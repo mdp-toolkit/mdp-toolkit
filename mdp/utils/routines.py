@@ -3,8 +3,6 @@ import os
 import cPickle
 import tempfile
 import types
-import datetime
-import time
 import mdp
 
 # import numeric module (scipy, Numeric or numarray)
