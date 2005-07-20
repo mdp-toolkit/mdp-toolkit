@@ -142,4 +142,4 @@ import test
 # import helper functions:
 from helper_funcs import pca, whitening, fastica, cubica, sfa, get_eta
 
-__version__ = '1.1.0'
+__version__ = '1.1.1'

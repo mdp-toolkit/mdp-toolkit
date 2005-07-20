@@ -1,4 +1,5 @@
 import mdp
+import warnings
 
 # import numeric module (scipy, Numeric or numarray)
 numx = mdp.numx
@@ -19,7 +20,7 @@ def _check_roundoff(t, type):
                  'probably getting severe round off'+\
                  '\nerrors. See CovarianceMatrix docstring for more'+\
                  ' information.'
-            raise mdp.MDPWarning, wr
+            warnings.warn(wr, mdp.MDPWarning)
 
 class CovarianceMatrix(object):
     """This class stores an empirical covariance matrix that can be updated

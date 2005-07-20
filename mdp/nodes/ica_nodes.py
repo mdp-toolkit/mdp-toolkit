@@ -400,7 +400,7 @@ class FastICANode(ICANode):
                     w /= utils.norm2(w)
                 round = round + 1
             # avoid roundoff errors
-            dummy_cond = numx.logical_and(convergence<0, convergence>-1E-15)
+            dummy_cond = numx.logical_and(convergence<0, convergence>-1E-5)
             convergence = numx.where(dummy_cond, 0, convergence)
             self.convergence = self._refcast(numx.sqrt(convergence*2))
             ret = utils.amax(self.convergence)
