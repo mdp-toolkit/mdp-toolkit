@@ -1,4 +1,14 @@
 -------------------------------------------------------------------------------
+MDP-?.?.?:
+
+12.07.2005: bug in utils.symrand (global name "mult" is not defined) 
+06.07.2005: changed round off error checking in FastICANode (it was 1e-15 and
+            it is now 1e-5). it failed on a MacOSX machine.
+23.06.2005: _check_roundoff in lcov.py issues a MDPWarning using warnings.warn.
+            it was using 'raise' before, and it was caught as a FlowException.
+21.06.2005: node consistency is assured at flow instantiation
+
+-------------------------------------------------------------------------------
 MDP-1.1.0:
 
 13.06.2005: MDP 1.1.0 released.
