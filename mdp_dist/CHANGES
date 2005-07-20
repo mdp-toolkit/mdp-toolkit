@@ -1,0 +1,39 @@
+-------------------------------------------------------------------------------
+MDP-1.1.0:
+
+13.06.2005: MDP 1.1.0 released.
+01.06.2005: Crash_recovery is now off by default.
+            To switch it on do: flow.set_crash_recovery(1)
+30.05.2005: New NoiseNode.
+30.05.2005: SimpleFlow and SignalNode now have a 'copy' method.
+30.05.2005: SimpleFlow is now a mutable sequence type and implements
+            many of the 'list' methods.
+30.05.2005: removed scipy dependency. Now mdp runs with either Numeric, 
+            numarray or scipy.
+24.05.2005: symeig removed from mdp.
+23.05.2005: all classes are now new-style.
+-------------------------------------------------------------------------------
+MDP-1.0.0:
+
+15.11.2004: MDP 1.0.0 released
+09.11.2004: Added crash recovery capabilities to SimpleFlow (on by default).
+05.11.2004: New GrowingNeuralGasNode. New graph module.
+04.11.2004: New IdentityNode subclass added. All analysis nodes are
+            now subclasses of IdentityNode.
+	    	Use of input_dim and output_dim in the nodes' constructor
+	    	is now consistent.
+02.11.2004: Now symeig works reliably also for complex matrices.
+            symeig now can be distributed as an independent package
+            It is still contained in mdp.utils for convenience.
+	    	Default value for option overwrite changed from 1 to 0.
+14.10.2004: With the release of Scypy 0.3.2, the installation of MDP got much
+            simpler.
+06.10.2004: Fixed a bug in symeig (when B=None and overwrite=0,
+	    	symeig raised an exception)
+04.09.2004: Fixed Windows-xspecific problems.
+-------------------------------------------------------------------------------
+MDP-0.9.0:
+
+24.08.2004: MDP 0.9.0 released. First public release. 
+16.08.2004: MDP project registered at SourceForge.
+-------------------------------------------------------------------------------
