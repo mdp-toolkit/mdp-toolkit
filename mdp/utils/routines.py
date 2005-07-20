@@ -106,7 +106,7 @@ def symrand(dim_or_eigv, typecode="d"):
         raise mdp.MDPException, "input type not supported."
     
     v = random_rot(dim, typecode=typecode)
-    h = mult(mult(hermitian(v), mdp.utils.diag(d)), v)
+    h = mdp.utils.mult(mdp.utils.mult(hermitian(v), mdp.utils.diag(d)), v)
     # to avoid roundoff errors, symmetrize the matrix (again)
     return refcast(0.5*(hermitian(h)+h), typecode)
 
@@ -127,7 +127,7 @@ class ProgressBar(object):
     """
 
     def __init__(self,minimum,maximum,width = None,delimiters = "[]",\
-                 char1 = "=",char2 = ">",char3 = "." ,flush = 1):
+                 char1 = "=",char2 = ">",char3 = "." , indent = 0, flush = 1):
         """
         (minimum-maximum) - the total number of iterations for which you
                             want to show a progress bar.
@@ -148,11 +148,13 @@ class ProgressBar(object):
         self.char1 = char1
         self.char2 = char2
         self.char3= char3
+        self.indent = indent
         self.where = 0       # When where == max, we are 100% done
         if not width:
             self.width = self.get_termsize()[1]-2  # terminal width-2 
         else:
             self.width = width
+        self.width = self.width - indent
         
     def update(self, where = 0):
         if where < self.min: where = self.min
@@ -181,7 +183,7 @@ class ProgressBar(object):
         # slice the percentage into the bar
         self.bar = self.bar[0:placepercent] + percentstring +\
                    self.bar[placepercent+len(percentstring):]
-        print "\r"+str(self.bar),
+        print "\r" + " "*self.indent + str(self.bar),
         if self.flush:
             sys.stdout.flush()
         
@@ -197,8 +199,8 @@ class ProgressBar(object):
             # Does anyone know how to get the console size under windows?
             # and what about MacOsX?
             height, width = 24, 79
-        return height, width
-    
+        return height, width    
+
 def norm2(v):
     """Compute the 2-norm for 1D arrays.
     norm2(v) = sqrt(sum(v_i^2))"""

@@ -57,6 +57,7 @@ class SimpleFlow(object):
         """
         'flow' is a list of SignalNodes.
         If 'verbose' is set print some basic progress information."""
+        self._check_nodes_consistency(flow)
         self.flow = flow
         self.verbose = verbose
         self._crash_recovery = 0

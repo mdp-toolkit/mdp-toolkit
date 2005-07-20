@@ -206,6 +206,8 @@ class NodesTestSuite(unittest.TestSuite):
             assert_type_equal(avg_dt.typecode(),type)
 
     def testRoundOffWarningCovMatrix(self):
+        import warnings
+        warnings.filterwarnings("error",'.*',mdp.MDPWarning)
         for type in ['d','f']:
             inp = numx_rand.random((1,2))
             cov = mdp.nodes.lcov.CovarianceMatrix(typecode=type)
@@ -216,6 +218,8 @@ class NodesTestSuite(unittest.TestSuite):
                 raise Exception, 'RoundOff warning did not work'
             except mdp.MDPWarning:
                 pass
+        # hope to reset the previous state...
+        warnings.filterwarnings("once",'.*',mdp.MDPWarning)
 
     def testPolynomialExpansionNode(self):
         def hardcoded_expansion(x, degree):
