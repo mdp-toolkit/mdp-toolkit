@@ -522,7 +522,7 @@ def assert_array_almost_equal(x,y,decimal=6,err_msg=''):
         if not cond:
             msg=msg+' (shapes mismatch):\n\t'+ \
                  'Shape of array 1: %s\n\tShape of array 2: %s'%(numx.shape(x),
-                                                                 shape(y))
+                                                                 numx.shape(y))
         assert cond, msg + '\n\t' + err_msg
         reduced = numx.ravel(numx.equal(\
             numx.less_equal(numx.around(abs(x-y),decimal),10.0**(-decimal)),1))

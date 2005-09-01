@@ -61,9 +61,6 @@ class SimpleFlow(object):
         self.flow = flow
         self.verbose = verbose
         self._crash_recovery = 0
-        
-    #?? add_signalnode, remove_signalnode could be more complicated because
-    #   it needs to check for the compatibility of the dimensions
 
     def _propagate_exception(self, except_, nodenr):
         # capture exception. the traceback of the error is printed and a
