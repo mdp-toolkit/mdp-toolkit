@@ -56,8 +56,8 @@ else:
     normal = _mdp.numx_rand.normal
 
 # copy scipy or emulated function in mdp.utils
-for name, val in scipy_emulation.__dict__.items():
-    if type(val) is types.FunctionType and name[0] != '_':
+for name, val in scipy_emulation.__dict__.iteritems():
+    if isinstance(val, types.FunctionType) and name[0] != '_':
         globals()[name] = getattr(_mdp.numx, name,
                                   getattr(_mdp.numx_linalg, name,
                                           val))

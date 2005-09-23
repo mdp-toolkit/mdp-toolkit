@@ -27,6 +27,8 @@ class OneDimensionalHitParade(object):
         """
         inp is the tuple (time-series, time-indices)
         """
+        argmin = numx.argmin
+        argmax = numx.argmax
         (x,ix) = inp
         rows = len(x)
         d = self.d
@@ -37,8 +39,8 @@ class OneDimensionalHitParade(object):
         lM = self.lM
         lm = self.lm
         for i in xrange(rows):
-            k1 = numx.argmin(M)
-            k2 = numx.argmax(m)
+            k1 = argmin(M)
+            k2 = argmax(m)
             if x[i] > M[k1]:
                 if ix[i]-iM[lM] <= d and x[i] > M[lM]:
                     M[lM] = x[i]
@@ -85,7 +87,7 @@ class OneDimensionalHitParade(object):
     
     
 class HitParadeNode(IdentityNode):
-    """HitParadeNode gets an multidimensional input signal and stores the first
+    """HitParadeNode gets a multidimensional input signal and stores the first
     'n' local maxima and minima, which are separated by a minimum gap 'd'.
     This is called HitParade.
 

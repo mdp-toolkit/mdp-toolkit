@@ -4,7 +4,6 @@ import traceback
 import types
 import cPickle
 import warnings
-import string
 import tempfile
 import os
 
@@ -28,7 +27,7 @@ class FlowExceptionCR(mdp.utils.CrashRecoveryException, FlowException):
         rec = self.crashing_obj._crash_recovery 
         errstr = args[0]
         if rec:
-            if type(rec) is types.StringType:
+            if isinstance(rec, str):
                 name = rec
             else:
                 name = None
@@ -67,8 +66,8 @@ class SimpleFlow(object):
         # new exception, containing the identity of the node in the flow
         # is raised. Allow crash recovery.
         tb = sys.exc_traceback
-        prev = string.join(traceback.format_exception(except_.__class__,
-                                                      except_,tb),'')
+        prev = ''.join(traceback.format_exception(except_.__class__,
+                                                  except_,tb))
         act = "\n! Exception in node #%d (%s):\n" \
               % (nodenr, type(self.flow[nodenr]).__name__)
         errstr = '\n'+40*'-'+act+'Node Traceback:\n'+prev+40*'-'
@@ -105,10 +104,10 @@ class SimpleFlow(object):
         #the signal node sand multiplies them if needed.
         flow = self.flow
 
-        if type(data_generators) is numx.ArrayType:
+        if isinstance(data_generators, numx.ArrayType):
             data_generators = [[data_generators]]*len(flow)
             
-        if type(data_generators) is not types.ListType:
+        if not isinstance(data_generators, list):
             errstr = "'data_generators' is "+ str(type(data_generators)) + \
                      " must be either a list of generators or an array"
             raise FlowException, errstr
@@ -116,8 +115,8 @@ class SimpleFlow(object):
         # check that all elements are generators or list
         for i in range(len(data_generators)):
             el = data_generators[i]
-            if type(el) not in [types.ListType, types.GeneratorType]:
-                if el==None:
+            if not isinstance(el, (list, types.GeneratorType)):
+                if el is None:
                     data_generators[i] = []
                 else:
                     raise FlowException, "Element number %d in the " % i + \
@@ -179,7 +178,7 @@ class SimpleFlow(object):
     def _execute_seq(self, x, nodenr = None):
         # Filters input data 'x' through the nodes 0..'node_nr' included
         flow = self.flow
-        if nodenr==None: nodenr = len(flow)-1
+        if nodenr is None: nodenr = len(flow)-1
         for i in range(nodenr+1):
             try:
                 x = flow[i].execute(x)
@@ -198,7 +197,7 @@ class SimpleFlow(object):
         node nr. 'nodenr'.
         This is equivalent to 'flow[:nodenr+1](generator)'."""
         # if generator is one single input sequence
-        if type(generator) is numx.ArrayType:
+        if isinstance(generator, numx.ArrayType):
             return self._execute_seq(generator, nodenr)
         # otherwise it is a generator
         res = []
@@ -230,7 +229,7 @@ class SimpleFlow(object):
         function of each node."""
         
         # if generator is one single input sequence
-        if type(generator) is numx.ArrayType:
+        if isinstance(generator, numx.ArrayType):
             return self._inverse_seq(generator)
         # otherwise it is a generator
         res = []
@@ -368,7 +367,7 @@ class CheckpointFlow(SimpleFlow):
     save the internal structures of a node for later analysis."""
     
     def _train_check_checkpoints(self, checkpoints):
-        if type(checkpoints) is not types.ListType:
+        if not isinstance(checkpoints, list):
             checkpoints = [checkpoints]*len(self.flow)
         
         if len(checkpoints) != len(self.flow):
@@ -398,7 +397,7 @@ class CheckpointFlow(SimpleFlow):
             if self.verbose:
                 print "Training node #%d (%s)" % (i,type(node).__name__)
             self._train_node(data_generators[i], i)
-            if i<=len(checkpoints) and checkpoints[i]!=None:
+            if (i <= len(checkpoints)) and (checkpoints[i] is not None):
                 dict = checkpoints[i](node)
                 if dict: self.__dict__.update(dict)
             if self.verbose: print "Training finished"

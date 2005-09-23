@@ -1,5 +1,3 @@
-import types
-
 from lcov import CovarianceMatrix
 from mdp import numx, utils, SignalNode, SignalNodeException
 from mdp.utils import mult, pinv, symeig, LeadingMinorException
@@ -83,7 +81,7 @@ class SFANode(SignalNode):
         x = self._refcast(x)
         
         if range:
-            if type(range) is types.ListType or type(range) is types.TupleType:
+            if isinstance(range, (list, tuple)):
                 sf = self.sf[:,range[0]:range[1]]
             else:
                 sf = self.sf[:,0:range]

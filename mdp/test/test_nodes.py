@@ -7,7 +7,6 @@ Run them with:
 """
 import unittest
 import inspect
-import types
 import mdp
 from testing_tools import assert_array_almost_equal, assert_array_equal, \
      assert_almost_equal, assert_equal, assert_array_almost_equal_diff
@@ -57,7 +56,7 @@ class NodesTestSuite(unittest.TestSuite):
 
         # generate generic test cases
         for node_class in self._nodes:
-            if type(node_class) is types.TupleType:
+            if isinstance(node_class, tuple):
                 node_class, args = node_class
             else:
                 args = []
@@ -90,7 +89,7 @@ class NodesTestSuite(unittest.TestSuite):
     def _get_random_mix(self, mat_dim = None, type = "d", scale = 1,\
                         rand_func = numx_rand.random, avg = None, \
                         std_dev = None):
-        if mat_dim == None: mat_dim = self.mat_dim
+        if mat_dim is None: mat_dim = self.mat_dim
         mat = ((rand_func(mat_dim)-0.5)*scale).astype(type)
         mat -= mean(mat,axis=0)
         mat /= std(mat,axis=0)

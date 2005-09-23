@@ -13,7 +13,7 @@ _limits = { 'd' : 1e13, 'f' : 1e5}
 
 def _check_roundoff(t, type):
     """Check if t is so large that t+1 == t up to 2 precision digits"""   
-    if _limits.has_key(type):
+    if type in _limits:
         if int(t) >= _limits[type]:
             wr = 'You have summed %e entries in the covariance matrix.'%t+\
                  '\nAs you are using typecode \'%s\', you are '%type+\

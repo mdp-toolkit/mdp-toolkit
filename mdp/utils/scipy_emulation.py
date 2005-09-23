@@ -2,8 +2,8 @@ import mdp
 import sys as _sys
 
 # import numeric module (scipy, Numeric or numarray)
-numx, numx_linalg, numx_rand, MDPException = mdp.numx, mdp.numx_linalg, \
-                                             mdp.numx_rand, mdp.MDPException
+numx, numx_linalg = mdp.numx, mdp.numx_linalg
+numx_rand, MDPException = mdp.numx_rand, mdp.MDPException
 
 class SymeigException(MDPException): pass
 
@@ -22,11 +22,11 @@ def _greatest_common_typecode(alist):
     """
     typecode = 'f'
     for array in alist:
-        if array==None: continue
+        if array is None: continue
         tc = array.typecode()
         if tc not in _type_keys: tc = 'd'
         transition = (typecode, tc)
-        if _type_conv.has_key(transition):
+        if transition in _type_conv:
             typecode = _type_conv[transition]
     return typecode
 
@@ -251,12 +251,17 @@ def squeeze(a):
     return val
 
 # In file: scipy_base/matrix_base.py
+# modified deprecated call to 'type'
+# 6c6
+# <     if type(M) == type('d'):
+# ---
+# >     if isinstance(M, str):
 def eye(N, M=None, k=0, typecode='d'):
     """ eye returns a N-by-M matrix where the  k-th diagonal is all ones,
         and everything else is zeros.
     """
     if M is None: M = N
-    if type(M) == type('d'):
+    if isinstance(M, str):
         typecode = M
         M = N
     m = numx.equal(numx.subtract.outer(numx.arange(N), numx.arange(M)),-k)

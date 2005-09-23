@@ -2,7 +2,6 @@ import sys
 import os
 import cPickle
 import tempfile
-import types
 import mdp
 
 # import numeric module (scipy, Numeric or numarray)
@@ -61,7 +60,7 @@ def _matmult(a,b):
         gemm, = numx_linalg.get_blas_funcs(('gemm',),(a,b))
         return gemm(1.0, a, b, 0., None, 0, 0)
 
-def rotate(mat, angle, columns = None, units = 'radians'):
+def rotate(mat, angle, columns = [0, 1], units = 'radians'):
     """
     Rotate in-place data matrix (NxM) in the plane defined by the columns=[i,j]
     when observation are stored on rows. Observation are rotated
@@ -77,8 +76,6 @@ def rotate(mat, angle, columns = None, units = 'radians'):
     if units is 'degrees': angle = angle/180.*numx.pi
     cos_ = scast(numx.cos(angle), typecode)
     sin_ = scast(numx.sin(angle), typecode)
-    if mat.shape[1] == 2: columns = [0,1]
-    assert (columns != None) and (len(columns) == 2),"wrong number of columns!"
     [i,j] = columns
     col_i = mat[:,i] + scast(0, typecode)
     col_j = mat[:,j]
@@ -95,10 +92,10 @@ def symrand(dim_or_eigv, typecode="d"):
      if 'dim_or_eigv' is  1-D real array 'a', return a matrix whose
                       eigenvalues are sort(a).
      """
-    if type(dim_or_eigv) == types.IntType:
+    if isinstance(dim_or_eigv, int):
         dim = dim_or_eigv
         d = numx_rand.random(dim)
-    elif type(dim_or_eigv) == numx.ArrayType and \
+    elif isinstance(dim_or_eigv, numx.ArrayType) and \
          len(numx.shape(dim_or_eigv)) == 1:
         dim = numx.shape(dim_or_eigv)[0]
         d = numx.sort(dim_or_eigv)
@@ -218,7 +215,7 @@ class CrashRecoveryException(mdp.MDPException):
         errstr = args[0]
         self.crashing_obj = args[1]
         self.parent_exception = args[2]
-        # ?? python 2.4: super(CrashRecoveryException, self).__init__(errstr)
+        # ?? python 2.5: super(CrashRecoveryException, self).__init__(errstr)
         mdp.MDPException.__init__(self, errstr)
 
     def dump(self, filename = None):

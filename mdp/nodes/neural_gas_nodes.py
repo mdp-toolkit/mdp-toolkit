@@ -79,8 +79,8 @@ class GrowingNeuralGasNode(IdentityNode):
         
         super(GrowingNeuralGasNode, self).__init__(input_dim, None, typecode)
 
-        if start_poss!=None:
-            if self._typecode==None:
+        if start_poss is not None:
+            if self._typecode is None:
                 self._set_typecode(start_poss[0].typecode())
             node1 = self._add_node(self._refcast(start_poss[0]))
             node2 = self._add_node(self._refcast(start_poss[1]))

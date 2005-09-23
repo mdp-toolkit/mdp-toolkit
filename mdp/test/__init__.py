@@ -35,7 +35,7 @@ def benchmark(suitename = 'all'):
     numx_rand.seed(1268049219, 2102953867)
     if suitename == 'all':
         suite = []
-        for s in benchmark_suites.values(): suite.extend(s)
+        for s in benchmark_suites.itervalues(): suite.extend(s)
     else:
         suite = benchmark_suites[suitename]
     print "Random Seed: ", numx_rand.get_seed()

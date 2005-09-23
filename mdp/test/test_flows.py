@@ -46,7 +46,7 @@ class FlowsTestCase(unittest.TestCase):
 
     def _get_random_mix(self,mat_dim = None, type = "d", scale = 1,
                         rand_func = numx_rand.random, avg = 0, std = 0):
-        if mat_dim == None: mat_dim = self.mat_dim
+        if mat_dim is None: mat_dim = self.mat_dim
         mat = ((rand_func(mat_dim)-0.5)*scale).astype(type)
         mat -= mdp.utils.mean(mat,axis=0)
         mat /= mdp.utils.std(mat,axis=0)
