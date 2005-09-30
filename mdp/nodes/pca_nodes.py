@@ -1,4 +1,5 @@
-from mdp import numx, SignalNode, SignalNodeException
+from mdp import numx, SignalNode, \
+     SignalNodeException, TrainingFinishedException
 from mdp.utils import mult, symeig, LeadingMinorException
 from lcov import CovarianceMatrix
 
@@ -36,9 +37,12 @@ class PCANode(SignalNode):
     
     def get_explained_variance(self):
         """Return the fraction of the original variance that can be
-        explained by self._output_dim. PCA components.
+        explained by self._output_dim PCA components.
         If for example output_dim has been set to 0.95, the explained
-        variance could be something like 0.958..."""
+        variance could be something like 0.958...
+        Note that if output_dim was explicitly set to be a fixed number
+        of components, there is no way to calculate the explained variance.
+        """
         return self.explained_variance
     
     def train(self, x):
@@ -96,9 +100,13 @@ class PCANode(SignalNode):
             # there is no way to tell what the explained variance is, since we
             # didn't compute all eigenvalues
             self.explained_variance = None
-        # otherwise, the number of principal components to keep has
-        # been specified by the fraction of variance to be explained
+        elif self._output_dim == self._input_dim:
+            # explained variance is 100%
+            self.explained_variance = 1.
         else:
+            # otherwise, the number of principal components to keep has
+            # been specified by the fraction of variance to be explained
+            #
             # total variance
             vartot = numx.sum(d)
             # cumulative variance (percent)

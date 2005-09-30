@@ -1,5 +1,6 @@
 from lcov import CovarianceMatrix
-from mdp import numx, utils, SignalNode, SignalNodeException
+from mdp import numx, utils, SignalNode, \
+     SignalNodeException, TrainingFinishedException
 from mdp.utils import mult, pinv, symeig, LeadingMinorException
 
 class SFANode(SignalNode):
