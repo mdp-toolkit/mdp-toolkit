@@ -1,4 +1,4 @@
-from mdp import numx, utils, FiniteSignalNode, SignalNodeException
+from mdp import numx, utils, FiniteNode, NodeException
 
 class OneDimensionalHitParade(object):
     """
@@ -86,7 +86,7 @@ class OneDimensionalHitParade(object):
 
     
     
-class HitParadeNode(FiniteSignalNode):
+class HitParadeNode(FiniteNode):
     """HitParadeNode gets a multidimensional input signal and stores the first
     'n' local maxima and minima, which are separated by a minimum gap 'd'.
     This is called HitParade.
@@ -173,7 +173,7 @@ class HitParadeNode(FiniteSignalNode):
             m[:,c],im[:,c] = hit[c].get_minima()
         return m,im
 
-class TimeFramesNode(FiniteSignalNode):
+class TimeFramesNode(FiniteNode):
     """TimeFramesNode receives a multidimensional input signal and copies on
     the space dimensions delayed version of the same signal. Example:
 
@@ -225,7 +225,7 @@ class TimeFramesNode(FiniteSignalNode):
             if not self._input_dim:
                 errstr = "Number of input dimensions undefined. Inversion"+\
                          "not possible."
-                raise SignalNodeException, errstr
+                raise NodeException, errstr
             self._set_default_outputdim(self._input_dim)
         
         # control the dimension of y
@@ -249,7 +249,7 @@ class TimeFramesNode(FiniteSignalNode):
         return x
 
 
-class EtaComputerNode(FiniteSignalNode):
+class EtaComputerNode(FiniteNode):
     """Node to compute the eta values of the normalized training data.
 
     The delta value of a signal is a measure of its temporal
@@ -321,7 +321,7 @@ class EtaComputerNode(FiniteSignalNode):
         return self._refcast(self._eta*t)
 
 
-class NoiseNode(FiniteSignalNode):
+class NoiseNode(FiniteNode):
     """Node to add noise to input data.
 
     Original idea by Mathias Franzius.
@@ -350,7 +350,7 @@ class NoiseNode(FiniteSignalNode):
         valid_noise_types = ['additive', 'multiplicative']
         if noise_type not in valid_noise_types:
             err_str = '%s is not a valid noise type' % str(noise_type)
-            raise SignalNodeException, err_str
+            raise NodeException, err_str
         else:
             self.noise_type = noise_type
             

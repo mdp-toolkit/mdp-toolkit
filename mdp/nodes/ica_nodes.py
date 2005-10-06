@@ -8,7 +8,7 @@ utils = mdp.utils
 mult = utils.mult
 t = numx.transpose
 
-class ICANode(mdp.Cumulator, mdp.FiniteSignalNode):
+class ICANode(mdp.Cumulator, mdp.FiniteNode):
     """
     ICANode is a general class to handle different batch-mode algorithm for
     Independent Component Analysis. More information about ICA can be found
@@ -104,7 +104,7 @@ class CuBICANode(ICANode):
     Analysis using the CuBICA algorithm by Tobias Blaschke (see reference
     below). Note that CuBICA is a batch-algorithm. This means that it needs
     all input data before it can start and compute the ICs.
-    The algorithm is here given as a SignalNode for convenience, but it
+    The algorithm is here given as a Node for convenience, but it
     actually accumulates all inputs it receives. Remember that to avoid
     running out of memory when you have many components and many time samples.
     
@@ -219,7 +219,7 @@ class FastICANode(ICANode):
     Analysis using the FastICA algorithm by Aapo Hyvarinen (see reference
     below). Note that FastICA is a batch-algorithm. This means that it needs
     all input data before it can start and compute the ICs.
-    The algorithm is here given as a SignalNode for convenience, but it
+    The algorithm is here given as a Node for convenience, but it
     actually accumulates all inputs it receives. Remember that to avoid
     running out of memory when you have many components and many time samples.
     
@@ -258,7 +258,7 @@ class FastICANode(ICANode):
         if approach in ['defl','symm']:
             self.approach = approach
         else:
-            raise mdp.SignalNodeException, \
+            raise mdp.NodeException, \
                   '%s approach method not known' % approach
         self.g = g
         self.fine_tanh = fine_tanh
@@ -296,7 +296,7 @@ class FastICANode(ICANode):
             # This is the actual fixed-point iteration loop.
             for round in range(max_it + 1):
                 if round == max_it:
-                    raise mdp.SignalNodeException,\
+                    raise mdp.NodeException,\
                           'No convergence after %d steps\n'%max_it
                 # Symmetric orthogonalization. Q = Q * real(inv(Q' * Q)^(1/2));
                 Q = mult(Q, utils.sqrtm(utils.inv(mult(t(Q), Q))))
@@ -354,7 +354,7 @@ class FastICANode(ICANode):
                         if nfail > failures:
                             erstr = 'Too many failures to converge (%d).' % \
                                     nfail+ ' Giving up.'
-                            raise mdp.SignalNodeException, erstr 
+                            raise mdp.NodeException, erstr 
                         break
                     # Project the vector into the space orthogonal to the space
                     # spanned by the earlier found basis vectors. Note that
@@ -404,7 +404,3 @@ class FastICANode(ICANode):
             ret = utils.amax(self.convergence)
         self.filters = Q
         return ret
-
-# backward compatibility
-CuBICA = CuBICANode
-FastICA = FastICANode

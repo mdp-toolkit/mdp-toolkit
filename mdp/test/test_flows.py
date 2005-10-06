@@ -25,12 +25,12 @@ class _CheckpointCollectFunction(mdp.CheckpointFunction):
     def __call__(self, node):
         self.classes.append(node.__class__)
 
-class _BogusNode(mdp.FiniteSignalNode):
+class _BogusNode(mdp.FiniteNode):
     def is_trainable(self): return 0
     def _execute(self,x): return 2*x
     def _inverse(self,x): return 0.5*x
 
-class _BogusExceptNode(mdp.FiniteSignalNode):
+class _BogusExceptNode(mdp.FiniteNode):
     def _train(self,x):
         self.bogus_attr = 1
         raise Exception, "Bogus Exception"
@@ -51,11 +51,11 @@ class FlowsTestCase(unittest.TestCase):
         mix = (rand_func((mat_dim[1], mat_dim[1]))*scale).astype(type)
         return mat,mix,mult(mat,mix)
 
-    def _get_default_flow(self, flow_class = mdp.SimpleFlow):
+    def _get_default_flow(self, flow_class = mdp.Flow):
         flow = flow_class([_BogusNode(),_BogusNode(),_BogusNode()])
         return flow
     
-    def testSimpleFlow(self):
+    def testFlow(self):
         inp = numx.ones((100,3))
         flow = self._get_default_flow()
         flow.train(inp)
@@ -68,18 +68,18 @@ class FlowsTestCase(unittest.TestCase):
         rec = flow.inverse(out)
         assert_array_equal(rec,inp)
 
-    def testSimpleFlow_copy(self):
+    def testFlow_copy(self):
         dummy_list = [1,2,3]
         flow = self._get_default_flow()
         flow[0].dummy_attr = dummy_list
         copy_flow = flow.copy()
         assert flow[0].dummy_attr == copy_flow[0].dummy_attr, \
-               'SimpleFlow copy method did not work'
+               'Flow copy method did not work'
         copy_flow[0].dummy_attr[0] = 10
         assert flow[0].dummy_attr != copy_flow[0].dummy_attr, \
-               'SimpleFlow copy method did not work'
+               'Flow copy method did not work'
         
-    def testSimpleFlow_container_privmethods(self):
+    def testFlow_container_privmethods(self):
         mat,mix,inp = self._get_random_mix(mat_dim=(100,3))
         flow = self._get_default_flow()
         flow.train(inp)
@@ -93,10 +93,10 @@ class FlowsTestCase(unittest.TestCase):
             flow[i] = new_node
             assert flow[i]==new_node, '__setitem__ did not set node %d' % i
         # test __?etitem__, normal slice -> this fails for python < 2.2 and
-        # if SimpleFlow is a subclassed from builtin 'list'
+        # if Flow is a subclassed from builtin 'list'
         flowslice = flow[0:2]
-        assert isinstance(flowslice,mdp.SimpleFlow), \
-               '__getitem__ slice is not a SimpleFlow instance'
+        assert isinstance(flowslice,mdp.Flow), \
+               '__getitem__ slice is not a Flow instance'
         assert len(flowslice) == 2, '__getitem__ returned wrong slice size'
         new_nodes_list = [_BogusNode(), _BogusNode()]
         flow[:2] = new_nodes_list
@@ -104,27 +104,27 @@ class FlowsTestCase(unittest.TestCase):
                (flow[1] == new_nodes_list[1]), '__setitem__ did not set slice'
         # test__?etitem__, extended slice
         flowslice = flow[:2:1]
-        assert isinstance(flowslice,mdp.SimpleFlow), \
-               '__getitem__ slice is not a SimpleFlow instance'
+        assert isinstance(flowslice,mdp.Flow), \
+               '__getitem__ slice is not a Flow instance'
         assert len(flowslice) == 2, '__getitem__ returned wrong slice size'
         new_nodes_list = [_BogusNode(), _BogusNode()]
         flow[:2:1] = new_nodes_list
         assert (flow[0] == new_nodes_list[0]) and \
                (flow[1] == new_nodes_list[1]), '__setitem__ did not set slice'
         # test __delitem__, integer key
-        copy_flow = mdp.SimpleFlow(flow[:])
+        copy_flow = mdp.Flow(flow[:])
         del copy_flow[0]
         assert len(copy_flow) == len(flow)-1, '__delitem__ did not del'
         for i in range(len(copy_flow)):
             assert copy_flow[i] == flow[i+1], '__delitem__ deleted wrong node'
         # test __delitem__, normal slice
-        copy_flow = mdp.SimpleFlow(flow[:])
+        copy_flow = mdp.Flow(flow[:])
         del copy_flow[:2]
         assert len(copy_flow) == len(flow)-2, \
                '__delitem__ did not del normal slice'
         assert copy_flow[0] == flow[2], '__delitem__ deleted wrong normal slice'
         # test __delitem__, extended slice
-        copy_flow = mdp.SimpleFlow(flow[:])
+        copy_flow = mdp.Flow(flow[:])
         del copy_flow[:2:1]
         assert len(copy_flow) == len(flow)-2, \
                '__delitem__ did not del extended slice'
@@ -134,7 +134,7 @@ class FlowsTestCase(unittest.TestCase):
         newflow = flow + flow
         assert len(newflow) == len(flow)*2, '__add__ did not work'
         
-    def testSimpleFlow_container_listmethods(self):
+    def testFlow_container_listmethods(self):
         # for all methods try using a node with right dimensionality
         # and one with wrong dimensionality
         flow = self._get_default_flow()
@@ -183,7 +183,7 @@ class FlowsTestCase(unittest.TestCase):
         assert oldnode == popnode, 'flow.pop popped wrong node out'
         assert_equal(len(flow), length-1)
         length = len(flow)
-        # pop - test SimpleFlow._check_nodes_consistency
+        # pop - test Flow._check_nodes_consistency
         flow[3]._set_default_outputdim(2)
         flow[4]._set_default_inputdim(2)
         flow[4]._set_default_outputdim(3)
@@ -215,7 +215,7 @@ class FlowsTestCase(unittest.TestCase):
             assert flow[i].__class__==cfunc.classes[i], 'Wrong class collected'
 
     def testCrashRecovery(self):
-        flow = mdp.SimpleFlow([_BogusExceptNode()])
+        flow = mdp.Flow([_BogusExceptNode()])
         flow.set_crash_recovery(1)
         try:
             flow.train(mdp.numx.zeros((1,2), 'd'))

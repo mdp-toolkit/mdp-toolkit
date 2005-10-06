@@ -8,8 +8,10 @@ import mdp
 # http://www.python.org/peps/pep-0255.html for a complete description.
 #
 # Let us define two bogus node classes to be used as examples of nodes:
-BogusNode = mdp.IdentityNode    
-class BogusNode2(mdp.IdentityNode):
+class BogusNode(mdp.FiniteNode):
+    def _train(self, x): pass
+    def _stop_training(self): pass
+class BogusNode2(mdp.Node):
     """This node does nothing. but it's not trainable and not invertible.
     """
     def is_trainable(self): return 0
@@ -36,7 +38,7 @@ def gen_data(blocks):
     return
 #
 # Let's define a bogus flow consisting of 2 ``BogusNode``:
-flow = mdp.SimpleFlow([BogusNode(),BogusNode()],verbose=1)
+flow = mdp.Flow([BogusNode(),BogusNode()],verbose=1)
 #
 # Train the first node with 5000 blocks and the second node with 3000 blocks.
 # Note that the only allowed argument to ``train`` is a sequence (list or tuple)
@@ -50,7 +52,7 @@ flow.train([gen_data(5000),gen_data(3000)])
 print "Done..."
 print 50*'-'
 # **one-shot training** using one set of data for both nodes
-flow = mdp.SimpleFlow([BogusNode(),BogusNode()])
+flow = mdp.Flow([BogusNode(),BogusNode()])
 block_x = mdp.utils.atleast_2d(mdp.numx.arange(2,1001,2))
 block_y = mdp.utils.atleast_2d(mdp.numx.arange(1,1001,2))
 single_block = mdp.numx.transpose(mdp.numx.concatenate([block_x,block_y]))
@@ -61,7 +63,7 @@ print 50*'-'
 #
 # If your flow contains non-trainable nodes, you must specify a ``None``
 # generator for the non-trainable nodes.
-flow = mdp.SimpleFlow([BogusNode2(),BogusNode()], verbose=1)
+flow = mdp.Flow([BogusNode2(),BogusNode()], verbose=1)
 print "Training block-mode (second example)..."
 flow.train([None,gen_data(5000)])
 print 50*'-'
@@ -70,7 +72,7 @@ print 50*'-'
 # the following ones:
 # ! Node 0 in not trainable
 # You probably need a 'None' generator for this node. Continuing anyway.
-flow = mdp.SimpleFlow([BogusNode2(),BogusNode()], verbose=1)
+flow = mdp.Flow([BogusNode2(),BogusNode()], verbose=1)
 print "Training one-shot (second example)..."
 flow.train(single_block)
 print 50*'-'
@@ -80,7 +82,7 @@ print 50*'-'
 # non-trainable nodes, or by switching off MDP warnings altogether:
 import warnings
 warnings.filterwarnings("ignore",'.*',mdp.MDPWarning)
-flow = mdp.SimpleFlow([BogusNode2(),BogusNode()], verbose=1)
+flow = mdp.Flow([BogusNode2(),BogusNode()], verbose=1)
 print "Training one-shot (second example)..."
 flow.train(single_block)
 print 50*'-'
@@ -89,7 +91,7 @@ print 50*'-'
 warnings.filterwarnings("always",'.*',mdp.MDPWarning)
 #
 # Generators can be used also for execution (and inversion):
-flow = mdp.SimpleFlow([BogusNode(),BogusNode()], verbose=1)
+flow = mdp.Flow([BogusNode(),BogusNode()], verbose=1)
 flow.train([gen_data(1), gen_data(1)])
 print "Executing block-mode..." 
 output = flow.execute(gen_data(1000))

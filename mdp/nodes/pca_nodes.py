@@ -1,9 +1,9 @@
-from mdp import numx, FiniteSignalNode, \
-     SignalNodeException, TrainingFinishedException
+from mdp import numx, FiniteNode, \
+     NodeException, TrainingFinishedException
 from mdp.utils import mult, symeig, LeadingMinorException
 from lcov import CovarianceMatrix
 
-class PCANode(FiniteSignalNode):
+class PCANode(FiniteNode):
     """PCANode receives an input signal and filters it through
     the most significatives of its principal components.
     More information about Principal Component Analysis, a.k.a. discrete
@@ -83,7 +83,7 @@ class PCANode(FiniteSignalNode):
             d, v = symeig(cov_mtx, range = rng, overwrite = 1)
         except LeadingMinorException, exception:
             errstr = str(exception)+"\n Covariance matrix may be singular."
-            raise SignalNodeException,errstr
+            raise NodeException,errstr
         
         # sort by descending order
         d = numx.take(d, range(d.shape[0]-1,-1,-1))
@@ -153,7 +153,7 @@ class PCANode(FiniteSignalNode):
         if n>self._output_dim:
             error_str = "y has dimension %d, should be at most %d" \
                         %(n, self._output_dim)
-            raise SignalNodeException, error_str
+            raise NodeException, error_str
         
         v = self.get_recmatrix()
         return mult(y, v[:n,:])+self.avg

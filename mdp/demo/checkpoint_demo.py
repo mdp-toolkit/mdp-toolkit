@@ -56,7 +56,6 @@ class CheckPCA(mdp.CheckpointFunction):
     def __init__(self,max_dim):
         self.max_dim = max_dim
     def __call__(self,node):
-        node.stop_training()
         act_dim = node.get_output_dim()
         if act_dim > self.max_dim:
             errstr = 'PCA output dimensions exceeded maximum '+\
@@ -92,7 +91,6 @@ flow.train([gen_data(10, 12), None, gen_data(10, 12)],
            [CheckPCA(10),
             None, 
             mdp.CheckpointSaveFunction('dummy.pic',
-                                       stop_training = 1,
                                        protocol = 0)])
 
 #

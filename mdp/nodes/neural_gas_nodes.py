@@ -1,5 +1,5 @@
 import graph
-from mdp import numx, numx_rand, utils, FiniteSignalNode
+from mdp import numx, numx_rand, utils, FiniteNode
 
 class _GNGNodeData(object):
     """Data associated to a node in a Growing Neural Gas graph."""
@@ -19,7 +19,7 @@ class _GNGEdgeData(object):
         self.age += 1
 
 
-class GrowingNeuralGasNode(FiniteSignalNode):
+class GrowingNeuralGasNode(FiniteNode):
     """GrowingNeuralGasNode learns the topological structure of its input,
     by building a corresponding graph approximation.
     More information about the Growing Neural Gas algorithm can be found in

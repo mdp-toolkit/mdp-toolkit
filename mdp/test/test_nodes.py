@@ -146,16 +146,16 @@ class NodesTestSuite(unittest.TestSuite):
     def _uniform(self, min_, max_, dims):
         return numx_rand.random(dims)*(max_-min_)+min_
 
-    def testSignalNodecopy(self):
+    def testNodecopy(self):
         test_list = [1,2,3]
-        generic_node = mdp.SignalNode()
+        generic_node = mdp.Node()
         generic_node.dummy_attr = test_list
         copy_node = generic_node.copy()
         assert generic_node.dummy_attr == copy_node.dummy_attr,\
-               'SignalNode copy method did not work'
+               'Node copy method did not work'
         copy_node.dummy_attr[0] = 10
         assert generic_node.dummy_attr != copy_node.dummy_attr,\
-               'SignalNode copy method did not work'
+               'Node copy method did not work'
         
     def testCovarianceMatrix(self):
         mat,mix,inp = self._get_random_mix()

@@ -13,7 +13,7 @@ def expanded_dim(degree, nvariables):
     a polynomial expansion of degree 'degree'."""
     return int(mdp.utils.comb(nvariables+degree, degree, exact=1))-1
 
-class _ExpansionNode(mdp.SignalNode):
+class _ExpansionNode(mdp.Node):
     
     def __init__(self, input_dim = None, typecode = None):
         if input_dim:
@@ -119,7 +119,7 @@ class QuadraticExpansionNode(PolynomialExpansionNode):
 
 # it was called like that:
 ##     def execute(self, x):
-##         mdp.SignalNode.execute(self, x)
+##         mdp.Node.execute(self, x)
 
 ##         rows = x.shape[0]
 ##         columns = self._input_dim

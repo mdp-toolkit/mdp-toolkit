@@ -1,9 +1,9 @@
 from lcov import CovarianceMatrix
-from mdp import numx, utils, SignalNode, FiniteSignalNode, \
-     SignalNodeException, TrainingFinishedException
+from mdp import numx, utils, FiniteNode, \
+     NodeException, TrainingFinishedException
 from mdp.utils import mult, pinv, symeig, LeadingMinorException
 
-class SFANode(FiniteSignalNode):
+class SFANode(FiniteNode):
     """SFANode receives an input signal and extracts its slowly varying
     components. More information about Slow Feature Analysis can be found in
     Wiskott, L. and Sejnowski, T.J., Slow Feature Analysis: Unsupervised
@@ -67,7 +67,7 @@ class SFANode(FiniteSignalNode):
             self.d, self.sf = symeig(dcov_mtx, cov_mtx, range=rng, overwrite = 1)
         except LeadingMinorException, exception:
             errstr = str(exception)+"\n Covariance matrices may be singular."
-            raise SignalNodeException,errstr
+            raise NodeException,errstr
             
     def _execute(self, x, range=None):
         """Compute the output of the slowest functions.
@@ -85,10 +85,6 @@ class SFANode(FiniteSignalNode):
 
     def _inverse(self, y):
         return mult(y, pinv(self.sf))+self.avg
-
-# backwards compatibility
-SfaNode = SFANode
-
 
 ### old weave inline code to perform the time derivative
 

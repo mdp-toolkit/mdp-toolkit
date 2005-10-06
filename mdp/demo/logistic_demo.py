@@ -77,7 +77,7 @@ sequence = [mdp.nodes.EtaComputerNode(),
             mdp.nodes.PolynomialExpansionNode(3),
             mdp.nodes.SFANode(output_dim=1),
             mdp.nodes.EtaComputerNode()]
-flow = mdp.SimpleFlow(sequence, verbose=1)
+flow = mdp.Flow(sequence, verbose=1)
 
 # Since the time-series is short enough to be kept in memory
 # we don't need to define generators and we can feed the flow

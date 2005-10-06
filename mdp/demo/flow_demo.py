@@ -36,12 +36,12 @@ def plot(x):
 # each step.
 
 # We could start by quickly defining a node to visualize the data
-# (see node_demo.py for details on subclassing SignalNode)
-class VisualizeNode(mdp.SignalNode):
+# (see node_demo.py for details on subclassing Node)
+class VisualizeNode(mdp.Node):
     def is_trainable(self): return 0
     def is_invertible(self): return 0
     def execute(self, x):
-        mdp.SignalNode.execute(self,x)
+        mdp.Node.execute(self,x)
         self._refcast(x)
         plot(x)
         return x
@@ -76,11 +76,11 @@ out2 = ica.execute(out1)
 plot(out2)
 #
 # - ... or we could use flows, the recommended way:
-flow = mdp.SimpleFlow([VisualizeNode(),
-                       mdp.nodes.PCANode(output_dim=5),
-                       VisualizeNode(),
-                       mdp.nodes.CuBICANode(),
-                       VisualizeNode()])
+flow = mdp.Flow([VisualizeNode(),
+                 mdp.nodes.PCANode(output_dim=5),
+                 VisualizeNode(),
+                 mdp.nodes.CuBICANode(),
+                 VisualizeNode()])
 flow.train(x)
 out = flow.execute(x)
 #   You will probably get some warnings here. This is expected, see the
@@ -146,7 +146,7 @@ except ValueError:
 # To see how it works let's define a bogus node that always throws an 
 # ``Exception`` and put it into a flow:
 #
-class BogusExceptNode(mdp.SignalNode):
+class BogusExceptNode(mdp.Node):
     def train(self,x):
         self.bogus_attr = 1
         raise Exception, "Bogus Exception"
@@ -154,7 +154,7 @@ class BogusExceptNode(mdp.SignalNode):
     def execute(self,x):
         raise Exception, "Bogus Exception"
 
-flow = mdp.SimpleFlow([BogusExceptNode()])
+flow = mdp.Flow([BogusExceptNode()])
 # Switch on crash recovery:
 flow.set_crash_recovery(1)
 # Attempt to train the flow:

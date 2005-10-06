@@ -6,8 +6,17 @@ MDP-?.?.?:
             it is now 1e-5). it failed on a MacOSX machine.
 23.06.2005: _check_roundoff in lcov.py issues a MDPWarning using warnings.warn.
             it was using 'raise' before, and it was caught as a FlowException.
-21.06.2005: node consistency is assured at flow instantiation
-
+21.06.2005: node consistency is assured at flow instantiation.
+06.10.2005: some bug fixes.
+06.10.2005: SignalNode, SignalNodeException, and SimpleFlow are now
+            deprecated aliases. Use Node, NodeException and Flow instead.
+06.10.2005: The SfaNode, CuBICA, and FastICA aliases have been deleted.
+06.10.2005: Node supports multiple and even an infinite number of training
+            phases. FiniteNode makes the implementation of a class with
+            a finite number of phases easy and one with just one phase
+            trivial.
+06.10.2005: Flow supports the new nodes and even nodes requiring a
+            supervision signal during training.
 -------------------------------------------------------------------------------
 MDP-1.1.0:
 

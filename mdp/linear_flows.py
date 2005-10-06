@@ -43,7 +43,7 @@ class FlowExceptionCR(mdp.utils.CrashRecoveryException, FlowException):
 void_generator = []
 
 class Flow(object):
-    """A Flow consists in a linear sequence of SignalNodes.
+    """A Flow consists in a linear sequence of Nodes.
 
     The data is sent to an input node and is successively processed
     by the following nodes on the graph. The Flow class
@@ -54,7 +54,7 @@ class Flow(object):
 
     def __init__(self, flow, verbose = 0):
         """
-        'flow' is a list of SignalNodes.
+        'flow' is a list of Nodes.
         If 'verbose' is set print some basic progress information."""
         self._check_nodes_consistency(flow)
         self.flow = flow
@@ -77,12 +77,7 @@ class Flow(object):
         #trains a single node in the flow
         node = self.flow[nodenr]
         try:
-            first = True
             while node.is_training():
-                if not first:
-                    # close the previous training phase
-                    # but leave the last training phase open (checkpoints...)
-                    node.stop_training()
                 for x in data_iterator:
                     # the arguments following the first are passed only to the
                     # currently trained node, allowing the implementation of
@@ -96,6 +91,9 @@ class Flow(object):
                     if nodenr>0: x = self._execute_seq(x, nodenr-1)
                     # train current node
                     node.train(x, *arg)
+                    # close the previous training phase
+                    # ?? but leave the last training phase open (checkpoints...)
+                    node.stop_training()
         except mdp.IsNotTrainableException, e:
             # attempted to train a node although it is not trainable.
             # raise a warning and continue with the next node.
@@ -179,7 +177,7 @@ class Flow(object):
 
         data_iterators = self._train_check_iterators(data_iterators)
         
-        # train each SignalNode successively
+        # train each Node successively
         for i in range(len(self.flow)):
             if self.verbose: print "Training node #%d (%s)" \
                % (i,str(self.flow[i]))
@@ -295,8 +293,8 @@ class Flow(object):
             self._check_dimension_consistency(out, inp)
 
     def _check_value_type_isnode(self, value):
-        if not isinstance(value, mdp.SignalNode):
-            raise TypeError, "flow item must be SignalNode instance"
+        if not isinstance(value, mdp.Node):
+            raise TypeError, "flow item must be Node instance"
 
     def __getitem__(self, key):
         if isinstance(key, slice):
@@ -337,7 +335,7 @@ class Flow(object):
     
     def __add__(self, other):
         # append other to self
-        if not isinstance(other, SimpleFlow):
+        if not isinstance(other, Flow):
             err_str = 'can only concatenate flow'+ \
                       ' (not \'%s\') to flow'%(type(other).__name__) 
             raise TypeError, err_str
@@ -356,7 +354,7 @@ class Flow(object):
     def extend(self, x):
         """flow.extend(iterable) -- extend flow by appending
         elements from the iterable"""
-        if not isinstance(x, SimpleFlow):
+        if not isinstance(x, Flow):
             err_str = 'can only concatenate flow'+ \
                       ' (not \'%s\') to flow'%(type(x).__name__) 
             raise TypeError, err_str
@@ -373,11 +371,16 @@ class Flow(object):
         del self[i]
         return x
 
-# ?? deprecate this
-SimpleFlow = Flow
+# deprecated alias
+class SimpleFlow(Flow):
+    def __init__(self, flow, verbose = 0):
+        wrnstr = "The alias 'SimpleFlow' is deprecated and won't be " + \
+        "continued in future releases. Use 'Flow' instead."
+        warnings.warn(wrnstr, DeprecationWarning)
+        super(SimpleFlow, self).__init__(flow, verbose)
         
 class CheckpointFlow(Flow):
-    """Subclass of SimpleFlow class allows user-supplied checkpoint functions
+    """Subclass of Flow class allows user-supplied checkpoint functions
     to be executed at the end of each phase, for example to
     save the internal structures of a node for later analysis."""
     
@@ -406,7 +409,7 @@ class CheckpointFlow(Flow):
         data_iterators = self._train_check_iterators(data_iterators)
         checkpoints = self._train_check_checkpoints(checkpoints)
 
-        # train each SignalNode successively
+        # train each Node successively
         for i in range(len(self.flow)):
             node = self.flow[i]
             if self.verbose:
@@ -440,14 +443,10 @@ class CheckpointSaveFunction(CheckpointFunction):
     and prolongate the training.
     """
 
-    def __init__(self, filename, stop_training = 0, binary = 1, protocol = 2):
+    def __init__(self, filename, binary = 1, protocol = 2):
         """CheckpointSaveFunction constructor.
         
         'filename'      -- the name of the pickle dump file.
-        'stop_training' -- if set to 0 the pickle dump is done before
-                           closing the training phase
-                           if set to 1 the training phase is closed and then
-                           the node is dumped
         'binary'        -- sets binary mode for opening the file.
                            When using a protocol higher than 0, make sure
                            the file is opened in binary mode. 
@@ -456,7 +455,6 @@ class CheckpointSaveFunction(CheckpointFunction):
         """
         self.filename = filename
         self.proto = protocol
-        self.stop_training = stop_training
         if binary or protocol > 0:
             self.mode = 'wb'
         else:
@@ -464,6 +462,5 @@ class CheckpointSaveFunction(CheckpointFunction):
 
     def __call__(self, node):
         fid = open(self.filename, self.mode)
-        if self.stop_training: node.stop_training()
         cPickle.dump(node, fid, self.proto)
         fid.close()

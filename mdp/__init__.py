@@ -127,14 +127,14 @@ class MDPWarning(UserWarning):
 import utils
 
 # import exceptions from nodes and flows
-from signal_node import SignalNodeException, TrainingException, \
+from signal_node import NodeException, TrainingException, \
      TrainingFinishedException, IsNotTrainableException, \
      IsNotInvertibleException
 from linear_flows import FlowException, FlowExceptionCR
 
 # import base node and flow classes.
-from signal_node import SignalNode, Cumulator, FiniteSignalNode
-from linear_flows import SimpleFlow, CheckpointFlow, \
+from signal_node import Node, Cumulator, FiniteNode
+from linear_flows import Flow, CheckpointFlow, \
      CheckpointFunction, CheckpointSaveFunction
 
 # import helper functions:

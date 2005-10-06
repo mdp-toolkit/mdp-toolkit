@@ -1,5 +1,5 @@
 from routines import timediff, refcast, scast, rotate, random_rot, \
-     ProgressBar, CrashRecoveryException, symrand, norm2
+     ProgressBar, CrashRecoveryException, symrand, norm2, uniq, ordered_uniq
 import mdp as _mdp
 import scipy_emulation, types
 

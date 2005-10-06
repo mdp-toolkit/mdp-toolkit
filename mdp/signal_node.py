@@ -4,11 +4,20 @@ import mdp
 # import numeric module (scipy, Numeric or numarray)
 numx = mdp.numx
 
-class SignalNodeException(mdp.MDPException):
-    """Base class for exceptions in SignalNode subclasses."""
+class NodeException(mdp.MDPException):
+    """Base class for exceptions in Node subclasses."""
     pass
 
-class TrainingException(SignalNodeException):
+# deprecated alias
+class SignalNodeException(NodeException):
+    """Deprecated, use NodeException instead."""
+    def __init__(self, str = ''):
+        wrnstr = "The alias 'SignalNodeException' is deprecated and won't " + \
+        "be continued in future releases. Use 'NodeException' instead."
+        warnings.warn(wrnstr, DeprecationWarning)
+        super(SignalNodeException, self).__init__(str)
+
+class TrainingException(NodeException):
     """Base class for exceptions in the training phase."""
     pass
 
@@ -22,37 +31,37 @@ class IsNotTrainableException(TrainingException):
     node is not trainable."""
     pass
 
-class IsNotInvertibleException(SignalNodeException):
+class IsNotInvertibleException(NodeException):
     """Raised when the 'inverse' function is called although the
     node is not invertible."""
     pass
 
-class SignalNode(object):
-    """A SignalNode corresponds to a learning algorithm or to a generic
-    data processing unit. Each SignalNode can have a training phase,
+class Node(object):
+    """A Node corresponds to a learning algorithm or to a generic
+    data processing unit. Each Node can have a training phase,
     during which the internal structures are learned from training data
     (e.g. the weights of a neural network are adapted or the covariance
     matrix is estimated) and an execution phase, where new data can be
     processed forwards (by processing the data through the node) or
     backwards (by applying the inverse of the transformation computed by
-    the node if defined). The Signalnode class is designed to make the
+    the node if defined). The Node class is designed to make the
     implementation of new algorithms easy and intuitive, for example by
     setting automatically input and output dimension and by casting the
     data to match the typecode (e.g. float or double) of the internal
-    structures. SignalNode was designed to be applied to arbitrarily
+    structures. Node was designed to be applied to arbitrarily
     long sets of data: the internal structures can be updated successively
     by sending chunks of the input data (this is equivalent to online
     learning if the chunks consists of single observations, or to batch
     learning if the whole data is sent in a single chunk).
 
-    A SignalNode can be anything taking a multidimensional input signal
+    A Node can be anything taking a multidimensional input signal
     and returning a multidimensional output signal. It can have two phases: a
     'training' phase, were statistics about the data are collected by calling
     the function 'train', and an 'execution' phase, where the input
     data is processed somehow and output data is returned by calling
     the function 'execute'.
 
-    SignalNode subclasses should take care of redefining (if necessary)
+    Node subclasses should take care of redefining (if necessary)
     the functions is_trainable, train, stop_training, execute, is_invertible,
     inverse, and get_supported_typecodes."""
 
@@ -118,7 +127,7 @@ class SignalNode(object):
     def _set_typecode(self,typecode):
         if self._typecode is not None:
             errstr = "Typecode is already set to '%s' " %(self._typecode)
-            raise SignalNodeException, errstr
+            raise NodeException, errstr
         
         if typecode in self.get_supported_typecodes():
             self._typecode = typecode
@@ -126,7 +135,7 @@ class SignalNode(object):
             errstr = "\nTypecode '%s' is not supported.\n"%typecode+ \
                       "Supported typecodes: %s" \
                       %(str(self.get_supported_typecodes()))
-            raise SignalNodeException, errstr
+            raise NodeException, errstr
 
     def _set_default_inputdim(self, nvariables):
         self._input_dim = nvariables
@@ -139,7 +148,7 @@ class SignalNode(object):
         if not numx.rank(x) == 2:
             error_str = "x has rank %d, should be 2"\
                         %(numx.rank(x))
-            raise SignalNodeException, error_str
+            raise NodeException, error_str
 
         # set the input dimension if necessary
         if not self._input_dim:
@@ -153,11 +162,11 @@ class SignalNode(object):
         if not x.shape[1]==self._input_dim:
             error_str = "x has dimension %d, should be %d" \
                         % (x.shape[1], self._input_dim)
-            raise SignalNodeException, error_str
+            raise NodeException, error_str
 
         if x.shape[0]==0:
             error_str = "x must have at least one observation (zero given)"
-            raise SignalNodeException, error_str
+            raise NodeException, error_str
         
     def _if_training_stop_training(self):
         if self.is_training():
@@ -173,7 +182,7 @@ class SignalNode(object):
         if not y.shape[1]==self._output_dim:
             error_str = "y has dimension %d, should be %d" \
                         % (y.shape[1], self._output_dim)
-            raise SignalNodeException, error_str
+            raise NodeException, error_str
 
     def _refcast(self, x):
         """Helper function to cast arrays to the internal typecode."""
@@ -271,7 +280,7 @@ class SignalNode(object):
             if not self._input_dim:
                 errstr = "Number of input dimensions undefined. Inversion"+\
                          "not possible."
-                raise SignalNodeException, errstr
+                raise NodeException, errstr
             self._set_default_outputdim(self._input_dim)
         
         # control the dimension of y
@@ -283,7 +292,7 @@ class SignalNode(object):
         return self._inverse(self._refcast(y))
 
     def __call__(self,x):
-        """Calling an instance if SignalNode is equivalent to call
+        """Calling an instance if Node is equivalent to call
         its 'execute' method."""
         return self.execute(x)
 
@@ -306,9 +315,17 @@ class SignalNode(object):
         Protocol is the pickle protocol."""
         as_str = _cPickle.dumps(self, protocol)
         return _cPickle.loads(as_str)
+        
+# deprecated alias
+class SignalNode(Node):
+    def __init__(self, input_dim = None, output_dim = None, typecode = None):
+        wrnstr = "The alias 'SignalNode' is deprecated and won't be " + \
+        "continued in future releases. Use 'Node' instead."
+        warnings.warn(wrnstr, DeprecationWarning)
+        super(SignalNode, self).__init__(input_dim, output_dim, typecode)
 
-class Cumulator(SignalNode):
-    """A Cumulator is a SignalNode whose training phase simply cumulates
+class Cumulator(Node):
+    """A Cumulator is a Node whose training phase simply cumulates
     all input data.
     This makes it possible to implement batch-mode learning.
     """
@@ -330,9 +347,8 @@ class Cumulator(SignalNode):
         self.data = numx.array(self.data, typecode = self._typecode)
         self.data.shape = (self.tlen, self._input_dim)
 
-class FiniteSignalNode(SignalNode):
-    """A FiniteSignalNode is a SignalNode with a finite number of training
-    phases.
+class FiniteNode(Node):
+    """A FiniteNode is a Node with a finite number of training phases.
     This class is useful to implement one-shot algorithms."""
 
     # read-only _train_seq property
@@ -342,7 +358,7 @@ class FiniteSignalNode(SignalNode):
     _train_seq = property(lambda self: self.get_train_seq())
     
     def __init__(self, input_dim = None, output_dim = None, typecode = None):
-        super(FiniteSignalNode, self).__init__(input_dim, output_dim, typecode)
+        super(FiniteNode, self).__init__(input_dim, output_dim, typecode)
         if self.is_trainable():
             # this var stores at which point in the training sequence we are
             self._train_phase = 0

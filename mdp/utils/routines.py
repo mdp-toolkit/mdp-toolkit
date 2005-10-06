@@ -204,6 +204,21 @@ def norm2(v):
     
     return numx.sqrt(numx.sum(mdp.utils.squeeze(v*v)))
 
+def ordered_uniq(alist):
+    """Return the elements in alist without repetitions.
+    The order in the list is preserved.
+    Implementation by Raymond Hettinger, 2002/03/17"""
+    set = {}
+    return [set.setdefault(e,e) for e in alist if e not in set]
+
+def uniq(alist):
+    """Return the elements in alist without repetitions.
+    The order in the list is not preserved.
+    Implementation by Raymond Hettinger, 2002/03/17"""
+    set = {}
+    map(set.__setitem__, alist, [])
+    return set.keys()
+
 class CrashRecoveryException(mdp.MDPException):
     """Class to handle crash recovery """
     def __init__(self, *args):
