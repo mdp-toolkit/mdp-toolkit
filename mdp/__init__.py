@@ -133,8 +133,8 @@ from signal_node import NodeException, TrainingException, \
 from linear_flows import FlowException, FlowExceptionCR
 
 # import base node and flow classes.
-from signal_node import Node, Cumulator, FiniteNode
-from linear_flows import Flow, CheckpointFlow, \
+from signal_node import Node, SignalNode, Cumulator, FiniteNode
+from linear_flows import Flow, SimpleFlow, CheckpointFlow, \
      CheckpointFunction, CheckpointSaveFunction
 
 # import helper functions:
