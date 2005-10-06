@@ -18,6 +18,7 @@ if _mdp.numx_description == 'symeig':
     inf = _mdp.numx.inf
     det = _mdp.numx_linalg.det
     inv = _mdp.numx_linalg.inv
+    solve = _mdp.numx_linalg.solve
     array2string = _mdp.numx.array2string
     
 elif _mdp.numx_description == 'scipy':
@@ -32,6 +33,7 @@ elif _mdp.numx_description == 'scipy':
     inf = _mdp.numx.inf
     det = _mdp.numx_linalg.det
     inv = _mdp.numx_linalg.inv
+    solve = _mdp.numx_linalg.solve
     array2string = _mdp.numx.array2string
     
 else:
@@ -45,6 +47,7 @@ else:
 
     det = _mdp.numx_linalg.determinant
     inv = _mdp.numx_linalg.inverse
+    solve = _mdp.numx_linalg.solve_linear_equations
     if _mdp.numx_description=='Numeric':
         array2string = _mdp.numx.array2string
         inf = 1/_mdp.numx.array(0.)
