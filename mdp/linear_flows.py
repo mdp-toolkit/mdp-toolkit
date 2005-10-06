@@ -42,11 +42,11 @@ class FlowExceptionCR(mdp.utils.CrashRecoveryException, FlowException):
 # use this if there's no need for a generator in the flow
 void_generator = []
 
-class SimpleFlow(object):
-    """A SimpleFlow consists in a linear sequence of SignalNodes.
+class Flow(object):
+    """A Flow consists in a linear sequence of SignalNodes.
 
     The data is sent to an input node and is successively processed
-    by the following nodes on the graph. The SimpleFlow class
+    by the following nodes on the graph. The Flow class
     automatizes training, execution and inverse execution
     (if defined) of the whole nodes sequence.
     This class is a Python container class. Most of the builtin 'list'
@@ -73,20 +73,34 @@ class SimpleFlow(object):
         errstr = '\n'+40*'-'+act+'Node Traceback:\n'+prev+40*'-'
         raise FlowExceptionCR,(errstr, self, except_)
 
-    def _train_node(self, generator, nodenr):
+    def _train_node(self, data_iterator, nodenr):
         #trains a single node in the flow
         node = self.flow[nodenr]
         try:
-            for x in generator:
-                # filter x through the previous nodes
-                if nodenr>0: x = self._execute_seq(x, nodenr-1)
-                # train current node
-                node.train(x)
+            first = True
+            while node.is_training():
+                if not first:
+                    # close the previous training phase
+                    # but leave the last training phase open (checkpoints...)
+                    node.stop_training()
+                for x in data_iterator:
+                    # the arguments following the first are passed only to the
+                    # currently trained node, allowing the implementation of
+                    # supervised nodes
+                    if type(x) in [types.TupleType, types.ListType]:
+                        arg = x[1:]
+                        x = x[0]
+                    else:
+                        arg = ()
+                    # filter x through the previous nodes
+                    if nodenr>0: x = self._execute_seq(x, nodenr-1)
+                    # train current node
+                    node.train(x, *arg)
         except mdp.IsNotTrainableException, e:
             # attempted to train a node although it is not trainable.
             # raise a warning and continue with the next node.
             wrnstr = "\n! Node %d in not trainable" % nodenr + \
-                     "\nYou probably need a 'None' generator for"+\
+                     "\nYou probably need a 'None' iterator for"+\
                      " this node. Continuing anyway."
             warnings.warn(wrnstr, mdp.MDPWarning)
         except mdp.TrainingFinishedException, e:
@@ -99,35 +113,34 @@ class SimpleFlow(object):
             # capture any other exception occured during training.
             self._propagate_exception(e, nodenr)
             
-    def _train_check_generators(self, data_generators):
+    def _train_check_iterators(self, data_iterators):
         #verifies that the number of generators matches that of
         #the signal node sand multiplies them if needed.
         flow = self.flow
 
-        if isinstance(data_generators, numx.ArrayType):
-            data_generators = [[data_generators]]*len(flow)
-            
-        if not isinstance(data_generators, list):
-            errstr = "'data_generators' is "+ str(type(data_generators)) + \
+        if isinstance(data_iterators, numx.ArrayType):
+            data_iterators = [[data_iterators]]*len(flow)
+
+        if not isinstance(data_iterators, list):
+            errstr = "'data_iterators' is "+ str(type(data_iterators)) + \
                      " must be either a list of generators or an array"
             raise FlowException, errstr
 
-        # check that all elements are generators or list
-        for i in range(len(data_generators)):
-            el = data_generators[i]
-            if not isinstance(el, (list, types.GeneratorType)):
-                if el is None:
-                    data_generators[i] = []
-                else:
-                    raise FlowException, "Element number %d in the " % i + \
-                          "generator list is not a list or generator."
-        
-        # check that the number of data_generators is correct
-        if len(data_generators)!=len(flow):
+        # check that all elements are iterable
+        for i in range(len(data_iterators)):
+            el = data_iterators[i]
+            if el is None:
+                data_iterators[i] = []
+            elif not hasattr(el, '__iter__'):
+                raise FlowException, "Element number %d in the " % i + \
+                      "generator list is not a list or generator."
+       
+        # check that the number of data_iterators is correct
+        if len(data_iterators)!=len(flow):
             error_str = "%d data sequence generators specified, %d needed"
-            raise FlowException, error_str % (len(data_generators), len(flow))
+            raise FlowException, error_str % (len(data_iterators), len(flow))
 
-        return data_generators
+        return data_iterators
 
     def _close_last_node(self):
         if self.verbose: print "Close the training phase of the last node"
@@ -156,21 +169,21 @@ class SimpleFlow(object):
         """
         self._crash_recovery = state
 
-    def train(self, data_generators):
+    def train(self, data_iterators):
         """Train all trainable nodes in the flow.
         
-        'data_generators' is a list of generators (note that a list is also
+        'data_iterators' is a list of generators (note that a list is also
         a generator), which return data arrays, one for each node in the flow.
         If instead one array is specified, it is used as input training
         sequence for all nodes."""
 
-        data_generators = self._train_check_generators(data_generators)
+        data_iterators = self._train_check_iterators(data_iterators)
         
         # train each SignalNode successively
         for i in range(len(self.flow)):
             if self.verbose: print "Training node #%d (%s)" \
                % (i,str(self.flow[i]))
-            self._train_node(data_generators[i], i)
+            self._train_node(data_iterators[i], i)
             if self.verbose: print "Training finished"
 
         self._close_last_node()
@@ -360,8 +373,10 @@ class SimpleFlow(object):
         del self[i]
         return x
 
+# ?? deprecate this
+SimpleFlow = Flow
         
-class CheckpointFlow(SimpleFlow):
+class CheckpointFlow(Flow):
     """Subclass of SimpleFlow class allows user-supplied checkpoint functions
     to be executed at the end of each phase, for example to
     save the internal structures of a node for later analysis."""
@@ -377,7 +392,7 @@ class CheckpointFlow(SimpleFlow):
         return checkpoints
 
 
-    def train(self, data_generators, checkpoints):
+    def train(self, data_iterators, checkpoints):
         """Train all trainable nodes in the flow.
 
         Additionally calls the checkpoint function 'checkpoint[i]'
@@ -388,7 +403,7 @@ class CheckpointFlow(SimpleFlow):
         The class CheckpointFunction can be used to define user-supplied
         checkpoint functions"""
 
-        data_generators = self._train_check_generators(data_generators)
+        data_iterators = self._train_check_iterators(data_iterators)
         checkpoints = self._train_check_checkpoints(checkpoints)
 
         # train each SignalNode successively
@@ -396,7 +411,7 @@ class CheckpointFlow(SimpleFlow):
             node = self.flow[i]
             if self.verbose:
                 print "Training node #%d (%s)" % (i,type(node).__name__)
-            self._train_node(data_generators[i], i)
+            self._train_node(data_iterators[i], i)
             if (i <= len(checkpoints)) and (checkpoints[i] is not None):
                 dict = checkpoints[i](node)
                 if dict: self.__dict__.update(dict)

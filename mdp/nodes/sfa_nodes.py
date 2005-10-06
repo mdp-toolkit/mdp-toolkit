@@ -1,9 +1,9 @@
 from lcov import CovarianceMatrix
-from mdp import numx, utils, SignalNode, \
+from mdp import numx, utils, SignalNode, FiniteSignalNode, \
      SignalNodeException, TrainingFinishedException
 from mdp.utils import mult, pinv, symeig, LeadingMinorException
 
-class SFANode(SignalNode):
+class SFANode(FiniteSignalNode):
     """SFANode receives an input signal and extracts its slowly varying
     components. More information about Slow Feature Analysis can be found in
     Wiskott, L. and Sejnowski, T.J., Slow Feature Analysis: Unsupervised
@@ -36,17 +36,13 @@ class SFANode(SignalNode):
         # this is faster than a linear_filter or a weave-inline solution
         return x[1:,:]-x[:-1,:]
         
-    def train(self, x):
-        super(SFANode, self).train(x)
-        x = self._refcast(x)
+    def _train(self, x):
         ## update the covariance matrices
         # cut the final point to avoid a trivial solution in special cases
         self._cov_mtx.update(x[:-1,:])
         self._dcov_mtx.update(self.time_derivative(x))
 
-    def stop_training(self):
-        super(SFANode, self).stop_training()
-
+    def _stop_training(self):
         ##### request the covariance matrices and clean up
         cov_mtx, self.avg, self.tlen = self._cov_mtx.fix()
         del self._cov_mtx
@@ -73,14 +69,11 @@ class SFANode(SignalNode):
             errstr = str(exception)+"\n Covariance matrices may be singular."
             raise SignalNodeException,errstr
             
-    def execute(self, x, range=None):
+    def _execute(self, x, range=None):
         """Compute the output of the slowest functions.
         if 'range' is a number, then use the first 'range' functions.
         if 'range' is the interval=(i,j), then use all functions
                    between i and j."""
-        super(SFANode, self).execute(x)
-        x = self._refcast(x)
-        
         if range:
             if isinstance(range, (list, tuple)):
                 sf = self.sf[:,range[0]:range[1]]
@@ -90,9 +83,7 @@ class SFANode(SignalNode):
             sf = self.sf
         return mult(x-self.avg, sf)
 
-    def inverse(self, y):
-        SignalNode.inverse(self, y)
-        y = self._refcast(y)
+    def _inverse(self, y):
         return mult(y, pinv(self.sf))+self.avg
 
 # backwards compatibility

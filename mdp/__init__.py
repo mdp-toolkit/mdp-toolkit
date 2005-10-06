@@ -123,6 +123,9 @@ class MDPWarning(UserWarning):
     """Base class for warnings in MDP."""
     pass
 
+# import the utils module (used by other modules)
+import utils
+
 # import exceptions from nodes and flows
 from signal_node import SignalNodeException, TrainingException, \
      TrainingFinishedException, IsNotTrainableException, \
@@ -130,16 +133,15 @@ from signal_node import SignalNodeException, TrainingException, \
 from linear_flows import FlowException, FlowExceptionCR
 
 # import base node and flow classes.
-from signal_node import SignalNode, Cumulator, IdentityNode    
+from signal_node import SignalNode, Cumulator, FiniteSignalNode
 from linear_flows import SimpleFlow, CheckpointFlow, \
      CheckpointFunction, CheckpointSaveFunction
 
-# import our modules
-import nodes
-import utils
-import test
-
 # import helper functions:
 from helper_funcs import pca, whitening, fastica, cubica, sfa, get_eta
+
+# import our modules
+import nodes
+import test
 
 __version__ = '1.2.0.bore_revision'

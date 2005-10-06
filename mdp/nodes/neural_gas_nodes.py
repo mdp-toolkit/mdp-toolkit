@@ -1,5 +1,5 @@
 import graph
-from mdp import numx, numx_rand, utils, IdentityNode, SignalNode
+from mdp import numx, numx_rand, utils, FiniteSignalNode
 
 class _GNGNodeData(object):
     """Data associated to a node in a Growing Neural Gas graph."""
@@ -19,7 +19,7 @@ class _GNGEdgeData(object):
         self.age += 1
 
 
-class GrowingNeuralGasNode(IdentityNode):
+class GrowingNeuralGasNode(FiniteSignalNode):
     """GrowingNeuralGasNode learns the topological structure of its input,
     by building a corresponding graph approximation.
     More information about the Growing Neural Gas algorithm can be found in
@@ -162,9 +162,7 @@ class GrowingNeuralGasNode(IdentityNode):
         return numx.array(map(lambda n: n.data.pos, self.graph.nodes),
                           typecode = self._typecode)
 
-    def train(self, input):
-        super(GrowingNeuralGasNode, self).train(input)
-        input = self._refcast(input)
+    def _train(self, input):
         g = self.graph
         d = self.d
 
@@ -218,6 +216,9 @@ class GrowingNeuralGasNode(IdentityNode):
             # step 9 - decrease errors
             def _mult_err(node): node.data.cum_error *= d
             map(_mult_err, g.nodes)
+
+    def _stop_training(self):
+        pass
 
     def nearest_neighbor(self, input):
         """Assign each point in the input data to the nearest node in

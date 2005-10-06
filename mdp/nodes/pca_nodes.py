@@ -1,9 +1,9 @@
-from mdp import numx, SignalNode, \
+from mdp import numx, FiniteSignalNode, \
      SignalNodeException, TrainingFinishedException
 from mdp.utils import mult, symeig, LeadingMinorException
 from lcov import CovarianceMatrix
 
-class PCANode(SignalNode):
+class PCANode(FiniteSignalNode):
     """PCANode receives an input signal and filters it through
     the most significatives of its principal components.
     More information about Principal Component Analysis, a.k.a. discrete
@@ -45,15 +45,11 @@ class PCANode(SignalNode):
         """
         return self.explained_variance
     
-    def train(self, x):
-        super(PCANode, self).train(x)
+    def _train(self, x):
         # update the covariance matrix
-        x = self._refcast(x)
         self._cov_mtx.update(x)
         
-    def stop_training(self):
-        super(PCANode, self).stop_training()
-
+    def _stop_training(self):
         ##### request the covariance matrix and clean up
         cov_mtx, avg, self.tlen = self._cov_mtx.fix()
         del self._cov_mtx
@@ -129,7 +125,7 @@ class PCANode(SignalNode):
 
     def get_projmatrix(self ,transposed=1):
         """Return the projection matrix."""
-        self._check_if_training()
+        self._if_training_stop_training()
         if transposed:
             return self.v
         return numx.transpose(self.v)
@@ -137,25 +133,21 @@ class PCANode(SignalNode):
     def get_recmatrix(self, transposed=1):
         """Return the back-projection matrix (i.e. the reconstruction matrix).
         """
-        self._check_if_training()
+        self._if_training_stop_training()
         if transposed:
             return numx.transpose(self.v)
         return self.v
 
-    def execute(self, x, n = None):
+    def _execute(self, x, n = None):
         """Project the input on the first 'n' principal components.
         If 'n' is not set, use all available components."""
-        super(PCANode, self).execute(x)
-        x = self._refcast(x)
         if n is not None:
             return mult(x-self.avg, self.v[:,:n])
         return mult(x-self.avg, self.v)
 
-    def inverse(self, y, n = None):
+    def _inverse(self, y, n = None):
         """Project 'y' to the input space using the first 'n' components.
         If 'n' is not set, use all available components."""
-        super(PCANode, self).inverse(y)
-        y = self._refcast(y)
         if n is None:
             n = y.shape[1]
         if n>self._output_dim:
@@ -172,8 +164,8 @@ class WhiteningNode(PCANode):
     it through the most significatives of its principal components. All output
     signals have zero mean, unit variance and are decorrelated."""
     
-    def stop_training(self):
-        super(WhiteningNode, self).stop_training()
+    def _stop_training(self):
+        super(WhiteningNode, self)._stop_training()
 
         ##### whiten the filters
         # self.v is now the _whitening_ matrix
@@ -181,13 +173,13 @@ class WhiteningNode(PCANode):
 
     def get_eigenvectors(self):
         """Return the eigenvectors of the covariance matrix."""
-        self._check_if_training()
+        self._if_training_stop_training()
         return numx.sqrt(self.d)*self.v
 
     def get_recmatrix(self, transposed=1):
         """Return the back-projection matrix (i.e. the reconstruction matrix).
         """
-        self._check_if_training()
+        self._if_training_stop_training()
         v_inverse = self.v*self.d
         if transposed:
             return numx.transpose(v_inverse)

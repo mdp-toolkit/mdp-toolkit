@@ -1,4 +1,4 @@
-from mdp import numx, utils, SignalNode,IdentityNode, SignalNodeException
+from mdp import numx, utils, FiniteSignalNode, SignalNodeException
 
 class OneDimensionalHitParade(object):
     """
@@ -86,7 +86,7 @@ class OneDimensionalHitParade(object):
 
     
     
-class HitParadeNode(IdentityNode):
+class HitParadeNode(FiniteSignalNode):
     """HitParadeNode gets a multidimensional input signal and stores the first
     'n' local maxima and minima, which are separated by a minimum gap 'd'.
     This is called HitParade.
@@ -121,8 +121,7 @@ class HitParadeNode(IdentityNode):
     def get_supported_typecodes(self):
         return ['i','l','f','d']
 
-    def train(self, x):
-        super(HitParadeNode, self).train(x)
+    def _train(self, x):
         hit = self.hit
         old_tlen = self.tlen
         if hit is None:
@@ -135,6 +134,9 @@ class HitParadeNode(IdentityNode):
             hit[c].update((x[:,c],indices))
         self.hit = hit
         self.tlen = tlen
+
+    def _stop_training(self):
+        pass
 
     def copy(self, protocol = 0):
         """Return a deep copy of the node.
@@ -171,7 +173,7 @@ class HitParadeNode(IdentityNode):
             m[:,c],im[:,c] = hit[c].get_minima()
         return m,im
 
-class TimeFramesNode(SignalNode):
+class TimeFramesNode(FiniteSignalNode):
     """TimeFramesNode receives a multidimensional input signal and copies on
     the space dimensions delayed version of the same signal. Example:
 
@@ -200,10 +202,7 @@ class TimeFramesNode(SignalNode):
     def _set_default_outputdim(self, nvariables):
         self._output_dim = nvariables*self.time_frames
             
-    def execute(self, x):
-        super(TimeFramesNode, self).execute(x)
-        x = self._refcast(x)
-        
+    def _execute(self, x):
         gap = self.gap
         tf = x.shape[0]- (self.time_frames-1)*gap
         rows = self._input_dim
@@ -217,6 +216,23 @@ class TimeFramesNode(SignalNode):
         """This function returns a pseudo-inverse of the execute frame.
         y == execute(x) only if y belongs to the domain of execute and
         has been computed with a sufficently large x."""
+        
+        self._if_training_stop_training()
+
+        # set the output dimension if necessary
+        if not self._output_dim:
+            # if the input_dim is not defined, raise an exception
+            if not self._input_dim:
+                errstr = "Number of input dimensions undefined. Inversion"+\
+                         "not possible."
+                raise SignalNodeException, errstr
+            self._set_default_outputdim(self._input_dim)
+        
+        # control the dimension of y
+        self._check_output(y)
+        # cast
+        y = self._refcast(y)
+        
         gap = self.gap
         exp_length = y.shape[0]
         cols = self._input_dim
@@ -233,7 +249,7 @@ class TimeFramesNode(SignalNode):
         return x
 
 
-class EtaComputerNode(IdentityNode):
+class EtaComputerNode(FiniteSignalNode):
     """Node to compute the eta values of the normalized training data.
 
     The delta value of a signal is a measure of its temporal
@@ -281,8 +297,8 @@ class EtaComputerNode(IdentityNode):
         self._diff2 = numx.zeros((input_dim,), typecode='d')
         self._initialized = 1
 
-    def train(self, data):
-        super(EtaComputerNode, self).train(data)
+    def _train(self, data):
+        # ?? refcast automatico
         if not self._initialized: self._init_internals()
         #
         rdata = data[:-1]
@@ -291,8 +307,7 @@ class EtaComputerNode(IdentityNode):
         self._tlen += rdata.shape[0]
         self._diff2 += numx.sum(utils.timediff(data)**2)
 
-    def stop_training(self):
-        super(EtaComputerNode, self).stop_training()
+    def _stop_training(self):
         var_tlen = self._tlen-1
         var = (self._var/var_tlen) - (self._mean/self._tlen)**2
         delta = (self._diff2/self._tlen)/var
@@ -306,7 +321,7 @@ class EtaComputerNode(IdentityNode):
         return self._refcast(self._eta*t)
 
 
-class NoiseNode(SignalNode):
+class NoiseNode(FiniteSignalNode):
     """Node to add noise to input data.
 
     Original idea by Mathias Franzius.
@@ -345,9 +360,7 @@ class NoiseNode(SignalNode):
     def is_invertible(self):
         return 0
 
-    def execute(self, x):
-        super(NoiseNode, self).execute(x)
-        x = self._refcast(x)
+    def _execute(self, x):
         noise_mat = self._refcast(self.noise_func(*self.noise_args,
                                                   **{'shape': x.shape}))
         if self.noise_type == 'additive':

@@ -25,21 +25,17 @@ class _CheckpointCollectFunction(mdp.CheckpointFunction):
     def __call__(self, node):
         self.classes.append(node.__class__)
 
-class _BogusNode(mdp.SignalNode):
-    def execute(self,x):
-        mdp.SignalNode.execute(self,x)
-        return 2*x
+class _BogusNode(mdp.FiniteSignalNode):
+    def is_trainable(self): return 0
+    def _execute(self,x): return 2*x
+    def _inverse(self,x): return 0.5*x
 
-    def inverse(self,x):
-        mdp.SignalNode.inverse(self,x)
-        return 0.5*x
-
-class _BogusExceptNode(mdp.SignalNode):
-    def train(self,x):
+class _BogusExceptNode(mdp.FiniteSignalNode):
+    def _train(self,x):
         self.bogus_attr = 1
         raise Exception, "Bogus Exception"
     
-    def execute(self,x):
+    def _execute(self,x):
         raise Exception, "Bogus Exception"
 
 class FlowsTestCase(unittest.TestCase):
@@ -222,7 +218,7 @@ class FlowsTestCase(unittest.TestCase):
         flow = mdp.SimpleFlow([_BogusExceptNode()])
         flow.set_crash_recovery(1)
         try:
-            flow.train([[None]])
+            flow.train(mdp.numx.zeros((1,2), 'd'))
         except Exception, e:
             assert isinstance(e,mdp.FlowExceptionCR)
             fl = file(e.filename)

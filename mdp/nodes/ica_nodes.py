@@ -8,7 +8,7 @@ utils = mdp.utils
 mult = utils.mult
 t = numx.transpose
 
-class ICANode(mdp.Cumulator):
+class ICANode(mdp.Cumulator, mdp.FiniteSignalNode):
     """
     ICANode is a general class to handle different batch-mode algorithm for
     Independent Component Analysis. More information about ICA can be found
@@ -41,15 +41,17 @@ class ICANode(mdp.Cumulator):
     def get_supported_typecodes(self):
         return ['f','d']
 
-    def stop_training(self):
+    def _stop_training(self):
         """Whiten data if needed and call the 'core' routine to perform ICA.
            Take care of telescope-mode if needed.
         """
-        super(ICANode, self).stop_training()
+        super(ICANode, self)._stop_training()
+        
         verbose = self.verbose
         core = self.core
         limit = self.limit
-        
+
+        # ?? rewrite as a 2-phases node
         # whiten if needed
         if not self.whitened:
             self._set_default_outputdim(self.white_comp)
@@ -85,16 +87,12 @@ class ICANode(mdp.Cumulator):
         defining the linear transformation."""
         pass
 
-    def execute(self, x):
-        super(ICANode, self).execute(x)
-        x = self._refcast(x)
+    def _execute(self, x):
         if not self.whitened:
             x = self.white.execute(x)
         return mult(x,self.filters)
 
-    def inverse(self, y):
-        super(ICANode, self).inverse(y)
-        y = self._refcast(y)
+    def _inverse(self, y):
         y = mult(y,t(self.filters))
         if not self.whitened:
             y = self.white.inverse(y)

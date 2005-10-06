@@ -1,7 +1,5 @@
 import cPickle as _cPickle
-import inspect as _inspect
 import mdp
-from mdp.utils import refcast, scast
 
 # import numeric module (scipy, Numeric or numarray)
 numx = mdp.numx
@@ -73,27 +71,31 @@ class SignalNode(object):
         self._typecode = None
         if typecode is not None:
             self._set_typecode(typecode)
-            
-        self.__training = -1
-
+ 
         # skip the training phase if the node is not trainable
         if not self.is_trainable():
-            self.stop_training()
+            self._training = False
+        else:
+            # this var is False if the training of the current phase hasn't
+            #  started yet, True otherwise
+            self._train_phase_started = False
+            # this var is False if the complete training is finished
+            self._training = True
 
     ### getters
 
     def is_training(self):
-        """Return 1 if the node is in the training phase, -1 if the training
-        phase has not yet started, and 0 otherwise."""
-        return self.__training
+        """Return True if the node is in the training phase,
+        False otherwise."""
+        return self._training
 
     def is_trainable(self):
-        """Return 1 if the node can be trained, 0 otherwise."""
-        return 1
+        """Return True if the node can be trained, False otherwise."""
+        return True
 
     def is_invertible(self):
-        """Return 1 if the node can be inverted, 0 otherwise."""
-        return 1
+        """Return True if the node can be inverted, False otherwise."""
+        return True
 
     def get_input_dim(self):
         """Return input dimensions."""
@@ -102,6 +104,16 @@ class SignalNode(object):
     def get_output_dim(self):
         """Return output dimensions."""
         return self._output_dim
+
+    def get_supported_typecodes(self):
+        """Return the list of typecodes supported by this node."""
+        return ['i','l','f','d','F','D']
+
+    def get_typecode(self):
+        """Return typecode."""
+        return self._typecode
+
+    ### default settings- and check- functions
 
     def _set_typecode(self,typecode):
         if self._typecode is not None:
@@ -115,16 +127,6 @@ class SignalNode(object):
                       "Supported typecodes: %s" \
                       %(str(self.get_supported_typecodes()))
             raise SignalNodeException, errstr
-
-    def get_supported_typecodes(self):
-        """Return the list of typecodes supported by this node."""
-        return ['i','l','f','d','F','D']
-
-    def get_typecode(self):
-        """Return typecode."""
-        return self._typecode
-
-    ### default settings- and check- functions
 
     def _set_default_inputdim(self, nvariables):
         self._input_dim = nvariables
@@ -157,10 +159,14 @@ class SignalNode(object):
             error_str = "x must have at least one observation (zero given)"
             raise SignalNodeException, error_str
         
-    def _check_if_training(self):
-        #If training stop training.
+    def _if_training_stop_training(self):
         if self.is_training():
             self.stop_training()
+            # there are more training phases or the system has not
+            # converged
+            if self.is_training():
+                raise TrainingException, \
+                      "The training phases are not completed yet."
 
     def _check_output(self, y):
         # check the output dimension
@@ -171,16 +177,35 @@ class SignalNode(object):
 
     def _refcast(self, x):
         """Helper function to cast arrays to the internal typecode."""
-        return refcast(x,self._typecode)
+        return mdp.utils.refcast(x,self._typecode)
 
     def _scast(self, scalar):
         """Helper function to cast scalars to the internal typecode."""
         # if numeric finally becomes scipy_base we will remove this.
-        return scast(scalar, self._typecode)
+        return mdp.utils.scast(scalar, self._typecode)
     
     ### main functions
+
+    # this are the functions the user has to overwrite
+    # they receive the data already casted to the correct type
     
-    def train(self, x):
+    def _train(self, x, *args):
+        raise NotImplementedError
+
+    def _stop_training(self):
+        # implementations of this function MUST explicitly set
+        # self._training = False when necessary
+        raise NotImplementedError
+    
+    def _execute(self, x):
+        return x
+        
+    def _inverse(self, x):
+        return x
+
+    # the user interface to the overwritten functions
+    
+    def train(self, x, *args):
         """Update the internal structures according to the input data 'x'.
         
         'x' is a matrix having different variables on different columns
@@ -195,19 +220,23 @@ class SignalNode(object):
 
         # control the dimension of x
         self._check_input(x)
-
-        self.__training = 1
+        
+        self._train_phase_started = True
+        self._train(self._refcast(x), *args)
         
     def stop_training(self):
         """Stop the training phase."""
-        if self.is_trainable() and self.__training == -1:
+        if self.is_trainable() and self._train_phase_started == False:
             raise TrainingException, \
                   "The node has not been trained."
         
         if not self.is_training():
             raise TrainingFinishedException, \
                   "The training phase has already finished."
-        self.__training = 0
+
+        # implementations of this function MUST explicitly set
+        # self._training = False when necessary
+        self._stop_training()
         
     def execute(self, x):
         """Process the data contained in 'x'.
@@ -217,8 +246,7 @@ class SignalNode(object):
         'x' is a matrix having different variables on different columns
         and observations on the rows."""
         
-        # if training stop training
-        self._check_if_training()
+        self._if_training_stop_training()
         
         # control the dimension x
         self._check_input(x)
@@ -227,14 +255,15 @@ class SignalNode(object):
         if not self._output_dim:
             self._set_default_outputdim(self._input_dim)
 
+        return self._execute(self._refcast(x))
+
     def inverse(self, y):
-        """Invert 'x'.
+        """Invert 'y'.
         
         If the node is invertible, compute the input x such that
         y = execute(x)."""
         
-        # if training stop training 
-        self._check_if_training()
+        self._if_training_stop_training()
 
         # set the output dimension if necessary
         if not self._output_dim:
@@ -251,12 +280,15 @@ class SignalNode(object):
         if not self.is_invertible():
             raise IsNotInvertibleException, "This node is not invertible."
 
+        return self._inverse(self._refcast(y))
+
     def __call__(self,x):
         """Calling an instance if SignalNode is equivalent to call
         its 'execute' method."""
         return self.execute(x)
 
     ###### string representation
+    
     def __str__(self):
         return str(type(self).__name__)
     
@@ -286,32 +318,78 @@ class Cumulator(SignalNode):
         self.data = []
         self.tlen = 0
 
-    def train(self,x):
+    def _train(self, x):
         """Cumulate all imput data in a one dimensional list.
         """
-        super(Cumulator, self).train(x)
-        x = self._refcast(x)
         self.tlen += x.shape[0]
         self.data.extend(numx.ravel(x).tolist())
 
-    def stop_training(self):
+    def _stop_training(self):
         """Cast the data list to array type and reshape it.
         """
-        super(Cumulator, self).stop_training()
         self.data = numx.array(self.data, typecode = self._typecode)
         self.data.shape = (self.tlen, self._input_dim)
 
-class IdentityNode(SignalNode):
-    """An IdentityNode is a SignalNode that performs the identity operation,
-    i.e. returns the input when 'execute' and 'inverse' methods are called.
-    It is useful to generate subclasses of nodes that only perform analysis
-    on input data, without modifying it. 
-    """
+class FiniteSignalNode(SignalNode):
+    """A FiniteSignalNode is a SignalNode with a finite number of training
+    phases.
+    This class is useful to implement one-shot algorithms."""
 
-    def execute(self,x):
-        super(IdentityNode, self).execute(x)
-        return self._refcast(x)
+    # read-only _train_seq property
+    def get_train_seq(self):
+        return [(self._train, self._stop_training)]
+     # the lambda allows the overriding of the get function
+    _train_seq = property(lambda self: self.get_train_seq())
+    
+    def __init__(self, input_dim = None, output_dim = None, typecode = None):
+        super(FiniteSignalNode, self).__init__(input_dim, output_dim, typecode)
+        if self.is_trainable():
+            # this var stores at which point in the training sequence we are
+            self._train_phase = 0
 
-    def inverse(self,x):
-        super(IdentityNode, self).inverse(x)
-        return self._refcast(x)
+    def _if_training_stop_training(self):
+        if self.is_training():
+            if not self._train_phase == len(self._train_seq)-1:
+                raise TrainingException, \
+                      "The training phases are not completed yet."
+            else:
+                self.stop_training()
+
+    def train(self, x, *args):
+        """Update the internal structures according to the input data 'x'.
+        
+        'x' is a matrix having different variables on different columns
+        and observations on the rows."""
+
+        if not self.is_trainable():
+            raise IsNotTrainableException, "This node is not trainable."
+
+        if not self.is_training():
+            raise TrainingFinishedException, \
+                  "The training phase has already finished."
+
+        # control the dimension of x
+        self._check_input(x)
+        
+        self._train_phase_started = True
+        self._train_seq[self._train_phase][0](self._refcast(x), *args)
+        
+    def stop_training(self):
+        """Stop the training phase."""
+        if self.is_trainable() and self._train_phase_started == False:
+            raise TrainingException, \
+                  "The node has not been trained."
+        
+        if not self.is_training():
+            raise TrainingFinishedException, \
+                  "The training phase has already finished."
+
+        # close the current phase and initialize the next
+        self._train_seq[self._train_phase][1]()
+        self._train_phase += 1
+        self.train_phase_started = False
+
+        if self._train_phase >= len(self._train_seq):
+            # training phases finished
+            self._training = False
+        
