@@ -1,11 +1,9 @@
 import mdp
 import sys
 import traceback
-import types
 import cPickle
 import warnings
 import tempfile
-import os
 
 # import numeric module (scipy, Numeric or numarray)
 numx = mdp.numx
@@ -37,10 +35,6 @@ class FlowExceptionCR(mdp.utils.CrashRecoveryException, FlowException):
             errstr = errstr+dumpinfo    
 
         Exception.__init__(self,errstr)
-
-
-# use this if there's no need for a generator in the flow
-void_generator = []
 
 class Flow(object):
     """A Flow consists in a linear sequence of Nodes.
@@ -82,18 +76,19 @@ class Flow(object):
                     # the arguments following the first are passed only to the
                     # currently trained node, allowing the implementation of
                     # supervised nodes
-                    if type(x) in [types.TupleType, types.ListType]:
+                    if isinstance(x, (list, tuple)):
                         arg = x[1:]
                         x = x[0]
                     else:
                         arg = ()
                     # filter x through the previous nodes
-                    if nodenr>0: x = self._execute_seq(x, nodenr-1)
+                    if nodenr > 0: x = self._execute_seq(x, nodenr-1)
                     # train current node
                     node.train(x, *arg)
                     # close the previous training phase
                     # ?? but leave the last training phase open (checkpoints...)
                     node.stop_training()
+                    
         except mdp.IsNotTrainableException, e:
             # attempted to train a node although it is not trainable.
             # raise a warning and continue with the next node.
@@ -113,7 +108,7 @@ class Flow(object):
             
     def _train_check_iterators(self, data_iterators):
         #verifies that the number of generators matches that of
-        #the signal node sand multiplies them if needed.
+        #the signal nodes and multiplies them if needed.
         flow = self.flow
 
         if isinstance(data_iterators, numx.ArrayType):
