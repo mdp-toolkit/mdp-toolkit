@@ -70,6 +70,14 @@ class Flow(object):
     def _train_node(self, data_iterator, nodenr):
         #trains a single node in the flow
         node = self.flow[nodenr]
+        if data_iterator is not None and not node.is_trainable():
+            # attempted to train a node although it is not trainable.
+            # raise a warning and continue with the next node.
+            wrnstr = "\n! Node %d in not trainable" % nodenr + \
+                     "\nYou probably need a 'None' iterator for"+\
+                     " this node. Continuing anyway."
+            warnings.warn(wrnstr, mdp.MDPWarning)
+            return
         try:
             while node.is_training():
                 for x in data_iterator:
@@ -85,17 +93,9 @@ class Flow(object):
                     if nodenr > 0: x = self._execute_seq(x, nodenr-1)
                     # train current node
                     node.train(x, *arg)
-                    # close the previous training phase
-                    # ?? but leave the last training phase open (checkpoints...)
-                    node.stop_training()
-                    
-        except mdp.IsNotTrainableException, e:
-            # attempted to train a node although it is not trainable.
-            # raise a warning and continue with the next node.
-            wrnstr = "\n! Node %d in not trainable" % nodenr + \
-                     "\nYou probably need a 'None' iterator for"+\
-                     " this node. Continuing anyway."
-            warnings.warn(wrnstr, mdp.MDPWarning)
+                # close the previous training phase
+                # ?? but leave the last training phase open (checkpoints...)
+                node.stop_training()
         except mdp.TrainingFinishedException, e:
             # attempted to train a node although its training phase is already
             # finished. raise a warning and continue with the next node.
