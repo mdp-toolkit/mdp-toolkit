@@ -85,7 +85,7 @@ class OneDimensionalHitParade(object):
     
     
 class HitParadeNode(IdentityNode):
-    """HitParadeNode gets an multidimensional input signal and stores the first
+    """HitParadeNode gets a multidimensional input signal and stores the first
     'n' local maxima and minima, which are separated by a minimum gap 'd'.
     This is called HitParade.
 
