@@ -7,6 +7,7 @@ MDP-?.?.?:
 23.06.2005: _check_roundoff in lcov.py issues a MDPWarning using warnings.warn.
             it was using 'raise' before, and it was caught as a FlowException.
 21.06.2005: node consistency is assured at flow instantiation.
+05.10.2005: fixed failing 'import mdp' in test_symeig when mdp is not installed.
 06.10.2005: some bug fixes.
 06.10.2005: SignalNode, SignalNodeException, and SimpleFlow are now
             deprecated aliases. Use Node, NodeException and Flow instead.
