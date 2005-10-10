@@ -122,9 +122,7 @@ class Flow(object):
         # check that all elements are iterable
         for i in range(len(data_iterators)):
             el = data_iterators[i]
-            if el is None:
-                data_iterators[i] = []
-            elif not hasattr(el, '__iter__'):
+            if el is not None and not hasattr(el, '__iter__'):
                 raise FlowException, "Element number %d in the " % i + \
                       "generator list is not a list or generator."
        

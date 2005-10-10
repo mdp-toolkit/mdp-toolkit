@@ -58,8 +58,7 @@ class FlowsTestCase(unittest.TestCase):
     def testFlow(self):
         inp = numx.ones((100,3))
         flow = self._get_default_flow()
-        flow.train(inp)
-        for i in range(len(flow.flow)):
+        for i in range(len(flow)):
             assert not flow.flow[i].is_training(), \
                    'Training of node #%d has not been closed.' % i
 
@@ -82,7 +81,6 @@ class FlowsTestCase(unittest.TestCase):
     def testFlow_container_privmethods(self):
         mat,mix,inp = self._get_random_mix(mat_dim=(100,3))
         flow = self._get_default_flow()
-        flow.train(inp)
         # test __len__ 
         assert_equal(len(flow), len(flow.flow))
         # test __?etitem__, integer key
@@ -202,14 +200,15 @@ class FlowsTestCase(unittest.TestCase):
             lst.append(1)
         mat,mix,inp = self._get_random_mix(mat_dim=(100,3))
         flow = self._get_default_flow(flow_class = mdp.CheckpointFlow)
-        flow.train(inp, cfunc)
+        flow.train([None]*len(flow), cfunc)
         #
         assert len(lst)==len(flow), 'The checkpoint function has been called %d times instead of %d times.' % (len(lst), len(flow))
+        
     def testCheckpointFunction(self):
         cfunc = _CheckpointCollectFunction()
         mat,mix,inp = self._get_random_mix(mat_dim=(100,3))
         flow = self._get_default_flow(flow_class = mdp.CheckpointFlow)
-        flow.train(inp, cfunc)
+        flow.train([None]*len(flow), cfunc)
         #
         for i in range(len(flow)):
             assert flow[i].__class__==cfunc.classes[i], 'Wrong class collected'
