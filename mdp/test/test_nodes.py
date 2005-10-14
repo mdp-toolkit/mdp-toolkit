@@ -286,6 +286,8 @@ class NodesTestSuite(unittest.TestSuite):
                                   [0,0],self.decimal)
         assert_array_almost_equal(std(act_mat,axis=0),\
                                   des_var,self.decimal)
+        # test a bug in v.1.1.1, should not crash
+        pca.inverse(act_mat[:,:1])
 
     def testWhiteningNode(self):
         vars = 5

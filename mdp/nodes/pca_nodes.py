@@ -21,6 +21,18 @@ class PCANode(FiniteNode):
 
         # empirical covariance matrix, updated during the training phase
         self._cov_mtx = CovarianceMatrix(typecode)
+        
+    def _check_output(self, y):
+        # check output rank
+        if not numx.rank(y) == 2:
+            error_str = "y has rank %d, should be 2"\
+                        %(numx.rank(y))
+            raise SignalNodeException, error_str
+
+        if y.shape[1]==0 or y.shape[1]>self._output_dim:
+            error_str = "y has dimension %d, should be 0<y<=%d" \
+                        % (y.shape[1], self._output_dim)
+            raise SignalNodeException, error_str
 
     def set_output_dim(self, output_dim):
         """Set output dimensions.
