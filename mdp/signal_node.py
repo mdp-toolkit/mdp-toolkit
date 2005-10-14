@@ -163,6 +163,12 @@ class SignalNode(object):
             self.stop_training()
 
     def _check_output(self, y):
+        # check output rank
+        if not numx.rank(y) == 2:
+            error_str = "y has rank %d, should be 2"\
+                        %(numx.rank(y))
+            raise SignalNodeException, error_str
+
         # check the output dimension
         if not y.shape[1]==self._output_dim:
             error_str = "y has dimension %d, should be %d" \
