@@ -9,7 +9,7 @@ import tempfile
 numx = mdp.numx
 
 class FlowException(mdp.MDPException):
-    """Base class for exceptions in SimpleFlow subclasses."""
+    """Base class for exceptions in Flow subclasses."""
     pass
 
 class FlowExceptionCR(mdp.utils.CrashRecoveryException, FlowException):

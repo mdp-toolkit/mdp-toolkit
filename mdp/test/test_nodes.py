@@ -525,7 +525,7 @@ class NodesTestSuite(unittest.TestSuite):
         x = numx.take(x, perm_idx)
         classes = numx.take(classes, perm_idx)
 
-        flow = mdp.SimpleFlow([mdp.nodes.FDANode()])
+        flow = mdp.Flow([mdp.nodes.FDANode()])
         flow.train([[(x, classes)]])
         fda_node = flow[0]
 
