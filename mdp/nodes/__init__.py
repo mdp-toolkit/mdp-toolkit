@@ -3,4 +3,5 @@ from pca_nodes import WhiteningNode, PCANode
 from sfa_nodes import SFANode
 from ica_nodes import ICANode,CuBICANode,FastICANode
 from neural_gas_nodes import GrowingNeuralGasNode
+from fda_nodes import FDANode
 from misc_nodes import HitParadeNode, TimeFramesNode, EtaComputerNode, NoiseNode

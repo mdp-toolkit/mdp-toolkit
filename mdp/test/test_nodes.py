@@ -17,6 +17,7 @@ numx_rand = mdp.numx_rand
 mean = mdp.utils.mean
 std = mdp.utils.std
 covariance = mdp.utils.cov
+normal = mdp.utils.normal
 tr = numx.transpose
 testtypes = ['d', 'f']
 testdecimals = {'d':16, 'f':7}
@@ -31,6 +32,9 @@ def _cov(x,y=None):
     y = y - mean(y,0)
     y = y  / std(y,0)
     return mult(tr(x),y)/(x.shape[0]-1)
+
+def _rand_labels(x):
+    return numx.round(numx_rand.random(x.shape[0]))
     
 class NodesTestSuite(unittest.TestSuite):
 
@@ -41,45 +45,51 @@ class NodesTestSuite(unittest.TestSuite):
         self.mat_dim = (100,5)
         self.decimal = 7
         mn = mdp.nodes
+        # self._nodes = node_class or
+        #              (node_class, constructuctor_args,
+        #               function_that_returns_argument_for_the_train_func)
         self._nodes = [mn.PCANode,
                        mn.WhiteningNode,
                        mn.SFANode,
                        mn.CuBICANode,
                        mn.FastICANode,
                        mn.QuadraticExpansionNode,
-                       (mn.PolynomialExpansionNode, [3]),
-                       (mn.HitParadeNode, [2, 5]),
-                       (mn.TimeFramesNode, [3, 4]),
+                       (mn.PolynomialExpansionNode, [3], None),
+                       (mn.HitParadeNode, [2, 5], None),
+                       (mn.TimeFramesNode, [3, 4], None),
                        mn.EtaComputerNode,
                        mn.GrowingNeuralGasNode,
-                       mn.NoiseNode]
+                       mn.NoiseNode,
+                       (mn.FDANode, [], _rand_labels)]
 
         # generate generic test cases
         for node_class in self._nodes:
             if isinstance(node_class, tuple):
-                node_class, args = node_class
+                node_class, args, sup_args_func = node_class
             else:
                 args = []
+                sup_args_func = None
 
             # generate single testinverse_nodeclass test cases
             funcdesc = 'Test inverse function of '+node_class.__name__
-            testfunc = self._get_testinverse(node_class, args)
+            testfunc = self._get_testinverse(node_class, args, sup_args_func)
             # add to the suite
             self.addTest(unittest.FunctionTestCase(testfunc,
                                                    description=funcdesc))
             # generate testtypecode_nodeclass test cases
             funcdesc = 'Test typecode consistency of '+node_class.__name__
-            testfunc = self._get_testtypecode(node_class, args)
+            testfunc = self._get_testtypecode(node_class, args, sup_args_func)
             # add to the suite
             self.addTest(unittest.FunctionTestCase(testfunc,
                                                    description=funcdesc))
             # generate testoutputdim_nodeclass test cases
             if hasattr(node_class, 'set_output_dim'):
                 funcdesc = 'Test output dim consistency of '+node_class.__name__
-                testfunc = self._get_testoutputdim(node_class, args)
+                testfunc = self._get_testoutputdim(node_class, args,
+                                                   sup_args_func)
                 # add to the suite
                 self.addTest(unittest.FunctionTestCase(testfunc,
-                                                   description=funcdesc))
+                                                       description=funcdesc))
             
         for methname in dir(self):
             meth = getattr(self,methname)
@@ -97,14 +107,25 @@ class NodesTestSuite(unittest.TestSuite):
         if avg is not None: mat += avg
         mix = (rand_func((mat_dim[1],mat_dim[1]))*scale).astype(type)
         return mat,mix,mult(mat,mix)
+
+    def _train_if_necessary(self, inp, node, args, sup_args_func):
+        if node.is_trainable():
+            while node.is_training():
+                if sup_args_func is not None:
+                    # for nodes that need supervision
+                    sup_args = sup_args_func(inp)
+                    node.train(inp, sup_args)
+                else:
+                    node.train(inp)
+                node.stop_training()
     
-    def _get_testinverse(self, node_class, args=[]):
+    def _get_testinverse(self, node_class, args=[], sup_args_func=None):
         # generates testinverse_nodeclass test functions
         def _testinverse(node_class=node_class):
             mat,mix,inp = self._get_random_mix()
             node = node_class(*args)
             if not node.is_invertible():return
-            if node.is_trainable(): node.train(inp)
+            self._train_if_necessary(inp, node, args, sup_args_func)
             # execute the node
             out = node.execute(inp)
             # compute the inverse
@@ -112,23 +133,23 @@ class NodesTestSuite(unittest.TestSuite):
             assert_array_almost_equal(rec,inp,self.decimal)
         return _testinverse
 
-    def _get_testtypecode(self, node_class, args=[]):
+    def _get_testtypecode(self, node_class, args=[], sup_args_func=None):
         def _testtypecode(node_class=node_class):
             for typecode in testtypes:
                 mat,mix,inp = self._get_random_mix(type="d")
                 node = node_class(*args,**{'typecode':typecode})
-                if node.is_trainable(): node.train(inp)
+                self._train_if_necessary(inp, node, args, sup_args_func)
                 out = node.execute(inp)
                 assert_type_equal(out.typecode(),typecode) 
         return _testtypecode
 
-    def _get_testoutputdim(self, node_class, args=[]):
+    def _get_testoutputdim(self, node_class, args=[], sup_args_func=None):
         def _testoutputdim(node_class=node_class):
             mat,mix,inp = self._get_random_mix()
             output_dim = self.mat_dim[1]/2
             # case 1: output dim set in the constructor
             node = node_class(*args, **{'output_dim':output_dim})
-            if node.is_trainable(): node.train(inp)
+            self._train_if_necessary(inp, node, args, sup_args_func)
             # execute the node
             out = node(inp)
             assert out.shape[1]==output_dim
@@ -478,6 +499,55 @@ class NodesTestSuite(unittest.TestSuite):
         node = mdp.nodes.NoiseNode(bogus_noise, (1.,), 'multiplicative')
         out = node.execute(numx.zeros((100,10),'d'))
         assert_array_equal(out, numx.zeros((100,10),'d'))
+
+    def testFDANode(self):
+        mean1 = [0., 2.]
+        mean2 = [0., -2.]
+        std = [1., 0.2]
+        npoints = 50000
+        rot = 45
+        
+        # input data: two distinct gaussians rotated by 45 deg
+        def distr(size): return normal(0, std, shape=(size))
+        x1 = distr((npoints,2)) + mean1
+        mdp.utils.rotate(x1, rot, units='degrees')
+        x2 = distr((npoints,2)) + mean2
+        mdp.utils.rotate(x2, rot, units='degrees')
+        x = numx.concatenate((x1, x2), axis=0)
+
+        # labels
+        cl1 = numx.ones((x1.shape[0],), typecode='d')
+        cl2 = 2.*numx.ones((x2.shape[0],), typecode='d')
+        classes = numx.concatenate((cl1, cl2))
+
+        # shuffle the data
+        perm_idx = numx_rand.permutation(classes.shape[0])
+        x = numx.take(x, perm_idx)
+        classes = numx.take(classes, perm_idx)
+
+        flow = mdp.SimpleFlow([mdp.nodes.FDANode()])
+        flow.train([[(x, classes)]])
+        fda_node = flow[0]
+
+        assert fda_node.tlens[1] == npoints
+        assert fda_node.tlens[2] == npoints
+        m1 = numx.array([mean1])
+        m2 = numx.array([mean2])
+        mdp.utils.rotate(m1, rot, units='degrees')
+        mdp.utils.rotate(m2, rot, units='degrees')
+        assert_array_almost_equal(fda_node.means[1], m1, 2)
+        assert_array_almost_equal(fda_node.means[2], m2, 2)
+       
+        y = flow.execute(x)
+        assert_array_almost_equal(numx.mean(y, axis=0), [0., 0.], 7)
+        assert_array_almost_equal(numx.std(y, axis=0), [1., 1.], 7)
+        assert_almost_equal(mdp.utils.mult(y[:,0], numx.transpose(y[:,1])),
+                            0., 7)
+
+        v1 = fda_node.v[:,0]/fda_node.v[0,0]
+        assert_array_almost_equal(v1, [1., -1.], 2)
+        v1 = fda_node.v[:,1]/fda_node.v[0,1]
+        assert_array_almost_equal(v1, [1., 1.], 2)
         
 def get_suite():
     return NodesTestSuite()
