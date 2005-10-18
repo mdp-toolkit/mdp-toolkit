@@ -28,6 +28,10 @@ class FDANode(mdp.FiniteNode):
         self.tlens[lbl] += x.shape[0]
     
     def train_means(self, x, cl):
+        """'cl' can be a list of labels (one for each data point) or
+        a single label, in which case all input data is assigned to
+        the same class."""
+
         if type(cl) is int:
             self._update_means(x, cl)
         else:
@@ -50,6 +54,10 @@ class FDANode(mdp.FiniteNode):
         self.S_W += mdp.utils.mult(numx.transpose(x), x)
  
     def train_fda(self, x, cl):
+        """'cl' can be a list of labels (one for each data point) or
+        a single label, in which case all input data is assigned to
+        the same class."""
+
         #if self.S_W == None:
         if self._SW_init == 0:
             self._SW_init = 1

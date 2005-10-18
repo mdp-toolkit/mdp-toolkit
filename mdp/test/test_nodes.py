@@ -5,6 +5,7 @@ Run them with:
 >>> mdp.test.test("nodes")
 
 """
+import scipy
 import unittest
 import inspect
 import mdp
@@ -60,7 +61,8 @@ class NodesTestSuite(unittest.TestSuite):
                        mn.EtaComputerNode,
                        mn.GrowingNeuralGasNode,
                        mn.NoiseNode,
-                       (mn.FDANode, [], _rand_labels)]
+                       (mn.FDANode, [], _rand_labels),
+                       (mn.GaussianClassifierNode, [], _rand_labels)]
 
         # generate generic test cases
         for node_class in self._nodes:
@@ -548,6 +550,69 @@ class NodesTestSuite(unittest.TestSuite):
         assert_array_almost_equal(v1, [1., -1.], 2)
         v1 = fda_node.v[:,1]/fda_node.v[0,1]
         assert_array_almost_equal(v1, [1., 1.], 2)
+
+    def testGaussianClassifier_train(self):
+        nclasses = 10
+        dim = 4
+        npoints = 50000
+        covs = []
+        means = []
+
+        node = mdp.nodes.GaussianClassifierNode()
+        for i in range(nclasses):
+            cov = mdp.utils.symrand(dim)
+            mean = numx_rand.random((dim,))*10.
+            covs.append(cov)
+            means.append(mean)
+
+            x = scipy.stats.norm().rvs(size=(npoints, dim))
+            x = mdp.utils.mult(x, mdp.utils.sqrtm(cov))
+            x = x - scipy.mean(x, axis=0) + mean
+            x = mdp.utils.refcast(x, 'd')
+            cl = mdp.numx.ones((npoints,))*i
+
+            node.train(x, cl)
+        node.stop_training()
+
+        for i in range(nclasses):
+            lbl_idx = node.labels.index(i)
+            assert_array_almost_equal(mdp.numx_linalg.inv(covs[i]),
+                                      node.inv_covs[lbl_idx],
+                                      1)
+            assert_array_almost_equal(means[i],
+                                      node.means[lbl_idx],
+                                      self.decimal)
+
+    def testGaussianClassifier(self):
+        mean1 = [0., 2.]
+        mean2 = [0., -2.]
+        var = [1., 0.2]
+        npoints = 100
+        rot = 45
+        
+        # input data: two distinct gaussians rotated by 45 deg
+        distr = scipy.stats.norm(scale = var)
+        x1 = distr.rvs(size=(npoints,2)) + mean1
+        mdp.utils.rotate(x1, rot, units='degrees')
+        x2 = distr.rvs(size=(npoints,2)) + mean2
+        mdp.utils.rotate(x2, rot, units='degrees')
+        x = scipy.concatenate((x1, x2), axis=0)
+
+        # labels
+        cl1 = scipy.ones((x1.shape[0],), typecode='d')
+        cl2 = 2.*scipy.ones((x2.shape[0],), typecode='d')
+        classes = scipy.concatenate((cl1, cl2))
+
+        # shuffle the data
+        perm_idx = scipy.stats.permutation(classes.shape[0])
+        x = scipy.take(x, perm_idx)
+        classes = scipy.take(classes, perm_idx)
+
+        node = mdp.nodes.GaussianClassifierNode()
+        node.train(x, classes)
+        classification = node.classify(x)
+
+        assert_array_equal(classes, classification)
         
 def get_suite():
     return NodesTestSuite()

@@ -252,14 +252,10 @@ class Node(object):
         # implementations of this function MUST explicitly set
         # self._training = False when necessary
         self._stop_training()
-        
-    def execute(self, x):
-        """Process the data contained in 'x'.
-        
-        If the object is still in the training phase, the function
-        'stop_training' will be called.
-        'x' is a matrix having different variables on different columns
-        and observations on the rows."""
+
+    def _pre_execution_checks(self, x):
+        """This method contains all pre-execution checks.
+        It can be used when a subclass defines multiple execution methods."""
         
         self._if_training_stop_training()
         
@@ -269,7 +265,15 @@ class Node(object):
         # set the output dimension if necessary
         if not self._output_dim:
             self._set_default_outputdim(self._input_dim)
-
+        
+    def execute(self, x):
+        """Process the data contained in 'x'.
+        
+        If the object is still in the training phase, the function
+        'stop_training' will be called.
+        'x' is a matrix having different variables on different columns
+        and observations on the rows."""
+        self._pre_execution_checks(x)
         return self._execute(self._refcast(x))
 
     def inverse(self, y):

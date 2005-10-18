@@ -1,4 +1,5 @@
-from mdp import numx, utils, FiniteNode, NodeException
+import mdp
+from mdp import numx, numx_linalg, utils, FiniteNode, NodeException
 
 class OneDimensionalHitParade(object):
     """
@@ -367,3 +368,111 @@ class NoiseNode(FiniteNode):
             return x+noise_mat
         elif self.noise_type == 'multiplicative':
             return x*(self._scast(1)+noise_mat)
+
+
+class GaussianClassifierNode(FiniteNode):
+    def __init__(self, input_dim=None, typecode=None):
+        """This node performs a supervised Gaussian classification.
+
+        Given a set of labelled data, this node fits a gaussian distribution
+        to each class. Note that it is written as an analysis node (i.e., the
+        execute function is the identity function). To perform classification,
+        use the 'classify' method. If instead you need the posterior porbability
+        of the classes given the data use the 'class_probabilities' method.
+        """
+        super(GaussianClassifierNode, self).__init__(input_dim, None, typecode)
+        self.cov_objs = {}
+
+    def is_invertible(self):
+        return False
+
+    def _update_covs(self, x, lbl):
+        if not self.cov_objs.has_key(lbl):
+            self.cov_objs[lbl] = \
+                mdp.nodes.lcov.CovarianceMatrix(typecode = self._typecode)
+        self.cov_objs[lbl].update(x)
+
+    def _train(self, x, cl):
+        """'cl' can be a list of labels (one for each data point) or
+        a single label, in which case all input data is assigned to
+        the same class."""
+        # if cl is a number, all x's belong to the same class
+        if type(cl) is int:
+            self._update_covs(x, cl)
+        else:
+            # get all classes from cl
+            for lbl in  utils.uniq(cl):
+                x_lbl = numx.compress(cl==lbl, x, axis=0)
+                self._update_covs(x_lbl, lbl)
+
+    def _stop_training(self):
+        self.labels = self.cov_objs.keys()
+        self.labels.sort()
+
+        # we are going to store the inverse of the covariance matrices
+        # since only those are useful to compute the probabilities
+        self.inv_covs = []
+        self.means = []
+        self.p = []
+        # this list contains the square root of the determinant of the
+        # corresponding covariance matrix
+        self._sqrt_def_covs = []
+        nitems = 0
+        
+        for lbl in self.labels:
+            cov, mean, p = self.cov_objs[lbl].fix()
+            nitems += p
+            self._sqrt_def_covs.append(numx.sqrt(numx_linalg.det(cov)))
+            self.means.append(mean)
+            self.p.append(p)
+            self.inv_covs.append(numx_linalg.inv(cov))
+
+        for i in range(len(self.p)):
+            self.p[i] /= self._scast(nitems)
+
+        del self.cov_objs
+
+    # ?? if the distribution objects of the scipy.stats module were also
+    # in Numeric and numarray we could use them
+    def _gaussian_prob(self, x, lbl_idx):
+        """Return the probability of the data points x with respect to a gaussian.
+        x: input data, S: covariance matrix, mn: mean"""
+        x = self._refcast(x)
+
+        dim = self._input_dim
+        sqrt_detS = self._sqrt_def_covs[lbl_idx]
+        invS = self.inv_covs[lbl_idx]
+        # subtract the mean
+        x_mn = x - self.means[lbl_idx][numx.NewAxis,:]
+        # exponent
+        exponent = self._scast(-0.5) * \
+                   numx.sum(utils.mult(x_mn, invS)*x_mn, axis=1)
+        # constant
+        constant = self._scast((2.*numx.pi)**-(dim/2.)/sqrt_detS)
+        # probability
+        return constant * numx.exp(exponent)
+
+    def class_probabilities(self, x):
+        """Return the probability of each class given the input."""
+        self._pre_execution_checks(x)
+
+        # compute the probability for each class
+        tmp_prob = numx.zeros((x.shape[0], len(self.labels)),
+                              typecode=self._typecode)
+        for i in range(len(self.labels)):
+            tmp_prob[:,i] = self._gaussian_prob(x, i)
+            tmp_prob[:,i] *= self.p[i]
+            
+        # normalize to probability 1
+        # (not necessary, but sometimes useful)
+        tmp_tot = numx.sum(tmp_prob, axis=1)
+        tmp_tot = tmp_tot[:, numx.NewAxis]
+        return tmp_prob/tmp_tot
+        
+    def classify(self, x):
+        """Classify the input data using Maximum A-Posteriori."""
+        self._pre_execution_checks(x)
+
+        class_prob = self.class_probabilities(x)
+        winner = numx.argmax(class_prob)
+        return [self.labels[winner[i]] for i in range(len(winner))]
