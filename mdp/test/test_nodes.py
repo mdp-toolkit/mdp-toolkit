@@ -5,7 +5,6 @@ Run them with:
 >>> mdp.test.test("nodes")
 
 """
-import scipy
 import unittest
 import inspect
 import mdp
@@ -505,12 +504,12 @@ class NodesTestSuite(unittest.TestSuite):
     def testFDANode(self):
         mean1 = [0., 2.]
         mean2 = [0., -2.]
-        std = [1., 0.2]
+        std_ = [1., 0.2]
         npoints = 50000
         rot = 45
         
         # input data: two distinct gaussians rotated by 45 deg
-        def distr(size): return normal(0, std, shape=(size))
+        def distr(size): return normal(0, std_, shape=(size))
         x1 = distr((npoints,2)) + mean1
         mdp.utils.rotate(x1, rot, units='degrees')
         x2 = distr((npoints,2)) + mean2
@@ -541,10 +540,9 @@ class NodesTestSuite(unittest.TestSuite):
         assert_array_almost_equal(fda_node.means[2], m2, 2)
        
         y = flow.execute(x)
-        assert_array_almost_equal(numx.mean(y, axis=0), [0., 0.], 7)
-        assert_array_almost_equal(numx.std(y, axis=0), [1., 1.], 7)
-        assert_almost_equal(mdp.utils.mult(y[:,0], numx.transpose(y[:,1])),
-                            0., 7)
+        assert_array_almost_equal(mean(y, axis=0), [0., 0.], 7)
+        assert_array_almost_equal(std(y, axis=0), [1., 1.], 7)
+        assert_almost_equal(mult(y[:,0], tr(y[:,1])), 0., 7)
 
         v1 = fda_node.v[:,0]/fda_node.v[0,0]
         assert_array_almost_equal(v1, [1., -1.], 2)
@@ -561,15 +559,15 @@ class NodesTestSuite(unittest.TestSuite):
         node = mdp.nodes.GaussianClassifierNode()
         for i in range(nclasses):
             cov = mdp.utils.symrand(dim)
-            mean = numx_rand.random((dim,))*10.
+            mn = numx_rand.random((dim,))*10.
             covs.append(cov)
-            means.append(mean)
+            means.append(mn)
 
-            x = scipy.stats.norm().rvs(size=(npoints, dim))
-            x = mdp.utils.mult(x, mdp.utils.sqrtm(cov))
-            x = x - scipy.mean(x, axis=0) + mean
+            x = normal(0., 1., shape=(npoints, dim))
+            x = mult(x, mdp.utils.sqrtm(cov))
+            x = x - mean(x, axis=0) + mn
             x = mdp.utils.refcast(x, 'd')
-            cl = mdp.numx.ones((npoints,))*i
+            cl = numx.ones((npoints,))*i
 
             node.train(x, cl)
         node.stop_training()
@@ -583,30 +581,30 @@ class NodesTestSuite(unittest.TestSuite):
                                       node.means[lbl_idx],
                                       self.decimal)
 
-    def testGaussianClassifier(self):
+    def testGaussianClassifier_classify(self):
         mean1 = [0., 2.]
         mean2 = [0., -2.]
-        var = [1., 0.2]
+        std_ = [1., 0.2]
         npoints = 100
         rot = 45
         
         # input data: two distinct gaussians rotated by 45 deg
-        distr = scipy.stats.norm(scale = var)
-        x1 = distr.rvs(size=(npoints,2)) + mean1
+        def distr(size): return normal(0, std_, shape=(size))
+        x1 = distr((npoints,2)) + mean1
         mdp.utils.rotate(x1, rot, units='degrees')
-        x2 = distr.rvs(size=(npoints,2)) + mean2
+        x2 = distr((npoints,2)) + mean2
         mdp.utils.rotate(x2, rot, units='degrees')
-        x = scipy.concatenate((x1, x2), axis=0)
+        x = numx.concatenate((x1, x2), axis=0)
 
         # labels
-        cl1 = scipy.ones((x1.shape[0],), typecode='d')
-        cl2 = 2.*scipy.ones((x2.shape[0],), typecode='d')
-        classes = scipy.concatenate((cl1, cl2))
+        cl1 = numx.ones((x1.shape[0],), typecode='d')
+        cl2 = 2.*numx.ones((x2.shape[0],), typecode='d')
+        classes = numx.concatenate((cl1, cl2))
 
         # shuffle the data
-        perm_idx = scipy.stats.permutation(classes.shape[0])
-        x = scipy.take(x, perm_idx)
-        classes = scipy.take(classes, perm_idx)
+        perm_idx = numx_rand.permutation(classes.shape[0])
+        x = numx.take(x, perm_idx)
+        classes = numx.take(classes, perm_idx)
 
         node = mdp.nodes.GaussianClassifierNode()
         node.train(x, classes)

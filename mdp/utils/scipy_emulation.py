@@ -418,7 +418,6 @@ Returns: sum-along-'axis' for (a*a)
     a, axis = _chk_asarray(a, axis)
     return numx.sum(a*a,axis)
 
-
 # In file: scipy/stats/stats.py
 def var(a, axis=-1, bias=0):
     """
