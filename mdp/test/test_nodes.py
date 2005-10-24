@@ -631,10 +631,11 @@ class NodesTestSuite(unittest.TestSuite):
         # compare estimates to real parameters
         assert_array_almost_equal(fa.mu[0,:], mean(x, axis=0), 5)
         assert_array_almost_equal(fa.sigma, std(noise, axis=0)**2, 2)
-        B = numx.concatenate((A,tr(fa.A)),axis=0)
-        u,s,vh = numx.linalg.svd(B)
-        s /= max(s)
-        assert sum(s>1e-2)==k
+        # FA finds A only up to a rotation. here we verify that the
+        # A and its estimation span the same subspace
+        AA = numx.concatenate((A,tr(fa.A)),axis=0)
+        u,s,vh = numx.linalg.svd(AA)
+        assert sum(s/max(s)>1e-2)==k
 
         x = x[:100,:]
         y = fa.execute(x)
