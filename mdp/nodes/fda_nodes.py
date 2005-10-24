@@ -48,8 +48,7 @@ class FDANode(mdp.FiniteNode):
     # matrices and solve the FDA problem
 
     def _update_SW(self, x, lbl):
-        # !! warning this function modifies x in place
-        x -= self.means[lbl]
+        x = x - self.means[lbl]
         # update S_W
         self.S_W += mdp.utils.mult(numx.transpose(x), x)
  

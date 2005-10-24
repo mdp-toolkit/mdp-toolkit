@@ -266,7 +266,7 @@ class Node(object):
         if not self._output_dim:
             self._set_default_outputdim(self._input_dim)
         
-    def execute(self, x):
+    def execute(self, x, *args):
         """Process the data contained in 'x'.
         
         If the object is still in the training phase, the function
@@ -274,9 +274,9 @@ class Node(object):
         'x' is a matrix having different variables on different columns
         and observations on the rows."""
         self._pre_execution_checks(x)
-        return self._execute(self._refcast(x))
+        return self._execute(self._refcast(x), *args)
 
-    def inverse(self, y):
+    def inverse(self, y, *args, **kargs):
         """Invert 'y'.
         
         If the node is invertible, compute the input x such that
@@ -299,7 +299,7 @@ class Node(object):
         if not self.is_invertible():
             raise IsNotInvertibleException, "This node is not invertible."
 
-        return self._inverse(self._refcast(y))
+        return self._inverse(self._refcast(y), *args, **kargs)
 
     def __call__(self,x):
         """Calling an instance if Node is equivalent to call

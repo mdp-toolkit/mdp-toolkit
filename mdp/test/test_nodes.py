@@ -25,14 +25,6 @@ testdecimals = {'d':16, 'f':7}
 def assert_type_equal(act,des):
     assert act == des,' Typecode mismatch: "%s" (should be "%s") '%(act,des)
 
-def _cov(x,y=None):
-    y = y or x.copy()
-    x = x - mean(x,0)
-    x = x / std(x,0)
-    y = y - mean(y,0)
-    y = y  / std(y,0)
-    return mult(tr(x),y)/(x.shape[0]-1)
-
 def _rand_labels(x):
     return numx.round(numx_rand.random(x.shape[0]))
     
@@ -42,7 +34,7 @@ class NodesTestSuite(unittest.TestSuite):
         unittest.TestSuite.__init__(self)
         
         # constants
-        self.mat_dim = (100,5)
+        self.mat_dim = (500,5)
         self.decimal = 7
         mn = mdp.nodes
         # self._nodes = node_class or
@@ -61,7 +53,8 @@ class NodesTestSuite(unittest.TestSuite):
                        mn.GrowingNeuralGasNode,
                        mn.NoiseNode,
                        (mn.FDANode, [], _rand_labels),
-                       (mn.GaussianClassifierNode, [], _rand_labels)]
+                       (mn.GaussianClassifierNode, [], _rand_labels),
+                       mn.FANode]
 
         # generate generic test cases
         for node_class in self._nodes:
@@ -71,18 +64,20 @@ class NodesTestSuite(unittest.TestSuite):
                 args = []
                 sup_args_func = None
 
-            # generate single testinverse_nodeclass test cases
-            funcdesc = 'Test inverse function of '+node_class.__name__
-            testfunc = self._get_testinverse(node_class, args, sup_args_func)
-            # add to the suite
-            self.addTest(unittest.FunctionTestCase(testfunc,
-                                                   description=funcdesc))
             # generate testtypecode_nodeclass test cases
             funcdesc = 'Test typecode consistency of '+node_class.__name__
             testfunc = self._get_testtypecode(node_class, args, sup_args_func)
             # add to the suite
             self.addTest(unittest.FunctionTestCase(testfunc,
                                                    description=funcdesc))
+            # generate single testinverse_nodeclass test cases
+            if node_class not in [mn.FANode]:
+                funcdesc = 'Test inverse function of '+node_class.__name__
+                testfunc = self._get_testinverse(node_class, args,
+                                                 sup_args_func)
+                # add to the suite
+                self.addTest(unittest.FunctionTestCase(testfunc,
+                                                       description=funcdesc))
             # generate testoutputdim_nodeclass test cases
             if hasattr(node_class, 'set_output_dim'):
                 funcdesc = 'Test output dim consistency of '+node_class.__name__
@@ -124,14 +119,15 @@ class NodesTestSuite(unittest.TestSuite):
         # generates testinverse_nodeclass test functions
         def _testinverse(node_class=node_class):
             mat,mix,inp = self._get_random_mix()
-            node = node_class(*args)
+            node = node_class(typecode='f', *args)
             if not node.is_invertible():return
             self._train_if_necessary(inp, node, args, sup_args_func)
             # execute the node
             out = node.execute(inp)
             # compute the inverse
-            rec = node.inverse(out) 
-            assert_array_almost_equal(rec,inp,self.decimal)
+            rec = node.inverse(out)
+            assert_array_almost_equal(rec,inp,self.decimal-2)
+            assert_type_equal(rec.typecode(), 'f') 
         return _testinverse
 
     def _get_testtypecode(self, node_class, args=[], sup_args_func=None):
@@ -552,7 +548,7 @@ class NodesTestSuite(unittest.TestSuite):
     def testGaussianClassifier_train(self):
         nclasses = 10
         dim = 4
-        npoints = 50000
+        npoints = 10000
         covs = []
         means = []
 
@@ -560,25 +556,26 @@ class NodesTestSuite(unittest.TestSuite):
         for i in range(nclasses):
             cov = mdp.utils.symrand(dim)
             mn = numx_rand.random((dim,))*10.
-            covs.append(cov)
-            means.append(mn)
 
             x = normal(0., 1., shape=(npoints, dim))
-            x = mult(x, mdp.utils.sqrtm(cov))
-            x = x - mean(x, axis=0) + mn
+            x = mult(x, mdp.utils.sqrtm(cov)) + mn
             x = mdp.utils.refcast(x, 'd')
             cl = numx.ones((npoints,))*i
+            
+            mn_estimate = mean(x, axis=0)
+            means.append(mn_estimate)
+            covs.append(numx.cov(x))
 
             node.train(x, cl)
         node.stop_training()
 
         for i in range(nclasses):
             lbl_idx = node.labels.index(i)
-            assert_array_almost_equal(mdp.numx_linalg.inv(covs[i]),
-                                      node.inv_covs[lbl_idx],
-                                      1)
             assert_array_almost_equal(means[i],
                                       node.means[lbl_idx],
+                                      self.decimal)
+            assert_array_almost_equal(mdp.numx_linalg.inv(covs[i]),
+                                      node.inv_covs[lbl_idx],
                                       self.decimal)
 
     def testGaussianClassifier_classify(self):
@@ -611,6 +608,40 @@ class NodesTestSuite(unittest.TestSuite):
         classification = node.classify(x)
 
         assert_array_equal(classes, classification)
+
+    def testFANode(self):
+        d = 10
+        N = 5000
+        k = 4
+
+        mu = numx_rand.random((1, d))*3.+2.
+        sigma = numx_rand.random((d,))*0.01
+        A = tr(tr(mdp.utils.random_rot(d)[:k,:]))
+
+        # latent variables
+        y = mdp.utils.normal(0., 1., shape=(N, k))
+        # observations
+        noise = mdp.utils.normal(0., sigma, shape=(N, d))
+        x = mult(y, A) + mu + noise
+        
+        fa = mdp.nodes.FANode(output_dim=k, typecode='f')
+        fa.train(x)
+        fa.stop_training()
+
+        # compare estimates to real parameters
+        assert_array_almost_equal(fa.mu[0,:], mean(x, axis=0), 5)
+        assert_array_almost_equal(fa.sigma, std(noise, axis=0)**2, 2)
+        B = numx.concatenate((A,tr(fa.A)),axis=0)
+        u,s,vh = numx.linalg.svd(B)
+        s /= max(s)
+        assert sum(s>1e-2)==k
+
+        x = x[:100,:]
+        y = fa.execute(x)
+        x2 = fa.inverse(y, noise=False)
+
+        assert_type_equal(x2.typecode(), 'f')
+        assert_array_almost_equal(x, x2, 1)
         
 def get_suite():
     return NodesTestSuite()
