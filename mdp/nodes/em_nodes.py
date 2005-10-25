@@ -1,11 +1,11 @@
 import mdp
-from mdp import numx, numx_linalg
+from mdp import numx, numx_linalg, utils
 from mdp.utils import mult, normal
 from lcov import CovarianceMatrix
 import warnings
 
-take, put, diag, ravel = numx.take, numx.put, numx.diag, numx.ravel
-sqrt, tr, inv, det = numx.sqrt, numx.transpose,numx_linalg.inv,numx_linalg.det
+take, put, diag, ravel = numx.take, numx.put, utils.diag, numx.ravel
+sqrt, tr, inv, det = numx.sqrt, numx.transpose, utils.inv, utils.det
 
 # decreasing likelihood message
 _LHOOD_WARNING = 'Likelihood decreased in FANode. This is probably due '+\
@@ -70,7 +70,7 @@ class FANode(mdp.FiniteNode):
         ##### EM-cycle
         lhood_curve = []
         base_lhood = None
-        old_lhood = -numx.inf
+        old_lhood = -utils.inf
         for t in range(self.max_cycles):
             ## compute B = (A A^T + Sigma)^-1
             # copy to make it contiguous, otherwise .flat does not work
@@ -80,7 +80,7 @@ class FANode(mdp.FiniteNode):
             # this quantity is used later for the log-likelihood
             log_det_inv_B = numx.log(det(B))
             B = inv(B)
-            
+           
             ## other useful quantities
             trA_B = mult(tr(A), B)
             trA_B_cov_mtx = mult(trA_B, cov_mtx)
@@ -140,6 +140,7 @@ class FANode(mdp.FiniteNode):
         noise -- if True, generation includes noise."""
         res = mult(y, tr(self.A))+self.mu
         if noise:
-            res += mdp.utils.normal(0., self.sigma,
-                                    shape=(y.shape[0], self._input_dim))
+            ns = utils.normal(0., self.sigma,
+                              shape=(y.shape[0], self._input_dim))
+            res += self.refcast(ns)
         return res

@@ -20,6 +20,7 @@ if _mdp.numx_description == 'symeig':
     inv = _mdp.numx_linalg.inv
     solve = _mdp.numx_linalg.solve
     array2string = _mdp.numx.array2string
+    svd = _mdp.numx_linalg.svd
     
 elif _mdp.numx_description == 'scipy':
     # we have all necessary functions but 'symeig'
@@ -35,6 +36,7 @@ elif _mdp.numx_description == 'scipy':
     inv = _mdp.numx_linalg.inv
     solve = _mdp.numx_linalg.solve
     array2string = _mdp.numx.array2string
+    svd = _mdp.numx_linalg.svd
     
 else:
     # Numeric or numarray, load symeig and missing scipy functions
@@ -46,7 +48,8 @@ else:
     mult = _mdp.numx.dot
 
     det = _mdp.numx_linalg.determinant
-    inv = _mdp.numx_linalg.inverse
+    # ?? use pinv to avoid Numeric bug with inv that does not allow downcasting
+    inv = scipy_emulation.pinv
     solve = _mdp.numx_linalg.solve_linear_equations
     if _mdp.numx_description=='Numeric':
         array2string = _mdp.numx.array2string
@@ -57,7 +60,8 @@ else:
         array2string = _mdp.numx.arrayprint.array2string
         del numarray.ieeespecial
     normal = _mdp.numx_rand.normal
-
+    svd = _mdp.numx_linalg.singular_value_decomposition
+    
 # copy scipy or emulated function in mdp.utils
 for name, val in scipy_emulation.__dict__.iteritems():
     if isinstance(val, types.FunctionType) and name[0] != '_':
@@ -65,4 +69,4 @@ for name, val in scipy_emulation.__dict__.iteritems():
                                   getattr(_mdp.numx_linalg, name,
                                           val))
 
-del scipy_emulation, types, _mdp
+del scipy_emulation, types#, _mdp

@@ -422,10 +422,10 @@ class GaussianClassifierNode(FiniteNode):
         for lbl in self.labels:
             cov, mean, p = self.cov_objs[lbl].fix()
             nitems += p
-            self._sqrt_def_covs.append(numx.sqrt(numx_linalg.det(cov)))
+            self._sqrt_def_covs.append(numx.sqrt(utils.det(cov)))
             self.means.append(mean)
             self.p.append(p)
-            self.inv_covs.append(numx_linalg.inv(cov))
+            self.inv_covs.append(utils.inv(cov))
 
         for i in range(len(self.p)):
             self.p[i] /= self._scast(nitems)
