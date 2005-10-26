@@ -49,7 +49,7 @@ class FANode(mdp.FiniteNode):
         idx_diag_d = [i*(d+1) for i in range(d)]
         idx_diag_k = [i*(k+1) for i in range(k)]
         # constant term in front of the log-likelihood
-        const= self._scast(-d/2. * numx.log(2.*numx.pi))
+        const = self._scast(-d/2. * numx.log(2.*numx.pi))
 
         ##### request the covariance matrix and clean up
         cov_mtx, mu, tlen = self._cov_mtx.fix()
@@ -101,7 +101,7 @@ class FANode(mdp.FiniteNode):
 
             ##### log-likelihood
             trace_B_cov = numx.sum(ravel(B*tr(cov_mtx)))
-            # this is actually likelihood over tlen
+            # this is actually likelihood/tlen.
             # cast to float explicitly. Numarray doesn't like
             # 0-D arrays to be used in logical expressions
             lhood = float(const - 0.5*log_det_inv_B - 0.5*trace_B_cov)
@@ -199,6 +199,7 @@ class KalmanNode(mdp.FiniteNode):
         R = self.R
         Q = self.Q
         k = self._output_dim
+        tlen = y.shape[0]
 
         # E(xt | y1 ... yt-1)
         xt_t1 = []
@@ -209,12 +210,17 @@ class KalmanNode(mdp.FiniteNode):
         # Var(xt | y1 ... yt)
         Vt_t = []
         # Kalman gain
-        if _internals: Kt = []
+        if _internals:
+            Kt = []
+            # constant term in front of the log-likelihood
+            const = self._scast(-self._input_dim/2. * numx.log(2.*numx.pi))
+            # log-likelihood
+            lhood = 0.
 
         # forward recursion
         xpre = self.pi1
         Vpre = self.V1
-        for i in xrange(y.shape[0]):
+        for i in xrange(tlen):
             xt_t1.append(xpre)
             Vt_t1.append(Vpre)
 
@@ -223,20 +229,31 @@ class KalmanNode(mdp.FiniteNode):
             
             # useful quantity
             VC = mult(Vpre, tr_C)
-            # Kalman gain
-            K = mult(VC, inv(mult(C, VC) + R))
+            ## comput the Kalman gain K
+            Sigma = mult(C, VC) + R
+            # this quantity is used later for the log-likelihood
+            # abs is there to avoid numerical errors when det < 0 
+            log_det_inv_Sigma = numx.log(abs(det(Sigma)))
+            inv_Sigma = inv(Sigma)
+            K = mult(VC, inv_Sigma)
 
             # ?? allow for missing values by putting xpost=xpre, Vpost=Vpre
             # new estimation
             # xpost := E(xt+1 | y1 ... yt+1)
-            xpost = xpre + mult(y[i,:] - mult(xpre, tr_C), tr(K))
+            y_diff = y[i:i+1,:] - mult(xpre, tr_C)
+            xpost = xpre + mult(y_diff, tr(K))
             # Vpost := Var(xt+1 | y1 ... yt+1)
             # this is the equation in Gahahramani and Hinton:
             # Vpost = Vpre - mult(K, tr(VC))
             # the following way is much more stable (see M.Welling eq. 43)
             # ?? should I get rid of eye?
-            I_KC = numx.eye(k) - mult(K, C)
+            I_KC = utils.eye(k) - mult(K, C)
             Vpost = mult(I_KC, mult(Vpre, tr(I_KC))) + mult(K, mult(R, tr(K)))
+
+            # ?? I think I'm losing the last point
+            if _internals:
+                lhood += float(const - 0.5*log_det_inv_Sigma \
+                               - 0.5*mult(y_diff, mult(inv_Sigma, tr(y_diff))))
 
             # ?? do not compute this on the last iteration
             # xpre := E(xt+1 | y1 ... yt)
@@ -247,19 +264,21 @@ class KalmanNode(mdp.FiniteNode):
             xt_t.append(xpost)
             Vt_t.append(Vpost)
             if _internals: Kt.append(K)
-
+                
         if _internals:
-            return xt_t, Vt_t, xt_t1, Vt_t1, Kt
+            return xt_t, Vt_t, xt_t1, Vt_t1, Kt, lhood
         else:
-            xt_t =numx.squeeze(numx.asarray(xt_t, typecode=self._typecode))
-            Vt_t =numx.squeeze(numx.asarray(Vt_t, typecode=self._typecode))
+            xt_t = numx.reshape(numx.asarray(xt_t, typecode=self._typecode),
+                                (tlen, k))
+            Vt_t = numx.reshape(numx.asarray(Vt_t, typecode=self._typecode),
+                                (tlen, k, k))
             return xt_t, Vt_t
 
     ### Kalman smoother
 
     def smooth(self, y, _internals=False):
-        xt_t, Vt_t, xt_t1, Vt_t1, Kt = self.filter(y, _internals=True)
-        if not _internals: del Kt
+        xt_t, Vt_t, xt_t1, Vt_t1, Kt, lhood = self.filter(y, _internals=True)
+        if not _internals: del Kt, lhood
 
         # ?? to save memory one could overwrite xt_t and delete xt_t1 and Kt
         # during the recursion
@@ -270,6 +289,7 @@ class KalmanNode(mdp.FiniteNode):
         C = self.C
         R = self.R
         Q = self.Q
+        k = self._output_dim
         tlen = y.shape[0]
 
         J = [None]*(tlen-1)
@@ -293,7 +313,7 @@ class KalmanNode(mdp.FiniteNode):
             Vt_t1_T = [None]*tlen
             k = self._output_dim
             # ?? is it interesting to get rid of eye?
-            Vt_t1_T[-1] = mult(mult(numx.eye(k)-mult(Kt[-1], C), A), Vt_t[-2])
+            Vt_t1_T[-1] = mult(mult(utils.eye(k)-mult(Kt[-1], C), A), Vt_t[-2])
             
             for i in xrange(tlen-1, 1, -1):
                 tmp = Vt_t1_T[i] - mult(A, Vt_t[i-1])
@@ -301,12 +321,15 @@ class KalmanNode(mdp.FiniteNode):
                                mult(J[i-1], mult(tmp, tr(J[i-2])))
             
         if _internals:
-            xt_T =numx.squeeze(numx.asarray(xt_T, typecode=self._typecode))
+            xt_T = numx.reshape(numx.asarray(xt_T, typecode=self._typecode),
+                                (tlen, k))
             # ?? Vt_T =numx.squeeze(numx.asarray(Vt_T, typecode=self._typecode))
-            return xt_T, Vt_T, Vt_t1_T
+            return xt_T, Vt_T, Vt_t1_T, lhood
         else:
-            xt_T =numx.squeeze(numx.asarray(xt_T, typecode=self._typecode))
-            Vt_T =numx.squeeze(numx.asarray(Vt_T, typecode=self._typecode))
+            xt_T = numx.reshape(numx.asarray(xt_T, typecode=self._typecode),
+                                (tlen, k))
+            Vt_T = numx.reshape(numx.asarray(Vt_T, typecode=self._typecode),
+                                (tlen, k, k))
             return xt_T, Vt_T
 
     ######## EM training
@@ -366,23 +389,28 @@ class KalmanNode(mdp.FiniteNode):
 
     ### training phase 3: EM estimation
     def _train_em(self, y):
+        y -= self.y_mean
+        
         # ?? cycle until convergence
-        for j in range(100):
+        for j in range(10):
         
             # do one EM cycle using only the current data
             
-            # E-step: estimate the latent variables using the current parameters
-            x, Pt, Ptt1 = self.smooth(y, _internals=True)
-            print j
+            # E-step:estimate the latent variables using the current parameters
+            x, Pt, Ptt1, lhood = self.smooth(y, _internals=True)
+            print j, lhood
 
             # useful quantities
             tlen = y.shape[0]
+            Pt = [Ptt1[i]+mult(tr(x[i:i+1,:]),x[i:i+1,:])
+                  for i in range(1, tlen)]
             sum_1_T_P = sum(Pt)
             sum_2_T_P = sum_1_T_P - Pt[0]
             sum_1_T1_P = sum_1_T_P - Pt[-1]
             # ?? del Pt
             # ?? better in smoother? useful at all?
-            Ptt1 = [Ptt1[i]+mult(tr(x[i,:]),x[i-1,:]) for i in range(1, tlen)]
+            Ptt1 = [Ptt1[i]+mult(tr(x[i:i+1,:]),x[i-1:i,:])
+                    for i in range(1, tlen)]
             sum_2_T_Ptt1 = sum(Ptt1[1:])
             del Ptt1
             yx = mult(tr(y), x)
@@ -393,7 +421,7 @@ class KalmanNode(mdp.FiniteNode):
             A = mult(sum_2_T_Ptt1, inv(sum_1_T1_P))
             Q = 1./(tlen-1) * (sum_2_T_P - mult(A, sum_2_T_Ptt1))
             # ?? replace with the mean over all sequences
-            pi1 = x[0,:]
+            pi1 = x[0:1,:]
             # ?? replace with the mean over all sequences
             V1 = Pt[0] - mult(tr(pi1), pi1)
 
@@ -411,3 +439,7 @@ class KalmanNode(mdp.FiniteNode):
 
     def _execute(self, y):
         return self._execute_smooth(y)
+
+    def _inverse(self, x):
+        # ?? noise
+        return mult(x, tr(self.C))+self.y_mean
