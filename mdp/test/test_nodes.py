@@ -626,7 +626,7 @@ class NodesTestSuite(unittest.TestSuite):
 
         mu = numx_rand.random((1, d))*3.+2.
         sigma = numx_rand.random((d,))*0.01
-        A = tr(tr(utils.random_rot(d)[:k,:]))
+        A = utils.random_rot(d)[:k,:]
 
         # latent variables
         y = utils.normal(0., 1., shape=(N, k))

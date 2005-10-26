@@ -1,7 +1,7 @@
 import mdp
 from mdp import numx, numx_linalg, utils
 from mdp.utils import mult, normal
-from lcov import CovarianceMatrix
+from lcov import CovarianceMatrix, DelayCovarianceMatrix
 import warnings
 
 take, put, diag, ravel = numx.take, numx.put, utils.diag, numx.ravel
@@ -11,6 +11,7 @@ sqrt, tr, inv, det = numx.sqrt, numx.transpose, utils.inv, utils.det
 _LHOOD_WARNING = 'Likelihood decreased in FANode. This is probably due '+\
                 'to some numerical errors.'
 warnings.filterwarnings('always', _LHOOD_WARNING, mdp.MDPWarning)
+
 
 class FANode(mdp.FiniteNode):
 
@@ -54,6 +55,7 @@ class FANode(mdp.FiniteNode):
         cov_mtx, mu, tlen = self._cov_mtx.fix()
         del self._cov_mtx
         # 'bias' the covariance matrix
+        # (i.e., cov_mtx = 1/tlen sum(x_t x_t^T) instead of 1/(tlen-1))
         cov_mtx *= (tlen-self._scast(1.))/tlen
         cov_diag = diag(cov_mtx).astype(typ)
 
@@ -71,7 +73,7 @@ class FANode(mdp.FiniteNode):
         lhood_curve = []
         base_lhood = None
         old_lhood = -utils.inf
-        for t in range(self.max_cycles):
+        for t in xrange(self.max_cycles):
             ## compute B = (A A^T + Sigma)^-1
             # copy to make it contiguous, otherwise .flat does not work
             B = mult(A, tr(A)).copy()
@@ -80,6 +82,7 @@ class FANode(mdp.FiniteNode):
             # this quantity is used later for the log-likelihood
             # abs is there to avoid numerical errors when det < 0 
             log_det_inv_B = numx.log(abs(det(B)))
+            # end the computation of B
             B = inv(B)
            
             ## other useful quantities
@@ -97,7 +100,6 @@ class FANode(mdp.FiniteNode):
             sigma = cov_diag - diag(mult(A, trA_B_cov_mtx))
 
             ##### log-likelihood
-            #trace_B_cov = numx.sum(ravel(tr(B*cov_mtx)))
             trace_B_cov = numx.sum(ravel(B*tr(cov_mtx)))
             # this is actually likelihood over tlen
             # cast to float explicitly. Numarray doesn't like
@@ -138,7 +140,7 @@ class FANode(mdp.FiniteNode):
         return mult(x-self.mu, self.E_y_mtx)
 
     def _inverse(self, y, noise=False):
-        """Generate observation x.
+        """Generate observations x.
 
         noise -- if True, generation includes noise."""
         res = mult(y, tr(self.A))+self.mu
@@ -147,3 +149,265 @@ class FANode(mdp.FiniteNode):
                               shape=(y.shape[0], self._input_dim))
             res += self.refcast(ns)
         return res
+
+
+class KalmanNode(mdp.FiniteNode):
+    
+    def get_train_seq(self):
+        return [(self._train_init1, self._stop_init1),
+                (self._train_init2, self._stop_init2),
+                (self._train_em, self._stop_em)]
+
+    def __init__(self, output_dim, input_dim=None, typecode=None):
+        """State Space Model / Linear Dynamical System / Kalman Filter
+
+        This node is a basic implementation of the EM algorithm for
+        State Space Models. It could probably be refined to save some memory
+        and time.
+
+        output_dim -- number of latent variables
+        """
+        # Notation as in Gaharamani and Hinton, 1996
+        super(KalmanNode, self).__init__(input_dim, output_dim, typecode)
+        
+        # x(t+1) = Ax(t) + w(t)
+        self.A = None
+        # y(t) = Cx(t) + v(t)
+        self.C = None
+        
+        # ?? zoubin chooses R and Q to be diagonal, which is restricitve
+        # but is more efficient. It certainly saves a lot of memory.
+        # covariance of w(t)
+        self.Q = None
+        # covariance of v(t)
+        self.R = None
+        # mean of v(1)
+        self.pi1 = None
+        # covariance of v(1)
+        self.V1 = None
+        # mean of the observations
+        self.y_mean = None
+
+    ### Kalman filter
+        
+    def filter(self, y, _internals=False):
+        # some definitions
+        A = self.A
+        tr_A = tr(A) # reference
+        C = self.C
+        tr_C = tr(C) # reference
+        R = self.R
+        Q = self.Q
+        k = self._output_dim
+
+        # E(xt | y1 ... yt-1)
+        xt_t1 = []
+        # E(xt | y1 ... yt)
+        xt_t = []
+        # Var(xt | y1 ... yt-1)
+        Vt_t1 = []
+        # Var(xt | y1 ... yt)
+        Vt_t = []
+        # Kalman gain
+        if _internals: Kt = []
+
+        # forward recursion
+        xpre = self.pi1
+        Vpre = self.V1
+        for i in xrange(y.shape[0]):
+            xt_t1.append(xpre)
+            Vt_t1.append(Vpre)
+
+            # ?? zoubin computes Kt in two different ways depending on
+            # the dimensionalities
+            
+            # useful quantity
+            VC = mult(Vpre, tr_C)
+            # Kalman gain
+            K = mult(VC, inv(mult(C, VC) + R))
+
+            # ?? allow for missing values by putting xpost=xpre, Vpost=Vpre
+            # new estimation
+            # xpost := E(xt+1 | y1 ... yt+1)
+            xpost = xpre + mult(y[i,:] - mult(xpre, tr_C), tr(K))
+            # Vpost := Var(xt+1 | y1 ... yt+1)
+            # this is the equation in Gahahramani and Hinton:
+            # Vpost = Vpre - mult(K, tr(VC))
+            # the following way is much more stable (see M.Welling eq. 43)
+            # ?? should I get rid of eye?
+            I_KC = numx.eye(k) - mult(K, C)
+            Vpost = mult(I_KC, mult(Vpre, tr(I_KC))) + mult(K, mult(R, tr(K)))
+
+            # ?? do not compute this on the last iteration
+            # xpre := E(xt+1 | y1 ... yt)
+            xpre = mult(xpost, tr_A)
+            # Vpre := Var(xt+1 | y1 ... yt)
+            Vpre = mult(A, mult(Vpost, tr_A)) + Q
+
+            xt_t.append(xpost)
+            Vt_t.append(Vpost)
+            if _internals: Kt.append(K)
+
+        if _internals:
+            return xt_t, Vt_t, xt_t1, Vt_t1, Kt
+        else:
+            xt_t =numx.squeeze(numx.asarray(xt_t, typecode=self._typecode))
+            Vt_t =numx.squeeze(numx.asarray(Vt_t, typecode=self._typecode))
+            return xt_t, Vt_t
+
+    ### Kalman smoother
+
+    def smooth(self, y, _internals=False):
+        xt_t, Vt_t, xt_t1, Vt_t1, Kt = self.filter(y, _internals=True)
+        if not _internals: del Kt
+
+        # ?? to save memory one could overwrite xt_t and delete xt_t1 and Kt
+        # during the recursion
+        
+        # some definitions
+        A = self.A
+        tr_A = tr(A) # reference
+        C = self.C
+        R = self.R
+        Q = self.Q
+        tlen = y.shape[0]
+
+        J = [None]*(tlen-1)
+        # E(xt | y1 ... yT)
+        xt_T = [None]*tlen
+        # Var(xt | y1 ... yT)
+        Vt_T = [None]*tlen
+
+        # backward recursion
+        xt_T[-1] = xt_t[-1]
+        Vt_T[-1] = Vt_t[-1]
+        for i in xrange(tlen-1, 0, -1):
+            J[i-1] = mult(Vt_t[i-1], mult(tr(A), inv(Vt_t1[i])))
+            xt_T[i-1] = xt_t[i-1] + \
+                        mult(xt_T[i]-mult(xt_t[i-1], tr_A), tr(J[i-1]))
+            Vt_T[i-1] = Vt_t[i-1] + \
+                        mult(J[i-1], mult(Vt_T[i]-Vt_t1[i], tr(J[i-1])))
+
+        # additional quantities of interest for EM, computed only if requested
+        if _internals:
+            Vt_t1_T = [None]*tlen
+            k = self._output_dim
+            # ?? is it interesting to get rid of eye?
+            Vt_t1_T[-1] = mult(mult(numx.eye(k)-mult(Kt[-1], C), A), Vt_t[-2])
+            
+            for i in xrange(tlen-1, 1, -1):
+                tmp = Vt_t1_T[i] - mult(A, Vt_t[i-1])
+                Vt_t1_T[i-1] = mult(Vt_t[i-1], tr(J[i-2])) + \
+                               mult(J[i-1], mult(tmp, tr(J[i-2])))
+            
+        if _internals:
+            xt_T =numx.squeeze(numx.asarray(xt_T, typecode=self._typecode))
+            # ?? Vt_T =numx.squeeze(numx.asarray(Vt_T, typecode=self._typecode))
+            return xt_T, Vt_T, Vt_t1_T
+        else:
+            xt_T =numx.squeeze(numx.asarray(xt_T, typecode=self._typecode))
+            Vt_T =numx.squeeze(numx.asarray(Vt_T, typecode=self._typecode))
+            return xt_T, Vt_T
+
+    ######## EM training
+
+    ### training phase 1: init Factor Analysis or AR1
+
+    def _train_init1(self, y):
+        k = self._output_dim
+        d = self._input_dim
+        
+        if not hasattr(self, 'init_node'):
+            if k<=d:
+                # initialize using Factor Analysis
+                self.init_node = FANode(output_dim = k)
+            else:
+                raise NotImplementedException, 'k>d'
+
+        self.init_node.train(y)
+
+    def _stop_init1(self):
+        self.init_node.stop_training()
+
+    ### training phase 2:
+    ###    init internals using the Factor Analysis or AR1 estimate
+    
+    def _train_init2(self, y):
+        if not hasattr(self, 'x_cov'):
+            self.x_cov = CovarianceMatrix(self._typecode)
+            self.x_dcov = DelayCovarianceMatrix(1, self._typecode)
+        x = self.init_node.execute(y)
+        self.x_cov.update(x)
+        self.x_dcov.update(x)
+        
+    def _stop_init2(self):
+        init_node = self.init_node
+        k = self._output_dim
+        d = self._input_dim
+        type = self._typecode
+        
+        # request the covariance matrix and clean up
+        x_cov, x_mean, tlen = self.x_cov.fix()
+        del self.x_cov
+        x_dcov, tmp, tmp, tlen = self.x_dcov.fix()
+        del self.x_dcov, tmp
+
+        # FA case, init internals
+        self.y_mean = init_node.mu
+        self.C = init_node.A
+        self.R = diag(init_node.sigma)
+        self.pi1 = x_mean
+        self.V1 = x_cov
+        self.Q = x_cov
+        # ?? zoubin uses A=inv(x_cov+Q)*x_dcov
+        self.A = mult(inv(x_cov), x_dcov)
+        
+        del self.init_node
+
+    ### training phase 3: EM estimation
+    def _train_em(self, y):
+        # ?? cycle until convergence
+        for j in range(100):
+        
+            # do one EM cycle using only the current data
+            
+            # E-step: estimate the latent variables using the current parameters
+            x, Pt, Ptt1 = self.smooth(y, _internals=True)
+            print j
+
+            # useful quantities
+            tlen = y.shape[0]
+            sum_1_T_P = sum(Pt)
+            sum_2_T_P = sum_1_T_P - Pt[0]
+            sum_1_T1_P = sum_1_T_P - Pt[-1]
+            # ?? del Pt
+            # ?? better in smoother? useful at all?
+            Ptt1 = [Ptt1[i]+mult(tr(x[i,:]),x[i-1,:]) for i in range(1, tlen)]
+            sum_2_T_Ptt1 = sum(Ptt1[1:])
+            del Ptt1
+            yx = mult(tr(y), x)
+
+            ## M-step: update the parameters
+            C = mult(yx, inv(sum_1_T_P))
+            R = 1./tlen * (mult(tr(y), y) - mult(C, tr(yx)))
+            A = mult(sum_2_T_Ptt1, inv(sum_1_T1_P))
+            Q = 1./(tlen-1) * (sum_2_T_P - mult(A, sum_2_T_Ptt1))
+            # ?? replace with the mean over all sequences
+            pi1 = x[0,:]
+            # ?? replace with the mean over all sequences
+            V1 = Pt[0] - mult(tr(pi1), pi1)
+
+            self.C, self.R, self.A, self.Q, self.pi1, self.V1 = \
+                    C, R, A, Q, pi1, V1
+
+    def _stop_em(self):
+        pass
+
+    def _execute_filter(self, y):
+        return self.filter(y-self.y_mean)[0]
+    
+    def _execute_smooth(self, y):
+        return self.smooth(y-self.y_mean)[0]
+
+    def _execute(self, y):
+        return self._execute_smooth(y)
