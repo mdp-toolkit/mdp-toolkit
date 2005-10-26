@@ -36,7 +36,7 @@ class FANode(mdp.FiniteNode):
     def _stop_training(self):
         #### some definitions
         verbose = self.verbose
-        type = self._typecode
+        typ = self._typecode
         one = self._scast(1.)
         tol = self.tol
         d = self._input_dim
@@ -55,7 +55,7 @@ class FANode(mdp.FiniteNode):
         del self._cov_mtx
         # 'bias' the covariance matrix
         cov_mtx *= (tlen-self._scast(1.))/tlen
-        cov_diag = diag(cov_mtx).astype(type)
+        cov_diag = diag(cov_mtx).astype(typ)
 
         ##### initialize the parameters
         # noise variances
@@ -65,7 +65,7 @@ class FANode(mdp.FiniteNode):
         # too slow. is the product of the diagonal a good approximation?
         #scale = det(cov_mtx)**(1./d)
         scale = numx.product(sigma)**(1./d)
-        A = normal(0., sqrt(scale/k), shape=(d,k)).astype(type)
+        A = normal(0., sqrt(scale/k), shape=(d,k)).astype(typ)
 
         ##### EM-cycle
         lhood_curve = []
@@ -78,7 +78,8 @@ class FANode(mdp.FiniteNode):
             # B += diag(sigma), avoid computing diag(sigma) which is dxd
             put(B.flat, idx_diag_d, take(B.flat, idx_diag_d)+sigma)
             # this quantity is used later for the log-likelihood
-            log_det_inv_B = numx.log(det(B))
+            # abs is there to avoid numerical errors when det < 0 
+            log_det_inv_B = numx.log(abs(det(B)))
             B = inv(B)
            
             ## other useful quantities
@@ -99,7 +100,9 @@ class FANode(mdp.FiniteNode):
             #trace_B_cov = numx.sum(ravel(tr(B*cov_mtx)))
             trace_B_cov = numx.sum(ravel(B*tr(cov_mtx)))
             # this is actually likelihood over tlen
-            lhood = const - 0.5*log_det_inv_B - 0.5*trace_B_cov
+            # cast to float explicitly. Numarray doesn't like
+            # 0-D arrays to be used in logical expressions
+            lhood = float(const - 0.5*log_det_inv_B - 0.5*trace_B_cov)
             if verbose: print 'cycle',t,'log-lhood:',lhood
 
             ##### convergence criterion
@@ -107,7 +110,7 @@ class FANode(mdp.FiniteNode):
             else:
                 # convergence criterion
                 if (lhood-base_lhood)<(1.+tol)*(old_lhood-base_lhood): break
-                if lhood<old_lhood:
+                if lhood < old_lhood:
                     # this should never happen
                     # it sometimes does, e.g. if the noise is extremely low,
                     # because of numerical problems
