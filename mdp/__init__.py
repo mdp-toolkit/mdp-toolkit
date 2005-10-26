@@ -64,17 +64,8 @@ http://mdp-toolkit.sourceforge.net
 # We use some scipy routines anyway. The ones that are not found in
 # Numeric and numarray are in utils.scipy_emulation.
 
-# (name, numx_module, numx_rand_module, numx_linalg_module)
-_NUMX_STRUCT = [
-    ('symeig',
-     'scipy', 'scipy.stats', 'scipy.linalg'),
-    ('scipy',
-     'scipy', 'scipy.stats', 'scipy.linalg'),
-    ('Numeric',
-     'Numeric', 'RandomArray', 'LinearAlgebra'),
-    ('numarray',
-     'numarray', 'numarray.random_array', 'numarray.linear_algebra')
-    ]
+import os as _os
+import warnings as _warnings
 
 # workaround to import module.submodule
 # see http://docs.python.org/lib/built-in-funcs.html
@@ -85,21 +76,44 @@ def _name_import(name):
         mod = getattr(mod, comp)
     return mod
 
-# Force MDP to use one specific extension module
-#_NUMX_STRUCT = [
-#    ('Numeric',
-#     'Numeric', 'RandomArray', 'LinearAlgebra'),
-#    ]
+# list of supported numerical extensions
+_NUMX_LABELS = ['symeig', 'scipy', 'Numeric', 'numarray']
+
+#  label : (numx_module, numx_rand_module, numx_linalg_module)              
+_NUMX_PKGS = {_NUMX_LABELS[0] : ('scipy', 'scipy.stats', 'scipy.linalg'),
+              _NUMX_LABELS[1] : ('scipy', 'scipy.stats', 'scipy.linalg'),
+              _NUMX_LABELS[2] : ('Numeric', 'RandomArray', 'LinearAlgebra'),
+              _NUMX_LABELS[3] : ('numarray', 'numarray.random_array',
+                                 'numarray.linear_algebra')
+              }
+
+
+# To force MDP to use one specific extension module
+# set the environment variable MDPNUMX
+# Mainly useful for testing
+
+_USR_LABEL = _os.getenv('MDPNUMX')
+if _USR_LABEL in _NUMX_LABELS:
+    _NUMX_LABELS = [_USR_LABEL]
+elif _USR_LABEL is None:
+    pass
+else:
+    _wrnstr = "\nExtension '%s' not supported. "%(_USR_LABEL) + \
+              "Supported extensions:\n %s"%(str(_NUMX_LABELS))
+    
+    _warnings.warn(_wrnstr, UserWarning)
+    del _wrnstr
 
 # try to load in sequence: symeig+scipy, scipy, Numeric, numarray
 numx_description = None
-for _numx_struct in _NUMX_STRUCT:
+for _label in _NUMX_LABELS:
     try:
-        _dumb = _name_import(_numx_struct[0])
-        numx = _name_import(_numx_struct[1])
-        numx_rand = _name_import(_numx_struct[2])
-        numx_linalg = _name_import(_numx_struct[3])
-        numx_description = _numx_struct[0]
+        _dumb = _name_import(_label)
+        _packages = _NUMX_PKGS[_label]
+        numx = _name_import(_packages[0])
+        numx_rand = _name_import(_packages[1])
+        numx_linalg = _name_import(_packages[2])
+        numx_description = _label
         break
     except ImportError:
         pass
@@ -110,7 +124,7 @@ if numx_description is None:
           "scipy, Numeric, or numarray"
 
 # clean up
-del _NUMX_STRUCT, _numx_struct, _dumb
+del _os, _warnings, _NUMX_LABELS, _NUMX_PKGS, _USR_LABEL, _name_import, _label, _dumb, _packages,
 
 # define our exceptions and warnings.
 # ?? in python 2.4 MDPException can be made new style
