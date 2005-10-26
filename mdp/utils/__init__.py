@@ -48,8 +48,8 @@ else:
     mult = _mdp.numx.dot
 
     det = _mdp.numx_linalg.determinant
-    # ?? use pinv to avoid Numeric bug with inv that does not allow downcasting
-    inv = scipy_emulation.pinv
+    _inv = _mdp.numx_linalg.inverse
+    inv = lambda x: refcast(_inv(x), x.typecode())
     solve = _mdp.numx_linalg.solve_linear_equations
     if _mdp.numx_description=='Numeric':
         array2string = _mdp.numx.array2string
@@ -69,4 +69,4 @@ for name, val in scipy_emulation.__dict__.iteritems():
                                   getattr(_mdp.numx_linalg, name,
                                           val))
 
-del scipy_emulation, types#, _mdp
+del scipy_emulation, types, _mdp

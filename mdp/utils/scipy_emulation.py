@@ -1,5 +1,6 @@
 import mdp
 import sys as _sys
+from routines import refcast as _refcast
 
 # import numeric module (scipy, Numeric or numarray)
 numx, numx_linalg = mdp.numx, mdp.numx_linalg
@@ -336,7 +337,8 @@ def pinv(a, cond=1e-10):
     """
     t = a.typecode()
     b = numx.identity(a.shape[0],t)
-    return numx_linalg.linear_least_squares(a, b, rcond=cond)[0].astype(t)
+    b = numx_linalg.linear_least_squares(a, b, rcond=cond)[0]
+    return _refcast(b, t)
 
 # In file: scipy_base/function_base.py
 def linspace(start,stop,num=50,endpoint=1,retstep=0):

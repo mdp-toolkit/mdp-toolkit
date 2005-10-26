@@ -231,7 +231,7 @@ class NodesTestSuite(unittest.TestSuite):
             cov.update(inp)
             try:
                 cov.fix()
-                raise Exception, 'RoundOff warning did not work'
+                assert False, 'RoundOff warning did not work'
             except mdp.MDPWarning:
                 pass
         # hope to reset the previous state...
@@ -522,6 +522,11 @@ class NodesTestSuite(unittest.TestSuite):
         classes = numx.take(classes, perm_idx)
 
         flow = mdp.Flow([mdp.nodes.FDANode()])
+        try:
+            flow[0].train(x, numx.ones((2,)))
+            assert False, 'No exception despite wrong number of labels'
+        except mdp.TrainingException:
+            pass
         flow.train([[(x, classes)]])
         fda_node = flow[0]
 
@@ -566,6 +571,12 @@ class NodesTestSuite(unittest.TestSuite):
             covs.append(utils.cov(x))
 
             node.train(x, cl)
+        try:
+            node.train(x, numx.ones((2,)))
+            assert False, 'No exception despite wrong number of labels'
+        except mdp.TrainingException:
+            pass
+
         node.stop_training()
 
         for i in range(nclasses):

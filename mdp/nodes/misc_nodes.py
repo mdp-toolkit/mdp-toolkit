@@ -386,6 +386,12 @@ class GaussianClassifierNode(FiniteNode):
     def is_invertible(self):
         return False
 
+    def _check_train_args(self, x, cl):
+        if type(cl) is not int and len(cl)!=x.shape[0]:
+            msg = "The number of labels should be equal to the number of " +\
+                  "datapoints (%d != %d)" % (len(cl), x.shape[0])
+            raise mdp.TrainingException, msg
+
     def _update_covs(self, x, lbl):
         if not self.cov_objs.has_key(lbl):
             self.cov_objs[lbl] = \

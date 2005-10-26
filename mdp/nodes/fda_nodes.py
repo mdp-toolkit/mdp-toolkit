@@ -9,7 +9,10 @@ class FDANode(mdp.FiniteNode):
                 (self.train_fda, self.stop_fda)]
     
     def __init__(self, input_dim=None, output_dim=None, typecode=None):
-        """Perform generalized Fisher Discriminant Analysis.
+        """Perform Fisher Discriminant Analysis.
+
+        This is a supervised node that implements FDA using a
+        generalized eigenvalue approach.
         """
         super(FDANode, self).__init__(input_dim, output_dim, typecode)
         self.S_W = None
@@ -17,6 +20,12 @@ class FDANode(mdp.FiniteNode):
         self.means = {}
         self.tlens = {}
         self._SW_init = 0
+
+    def _check_train_args(self, x, cl):
+        if type(cl) is not int and len(cl)!=x.shape[0]:
+            msg = "The number of labels should be equal to the number of " +\
+                  "datapoints (%d != %d)" % (len(cl), x.shape[0])
+            raise mdp.TrainingException, msg
 
     # Training step 1: compute mean and number of element in each class
 
@@ -53,10 +62,6 @@ class FDANode(mdp.FiniteNode):
         self.S_W += mdp.utils.mult(numx.transpose(x), x)
  
     def train_fda(self, x, cl):
-        """'cl' can be a list of labels (one for each data point) or
-        a single label, in which case all input data is assigned to
-        the same class."""
-
         #if self.S_W == None:
         if self._SW_init == 0:
             self._SW_init = 1
@@ -67,7 +72,7 @@ class FDANode(mdp.FiniteNode):
         self.allcov.update(x)
 
         # if cl is a number, all x's belong to the same class
-        if type(cl) == type(0):
+        if type(cl) is int:
             self._update_SW(x, cl)
         else:
             # get all classes from cl
@@ -90,6 +95,17 @@ class FDANode(mdp.FiniteNode):
             rng = None
 
         d, self.v = mdp.utils.symeig(S_W, S_T, range=rng, overwrite = 1)
+
+    def train(self, x, cl):
+        """Update the internal structures according to the input data 'x'.
+        
+        x -- a matrix having different variables on different columns
+             and observations on the rows.
+        cl -- can be a list of labels (one for each data point) or
+              a single label, in which case all input data is assigned to
+              the same class.
+        """
+        super(FDANode, self).train(x, cl)
 
     def _execute(self, x, range=None):
         if range:

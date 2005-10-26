@@ -190,6 +190,9 @@ class Node(object):
                         % (y.shape[1], self._output_dim)
             raise NodeException, error_str
 
+    def _check_train_args(self, x, *args):
+        pass
+
     def _refcast(self, x):
         """Helper function to cast arrays to the internal typecode."""
         return mdp.utils.refcast(x,self._typecode)
@@ -233,8 +236,8 @@ class Node(object):
             raise TrainingFinishedException, \
                   "The training phase has already finished."
 
-        # control the dimension of x
         self._check_input(x)
+        self._check_train_args(x, *args)        
         
         self._train_phase_started = True
         self._train(self._refcast(x), *args)
@@ -266,7 +269,7 @@ class Node(object):
         if not self._output_dim:
             self._set_default_outputdim(self._input_dim)
         
-    def execute(self, x, *args):
+    def execute(self, x, *args, **kargs):
         """Process the data contained in 'x'.
         
         If the object is still in the training phase, the function
@@ -274,7 +277,7 @@ class Node(object):
         'x' is a matrix having different variables on different columns
         and observations on the rows."""
         self._pre_execution_checks(x)
-        return self._execute(self._refcast(x), *args)
+        return self._execute(self._refcast(x), *args, **kargs)
 
     def inverse(self, y, *args, **kargs):
         """Invert 'y'.
@@ -394,8 +397,8 @@ class FiniteNode(Node):
             raise TrainingFinishedException, \
                   "The training phase has already finished."
 
-        # control the dimension of x
         self._check_input(x)
+        self._check_train_args(x, *args)        
         
         self._train_phase_started = True
         self._train_seq[self._train_phase][0](self._refcast(x), *args)
