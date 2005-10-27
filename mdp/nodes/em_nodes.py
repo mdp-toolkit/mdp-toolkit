@@ -377,6 +377,7 @@ class KalmanNode(mdp.FiniteNode):
 
         # FA case, init internals
         self.y_mean = init_node.mu
+        return
         self.C = init_node.A
         self.R = diag(init_node.sigma)
         self.pi1 = x_mean
@@ -393,6 +394,8 @@ class KalmanNode(mdp.FiniteNode):
         
         # ?? cycle until convergence
         for j in range(10):
+            print
+            print self.A
         
             # do one EM cycle using only the current data
             
