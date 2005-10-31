@@ -16,14 +16,9 @@ def expanded_dim(degree, nvariables):
 class _ExpansionNode(mdp.Node):
     
     def __init__(self, input_dim = None, typecode = None):
-        if input_dim:
-            output_dim = self.expanded_dim(input_dim)
-        else:
-            output_dim = None
+        super(_ExpansionNode, self).__init__(input_dim, None, typecode)
 
-        super(_ExpansionNode, self).__init__(input_dim, output_dim, typecode)
-
-    def expanded_dim(self,dim):
+    def expanded_dim(self, dim):
         return dim
         
     def is_trainable(self):
@@ -32,8 +27,13 @@ class _ExpansionNode(mdp.Node):
     def is_invertible(self):
         return 0
             
-    def _set_default_outputdim(self, nvariables):
-        self._output_dim = self.expanded_dim(nvariables)
+    def _set_input_dim(self, n):
+        self._input_dim = n
+        self._output_dim = self.expanded_dim(n)
+
+    def _set_output_dim(self, n):
+        msg = "Output dim can not be explicitly set!"
+        raise mdp.NodeException, msg
 
 class PolynomialExpansionNode(_ExpansionNode):
     """A PolynomialExpansionNode takes as input a signal of dimension N
@@ -49,17 +49,14 @@ class PolynomialExpansionNode(_ExpansionNode):
         a polynomial expansion of degree 'self.degree'."""
         return expanded_dim(self._degree, dim)
     
-    def execute(self, x):
-        super(PolynomialExpansionNode, self).execute(x)
-        x = self._refcast(x)
-        
+    def _execute(self, x):
         degree = self._degree
-        dim = self._input_dim
+        dim = self.input_dim
         n = x.shape[1]
         
         # preallocate memory
-        dexp = numx.zeros((self._output_dim, x.shape[0]), \
-                           typecode=self._typecode)
+        dexp = numx.zeros((self.output_dim, x.shape[0]), \
+                           typecode=self.typecode)
         # copy monomials of degree 1
         dexp[0:n,:] = numx.transpose(x)
 
@@ -122,9 +119,9 @@ class QuadraticExpansionNode(PolynomialExpansionNode):
 ##         mdp.Node.execute(self, x)
 
 ##         rows = x.shape[0]
-##         columns = self._input_dim
+##         columns = self.input_dim
 ##         # dexp is going to contain the expanded signal
-##         dexp = numx.zeros((rows, self._output_dim), typecode=self._typecode)
+##         dexp = numx.zeros((rows, self.output_dim), typecode=self._typecode)
 
 ##         # execute the inline C code
 ##         weave.inline(_EXPANSION_POL2_CCODE,['rows','columns','dexp','x'],

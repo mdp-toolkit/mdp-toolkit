@@ -1,5 +1,5 @@
 import mdp
-from mdp import numx, numx_linalg, utils, FiniteNode, NodeException
+from mdp import numx, numx_linalg, utils, Node, NodeException
 
 class OneDimensionalHitParade(object):
     """
@@ -87,7 +87,7 @@ class OneDimensionalHitParade(object):
 
     
     
-class HitParadeNode(FiniteNode):
+class HitParadeNode(Node):
     """HitParadeNode gets a multidimensional input signal and stores the first
     'n' local maxima and minima, which are separated by a minimum gap 'd'.
     This is called HitParade.
@@ -127,11 +127,11 @@ class HitParadeNode(FiniteNode):
         old_tlen = self.tlen
         if hit is None:
             hit = [OneDimensionalHitParade\
-                   (self.n,self.d,self._typecode,self.itype)\
-                   for c in range(self._input_dim)]
+                   (self.n,self.d,self.typecode,self.itype)\
+                   for c in range(self.input_dim)]
         tlen = old_tlen + x.shape[0]
         indices = numx.arange(old_tlen,tlen)
-        for c in range(self._input_dim):
+        for c in range(self.input_dim):
             hit[c].update((x[:,c],indices))
         self.hit = hit
         self.tlen = tlen
@@ -151,11 +151,11 @@ class HitParadeNode(FiniteNode):
         Return the tuple (maxima, indices).
         Maxima are sorted largest-first.
         """
-        cols = self._input_dim
+        cols = self.input_dim
         n = self.n
         hit = self.hit
         iM = numx.zeros((n,cols),typecode=self.itype)
-        M = numx.ones((n,cols),typecode=self._typecode)
+        M = numx.ones((n,cols),typecode=self.typecode)
         for c in range(cols):
             M[:,c],iM[:,c] = hit[c].get_maxima()
         return M,iM
@@ -165,16 +165,16 @@ class HitParadeNode(FiniteNode):
         Return the tuple (minima, indices).
         Minima are sorted smallest-first.
         """
-        cols = self._input_dim
+        cols = self.input_dim
         n = self.n
         hit = self.hit
         im = numx.zeros((n,cols), typecode=self.itype)
-        m = numx.ones((n,cols), typecode=self._typecode)
+        m = numx.ones((n,cols), typecode=self.typecode)
         for c in range(cols):
             m[:,c],im[:,c] = hit[c].get_minima()
         return m,im
 
-class TimeFramesNode(FiniteNode):
+class TimeFramesNode(Node):
     """TimeFramesNode receives a multidimensional input signal and copies on
     the space dimensions delayed version of the same signal. Example:
 
@@ -199,16 +199,21 @@ class TimeFramesNode(FiniteNode):
 
     def is_invertible(self):
         return 0
+
+    def _set_input_dim(self, n):
+        self._input_dim = n
+        self._output_dim = n*self.time_frames
         
-    def _set_default_outputdim(self, nvariables):
-        self._output_dim = nvariables*self.time_frames
+    def _set_output_dim(self, n):
+        msg = 'Output dim can not be explicitly set!'
+        raise NodeException, msg
             
     def _execute(self, x):
         gap = self.gap
         tf = x.shape[0]- (self.time_frames-1)*gap
-        rows = self._input_dim
-        cols = self._output_dim
-        y = numx.zeros((tf,cols),typecode=self._typecode)
+        rows = self.input_dim
+        cols = self.output_dim
+        y = numx.zeros((tf,cols),typecode=self.typecode)
         for frame in range(self.time_frames):
             y[:,frame*rows:(frame+1)*rows] = x[gap*frame:gap*frame+tf,:]
         return y
@@ -221,13 +226,13 @@ class TimeFramesNode(FiniteNode):
         self._if_training_stop_training()
 
         # set the output dimension if necessary
-        if not self._output_dim:
+        if not self.output_dim:
             # if the input_dim is not defined, raise an exception
-            if not self._input_dim:
+            if not self.input_dim:
                 errstr = "Number of input dimensions undefined. Inversion"+\
                          "not possible."
                 raise NodeException, errstr
-            self._set_default_outputdim(self._input_dim)
+            self.outputdim = self.input_dim
         
         # control the dimension of y
         self._check_output(y)
@@ -236,10 +241,10 @@ class TimeFramesNode(FiniteNode):
         
         gap = self.gap
         exp_length = y.shape[0]
-        cols = self._input_dim
+        cols = self.input_dim
         rest = (self.time_frames-1)*gap
         rows = exp_length + rest
-        x = numx.zeros((rows,cols),typecode=self._typecode)
+        x = numx.zeros((rows,cols),typecode=self.typecode)
         x[:exp_length,:] = y[:,:cols]
         count = 1
         # Note that if gap > 1 some of the last rows will be filled with zeros!
@@ -250,7 +255,7 @@ class TimeFramesNode(FiniteNode):
         return x
 
 
-class EtaComputerNode(FiniteNode):
+class EtaComputerNode(Node):
     """Node to compute the eta values of the normalized training data.
 
     The delta value of a signal is a measure of its temporal
@@ -291,7 +296,7 @@ class EtaComputerNode(FiniteNode):
         return ['f','d']
 
     def _init_internals(self):
-        input_dim = self._input_dim
+        input_dim = self.input_dim
         self._mean = numx.zeros((input_dim,), typecode='d')
         self._var = numx.zeros((input_dim,), typecode='d')
         self._tlen = 0
@@ -322,7 +327,7 @@ class EtaComputerNode(FiniteNode):
         return self._refcast(self._eta*t)
 
 
-class NoiseNode(FiniteNode):
+class NoiseNode(Node):
     """Node to add noise to input data.
 
     Original idea by Mathias Franzius.
@@ -370,15 +375,16 @@ class NoiseNode(FiniteNode):
             return x*(self._scast(1)+noise_mat)
 
 
-class GaussianClassifierNode(FiniteNode):
+class GaussianClassifierNode(Node):
     def __init__(self, input_dim=None, typecode=None):
         """This node performs a supervised Gaussian classification.
 
         Given a set of labelled data, this node fits a gaussian distribution
         to each class. Note that it is written as an analysis node (i.e., the
         execute function is the identity function). To perform classification,
-        use the 'classify' method. If instead you need the posterior porbability
-        of the classes given the data use the 'class_probabilities' method.
+        use the 'classify' method. If instead you need the posterior
+        probability of the classes given the data use the 'class_probabilities'
+        method.
         """
         super(GaussianClassifierNode, self).__init__(input_dim, None, typecode)
         self.cov_objs = {}
@@ -395,7 +401,7 @@ class GaussianClassifierNode(FiniteNode):
     def _update_covs(self, x, lbl):
         if not self.cov_objs.has_key(lbl):
             self.cov_objs[lbl] = \
-                mdp.nodes.lcov.CovarianceMatrix(typecode = self._typecode)
+                mdp.nodes.lcov.CovarianceMatrix(typecode = self.typecode)
         self.cov_objs[lbl].update(x)
 
     def _train(self, x, cl):
@@ -441,11 +447,12 @@ class GaussianClassifierNode(FiniteNode):
     # ?? if the distribution objects of the scipy.stats module were also
     # in Numeric and numarray we could use them
     def _gaussian_prob(self, x, lbl_idx):
-        """Return the probability of the data points x with respect to a gaussian.
+        """Return the probability of the data points x with respect to a
+        gaussian.
         x: input data, S: covariance matrix, mn: mean"""
         x = self._refcast(x)
 
-        dim = self._input_dim
+        dim = self.input_dim
         sqrt_detS = self._sqrt_def_covs[lbl_idx]
         invS = self.inv_covs[lbl_idx]
         # subtract the mean
@@ -464,7 +471,7 @@ class GaussianClassifierNode(FiniteNode):
 
         # compute the probability for each class
         tmp_prob = numx.zeros((x.shape[0], len(self.labels)),
-                              typecode=self._typecode)
+                              typecode=self.typecode)
         for i in range(len(self.labels)):
             tmp_prob[:,i] = self._gaussian_prob(x, i)
             tmp_prob[:,i] *= self.p[i]

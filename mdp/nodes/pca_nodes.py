@@ -1,9 +1,9 @@
-from mdp import numx, FiniteNode, \
+from mdp import numx, Node, \
      NodeException, TrainingFinishedException
 from mdp.utils import mult, symeig, LeadingMinorException
 from lcov import CovarianceMatrix
 
-class PCANode(FiniteNode):
+class PCANode(Node):
     """PCANode receives an input signal and filters it through
     the most significatives of its principal components.
     More information about Principal Component Analysis, a.k.a. discrete
@@ -16,9 +16,14 @@ class PCANode(FiniteNode):
         are kept) or by the fraction of variance to be explained
         (e.g. 'output_dim=0.95' means that as many components as necessary
         will be kept in order to explain 95% of the input variance)."""
+        if output_dim <= 1 and isinstance(output_dim, float):
+            self._desired_variance = output_dim
+            output_dim = None
+        else:
+            self._desired_variance = None
         
         super(PCANode, self).__init__(input_dim, output_dim, typecode)
-
+        
         # empirical covariance matrix, updated during the training phase
         self._cov_mtx = CovarianceMatrix(typecode)
         
@@ -29,20 +34,10 @@ class PCANode(FiniteNode):
                         %(numx.rank(y))
             raise SignalNodeException, error_str
 
-        if y.shape[1]==0 or y.shape[1]>self._output_dim:
+        if y.shape[1]==0 or y.shape[1]>self.output_dim:
             error_str = "y has dimension %d, should be 0<y<=%d" \
-                        % (y.shape[1], self._output_dim)
+                        % (y.shape[1], self.output_dim)
             raise SignalNodeException, error_str
-
-    def set_output_dim(self, output_dim):
-        """Set output dimensions.
-        This only works _before_ the end of the training phase."""
-        if self.is_training():
-            self._set_default_outputdim(output_dim)
-        else:
-            errstr = "The output dimension cannot be changed "+ \
-                     "after the training phase."
-            raise TrainingFinishedException, errstr
 
     def get_supported_typecodes(self):
         return ['f','d']
@@ -74,15 +69,15 @@ class PCANode(FiniteNode):
         ##### compute the principal components
         # if the number of principal components to keep is not specified,
         # keep all components
-        if not self._output_dim:
-            self._output_dim = self._input_dim
+        if self._desired_variance is None and self.output_dim is None:
+            self.output_dim = self.input_dim
 
         ## define the range of eigenvalues to compute
         # if the number of principal components to keep has been
         # specified directly
-        if self._output_dim>=1:
+        if self.output_dim >= 1:
             # (eigenvalues sorted in ascending order)
-            rng = (self._input_dim-self._output_dim+1, self._input_dim)
+            rng = (self.input_dim-self.output_dim+1, self.input_dim)
         # otherwise, the number of principal components to keep has been
         # specified by the fraction of variance to be explained
         else:
@@ -104,11 +99,11 @@ class PCANode(FiniteNode):
         ## compute the explained variance
         # if the number of principal components to keep has been
         # specified directly
-        if self._output_dim>=1:
+        if self.output_dim >= 1:
             # there is no way to tell what the explained variance is, since we
             # didn't compute all eigenvalues
             self.explained_variance = None
-        elif self._output_dim == self._input_dim:
+        elif self.output_dim == self.input_dim:
             # explained variance is 100%
             self.explained_variance = 1.
         else:
@@ -121,13 +116,13 @@ class PCANode(FiniteNode):
             varcum = numx.cumsum(d/vartot, axis = 0)
             # select only the relevant eigenvalues
             # number of relevant eigenvalues
-            neigval = numx.searchsorted(varcum, self._output_dim)+1
+            neigval = numx.searchsorted(varcum, self._desired_variance)+1
             self.explained_variance = varcum[neigval]
             # cut
             d = d[0:neigval]
             v = v[:,0:neigval]
             # define the new output dimension
-            self._output_dim = neigval
+            self.output_dim = neigval
             
         ## store the eigenvalues
         self.d = d
@@ -162,9 +157,9 @@ class PCANode(FiniteNode):
         If 'n' is not set, use all available components."""
         if n is None:
             n = y.shape[1]
-        if n>self._output_dim:
+        if n > self.output_dim:
             error_str = "y has dimension %d, should be at most %d" \
-                        %(n, self._output_dim)
+                        %(n, self.output_dim)
             raise NodeException, error_str
         
         v = self.get_recmatrix()

@@ -8,7 +8,7 @@ utils = mdp.utils
 mult = utils.mult
 t = numx.transpose
 
-class ICANode(mdp.Cumulator, mdp.FiniteNode):
+class ICANode(mdp.Cumulator, mdp.Node):
     """
     ICANode is a general class to handle different batch-mode algorithm for
     Independent Component Analysis. More information about ICA can be found
@@ -54,7 +54,7 @@ class ICANode(mdp.Cumulator, mdp.FiniteNode):
         # ?? rewrite as a 2-phases node
         # whiten if needed
         if not self.whitened:
-            self._set_default_outputdim(self.white_comp)
+            self.output_dim = self.white_comp
             white = mdp.nodes.WhiteningNode(output_dim = self.white_comp)
             white.train(self.data)
             self.data = white.execute(self.data)
@@ -64,7 +64,7 @@ class ICANode(mdp.Cumulator, mdp.FiniteNode):
 
         # call 'core' in telescope mode if needed
         if self.telescope:
-            minpow = math.frexp(self._input_dim*10)[1]
+            minpow = math.frexp(self.input_dim*10)[1]
             maxpow = int(numx.log(data.shape[0])/numx.log(2))
             for tel in range(minpow,maxpow+1):
                 index = 2**tel
@@ -134,14 +134,14 @@ class CuBICANode(ICANode):
         # numeric libraries. they are going to disappear as soon as
         # new casting conventions are established -> Numeric 3,
         # scipy 3.3, ...)
-        scalars = numx.arange(0, 37, typecode=self._typecode)
+        scalars = numx.arange(0, 37, typecode=self.typecode)
         ct_c34 = self._scast(0.0625)
         ct_s34 = self._scast(0.25)
         ct_c44 = self._scast(1./384)
         ct_s44 = self._scast(1./96)
 
         # initial transposed rotation matrix == identity matrix
-        Qt = numx.identity(comp, typecode=self._typecode)
+        Qt = numx.identity(comp, typecode=self.typecode)
 
         # maximum number of sweeps through all possible pairs of signals
         num = int(1+round(numx.sqrt(comp)))
@@ -275,7 +275,7 @@ class FastICANode(ICANode):
         limit = self.limit
         max_it = self.max_it
         failures = self.failures
-        typecode = self._typecode
+        typecode = self.typecode
         verbose = self.verbose
         X = t(data)
 

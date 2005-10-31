@@ -13,7 +13,7 @@ _LHOOD_WARNING = 'Likelihood decreased in FANode. This is probably due '+\
 warnings.filterwarnings('always', _LHOOD_WARNING, mdp.MDPWarning)
 
 
-class FANode(mdp.FiniteNode):
+class FANode(mdp.Node):
 
     def __init__(self, tol=1e-4, max_cycles=100, verbose=False,
                  input_dim=None, output_dim=None, typecode=None):
@@ -37,14 +37,14 @@ class FANode(mdp.FiniteNode):
     def _stop_training(self):
         #### some definitions
         verbose = self.verbose
-        typ = self._typecode
+        typ = self.typecode
         one = self._scast(1.)
         tol = self.tol
-        d = self._input_dim
+        d = self.input_dim
         # if the number of latent variables is not specified,
         # set it equal to the number of input components
-        if not self._output_dim: self._output_dim = d
-        k = self._output_dim
+        if not self.output_dim: self.output_dim = d
+        k = self.output_dim
         # indices of the diagonal elements of a dxd or kxk matrix
         idx_diag_d = [i*(d+1) for i in range(d)]
         idx_diag_k = [i*(k+1) for i in range(k)]
@@ -146,12 +146,12 @@ class FANode(mdp.FiniteNode):
         res = mult(y, tr(self.A))+self.mu
         if noise:
             ns = utils.normal(0., self.sigma,
-                              shape=(y.shape[0], self._input_dim))
+                              shape=(y.shape[0], self.input_dim))
             res += self.refcast(ns)
         return res
 
 
-class KalmanNode(mdp.FiniteNode):
+class KalmanNode(mdp.Node):
     
     def get_train_seq(self):
         return [(self._train_init1, self._stop_init1),
@@ -198,7 +198,7 @@ class KalmanNode(mdp.FiniteNode):
         tr_C = tr(C) # reference
         R = self.R
         Q = self.Q
-        k = self._output_dim
+        k = self.output_dim
         tlen = y.shape[0]
 
         # E(xt | y1 ... yt-1)
@@ -213,7 +213,7 @@ class KalmanNode(mdp.FiniteNode):
         if _internals:
             Kt = []
             # constant term in front of the log-likelihood
-            const = self._scast(-self._input_dim/2. * numx.log(2.*numx.pi))
+            const = self._scast(-self.input_dim/2. * numx.log(2.*numx.pi))
             # log-likelihood
             lhood = 0.
 
@@ -268,9 +268,9 @@ class KalmanNode(mdp.FiniteNode):
         if _internals:
             return xt_t, Vt_t, xt_t1, Vt_t1, Kt, lhood
         else:
-            xt_t = numx.reshape(numx.asarray(xt_t, typecode=self._typecode),
+            xt_t = numx.reshape(numx.asarray(xt_t, typecode=self.typecode),
                                 (tlen, k))
-            Vt_t = numx.reshape(numx.asarray(Vt_t, typecode=self._typecode),
+            Vt_t = numx.reshape(numx.asarray(Vt_t, typecode=self.typecode),
                                 (tlen, k, k))
             return xt_t, Vt_t
 
@@ -289,7 +289,7 @@ class KalmanNode(mdp.FiniteNode):
         C = self.C
         R = self.R
         Q = self.Q
-        k = self._output_dim
+        k = self.output_dim
         tlen = y.shape[0]
 
         J = [None]*(tlen-1)
@@ -311,7 +311,7 @@ class KalmanNode(mdp.FiniteNode):
         # additional quantities of interest for EM, computed only if requested
         if _internals:
             Vt_t1_T = [None]*tlen
-            k = self._output_dim
+            k = self.output_dim
             # ?? is it interesting to get rid of eye?
             Vt_t1_T[-1] = mult(mult(utils.eye(k)-mult(Kt[-1], C), A), Vt_t[-2])
             
@@ -321,14 +321,18 @@ class KalmanNode(mdp.FiniteNode):
                                mult(J[i-1], mult(tmp, tr(J[i-2])))
             
         if _internals:
-            xt_T = numx.reshape(numx.asarray(xt_T, typecode=self._typecode),
+            xt_T = numx.reshape(numx.asarray(xt_T, typecode=self.typecode),
                                 (tlen, k))
+<<<<<<< .mine
+            # ?? Vt_T =numx.squeeze(numx.asarray(Vt_T, typecode=self.typecode))
+=======
             # ??Vt_T =numx.squeeze(numx.asarray(Vt_T, typecode=self._typecode))
+>>>>>>> .r75
             return xt_T, Vt_T, Vt_t1_T, lhood
         else:
-            xt_T = numx.reshape(numx.asarray(xt_T, typecode=self._typecode),
+            xt_T = numx.reshape(numx.asarray(xt_T, typecode=self.typecode),
                                 (tlen, k))
-            Vt_T = numx.reshape(numx.asarray(Vt_T, typecode=self._typecode),
+            Vt_T = numx.reshape(numx.asarray(Vt_T, typecode=self.typecode),
                                 (tlen, k, k))
             return xt_T, Vt_T
 
@@ -337,9 +341,14 @@ class KalmanNode(mdp.FiniteNode):
     ### training phase 1: init Factor Analysis or AR1
 
     def _train_init1(self, y):
+<<<<<<< .mine
+        k = self.output_dim
+        d = self.input_dim
+=======
         return
         k = self._output_dim
         d = self._input_dim
+>>>>>>> .r75
         
         if not hasattr(self, 'init_node'):
             if k<=d:
@@ -360,8 +369,8 @@ class KalmanNode(mdp.FiniteNode):
     def _train_init2(self, y):
         return
         if not hasattr(self, 'x_cov'):
-            self.x_cov = CovarianceMatrix(self._typecode)
-            self.x_dcov = DelayCovarianceMatrix(1, self._typecode)
+            self.x_cov = CovarianceMatrix(self.typecode)
+            self.x_dcov = DelayCovarianceMatrix(1, self.typecode)
         x = self.init_node.execute(y)
         self.x_cov.update(x)
         self.x_dcov.update(x)
@@ -369,9 +378,9 @@ class KalmanNode(mdp.FiniteNode):
     def _stop_init2(self):
         return
         init_node = self.init_node
-        k = self._output_dim
-        d = self._input_dim
-        type = self._typecode
+        k = self.output_dim
+        d = self.input_dim
+        type = self.typecode
         
         # request the covariance matrix and clean up
         x_cov, x_mean, tlen = self.x_cov.fix()

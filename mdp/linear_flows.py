@@ -64,7 +64,7 @@ class Flow(object):
                                                   except_,tb))
         act = "\n! Exception in node #%d (%s):\n" \
               % (nodenr, type(self.flow[nodenr]).__name__)
-        errstr = '\n'+40*'-'+act+'Node Traceback:\n'+prev+40*'-'
+        errstr = ''.join(('\n', 40*'-', act, 'Node Traceback:\n', prev, 40*'-'))
         raise FlowExceptionCR,(errstr, self, except_)
 
     def _train_node(self, data_iterator, nodenr):
@@ -79,7 +79,11 @@ class Flow(object):
             warnings.warn(wrnstr, mdp.MDPWarning)
             return
         try:
-            while node.is_training():
+            # we leave the last training phase open:
+            # checkpoint functions must close it explicitly!
+            # Note that the last training_phase is closed
+            # automatically when the node is executed.
+            while True:
                 for x in data_iterator:
                     # the arguments following the first are passed only to the
                     # currently trained node, allowing the implementation of
@@ -93,9 +97,11 @@ class Flow(object):
                     if nodenr > 0: x = self._execute_seq(x, nodenr-1)
                     # train current node
                     node.train(x, *arg)
-                # close the previous training phase
-                # ?? but leave the last training phase open (checkpoints...)
-                node.stop_training()
+                if node.get_remaining_train_phase() > 1:
+                    # close the previous training phase
+                    node.stop_training()
+                else:
+                    break
         except mdp.TrainingFinishedException, e:
             # attempted to train a node although its training phase is already
             # finished. raise a warning and continue with the next node.
@@ -281,8 +287,8 @@ class Flow(object):
         """Check the dimension consistency of a list of nodes."""
         len_flow = len(flow)
         for i in range(1,len_flow):
-            out = flow[i-1].get_output_dim()
-            inp = flow[i].get_input_dim()
+            out = flow[i-1].output_dim
+            inp = flow[i].input_dim
             self._check_dimension_consistency(out, inp)
 
     def _check_value_type_isnode(self, value):
@@ -436,10 +442,14 @@ class CheckpointSaveFunction(CheckpointFunction):
     and prolongate the training.
     """
 
-    def __init__(self, filename, binary = 1, protocol = 2):
+    def __init__(self, filename, stop_training = 0, binary = 1, protocol = 2):
         """CheckpointSaveFunction constructor.
         
         'filename'      -- the name of the pickle dump file.
+        'stop_training' -- if set to 0 the pickle dump is done before
+                           closing the training phase
+                           if set to 1 the training phase is closed and then
+                           the node is dumped
         'binary'        -- sets binary mode for opening the file.
                            When using a protocol higher than 0, make sure
                            the file is opened in binary mode. 
@@ -448,6 +458,7 @@ class CheckpointSaveFunction(CheckpointFunction):
         """
         self.filename = filename
         self.proto = protocol
+        self.stop_training = stop_training
         if binary or protocol > 0:
             self.mode = 'wb'
         else:
@@ -455,5 +466,6 @@ class CheckpointSaveFunction(CheckpointFunction):
 
     def __call__(self, node):
         fid = open(self.filename, self.mode)
+        if self.stop_training: node.stop_training()
         cPickle.dump(node, fid, self.proto)
         fid.close()

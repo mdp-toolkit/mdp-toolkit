@@ -2,9 +2,9 @@ import mdp
 
 numx = mdp.numx
 
-class FDANode(mdp.FiniteNode):
+class FDANode(mdp.Node):
     
-    def get_train_seq(self):
+    def _get_train_seq(self):
         return [(self.train_means, self.stop_means),
                 (self.train_fda, self.stop_fda)]
     
@@ -16,13 +16,13 @@ class FDANode(mdp.FiniteNode):
         """
         super(FDANode, self).__init__(input_dim, output_dim, typecode)
         self.S_W = None
-        self.allcov = mdp.nodes.lcov.CovarianceMatrix(typecode = self._typecode)
+        self.allcov = mdp.nodes.lcov.CovarianceMatrix(typecode = self.typecode)
         self.means = {}
         self.tlens = {}
         self._SW_init = 0
 
     def _check_train_args(self, x, cl):
-        if type(cl) is not int and len(cl)!=x.shape[0]:
+        if not isinstance(cl, int) and len(cl) != x.shape[0]:
             msg = "The number of labels should be equal to the number of " +\
                   "datapoints (%d != %d)" % (len(cl), x.shape[0])
             raise mdp.TrainingException, msg
@@ -31,7 +31,7 @@ class FDANode(mdp.FiniteNode):
 
     def _update_means(self, x, lbl):
         if not self.means.has_key(lbl):
-            self.means[lbl] = numx.zeros((1, self._input_dim), typecode=self._typecode)
+            self.means[lbl] = numx.zeros((1, self.input_dim), typecode=self.typecode)
             self.tlens[lbl] = 0
         self.means[lbl] += numx.sum(x, 0)
         self.tlens[lbl] += x.shape[0]
@@ -41,7 +41,7 @@ class FDANode(mdp.FiniteNode):
         a single label, in which case all input data is assigned to
         the same class."""
 
-        if type(cl) is int:
+        if isinstance(cl, int):
             self._update_means(x, cl)
         else:
             for lbl in mdp.utils.uniq(cl):
@@ -65,14 +65,14 @@ class FDANode(mdp.FiniteNode):
         #if self.S_W == None:
         if self._SW_init == 0:
             self._SW_init = 1
-            self.S_W = numx.zeros((self._input_dim, self._input_dim),
-                                  typecode=self._typecode)
+            self.S_W = numx.zeros((self.input_dim, self.input_dim),
+                                  typecode=self.typecode)
 
         # update the covariance matrix of all classes
         self.allcov.update(x)
 
         # if cl is a number, all x's belong to the same class
-        if type(cl) is int:
+        if isinstance(cl, int):
             self._update_SW(x, cl)
         else:
             # get all classes from cl
@@ -89,11 +89,12 @@ class FDANode(mdp.FiniteNode):
        
         #### solve the generalized eigenvalue problem
         # the eigenvalues are already ordered in ascending order
-        if self._output_dim>=1:
-            rng = (1, self._output_dim)
-        else:
+        if self.output_dim is None:
             rng = None
-
+            self.output_dim = self.input_dim
+        else:
+            rng = (1, self.output_dim)
+            
         d, self.v = mdp.utils.symeig(S_W, S_T, range=rng, overwrite = 1)
 
     def train(self, x, cl):
@@ -109,7 +110,7 @@ class FDANode(mdp.FiniteNode):
 
     def _execute(self, x, range=None):
         if range:
-            if type(range) is types.ListType or type(range) is types.TupleType:
+            if isinstance(range, (list, tuple)):
                 v = self.v[:,range[0]:range[1]]
             else:
                 v = self.v[:,0:range]

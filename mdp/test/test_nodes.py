@@ -78,8 +78,8 @@ class NodesTestSuite(unittest.TestSuite):
                 self.addTest(unittest.FunctionTestCase(testfunc,
                                                        description=funcdesc))
             # generate testoutputdim_nodeclass test cases
-            if hasattr(node_class, 'set_output_dim'):
-                funcdesc = 'Test output dim consistency of '+node_class.__name__
+            if 'output_dim' in inspect.getargspec(node_class.__init__)[0]:
+                funcdesc ='Test output dim consistency of '+node_class.__name__
                 testfunc = self._get_testoutputdim(node_class, args,
                                                    sup_args_func)
                 # add to the suite
@@ -105,14 +105,17 @@ class NodesTestSuite(unittest.TestSuite):
 
     def _train_if_necessary(self, inp, node, args, sup_args_func):
         if node.is_trainable():
-            while node.is_training():
+            while True:
                 if sup_args_func is not None:
                     # for nodes that need supervision
                     sup_args = sup_args_func(inp)
                     node.train(inp, sup_args)
                 else:
                     node.train(inp)
-                node.stop_training()
+                if node.get_remaining_train_phase() > 1:
+                    node.stop_training()
+                else:
+                    break
     
     def _get_testinverse(self, node_class, args=[], sup_args_func=None):
         # generates testinverse_nodeclass test functions
@@ -125,7 +128,7 @@ class NodesTestSuite(unittest.TestSuite):
             out = node.execute(inp)
             # compute the inverse
             rec = node.inverse(out)
-            assert_array_almost_equal(rec,inp,self.decimal-2)
+            assert_array_almost_equal(rec,inp,self.decimal-3)
             assert_type_equal(rec.typecode(), 'f') 
         return _testinverse
 
@@ -152,7 +155,7 @@ class NodesTestSuite(unittest.TestSuite):
             assert node._output_dim==output_dim
             # case 2: output_dim set explicitly
             node = node_class(*args)
-            if node.is_trainable(): node.train(inp)
+            self._train_if_necessary(inp, node, args, sup_args_func)
             node.set_output_dim(output_dim)
             # execute the node
             out = node(inp)
@@ -583,10 +586,10 @@ class NodesTestSuite(unittest.TestSuite):
             lbl_idx = node.labels.index(i)
             assert_array_almost_equal(means[i],
                                       node.means[lbl_idx],
-                                      self.decimal)
+                                      self.decimal-1)
             assert_array_almost_equal(utils.inv(covs[i]),
                                       node.inv_covs[lbl_idx],
-                                      self.decimal)
+                                      self.decimal-2)
 
     def testGaussianClassifier_classify(self):
         mean1 = [0., 2.]
@@ -634,7 +637,7 @@ class NodesTestSuite(unittest.TestSuite):
         noise = utils.normal(0., sigma, shape=(N, d))
         x = mult(y, A) + mu + noise
         
-        fa = mdp.nodes.FANode(output_dim=k, typecode='f')
+        fa = mdp.nodes.FANode(output_dim=k, typecode='d')
         fa.train(x)
         fa.stop_training()
 
@@ -646,13 +649,22 @@ class NodesTestSuite(unittest.TestSuite):
         AA = numx.concatenate((A,tr(fa.A)),axis=0)
         u,s,vh = utils.svd(AA)
         assert sum(s/max(s)>1e-2)==k
-
         x = x[:100,:]
         y = fa.execute(x)
         x2 = fa.inverse(y, noise=False)
-
-        assert_type_equal(x2.typecode(), 'f')
+        assert_type_equal(x2.typecode(), 'd')
         assert_array_almost_equal(x, x2, 1)
+
+        # check typecode consistency:
+        # don't check results here: float type yields large deviations!
+        fa = mdp.nodes.FANode(output_dim=k, typecode='f')
+        fa.train(x)
+        fa.stop_training()
+        
+        x = x[:100,:]
+        y = fa.execute(x)
+        x2 = fa.inverse(y, noise=False)
+        assert_type_equal(x2.typecode(), 'f')
         
 def get_suite():
     return NodesTestSuite()

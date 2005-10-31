@@ -25,12 +25,18 @@ class _CheckpointCollectFunction(mdp.CheckpointFunction):
     def __call__(self, node):
         self.classes.append(node.__class__)
 
-class _BogusNode(mdp.FiniteNode):
+class _BogusNode(mdp.Node):
     def is_trainable(self): return 0
     def _execute(self,x): return 2*x
     def _inverse(self,x): return 0.5*x
 
-class _BogusExceptNode(mdp.FiniteNode):
+class _BogusNodeTrainable(mdp.Node):
+    def _train(self, x):
+        pass
+    def _stop_training(self):
+        pass
+    
+class _BogusExceptNode(mdp.Node):
     def _train(self,x):
         self.bogus_attr = 1
         raise Exception, "Bogus Exception"
@@ -51,8 +57,8 @@ class FlowsTestCase(unittest.TestCase):
         mix = (rand_func((mat_dim[1], mat_dim[1]))*scale).astype(type)
         return mat,mix,mult(mat,mix)
 
-    def _get_default_flow(self, flow_class = mdp.Flow):
-        flow = flow_class([_BogusNode(),_BogusNode(),_BogusNode()])
+    def _get_default_flow(self, flow_class=mdp.Flow, node_class=_BogusNode):
+        flow = flow_class([node_class(),node_class(),node_class()])
         return flow
     
     def testFlow(self):
@@ -139,8 +145,8 @@ class FlowsTestCase(unittest.TestCase):
         length = len(flow)
         # we test __contains__ and __iter__ with the for loop 
         for node in flow:
-            node._set_default_inputdim(10)
-            node._set_default_outputdim(10)
+            node.input_dim = 10
+            node.output_dim = 10
         # append
         newnode = _BogusNode(input_dim=10, output_dim=10)
         flow.append(newnode)
@@ -158,8 +164,13 @@ class FlowsTestCase(unittest.TestCase):
         assert_equal(len(flow), 2*length)
         length = len(flow)
         try:
-            newflow = flow.copy()
-            newflow[0]._set_default_inputdim(11)
+            newflow = self._get_default_flow()
+            for idx in range(len(newflow)):
+                if idx == 0:
+                    newflow[idx].input_dim = 11
+                else:
+                    newflow[idx].input_dim = 10
+                newflow[idx].output_dim = 10
             flow.extend(newflow)
             raise Exception, 'flow.extend appended inconsistent flow'
         except ValueError:
@@ -180,12 +191,13 @@ class FlowsTestCase(unittest.TestCase):
         popnode = flow.pop(5)
         assert oldnode == popnode, 'flow.pop popped wrong node out'
         assert_equal(len(flow), length-1)
-        length = len(flow)
         # pop - test Flow._check_nodes_consistency
-        flow[3]._set_default_outputdim(2)
-        flow[4]._set_default_inputdim(2)
-        flow[4]._set_default_outputdim(3)
-        flow[5]._set_default_inputdim(3)
+        flow = self._get_default_flow() + self._get_default_flow()
+        length = len(flow)
+        flow[3].output_dim = 2
+        flow[4].input_dim = 2
+        flow[4].output_dim = 3
+        flow[5].input_dim = 3
         flow._check_nodes_consistency(flow.flow)
         try:
             nottobepopped = flow.pop(4)
@@ -199,16 +211,18 @@ class FlowsTestCase(unittest.TestCase):
         def cfunc(node, lst = lst):
             lst.append(1)
         mat,mix,inp = self._get_random_mix(mat_dim=(100,3))
-        flow = self._get_default_flow(flow_class = mdp.CheckpointFlow)
-        flow.train([None]*len(flow), cfunc)
+        flow = self._get_default_flow(flow_class = mdp.CheckpointFlow,
+                                      node_class = _BogusNodeTrainable)
+        flow.train(inp, cfunc)
         #
         assert len(lst)==len(flow), 'The checkpoint function has been called %d times instead of %d times.' % (len(lst), len(flow))
         
     def testCheckpointFunction(self):
         cfunc = _CheckpointCollectFunction()
         mat,mix,inp = self._get_random_mix(mat_dim=(100,3))
-        flow = self._get_default_flow(flow_class = mdp.CheckpointFlow)
-        flow.train([None]*len(flow), cfunc)
+        flow = self._get_default_flow(flow_class = mdp.CheckpointFlow,
+                                      node_class = _BogusNodeTrainable)
+        flow.train(inp, cfunc)
         #
         for i in range(len(flow)):
             assert flow[i].__class__==cfunc.classes[i], 'Wrong class collected'

@@ -21,7 +21,7 @@ test_suites = {'nodes': test_nodes.get_suite(),
                'utils': test_utils.get_suite()}
 
 def test(suitename = 'all', verbosity = 2):
-    numx_rand.seed(1268049219, 2102953867)
+    #numx_rand.seed(1268049219, 2102953867)
     if suitename == 'all':
         suite = unittest.TestSuite(test_suites.values())
     else:

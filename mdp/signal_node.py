@@ -1,4 +1,5 @@
 import cPickle as _cPickle
+import warnings as _warnings
 import mdp
 
 # import numeric module (scipy, Numeric or numarray)
@@ -14,7 +15,7 @@ class SignalNodeException(NodeException):
     def __init__(self, str = ''):
         wrnstr = "The alias 'SignalNodeException' is deprecated and won't " + \
         "be continued in future releases. Use 'NodeException' instead."
-        warnings.warn(wrnstr, DeprecationWarning)
+        _warnings.warn(wrnstr, DeprecationWarning)
         super(SignalNodeException, self).__init__(str)
 
 class TrainingException(NodeException):
@@ -35,6 +36,36 @@ class IsNotInvertibleException(NodeException):
     """Raised when the 'inverse' function is called although the
     node is not invertible."""
     pass
+
+# Decorators definitions. The syntax:
+# @dec1
+# def func(arg1, arg2, ...):
+#     pass
+# is equivalent to:
+# def func(arg1, arg2, ...):
+#     pass
+# func = dec1(func)
+#
+# Decorators declarations calling a function that returns the decorator:
+# @decomaker(argA, argB, ...)
+# def func(arg1, arg2, ...):
+#     pass
+# is equivalent to:
+# func = decomaker(argA, argB, ...)(func)
+
+def decomaker(method):
+    message = 'Documentation inherited from "%s":'%(method.__name__)
+    print 'Hy'
+    def docstringappend(func):
+        org_doc, app_doc = func.__doc__, method.__doc__
+        if org_doc and app_doc:
+            org_doc = '\n'.join((org_doc, message, app_doc))
+        elif app_doc is None:
+            pass
+        else:
+            org_doc = '\n'.join((message, app_doc))
+        return func
+    return docstringappend
 
 class Node(object):
     """A Node corresponds to a learning algorithm or to a generic
@@ -75,29 +106,139 @@ class Node(object):
         structures to match this argument (use _refcast and _scast private
         methods when possible).
         """
-        self._input_dim = input_dim
-        self._output_dim = output_dim
+        # initialize basic attributes
+        self._input_dim = None
+        self._output_dim = None
         self._typecode = None
-        if typecode is not None:
-            self._set_typecode(typecode)
+        # call set functions for properties
+        self.set_input_dim(input_dim)
+        self.set_output_dim(output_dim)
+        self.set_typecode(typecode)
  
         # skip the training phase if the node is not trainable
         if not self.is_trainable():
             self._training = False
+            self._train_phase = -1
+            self._train_phase_started = False
         else:
+            # this var stores at which point in the training sequence we are
+            self._train_phase = 0          
             # this var is False if the training of the current phase hasn't
             #  started yet, True otherwise
             self._train_phase_started = False
             # this var is False if the complete training is finished
             self._training = True
 
-    ### getters
+    ### properties
 
+    def get_input_dim(self):
+        """Return input dimensions."""
+        return self._input_dim
+
+    def set_input_dim(self, n):
+        """Set input dimensions.
+        Performs sanity checks and then calls self._set_input_dim(n), which
+        is responsible for setting the internal attribute self._input_dim.
+        Note that self._set_input_dim can be overriden by subclasses,
+        """
+        if n is None:
+            pass
+        elif (self._input_dim is not None) and (self._input_dim !=  n):
+            msg = "Input dim are set already (%d)!"%(self.input_dim)
+            raise NodeException, msg
+        else:
+            self._set_input_dim(n)
+
+    def _set_input_dim(self, n):
+        self._input_dim = n
+
+    input_dim = property(get_input_dim,
+                         set_input_dim,
+                         doc = "Input dimensions")
+
+    def get_output_dim(self):
+        """Return output dimensions."""
+        return self._output_dim
+
+    def set_output_dim(self, n):
+        """Set output dimensions.
+        Performs sanity checks and then calls self._set_output_dim(n), which
+        is responsible for setting the internal attribute self._output_dim.
+        Note that self._set_output_dim can be overriden by subclasses,
+        """
+        if n is None:
+            pass
+        elif (self._output_dim is not None) and (self._output_dim != n):
+            msg = "Output dim are set already (%d)!"%(self.output_dim)
+            raise NodeException, msg
+        else:
+            self._set_output_dim(n)
+
+    def _set_output_dim(self, n):
+        self._output_dim = n
+
+    output_dim = property(get_output_dim,
+                          set_output_dim,
+                          doc = "Output dimensions")
+
+    def get_typecode(self):
+        """Return typecode."""
+        return self._typecode
+    
+    def set_typecode(self, t):
+        """Set Node's internal structures typecode.
+        Performs sanity checks and then calls self._set_typecode(n), which
+        is responsible for setting the internal attribute self._typecode.
+        Note that self._set_typecode can be overriden by subclasses,
+        """
+        if t is None:
+            pass
+        elif (self._typecode is not None) and (self._typecode != t):
+            errstr = "Typecode is already set to '%s' " %(self.typecode)
+            raise NodeException, errstr
+        elif t not in self.get_supported_typecodes():
+            errstr = "\nTypecode '%s' is not supported.\n"%t+ \
+                      "Supported typecodes: %s" \
+                      %(str(self.get_supported_typecodes()))
+            raise NodeException, errstr
+        else:
+            self._set_typecode(t)
+
+    def _set_typecode(self, t):
+        self._typecode = t
+        
+    typecode = property(get_typecode,
+                        set_typecode,
+                        doc = "Typecode")
+
+
+
+    _train_seq = property(lambda self: self._get_train_seq(),
+                          doc = "List of tuples: [(training-phase1, " +\
+                          "stop-training-phase1), (training-phase2, " +\
+                          "stop_training-phase2), ... ].\n" +\
+                          " By default _train_seq = [(self._train," +\
+                          " self._stop_training]")
+
+    def _get_train_seq(self):
+        return [(self._train, self._stop_training)]
+
+    ### Node states
     def is_training(self):
         """Return True if the node is in the training phase,
         False otherwise."""
         return self._training
 
+    def get_current_train_phase(self):
+        """Return the index of the current training phase. The training phases
+        are defined in the list self._train_seq."""
+        return self._train_phase
+
+    def get_remaining_train_phase(self):
+        """Return the number of training phases still to accomplish."""
+        return len(self._train_seq) - self._train_phase
+
+    ### Node capabilities
     def is_trainable(self):
         """Return True if the node can be trained, False otherwise."""
         return True
@@ -106,43 +247,11 @@ class Node(object):
         """Return True if the node can be inverted, False otherwise."""
         return True
 
-    def get_input_dim(self):
-        """Return input dimensions."""
-        return self._input_dim
-
-    def get_output_dim(self):
-        """Return output dimensions."""
-        return self._output_dim
-
     def get_supported_typecodes(self):
         """Return the list of typecodes supported by this node."""
         return ['i','l','f','d','F','D']
 
-    def get_typecode(self):
-        """Return typecode."""
-        return self._typecode
-
-    ### default settings- and check- functions
-
-    def _set_typecode(self,typecode):
-        if self._typecode is not None:
-            errstr = "Typecode is already set to '%s' " %(self._typecode)
-            raise NodeException, errstr
-        
-        if typecode in self.get_supported_typecodes():
-            self._typecode = typecode
-        else:
-            errstr = "\nTypecode '%s' is not supported.\n"%typecode+ \
-                      "Supported typecodes: %s" \
-                      %(str(self.get_supported_typecodes()))
-            raise NodeException, errstr
-
-    def _set_default_inputdim(self, nvariables):
-        self._input_dim = nvariables
-        
-    def _set_default_outputdim(self, nvariables):
-        self._output_dim = nvariables
-        
+    ### check functions
     def _check_input(self, x):
         # check input rank
         if not numx.rank(x) == 2:
@@ -151,32 +260,23 @@ class Node(object):
             raise NodeException, error_str
 
         # set the input dimension if necessary
-        if not self._input_dim:
-            self._set_default_inputdim(x.shape[1])
+        if self.input_dim is None:
+            self.input_dim = x.shape[1]
 
         # set the typecode if necessary
-        if not self._typecode:
-            self._set_typecode(x.typecode())
+        if self.typecode is None:
+            self.typecode = x.typecode()
 
         # check the input dimension
-        if not x.shape[1]==self._input_dim:
+        if not x.shape[1] == self.input_dim:
             error_str = "x has dimension %d, should be %d" \
-                        % (x.shape[1], self._input_dim)
+                        % (x.shape[1], self.input_dim)
             raise NodeException, error_str
 
-        if x.shape[0]==0:
+        if x.shape[0] == 0:
             error_str = "x must have at least one observation (zero given)"
             raise NodeException, error_str
         
-    def _if_training_stop_training(self):
-        if self.is_training():
-            self.stop_training()
-            # there are more training phases or the system has not
-            # converged
-            if self.is_training():
-                raise TrainingException, \
-                      "The training phases are not completed yet."
-
     def _check_output(self, y):
         # check output rank
         if not numx.rank(y) == 2:
@@ -185,43 +285,75 @@ class Node(object):
             raise SignalNodeException, error_str
 
         # check the output dimension
-        if not y.shape[1]==self._output_dim:
+        if not y.shape[1] == self.output_dim:
             error_str = "y has dimension %d, should be %d" \
-                        % (y.shape[1], self._output_dim)
+                        % (y.shape[1], self.output_dim)
             raise NodeException, error_str
 
+    def _if_training_stop_training(self):
+        if self.is_training():
+            self.stop_training()
+            # if there is some training phases left
+            # we shouldn't be here!
+            if self.get_remaining_train_phase() > 0:
+                raise TrainingException, \
+                      "The training phases are not completed yet."
+
+    def _pre_execution_checks(self, x):
+        """This method contains all pre-execution checks.
+        It can be used when a subclass defines multiple execution methods."""
+        
+        self._if_training_stop_training()
+        
+        # control the dimension x
+        self._check_input(x)
+
+        # set the output dimension if necessary
+        if self.output_dim is None:
+            self.output_dim = self.input_dim
+
     def _check_train_args(self, x, *args):
+        # implemented by subclasses if needed
         pass
+
+    ### casting helper functions
 
     def _refcast(self, x):
         """Helper function to cast arrays to the internal typecode."""
-        return mdp.utils.refcast(x,self._typecode)
+        return mdp.utils.refcast(x, self.typecode)
 
     def _scast(self, scalar):
         """Helper function to cast scalars to the internal typecode."""
         # if numeric finally becomes scipy_base we will remove this.
-        return mdp.utils.scast(scalar, self._typecode)
+        return mdp.utils.scast(scalar, self.typecode)
     
-    ### main functions
+    ### Methods to be implemented by the user
 
-    # this are the functions the user has to overwrite
+    # this are the methods the user has to overwrite
     # they receive the data already casted to the correct type
     
     def _train(self, x, *args):
-        raise NotImplementedError
+        if self.is_trainable():
+            raise NotImplementedError
+        else:
+            pass
 
     def _stop_training(self):
-        # implementations of this function MUST explicitly set
-        # self._training = False when necessary
-        raise NotImplementedError
-    
+        if self.is_trainable():
+            raise NotImplementedError
+        else:
+            pass
+
     def _execute(self, x):
         return x
         
     def _inverse(self, x):
-        return x
+        if self.is_invertible():
+            return x
+        else:
+            pass
 
-    # the user interface to the overwritten functions
+    ### User interface to the overwritten methods
     
     def train(self, x, *args):
         """Update the internal structures according to the input data 'x'.
@@ -240,8 +372,8 @@ class Node(object):
         self._check_train_args(x, *args)        
         
         self._train_phase_started = True
-        self._train(self._refcast(x), *args)
-        
+        self._train_seq[self._train_phase][0](self._refcast(x), *args)
+
     def stop_training(self):
         """Stop the training phase."""
         if self.is_trainable() and self._train_phase_started == False:
@@ -252,23 +384,14 @@ class Node(object):
             raise TrainingFinishedException, \
                   "The training phase has already finished."
 
-        # implementations of this function MUST explicitly set
-        # self._training = False when necessary
-        self._stop_training()
+        # close the current phase.
+        self._train_seq[self._train_phase][1]()
+        self._train_phase += 1
+        self.train_phase_started = False
+        # check if we have some training phase left
+        if self.get_remaining_train_phase() == 0:
+            self._training = False
 
-    def _pre_execution_checks(self, x):
-        """This method contains all pre-execution checks.
-        It can be used when a subclass defines multiple execution methods."""
-        
-        self._if_training_stop_training()
-        
-        # control the dimension x
-        self._check_input(x)
-
-        # set the output dimension if necessary
-        if not self._output_dim:
-            self._set_default_outputdim(self._input_dim)
-        
     def execute(self, x, *args, **kargs):
         """Process the data contained in 'x'.
         
@@ -285,26 +408,26 @@ class Node(object):
         If the node is invertible, compute the input x such that
         y = execute(x)."""
         
+        if not self.is_invertible():
+            raise IsNotInvertibleException, "This node is not invertible."
+
         self._if_training_stop_training()
 
         # set the output dimension if necessary
-        if not self._output_dim:
+        if self.output_dim is None:
             # if the input_dim is not defined, raise an exception
-            if not self._input_dim:
+            if self.input_dim is None:
                 errstr = "Number of input dimensions undefined. Inversion"+\
                          "not possible."
                 raise NodeException, errstr
-            self._set_default_outputdim(self._input_dim)
+            self.output_dim = self.input_dim
         
         # control the dimension of y
         self._check_output(y)
 
-        if not self.is_invertible():
-            raise IsNotInvertibleException, "This node is not invertible."
-
         return self._inverse(self._refcast(y), *args, **kargs)
 
-    def __call__(self,x):
+    def __call__(self, x):
         """Calling an instance if Node is equivalent to call
         its 'execute' method."""
         return self.execute(x)
@@ -317,9 +440,9 @@ class Node(object):
     def __repr__(self):
         # print input_dim, output_dim, typecode 
         name = type(self).__name__
-        inp = "input_dim=%s"%str(self._input_dim)
-        out = "output_dim=%s"%str(self._output_dim)
-        typ = "typecode='%s'"%self._typecode
+        inp = "input_dim=%s"%str(self.input_dim)
+        out = "output_dim=%s"%str(self.output_dim)
+        typ = "typecode='%s'"%self.typecode
         args = ', '.join((inp, out, typ))
         return name+'('+args+')'
 
@@ -328,14 +451,6 @@ class Node(object):
         Protocol is the pickle protocol."""
         as_str = _cPickle.dumps(self, protocol)
         return _cPickle.loads(as_str)
-        
-# deprecated alias
-class SignalNode(Node):
-    def __init__(self, input_dim = None, output_dim = None, typecode = None):
-        wrnstr = "The alias 'SignalNode' is deprecated and won't be " + \
-        "continued in future releases. Use 'Node' instead."
-        warnings.warn(wrnstr, DeprecationWarning)
-        super(SignalNode, self).__init__(input_dim, output_dim, typecode)
 
 class Cumulator(Node):
     """A Cumulator is a Node whose training phase simply cumulates
@@ -357,68 +472,14 @@ class Cumulator(Node):
     def _stop_training(self):
         """Cast the data list to array type and reshape it.
         """
-        self.data = numx.array(self.data, typecode = self._typecode)
-        self.data.shape = (self.tlen, self._input_dim)
+        self._training = False
+        self.data = numx.array(self.data, typecode = self.typecode)
+        self.data.shape = (self.tlen, self.input_dim)
 
-class FiniteNode(Node):
-    """A FiniteNode is a Node with a finite number of training phases.
-    This class is useful to implement one-shot algorithms."""
-
-    # read-only _train_seq property
-    def get_train_seq(self):
-        return [(self._train, self._stop_training)]
-     # the lambda allows the overriding of the get function
-    _train_seq = property(lambda self: self.get_train_seq())
-    
+# deprecated alias
+class SignalNode(Node):
     def __init__(self, input_dim = None, output_dim = None, typecode = None):
-        super(FiniteNode, self).__init__(input_dim, output_dim, typecode)
-        if self.is_trainable():
-            # this var stores at which point in the training sequence we are
-            self._train_phase = 0
-
-    def _if_training_stop_training(self):
-        if self.is_training():
-            if not self._train_phase == len(self._train_seq)-1:
-                raise TrainingException, \
-                      "The training phases are not completed yet."
-            else:
-                self.stop_training()
-
-    def train(self, x, *args):
-        """Update the internal structures according to the input data 'x'.
-        
-        'x' is a matrix having different variables on different columns
-        and observations on the rows."""
-
-        if not self.is_trainable():
-            raise IsNotTrainableException, "This node is not trainable."
-
-        if not self.is_training():
-            raise TrainingFinishedException, \
-                  "The training phase has already finished."
-
-        self._check_input(x)
-        self._check_train_args(x, *args)        
-        
-        self._train_phase_started = True
-        self._train_seq[self._train_phase][0](self._refcast(x), *args)
-        
-    def stop_training(self):
-        """Stop the training phase."""
-        if self.is_trainable() and self._train_phase_started == False:
-            raise TrainingException, \
-                  "The node has not been trained."
-        
-        if not self.is_training():
-            raise TrainingFinishedException, \
-                  "The training phase has already finished."
-
-        # close the current phase and initialize the next
-        self._train_seq[self._train_phase][1]()
-        self._train_phase += 1
-        self.train_phase_started = False
-
-        if self._train_phase >= len(self._train_seq):
-            # training phases finished
-            self._training = False
-        
+        wrnstr = "The alias 'SignalNode' is deprecated and won't be " + \
+        "continued in future releases. Use 'Node' instead."
+        _warnings.warn(wrnstr, DeprecationWarning)
+        super(SignalNode, self).__init__(input_dim, output_dim, typecode)

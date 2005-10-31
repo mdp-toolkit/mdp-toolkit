@@ -1,5 +1,5 @@
 import graph
-from mdp import numx, numx_rand, utils, FiniteNode
+from mdp import numx, numx_rand, utils, Node, NodeException
 
 class _GNGNodeData(object):
     """Data associated to a node in a Growing Neural Gas graph."""
@@ -19,7 +19,7 @@ class _GNGEdgeData(object):
         self.age += 1
 
 
-class GrowingNeuralGasNode(FiniteNode):
+class GrowingNeuralGasNode(Node):
     """GrowingNeuralGasNode learns the topological structure of its input,
     by building a corresponding graph approximation.
     More information about the Growing Neural Gas algorithm can be found in
@@ -76,12 +76,13 @@ class GrowingNeuralGasNode(FiniteNode):
         self.eps_b, self.eps_n, self.max_age, self.lambda_, self.alpha, \
                     self.d, self.max_nodes = \
                     eps_b, eps_n, max_age, lambda_, alpha, d, max_nodes
+
         
         super(GrowingNeuralGasNode, self).__init__(input_dim, None, typecode)
 
         if start_poss is not None:
-            if self._typecode is None:
-                self._set_typecode(start_poss[0].typecode())
+            if self.typecode is None:
+                self.typecode = start_poss[0].typecode()
             node1 = self._add_node(self._refcast(start_poss[0]))
             node2 = self._add_node(self._refcast(start_poss[1]))
             self._add_edge(node1, node2)
@@ -90,8 +91,9 @@ class GrowingNeuralGasNode(FiniteNode):
         """Return the list of typecodes supported by this node."""
         return ['f','d']
     
-    def _set_typecode(self, typecode):
-        super(GrowingNeuralGasNode, self)._set_typecode(typecode)
+    def _set_typecode(self, t):
+        """Set typecode."""
+        self._typecode = t
         self.eps_b = self._scast(self.eps_b)
         self.eps_n = self._scast(self.eps_n)
 
@@ -160,7 +162,7 @@ class GrowingNeuralGasNode(FiniteNode):
 
     def get_nodes_position(self):
         return numx.array(map(lambda n: n.data.pos, self.graph.nodes),
-                          typecode = self._typecode)
+                          typecode = self.typecode)
 
     def _train(self, input):
         g = self.graph
@@ -173,9 +175,9 @@ class GrowingNeuralGasNode(FiniteNode):
             # with zero mean and unit variance
             normal = utils.normal
             node1 = self._add_node(self._refcast(\
-                normal(0.0, 1.0, self.get_input_dim())))
+                normal(0.0, 1.0, self.input_dim)))
             node2 = self._add_node(self._refcast(\
-                normal(0.0, 1.0, self.get_input_dim())))
+                normal(0.0, 1.0, self.input_dim)))
         
         # loop on single data points
         for x in input:

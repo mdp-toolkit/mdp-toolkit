@@ -1,9 +1,9 @@
 from lcov import CovarianceMatrix
-from mdp import numx, utils, FiniteNode, \
+from mdp import numx, utils, Node, \
      NodeException, TrainingFinishedException
 from mdp.utils import mult, pinv, symeig, LeadingMinorException
 
-class SFANode(FiniteNode):
+class SFANode(Node):
     """SFANode receives an input signal and extracts its slowly varying
     components. More information about Slow Feature Analysis can be found in
     Wiskott, L. and Sejnowski, T.J., Slow Feature Analysis: Unsupervised
@@ -17,16 +17,6 @@ class SFANode(FiniteNode):
         self._cov_mtx = CovarianceMatrix(typecode)
         # one for the derivatives
         self._dcov_mtx = CovarianceMatrix(typecode)
-
-    def set_output_dim(self, output_dim):
-        """Set output dimensions.
-        This only works _before_ the end of the training phase."""
-        if self.is_training():
-            self._set_default_outputdim(output_dim)
-        else:
-            errstr = "The output dimension cannot be changed "+ \
-                     "after the training phase."
-            raise TrainingFinishedException, errstr
 
     def get_supported_typecodes(self):
         return ['f','d']
@@ -51,12 +41,12 @@ class SFANode(FiniteNode):
 
         # if the number of output components to keep is not specified,
         # keep all components
-        if not self._output_dim:
-            self._output_dim = self._input_dim
+        if not self.output_dim:
+            self.output_dim = self.input_dim
 
-        if self._output_dim < self._input_dim:
+        if self.output_dim < self.input_dim:
             # (eigenvalues sorted in ascending order)
-            rng = (1, self._output_dim)
+            rng = (1, self.output_dim)
         else:
             # otherwise, keep all output components
             rng = None
@@ -64,7 +54,7 @@ class SFANode(FiniteNode):
         #### solve the generalized eigenvalue problem
         # the eigenvalues are already ordered in ascending order
         try:
-            self.d, self.sf = symeig(dcov_mtx, cov_mtx, range=rng, overwrite = 1)
+            self.d, self.sf = symeig(dcov_mtx, cov_mtx, range=rng, overwrite=1)
         except LeadingMinorException, exception:
             errstr = str(exception)+"\n Covariance matrices may be singular."
             raise NodeException,errstr
@@ -101,7 +91,7 @@ class SFANode(FiniteNode):
 ## def time_derivative(self, x):
 ##     rows = x.shape[0]
 ##     columns = x.shape[1]
-##     deriv = numx.zeros((rows-1, columns), typecode=self._typecode)
+##     deriv = numx.zeros((rows-1, columns), typecode=self.typecode)
 
 ##     weave.inline(_TDERIVATIVE_1ORDER_CCODE,['rows','columns','deriv','x'],
 ##                  type_factories = weave.blitz_tools.blitz_type_factories,

@@ -124,7 +124,8 @@ if numx_description is None:
           "scipy, Numeric, or numarray"
 
 # clean up
-del _os, _warnings, _NUMX_LABELS, _NUMX_PKGS, _USR_LABEL, _name_import, _label, _dumb, _packages,
+del _os, _warnings, _NUMX_LABELS, _NUMX_PKGS, _USR_LABEL
+del _name_import, _label, _dumb, _packages
 
 # define our exceptions and warnings.
 # ?? in python 2.4 MDPException can be made new style
@@ -138,6 +139,7 @@ class MDPWarning(UserWarning):
     pass
 
 # import the utils module (used by other modules)
+# here we set scipy_emulation if needed.
 import utils
 
 # import exceptions from nodes and flows
@@ -147,7 +149,7 @@ from signal_node import NodeException, TrainingException, \
 from linear_flows import FlowException, FlowExceptionCR
 
 # import base node and flow classes.
-from signal_node import Node, SignalNode, Cumulator, FiniteNode
+from signal_node import Node, SignalNode, Cumulator
 from linear_flows import Flow, SimpleFlow, CheckpointFlow, \
      CheckpointFunction, CheckpointSaveFunction
 
