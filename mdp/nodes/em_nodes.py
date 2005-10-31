@@ -323,11 +323,7 @@ class KalmanNode(mdp.Node):
         if _internals:
             xt_T = numx.reshape(numx.asarray(xt_T, typecode=self.typecode),
                                 (tlen, k))
-<<<<<<< .mine
             # ?? Vt_T =numx.squeeze(numx.asarray(Vt_T, typecode=self.typecode))
-=======
-            # ??Vt_T =numx.squeeze(numx.asarray(Vt_T, typecode=self._typecode))
->>>>>>> .r75
             return xt_T, Vt_T, Vt_t1_T, lhood
         else:
             xt_T = numx.reshape(numx.asarray(xt_T, typecode=self.typecode),
@@ -341,14 +337,9 @@ class KalmanNode(mdp.Node):
     ### training phase 1: init Factor Analysis or AR1
 
     def _train_init1(self, y):
-<<<<<<< .mine
-        k = self.output_dim
-        d = self.input_dim
-=======
         return
         k = self._output_dim
         d = self._input_dim
->>>>>>> .r75
         
         if not hasattr(self, 'init_node'):
             if k<=d:
