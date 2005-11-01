@@ -95,13 +95,22 @@ class NodesTestSuite(unittest.TestSuite):
                         rand_func = numx_rand.random, avg = None, \
                         std_dev = None):
         if mat_dim is None: mat_dim = self.mat_dim
-        mat = ((rand_func(mat_dim)-0.5)*scale).astype(type)
-        mat -= mean(mat,axis=0)
-        mat /= std(mat,axis=0)
-        if std_dev is not None: mat *= std_dev
-        if avg is not None: mat += avg
-        mix = (rand_func((mat_dim[1],mat_dim[1]))*scale).astype(type)
-        return mat,mix,mult(mat,mix)
+        d = 0
+        while d < 1E-3:
+            mat = ((rand_func(mat_dim)-0.5)*scale).astype(type)
+            mat -= mean(mat,axis=0)
+            mat /= std(mat,axis=0)
+            # check that the minimum eigenvalue is finite and positive
+            d1 = min(utils.symeig(mult(tr(mat), mat), eigenvectors = 0))
+            if std_dev is not None: mat *= std_dev
+            if avg is not None: mat += avg
+            mix = (rand_func((mat_dim[1],mat_dim[1]))*scale).astype(type)
+            matmix = mult(mat,mix)
+            matmix_n = matmix - mean(matmix, axis=0)
+            matmix_n /= std(matmix_n, axis=0)
+            d2 = min(utils.symeig(mult(tr(matmix_n),matmix_n),eigenvectors=0))
+            d = min(d1, d2)
+        return mat, mix, matmix
 
     def _train_if_necessary(self, inp, node, args, sup_args_func):
         if node.is_trainable():
@@ -128,14 +137,14 @@ class NodesTestSuite(unittest.TestSuite):
             out = node.execute(inp)
             # compute the inverse
             rec = node.inverse(out)
-            assert_array_almost_equal(rec,inp,self.decimal-3)
+            assert_array_almost_equal_diff(rec,inp,self.decimal-3)
             assert_type_equal(rec.typecode(), 'f') 
         return _testinverse
 
     def _get_testtypecode(self, node_class, args=[], sup_args_func=None):
         def _testtypecode(node_class=node_class):
             for typecode in testtypes:
-                mat,mix,inp = self._get_random_mix(type="d")
+                mat, mix, inp = self._get_random_mix(type="d")
                 node = node_class(*args,**{'typecode':typecode})
                 self._train_if_necessary(inp, node, args, sup_args_func)
                 out = node.execute(inp)
@@ -312,14 +321,15 @@ class NodesTestSuite(unittest.TestSuite):
     def testWhiteningNode(self):
         vars = 5
         dim = (10000,vars)
-        mat,mix,inp = self._get_random_mix(mat_dim=dim,avg=numx_rand.random(vars))
+        mat,mix,inp = self._get_random_mix(mat_dim=dim,
+                                           avg=numx_rand.random(vars))
         w = mdp.nodes.WhiteningNode()
         w.train(inp)
         out = w.execute(inp)
         assert_array_almost_equal(mean(out,axis=0),\
-                                  numx.zeros((dim[1])),self.decimal)
+                                  numx.zeros((dim[1])),self.decimal-1)
         assert_array_almost_equal(std(out,axis=0)**2,\
-                                  numx.ones((dim[1])),self.decimal)
+                                  numx.ones((dim[1])),self.decimal-1)
 
     def testSFANode(self):
         dim=10000
@@ -336,7 +346,7 @@ class NodesTestSuite(unittest.TestSuite):
         out = sfa.execute(mat)
         correlation = mult(tr(des_mat[:-1,:]),out[:-1,:])/(dim-2)
         assert_array_almost_equal(abs(correlation),
-                                  utils.eye(2),self.decimal)
+                                  utils.eye(2),self.decimal-2)
 
     def _testICANode(self,icanode):
         vars = 3
@@ -458,7 +468,7 @@ class NodesTestSuite(unittest.TestSuite):
         norms = numx.sqrt(numx.sum(poss*poss, axis=1))
         poss = tr(tr(poss)/norms)
         assert max(numx.minimum(numx.sum(abs(poss-dir),axis=1),
-                                 numx.sum(abs(poss+dir),axis=1)))<1e-10, \
+                                 numx.sum(abs(poss+dir),axis=1)))<1e-7, \
                'At least one node of the graph does lies out of the line.'
         # check that the graph is linear (no additional branches)
         # get a topological sort of the graph
@@ -584,10 +594,10 @@ class NodesTestSuite(unittest.TestSuite):
 
         for i in range(nclasses):
             lbl_idx = node.labels.index(i)
-            assert_array_almost_equal(means[i],
+            assert_array_almost_equal_diff(means[i],
                                       node.means[lbl_idx],
                                       self.decimal-1)
-            assert_array_almost_equal(utils.inv(covs[i]),
+            assert_array_almost_equal_diff(utils.inv(covs[i]),
                                       node.inv_covs[lbl_idx],
                                       self.decimal-2)
 

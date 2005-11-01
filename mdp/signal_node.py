@@ -37,35 +37,6 @@ class IsNotInvertibleException(NodeException):
     node is not invertible."""
     pass
 
-# Decorators definitions. The syntax:
-# @dec1
-# def func(arg1, arg2, ...):
-#     pass
-# is equivalent to:
-# def func(arg1, arg2, ...):
-#     pass
-# func = dec1(func)
-#
-# Decorators declarations calling a function that returns the decorator:
-# @decomaker(argA, argB, ...)
-# def func(arg1, arg2, ...):
-#     pass
-# is equivalent to:
-# func = decomaker(argA, argB, ...)(func)
-
-def decomaker(method):
-    message = 'Documentation inherited from "%s":'%(method.__name__)
-    print 'Hy'
-    def docstringappend(func):
-        org_doc, app_doc = func.__doc__, method.__doc__
-        if org_doc and app_doc:
-            org_doc = '\n'.join((org_doc, message, app_doc))
-        elif app_doc is None:
-            pass
-        else:
-            org_doc = '\n'.join((message, app_doc))
-        return func
-    return docstringappend
 
 class Node(object):
     """A Node corresponds to a learning algorithm or to a generic

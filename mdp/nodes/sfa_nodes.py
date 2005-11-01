@@ -58,7 +58,14 @@ class SFANode(Node):
         except LeadingMinorException, exception:
             errstr = str(exception)+"\n Covariance matrices may be singular."
             raise NodeException,errstr
-            
+
+        # check that we didn't get negative eigenvalues,
+        # if this is the case the covariance matrix may be singular
+        if min(self.d) <= 0:
+            errs="Got negative eigenvalues: Covariance matrix may be singular."
+            raise NodeException, errs 
+
+        
     def _execute(self, x, range=None):
         """Compute the output of the slowest functions.
         if 'range' is a number, then use the first 'range' functions.

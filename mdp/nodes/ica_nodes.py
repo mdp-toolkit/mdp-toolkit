@@ -61,7 +61,7 @@ class ICANode(mdp.Cumulator, mdp.Node):
             self.white = white
 
         data = self.data
-
+        
         # call 'core' in telescope mode if needed
         if self.telescope:
             minpow = math.frexp(self.input_dim*10)[1]
@@ -278,7 +278,7 @@ class FastICANode(ICANode):
         typecode = self.typecode
         verbose = self.verbose
         X = t(data)
-
+        
         # casted constants
         comp = X.shape[0]
         tlen = self._scast(X.shape[1])
@@ -380,7 +380,6 @@ class FastICANode(ICANode):
                     # this w.
                     # u_i = b_i' x = x' b_i. For all x:s simultaneously this is
                     u = mult(t(X),w)
-
                     #non linearity
                     if g == 'pow3':
                         w = mult(X,u*u*u)/tlen - three*w

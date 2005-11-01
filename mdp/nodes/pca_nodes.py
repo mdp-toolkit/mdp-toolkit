@@ -91,6 +91,13 @@ class PCANode(Node):
         except LeadingMinorException, exception:
             errstr = str(exception)+"\n Covariance matrix may be singular."
             raise NodeException,errstr
+
+        # check that we didn't get negative eigenvalues,
+        # if this is the case the covariance matrix may be singular
+        if min(d) <= 0:
+            errs="Got negative eigenvalues: Covariance matrix may be singular."
+            raise NodeException, errs 
+                  
         
         # sort by descending order
         d = numx.take(d, range(d.shape[0]-1,-1,-1))

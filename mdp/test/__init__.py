@@ -11,6 +11,7 @@ Run all benchmarks with:
 """
 
 import unittest
+import sys
 from mdp import numx, numx_rand
 import test_nodes, test_flows, test_utils
 import benchmark_mdp
@@ -20,13 +21,17 @@ test_suites = {'nodes': test_nodes.get_suite(),
                'flows': test_flows.get_suite(),
                'utils': test_utils.get_suite()}
 
-def test(suitename = 'all', verbosity = 2):
-    #numx_rand.seed(1268049219, 2102953867)
+def test(suitename = 'all', verbosity = 2, seed = None):
+    if seed is None:
+        #numx_rand.seed(1268049219, 2102953867)
+        pass
+    else:
+        numx_rand.seed(*seed)
+    sys.stderr.write("Random Seed: " + str(numx_rand.get_seed())+'\n')
     if suitename == 'all':
         suite = unittest.TestSuite(test_suites.values())
     else:
         suite = test_suites[suitename]
-    print "Random Seed: ", numx_rand.get_seed()
     unittest.TextTestRunner(verbosity=verbosity).run(suite)
 
 benchmark_suites = {'mdp': benchmark_mdp.get_benchmarks()}
