@@ -9,7 +9,16 @@ import unittest
 import pickle
 import os
 import tempfile
-from mdp import utils, numx_rand
+from mdp import utils, numx_rand, Node, nodes
+
+class BogusClass(object):
+    x = numx_rand.random((2,2))
+    
+class BogusNode(Node):
+    x = numx_rand.random((2,2))
+    y = BogusClass()
+    z = BogusClass()
+    z.z = BogusClass()
 
 class UtilsTestCase(unittest.TestCase):
 ##     def testProgressBar(self):
@@ -37,12 +46,30 @@ class UtilsTestCase(unittest.TestCase):
             os.remove(fname)
             assert obj == a
             
-        
+    def testIntrospection(self):
+        bogus = BogusNode()
+        arrays, string = utils.dig_node(bogus)
+        assert len(arrays.keys()) == 4, 'Not all arrays where caught'
+        assert sorted(arrays.keys()) == ['x', 'y.x',
+                                         'z.x', 'z.z.x'], 'Wrong names'
+        sizes = [x[0] for x in arrays.values()]
+        assert sorted(sizes) == [numx_rand.random((2,2)).itemsize()*4]*4, \
+               'Wrong sizes'
+        sfa = nodes.SFANode()
+        sfa.train(numx_rand.random((1000, 10)))
+        a_sfa, string = utils.dig_node(sfa)
+        keys = ['_cov_mtx._avg', '_cov_mtx._cov_mtx',
+                '_dcov_mtx._avg', '_dcov_mtx._cov_mtx',]
+        assert sorted(a_sfa.keys()) == keys, 'Wrong arrays in SFANode'
+        sfa.stop_training()
+        a_sfa, string = utils.dig_node(sfa)
+        keys = ['avg', 'd', 'sf', 'tlen']
+        assert sorted(a_sfa.keys()) == keys, 'Wrong arrays in SFANode'
+                
 def get_suite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(UtilsTestCase))
     return suite
-
 
 if __name__ == '__main__':
     numx_rand.seed(1268049219, 2102953867)

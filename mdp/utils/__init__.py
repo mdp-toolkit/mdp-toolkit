@@ -1,5 +1,6 @@
 from routines import timediff, refcast, scast, rotate, random_rot, \
      ProgressBar, CrashRecoveryException, symrand, norm2, uniq, ordered_uniq
+from introspection import dig_node, get_node_size
 import mdp as _mdp
 import scipy_emulation, types
 
