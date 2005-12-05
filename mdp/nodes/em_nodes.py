@@ -19,9 +19,17 @@ class FANode(mdp.Node):
                  input_dim=None, output_dim=None, typecode=None):
         """Perform Factor Analysis.
 
-        tol -- tolerance (change in log-likelihood)
+        The current implementation should be more efficient for long data sets
+        with 
+
+        tol -- tolerance (minimum change in log-likelihood)
         max_cycles -- maximum number of EM cycles
         verbose -- if True, print log-likelihood during the EM-cycles
+
+        More information about Factor Analysis can be found in
+        Max Welling´s classnotes:
+        http://www.ics.uci.edu/~welling/classnotes/classnotes.html ,
+        under the chapter ´Linear Models´.
         """
         # Notation as in Max Welling's notes
         super(FANode, self).__init__(input_dim, output_dim, typecode)
@@ -64,7 +72,8 @@ class FANode(mdp.Node):
         sigma = cov_diag
         # loading factors
         # Zoubin uses the determinant of cov_mtx^1/d as scale but it's
-        # too slow. is the product of the diagonal a good approximation?
+        # too slow for large matrices. Ss the product of the diagonal a good
+        # approximation?
         #scale = det(cov_mtx)**(1./d)
         scale = numx.product(sigma)**(1./d)
         A = normal(0., sqrt(scale/k), shape=(d,k)).astype(typ)
@@ -153,7 +162,7 @@ class FANode(mdp.Node):
 
 class KalmanNode(mdp.Node):
     
-    def get_train_seq(self):
+    def _get_train_seq(self):
         return [(self._train_init1, self._stop_init1),
                 (self._train_init2, self._stop_init2),
                 (self._train_em, self._stop_em)]
