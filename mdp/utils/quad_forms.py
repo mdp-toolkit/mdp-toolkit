@@ -131,10 +131,10 @@ if __name__ == "__main__":
     H = H+tr(H)
     q = QuadraticForm(H=H, f=noise*mdp.numx_rand.random((10,)))
     xmax, xmin, vmax, vmin = q.get_extrema(mdp.utils.norm2(x), tol=noise)
-    print 'Shoule be zero:', max(abs(x-xmax))
+    print 'Should be zero:', max(abs(x-xmax))
     # check I + linear term
     f = x
     H = numx.eye(10, "d")
     q = QuadraticForm(H=H,f=f)
     xmax, xmin, vmax, vmin = q.get_extrema(mdp.utils.norm2(x), tol=noise) 
-    print 'Shoule be zero:', max(abs(f-xmax))
+    print 'Should be zero:', max(abs(f-xmax))
