@@ -1,6 +1,7 @@
 from routines import timediff, refcast, scast, rotate, random_rot, \
      ProgressBar, CrashRecoveryException, symrand, norm2, uniq, ordered_uniq
 from introspection import dig_node, get_node_size
+from quad_forms import QuadraticForm
 import mdp as _mdp
 import scipy_emulation, types
 
@@ -70,4 +71,5 @@ for name, val in scipy_emulation.__dict__.iteritems():
                                   getattr(_mdp.numx_linalg, name,
                                           val))
 
+# clean up
 del scipy_emulation, types, _mdp
