@@ -17,10 +17,10 @@ class PCANode(Node):
         (e.g. 'output_dim=0.95' means that as many components as necessary
         will be kept in order to explain 95% of the input variance)."""
         if output_dim <= 1 and isinstance(output_dim, float):
-            self._desired_variance = output_dim
+            self.desired_variance = output_dim
             output_dim = None
         else:
-            self._desired_variance = None
+            self.desired_variance = None
         
         super(PCANode, self).__init__(input_dim, output_dim, typecode)
         
@@ -69,7 +69,7 @@ class PCANode(Node):
         ##### compute the principal components
         # if the number of principal components to keep is not specified,
         # keep all components
-        if self._desired_variance is None and self.output_dim is None:
+        if self.desired_variance is None and self.output_dim is None:
             self.output_dim = self.input_dim
 
         ## define the range of eigenvalues to compute
@@ -123,7 +123,7 @@ class PCANode(Node):
             varcum = numx.cumsum(d/vartot, axis = 0)
             # select only the relevant eigenvalues
             # number of relevant eigenvalues
-            neigval = numx.searchsorted(varcum, self._desired_variance)+1
+            neigval = numx.searchsorted(varcum, self.desired_variance)+1
             self.explained_variance = varcum[neigval]
             # cut
             d = d[0:neigval]

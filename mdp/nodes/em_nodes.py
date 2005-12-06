@@ -27,9 +27,9 @@ class FANode(mdp.Node):
         verbose -- if True, print log-likelihood during the EM-cycles
 
         More information about Factor Analysis can be found in
-        Max Welling´s classnotes:
+        Max Welling's classnotes:
         http://www.ics.uci.edu/~welling/classnotes/classnotes.html ,
-        under the chapter ´Linear Models´.
+        under the chapter 'Linear Models'.
         """
         # Notation as in Max Welling's notes
         super(FANode, self).__init__(input_dim, output_dim, typecode)

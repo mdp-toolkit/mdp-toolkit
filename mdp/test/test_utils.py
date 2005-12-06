@@ -9,7 +9,7 @@ import unittest
 import pickle
 import os
 import tempfile
-from mdp import utils, numx_rand, Node, nodes
+from mdp import numx, utils, numx_rand, Node, nodes
 
 class BogusClass(object):
     x = numx_rand.random((2,2))
@@ -64,7 +64,7 @@ class UtilsTestCase(unittest.TestCase):
         sfa.stop_training()
         a_sfa, string = utils.dig_node(sfa)
         keys = ['avg', 'd', 'sf', 'tlen']
-        assert sorted(a_sfa.keys()) == keys, 'Wrong arrays in SFANode'
+        assert sorted(a_sfa.keys()) == keys, 'Wrong arrays in SFANode'        
                 
 def get_suite():
     suite = unittest.TestSuite()
