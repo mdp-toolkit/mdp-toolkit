@@ -169,8 +169,8 @@ class Flow(object):
     def train(self, data_iterators):
         """Train all trainable nodes in the flow.
         
-        'data_iterators' is a list of generators (note that a list is also
-        a generator), which return data arrays, one for each node in the flow.
+        'data_iterators' is a list of iterators (note that a list is also
+        a iterator), which return data arrays, one for each node in the flow.
         If instead one array is specified, it is used as input training
         sequence for all nodes."""
 

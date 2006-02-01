@@ -9,7 +9,7 @@ sqrt, tr, inv, det = numx.sqrt, numx.transpose, utils.inv, utils.det
 
 # decreasing likelihood message
 _LHOOD_WARNING = 'Likelihood decreased in FANode. This is probably due '+\
-                'to some numerical errors.'
+                 'to some numerical errors.'
 warnings.filterwarnings('always', _LHOOD_WARNING, mdp.MDPWarning)
 
 
@@ -19,8 +19,8 @@ class FANode(mdp.Node):
                  input_dim=None, output_dim=None, typecode=None):
         """Perform Factor Analysis.
 
-        The current implementation should be more efficient for long data sets
-        with 
+        The current implementation should be most efficient for long
+        data sets with
 
         tol -- tolerance (minimum change in log-likelihood)
         max_cycles -- maximum number of EM cycles
@@ -148,10 +148,10 @@ class FANode(mdp.Node):
         variables."""
         return mult(x-self.mu, self.E_y_mtx)
 
-    def _inverse(self, y, noise=False):
+    def _inverse(self, y, noise = False):
         """Generate observations x.
 
-        noise -- if True, generation includes noise."""
+        noise -- if True, generation includes the estimated noise."""
         res = mult(y, tr(self.A))+self.mu
         if noise:
             ns = utils.normal(0., self.sigma,
@@ -171,8 +171,8 @@ class KalmanNode(mdp.Node):
         """State Space Model / Linear Dynamical System / Kalman Filter
 
         This node is a basic implementation of the EM algorithm for
-        State Space Models. It could probably be refined to save some memory
-        and time.
+        Linear Dynamical Systems. It could probably be refined to save
+        some memory and time.
 
         output_dim -- number of latent variables
         """
@@ -210,6 +210,7 @@ class KalmanNode(mdp.Node):
         k = self.output_dim
         tlen = y.shape[0]
 
+        # ?? save _t1 variables only when internals is set
         # E(xt | y1 ... yt-1)
         xt_t1 = []
         # E(xt | y1 ... yt)
@@ -252,7 +253,7 @@ class KalmanNode(mdp.Node):
             y_diff = y[i:i+1,:] - mult(xpre, tr_C)
             xpost = xpre + mult(y_diff, tr(K))
             # Vpost := Var(xt+1 | y1 ... yt+1)
-            # this is the equation in Gahahramani and Hinton:
+            # this is the equation in Gaharamani and Hinton:
             # Vpost = Vpre - mult(K, tr(VC))
             # the following way is much more stable (see M.Welling eq. 43)
             # ?? should I get rid of eye?
@@ -312,6 +313,7 @@ class KalmanNode(mdp.Node):
         Vt_T[-1] = Vt_t[-1]
         for i in xrange(tlen-1, 0, -1):
             J[i-1] = mult(Vt_t[i-1], mult(tr(A), inv(Vt_t1[i])))
+            # ?? ... + mult(ct_T[i]-xt_t1[i], tr(J[i-1]))
             xt_T[i-1] = xt_t[i-1] + \
                         mult(xt_T[i]-mult(xt_t[i-1], tr_A), tr(J[i-1]))
             Vt_T[i-1] = Vt_t[i-1] + \
