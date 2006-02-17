@@ -1,11 +1,13 @@
 -------------------------------------------------------------------------------
 MDP-?.?.?:
+
+01.11.2006: New nodes: FANode, FDANode, GaussianClassifierNode
 31.10.2005: Non back-compatible changes. Node has got three new 'properties':
             output_dim, input_dim, typecode. They are accessible through their
-	    getters (get_PROPERTY). They can be set using the default setters
-	    (set_PROPERTY). Subclasses can customize the setters, overriding
-	    the _set_PROEPRTY private methods. All nodes had to be changed to 
-	    conform with the new structure. All tests pass.
+	        getters (get_PROPERTY). They can be set using the default setters
+	        (set_PROPERTY). Subclasses can customize the setters, overriding
+	        the _set_PROEPRTY private methods. All nodes had to be changed to 
+	        conform with the new structure. All tests pass.
 26.10.2005: To force MDP to use a particular numerical extension, you
             can now set the enviroment variable MDPNUMX. Supported
             values are 'symeig', 'scipy', 'Numeric', 'numarray'.
@@ -27,7 +29,6 @@ MDP-?.?.?:
 23.06.2005: _check_roundoff in lcov.py issues a MDPWarning using warnings.warn.
             it was using 'raise' before, and it was caught as a FlowException.
 21.06.2005: node consistency is assured at flow instantiation.
-
 -------------------------------------------------------------------------------
 MDP-1.1.0:
 

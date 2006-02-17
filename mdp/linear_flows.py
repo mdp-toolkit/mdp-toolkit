@@ -114,7 +114,7 @@ class Flow(object):
             self._propagate_exception(e, nodenr)
             
     def _train_check_iterators(self, data_iterators):
-        #verifies that the number of generators matches that of
+        #verifies that the number of iterators matches that of
         #the signal nodes and multiplies them if needed.
         flow = self.flow
 
@@ -135,7 +135,7 @@ class Flow(object):
        
         # check that the number of data_iterators is correct
         if len(data_iterators)!=len(flow):
-            error_str = "%d data sequence generators specified, %d needed"
+            error_str = "%d data iterators specified, %d needed"
             raise FlowException, error_str % (len(data_iterators), len(flow))
 
         # check that every node with multiple phases has an iterator
@@ -208,22 +208,22 @@ class Flow(object):
                 self._propagate_exception(e, i)
         return x
 
-    def execute(self, generator, nodenr = None):
+    def execute(self, iterator, nodenr = None):
         """Process the data through all nodes in the flow.
         
-        'generator' is a generator  (note that a list is also a generator),
+        'iterator' is an iterator (note that a list is also an iterator),
         which returns data arrays that are used as input to the flow.
         Alternatively, one can specify one data array as input.
         
         If 'nodenr' is specified, the flow is executed only up to
         node nr. 'nodenr'.
-        This is equivalent to 'flow[:nodenr+1](generator)'."""
-        # if generator is one single input sequence
-        if isinstance(generator, numx.ArrayType):
-            return self._execute_seq(generator, nodenr)
-        # otherwise it is a generator
+        This is equivalent to 'flow[:nodenr+1](iterator)'."""
+        # if iterator is one single input sequence
+        if isinstance(iterator, numx.ArrayType):
+            return self._execute_seq(iterator, nodenr)
+        # otherwise it is a iterator
         res = []
-        for x in generator:
+        for x in iterator:
             res.append(self._execute_seq(x, nodenr))
         return numx.concatenate(res)
 
@@ -238,24 +238,24 @@ class Flow(object):
         return x
 
 
-    def inverse(self, generator):
+    def inverse(self, iterator):
         """Process the data through all nodes in the flow backwards        
         (starting from the last node up to the first node) by calling the
         inverse function of each node.
-        'generator' is a generator  (note that a list is also a generator),
+        'iterator' is an iterator  (note that a list is also an iterator),
         which returns data arrays that are used as input to the flow.
         Alternatively, one can specify one data array as input.
         
-        Note that this is _not_ equivalent to 'flow[::-1](generator)',
+        Note that this is _not_ equivalent to 'flow[::-1](iterator)',
         which also executes the flow backwards but calls the 'execute'
         function of each node."""
         
-        # if generator is one single input sequence
-        if isinstance(generator, numx.ArrayType):
-            return self._inverse_seq(generator)
-        # otherwise it is a generator
+        # if iterator is one single input sequence
+        if isinstance(iterator, numx.ArrayType):
+            return self._inverse_seq(iterator)
+        # otherwise it is a iterator
         res = []
-        for x in generator:
+        for x in iterator:
             res.append(self._inverse_seq(x))
         return numx.concatenate(res)
 
@@ -265,9 +265,9 @@ class Flow(object):
         as_str = cPickle.dumps(self, protocol)
         return cPickle.loads(as_str)
 
-    def __call__(self, generator, nodenr = None):
+    def __call__(self, iterator, nodenr = None):
         """Calling an instance is equivalent to call its 'execute' method."""
-        return self.execute(generator, nodenr=nodenr)
+        return self.execute(iterator, nodenr=nodenr)
 
     ###### string representation
     def __str__(self):

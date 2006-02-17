@@ -2,14 +2,13 @@ realistic TODO:
 
 MDP 2.0.0 28.10.2005:
 
-- check tests: should run without failures or errors up to 10000 times. (zito)
 - test PCANode when output_dim = float (zito)
-- document new nodes, check old ones also (berkes)
-- decorators for automagically handle docstrings (zito?)
-- check iterators generators in flow (only allow generators for single phase nodes)
-  (remember : type <generator>) + test (berkes)
+- document new nodes, check old ones as well (berkes)
 - kalman filters (berkes)
-- TUTORIAL! (who knows?)
+- TUTORIAL:
+    - check code errors
+    - is_trainable etc. return True/False
+    - flow, iterators, generators etc.
 - demos ? 
 - site: add citation section, state email addresses, rewrite description to highlight
   education, framework for new algorithms, title outlook, modify mantainers, modify 
@@ -17,8 +16,18 @@ MDP 2.0.0 28.10.2005:
 - memory profiler
 - real benchmark
 - quadratic forms
+- write paragraph about the new scipy/numpy thing
 
-  
+done:
+
+- check tests: should run without failures or errors up to 10000 times. (zito)
+- decorators for automagically handle docstrings (zito?)
+- check iterators generators in flow (only allow generators for single
+    phase nodes) also check all Flow docstrings: they contain a lot of
+    'generators'
+- tutorial: supervised / multiple-phase nodes
+
+
 forget about that:
 
 MDP 1.1.0, 13.06.2005:
