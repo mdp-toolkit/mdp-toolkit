@@ -44,6 +44,25 @@ class _BogusExceptNode(mdp.Node):
     def _execute(self,x):
         raise Exception, "Bogus Exception"
 
+class _BogusMultiNode(mdp.Node):
+
+    def __init__(self):
+        super(_BogusMultiNode, self).__init__()
+        self.visited = []
+    
+    def _get_train_seq(self):
+        return [(self.train1, self.stop1),
+                (self.train2, self.stop2)]
+
+    def train1(self, x):
+        self.visited.append(1)
+    def stop1(self):
+        self.visited.append(2)
+    def train2(self, x):
+        self.visited.append(3)
+    def stop2(self):
+        self.visited.append(4)
+
 class FlowsTestCase(unittest.TestCase):
 
     def _get_random_mix(self,mat_dim = None, type = "d", scale = 1,
@@ -126,7 +145,8 @@ class FlowsTestCase(unittest.TestCase):
         del copy_flow[:2]
         assert len(copy_flow) == len(flow)-2, \
                '__delitem__ did not del normal slice'
-        assert copy_flow[0] == flow[2], '__delitem__ deleted wrong normal slice'
+        assert copy_flow[0] == flow[2], \
+               '__delitem__ deleted wrong normal slice'
         # test __delitem__, extended slice
         copy_flow = mdp.Flow(flow[:])
         del copy_flow[:2:1]
@@ -215,7 +235,8 @@ class FlowsTestCase(unittest.TestCase):
                                       node_class = _BogusNodeTrainable)
         flow.train(inp, cfunc)
         #
-        assert len(lst)==len(flow), 'The checkpoint function has been called %d times instead of %d times.' % (len(lst), len(flow))
+        assert len(lst)==len(flow), \
+               'The checkpoint function has been called %d times instead of %d times.' % (len(lst), len(flow))
         
     def testCheckpointFunction(self):
         cfunc = _CheckpointCollectFunction()
@@ -246,13 +267,33 @@ class FlowsTestCase(unittest.TestCase):
             assert isinstance(e,mdp.FlowExceptionCR)
             assert not hasattr(e,'filename')
 
-            
+    def testMultiplePhases(self):
+        # test basic multiple phase sequence
+        flow = mdp.Flow([_BogusMultiNode()])
+        flow.train(mdp.numx.zeros((1,2), 'd'))
+        assert flow[0].visited == [1,2,3,4]
+        # try to use an iterator to train it, check for rewinds
+        class TestIterator:
+            def __init__(self):
+                self.used = 0
+            def __iter__(self):
+                self.used += 1
+                yield mdp.numx.zeros((1,2), 'd')
+        flow = mdp.Flow([_BogusMultiNode()])
+        iter = TestIterator()
+        flow.train([iter])
+        assert iter.used == 2
+        # should not work with an iterator
+        def testgenerator():
+            yield mdp.numx.zeros((1,2), 'd')
+        flow = mdp.Flow([_BogusMultiNode()])
+        self.assertRaises(mdp.FlowException, flow.train, [testgenerator()])
+
 def get_suite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(FlowsTestCase))
     return suite
 
-    
 if __name__ == '__main__':
     numx_rand.seed(1268049219, 2102953867)
     unittest.TextTestRunner(verbosity=2).run(get_suite())

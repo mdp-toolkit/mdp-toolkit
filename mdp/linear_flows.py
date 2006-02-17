@@ -4,6 +4,7 @@ import traceback
 import cPickle
 import warnings
 import tempfile
+import types
 
 # import numeric module (scipy, Numeric or numarray)
 numx = mdp.numx
@@ -122,7 +123,7 @@ class Flow(object):
 
         if not isinstance(data_iterators, list):
             errstr = "'data_iterators' is "+ str(type(data_iterators)) + \
-                     " must be either a list of generators or an array"
+                     " must be either a list of iterators or an array"
             raise FlowException, errstr
 
         # check that all elements are iterable
@@ -130,12 +131,23 @@ class Flow(object):
             el = data_iterators[i]
             if el is not None and not hasattr(el, '__iter__'):
                 raise FlowException, "Element number %d in the " % i + \
-                      "generator list is not a list or generator."
+                      "iterators list is not a list or iterator."
        
         # check that the number of data_iterators is correct
         if len(data_iterators)!=len(flow):
             error_str = "%d data sequence generators specified, %d needed"
             raise FlowException, error_str % (len(data_iterators), len(flow))
+
+        # check that every node with multiple phases has an iterator
+        # but NOT a generator (since you cannot "rewind" a generator)
+        for i in range(len(flow)):
+            node, iter = flow[i], data_iterators[i]
+            if len(node._train_seq)>1 and type(iter) is types.GeneratorType:
+                errstr = "Node number %d has multiple training phases " %i +\
+                         "but the corresponding iterator is a generator. " +\
+                         "This is not allowed since generators cannot be " +\
+                         "'rewinded' for further training."
+                raise FlowException, errstr
 
         return data_iterators
 
