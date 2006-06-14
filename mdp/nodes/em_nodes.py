@@ -249,10 +249,10 @@ class KalmanNode(mdp.Node):
 
             # ?? allow for missing values by putting xpost=xpre, Vpost=Vpre
             # new estimation
-            # xpost := E(xt+1 | y1 ... yt+1)
+            # xpost := E(xt | y1 ... yt)
             y_diff = y[i:i+1,:] - mult(xpre, tr_C)
             xpost = xpre + mult(y_diff, tr(K))
-            # Vpost := Var(xt+1 | y1 ... yt+1)
+            # Vpost := Var(xt | y1 ... yt)
             # this is the equation in Gaharamani and Hinton:
             # Vpost = Vpre - mult(K, tr(VC))
             # the following way is much more stable (see M.Welling eq. 43)

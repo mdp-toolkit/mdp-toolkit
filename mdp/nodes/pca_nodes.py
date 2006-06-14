@@ -137,7 +137,7 @@ class PCANode(Node):
         ## store the eigenvectors
         self.v = v
 
-    def get_projmatrix(self ,transposed=1):
+    def get_projmatrix(self, transposed=1):
         """Return the projection matrix."""
         self._if_training_stop_training()
         if transposed:
