@@ -1,10 +1,8 @@
 import mdp
 
 numx = mdp.numx
-solve = mdp.numx_linalg.solve
 tr = numx.transpose
 epsilon = 1E-15
-
 
 class QuadraticForm(object):
     """ """
@@ -64,7 +62,7 @@ class QuadraticForm(object):
             # H is negative definite
             H_definite_negative = True
 
-        x0 = solve(-H, f)
+        x0 = mdp.numx_linalg.solve(-H, f)
         if H_definite_positive and mdp.utils.norm2(x0) <= norm:
             xmin = x0
             # x0 is a minimum
