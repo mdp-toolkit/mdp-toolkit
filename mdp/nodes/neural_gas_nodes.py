@@ -1,5 +1,3 @@
-## Automatically adapted for numpy Jun 26, 2006 by 
-
 import graph
 from mdp import numx, numx_rand, utils, Node, NodeException
 
@@ -84,12 +82,12 @@ class GrowingNeuralGasNode(Node):
 
         if start_poss is not None:
             if self.typecode is None:
-                self.typecode = start_poss[0].dtype.char
+                self.typecode = start_poss[0].dtype
             node1 = self._add_node(self._refcast(start_poss[0]))
             node2 = self._add_node(self._refcast(start_poss[1]))
             self._add_edge(node1, node2)
 
-    def get_supported_typecodes(self):
+    def _get_supported_typecodes(self):
         """Return the list of typecodes supported by this node."""
         return ['f','d']
     
@@ -175,7 +173,7 @@ class GrowingNeuralGasNode(Node):
             # assuming that the input data has zero mean and unit variance,
             # choose the random position according to a gaussian distribution
             # with zero mean and unit variance
-            normal = utils.normal
+            normal = numx_rand.normal
             node1 = self._add_node(self._refcast(\
                 normal(0.0, 1.0, self.input_dim)))
             node2 = self._add_node(self._refcast(\

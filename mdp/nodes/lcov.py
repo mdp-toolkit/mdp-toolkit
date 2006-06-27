@@ -1,5 +1,3 @@
-## Automatically adapted for numpy Jun 26, 2006 by 
-
 import mdp
 import warnings
 
@@ -15,8 +13,8 @@ _limits = { 'd' : 1e13, 'f' : 1e5}
 
 def _check_roundoff(t, type):
     """Check if t is so large that t+1 == t up to 2 precision digits"""   
-    if type in _limits:
-        if int(t) >= _limits[type]:
+    if type.char in _limits:
+        if int(t) >= _limits[type.char]:
             wr = 'You have summed %e entries in the covariance matrix.'%t+\
                  '\nAs you are using typecode \'%s\', you are '%type+\
                  'probably getting severe round off'+\
@@ -47,7 +45,10 @@ class CovarianceMatrix(object):
         no upcast is possible.
         """
         
-        self._typecode = typecode
+        if typecode is None:
+            self._typecode = None
+        else:
+            self._typecode = numx.dtype(typecode)
 
         # covariance matrix, updated during the training phase
         self._cov_mtx = None
@@ -63,8 +64,8 @@ class CovarianceMatrix(object):
         """
         
         # init typecode
-        if not self._typecode:
-            self._typecode = x.dtype.char
+        if self._typecode is None:
+            self._typecode = x.dtype
         dim = x.shape[1]
         self._input_dim = dim
         type = self._typecode
@@ -143,8 +144,11 @@ class DelayCovarianceMatrix(object):
 
         # time delay
         self._dt = int(dt)
-        
-        self._typecode = typecode
+
+        if typecode is None:
+            self._typecode = None
+        else:
+            self._typecode = numx.dtype(typecode)
 
         # clean up variables to spare on space
         self._cov_mtx = None
@@ -159,8 +163,8 @@ class DelayCovarianceMatrix(object):
         """
         
         # init typecode
-        if not self._typecode:
-            self._typecode = x.dtype.char
+        if self._typecode is None:
+            self._typecode = x.dtype
         dim = x.shape[1]
         self._input_dim = dim
         # init covariance matrix

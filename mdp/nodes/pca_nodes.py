@@ -1,8 +1,6 @@
-## Automatically adapted for numpy Jun 26, 2006 by 
-
 from mdp import numx, Node, \
      NodeException, TrainingFinishedException
-from mdp.utils import mult, symeig, LeadingMinorException
+from mdp.utils import mult, symeig #, LeadingMinorException
 from lcov import CovarianceMatrix
 
 class PCANode(Node):
@@ -41,7 +39,7 @@ class PCANode(Node):
                         % (y.shape[1], self.output_dim)
             raise SignalNodeException, error_str
 
-    def get_supported_typecodes(self):
+    def _get_supported_typecodes(self):
         return ['f','d']
     
     def get_explained_variance(self):
@@ -90,7 +88,8 @@ class PCANode(Node):
         # (eigenvalues sorted in ascending order)
         try:
             d, v = symeig(cov_mtx, range = rng, overwrite = 1)
-        except LeadingMinorException, exception:
+        #except LeadingMinorException, exception:
+        except exception:
             errstr = str(exception)+"\n Covariance matrix may be singular."
             raise NodeException,errstr
 

@@ -1,5 +1,3 @@
-## Automatically adapted for numpy Jun 26, 2006 by 
-
 """These are some benchmark functions for MDP.
 
 Run them with:
@@ -18,7 +16,7 @@ numx_rand = mdp.numx_rand
 def _random_spd_mtx(dim):
     rnd = numx_rand.random((dim,dim))
     v = mdp.utils.random_rot(rnd)
-    d = mdp.utils.diag(numx_rand.random(dim) + 1)
+    d = mdp.numx.diag(numx_rand.random(dim) + 1)
     return  mult(v,mult(d,numx.transpose(v)))
 
 ####### benchmark function

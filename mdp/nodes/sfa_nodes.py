@@ -1,9 +1,7 @@
-## Automatically adapted for numpy Jun 26, 2006 by 
-
 from lcov import CovarianceMatrix
 from mdp import numx, utils, Node, \
      NodeException, TrainingFinishedException
-from mdp.utils import mult, pinv, symeig, LeadingMinorException
+from mdp.utils import mult, pinv, symeig #, LeadingMinorException
 
 class SFANode(Node):
     """SFANode receives an input signal and extracts its slowly varying
@@ -20,7 +18,7 @@ class SFANode(Node):
         # one for the derivatives
         self._dcov_mtx = CovarianceMatrix(typecode)
 
-    def get_supported_typecodes(self):
+    def _get_supported_typecodes(self):
         return ['f','d']
 
     def time_derivative(self, x):
@@ -57,7 +55,8 @@ class SFANode(Node):
         # the eigenvalues are already ordered in ascending order
         try:
             self.d, self.sf = symeig(dcov_mtx, cov_mtx, range=rng, overwrite=1)
-        except LeadingMinorException, exception:
+        #except LeadingMinorException, exception:
+        except exception:
             errstr = str(exception)+"\n Covariance matrices may be singular."
             raise NodeException,errstr
 
@@ -66,7 +65,6 @@ class SFANode(Node):
         if min(self.d) <= 0:
             errs="Got negative eigenvalues: Covariance matrix may be singular."
             raise NodeException, errs 
-
         
     def _execute(self, x, range=None):
         """Compute the output of the slowest functions.

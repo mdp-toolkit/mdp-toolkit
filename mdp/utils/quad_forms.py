@@ -1,5 +1,3 @@
-## Automatically adapted for numpy Jun 26, 2006 by 
-
 import mdp
 
 numx = mdp.numx

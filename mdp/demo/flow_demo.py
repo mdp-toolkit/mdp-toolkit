@@ -1,4 +1,4 @@
-## Automatically adapted for numpy Jun 26, 2006 by 
+ 
 
 """This demo shows how to build, train and execute a flow.
 
@@ -53,7 +53,7 @@ class VisualizeNode(mdp.Node):
 # Generate a signal with 20 dimensions and 1000 observations:
 inp = mdp.numx_rand.random((1000,20))
 # Rescale x to have zero mean and unit variance:
-inp = (inp - mdp.utils.mean(inp,0))/mdp.utils.std(inp,0)
+inp = (inp - mdp.numx.mean(inp,0))/mdp.numx.std(inp,0)
 # We reduce the variance of the last 15 components, so that they are
 # going to be eliminated by PCA:
 inp[:,5:] /= 10.0
@@ -92,7 +92,7 @@ out = flow.execute(x)
 # Just to check that everything works properly, we can 
 # calculate covariance between sources and estimated sources
 # (should be approximately 1):
-cov = mdp.utils.amax(abs(mdp.utils.cov(inp[:,:5],out)))
+cov = mdp.numx.amax(abs(mdp.numx.cov(inp[:,:5],out)))
 print 'Covariance between sources and estimated sources:\n',cov
 #
 # Flow inversion
@@ -108,8 +108,8 @@ print 'Covariance between sources and estimated sources:\n',cov
 rec = flow[1::2].inverse(out)
 # Calculate covariance between input mix and reconstructed mix:
 # (should be approximately 1)
-cov = mdp.utils.amax(abs(mdp.utils.cov(x/mdp.utils.std(x,0),
-                                       rec/mdp.utils.std(rec,0))))
+cov = mdp.numx.amax(abs(mdp.numx.cov(x/mdp.numx.std(x,0),
+                                       rec/mdp.numx.std(rec,0))))
 print 'Covariance between input mix and reconstructed mix:\n',cov
 #
 # Flows are container type objects

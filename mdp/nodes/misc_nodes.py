@@ -1,5 +1,3 @@
-## Automatically adapted for numpy Jun 26, 2006 by 
-
 import mdp
 from mdp import numx, numx_linalg, utils, Node, NodeException
 
@@ -21,8 +19,8 @@ class OneDimensionalHitParade(object):
         self.d = int(d)
         self.iM = numx.zeros((n,),dtype=integer_typecode)
         self.im = numx.zeros((n,),dtype=integer_typecode)
-        self.M = numx.array([-utils.inf]*n, dtype=real_typecode)
-        self.m = numx.array([utils.inf]*n, dtype=real_typecode)
+        self.M = numx.array([-numx.inf]*n, dtype=real_typecode)
+        self.m = numx.array([numx.inf]*n, dtype=real_typecode)
         self.lM = 0
         self.lm = 0
 
@@ -121,7 +119,7 @@ class HitParadeNode(Node):
         self.hit = None
         self.tlen = 0
 
-    def get_supported_typecodes(self):
+    def _get_supported_typecodes(self):
         return ['i','l','f','d']
 
     def _train(self, x):
@@ -294,7 +292,7 @@ class EtaComputerNode(Node):
         super(EtaComputerNode, self).__init__(input_dim, None, typecode)
         self._initialized = 0
 
-    def get_supported_typecodes(self):
+    def _get_supported_typecodes(self):
         return ['f','d']
 
     def _init_internals(self):
@@ -334,7 +332,7 @@ class NoiseNode(Node):
 
     Original idea by Mathias Franzius.
     """
-    def __init__(self, noise_func = utils.normal, noise_args = (0,1),
+    def __init__(self, noise_func = mdp.numx_rand.normal, noise_args = (0,1),
                  noise_type = 'additive', input_dim = None, typecode = None):
         """
         Add noise to input signals.
@@ -436,7 +434,7 @@ class GaussianClassifierNode(Node):
         for lbl in self.labels:
             cov, mean, p = self.cov_objs[lbl].fix()
             nitems += p
-            self._sqrt_def_covs.append(numx.sqrt(utils.det(cov)))
+            self._sqrt_def_covs.append(numx.sqrt(numx_linalg.det(cov)))
             self.means.append(mean)
             self.p.append(p)
             self.inv_covs.append(utils.inv(cov))

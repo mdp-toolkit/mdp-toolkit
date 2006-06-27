@@ -1,5 +1,3 @@
-## Automatically adapted for numpy Jun 26, 2006 by 
-
 import mdp
 
 def pca(x, **kwargs):
@@ -100,3 +98,4 @@ def get_eta(x, **kwargs):
     eta.train(x)
     return eta.get_eta(**kwargs)
  
+

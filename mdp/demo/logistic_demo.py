@@ -1,4 +1,4 @@
-## Automatically adapted for numpy Jun 26, 2006 by 
+ 
 
 """This demo shows an example of the use of MDP in real life."""
 
@@ -37,7 +37,7 @@ def hold(*args):
 # a combination of three sine waves (freqs: 5, 11, 13 Hz), and define a function
 # to generate the logistic map
 p2 = mdp.numx.pi*2
-t = mdp.utils.linspace(0,1,10000,endpoint=0) # time axis 1s, samplerate 10KHz
+t = mdp.numx.linspace(0,1,10000,endpoint=0) # time axis 1s, samplerate 10KHz
 dforce = mdp.numx.sin(p2*5*t) + mdp.numx.sin(p2*11*t) + mdp.numx.sin(p2*13*t)
 def logistic_map(x,r):
     return r*x*(1-x)
@@ -102,12 +102,12 @@ slow = flow.execute(series)
 # up to a scaling factor, a constant offset and the sign.
 # To allow a comparison we rescale the driving force
 # to have zero mean and unit variance:
-resc_dforce = (dforce - mdp.utils.mean(dforce,0))/mdp.utils.std(dforce,0)
+resc_dforce = (dforce - mdp.numx.mean(dforce,0))/mdp.numx.std(dforce,0)
 
 # print covariance between the rescaled driving force and
 # the slow feature. Note that embedding the time-series with
 # 10 time frames leads to a time-series with 9 observations less:
-cov = mdp.utils.cov(resc_dforce[:-9],slow)
+cov = mdp.numx.cov(resc_dforce[:-9],slow)
 print 'Covariance (driving force, slow feature) %f (1 if identical)'%cov
 
 # print the *eta-values* of the chaotic time-series and of

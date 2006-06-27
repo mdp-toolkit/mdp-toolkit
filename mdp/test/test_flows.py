@@ -1,5 +1,3 @@
-## Automatically adapted for numpy Jun 26, 2006 by 
-
 """These are test functions for MDP flows.
 
 Run them with:
@@ -71,8 +69,8 @@ class FlowsTestCase(unittest.TestCase):
                         rand_func = numx_rand.random, avg = 0, std = 0):
         if mat_dim is None: mat_dim = self.mat_dim
         mat = ((rand_func(mat_dim)-0.5)*scale).astype(type)
-        mat -= mdp.utils.mean(mat,axis=0)
-        mat /= mdp.utils.std(mat,axis=0)
+        mat -= mdp.numx.mean(mat,axis=0)
+        mat /= mdp.numx.std(mat,axis=0)
         if std: mat *= std
         if avg: mat += avg
         mix = (rand_func((mat_dim[1], mat_dim[1]))*scale).astype(type)

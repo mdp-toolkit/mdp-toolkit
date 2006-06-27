@@ -1,5 +1,3 @@
-## Automatically adapted for numpy Jun 26, 2006 by 
-
 # Modular toolkit for Data Processing (MDP)
 """
 Modular toolkit for Data Processing (MDP) is a Python library to
@@ -58,80 +56,6 @@ educational tool.
 http://mdp-toolkit.sourceforge.net
 """
 
-# The following code is for importing a numeric extension module for
-# Python. We support Numeric, numarray and scipy.
-# Note that numarray is much slower than Numeric and scipy, and
-# scipy contains more functions and wrappers to FORTRAN LAPACK
-# routines, i.e. scipy is almost always faster than Numeric.
-# We use some scipy routines anyway. The ones that are not found in
-# Numeric and numarray are in utils.scipy_emulation.
-
-import os as _os
-import warnings as _warnings
-
-## # workaround to import module.submodule
-## # see http://docs.python.org/lib/built-in-funcs.html
-## def _name_import(name):
-##     mod = __import__(name)
-##     components = name.split('.')
-##     for comp in components[1:]:
-##         mod = getattr(mod, comp)
-##     return mod
-
-## # list of supported numerical extensions
-## _NUMX_LABELS = ['symeig', 'scipy', 'Numeric', 'numarray']
-
-## #  label : (numx_module, numx_rand_module, numx_linalg_module)              
-## _NUMX_PKGS = {_NUMX_LABELS[0] : ('scipy', 'scipy.stats', 'scipy.linalg'),
-##               _NUMX_LABELS[1] : ('scipy', 'scipy.stats', 'scipy.linalg'),
-##               _NUMX_LABELS[2] : ('Numeric', 'RandomArray', 'LinearAlgebra'),
-##               _NUMX_LABELS[3] : ('numarray', 'numarray.random_array',
-##                                  'numarray.linear_algebra')
-##               }
-
-
-## # To force MDP to use one specific extension module
-## # set the environment variable MDPNUMX
-## # Mainly useful for testing
-
-## _USR_LABEL = _os.getenv('MDPNUMX')
-## if _USR_LABEL in _NUMX_LABELS:
-##     _NUMX_LABELS = [_USR_LABEL]
-## elif _USR_LABEL is None:
-##     pass
-## else:
-##     _wrnstr = "\nExtension '%s' not supported. "%(_USR_LABEL) + \
-##               "Supported extensions:\n %s"%(str(_NUMX_LABELS))
-    
-##     _warnings.warn(_wrnstr, UserWarning)
-##     del _wrnstr
-
-## # try to load in sequence: symeig+scipy, scipy, Numeric, numarray
-## numx_description = None
-## for _label in _NUMX_LABELS:
-##     try:
-##         _dumb = _name_import(_label)
-##         _packages = _NUMX_PKGS[_label]
-##         numx = _name_import(_packages[0])
-##         numx_rand = _name_import(_packages[1])
-##         numx_linalg = _name_import(_packages[2])
-##         numx_description = _label
-##         break
-##     except ImportError:
-##         pass
-    
-## if numx_description is None:
-##     raise ImportError, \
-##           "Could not find any of the numeric modules "+ \
-##           "scipy, Numeric, or numarray"
-
-## # clean up
-## del _os, _warnings, _NUMX_LABELS, _NUMX_PKGS, _USR_LABEL
-## del _name_import, _label, _dumb, _packages
-
-# define our exceptions and warnings.
-# ?? in python 2.4 MDPException can be made new style
-# MDPException(Exception, object)
 
 import numpy as numx
 import numpy.random as numx_rand

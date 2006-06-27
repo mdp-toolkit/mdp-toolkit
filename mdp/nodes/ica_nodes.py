@@ -1,5 +1,3 @@
-## Automatically adapted for numpy Jun 26, 2006 by 
-
 import math
 import mdp
 
@@ -40,7 +38,7 @@ class ICANode(mdp.Cumulator, mdp.Node):
         self.whitened = whitened
         self.white_comp = white_comp
 
-    def get_supported_typecodes(self):
+    def _get_supported_typecodes(self):
         return ['f','d']
 
     def _stop_training(self):
@@ -304,8 +302,8 @@ class FastICANode(ICANode):
                 Q = mult(Q, utils.sqrtm(utils.inv(mult(t(Q), Q))))
                 # Test for termination condition.Note that we consider opposite
                 # directions here as well.
-                convergence.append(1 - utils.amin(abs(\
-                    utils.diag(mult(t(Q),QOld))),axis=0))
+                convergence.append(1 - numx.amin(abs(\
+                    numx.diag(mult(t(Q),QOld))),axis=0))
                 if convergence[round] < limit:
                     if verbose: print 'Convergence after %d steps\n'%round
                     break
@@ -366,7 +364,7 @@ class FastICANode(ICANode):
                     w /= utils.norm2(w)
                     # Test for termination condition. Note that the algorithm
                     # has converged if the direction of w and wOld is the same.
-                    conv = float(utils.squeeze(abs(numx.sum(w*wOld))))
+                    conv = float(numx.squeeze(abs(numx.sum(w*wOld))))
                     if conv >= limit:
                         nfail = 0
                         convergence[round] = 1 - conv
@@ -402,6 +400,6 @@ class FastICANode(ICANode):
             dummy_cond = numx.logical_and(convergence<0, convergence>-1E-5)
             convergence = numx.where(dummy_cond, 0, convergence)
             self.convergence = self._refcast(numx.sqrt(convergence*2))
-            ret = utils.amax(self.convergence)
+            ret = numx.amax(self.convergence)
         self.filters = Q
         return ret

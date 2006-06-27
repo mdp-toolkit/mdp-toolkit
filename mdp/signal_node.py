@@ -1,5 +1,3 @@
-## Automatically adapted for numpy Jun 26, 2006 by 
-
 import cPickle as _cPickle
 import warnings as _warnings
 import mdp
@@ -39,6 +37,9 @@ class IsNotInvertibleException(NodeException):
     node is not invertible."""
     pass
 
+SUPPORTED_TYPECODES = [numx.dtype(ch)
+                       for ch in numx.typecodes['AllInteger']+
+                                 numx.typecodes['AllFloat']]
 
 class Node(object):
     """A Node corresponds to a learning algorithm or to a generic
@@ -162,17 +163,18 @@ class Node(object):
         """Set Node's internal structures typecode.
         Performs sanity checks and then calls self._set_typecode(n), which
         is responsible for setting the internal attribute self._typecode.
-        Note that self._set_typecode can be overriden by subclasses,
+        Note that self._set_typecode can be overriden by subclasses.
+        Internally the typecode is stored as a numpy.dtype object.
         """
-        if t is None:
-            pass
-        elif (self._typecode is not None) and (self._typecode != t):
-            errstr = "Typecode is already set to '%s' " %(self.typecode)
+        if t is None: return
+        t = numx.dtype(t)
+        if (self._typecode is not None) and (self._typecode != t):
+            errstr = "Typecode is already set to '%s' " % (self.typecode.name)
             raise NodeException, errstr
         elif t not in self.get_supported_typecodes():
-            errstr = "\nTypecode '%s' is not supported.\n"%t+ \
+            errstr = "\nTypecode '%s' is not supported.\n" % t.name+ \
                       "Supported typecodes: %s" \
-                      %(str(self.get_supported_typecodes()))
+                      %([t.name for t in SUPPORTED_TYPECODES])
             raise NodeException, errstr
         else:
             self._set_typecode(t)
@@ -184,7 +186,18 @@ class Node(object):
                         set_typecode,
                         doc = "Typecode")
 
+    def _get_supported_typecodes(self):
+        """Return the list of typecodes supported by this node.
+        The types can be specified in any format allowed by numpy.dtype."""
+        return SUPPORTED_TYPECODES
 
+    def get_supported_typecodes(self):
+        """Return Node's supported typecodes as a list of numpy.dtype objects.
+        """
+        return [numx.dtype(t) for t in self._get_supported_typecodes()]
+
+    supported_typecodes = property(get_supported_typecodes,
+                                   doc = "Supported typecodes")
 
     _train_seq = property(lambda self: self._get_train_seq(),
                           doc = "List of tuples: [(training-phase1, " +\
@@ -220,10 +233,6 @@ class Node(object):
         """Return True if the node can be inverted, False otherwise."""
         return True
 
-    def get_supported_typecodes(self):
-        """Return the list of typecodes supported by this node."""
-        return ['i','l','f','d','F','D']
-
     ### check functions
     def _check_input(self, x):
         # check input rank
@@ -238,7 +247,7 @@ class Node(object):
 
         # set the typecode if necessary
         if self.typecode is None:
-            self.typecode = x.dtype.char
+            self.typecode = x.dtype
 
         # check the input dimension
         if not x.shape[1] == self.input_dim:
@@ -415,7 +424,11 @@ class Node(object):
         name = type(self).__name__
         inp = "input_dim=%s"%str(self.input_dim)
         out = "output_dim=%s"%str(self.output_dim)
-        typ = "typecode='%s'"%self.typecode
+        if self.typecode is None:
+            name = '* not initialized yet *'
+        else:
+            name = self.typecode.name
+        typ = "typecode='%s'" % name
         args = ', '.join((inp, out, typ))
         return name+'('+args+')'
 

@@ -1,4 +1,4 @@
-## Automatically adapted for numpy Jun 26, 2006 by 
+ 
 
 """This demo shows how to use generators to train and execute flows.
 """

@@ -1,5 +1,3 @@
-## Automatically adapted for numpy Jun 26, 2006 by 
-
 import sys
 import os
 import cPickle
@@ -18,49 +16,13 @@ def refcast(array, typecode):
     """
     Cast the array to typecode only if necessary, otherwise return a reference.
     """
-    if array.dtype.char==typecode:
+    if array.dtype == typecode:
         return array
     return array.astype(typecode)
 
 def scast(scalar, typecode):
     """Convert a scalar in a 0D array of the given typecode."""
     return numx.array(scalar, dtype=typecode)
-
-def _gemm_matmult(a,b, alpha=1.0, beta=0.0, c=None, trans_a=0, trans_b=0):
-    """Return alpha*(a*b) + beta*c.
-    a,b,c : matrices
-    alpha, beta: scalars
-    trans_a: 0 (a not transposed), 1 (a transposed), 2 (a conjugate transposed)
-    trans_b: 0 (b not transposed), 1 (b transposed), 2 (b conjugate transposed)
-    """
-    typecode = mat.dtype.char
-    if a.flags.contiguous and b.flags.contiguous and not trans_a and not trans_b:
-        mat = numx.dot(a, b)
-        if alpha != 1:
-            mat *= scast(alpha, typecode)
-        if beta != 0:
-            mat += scast(beta*c, typecode)
-        return mat
-    if c is not None:
-        gemm, = numx_linalg.get_blas_funcs(('gemm',),(a,b,c))
-    else:
-        gemm,=  numx_linalg.get_blas_funcs(('gemm',),(a,b))
-
-    return gemm(alpha, a, b, beta, c, trans_a, trans_b)
-
-def _matmult(a,b):
-    """Return matrix multiplication between 2-dimensional matrices a and b."""
-
-    if (numx.rank(a)!=2 or numx.rank(b)!=2) or \
-           (a.flags.contiguous and b.flags.contiguous):
-        return numx.dot(a,b)
-    else:
-        if a.shape[1] != b.shape[0]:
-            err_str = "matrices are not aligned. shape(a)=%s, shape(b)=%s"\
-                      %(str(a.shape),str(b.shape))
-            raise mdp.MDPException, err_str
-        gemm, = numx_linalg.get_blas_funcs(('gemm',),(a,b))
-        return gemm(1.0, a, b, 0., None, 0, 0)
 
 def rotate(mat, angle, columns = [0, 1], units = 'radians'):
     """
@@ -74,7 +36,7 @@ def rotate(mat, angle, columns = [0, 1], units = 'radians'):
 
     If M=2, columns=[0,1].
     """
-    typecode = mat.dtype.char
+    typecode = mat.dtype
     if units is 'degrees': angle = angle/180.*numx.pi
     cos_ = scast(numx.cos(angle), typecode)
     sin_ = scast(numx.sin(angle), typecode)
@@ -105,7 +67,7 @@ def symrand(dim_or_eigv, typecode="d"):
         raise mdp.MDPException, "input type not supported."
     
     v = random_rot(dim, typecode=typecode)
-    h = mdp.utils.mult(mdp.utils.mult(hermitian(v), mdp.utils.diag(d)), v)
+    h = mdp.utils.mult(mdp.utils.mult(hermitian(v), mdp.numx.diag(d)), v)
     # to avoid roundoff errors, symmetrize the matrix (again)
     return refcast(0.5*(hermitian(h)+h), typecode)
 
@@ -136,93 +98,11 @@ def random_rot(dim, typecode='d'):
     H = mdp.numx.transpose(D*mdp.numx.transpose(H))
     return H
 
-class ProgressBar(object):
-    """A text-mode fully configurable progress bar.
-       Note: remember that ProgressBar flushes sys.stdout by
-       default each time you update it. If you need to rely on
-       buffered stdout than set flush = 0.
-    """
-
-    def __init__(self,minimum,maximum,width = None,delimiters = "[]",\
-                 char1 = "=",char2 = ">",char3 = "." , indent = 0, flush = 1):
-        """
-        (minimum-maximum) - the total number of iterations for which you
-                            want to show a progress bar.
-        width             - the total width of the progress bar in characters
-                            (default is the teminal widthin UNIX and
-                             79 characters in Windows).
-        The default progress bar looks like this:
-        [===========60%===>.........]
-        Progress bar delimiters and chars can be customized. 
-        """
-        # bar is [===>.....20%.....]
-        self.flush = flush
-        self.delimiters = delimiters
-        self.bar = delimiters   # This holds the progress bar string
-        self.min = minimum
-        self.max = maximum
-        self.span = maximum - minimum
-        self.char1 = char1
-        self.char2 = char2
-        self.char3= char3
-        self.indent = indent
-        self.where = 0       # When where == max, we are 100% done
-        if not width:
-            self.width = self.get_termsize()[1]-2  # terminal width-2 
-        else:
-            self.width = width
-        self.width = self.width - indent
-        
-    def update(self, where = 0):
-        if where < self.min: where = self.min
-        if where > self.max: where = self.max
-        self.where = where
-
-        # Figure out the new percent done
-        if self.span == 0:
-            percent = 1.
-        else:
-            percent = (self.where - self.min)/ float(self.span)
-
-        # Figure out how many hash bars the percentage should be
-        actwidth = self.width - 2
-        symbols = int(round(percent * actwidth))
-
-        # build a progress bar with hashes and spaces
-        self.bar =  self.delimiters[0]+self.char1*(symbols-1)+\
-                   self.char2+self.char3*(actwidth-symbols)+self.delimiters[1]
-
-        # figure out where to put the percentage, roughly centered
-        percent = int(round(percent*100))
-        percentstring = str(percent) + "%"
-        placepercent = (len(self.bar) / 2) - len(percentstring) + 2
-        
-        # slice the percentage into the bar
-        self.bar = self.bar[0:placepercent] + percentstring +\
-                   self.bar[placepercent+len(percentstring):]
-        print "\r" + " "*self.indent + str(self.bar),
-        if self.flush:
-            sys.stdout.flush()
-        
-    def get_termsize(self):
-        try:
-            # this works on unix machines
-            import struct, fcntl, termios
-            height, width = struct.unpack("hhhh", \
-                     fcntl.ioctl(0,termios.TIOCGWINSZ, "\000"*8))[0:2]
-            if not (height and width): height, width = 24, 79
-        except ImportError:
-            # for windows machins, use default values
-            # Does anyone know how to get the console size under windows?
-            # and what about MacOsX?
-            height, width = 24, 79
-        return height, width    
-
 def norm2(v):
     """Compute the 2-norm for 1D arrays.
     norm2(v) = sqrt(sum(v_i^2))"""
     
-    return numx.sqrt(numx.sum(mdp.utils.squeeze(v*v)))
+    return numx.sqrt(numx.sum(mdp.numx.squeeze(v*v)))
 
 def ordered_uniq(alist):
     """Return the elements in alist without repetitions.
@@ -279,3 +159,165 @@ class CrashRecoveryException(mdp.MDPException):
         fl.close()
         return filename
 
+
+# the following functions and classes were part of the scipy_emulation.py file
+
+_type_keys = ['f', 'd', 'F', 'D']
+_type_conv = {('f','d'): 'd', ('f','F'): 'F', ('f','D'): 'D',
+              ('d','F'): 'D', ('d','D'): 'D',
+              ('F','d'): 'D', ('F','D'): 'D'}
+
+def _greatest_common_typecode(alist):
+    """
+    Apply conversion rules to find the common conversion type
+    Typecode 'd' is default for 'i' or unknown types
+    (known types: 'f','d','F','D').
+    """
+    typecode = 'f'
+    for array in alist:
+        if array is None: continue
+        tc = array.dtype.char
+        if tc not in _type_keys: tc = 'd'
+        transition = (typecode, tc)
+        if transition in _type_conv:
+            typecode = _type_conv[transition]
+    return typecode
+
+def _symeig_fake(A, B = None, eigenvectors = 1, turbo = "on", range = None,
+                 type = 1, overwrite = 0):
+    """Solve standard and generalized eigenvalue problem for symmetric
+(hermitian) definite positive matrices.
+This function is a wrapper of LinearAlgebra.eigenvectors or
+numarray.linear_algebra.eigenvectors with an interface compatible with symeig.
+
+    Syntax:
+
+      w,Z = symeig(A) 
+      w = symeig(A,eigenvectors=0)
+      w,Z = symeig(A,range=(lo,hi))
+      w,Z = symeig(A,B,range=(lo,hi))
+
+    Inputs:
+
+      A     -- An N x N matrix.
+      B     -- An N x N matrix.
+      eigenvectors -- if set return eigenvalues and eigenvectors, otherwise
+                      only eigenvalues 
+      turbo -- not implemented
+      range -- the tuple (lo,hi) represent the indexes of the smallest and
+               largest (in ascending order) eigenvalues to be returned.
+               1 <= lo < hi <= N
+               if range = None, returns all eigenvalues and eigenvectors. 
+      type  -- not implemented, always solve A*x = (lambda)*B*x
+      overwrite -- not implemented
+      
+    Outputs:
+
+      w     -- (selected) eigenvalues in ascending order.
+      Z     -- if range = None, Z contains the matrix of eigenvectors,
+               normalized as follows:
+                  Z^H * A * Z = lambda and Z^H * B * Z = I
+               where ^H means conjugate transpose.
+               if range, an N x M matrix containing the orthonormal
+               eigenvectors of the matrix A corresponding to the selected
+               eigenvalues, with the i-th column of Z holding the eigenvector
+               associated with w[i]. The eigenvectors are normalized as above.
+    """
+    typecode = _greatest_common_typecode([A, B])
+    if B is None:
+        w, Z = numx_linalg.eig(A)
+        w = w.real
+    else:
+        # make B the identity matrix
+        wB, ZB = numx_linalg.eig(B)
+        ZB = ZB / numx.sqrt(wB.real)
+        # transform A in the new basis: A = ZB^T * A * ZB
+        A = mdp.utils.mult(mdp.utils.mult(numx.transpose(ZB), A), ZB)
+        # diagonalize A
+        w, ZA = numx_linalg.eig(A)
+        Z = mdp.utils.mult(ZB, ZA)
+        w = w.real
+        
+    idx = numx.argsort(w)
+    w = numx.take(w, idx)
+    Z = numx.take(Z, idx, axis=1)
+    
+    if range is not None:
+        lo, hi = range
+        Z = Z[:, lo-1:hi]
+        w = w[lo-1:hi]
+
+    # the final call to refcast is necessary because of a bug in the casting
+    # behavior of Numeric and numarray: eigenvector does not wrap the LAPACK
+    # single precision routines
+    if eigenvectors:
+        return mdp.utils.refcast(w, typecode), mdp.utils.refcast(Z, typecode)
+    else:
+        return mdp.utils.refcast(w, typecode)
+
+# Code found below this line is part, or derived from, SciPy 0.3.2.
+# Copyright Notice:
+#
+##  Copyright (c) 2001, 2002 Enthought, Inc.
+##
+## All rights reserved.
+##
+## Redistribution and use in source and binary forms, with or without
+## modification, are permitted provided that the following conditions are met:
+##
+##   a. Redistributions of source code must retain the above copyright notice,
+##      this list of conditions and the following disclaimer.
+##   b. Redistributions in binary form must reproduce the above copyright
+##      notice, this list of conditions and the following disclaimer in the
+##      documentation and/or other materials provided with the distribution.
+##   c. Neither the name of the Enthought nor the names of its contributors
+##      may be used to endorse or promote products derived from this software
+##      without specific prior written permission.
+##
+##
+## THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+## AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+## IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+## ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE FOR
+## ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+## DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+## SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+## CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+## LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+## OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+## DAMAGE.
+##
+
+def sqrtm(A, disp=1):
+    """This is a weak matrix sqrt function.
+    It works only for symmetric matrices. disp : not implemented."""
+    d, V = mdp.utils.symeig(A)
+    D = numx.diag(numx.sqrt(d))
+    return mdp.utils.mult(V, mdp.utils.mult(D, numx.transpose(V)))
+
+# In file: scipy/common.py
+def comb(N, k, exact=0):
+    """Combinations of N things taken k at a time.
+
+    Notes:
+      - If k > N, N < 0, or k < 0, then a 0 is returned.
+
+    Note:
+    The exact=0 variant of scipy is not implemented.
+    """
+    if exact:
+        if (k > N) or (N < 0) or (k < 0):
+            return 0L
+        N,k = map(long,(N,k))
+        top = N
+        val = 1L
+        while (top > (N-k)):
+            val *= top
+            top -= 1
+        n = 1L
+        while (n < k+1L):
+            val /= n
+            n += 1
+        return val
+    else:
+        raise NotImplementedError

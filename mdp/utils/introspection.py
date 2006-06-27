@@ -1,5 +1,3 @@
-## Automatically adapted for numpy Jun 26, 2006 by 
-
 import inspect
 import cPickle
 import mdp
@@ -15,14 +13,22 @@ class _Walk(object):
     def __init__(self):
         self.arrays = {}
         self.start = None
+        self.allobjs = {}
+        
     def __call__(self, x, start = None):
         arrays = self.arrays
         for name in dir(x):
             obj = getattr(x, name)
+            if id(obj) in self.allobjs.keys():
+                continue
+            else:
+                self.allobjs[id(obj)] = None
+                
             if start:
                 struct = '.'.join((start, name))
             else:
                 struct = name
+               
             if isinstance(obj, mdp.numx.ndarray):
                 if start is not None:
                     arrays[struct] = obj

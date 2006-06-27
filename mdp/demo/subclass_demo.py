@@ -1,4 +1,4 @@
-## Automatically adapted for numpy Jun 26, 2006 by 
+ 
 
 """This demo shows how to write subclasses of Node.
 
@@ -156,7 +156,7 @@ node = MeanFreeNode()
 x = mdp.numx_rand.random((10,4))
 node.train(x)
 y = node.execute(x)
-print 'Mean of y (should be zero): ', mdp.utils.mean(y, 0)
+print 'Mean of y (should be zero): ', mdp.numx.mean(y, 0)
 #
 # - In our last example we'll define a node that repeats its input twice,
 #   returning an input that has twice as many dimensions:

@@ -1,5 +1,3 @@
-## Automatically adapted for numpy Jun 26, 2006 by 
-
 """This is the test module for MDP.
 
 Run all tests with:

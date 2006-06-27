@@ -1,12 +1,13 @@
-## Automatically adapted for numpy Jun 26, 2006 by 
-
 """Tools for the test- and benchmark functions."""
 
 import time
 import mdp
 numx = mdp.numx
-from mdp.utils import assert_array_equal, assert_array_almost_equal, \
-     assert_equal, assert_almost_equal, iscomplexobj
+testing = mdp.numx.testing
+assert_array_equal, assert_array_almost_equal, \
+     assert_equal, assert_almost_equal = \
+     testing.assert_array_equal, testing.assert_array_almost_equal, \
+     testing.assert_equal, testing.assert_almost_equal
 
 #### test tools
 def assert_array_almost_equal_diff(x,y,digits,err_msg=''):
@@ -19,7 +20,7 @@ def assert_array_almost_equal_diff(x,y,digits,err_msg=''):
                % (numx.shape(x),numx.shape(y)) + err_msg
     maxdiff = max(numx.ravel(abs(x-y)))/\
               max(max(abs(numx.ravel(x))),max(abs(numx.ravel(y)))) 
-    if iscomplexobj(x) or iscomplexobj(y): maxdiff = maxdiff/2
+    if numx.iscomplexobj(x) or numx.iscomplexobj(y): maxdiff = maxdiff/2
     cond =  maxdiff< 10**(-digits)
     msg = msg+'\n\t Relative maximum difference: %e'%(maxdiff)+'\n\t'+\
           'Array1: '+str(x)+'\n\t'+\

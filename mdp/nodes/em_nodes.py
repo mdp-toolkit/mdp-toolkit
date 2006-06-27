@@ -1,13 +1,12 @@
-## Automatically adapted for numpy Jun 26, 2006 by 
-
 import mdp
 from mdp import numx, numx_linalg, utils
-from mdp.utils import mult, normal
+from mdp.utils import mult
 from lcov import CovarianceMatrix, DelayCovarianceMatrix
 import warnings
 
-take, put, diag, ravel = numx.take, numx.put, utils.diag, numx.ravel
-sqrt, tr, inv, det = numx.sqrt, numx.transpose, utils.inv, utils.det
+take, put, diag, ravel = numx.take, numx.put, numx.diag, numx.ravel
+sqrt, tr, inv, det = numx.sqrt, numx.transpose, utils.inv, numx_linalg.det
+normal = mdp.numx_rand.normal
 
 # decreasing likelihood message
 _LHOOD_WARNING = 'Likelihood decreased in FANode. This is probably due '+\
@@ -83,7 +82,7 @@ class FANode(mdp.Node):
         ##### EM-cycle
         lhood_curve = []
         base_lhood = None
-        old_lhood = -utils.inf
+        old_lhood = -numx.inf
         for t in xrange(self.max_cycles):
             ## compute B = (A A^T + Sigma)^-1
             ##???###
@@ -157,7 +156,7 @@ class FANode(mdp.Node):
         noise -- if True, generation includes the estimated noise."""
         res = mult(y, tr(self.A))+self.mu
         if noise:
-            ns = utils.normal(0., self.sigma,
+            ns = numx_rand.normal(0., self.sigma,
                               size=(y.shape[0], self.input_dim))
             res += self.refcast(ns)
         return res

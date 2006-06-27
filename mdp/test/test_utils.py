@@ -1,5 +1,3 @@
-## Automatically adapted for numpy Jun 26, 2006 by 
-
 """These are test functions for MDP utilities.
 
 Run them with:
@@ -11,12 +9,13 @@ import unittest
 import pickle
 import os
 import tempfile
-from mdp import numx, utils, numx_rand, Node, nodes
+from mdp import numx, utils, numx_rand, numx_linalg, Node, nodes
 from testing_tools import assert_array_almost_equal, assert_array_equal, \
      assert_almost_equal, assert_equal, assert_array_almost_equal_diff
 
 class BogusClass(object):
-    x = numx_rand.random((2,2))
+    def __init__(self):
+        self.x = numx_rand.random((2,2))
     
 class BogusNode(Node):
     x = numx_rand.random((2,2))
@@ -77,8 +76,8 @@ class UtilsTestCase(unittest.TestCase):
             x = utils.random_rot(dim, typecode='f')
             assert x.dtype.char=='f', 'Wrong typecode'
             y = utils.mult(numx.transpose(x), x)
-            assert_almost_equal(utils.det(x), 1., 4)
-            assert_array_almost_equal(y, utils.eye(dim), 4)
+            assert_almost_equal(numx_linalg.det(x), 1., 4)
+            assert_array_almost_equal(y, numx.eye(dim), 4)
 
                 
 def get_suite():

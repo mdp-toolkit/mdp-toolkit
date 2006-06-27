@@ -1,5 +1,3 @@
-## Automatically adapted for numpy Jun 26, 2006 by 
-
 """These are test functions for MDP nodes.
 
 Run them with:
@@ -15,15 +13,17 @@ from testing_tools import assert_array_almost_equal, assert_array_equal, \
      assert_almost_equal, assert_equal, assert_array_almost_equal_diff
 
 mult = utils.mult
-mean = utils.mean
-std = utils.std
-normal = utils.normal
+mean = numx.mean
+std = numx.std
+normal = numx_rand.normal
 tr = numx.transpose
-testtypes = ['d', 'f']
+testtypes = [numx.dtype('d'), numx.dtype('f')]
+testtypeschar = [t.char for t in testtypes]
 testdecimals = {'d':16, 'f':7}
 
-def assert_type_equal(act,des):
-    assert act == des,' Typecode mismatch: "%s" (should be "%s") '%(act,des)
+def assert_type_equal(act, des):
+    assert act == numx.dtype(des), \
+           'Typecode mismatch: "%s" (should be "%s") '%(act,des)
 
 def _rand_labels(x):
     return numx.around(numx_rand.random(x.shape[0]))
@@ -139,17 +139,17 @@ class NodesTestSuite(unittest.TestSuite):
             # compute the inverse
             rec = node.inverse(out)
             assert_array_almost_equal_diff(rec,inp,self.decimal-3)
-            assert_type_equal(rec.dtype.char, 'f') 
+            assert_type_equal(rec.dtype, 'f')
         return _testinverse
 
     def _get_testtypecode(self, node_class, args=[], sup_args_func=None):
         def _testtypecode(node_class=node_class):
-            for typecode in testtypes:
+            for typecode in testtypes+testtypeschar:
                 mat, mix, inp = self._get_random_mix(type="d")
-                node = node_class(*args,**{'typecode':typecode})
+                node = node_class(*args, **{'typecode':typecode})
                 self._train_if_necessary(inp, node, args, sup_args_func)
                 out = node.execute(inp)
-                assert_type_equal(out.dtype.char, typecode) 
+                assert_type_equal(out.dtype, typecode) 
         return _testtypecode
 
     def _get_testoutputdim(self, node_class, args=[], sup_args_func=None):
@@ -189,7 +189,7 @@ class NodesTestSuite(unittest.TestSuite):
         
     def testCovarianceMatrix(self):
         mat,mix,inp = self._get_random_mix()
-        des_cov = utils.cov(inp, rowvar=0)
+        des_cov = numx.cov(inp, rowvar=0)
         des_avg = mean(inp,axis=0)
         des_tlen = inp.shape[0]
         act_cov = mdp.nodes.lcov.CovarianceMatrix()
@@ -220,8 +220,8 @@ class NodesTestSuite(unittest.TestSuite):
             cov = mdp.nodes.lcov.CovarianceMatrix(typecode=type)
             cov.update(inp)
             cov,avg,tlen = cov.fix()
-            assert_type_equal(cov.dtype.char,type)
-            assert_type_equal(avg.dtype.char,type) 
+            assert_type_equal(cov.dtype,type)
+            assert_type_equal(avg.dtype,type) 
 
     def testtypecodeDelayCovarianceMatrix(self):
         for type in testtypes:
@@ -230,9 +230,9 @@ class NodesTestSuite(unittest.TestSuite):
             cov = mdp.nodes.lcov.DelayCovarianceMatrix(dt=dt,typecode=type)
             cov.update(inp)
             cov,avg,avg_dt,tlen = cov.fix()
-            assert_type_equal(cov.dtype.char,type)
-            assert_type_equal(avg.dtype.char,type)
-            assert_type_equal(avg_dt.dtype.char,type)
+            assert_type_equal(cov.dtype,type)
+            assert_type_equal(avg.dtype,type)
+            assert_type_equal(avg_dt.dtype,type)
 
     def testRoundOffWarningCovMatrix(self):
         import warnings
@@ -303,8 +303,8 @@ class NodesTestSuite(unittest.TestSuite):
     def testPCANode(self):
         line_x = numx.zeros((1000,2),"d")
         line_y = numx.zeros((1000,2),"d")
-        line_x[:,0] = utils.linspace(-1,1,num=1000,endpoint=1)
-        line_y[:,1] = utils.linspace(-0.2,0.2,num=1000,endpoint=1)
+        line_x[:,0] = numx.linspace(-1,1,num=1000,endpoint=1)
+        line_y[:,1] = numx.linspace(-0.2,0.2,num=1000,endpoint=1)
         mat = numx.concatenate((line_x,line_y))
         des_var = std(mat,axis=0)
         utils.rotate(mat,numx_rand.random()*2*numx.pi)
@@ -335,7 +335,7 @@ class NodesTestSuite(unittest.TestSuite):
     def testSFANode(self):
         dim=10000
         freqs = [2*numx.pi*1,2*numx.pi*5]
-        t =  utils.linspace(0,1,num=dim)
+        t =  numx.linspace(0,1,num=dim)
         mat = tr(numx.array(\
             [numx.sin(freqs[0]*t),numx.sin(freqs[1]*t)]))
         mat = (mat - mean(mat[:-1,:],axis=0))\
@@ -347,7 +347,7 @@ class NodesTestSuite(unittest.TestSuite):
         out = sfa.execute(mat)
         correlation = mult(tr(des_mat[:-1,:]),out[:-1,:])/(dim-2)
         assert_array_almost_equal(abs(correlation),
-                                  utils.eye(2), self.decimal-3)
+                                  numx.eye(2), self.decimal-3)
 
     def _testICANode(self,icanode):
         vars = 3
@@ -356,7 +356,7 @@ class NodesTestSuite(unittest.TestSuite):
         icanode.train(inp)
         act_mat = icanode.execute(inp)
         cov = utils.cov2((mat-mean(mat,axis=0))/std(mat,axis=0), act_mat)
-        maxima = utils.amax(abs(cov))
+        maxima = numx.amax(abs(cov))
         assert_array_almost_equal(maxima,numx.ones(vars),3)
         
     def testCuBICANodeBatch(self):
@@ -439,7 +439,7 @@ class NodesTestSuite(unittest.TestSuite):
 
     def testEtaComputerNode(self):
         tlen = 1e5
-        t = utils.linspace(0,2*numx.pi,tlen)
+        t = numx.linspace(0,2*numx.pi,tlen)
         inp = tr(numx.array([numx.sin(t), numx.sin(5*t)]))
         # create node to be tested
         ecnode = mdp.nodes.EtaComputerNode()
@@ -478,8 +478,8 @@ class NodesTestSuite(unittest.TestSuite):
         assert_array_equal(deg[2:], [2 for i in range(len(deg)-2)])
         # check the distribution of the nodes' position is uniform
         # this node is at one of the extrema of the graph
-        x0 = numx.outer(utils.amin(x), dir)+const
-        x1 = numx.outer(utils.amax(x), dir)+const
+        x0 = numx.outer(numx.amin(x), dir)+const
+        x1 = numx.outer(numx.amax(x), dir)+const
         linelen = utils.norm2(x0-x1)
         # this is the mean distance the node should have
         dist = linelen/poss.shape[0]
@@ -581,7 +581,7 @@ class NodesTestSuite(unittest.TestSuite):
             
             mn_estimate = mean(x, axis=0)
             means.append(mn_estimate)
-            covs.append(utils.cov(x, rowvar=0))
+            covs.append(numx.cov(x, rowvar=0))
 
             node.train(x, cl)
         try:
@@ -642,9 +642,9 @@ class NodesTestSuite(unittest.TestSuite):
         A = utils.random_rot(d)[:k,:]
 
         # latent variables
-        y = utils.normal(0., 1., size=(N, k))
+        y = numx_rand.normal(0., 1., size=(N, k))
         # observations
-        noise = utils.normal(0., 1., size=(N, d)) * sigma
+        noise = numx_rand.normal(0., 1., size=(N, d)) * sigma
         
         x = mult(y, A) + mu + noise
         
@@ -663,7 +663,7 @@ class NodesTestSuite(unittest.TestSuite):
         x = x[:100,:]
         y = fa.execute(x)
         x2 = fa.inverse(y, noise=False)
-        assert_type_equal(x2.dtype.char, 'd')
+        assert_type_equal(x2.dtype, 'd')
         assert_array_almost_equal(x, x2, 1)
 
         # check typecode consistency:
@@ -675,7 +675,7 @@ class NodesTestSuite(unittest.TestSuite):
         x = x[:100,:]
         y = fa.execute(x)
         x2 = fa.inverse(y, noise=False)
-        assert_type_equal(x2.dtype.char, 'f')
+        assert_type_equal(x2.dtype, 'f')
         
 def get_suite():
     return NodesTestSuite()
