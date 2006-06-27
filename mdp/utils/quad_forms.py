@@ -6,11 +6,11 @@ epsilon = 1E-15
 
 class QuadraticForm(object):
     """ """
-    def __init__(self, H=None, f=None, c=None, typecode="d"):
+    def __init__(self, H=None, f=None, c=None, dtype="d"):
         self.H = H
         self.f = f
         self.c = c
-        self.typecode = typecode
+        self.dtype = dtype
 
     def from_SFANode(sfa_node, unit):
         """
@@ -19,13 +19,13 @@ class QuadraticForm(object):
         of the component 'nr' of the SFA 'node'.
         Note that this implies that the SFA node follows a quadratic expansion.
         """
-        typecode = sfa_node.typecode
-        if self.typecode is None:
-            self.typecode = typecode
+        dtype = sfa_node.dtype
+        if self.dtype is None:
+            self.dtype = dtype
         sf = sfa_node.sf[:, unit]
         c = -mdp.utils.mult(sfa_node.avg, sf)
         N = sfa_node.output_dim
-        H = numx.zeros((N,N),dtype=typecode)
+        H = numx.zeros((N,N),dtype=dtype)
         k = N
         for i in range(N):
             for j in range(N):
@@ -51,7 +51,7 @@ class QuadraticForm(object):
         tol: norm error tolerance
         """
         H, f, c = self.H, self.f, self.c
-        if f is None: f = numx.zeros((H.shape[0],), dtype=self.typecode)
+        if f is None: f = numx.zeros((H.shape[0],), dtype=self.dtype)
         if c is None: c = 0    
         H_definite_positive, H_definite_negative = False, False
         E = mdp.utils.symeig(H, eigenvectors=0, overwrite=0)
@@ -82,12 +82,12 @@ class QuadraticForm(object):
 
     def maximize(self, norm, tol = 1.E-4, x0 = None, factor = None):
         H, f = self.H, self.f
-        if f is None: f = numx.zeros((H.shape[0],), dtype=self.typecode)
+        if f is None: f = numx.zeros((H.shape[0],), dtype=self.dtype)
         if factor is not None:
             H = factor*H
             f = factor*f
         if x0 is not None:
-            x0 = mdp.utils.refcast(x0, self.typecode)
+            x0 = mdp.utils.refcast(x0, self.dtype)
             f = mdp.utils.mult(H, x0)+ f
             # c = 0.5*x0'*H*x0 + f'*x0 + c -> do we need it?
         mu, V = mdp.utils.symeig(H, overwrite=0)

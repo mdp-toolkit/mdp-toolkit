@@ -14,7 +14,7 @@ forwards (by processing the data through the node) or backwards (by
 applying the inverse of the transformation computed by the node if
 defined). MDP is designed to make the implementation of new algorithms
 easy and intuitive, for example by setting automatically input and
-output dimension and by casting the data to match the typecode
+output dimension and by casting the data to match the dtype
 (e.g. float or double precision) of the internal structures. Most of
 the nodes were designed to be applied to arbitrarily long sets of
 data: the internal structures can be updated successively by sending

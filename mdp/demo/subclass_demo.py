@@ -26,7 +26,7 @@ class TimesTwoNode(mdp.Node):
     def _execute(self, x):
         #   '_execute' is called by the 'execute' function in mdp.Node,
         #   which takes care of checking the dimensionality of 'x' and
-        #   of casting 'x' the the internal typecode if necessary.
+        #   of casting 'x' the the internal dtype if necessary.
         #   Note that we have to cast the scalar to be sure that
         #   if we use some of the numeric extension (e.g. ``Numeric``),
         #   the result of the multiplication is not upcasted
@@ -47,7 +47,7 @@ class TimesTwoNode(mdp.Node):
         return y/self._scast(2)
 #
 #   Test the new node:
-node = TimesTwoNode(typecode = 'i')
+node = TimesTwoNode(dtype = 'i')
 x = mdp.numx.array([[1.0, 2.0, 3.0]])
 y = node(x)
 print x, '* 2 =  ', y
@@ -58,21 +58,21 @@ print y, '/ 2 =', node.inverse(y)
 #
 class PowerNode(mdp.Node):
     #   We redefine the init method to take the power as first argument.
-    #   In general one should always give the possibility to set the typecode
+    #   In general one should always give the possibility to set the dtype
     #   and the input dimensions. The default value is None, which means that
     #   the exact value is going to be inherited from the input data:
     def __init__(self, power, input_dim=None, dtype=None):
         #   Initialize the parent class:
-        super(PowerNode, self).__init__(input_dim=input_dim, dtype=typecode)
+        super(PowerNode, self).__init__(input_dim=input_dim, dtype=dtype)
         #   Store the power:
         self.power = power
     #   ``PowerNode`` is not trainable...
     def is_trainable(self): return 0
     #   ... nor invertible:
     def is_invertible(self): return 0
-    #   It is possible to overwrite the function ``get_supported_typecodes``
-    #   to return a list of typecodes supported by the node:
-    def get_supported_typecodes(self):
+    #   It is possible to overwrite the function ``get_supported_dtypes``
+    #   to return a list of dtypes supported by the node:
+    def get_supported_dtypes(self):
         return ['f', 'd']
     #   The ``execute`` method:
     def _execute(self, x):
@@ -81,11 +81,11 @@ class PowerNode(mdp.Node):
 #   The same definition without comments:
 class PowerNode(mdp.Node):
     def __init__(self, power, input_dim=None, dtype=None):
-        super(PowerNode, self).__init__(input_dim=input_dim, dtype=typecode)
+        super(PowerNode, self).__init__(input_dim=input_dim, dtype=dtype)
         self.power = power
     def is_trainable(self): return 0
     def is_invertible(self): return 0
-    def get_supported_typecodes(self):
+    def get_supported_dtypes(self):
         return ['f', 'd']
     def _execute(self, x):
         return x**self._scast(self.power)
@@ -103,7 +103,7 @@ print x, '**', node.power, '=', node(x)
 class MeanFreeNode(mdp.FiniteNode):
     def __init__(self, input_dim=None, dtype=None):
         super(MeanFreeNode, self).__init__(input_dim=input_dim,
-                                           dtype=typecode)
+                                           dtype=dtype)
         #   Mean of the input data. We initialize it to None since we still
         #   don't know how large is an input vector:
         self.avg = None
@@ -112,10 +112,10 @@ class MeanFreeNode(mdp.FiniteNode):
     #   The ``_train`` method receives the input data:
     def _train(self, x):
         #   Initialize the mean vector with the right size and
-        #   typecode if necessary:
+        #   dtype if necessary:
         if self.avg is None:
             self.avg = mdp.numx.zeros(self.get_input_dim(),
-                                      dtype=self.get_typecode())
+                                      dtype=self.get_dtype())
         #   Update the mean with the sum of the new data:
         self.avg += sum(x, 0)
         #   Count the number of points processed:
@@ -135,13 +135,13 @@ class MeanFreeNode(mdp.FiniteNode):
 class MeanFreeNode(mdp.FiniteNode):
     def __init__(self, input_dim=None, dtype=None):
         super(MeanFreeNode, self).__init__(input_dim=input_dim,
-                                           dtype=typecode)
+                                           dtype=dtype)
         self.avg = None
         self.tlen = 0
     def _train(self, x):
         if self.avg is None:
             self.avg = mdp.numx.zeros(self.get_input_dim(),
-                                      dtype=self.get_typecode())
+                                      dtype=self.get_dtype())
         self.avg += sum(x, 0)
         self.tlen += x.shape[0]
     def _stop_training(self):

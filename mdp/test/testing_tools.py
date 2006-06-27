@@ -28,6 +28,10 @@ def assert_array_almost_equal_diff(x,y,digits,err_msg=''):
           'Absolute Difference: '+str(abs(y-x))
     assert cond, msg 
 
+def assert_type_equal(act, des):
+    assert act == numx.dtype(des), \
+           'Typecode mismatch: "%s" (should be "%s") '%(act,des)
+
 #### benchmark tools
 
 # function used to measure time

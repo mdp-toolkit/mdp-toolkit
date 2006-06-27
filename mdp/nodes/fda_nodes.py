@@ -30,10 +30,10 @@ class FDANode(mdp.Node):
         return [(self._train_means, self._stop_means),
                 (self._train_fda, self._stop_fda)]
     
-    def __init__(self, input_dim=None, output_dim=None, typecode=None):
-        super(FDANode, self).__init__(input_dim, output_dim, typecode)
+    def __init__(self, input_dim=None, output_dim=None, dtype=None):
+        super(FDANode, self).__init__(input_dim, output_dim, dtype)
         self.S_W = None
-        self.allcov = mdp.nodes.lcov.CovarianceMatrix(typecode = self.typecode)
+        self.allcov = mdp.nodes.lcov.CovarianceMatrix(dtype = self.dtype)
         self.means = {}
         self.tlens = {}
         self._SW_init = 0
@@ -49,7 +49,7 @@ class FDANode(mdp.Node):
     def _update_means(self, x, lbl):
         if not self.means.has_key(lbl):
             self.means[lbl] = numx.zeros((1, self.input_dim),
-                                         dtype=self.typecode)
+                                         dtype=self.dtype)
             self.tlens[lbl] = 0
         self.means[lbl] += numx.sum(x, 0)
         self.tlens[lbl] += x.shape[0]
@@ -65,7 +65,7 @@ class FDANode(mdp.Node):
 
     def _stop_means(self):
         for lbl in self.means.keys():
-            self.means[lbl] /= self._scast(self.tlens[lbl])
+            self.means[lbl] /= self.tlens[lbl]
 
     # Training step 2: compute the overall and within-class covariance
     # matrices and solve the FDA problem
@@ -80,7 +80,7 @@ class FDANode(mdp.Node):
         if self._SW_init == 0:
             self._SW_init = 1
             self.S_W = numx.zeros((self.input_dim, self.input_dim),
-                                  dtype=self.typecode)
+                                  dtype=self.dtype)
 
         # update the covariance matrix of all classes
         self.allcov.update(x)

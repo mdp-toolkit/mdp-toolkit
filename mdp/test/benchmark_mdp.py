@@ -111,7 +111,7 @@ def get_benchmarks():
 
 if __name__ == "__main__":
     from testing_tools import run_benchmarks
-    #num_rand.seed(1268049219, 2102953867)
+    #num_rand.seed(1268049219)
     print "Running benchmarks: "
     run_benchmarks(get_benchmarks())
-    print "Random seed was: ",numx_rand.get_seed()
+    print "Random seed was: ",numx_rand.get_state()[1][0]

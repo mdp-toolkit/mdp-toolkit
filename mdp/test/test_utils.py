@@ -11,7 +11,8 @@ import os
 import tempfile
 from mdp import numx, utils, numx_rand, numx_linalg, Node, nodes
 from testing_tools import assert_array_almost_equal, assert_array_equal, \
-     assert_almost_equal, assert_equal, assert_array_almost_equal_diff
+     assert_almost_equal, assert_equal, assert_array_almost_equal_diff, \
+     assert_type_equal
 
 class BogusClass(object):
     def __init__(self):
@@ -66,19 +67,34 @@ class UtilsTestCase(unittest.TestCase):
         assert sorted(a_sfa.keys()) == keys, 'Wrong arrays in SFANode'
         sfa.stop_training()
         a_sfa, string = utils.dig_node(sfa)
-        keys = ['avg', 'd', 'sf', 'tlen']
+        keys = ['avg', 'd', 'sf']
         assert sorted(a_sfa.keys()) == keys, 'Wrong arrays in SFANode'
 
     def testRandomRot(self):
         dim = 20
         tlen = 10
         for i in range(tlen):
-            x = utils.random_rot(dim, typecode='f')
-            assert x.dtype.char=='f', 'Wrong typecode'
+            x = utils.random_rot(dim, dtype='f')
+            assert x.dtype.char=='f', 'Wrong dtype'
             y = utils.mult(numx.transpose(x), x)
             assert_almost_equal(numx_linalg.det(x), 1., 4)
             assert_array_almost_equal(y, numx.eye(dim), 4)
 
+    def testCasting(self):
+        x = numx_rand.random((5,3)).astype('d')
+        y = 3*x
+        assert_type_equal(y.dtype, x.dtype)
+        x = numx_rand.random((5,3)).astype('f')
+        y = 3.*x
+        assert_type_equal(y.dtype, x.dtype)
+        x = (10*numx_rand.random((5,3))).astype('i')
+        y = 3.*x
+        assert_type_equal(y.dtype, 'd')
+        y = 3L*x
+        assert_type_equal(y.dtype, 'i')
+        x = numx_rand.random((5,3)).astype('f')
+        y = 3L*x
+        assert_type_equal(y.dtype, 'f')
                 
 def get_suite():
     suite = unittest.TestSuite()

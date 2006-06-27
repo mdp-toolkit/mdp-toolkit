@@ -16,7 +16,7 @@ import mdp
 # applying the inverse of the transformation computed by the node if 
 # defined). MDP is designed to make the implementation of new algorithms
 # easy and intuitive, for example by setting automatically input and 
-# output dimension and by casting the data to match the typecode 
+# output dimension and by casting the data to match the dtype 
 # (e.g. float or double precision) of the internal structures. Most of 
 # the nodes were designed to be applied to arbitrarily long sets of 
 # data: the internal structures can be updated successively by 
@@ -32,9 +32,9 @@ import mdp
 # Nodes can be obtained by creating an instance of the node class.
 # Each node is characterized by an input dimension, that corresponds
 # to the dimensionality of the input vectors, an output dimension, and
-# a typecode, which determines the typecode of the internal structures
+# a dtype, which determines the dtype of the internal structures
 # and of the output signal. These three attributes are inherited from
-# the input data if left unspecified. Input dimension and typecode
+# the input data if left unspecified. Input dimension and dtype
 # can usually be specified when an instance of the node class
 # is created.
 # The constructor of each node class can require other task-specific
@@ -43,7 +43,7 @@ import mdp
 # Some examples of node creation:
 #
 # - Create a node that performs Principal Component Analysis (PCA) 
-#   whose input dimension and typecode
+#   whose input dimension and dtype
 #   are inherited from the input data during training. Output dimensions
 #   default to input dimensions.
 pcanode1 = mdp.nodes.PCANode()
@@ -54,17 +54,17 @@ print repr(pcanode1)
 pcanode2 = mdp.nodes.PCANode(output_dim = 10)
 print repr(pcanode2)
 #
-# - If the typecode is set to ``f`` (float) the input 
+# - If the dtype is set to ``f`` (float) the input 
 #   data is cast to float precision when received and the internal 
-#   structures are also stored as ``f``. The typecode influences the 
+#   structures are also stored as ``f``. The dtype influences the 
 #   memory space necessary for a node and the precision with which the 
 #   computations are performed.
-pcanode3 = mdp.nodes.PCANode(typecode = 'f')
+pcanode3 = mdp.nodes.PCANode(dtype = 'f')
 print repr(pcanode3)
 #
-#   You can obtain a list of the typecodes supported by a node
-#   by calling its 'get_supported_typecodes' method:
-print pcanode3.get_supported_typecodes()
+#   You can obtain a list of the dtypes supported by a node
+#   by calling its 'get_supported_dtypes' method:
+print pcanode3.get_supported_dtypes()
 #
 # - A PolynomialExpansionNode expands its input in the space
 #   of polynomals of a given degree by computing all monomials up
@@ -82,7 +82,7 @@ expnode = mdp.nodes.PolynomialExpansionNode(3)
 x = mdp.numx_rand.random((100, 25))  # 25 variables, 100 observations
 pcanode1.train(x)
 #
-#   At this point the input dimension and the typecode have been
+#   At this point the input dimension and the dtype have been
 #   inherited from ``x``:
 print repr(pcanode1)
 #

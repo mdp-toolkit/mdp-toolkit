@@ -16,7 +16,7 @@ def _check_roundoff(t, type):
     if type.char in _limits:
         if int(t) >= _limits[type.char]:
             wr = 'You have summed %e entries in the covariance matrix.'%t+\
-                 '\nAs you are using typecode \'%s\', you are '%type+\
+                 '\nAs you are using dtype \'%s\', you are '%type+\
                  'probably getting severe round off'+\
                  '\nerrors. See CovarianceMatrix docstring for more'+\
                  ' information.'
@@ -38,17 +38,17 @@ class CovarianceMatrix(object):
     http://docs.sun.com/source/806-3568/ncg_goldberg.html
     """
 
-    def __init__(self, typecode = None):
-        """If typecode is not defined, it will be inherited from the first
+    def __init__(self, dtype = None):
+        """If dtype is not defined, it will be inherited from the first
         data bunch received by 'update'.
-        All the matrices in this class are set up with the given typecode and
+        All the matrices in this class are set up with the given dtype and
         no upcast is possible.
         """
         
-        if typecode is None:
-            self._typecode = None
+        if dtype is None:
+            self._dtype = None
         else:
-            self._typecode = numx.dtype(typecode)
+            self._dtype = numx.dtype(dtype)
 
         # covariance matrix, updated during the training phase
         self._cov_mtx = None
@@ -60,15 +60,15 @@ class CovarianceMatrix(object):
     def _init_internals(self, x):
         """Inits some internals structures. The reason this is not done in
         the constructor is that we want to be able to derive the input
-        dimension and the typecode directly from the data this class receives.
+        dimension and the dtype directly from the data this class receives.
         """
         
-        # init typecode
-        if self._typecode is None:
-            self._typecode = x.dtype
+        # init dtype
+        if self._dtype is None:
+            self._dtype = x.dtype
         dim = x.shape[1]
         self._input_dim = dim
-        type = self._typecode
+        type = self._dtype
         # init covariance matrix
         self._cov_mtx = numx.zeros((dim,dim), type)
         # init average
@@ -81,7 +81,7 @@ class CovarianceMatrix(object):
         #?? check the input dimension
 
         # cast input
-        x = utils.refcast(x, self._typecode)
+        x = utils.refcast(x, self._dtype)
         
         # update the covariance matrix, the average and the number of
         # observations (try to do everything inplace)
@@ -94,8 +94,8 @@ class CovarianceMatrix(object):
         the number of observations. The covariance matrix is then reset to
         a zero-state."""
         # local variables
-        type = self._typecode
-        tlen = utils.scast(self._tlen, type)
+        type = self._dtype
+        tlen = self._tlen
         _check_roundoff(tlen, type)
         avg = self._avg
         cov_mtx = self._cov_mtx
@@ -103,8 +103,8 @@ class CovarianceMatrix(object):
         ##### fix the training variables
         # fix the covariance matrix (try to do everything inplace)
         avg_mtx = numx.outer(avg,avg)
-        avg_mtx /= tlen*(tlen - utils.scast(1, type))
-        cov_mtx /= tlen - utils.scast(1, type)
+        avg_mtx /= tlen*(tlen - 1)
+        cov_mtx /= tlen - 1
         cov_mtx -= avg_mtx
         # fix the average
         avg /= tlen
@@ -134,21 +134,21 @@ class DelayCovarianceMatrix(object):
     http://docs.sun.com/source/806-3568/ncg_goldberg.html
     """
 
-    def __init__(self, dt, typecode = None):
+    def __init__(self, dt, dtype = None):
         """dt is the time delay. If dt==0, DelayCovarianceMatrix equals
-        CovarianceMatrix. If typecode is not defined, it will be inherited from
+        CovarianceMatrix. If dtype is not defined, it will be inherited from
         the first data bunch received by 'update'.
-        All the matrices in this class are set up with the given typecode and
+        All the matrices in this class are set up with the given dtype and
         no upcast is possible.
         """
 
         # time delay
         self._dt = int(dt)
 
-        if typecode is None:
-            self._typecode = None
+        if dtype is None:
+            self._dtype = None
         else:
-            self._typecode = numx.dtype(typecode)
+            self._dtype = numx.dtype(dtype)
 
         # clean up variables to spare on space
         self._cov_mtx = None
@@ -159,26 +159,26 @@ class DelayCovarianceMatrix(object):
     def _init_internals(self, x):
         """Inits some internals structures. The reason this is not done in
         the constructor is that we want to be able to derive the input
-        dimension and the typecode directly from the data this class receives.
+        dimension and the dtype directly from the data this class receives.
         """
         
-        # init typecode
-        if self._typecode is None:
-            self._typecode = x.dtype
+        # init dtype
+        if self._dtype is None:
+            self._dtype = x.dtype
         dim = x.shape[1]
         self._input_dim = dim
         # init covariance matrix
-        self._cov_mtx = numx.zeros((dim,dim), self._typecode)
+        self._cov_mtx = numx.zeros((dim,dim), self._dtype)
         # init averages
-        self._avg = numx.zeros(dim, self._typecode)
-        self._avg_dt = numx.zeros(dim, self._typecode)
+        self._avg = numx.zeros(dim, self._dtype)
+        self._avg_dt = numx.zeros(dim, self._dtype)
 
     def update(self, x):
         if self._cov_mtx is None:
             self._init_internals(x)
 
         # cast input
-        x = utils.refcast(x, self._typecode)
+        x = utils.refcast(x, self._dtype)
 
         dt = self._dt
 
@@ -210,8 +210,8 @@ class DelayCovarianceMatrix(object):
         """
         
         # local variables
-        type = self._typecode
-        tlen = utils.scast(self._tlen, type)
+        type = self._dtype
+        tlen = self._tlen
         _check_roundoff(tlen, type)
         avg = self._avg
         avg_dt = self._avg_dt
@@ -223,7 +223,7 @@ class DelayCovarianceMatrix(object):
         avg_mtx /= tlen
                  
         cov_mtx -= avg_mtx
-        cov_mtx /= tlen - utils.scast(1, type)
+        cov_mtx /= tlen - 1
 
         if A is not None:
             cov_mtx = mult(A,mult(cov_mtx, tr(A)))

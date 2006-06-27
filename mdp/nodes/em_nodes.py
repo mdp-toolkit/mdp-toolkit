@@ -17,7 +17,7 @@ warnings.filterwarnings('always', _LHOOD_WARNING, mdp.MDPWarning)
 class FANode(mdp.Node):
 
     def __init__(self, tol=1e-4, max_cycles=100, verbose=False,
-                 input_dim=None, output_dim=None, typecode=None):
+                 input_dim=None, output_dim=None, dtype=None):
         """Perform Factor Analysis.
 
         The current implementation should be most efficient for long
@@ -33,11 +33,11 @@ class FANode(mdp.Node):
         under the chapter 'Linear Models'.
         """
         # Notation as in Max Welling's notes
-        super(FANode, self).__init__(input_dim, output_dim, typecode)
+        super(FANode, self).__init__(input_dim, output_dim, dtype)
         self.tol = tol
         self.max_cycles = max_cycles
         self.verbose = verbose
-        self._cov_mtx = CovarianceMatrix(typecode)
+        self._cov_mtx = CovarianceMatrix(dtype)
     
     def _train(self, x):
         # update the covariance matrix
@@ -46,8 +46,7 @@ class FANode(mdp.Node):
     def _stop_training(self):
         #### some definitions
         verbose = self.verbose
-        typ = self.typecode
-        one = self._scast(1.)
+        typ = self.dtype
         tol = self.tol
         d = self.input_dim
         # if the number of latent variables is not specified,
@@ -58,14 +57,14 @@ class FANode(mdp.Node):
         idx_diag_d = [i*(d+1) for i in range(d)]
         idx_diag_k = [i*(k+1) for i in range(k)]
         # constant term in front of the log-likelihood
-        const = self._scast(-d/2. * numx.log(2.*numx.pi))
+        const = -d/2. * numx.log(2.*numx.pi)
 
         ##### request the covariance matrix and clean up
         cov_mtx, mu, tlen = self._cov_mtx.fix()
         del self._cov_mtx
         # 'bias' the covariance matrix
         # (i.e., cov_mtx = 1/tlen sum(x_t x_t^T) instead of 1/(tlen-1))
-        cov_mtx *= (tlen-self._scast(1.))/tlen
+        cov_mtx *= (tlen-1.)/tlen
         cov_diag = diag(cov_mtx).astype(typ)
 
         ##### initialize the parameters
@@ -104,7 +103,7 @@ class FANode(mdp.Node):
             ## E_yyT = E(y_n y_n^T | x_n)
             E_yyT = - mult(trA_B, A) + mult(trA_B_cov_mtx, tr(trA_B))
             # E_yyT += numx.eye(k)
-            put(E_yyT.ravel(), idx_diag_k, take(E_yyT.ravel(), idx_diag_k)+one)
+            put(E_yyT.ravel(), idx_diag_k, take(E_yyT.ravel(), idx_diag_k)+1.)
             
             ##### M-step
             A = mult(tr(trA_B_cov_mtx), inv(E_yyT))

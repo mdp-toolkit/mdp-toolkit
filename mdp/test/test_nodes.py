@@ -10,7 +10,8 @@ import inspect
 import mdp
 from mdp import utils, numx, numx_rand, numx_linalg
 from testing_tools import assert_array_almost_equal, assert_array_equal, \
-     assert_almost_equal, assert_equal, assert_array_almost_equal_diff
+     assert_almost_equal, assert_equal, assert_array_almost_equal_diff, \
+     assert_type_equal
 
 mult = utils.mult
 mean = numx.mean
@@ -20,10 +21,6 @@ tr = numx.transpose
 testtypes = [numx.dtype('d'), numx.dtype('f')]
 testtypeschar = [t.char for t in testtypes]
 testdecimals = {'d':16, 'f':7}
-
-def assert_type_equal(act, des):
-    assert act == numx.dtype(des), \
-           'Typecode mismatch: "%s" (should be "%s") '%(act,des)
 
 def _rand_labels(x):
     return numx.around(numx_rand.random(x.shape[0]))
@@ -64,9 +61,9 @@ class NodesTestSuite(unittest.TestSuite):
                 args = []
                 sup_args_func = None
 
-            # generate testtypecode_nodeclass test cases
-            funcdesc = 'Test typecode consistency of '+node_class.__name__
-            testfunc = self._get_testtypecode(node_class, args, sup_args_func)
+            # generate testdtype_nodeclass test cases
+            funcdesc = 'Test dtype consistency of '+node_class.__name__
+            testfunc = self._get_testdtype(node_class, args, sup_args_func)
             # add to the suite
             self.addTest(unittest.FunctionTestCase(testfunc,
                                                    description=funcdesc))
@@ -131,7 +128,7 @@ class NodesTestSuite(unittest.TestSuite):
         # generates testinverse_nodeclass test functions
         def _testinverse(node_class=node_class):
             mat,mix,inp = self._get_random_mix()
-            node = node_class(typecode='f', *args)
+            node = node_class(dtype='f', *args)
             if not node.is_invertible():return
             self._train_if_necessary(inp, node, args, sup_args_func)
             # execute the node
@@ -142,15 +139,15 @@ class NodesTestSuite(unittest.TestSuite):
             assert_type_equal(rec.dtype, 'f')
         return _testinverse
 
-    def _get_testtypecode(self, node_class, args=[], sup_args_func=None):
-        def _testtypecode(node_class=node_class):
-            for typecode in testtypes+testtypeschar:
+    def _get_testdtype(self, node_class, args=[], sup_args_func=None):
+        def _testdtype(node_class=node_class):
+            for dtype in testtypes+testtypeschar:
                 mat, mix, inp = self._get_random_mix(type="d")
-                node = node_class(*args, **{'typecode':typecode})
+                node = node_class(*args, **{'dtype':dtype})
                 self._train_if_necessary(inp, node, args, sup_args_func)
                 out = node.execute(inp)
-                assert_type_equal(out.dtype, typecode) 
-        return _testtypecode
+                assert_type_equal(out.dtype, dtype) 
+        return _testdtype
 
     def _get_testoutputdim(self, node_class, args=[], sup_args_func=None):
         def _testoutputdim(node_class=node_class):
@@ -214,20 +211,20 @@ class NodesTestSuite(unittest.TestSuite):
         assert_array_almost_equal(act_avg_dt,des_avg_dt,self.decimal-1)
         assert_array_almost_equal(act_cov,des_cov,self.decimal-1)
 
-    def testtypecodeCovarianceMatrix(self):
+    def testdtypeCovarianceMatrix(self):
         for type in testtypes:
             mat,mix,inp = self._get_random_mix(type='d')
-            cov = mdp.nodes.lcov.CovarianceMatrix(typecode=type)
+            cov = mdp.nodes.lcov.CovarianceMatrix(dtype=type)
             cov.update(inp)
             cov,avg,tlen = cov.fix()
             assert_type_equal(cov.dtype,type)
             assert_type_equal(avg.dtype,type) 
 
-    def testtypecodeDelayCovarianceMatrix(self):
+    def testdtypeDelayCovarianceMatrix(self):
         for type in testtypes:
             dt = 5
             mat,mix,inp = self._get_random_mix(type='d')
-            cov = mdp.nodes.lcov.DelayCovarianceMatrix(dt=dt,typecode=type)
+            cov = mdp.nodes.lcov.DelayCovarianceMatrix(dt=dt,dtype=type)
             cov.update(inp)
             cov,avg,avg_dt,tlen = cov.fix()
             assert_type_equal(cov.dtype,type)
@@ -239,7 +236,7 @@ class NodesTestSuite(unittest.TestSuite):
         warnings.filterwarnings("error",'.*',mdp.MDPWarning)
         for type in ['d','f']:
             inp = numx_rand.random((1,2))
-            cov = mdp.nodes.lcov.CovarianceMatrix(typecode=type)
+            cov = mdp.nodes.lcov.CovarianceMatrix(dtype=type)
             cov._tlen = int(1e+15)
             cov.update(inp)
             try:
@@ -648,7 +645,7 @@ class NodesTestSuite(unittest.TestSuite):
         
         x = mult(y, A) + mu + noise
         
-        fa = mdp.nodes.FANode(output_dim=k, typecode='d')
+        fa = mdp.nodes.FANode(output_dim=k, dtype='d')
         fa.train(x)
         fa.stop_training()
 
@@ -666,9 +663,9 @@ class NodesTestSuite(unittest.TestSuite):
         assert_type_equal(x2.dtype, 'd')
         assert_array_almost_equal(x, x2, 1)
 
-        # check typecode consistency:
+        # check dtype consistency:
         # don't check results here: float type yields large deviations!
-        fa = mdp.nodes.FANode(output_dim=k, typecode='f')
+        fa = mdp.nodes.FANode(output_dim=k, dtype='f')
         fa.train(x)
         fa.stop_training()
         
@@ -682,6 +679,6 @@ def get_suite():
 
 
 if __name__ == '__main__':
-    numx_rand.seed(1268049219, 2102953867)
+    numx_rand.seed(1268049219)
     unittest.TextTestRunner(verbosity=2).run(get_suite())
 

@@ -10,7 +10,7 @@ class PCANode(Node):
     Karhunen-Loeve transform can be found among others in
     I.T. Jolliffe, Principal Component Analysis, Springer-Verlag (1986)."""
     
-    def __init__(self, input_dim = None, output_dim = None, typecode = None):
+    def __init__(self, input_dim = None, output_dim = None, dtype = None):
         """The number of principal components to be kept can be specified as
         'output_dim' directly (e.g. 'output_dim=10' means 10 components
         are kept) or by the fraction of variance to be explained
@@ -22,10 +22,10 @@ class PCANode(Node):
         else:
             self.desired_variance = None
         
-        super(PCANode, self).__init__(input_dim, output_dim, typecode)
+        super(PCANode, self).__init__(input_dim, output_dim, dtype)
         
         # empirical covariance matrix, updated during the training phase
-        self._cov_mtx = CovarianceMatrix(typecode)
+        self._cov_mtx = CovarianceMatrix(dtype)
         
     def _check_output(self, y):
         # check output rank
@@ -39,7 +39,7 @@ class PCANode(Node):
                         % (y.shape[1], self.output_dim)
             raise SignalNodeException, error_str
 
-    def _get_supported_typecodes(self):
+    def _get_supported_dtypes(self):
         return ['f','d']
     
     def get_explained_variance(self):

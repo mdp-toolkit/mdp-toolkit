@@ -18,7 +18,7 @@ class ICANode(mdp.Cumulator, mdp.Node):
     
     def __init__(self, limit = 0.001, telescope = 0, verbose = 0, \
                  whitened = 0, white_comp = None, input_dim = None, \
-                 typecode = None):
+                 dtype = None):
         """
         - Set whitened == 1 if input data are already whitened.
           Otherwise the node will whiten the data itself.
@@ -31,14 +31,14 @@ class ICANode(mdp.Cumulator, mdp.Node):
           convergence for stationary statistics.
           This mode has not been thoroughly tested and must be considered beta.
         """
-        super(ICANode, self).__init__(input_dim, None, typecode)
+        super(ICANode, self).__init__(input_dim, None, dtype)
         self.telescope = telescope
         self.verbose = verbose
         self.limit = limit
         self.whitened = whitened
         self.white_comp = white_comp
 
-    def _get_supported_typecodes(self):
+    def _get_supported_dtypes(self):
         return ['f','d']
 
     def _stop_training(self):
@@ -128,20 +128,20 @@ class CuBICANode(ICANode):
         # convergence criterium == maxangle
         limit = self.limit
         comp = x.shape[1]
-        tlen = self._scast(x.shape[0])
+        tlen = x.shape[0]
         
         # some casted constants (this is due to casting issues in the
         # numeric libraries. they are going to disappear as soon as
         # new casting conventions are established -> Numeric 3,
         # scipy 3.3, ...)
-        scalars = numx.arange(0, 37, dtype=self.typecode)
-        ct_c34 = self._scast(0.0625)
-        ct_s34 = self._scast(0.25)
-        ct_c44 = self._scast(1./384)
-        ct_s44 = self._scast(1./96)
+        scalars = numx.arange(0, 37, dtype=self.dtype)
+        ct_c34 = 0.0625
+        ct_s34 = 0.25
+        ct_c44 = 1./384
+        ct_s44 = 1./96
 
         # initial transposed rotation matrix == identity matrix
-        Qt = numx.identity(comp, dtype=self.typecode)
+        Qt = numx.identity(comp, dtype=self.dtype)
 
         # maximum number of sweeps through all possible pairs of signals
         num = int(1+round(numx.sqrt(comp)))
@@ -238,7 +238,7 @@ class FastICANode(ICANode):
     def __init__(self, approach = 'defl', g = 'pow3', \
                  fine_tanh = 10, fine_gaus = 1, max_it = 1000, failures = 5,\
                  limit = 0.001, verbose = 0, whitened = 0, white_comp = None,\
-                 input_dim = None, typecode=None):
+                 input_dim = None, dtype=None):
         """
         - approach:          the approach to use. Possible values are:
                                'defl' --> deflation
@@ -254,7 +254,7 @@ class FastICANode(ICANode):
         Note: FastICA does not support the telescope mode (the convergence
               criterium is not robust in telescope mode)."""
         ICANode.__init__(self, limit, 0, verbose, whitened,\
-                         white_comp, input_dim, typecode)
+                         white_comp, input_dim, dtype)
         if approach in ['defl','symm']:
             self.approach = approach
         else:
@@ -275,24 +275,21 @@ class FastICANode(ICANode):
         limit = self.limit
         max_it = self.max_it
         failures = self.failures
-        typecode = self.typecode
+        dtype = self.dtype
         verbose = self.verbose
         X = t(data)
         
         # casted constants
         comp = X.shape[0]
-        tlen = self._scast(X.shape[1])
-        three = self._scast(3)
-        one = self._scast(1)
-        half = self._scast(0.5)
+        tlen = X.shape[1]
 
         # SYMMETRIC APPROACH
         if approach == 'symm':
             # create list to store convergence
             convergence = []
             # Take random orthonormal initial vectors.
-            Q = utils.random_rot(comp, typecode)
-            QOld = numx.zeros(numx.shape(Q),typecode)
+            Q = utils.random_rot(comp, dtype)
+            QOld = numx.zeros(numx.shape(Q),dtype)
             # This is the actual fixed-point iteration loop.
             for round in range(max_it + 1):
                 if round == max_it:
@@ -318,15 +315,15 @@ class FastICANode(ICANode):
                 u = mult(t(X),Q)
                 # non linearity
                 if g == 'pow3':
-                    Q = mult(X,u*u*u)/tlen - three*Q
+                    Q = mult(X,u*u*u)/tlen - 3.*Q
                 elif g == 'tanh':
                     tang = numx.tanh(fine_tanh * u)
-                    temp = t(numx.sum(one-tang*tang))/tlen
+                    temp = t(numx.sum(1.-tang*tang))/tlen
                     Q = mult(X,tang) - temp * Q * fine_tanh
                 elif g == 'gaus':
                     u2 = u*u
-                    gauss =  u*numx.exp(-fine_gaus*u2*half)
-                    dgauss = (one - fine_gaus*u2)*numx.exp(-fine_gaus*u2*half)
+                    gauss =  u*numx.exp(-fine_gaus*u2*0.5)
+                    dgauss = (1. - fine_gaus*u2)*numx.exp(-fine_gaus*u2*0.5)
                     Q = (mult(X,gauss) - numx.sum(dgauss)*Q)/tlen
             self.convergence = numx.array(convergence)
             ret = convergence[-1]
@@ -335,8 +332,8 @@ class FastICANode(ICANode):
             # adjust limit! 
             limit = 1 - limit*limit*0.5
             # create array to store convergence
-            convergence = numx.zeros((comp,),dtype=typecode)
-            Q = numx.zeros((comp,comp),dtype=typecode)
+            convergence = numx.zeros((comp,),dtype=dtype)
+            Q = numx.zeros((comp,comp),dtype=dtype)
             round = 0
             nfail = 0
             while round < comp:
@@ -345,7 +342,7 @@ class FastICANode(ICANode):
                 w  = self._refcast(numx_rand.random((comp, 1)) - .5)
                 w -= mult(mult(Q,t(Q)),w)
                 w /= utils.norm2(w)
-                wOld = numx.zeros(numx.shape(w), typecode)
+                wOld = numx.zeros(numx.shape(w), dtype)
                 # This is the actual fixed-point iteration loop.
                 for i in range(max_it + 1):
                     if i == max_it:
@@ -382,16 +379,16 @@ class FastICANode(ICANode):
                     u = mult(t(X),w)
                     #non linearity
                     if g == 'pow3':
-                        w = mult(X,u*u*u)/tlen - three*w
+                        w = mult(X,u*u*u)/tlen - 3.*w
                     elif g == 'tanh':
                         tang = numx.tanh(fine_tanh * u)
-                        temp = t(numx.sum(one - tang*tang))*w
+                        temp = t(numx.sum(1. - tang*tang))*w
                         w = mult(X,tang) - fine_tanh/tlen*temp
                     elif g == 'gaus':
                         u2 = u*u
-                        temp = numx.exp(-fine_gaus * u2*half)
+                        temp = numx.exp(-fine_gaus * u2*0.5)
                         gauss =  u *temp
-                        dgauss = (one - fine_gaus *u2)*temp
+                        dgauss = (1. - fine_gaus *u2)*temp
                         w = (mult(X,gauss) - numx.sum(dgauss) * w) / tlen
                     # Normalize the new w.
                     w /= utils.norm2(w)

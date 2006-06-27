@@ -31,7 +31,7 @@ class GrowingNeuralGasNode(Node):
     """
     def __init__(self, start_poss=None, eps_b=0.2, eps_n=0.006, max_age=50,
                  lambda_=100, alpha=0.5, d=0.995, max_nodes=2147483647,
-                 input_dim=None, typecode=None):
+                 input_dim=None, dtype=None):
         """Growing Neural Gas algorithm.
 
         start_pos -- sequence of two arrays containing the position of the
@@ -78,24 +78,18 @@ class GrowingNeuralGasNode(Node):
                     eps_b, eps_n, max_age, lambda_, alpha, d, max_nodes
 
         
-        super(GrowingNeuralGasNode, self).__init__(input_dim, None, typecode)
+        super(GrowingNeuralGasNode, self).__init__(input_dim, None, dtype)
 
         if start_poss is not None:
-            if self.typecode is None:
-                self.typecode = start_poss[0].dtype
+            if self.dtype is None:
+                self.dtype = start_poss[0].dtype
             node1 = self._add_node(self._refcast(start_poss[0]))
             node2 = self._add_node(self._refcast(start_poss[1]))
             self._add_edge(node1, node2)
 
-    def _get_supported_typecodes(self):
-        """Return the list of typecodes supported by this node."""
+    def _get_supported_dtypes(self):
+        """Return the list of dtypes supported by this node."""
         return ['f','d']
-    
-    def _set_typecode(self, t):
-        """Set typecode."""
-        self._typecode = t
-        self.eps_b = self._scast(self.eps_b)
-        self.eps_n = self._scast(self.eps_n)
 
     def _add_node(self, pos):
         node = self.graph.add_node(_GNGNodeData(pos))
@@ -122,7 +116,7 @@ class GrowingNeuralGasNode(Node):
 
     def _move_node(self, node, x, eps):
         """Move a node by eps in the direction x."""
-        # ! make sure that eps already has the right typecode
+        # ! make sure that eps already has the right dtype
         node.data.pos += eps*(x - node.data.pos)
 
     def _remove_old_edges(self, edges):
@@ -162,7 +156,7 @@ class GrowingNeuralGasNode(Node):
 
     def get_nodes_position(self):
         return numx.array(map(lambda n: n.data.pos, self.graph.nodes),
-                          dtype = self.typecode)
+                          dtype = self.dtype)
 
     def _train(self, input):
         g = self.graph

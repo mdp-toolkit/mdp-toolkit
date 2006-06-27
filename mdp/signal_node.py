@@ -37,7 +37,7 @@ class IsNotInvertibleException(NodeException):
     node is not invertible."""
     pass
 
-SUPPORTED_TYPECODES = [numx.dtype(ch)
+SUPPORTED_DTYPES = [numx.dtype(ch)
                        for ch in numx.typecodes['AllInteger']+
                                  numx.typecodes['AllFloat']]
 
@@ -52,7 +52,7 @@ class Node(object):
     the node if defined). The Node class is designed to make the
     implementation of new algorithms easy and intuitive, for example by
     setting automatically input and output dimension and by casting the
-    data to match the typecode (e.g. float or double) of the internal
+    data to match the dtype (e.g. float or double) of the internal
     structures. Node was designed to be applied to arbitrarily
     long sets of data: the internal structures can be updated successively
     by sending chunks of the input data (this is equivalent to online
@@ -68,26 +68,26 @@ class Node(object):
 
     Node subclasses should take care of redefining (if necessary)
     the functions is_trainable, train, stop_training, execute, is_invertible,
-    inverse, and get_supported_typecodes."""
+    inverse, and get_supported_dtypes."""
 
-    def __init__(self, input_dim = None, output_dim = None, typecode = None):
+    def __init__(self, input_dim = None, output_dim = None, dtype = None):
         """If the input dimension and the output dimension are
         unspecified, they will be set when the 'train' or 'execute'
         function is called for the first time.
-        If the typecode is unspecified, it will be inherited from the data
+        If the dtype is unspecified, it will be inherited from the data
         it receives at the first call of 'train' or 'execute'. Every subclass
         must take care of up- or down-casting the input and its internal
-        structures to match this argument (use _refcast and _scast private
-        methods when possible).
+        structures to match this argument (use _refcast private
+        method when possible).
         """
         # initialize basic attributes
         self._input_dim = None
         self._output_dim = None
-        self._typecode = None
+        self._dtype = None
         # call set functions for properties
         self.set_input_dim(input_dim)
         self.set_output_dim(output_dim)
-        self.set_typecode(typecode)
+        self.set_dtype(dtype)
  
         # skip the training phase if the node is not trainable
         if not self.is_trainable():
@@ -155,49 +155,49 @@ class Node(object):
                           set_output_dim,
                           doc = "Output dimensions")
 
-    def get_typecode(self):
-        """Return typecode."""
-        return self._typecode
+    def get_dtype(self):
+        """Return dtype."""
+        return self._dtype
     
-    def set_typecode(self, t):
-        """Set Node's internal structures typecode.
-        Performs sanity checks and then calls self._set_typecode(n), which
-        is responsible for setting the internal attribute self._typecode.
-        Note that self._set_typecode can be overriden by subclasses.
-        Internally the typecode is stored as a numpy.dtype object.
+    def set_dtype(self, t):
+        """Set Node's internal structures dtype.
+        Performs sanity checks and then calls self._set_dtype(n), which
+        is responsible for setting the internal attribute self._dtype.
+        Note that self._set_dtype can be overriden by subclasses.
+        Internally the dtype is stored as a numpy.dtype object.
         """
         if t is None: return
         t = numx.dtype(t)
-        if (self._typecode is not None) and (self._typecode != t):
-            errstr = "Typecode is already set to '%s' " % (self.typecode.name)
+        if (self._dtype is not None) and (self._dtype != t):
+            errstr = "Typecode is already set to '%s' " % (self.dtype.name)
             raise NodeException, errstr
-        elif t not in self.get_supported_typecodes():
+        elif t not in self.get_supported_dtypes():
             errstr = "\nTypecode '%s' is not supported.\n" % t.name+ \
-                      "Supported typecodes: %s" \
-                      %([t.name for t in SUPPORTED_TYPECODES])
+                      "Supported dtypes: %s" \
+                      %([t.name for t in SUPPORTED_DTYPES])
             raise NodeException, errstr
         else:
-            self._set_typecode(t)
+            self._set_dtype(t)
 
-    def _set_typecode(self, t):
-        self._typecode = t
+    def _set_dtype(self, t):
+        self._dtype = t
         
-    typecode = property(get_typecode,
-                        set_typecode,
+    dtype = property(get_dtype,
+                        set_dtype,
                         doc = "Typecode")
 
-    def _get_supported_typecodes(self):
-        """Return the list of typecodes supported by this node.
+    def _get_supported_dtypes(self):
+        """Return the list of dtypes supported by this node.
         The types can be specified in any format allowed by numpy.dtype."""
-        return SUPPORTED_TYPECODES
+        return SUPPORTED_DTYPES
 
-    def get_supported_typecodes(self):
-        """Return Node's supported typecodes as a list of numpy.dtype objects.
+    def get_supported_dtypes(self):
+        """Return Node's supported dtypes as a list of numpy.dtype objects.
         """
-        return [numx.dtype(t) for t in self._get_supported_typecodes()]
+        return [numx.dtype(t) for t in self._get_supported_dtypes()]
 
-    supported_typecodes = property(get_supported_typecodes,
-                                   doc = "Supported typecodes")
+    supported_dtypes = property(get_supported_dtypes,
+                                   doc = "Supported dtypes")
 
     _train_seq = property(lambda self: self._get_train_seq(),
                           doc = "List of tuples: [(training-phase1, " +\
@@ -245,9 +245,9 @@ class Node(object):
         if self.input_dim is None:
             self.input_dim = x.shape[1]
 
-        # set the typecode if necessary
-        if self.typecode is None:
-            self.typecode = x.dtype
+        # set the dtype if necessary
+        if self.dtype is None:
+            self.dtype = x.dtype
 
         # check the input dimension
         if not x.shape[1] == self.input_dim:
@@ -301,13 +301,8 @@ class Node(object):
     ### casting helper functions
 
     def _refcast(self, x):
-        """Helper function to cast arrays to the internal typecode."""
-        return mdp.utils.refcast(x, self.typecode)
-
-    def _scast(self, scalar):
-        """Helper function to cast scalars to the internal typecode."""
-        # if numeric finally becomes scipy_base we will remove this.
-        return mdp.utils.scast(scalar, self.typecode)
+        """Helper function to cast arrays to the internal dtype."""
+        return mdp.utils.refcast(x, self.dtype)
     
     ### Methods to be implemented by the user
 
@@ -420,15 +415,15 @@ class Node(object):
         return str(type(self).__name__)
     
     def __repr__(self):
-        # print input_dim, output_dim, typecode 
+        # print input_dim, output_dim, dtype 
         name = type(self).__name__
         inp = "input_dim=%s"%str(self.input_dim)
         out = "output_dim=%s"%str(self.output_dim)
-        if self.typecode is None:
+        if self.dtype is None:
             name = '* not initialized yet *'
         else:
-            name = self.typecode.name
-        typ = "typecode='%s'" % name
+            name = self.dtype.name
+        typ = "dtype='%s'" % name
         args = ', '.join((inp, out, typ))
         return name+'('+args+')'
 
@@ -444,8 +439,8 @@ class Cumulator(Node):
     This makes it possible to implement batch-mode learning.
     """
 
-    def __init__(self, input_dim = None, output_dim = None, typecode = None):
-        super(Cumulator, self).__init__(input_dim, output_dim, typecode)
+    def __init__(self, input_dim = None, output_dim = None, dtype = None):
+        super(Cumulator, self).__init__(input_dim, output_dim, dtype)
         self.data = []
         self.tlen = 0
 
@@ -459,13 +454,13 @@ class Cumulator(Node):
         """Cast the data list to array type and reshape it.
         """
         self._training = False
-        self.data = numx.array(self.data, dtype = self.typecode)
+        self.data = numx.array(self.data, dtype = self.dtype)
         self.data.shape = (self.tlen, self.input_dim)
 
 # deprecated alias
 class SignalNode(Node):
-    def __init__(self, input_dim = None, output_dim = None, typecode = None):
+    def __init__(self, input_dim = None, output_dim = None, dtype = None):
         wrnstr = "The alias 'SignalNode' is deprecated and won't be " + \
         "continued in future releases. Use 'Node' instead."
         _warnings.warn(wrnstr, DeprecationWarning)
-        super(SignalNode, self).__init__(input_dim, output_dim, typecode)
+        super(SignalNode, self).__init__(input_dim, output_dim, dtype)

@@ -5,22 +5,22 @@ class OneDimensionalHitParade(object):
     """
     Class to produce hit-parades out of a one-dimensional time-series.
     """
-    def __init__(self,n,d,real_typecode="d",integer_typecode="l"):
+    def __init__(self,n,d,real_dtype="d",integer_dtype="l"):
         """
         n - number of maxima and minima to remember
         d - minimum gap between two hits
 
-        real_typecode is for sequence items
-        integer_typecode is for sequence indices
+        real_dtype is for sequence items
+        integer_dtype is for sequence indices
 
-        Note: be careful with typecodes!
+        Note: be careful with dtypes!
         """
         self.n = int(n)
         self.d = int(d)
-        self.iM = numx.zeros((n,),dtype=integer_typecode)
-        self.im = numx.zeros((n,),dtype=integer_typecode)
-        self.M = numx.array([-numx.inf]*n, dtype=real_typecode)
-        self.m = numx.array([numx.inf]*n, dtype=real_typecode)
+        self.iM = numx.zeros((n,),dtype=integer_dtype)
+        self.im = numx.zeros((n,),dtype=integer_dtype)
+        self.M = numx.array([-numx.inf]*n, dtype=real_dtype)
+        self.m = numx.array([numx.inf]*n, dtype=real_dtype)
         self.lM = 0
         self.lm = 0
 
@@ -107,19 +107,19 @@ class HitParadeNode(Node):
     """    
 
     
-    def __init__(self, n, d, input_dim=None, typecode=None):
+    def __init__(self, n, d, input_dim=None, dtype=None):
         """
         n - number of maxima and minima to store
         d - minimum gap between two maxima or two minima
         """
-        super(HitParadeNode, self).__init__(input_dim, None, typecode)
+        super(HitParadeNode, self).__init__(input_dim, None, dtype)
         self.n = int(n)
         self.d = int(d)
         self.itype = 'l'
         self.hit = None
         self.tlen = 0
 
-    def _get_supported_typecodes(self):
+    def _get_supported_dtypes(self):
         return ['i','l','f','d']
 
     def _train(self, x):
@@ -127,7 +127,7 @@ class HitParadeNode(Node):
         old_tlen = self.tlen
         if hit is None:
             hit = [OneDimensionalHitParade\
-                   (self.n,self.d,self.typecode,self.itype)\
+                   (self.n,self.d,self.dtype,self.itype)\
                    for c in range(self.input_dim)]
         tlen = old_tlen + x.shape[0]
         indices = numx.arange(old_tlen,tlen)
@@ -155,7 +155,7 @@ class HitParadeNode(Node):
         n = self.n
         hit = self.hit
         iM = numx.zeros((n,cols),dtype=self.itype)
-        M = numx.ones((n,cols),dtype=self.typecode)
+        M = numx.ones((n,cols),dtype=self.dtype)
         for c in range(cols):
             M[:,c],iM[:,c] = hit[c].get_maxima()
         return M,iM
@@ -169,7 +169,7 @@ class HitParadeNode(Node):
         n = self.n
         hit = self.hit
         im = numx.zeros((n,cols), dtype=self.itype)
-        m = numx.ones((n,cols), dtype=self.typecode)
+        m = numx.ones((n,cols), dtype=self.dtype)
         for c in range(cols):
             m[:,c],im[:,c] = hit[c].get_minima()
         return m,im
@@ -189,8 +189,8 @@ class TimeFramesNode(Node):
 
     """
     
-    def __init__(self, time_frames, gap=1, input_dim=None, typecode=None):     
-        super(TimeFramesNode, self).__init__(input_dim, None, typecode)
+    def __init__(self, time_frames, gap=1, input_dim=None, dtype=None):     
+        super(TimeFramesNode, self).__init__(input_dim, None, dtype)
         self.time_frames = time_frames
         self.gap = gap
 
@@ -213,7 +213,7 @@ class TimeFramesNode(Node):
         tf = x.shape[0]- (self.time_frames-1)*gap
         rows = self.input_dim
         cols = self.output_dim
-        y = numx.zeros((tf,cols),dtype=self.typecode)
+        y = numx.zeros((tf,cols),dtype=self.dtype)
         for frame in range(self.time_frames):
             y[:,frame*rows:(frame+1)*rows] = x[gap*frame:gap*frame+tf,:]
         return y
@@ -244,7 +244,7 @@ class TimeFramesNode(Node):
         cols = self.input_dim
         rest = (self.time_frames-1)*gap
         rows = exp_length + rest
-        x = numx.zeros((rows,cols),dtype=self.typecode)
+        x = numx.zeros((rows,cols),dtype=self.dtype)
         x[:exp_length,:] = y[:,:cols]
         count = 1
         # Note that if gap > 1 some of the last rows will be filled with zeros!
@@ -288,11 +288,11 @@ class EtaComputerNode(Node):
     and the results are stored internally.
     """
     
-    def __init__(self, input_dim=None, typecode=None):
-        super(EtaComputerNode, self).__init__(input_dim, None, typecode)
+    def __init__(self, input_dim=None, dtype=None):
+        super(EtaComputerNode, self).__init__(input_dim, None, dtype)
         self._initialized = 0
 
-    def _get_supported_typecodes(self):
+    def _get_supported_dtypes(self):
         return ['f','d']
 
     def _init_internals(self):
@@ -333,7 +333,7 @@ class NoiseNode(Node):
     Original idea by Mathias Franzius.
     """
     def __init__(self, noise_func = mdp.numx_rand.normal, noise_args = (0,1),
-                 noise_type = 'additive', input_dim = None, typecode = None):
+                 noise_type = 'additive', input_dim = None, dtype = None):
         """
         Add noise to input signals.
         
@@ -350,7 +350,7 @@ class NoiseNode(Node):
           Default is 'additive'.
         """
         super(NoiseNode, self).__init__(input_dim = input_dim,
-                                        typecode = typecode)
+                                        dtype = dtype)
         self.noise_func = noise_func
         self.noise_args = noise_args
         valid_noise_types = ['additive', 'multiplicative']
@@ -372,11 +372,11 @@ class NoiseNode(Node):
         if self.noise_type == 'additive':
             return x+noise_mat
         elif self.noise_type == 'multiplicative':
-            return x*(self._scast(1)+noise_mat)
+            return x*(1.+noise_mat)
 
 
 class GaussianClassifierNode(Node):
-    def __init__(self, input_dim=None, typecode=None):
+    def __init__(self, input_dim=None, dtype=None):
         """This node performs a supervised Gaussian classification.
 
         Given a set of labelled data, this node fits a gaussian distribution
@@ -386,7 +386,7 @@ class GaussianClassifierNode(Node):
         probability of the classes given the data use the 'class_probabilities'
         method.
         """
-        super(GaussianClassifierNode, self).__init__(input_dim, None, typecode)
+        super(GaussianClassifierNode, self).__init__(input_dim, None, dtype)
         self.cov_objs = {}
 
     def is_invertible(self):
@@ -401,7 +401,7 @@ class GaussianClassifierNode(Node):
     def _update_covs(self, x, lbl):
         if not self.cov_objs.has_key(lbl):
             self.cov_objs[lbl] = \
-                mdp.nodes.lcov.CovarianceMatrix(typecode = self.typecode)
+                mdp.nodes.lcov.CovarianceMatrix(dtype = self.dtype)
         self.cov_objs[lbl].update(x)
 
     def _train(self, x, cl):
@@ -440,7 +440,7 @@ class GaussianClassifierNode(Node):
             self.inv_covs.append(utils.inv(cov))
 
         for i in range(len(self.p)):
-            self.p[i] /= self._scast(nitems)
+            self.p[i] /= float(nitems)
 
         del self.cov_objs
 
@@ -458,10 +458,9 @@ class GaussianClassifierNode(Node):
         # subtract the mean
         x_mn = x - self.means[lbl_idx][numx.newaxis,:]
         # exponent
-        exponent = self._scast(-0.5) * \
-                   numx.sum(utils.mult(x_mn, invS)*x_mn, axis=1)
+        exponent = -0.5 * numx.sum(utils.mult(x_mn, invS)*x_mn, axis=1)
         # constant
-        constant = self._scast((2.*numx.pi)**-(dim/2.)/sqrt_detS)
+        constant = (2.*numx.pi)**-(dim/2.)/sqrt_detS
         # probability
         return constant * numx.exp(exponent)
 
@@ -471,7 +470,7 @@ class GaussianClassifierNode(Node):
 
         # compute the probability for each class
         tmp_prob = numx.zeros((x.shape[0], len(self.labels)),
-                              dtype=self.typecode)
+                              dtype=self.dtype)
         for i in range(len(self.labels)):
             tmp_prob[:,i] = self._gaussian_prob(x, i)
             tmp_prob[:,i] *= self.p[i]

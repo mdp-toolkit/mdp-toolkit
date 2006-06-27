@@ -12,17 +12,17 @@ def timediff(data):
     # this is the fastest way we found so far
     return data[1:]-data[:-1]
 
-def refcast(array, typecode):
+def refcast(array, dtype):
     """
-    Cast the array to typecode only if necessary, otherwise return a reference.
+    Cast the array to dtype only if necessary, otherwise return a reference.
     """
-    if array.dtype == typecode:
+    if array.dtype == dtype:
         return array
-    return array.astype(typecode)
+    return array.astype(dtype)
 
-def scast(scalar, typecode):
-    """Convert a scalar in a 0D array of the given typecode."""
-    return numx.array(scalar, dtype=typecode)
+def scast(scalar, dtype):
+    """Convert a scalar in a 0D array of the given dtype."""
+    return numx.array(scalar, dtype=dtype)
 
 def rotate(mat, angle, columns = [0, 1], units = 'radians'):
     """
@@ -36,12 +36,12 @@ def rotate(mat, angle, columns = [0, 1], units = 'radians'):
 
     If M=2, columns=[0,1].
     """
-    typecode = mat.dtype
+    dtype = mat.dtype
     if units is 'degrees': angle = angle/180.*numx.pi
-    cos_ = scast(numx.cos(angle), typecode)
-    sin_ = scast(numx.sin(angle), typecode)
+    cos_ = numx.cos(angle)
+    sin_ = numx.sin(angle)
     [i,j] = columns
-    col_i = mat[:,i] + scast(0, typecode)
+    col_i = mat[:,i] + 0.
     col_j = mat[:,j]
     mat[:,i] = cos_*col_i - sin_*col_j
     mat[:,j] = sin_*col_i + cos_*col_j
@@ -50,7 +50,7 @@ def hermitian(x):
     """Compute the Hermitian, i.e. conjugate transpose, of x."""
     return numx.conjugate(numx.transpose(x))
 
-def symrand(dim_or_eigv, typecode="d"):
+def symrand(dim_or_eigv, dtype="d"):
     """Return a random symmetric (Hermitian) matrix.
      if 'dim_or_eigv' is an integer N, return a NxN matrix.
      if 'dim_or_eigv' is  1-D real array 'a', return a matrix whose
@@ -66,12 +66,12 @@ def symrand(dim_or_eigv, typecode="d"):
     else:
         raise mdp.MDPException, "input type not supported."
     
-    v = random_rot(dim, typecode=typecode)
+    v = random_rot(dim, dtype=dtype)
     h = mdp.utils.mult(mdp.utils.mult(hermitian(v), mdp.numx.diag(d)), v)
     # to avoid roundoff errors, symmetrize the matrix (again)
-    return refcast(0.5*(hermitian(h)+h), typecode)
+    return refcast(0.5*(hermitian(h)+h), dtype)
 
-def random_rot(dim, typecode='d'):
+def random_rot(dim, dtype='d'):
     """Return a random rotation matrix, drawn from the Haar distribution
     (the only uniform distribution on SO(n)).
     The algorithm is described in the paper
@@ -80,16 +80,16 @@ def random_rot(dim, typecode='d'):
     on Numerical Analysis, 17(3), pp. 403-409, 1980.
     For more information see
     http://en.wikipedia.org/wiki/Orthogonal_matrix#Randomization"""
-    H = mdp.numx.eye(dim, dtype=typecode)
-    D = mdp.numx.ones((dim,), dtype=typecode)
+    H = mdp.numx.eye(dim, dtype=dtype)
+    D = mdp.numx.ones((dim,), dtype=dtype)
     for n in range(1, dim):
-        x = mdp.numx_rand.normal(size=(dim-n+1,)).astype(typecode)
+        x = mdp.numx_rand.normal(size=(dim-n+1,)).astype(dtype)
         D[n-1] = mdp.numx.sign(x[0])
         x[0] -= D[n-1]*mdp.numx.sqrt(mdp.numx.sum(x*x))
         # Householder transformation
-        Hx = mdp.numx.eye(dim-n+1, dtype=typecode) \
+        Hx = mdp.numx.eye(dim-n+1, dtype=dtype) \
              - 2.*mdp.numx.outer(x, x)/mdp.numx.sum(x*x)
-        mat = mdp.numx.eye(dim, dtype=typecode)
+        mat = mdp.numx.eye(dim, dtype=dtype)
         mat[n-1:,n-1:] = Hx
         H = mdp.utils.mult(H, mat)
     # Fix the last sign such that the determinant is 1
@@ -167,21 +167,21 @@ _type_conv = {('f','d'): 'd', ('f','F'): 'F', ('f','D'): 'D',
               ('d','F'): 'D', ('d','D'): 'D',
               ('F','d'): 'D', ('F','D'): 'D'}
 
-def _greatest_common_typecode(alist):
+def _greatest_common_dtype(alist):
     """
     Apply conversion rules to find the common conversion type
     Typecode 'd' is default for 'i' or unknown types
     (known types: 'f','d','F','D').
     """
-    typecode = 'f'
+    dtype = 'f'
     for array in alist:
         if array is None: continue
         tc = array.dtype.char
         if tc not in _type_keys: tc = 'd'
-        transition = (typecode, tc)
+        transition = (dtype, tc)
         if transition in _type_conv:
-            typecode = _type_conv[transition]
-    return typecode
+            dtype = _type_conv[transition]
+    return dtype
 
 def _symeig_fake(A, B = None, eigenvectors = 1, turbo = "on", range = None,
                  type = 1, overwrite = 0):
@@ -223,7 +223,7 @@ numarray.linear_algebra.eigenvectors with an interface compatible with symeig.
                eigenvalues, with the i-th column of Z holding the eigenvector
                associated with w[i]. The eigenvectors are normalized as above.
     """
-    typecode = _greatest_common_typecode([A, B])
+    dtype = _greatest_common_dtype([A, B])
     if B is None:
         w, Z = numx_linalg.eig(A)
         w = w.real
@@ -251,9 +251,9 @@ numarray.linear_algebra.eigenvectors with an interface compatible with symeig.
     # behavior of Numeric and numarray: eigenvector does not wrap the LAPACK
     # single precision routines
     if eigenvectors:
-        return mdp.utils.refcast(w, typecode), mdp.utils.refcast(Z, typecode)
+        return mdp.utils.refcast(w, dtype), mdp.utils.refcast(Z, dtype)
     else:
-        return mdp.utils.refcast(w, typecode)
+        return mdp.utils.refcast(w, dtype)
 
 # Code found below this line is part, or derived from, SciPy 0.3.2.
 # Copyright Notice:

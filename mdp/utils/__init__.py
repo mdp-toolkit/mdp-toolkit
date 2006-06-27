@@ -12,7 +12,7 @@ symeig = routines._symeig_fake
 # function in the future
 mult = _mdp.numx.dot
 
-# workaround to numpy issues with typecode behavior:
+# workaround to numpy issues with dtype behavior:
 # 'f' is upcasted at least in the following functions
 _inv = _mdp.numx_linalg.inv
 inv = lambda x: refcast(_inv(x), x.dtype)

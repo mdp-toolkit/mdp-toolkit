@@ -9,16 +9,16 @@ class SFANode(Node):
     Wiskott, L. and Sejnowski, T.J., Slow Feature Analysis: Unsupervised
     Learning of Invariances, Neural Computation, 14(4):715-770 (2002)."""
     
-    def __init__(self, input_dim=None, output_dim=None, typecode=None):
-        super(SFANode, self).__init__(input_dim, output_dim, typecode)
+    def __init__(self, input_dim=None, output_dim=None, dtype=None):
+        super(SFANode, self).__init__(input_dim, output_dim, dtype)
 
         # init two covariance matrices
         # one for the input data
-        self._cov_mtx = CovarianceMatrix(typecode)
+        self._cov_mtx = CovarianceMatrix(dtype)
         # one for the derivatives
-        self._dcov_mtx = CovarianceMatrix(typecode)
+        self._dcov_mtx = CovarianceMatrix(dtype)
 
-    def _get_supported_typecodes(self):
+    def _get_supported_dtypes(self):
         return ['f','d']
 
     def time_derivative(self, x):
@@ -98,7 +98,7 @@ class SFANode(Node):
 ## def time_derivative(self, x):
 ##     rows = x.shape[0]
 ##     columns = x.shape[1]
-##     deriv = numx.zeros((rows-1, columns), dtype=self.typecode)
+##     deriv = numx.zeros((rows-1, columns), dtype=self.dtype)
 
 ##     weave.inline(_TDERIVATIVE_1ORDER_CCODE,['rows','columns','deriv','x'],
 ##                  type_factories = weave.blitz_tools.blitz_type_factories,

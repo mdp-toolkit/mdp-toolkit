@@ -295,6 +295,6 @@ def get_suite():
     return suite
 
 if __name__ == '__main__':
-    numx_rand.seed(1268049219, 2102953867)
+    numx_rand.seed(1268049219)
     unittest.TextTestRunner(verbosity=2).run(get_suite())
 
