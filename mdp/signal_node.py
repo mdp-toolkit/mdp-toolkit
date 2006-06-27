@@ -312,14 +312,10 @@ class Node(object):
     def _train(self, x, *args):
         if self.is_trainable():
             raise NotImplementedError
-        else:
-            pass
 
     def _stop_training(self):
         if self.is_trainable():
             raise NotImplementedError
-        else:
-            pass
 
     def _execute(self, x):
         return x
@@ -327,8 +323,6 @@ class Node(object):
     def _inverse(self, x):
         if self.is_invertible():
             return x
-        else:
-            pass
 
     ### User interface to the overwritten methods
     

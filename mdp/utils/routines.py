@@ -7,6 +7,8 @@ import mdp
 # import numeric module (scipy, Numeric or numarray)
 numx, numx_rand, numx_linalg  = mdp.numx, mdp.numx_rand, mdp.numx_linalg
 
+class SymeigException(mdp.MDPException): pass
+
 def timediff(data):
     """Returns the array of the time differences of data."""
     # this is the fastest way we found so far
@@ -183,6 +185,12 @@ def _greatest_common_dtype(alist):
             dtype = _type_conv[transition]
     return dtype
 
+def _assert_eigenvalues_real(w, dtype):
+    tol = numx.finfo(dtype.type).eps * 100
+    if numx.amax(abs(w.imag)) > tol:
+        raise SymeigException, \
+              "Some eigenvalues have significant imaginary part"
+
 def _symeig_fake(A, B = None, eigenvectors = 1, turbo = "on", range = None,
                  type = 1, overwrite = 0):
     """Solve standard and generalized eigenvalue problem for symmetric
@@ -223,20 +231,33 @@ numarray.linear_algebra.eigenvectors with an interface compatible with symeig.
                eigenvalues, with the i-th column of Z holding the eigenvector
                associated with w[i]. The eigenvectors are normalized as above.
     """
-    dtype = _greatest_common_dtype([A, B])
-    if B is None:
-        w, Z = numx_linalg.eig(A)
-        w = w.real
-    else:
-        # make B the identity matrix
-        wB, ZB = numx_linalg.eig(B)
-        ZB = ZB / numx.sqrt(wB.real)
-        # transform A in the new basis: A = ZB^T * A * ZB
-        A = mdp.utils.mult(mdp.utils.mult(numx.transpose(ZB), A), ZB)
-        # diagonalize A
-        w, ZA = numx_linalg.eig(A)
-        Z = mdp.utils.mult(ZB, ZA)
-        w = w.real
+
+    dtype = numx.dtype(_greatest_common_dtype([A, B]))
+    try:
+        if B is None:
+            w, Z = numx_linalg.eig(A)
+        else:
+            # make B the identity matrix
+            wB, ZB = numx_linalg.eig(B)
+            _assert_eigenvalues_real(wB, dtype)
+            ZB = ZB.real / numx.sqrt(wB.real)
+            # transform A in the new basis: A = ZB^T * A * ZB
+            A = mdp.utils.mult(mdp.utils.mult(numx.transpose(ZB), A), ZB)
+            # diagonalize A
+            w, ZA = numx_linalg.eig(A)
+            Z = mdp.utils.mult(ZB, ZA)
+    except numx_linalg.LinAlgError, exception:
+        raise SymeigException, str(exception)
+    # workaround to bug in numpy 0.9.9
+    except NameError, exception:
+        if str(exception)=="NameError: global name 'Complex' is not defined":
+            raise SymeigException, 'Complex eigenvalues'
+        else:
+            raise NameError, str(exception)
+
+    _assert_eigenvalues_real(w, dtype)
+    w = w.real
+    Z = Z.real
         
     idx = numx.argsort(w)
     w = numx.take(w, idx)

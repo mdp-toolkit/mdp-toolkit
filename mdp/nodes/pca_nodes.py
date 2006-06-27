@@ -1,6 +1,7 @@
 from mdp import numx, Node, \
      NodeException, TrainingFinishedException
-from mdp.utils import mult, symeig, CovarianceMatrix #, LeadingMinorException
+from mdp.utils import mult, symeig, CovarianceMatrix, \
+                      SymeigException #, LeadingMinorException
 
 class PCANode(Node):
     """PCANode receives an input signal and filters it through
@@ -88,7 +89,7 @@ class PCANode(Node):
         try:
             d, v = symeig(cov_mtx, range = rng, overwrite = 1)
         #except LeadingMinorException, exception:
-        except exception:
+        except SymeigException, exception:
             errstr = str(exception)+"\n Covariance matrix may be singular."
             raise NodeException,errstr
 

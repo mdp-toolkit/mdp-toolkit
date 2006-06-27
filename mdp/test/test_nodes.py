@@ -40,6 +40,7 @@ class NodesTestSuite(unittest.TestSuite):
         self._nodes = [mn.PCANode,
                        mn.WhiteningNode,
                        mn.SFANode,
+                       mn.SFA2Node,
                        mn.CuBICANode,
                        mn.FastICANode,
                        mn.QuadraticExpansionNode,
@@ -345,6 +346,46 @@ class NodesTestSuite(unittest.TestSuite):
         correlation = mult(tr(des_mat[:-1,:]),out[:-1,:])/(dim-2)
         assert_array_almost_equal(abs(correlation),
                                   numx.eye(2), self.decimal-3)
+        sfa = mdp.nodes.SFANode(output_dim = 1)
+        sfa.train(mat)
+        out = sfa.execute(mat)
+        assert out.shape[1]==1, 'Wrong output_dim'
+        correlation = mult(tr(des_mat[:-1,:1]),out[:-1,:])/(dim-2)
+        assert_array_almost_equal(abs(correlation),
+                                  numx.eye(1), self.decimal-3)
+        
+
+    def testSFA2Node(self):
+        dim = 10000
+        freqs = [2*numx.pi*1,2*numx.pi*5]
+        t =  numx.linspace(0,1,num=dim)
+        mat = tr(numx.array(\
+            [numx.sin(freqs[0]*t),numx.sin(freqs[1]*t)]))
+        mat = (mat - mean(mat[:-1,:],axis=0))\
+              /std(mat[:-1,:],axis=0)
+        des_mat = mat.copy()
+        mat = mult(mat,numx_rand.random((2,2))) + numx_rand.random(2)
+        sfa = mdp.nodes.SFA2Node()
+        sfa.train(mat)
+        out = sfa.execute(mat)
+        assert out.shape[1]==5, "Wrong output_dim" 
+        correlation = mult(tr(des_mat[:-1,:]),
+                           numx.take(out[:-1,:], (0,2), axis=1))/(dim-2)
+        assert_array_almost_equal(abs(correlation),
+                                  numx.eye(2), self.decimal-3)
+        for nr in range(sfa.output_dim):
+            qform = sfa.get_quadratic_form(nr)
+            outq = qform.apply(mat)
+            assert_array_almost_equal(outq, out[:,nr], self.decimal)
+
+        sfa = mdp.nodes.SFANode(output_dim = 2)
+        sfa.train(mat)
+        out = sfa.execute(mat)
+        assert out.shape[1]==2, 'Wrong output_dim'
+        correlation = mult(tr(des_mat[:-1,:1]),out[:-1,:1])/(dim-2)
+        assert_array_almost_equal(abs(correlation),
+                                  numx.eye(1), self.decimal-3)
+
 
     def _testICANode(self,icanode):
         vars = 3

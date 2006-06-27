@@ -1,6 +1,8 @@
+import mdp
 from mdp import numx, utils, Node, \
      NodeException, TrainingFinishedException
-from mdp.utils import mult, pinv, symeig, CovarianceMatrix
+from mdp.utils import mult, pinv, symeig, CovarianceMatrix, QuadraticForm, \
+                      SymeigException
                       #, LeadingMinorException
 
 class SFANode(Node):
@@ -39,24 +41,19 @@ class SFANode(Node):
         dcov_mtx, davg, dtlen = self._dcov_mtx.fix()
         del self._dcov_mtx
 
-        # if the number of output components to keep is not specified,
-        # keep all components
-        if not self.output_dim:
-            self.output_dim = self.input_dim
-
-        if self.output_dim < self.input_dim:
+        if self.output_dim is not None and self.output_dim < self.input_dim:
             # (eigenvalues sorted in ascending order)
             rng = (1, self.output_dim)
         else:
             # otherwise, keep all output components
-            rng = None
+            rng = None        
         
         #### solve the generalized eigenvalue problem
         # the eigenvalues are already ordered in ascending order
         try:
             self.d, self.sf = symeig(dcov_mtx, cov_mtx, range=rng, overwrite=1)
         #except LeadingMinorException, exception:
-        except exception:
+        except SymeigException, exception:
             errstr = str(exception)+"\n Covariance matrices may be singular."
             raise NodeException,errstr
 
@@ -82,6 +79,79 @@ class SFANode(Node):
 
     def _inverse(self, y):
         return mult(y, pinv(self.sf))+self.avg
+
+class SFA2Node(SFANode):
+    """SFA2Node receives an input signal, expands it in the space of
+    inhomogeneous polynomials of degree 2 and extracts its slowly varying
+    components. The 'get_quadratic_form' method returns the input-output
+    function of one of the learned unit as a QuadraticForm object.
+    See the documentation of mdp.utils.QuadraticForm for additional
+    information.
+
+    More information about Slow Feature Analysis can be found in
+    Wiskott, L. and Sejnowski, T.J., Slow Feature Analysis: Unsupervised
+    Learning of Invariances, Neural Computation, 14(4):715-770 (2002)."""
+
+    def __init__(self, input_dim=None, output_dim=None, dtype=None):
+        super(SFA2Node, self).__init__(input_dim, output_dim, dtype)
+        self._expnode = mdp.nodes.QuadraticExpansionNode(input_dim=input_dim,
+                                                         dtype=dtype)
+
+    def is_invertible(self):
+        """Return True if the node can be inverted, False otherwise."""
+        return False
+
+    def _set_input_dim(self, n):
+        self._expnode.input_dim = n
+        self._input_dim = n
+        
+    def _train(self, x):
+        # expand in the space of polynomials of degree 2
+        super(SFA2Node, self)._train(self._expnode(x))
+
+    def _stop_training(self):
+        super(SFA2Node, self)._stop_training()
+
+        # set the output dimension if necessary
+        if self.output_dim is None:
+            self.output_dim = self._expnode.output_dim
+
+    def _execute(self, x, range=None):
+        """Compute the output of the slowest functions.
+        if 'range' is a number, then use the first 'range' functions.
+        if 'range' is the interval=(i,j), then use all functions
+                   between i and j."""
+        return super(SFA2Node, self)._execute(self._expnode(x))
+
+    def get_quadratic_form(self, nr):
+        """
+        Return the matrix H, the vector f and the constant c of the
+        quadratic form 1/2 x'Hx + f'x + c that defines the output
+        of the component 'nr' of the SFA node.
+        """
+
+        self._if_training_stop_training()
+
+        sf = self.sf[:, nr]
+        c = -mdp.utils.mult(self.avg, sf)
+        N = self.input_dim
+        f = sf[:N]
+        H = numx.zeros((N,N), dtype = self.dtype)
+        k = N
+        for i in range(N):
+            for j in range(N):
+                if j > i:
+                    H[i,j] = sf[k]
+                    k = k+1
+                elif j == i:
+                    H[i,j] = 2*sf[k]
+                    k = k+1
+                else:
+                    H[i,j] = H[j,i]
+
+        return QuadraticForm(H, f, c, dtype = self.dtype)
+
+               
 
 ### old weave inline code to perform the time derivative
 

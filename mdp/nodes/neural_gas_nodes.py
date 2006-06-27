@@ -1,5 +1,4 @@
-import graph
-from mdp import numx, numx_rand, utils, Node, NodeException
+from mdp import numx, numx_rand, utils, graph, Node, NodeException
 
 class _GNGNodeData(object):
     """Data associated to a node in a Growing Neural Gas graph."""

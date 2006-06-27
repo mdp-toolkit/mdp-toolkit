@@ -6,41 +6,19 @@ epsilon = 1E-15
 
 class QuadraticForm(object):
     """ """
-    def __init__(self, H=None, f=None, c=None, dtype="d"):
+    def __init__(self, H, f, c, dtype='d'):
         self.H = H
         self.f = f
         self.c = c
         self.dtype = dtype
 
-    def from_SFANode(sfa_node, unit):
-        """
-        Return the matrix H, the vector f and the constant c of the
-        quadratic form 1/2 x'Hx + f'x + c that defines the output
-        of the component 'nr' of the SFA 'node'.
-        Note that this implies that the SFA node follows a quadratic expansion.
-        """
-        dtype = sfa_node.dtype
-        if self.dtype is None:
-            self.dtype = dtype
-        sf = sfa_node.sf[:, unit]
-        c = -mdp.utils.mult(sfa_node.avg, sf)
-        N = sfa_node.output_dim
-        H = numx.zeros((N,N),dtype=dtype)
-        k = N
-        for i in range(N):
-            for j in range(N):
-                if j > i:
-                    H[i,j] = sf[k]
-                    k = k+1
-                elif j == i:
-                    H[i,j] = 2*sf[k]
-                    k = k+1
-                else:
-                    H[i,j] = H[j,i]
-        self.H = H
-        self.f = f
-        self.c = c
-
+    def apply(self, x):
+        """Apply the quadratic form to the input vectors.
+        Return 1/2 x'Hx + f'x + c ."""
+        return 0.5*numx.sum(mdp.utils.mult(x, numx.transpose(self.H))*x,
+                            axis=1) + \
+               mdp.utils.mult(x, self.f) + self.c
+        
     def get_extrema(self, norm, tol = 1.E-4):
         """
         Find the input vectors xmax and xmin with norm 'nrm' that maximize
@@ -52,7 +30,7 @@ class QuadraticForm(object):
         """
         H, f, c = self.H, self.f, self.c
         if f is None: f = numx.zeros((H.shape[0],), dtype=self.dtype)
-        if c is None: c = 0    
+        if c is None: c = 0
         H_definite_positive, H_definite_negative = False, False
         E = mdp.utils.symeig(H, eigenvectors=0, overwrite=0)
         if E[0] >= 0:
@@ -125,14 +103,14 @@ if __name__ == "__main__":
     # check H with negligible linear term
     noise = 1e-7
     x = mdp.numx_rand.random((10,))
-    H = mdp.numx.outer(x, x)+noise*mdp.numx_rand.random((10,10))
+    H = mdp.numx.outer(x, x) + numx.eye(10)*0.1
     H = H+tr(H)
     q = QuadraticForm(H=H, f=noise*mdp.numx_rand.random((10,)))
     xmax, xmin, vmax, vmin = q.get_extrema(mdp.utils.norm2(x), tol=noise)
     print 'Should be zero:', max(abs(x-xmax))
     # check I + linear term
     f = x
-    H = numx.eye(10, "d")
+    H = numx.eye(10, dtype='d')
     q = QuadraticForm(H=H,f=f)
     xmax, xmin, vmax, vmin = q.get_extrema(mdp.utils.norm2(x), tol=noise) 
     print 'Should be zero:', max(abs(f-xmax))
