@@ -401,7 +401,7 @@ class GaussianClassifierNode(Node):
     def _update_covs(self, x, lbl):
         if not self.cov_objs.has_key(lbl):
             self.cov_objs[lbl] = \
-                mdp.nodes.lcov.CovarianceMatrix(dtype = self.dtype)
+                utils.CovarianceMatrix(dtype = self.dtype)
         self.cov_objs[lbl].update(x)
 
     def _train(self, x, cl):

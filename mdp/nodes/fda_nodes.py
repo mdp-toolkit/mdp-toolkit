@@ -33,7 +33,7 @@ class FDANode(mdp.Node):
     def __init__(self, input_dim=None, output_dim=None, dtype=None):
         super(FDANode, self).__init__(input_dim, output_dim, dtype)
         self.S_W = None
-        self.allcov = mdp.nodes.lcov.CovarianceMatrix(dtype = self.dtype)
+        self.allcov = mdp.utils.CovarianceMatrix(dtype = self.dtype)
         self.means = {}
         self.tlens = {}
         self._SW_init = 0

@@ -1,7 +1,7 @@
-from lcov import CovarianceMatrix
 from mdp import numx, utils, Node, \
      NodeException, TrainingFinishedException
-from mdp.utils import mult, pinv, symeig #, LeadingMinorException
+from mdp.utils import mult, pinv, symeig, CovarianceMatrix
+                      #, LeadingMinorException
 
 class SFANode(Node):
     """SFANode receives an input signal and extracts its slowly varying

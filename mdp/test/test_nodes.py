@@ -189,7 +189,7 @@ class NodesTestSuite(unittest.TestSuite):
         des_cov = numx.cov(inp, rowvar=0)
         des_avg = mean(inp,axis=0)
         des_tlen = inp.shape[0]
-        act_cov = mdp.nodes.lcov.CovarianceMatrix()
+        act_cov = utils.CovarianceMatrix()
         act_cov.update(inp)
         act_cov,act_avg,act_tlen = act_cov.fix()
         assert_array_almost_equal(act_tlen,des_tlen,self.decimal)
@@ -203,7 +203,7 @@ class NodesTestSuite(unittest.TestSuite):
         des_avg = mean(inp[:des_tlen,:],axis=0)
         des_avg_dt = mean(inp[dt:,:],axis=0)
         des_cov = utils.cov2(inp[:des_tlen,:], inp[dt:,:])
-        act_cov = mdp.nodes.lcov.DelayCovarianceMatrix(dt)
+        act_cov = utils.DelayCovarianceMatrix(dt)
         act_cov.update(inp)
         act_cov,act_avg,act_avg_dt,act_tlen = act_cov.fix()
         assert_array_almost_equal(act_tlen,des_tlen,self.decimal-1)
@@ -214,7 +214,7 @@ class NodesTestSuite(unittest.TestSuite):
     def testdtypeCovarianceMatrix(self):
         for type in testtypes:
             mat,mix,inp = self._get_random_mix(type='d')
-            cov = mdp.nodes.lcov.CovarianceMatrix(dtype=type)
+            cov = utils.CovarianceMatrix(dtype=type)
             cov.update(inp)
             cov,avg,tlen = cov.fix()
             assert_type_equal(cov.dtype,type)
@@ -224,7 +224,7 @@ class NodesTestSuite(unittest.TestSuite):
         for type in testtypes:
             dt = 5
             mat,mix,inp = self._get_random_mix(type='d')
-            cov = mdp.nodes.lcov.DelayCovarianceMatrix(dt=dt,dtype=type)
+            cov = utils.DelayCovarianceMatrix(dt=dt,dtype=type)
             cov.update(inp)
             cov,avg,avg_dt,tlen = cov.fix()
             assert_type_equal(cov.dtype,type)
@@ -236,7 +236,7 @@ class NodesTestSuite(unittest.TestSuite):
         warnings.filterwarnings("error",'.*',mdp.MDPWarning)
         for type in ['d','f']:
             inp = numx_rand.random((1,2))
-            cov = mdp.nodes.lcov.CovarianceMatrix(dtype=type)
+            cov = utils.CovarianceMatrix(dtype=type)
             cov._tlen = int(1e+15)
             cov.update(inp)
             try:

@@ -1,8 +1,6 @@
 # inspired by some code by Nathan Denny (1999)
 # see http://www.ece.arizona.edu/~denny/python_nest/graph_lib_1.0.1.html
 
-from types import ListType, TupleType
-
 class GraphException(Exception):
     """Base class for exception in the graph package."""
     pass
@@ -14,7 +12,7 @@ class GraphTopologicalException(GraphException):
 
 
 def is_sequence(x):
-    return type(x) in (TupleType, ListType)
+    return isinstance(x, (list, tuple))
 
 def recursive_map(func, seq):
     """Apply a function recursively on a sequence and all subsequences."""

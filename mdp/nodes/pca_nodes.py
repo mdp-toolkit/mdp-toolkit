@@ -1,7 +1,6 @@
 from mdp import numx, Node, \
      NodeException, TrainingFinishedException
-from mdp.utils import mult, symeig #, LeadingMinorException
-from lcov import CovarianceMatrix
+from mdp.utils import mult, symeig, CovarianceMatrix #, LeadingMinorException
 
 class PCANode(Node):
     """PCANode receives an input signal and filters it through

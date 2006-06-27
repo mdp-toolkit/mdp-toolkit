@@ -1,7 +1,6 @@
 import mdp
 from mdp import numx, numx_linalg, utils
-from mdp.utils import mult
-from lcov import CovarianceMatrix, DelayCovarianceMatrix
+from mdp.utils import mult, CovarianceMatrix
 import warnings
 
 take, put, diag, ravel = numx.take, numx.put, numx.diag, numx.ravel
@@ -37,7 +36,7 @@ class FANode(mdp.Node):
         self.tol = tol
         self.max_cycles = max_cycles
         self.verbose = verbose
-        self._cov_mtx = CovarianceMatrix(dtype)
+        self._cov_mtx = CovarianceMatrix(dtype, bias=True)
     
     def _train(self, x):
         # update the covariance matrix
@@ -64,8 +63,7 @@ class FANode(mdp.Node):
         del self._cov_mtx
         # 'bias' the covariance matrix
         # (i.e., cov_mtx = 1/tlen sum(x_t x_t^T) instead of 1/(tlen-1))
-        cov_mtx *= (tlen-1.)/tlen
-        cov_diag = diag(cov_mtx).astype(typ)
+        cov_diag = diag(cov_mtx)
 
         ##### initialize the parameters
         # noise variances

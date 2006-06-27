@@ -3,7 +3,10 @@ from routines import timediff, refcast, scast, rotate, random_rot, \
      comb, sqrtm
 from introspection import dig_node, get_node_size
 from quad_forms import QuadraticForm
+from covariance import CovarianceMatrix, DelayCovarianceMatrix
+from progress_bar import progressinfo
 import mdp as _mdp
+
 
 symeig = routines._symeig_fake
 

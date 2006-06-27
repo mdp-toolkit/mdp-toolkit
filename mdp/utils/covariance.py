@@ -3,9 +3,6 @@ import warnings
 
 # import numeric module (scipy, Numeric or numarray)
 numx = mdp.numx
-
-utils = mdp.utils
-mult = utils.mult
 tr = numx.transpose
 
 # precision warning parameters
@@ -38,11 +35,13 @@ class CovarianceMatrix(object):
     http://docs.sun.com/source/806-3568/ncg_goldberg.html
     """
 
-    def __init__(self, dtype = None):
+    def __init__(self, dtype = None, bias = False):
         """If dtype is not defined, it will be inherited from the first
         data bunch received by 'update'.
         All the matrices in this class are set up with the given dtype and
         no upcast is possible.
+        If bias is True, the covariance matrix is normalized by dividing
+        by T instead of the usual T-1.
         """
         
         if dtype is None:
@@ -56,6 +55,8 @@ class CovarianceMatrix(object):
         self._avg = None
          # number of observation so far during the training phase
         self._tlen = 0
+
+        self.bias = bias
 
     def _init_internals(self, x):
         """Inits some internals structures. The reason this is not done in
@@ -81,11 +82,11 @@ class CovarianceMatrix(object):
         #?? check the input dimension
 
         # cast input
-        x = utils.refcast(x, self._dtype)
+        x = mdp.utils.refcast(x, self._dtype)
         
         # update the covariance matrix, the average and the number of
         # observations (try to do everything inplace)
-        self._cov_mtx += mult(tr(x), x)
+        self._cov_mtx += mdp.utils.mult(tr(x), x)
         self._avg += numx.sum(x, 0)
         self._tlen += x.shape[0]
 
@@ -103,8 +104,13 @@ class CovarianceMatrix(object):
         ##### fix the training variables
         # fix the covariance matrix (try to do everything inplace)
         avg_mtx = numx.outer(avg,avg)
-        avg_mtx /= tlen*(tlen - 1)
-        cov_mtx /= tlen - 1
+
+        if self.bias:
+            avg_mtx /= tlen*(tlen)
+            cov_mtx /= tlen
+        else:
+            avg_mtx /= tlen*(tlen - 1)
+            cov_mtx /= tlen - 1
         cov_mtx -= avg_mtx
         # fix the average
         avg /= tlen
@@ -134,12 +140,14 @@ class DelayCovarianceMatrix(object):
     http://docs.sun.com/source/806-3568/ncg_goldberg.html
     """
 
-    def __init__(self, dt, dtype = None):
+    def __init__(self, dt, dtype = None, bias = False):
         """dt is the time delay. If dt==0, DelayCovarianceMatrix equals
         CovarianceMatrix. If dtype is not defined, it will be inherited from
         the first data bunch received by 'update'.
         All the matrices in this class are set up with the given dtype and
         no upcast is possible.
+        If bias is True, the covariance matrix is normalized by dividing
+        by T instead of the usual T-1.
         """
 
         # time delay
@@ -155,6 +163,8 @@ class DelayCovarianceMatrix(object):
         self._avg = None
         self._avg_dt = None
         self._tlen = 0
+
+        self.bias = bias
 
     def _init_internals(self, x):
         """Inits some internals structures. The reason this is not done in
@@ -178,7 +188,7 @@ class DelayCovarianceMatrix(object):
             self._init_internals(x)
 
         # cast input
-        x = utils.refcast(x, self._dtype)
+        x = mdp.utils.refcast(x, self._dtype)
 
         dt = self._dt
 
@@ -190,7 +200,7 @@ class DelayCovarianceMatrix(object):
         
         # update the covariance matrix, the average and the number of
         # observations (try to do everything inplace)
-        self._cov_mtx += mult(tr(x[:tlen-dt,:]), x[dt:tlen,:])
+        self._cov_mtx += mdp.utils.mult(tr(x[:tlen-dt,:]), x[dt:tlen,:])
         totalsum = numx.sum(x, 0)
         self._avg += totalsum - numx.sum(x[tlen-dt:,:], 0)
         self._avg_dt += totalsum - numx.sum(x[:dt,:], 0)
@@ -223,10 +233,13 @@ class DelayCovarianceMatrix(object):
         avg_mtx /= tlen
                  
         cov_mtx -= avg_mtx
-        cov_mtx /= tlen - 1
+        if self.bias:
+            cov_mtx /= tlen
+        else:
+            cov_mtx /= tlen - 1
 
         if A is not None:
-            cov_mtx = mult(A,mult(cov_mtx, tr(A)))
+            cov_mtx = mdp.utils.mult(A, mdp.utils.mult(cov_mtx, tr(A)))
         
         # fix the average
         avg /= tlen
