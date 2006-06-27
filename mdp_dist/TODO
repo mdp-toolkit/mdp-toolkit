@@ -2,6 +2,7 @@ realistic TODO:
 
 MDP 2.0.0 28.10.2005:
 
+- helper functions
 - test PCANode when output_dim = float (zito)
 - document new nodes, check old ones as well (berkes)
 [ - kalman filters (berkes) ]
