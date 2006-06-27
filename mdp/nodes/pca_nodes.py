@@ -1,3 +1,5 @@
+## Automatically adapted for numpy Jun 26, 2006 by 
+
 from mdp import numx, Node, \
      NodeException, TrainingFinishedException
 from mdp.utils import mult, symeig, LeadingMinorException

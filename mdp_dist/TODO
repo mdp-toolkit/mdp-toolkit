@@ -4,19 +4,22 @@ MDP 2.0.0 28.10.2005:
 
 - test PCANode when output_dim = float (zito)
 - document new nodes, check old ones as well (berkes)
-- kalman filters (berkes)
+[ - kalman filters (berkes) ]
 - TUTORIAL:
     - check code errors
     - is_trainable etc. return True/False
     - flow, iterators, generators etc.
-- demos ? 
-- site: add citation section, state email addresses, rewrite description to highlight
-  education, framework for new algorithms, title outlook, modify mantainers, modify 
+    - generate demos
+- real demos ?
+- site: add citation section, state email addresses, rewrite 
+  description to highlight
+  education, framework for new algorithms, title outlook, 
+  modify mantainers, modify 
   compilation instruction for scipy, add migration faq.
-- memory profiler
-- real benchmark
+[ - memory profiler ]
+[ - real benchmark ]
 - quadratic forms
-- write paragraph about the new scipy/numpy thing
+[ - write paragraph about the new scipy/numpy thing ]
 
 done:
 

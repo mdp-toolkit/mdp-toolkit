@@ -1,3 +1,5 @@
+## Automatically adapted for numpy Jun 26, 2006 by 
+
 import mdp
 from mdp import numx, numx_linalg, utils
 from mdp.utils import mult, normal
@@ -76,7 +78,7 @@ class FANode(mdp.Node):
         # approximation?
         #scale = det(cov_mtx)**(1./d)
         scale = numx.product(sigma)**(1./d)
-        A = normal(0., sqrt(scale/k), shape=(d,k)).astype(typ)
+        A = normal(0., sqrt(scale/k), size=(d,k)).astype(typ)
 
         ##### EM-cycle
         lhood_curve = []
@@ -84,10 +86,11 @@ class FANode(mdp.Node):
         old_lhood = -utils.inf
         for t in xrange(self.max_cycles):
             ## compute B = (A A^T + Sigma)^-1
-            # copy to make it contiguous, otherwise .flat does not work
+            ##???###
+            # copy to make it contiguous, otherwise .ravel() does not work
             B = mult(A, tr(A)).copy()
             # B += diag(sigma), avoid computing diag(sigma) which is dxd
-            put(B.flat, idx_diag_d, take(B.flat, idx_diag_d)+sigma)
+            put(B.ravel(), idx_diag_d, take(B.ravel(), idx_diag_d)+sigma)
             # this quantity is used later for the log-likelihood
             # abs is there to avoid numerical errors when det < 0 
             log_det_B = numx.log(abs(det(B)))
@@ -102,7 +105,7 @@ class FANode(mdp.Node):
             ## E_yyT = E(y_n y_n^T | x_n)
             E_yyT = - mult(trA_B, A) + mult(trA_B_cov_mtx, tr(trA_B))
             # E_yyT += numx.eye(k)
-            put(E_yyT.flat, idx_diag_k, take(E_yyT.flat, idx_diag_k)+one)
+            put(E_yyT.ravel(), idx_diag_k, take(E_yyT.ravel(), idx_diag_k)+one)
             
             ##### M-step
             A = mult(tr(trA_B_cov_mtx), inv(E_yyT))
@@ -137,7 +140,7 @@ class FANode(mdp.Node):
         ## MAP matrix
         # compute B = (A A^T + Sigma)^-1
         B = mult(A, tr(A)).copy() 
-        put(B.flat, idx_diag_d, take(B.flat, idx_diag_d)+sigma)
+        put(B.ravel(), idx_diag_d, take(B.ravel(), idx_diag_d)+sigma)
         B = inv(B)
         self.E_y_mtx = mult(tr(B), A)
         
@@ -155,7 +158,7 @@ class FANode(mdp.Node):
         res = mult(y, tr(self.A))+self.mu
         if noise:
             ns = utils.normal(0., self.sigma,
-                              shape=(y.shape[0], self.input_dim))
+                              size=(y.shape[0], self.input_dim))
             res += self.refcast(ns)
         return res
 

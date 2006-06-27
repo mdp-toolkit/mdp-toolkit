@@ -1,3 +1,5 @@
+## Automatically adapted for numpy Jun 26, 2006 by 
+
 """This is the test module for MDP.
 
 Run all tests with:
@@ -23,11 +25,11 @@ test_suites = {'nodes': test_nodes.get_suite(),
 
 def test(suitename = 'all', verbosity = 2, seed = None):
     if seed is None:
-        #numx_rand.seed(1268049219, 2102953867)
+        #numx_rand.seed(1268049219)
         pass
     else:
         numx_rand.seed(*seed)
-    sys.stderr.write("Random Seed: " + str(numx_rand.get_seed())+'\n')
+    sys.stderr.write("Random Seed: " + str(numx_rand.get_state()[1][0])+'\n')
     if suitename == 'all':
         suite = unittest.TestSuite(test_suites.values())
     else:
@@ -37,11 +39,11 @@ def test(suitename = 'all', verbosity = 2, seed = None):
 benchmark_suites = {'mdp': benchmark_mdp.get_benchmarks()}
     
 def benchmark(suitename = 'all'):
-    numx_rand.seed(1268049219, 2102953867)
+    numx_rand.seed(1268049219)
     if suitename == 'all':
         suite = []
         for s in benchmark_suites.itervalues(): suite.extend(s)
     else:
         suite = benchmark_suites[suitename]
-    print "Random Seed: ", numx_rand.get_seed()
+    print "Random Seed: ", numx_rand.get_state()[1][0]
     run_benchmarks(suite)

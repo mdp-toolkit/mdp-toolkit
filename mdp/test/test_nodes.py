@@ -1,3 +1,5 @@
+## Automatically adapted for numpy Jun 26, 2006 by 
+
 """These are test functions for MDP nodes.
 
 Run them with:
@@ -15,7 +17,6 @@ from testing_tools import assert_array_almost_equal, assert_array_equal, \
 mult = utils.mult
 mean = utils.mean
 std = utils.std
-covariance = utils.cov
 normal = utils.normal
 tr = numx.transpose
 testtypes = ['d', 'f']
@@ -138,7 +139,7 @@ class NodesTestSuite(unittest.TestSuite):
             # compute the inverse
             rec = node.inverse(out)
             assert_array_almost_equal_diff(rec,inp,self.decimal-3)
-            assert_type_equal(rec.typecode(), 'f') 
+            assert_type_equal(rec.dtype.char, 'f') 
         return _testinverse
 
     def _get_testtypecode(self, node_class, args=[], sup_args_func=None):
@@ -148,7 +149,7 @@ class NodesTestSuite(unittest.TestSuite):
                 node = node_class(*args,**{'typecode':typecode})
                 self._train_if_necessary(inp, node, args, sup_args_func)
                 out = node.execute(inp)
-                assert_type_equal(out.typecode(),typecode) 
+                assert_type_equal(out.dtype.char, typecode) 
         return _testtypecode
 
     def _get_testoutputdim(self, node_class, args=[], sup_args_func=None):
@@ -188,7 +189,7 @@ class NodesTestSuite(unittest.TestSuite):
         
     def testCovarianceMatrix(self):
         mat,mix,inp = self._get_random_mix()
-        des_cov = covariance(inp)
+        des_cov = utils.cov(inp, rowvar=0)
         des_avg = mean(inp,axis=0)
         des_tlen = inp.shape[0]
         act_cov = mdp.nodes.lcov.CovarianceMatrix()
@@ -202,16 +203,16 @@ class NodesTestSuite(unittest.TestSuite):
         dt = 5
         mat,mix,inp = self._get_random_mix()
         des_tlen = inp.shape[0] - dt
-        des_cov = covariance(inp[:des_tlen,:],inp[dt:,:])
         des_avg = mean(inp[:des_tlen,:],axis=0)
         des_avg_dt = mean(inp[dt:,:],axis=0)
+        des_cov = utils.cov2(inp[:des_tlen,:], inp[dt:,:])
         act_cov = mdp.nodes.lcov.DelayCovarianceMatrix(dt)
         act_cov.update(inp)
         act_cov,act_avg,act_avg_dt,act_tlen = act_cov.fix()
-        assert_array_almost_equal(act_tlen,des_tlen,self.decimal)
-        assert_array_almost_equal(act_avg,des_avg,self.decimal)
-        assert_array_almost_equal(act_avg_dt,des_avg_dt,self.decimal)
-        assert_array_almost_equal(act_cov,des_cov,self.decimal)
+        assert_array_almost_equal(act_tlen,des_tlen,self.decimal-1)
+        assert_array_almost_equal(act_avg,des_avg,self.decimal-1)
+        assert_array_almost_equal(act_avg_dt,des_avg_dt,self.decimal-1)
+        assert_array_almost_equal(act_cov,des_cov,self.decimal-1)
 
     def testtypecodeCovarianceMatrix(self):
         for type in testtypes:
@@ -219,8 +220,8 @@ class NodesTestSuite(unittest.TestSuite):
             cov = mdp.nodes.lcov.CovarianceMatrix(typecode=type)
             cov.update(inp)
             cov,avg,tlen = cov.fix()
-            assert_type_equal(cov.typecode(),type)
-            assert_type_equal(avg.typecode(),type) 
+            assert_type_equal(cov.dtype.char,type)
+            assert_type_equal(avg.dtype.char,type) 
 
     def testtypecodeDelayCovarianceMatrix(self):
         for type in testtypes:
@@ -229,9 +230,9 @@ class NodesTestSuite(unittest.TestSuite):
             cov = mdp.nodes.lcov.DelayCovarianceMatrix(dt=dt,typecode=type)
             cov.update(inp)
             cov,avg,avg_dt,tlen = cov.fix()
-            assert_type_equal(cov.typecode(),type)
-            assert_type_equal(avg.typecode(),type)
-            assert_type_equal(avg_dt.typecode(),type)
+            assert_type_equal(cov.dtype.char,type)
+            assert_type_equal(avg.dtype.char,type)
+            assert_type_equal(avg_dt.dtype.char,type)
 
     def testRoundOffWarningCovMatrix(self):
         import warnings
@@ -327,9 +328,9 @@ class NodesTestSuite(unittest.TestSuite):
         w.train(inp)
         out = w.execute(inp)
         assert_array_almost_equal(mean(out,axis=0),\
-                                  numx.zeros((dim[1])),self.decimal-1)
-        assert_array_almost_equal(std(out,axis=0)**2,\
-                                  numx.ones((dim[1])),self.decimal-1)
+                                  numx.zeros((dim[1])),self.decimal)
+        assert_array_almost_equal(std(out,axis=0),\
+                                  numx.ones((dim[1])),self.decimal-3)
 
     def testSFANode(self):
         dim=10000
@@ -346,7 +347,7 @@ class NodesTestSuite(unittest.TestSuite):
         out = sfa.execute(mat)
         correlation = mult(tr(des_mat[:-1,:]),out[:-1,:])/(dim-2)
         assert_array_almost_equal(abs(correlation),
-                                  utils.eye(2),self.decimal-2)
+                                  utils.eye(2), self.decimal-3)
 
     def _testICANode(self,icanode):
         vars = 3
@@ -354,8 +355,7 @@ class NodesTestSuite(unittest.TestSuite):
         mat,mix,inp = self._get_random_mix(mat_dim=dim)
         icanode.train(inp)
         act_mat = icanode.execute(inp)
-        cov = covariance((mat-mean(mat,axis=0))\
-                        /std(mat,axis=0),act_mat)
+        cov = utils.cov2((mat-mean(mat,axis=0))/std(mat,axis=0), act_mat)
         maxima = utils.amax(abs(cov))
         assert_array_almost_equal(maxima,numx.ones(vars),3)
         
@@ -458,7 +458,7 @@ class NodesTestSuite(unittest.TestSuite):
         dir = self._uniform(-1,1,[dim])
         dir /= utils.norm2(dir)
         x = self._uniform(-1,1,[npoints])
-        data = numx.outerproduct(x, dir)+const
+        data = numx.outer(x, dir)+const
         # train the gng network
         gng = mdp.nodes.GrowingNeuralGasNode(start_poss=[data[0,:],data[1,:]])
         gng.train(data)
@@ -478,8 +478,8 @@ class NodesTestSuite(unittest.TestSuite):
         assert_array_equal(deg[2:], [2 for i in range(len(deg)-2)])
         # check the distribution of the nodes' position is uniform
         # this node is at one of the extrema of the graph
-        x0 = numx.outerproduct(utils.amin(x), dir)+const
-        x1 = numx.outerproduct(utils.amax(x), dir)+const
+        x0 = numx.outer(utils.amin(x), dir)+const
+        x1 = numx.outer(utils.amax(x), dir)+const
         linelen = utils.norm2(x0-x1)
         # this is the mean distance the node should have
         dist = linelen/poss.shape[0]
@@ -499,8 +499,8 @@ class NodesTestSuite(unittest.TestSuite):
         assert_array_equal(nodes[0].data.pos,numx.asarray([2,0]))
 
     def testNoiseNode(self):
-        def bogus_noise(mean, shape=None):
-            return numx.ones(shape)*mean
+        def bogus_noise(mean, size=None):
+            return numx.ones(size)*mean
 
         node = mdp.nodes.NoiseNode(bogus_noise, (1.,))
         out = node.execute(numx.zeros((100,10),'d'))
@@ -512,12 +512,12 @@ class NodesTestSuite(unittest.TestSuite):
     def testFDANode(self):
         mean1 = [0., 2.]
         mean2 = [0., -2.]
-        std_ = [1., 0.2]
+        std_ = numx.array([1., 0.2])
         npoints = 50000
         rot = 45
         
         # input data: two distinct gaussians rotated by 45 deg
-        def distr(size): return normal(0, std_, shape=(size))
+        def distr(size): return normal(0, 1., size=(size)) * std_
         x1 = distr((npoints,2)) + mean1
         utils.rotate(x1, rot, units='degrees')
         x2 = distr((npoints,2)) + mean2
@@ -525,8 +525,8 @@ class NodesTestSuite(unittest.TestSuite):
         x = numx.concatenate((x1, x2), axis=0)
 
         # labels
-        cl1 = numx.ones((x1.shape[0],), typecode='d')
-        cl2 = 2.*numx.ones((x2.shape[0],), typecode='d')
+        cl1 = numx.ones((x1.shape[0],), dtype='d')
+        cl2 = 2.*numx.ones((x2.shape[0],), dtype='d')
         classes = numx.concatenate((cl1, cl2))
 
         # shuffle the data
@@ -553,9 +553,9 @@ class NodesTestSuite(unittest.TestSuite):
         assert_array_almost_equal(fda_node.means[2], m2, 2)
        
         y = flow.execute(x)
-        assert_array_almost_equal(mean(y, axis=0), [0., 0.], 7)
-        assert_array_almost_equal(std(y, axis=0), [1., 1.], 7)
-        assert_almost_equal(mult(y[:,0], tr(y[:,1])), 0., 7)
+        assert_array_almost_equal(mean(y, axis=0), [0., 0.], self.decimal-2)
+        assert_array_almost_equal(std(y, axis=0), [1., 1.], self.decimal-2)
+        assert_almost_equal(mult(y[:,0], tr(y[:,1])), 0., self.decimal-2)
 
         v1 = fda_node.v[:,0]/fda_node.v[0,0]
         assert_array_almost_equal(v1, [1., -1.], 2)
@@ -574,14 +574,14 @@ class NodesTestSuite(unittest.TestSuite):
             cov = utils.symrand(dim)
             mn = numx_rand.random((dim,))*10.
 
-            x = normal(0., 1., shape=(npoints, dim))
+            x = normal(0., 1., size=(npoints, dim))
             x = mult(x, utils.sqrtm(cov)) + mn
             x = utils.refcast(x, 'd')
             cl = numx.ones((npoints,))*i
             
             mn_estimate = mean(x, axis=0)
             means.append(mn_estimate)
-            covs.append(utils.cov(x))
+            covs.append(utils.cov(x, rowvar=0))
 
             node.train(x, cl)
         try:
@@ -604,12 +604,12 @@ class NodesTestSuite(unittest.TestSuite):
     def testGaussianClassifier_classify(self):
         mean1 = [0., 2.]
         mean2 = [0., -2.]
-        std_ = [1., 0.2]
+        std_ = numx.array([1., 0.2])
         npoints = 100
         rot = 45
         
         # input data: two distinct gaussians rotated by 45 deg
-        def distr(size): return normal(0, std_, shape=(size))
+        def distr(size): return normal(0, 1., size=(size)) * std_
         x1 = distr((npoints,2)) + mean1
         utils.rotate(x1, rot, units='degrees')
         x2 = distr((npoints,2)) + mean2
@@ -617,8 +617,8 @@ class NodesTestSuite(unittest.TestSuite):
         x = numx.concatenate((x1, x2), axis=0)
 
         # labels
-        cl1 = numx.ones((x1.shape[0],), typecode='d')
-        cl2 = 2.*numx.ones((x2.shape[0],), typecode='d')
+        cl1 = numx.ones((x1.shape[0],), dtype='d')
+        cl2 = 2.*numx.ones((x2.shape[0],), dtype='d')
         classes = numx.concatenate((cl1, cl2))
 
         # shuffle the data
@@ -642,9 +642,10 @@ class NodesTestSuite(unittest.TestSuite):
         A = utils.random_rot(d)[:k,:]
 
         # latent variables
-        y = utils.normal(0., 1., shape=(N, k))
+        y = utils.normal(0., 1., size=(N, k))
         # observations
-        noise = utils.normal(0., sigma, shape=(N, d))
+        noise = utils.normal(0., 1., size=(N, d)) * sigma
+        
         x = mult(y, A) + mu + noise
         
         fa = mdp.nodes.FANode(output_dim=k, typecode='d')
@@ -662,7 +663,7 @@ class NodesTestSuite(unittest.TestSuite):
         x = x[:100,:]
         y = fa.execute(x)
         x2 = fa.inverse(y, noise=False)
-        assert_type_equal(x2.typecode(), 'd')
+        assert_type_equal(x2.dtype.char, 'd')
         assert_array_almost_equal(x, x2, 1)
 
         # check typecode consistency:
@@ -674,7 +675,7 @@ class NodesTestSuite(unittest.TestSuite):
         x = x[:100,:]
         y = fa.execute(x)
         x2 = fa.inverse(y, noise=False)
-        assert_type_equal(x2.typecode(), 'f')
+        assert_type_equal(x2.dtype.char, 'f')
         
 def get_suite():
     return NodesTestSuite()

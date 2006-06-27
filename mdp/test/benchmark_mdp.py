@@ -1,3 +1,5 @@
+## Automatically adapted for numpy Jun 26, 2006 by 
+
 """These are some benchmark functions for MDP.
 
 Run them with:

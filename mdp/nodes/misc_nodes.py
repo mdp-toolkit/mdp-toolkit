@@ -1,3 +1,5 @@
+## Automatically adapted for numpy Jun 26, 2006 by 
+
 import mdp
 from mdp import numx, numx_linalg, utils, Node, NodeException
 
@@ -17,10 +19,10 @@ class OneDimensionalHitParade(object):
         """
         self.n = int(n)
         self.d = int(d)
-        self.iM = numx.zeros((n,),typecode=integer_typecode)
-        self.im = numx.zeros((n,),typecode=integer_typecode)
-        self.M = numx.array([-utils.inf]*n, typecode=real_typecode)
-        self.m = numx.array([utils.inf]*n, typecode=real_typecode)
+        self.iM = numx.zeros((n,),dtype=integer_typecode)
+        self.im = numx.zeros((n,),dtype=integer_typecode)
+        self.M = numx.array([-utils.inf]*n, dtype=real_typecode)
+        self.m = numx.array([utils.inf]*n, dtype=real_typecode)
         self.lM = 0
         self.lm = 0
 
@@ -154,8 +156,8 @@ class HitParadeNode(Node):
         cols = self.input_dim
         n = self.n
         hit = self.hit
-        iM = numx.zeros((n,cols),typecode=self.itype)
-        M = numx.ones((n,cols),typecode=self.typecode)
+        iM = numx.zeros((n,cols),dtype=self.itype)
+        M = numx.ones((n,cols),dtype=self.typecode)
         for c in range(cols):
             M[:,c],iM[:,c] = hit[c].get_maxima()
         return M,iM
@@ -168,8 +170,8 @@ class HitParadeNode(Node):
         cols = self.input_dim
         n = self.n
         hit = self.hit
-        im = numx.zeros((n,cols), typecode=self.itype)
-        m = numx.ones((n,cols), typecode=self.typecode)
+        im = numx.zeros((n,cols), dtype=self.itype)
+        m = numx.ones((n,cols), dtype=self.typecode)
         for c in range(cols):
             m[:,c],im[:,c] = hit[c].get_minima()
         return m,im
@@ -213,7 +215,7 @@ class TimeFramesNode(Node):
         tf = x.shape[0]- (self.time_frames-1)*gap
         rows = self.input_dim
         cols = self.output_dim
-        y = numx.zeros((tf,cols),typecode=self.typecode)
+        y = numx.zeros((tf,cols),dtype=self.typecode)
         for frame in range(self.time_frames):
             y[:,frame*rows:(frame+1)*rows] = x[gap*frame:gap*frame+tf,:]
         return y
@@ -244,7 +246,7 @@ class TimeFramesNode(Node):
         cols = self.input_dim
         rest = (self.time_frames-1)*gap
         rows = exp_length + rest
-        x = numx.zeros((rows,cols),typecode=self.typecode)
+        x = numx.zeros((rows,cols),dtype=self.typecode)
         x[:exp_length,:] = y[:,:cols]
         count = 1
         # Note that if gap > 1 some of the last rows will be filled with zeros!
@@ -297,10 +299,10 @@ class EtaComputerNode(Node):
 
     def _init_internals(self):
         input_dim = self.input_dim
-        self._mean = numx.zeros((input_dim,), typecode='d')
-        self._var = numx.zeros((input_dim,), typecode='d')
+        self._mean = numx.zeros((input_dim,), dtype='d')
+        self._var = numx.zeros((input_dim,), dtype='d')
         self._tlen = 0
-        self._diff2 = numx.zeros((input_dim,), typecode='d')
+        self._diff2 = numx.zeros((input_dim,), dtype='d')
         self._initialized = 1
 
     def _train(self, data):
@@ -368,7 +370,7 @@ class NoiseNode(Node):
 
     def _execute(self, x):
         noise_mat = self._refcast(self.noise_func(*self.noise_args,
-                                                  **{'shape': x.shape}))
+                                                  **{'size': x.shape}))
         if self.noise_type == 'additive':
             return x+noise_mat
         elif self.noise_type == 'multiplicative':
@@ -456,7 +458,7 @@ class GaussianClassifierNode(Node):
         sqrt_detS = self._sqrt_def_covs[lbl_idx]
         invS = self.inv_covs[lbl_idx]
         # subtract the mean
-        x_mn = x - self.means[lbl_idx][numx.NewAxis,:]
+        x_mn = x - self.means[lbl_idx][numx.newaxis,:]
         # exponent
         exponent = self._scast(-0.5) * \
                    numx.sum(utils.mult(x_mn, invS)*x_mn, axis=1)
@@ -471,7 +473,7 @@ class GaussianClassifierNode(Node):
 
         # compute the probability for each class
         tmp_prob = numx.zeros((x.shape[0], len(self.labels)),
-                              typecode=self.typecode)
+                              dtype=self.typecode)
         for i in range(len(self.labels)):
             tmp_prob[:,i] = self._gaussian_prob(x, i)
             tmp_prob[:,i] *= self.p[i]
@@ -479,8 +481,8 @@ class GaussianClassifierNode(Node):
         # normalize to probability 1
         # (not necessary, but sometimes useful)
         tmp_tot = numx.sum(tmp_prob, axis=1)
-        tmp_tot = tmp_tot[:, numx.NewAxis]
-        return tmp_prob/tmp_tot
+        tmp_tot = tmp_tot[:, numx.newaxis]
+        return tmp_prob/tmp_tot ##???## serve newaxis?
         
     def classify(self, x):
         """Classify the input data using Maximum A-Posteriori."""

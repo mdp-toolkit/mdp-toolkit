@@ -1,3 +1,5 @@
+## Automatically adapted for numpy Jun 26, 2006 by 
+
 """These are test functions for MDP utilities.
 
 Run them with:
@@ -10,6 +12,8 @@ import pickle
 import os
 import tempfile
 from mdp import numx, utils, numx_rand, Node, nodes
+from testing_tools import assert_array_almost_equal, assert_array_equal, \
+     assert_almost_equal, assert_equal, assert_array_almost_equal_diff
 
 class BogusClass(object):
     x = numx_rand.random((2,2))
@@ -53,7 +57,7 @@ class UtilsTestCase(unittest.TestCase):
         assert sorted(arrays.keys()) == ['x', 'y.x',
                                          'z.x', 'z.z.x'], 'Wrong names'
         sizes = [x[0] for x in arrays.values()]
-        assert sorted(sizes) == [numx_rand.random((2,2)).itemsize()*4]*4, \
+        assert sorted(sizes) == [numx_rand.random((2,2)).itemsize*4]*4, \
                'Wrong sizes'
         sfa = nodes.SFANode()
         sfa.train(numx_rand.random((1000, 10)))
@@ -64,7 +68,18 @@ class UtilsTestCase(unittest.TestCase):
         sfa.stop_training()
         a_sfa, string = utils.dig_node(sfa)
         keys = ['avg', 'd', 'sf', 'tlen']
-        assert sorted(a_sfa.keys()) == keys, 'Wrong arrays in SFANode'        
+        assert sorted(a_sfa.keys()) == keys, 'Wrong arrays in SFANode'
+
+    def testRandomRot(self):
+        dim = 20
+        tlen = 10
+        for i in range(tlen):
+            x = utils.random_rot(dim, typecode='f')
+            assert x.dtype.char=='f', 'Wrong typecode'
+            y = utils.mult(numx.transpose(x), x)
+            assert_almost_equal(utils.det(x), 1., 4)
+            assert_array_almost_equal(y, utils.eye(dim), 4)
+
                 
 def get_suite():
     suite = unittest.TestSuite()
@@ -72,5 +87,5 @@ def get_suite():
     return suite
 
 if __name__ == '__main__':
-    numx_rand.seed(1268049219, 2102953867)
+    numx_rand.seed(1268049219)
     unittest.TextTestRunner(verbosity=2).run(get_suite())

@@ -1,3 +1,5 @@
+## Automatically adapted for numpy Jun 26, 2006 by 
+
 """This demo shows how to write subclasses of Node.
 
 This is what you want to read if you intend to expand the MDP nodes library.
@@ -59,9 +61,9 @@ class PowerNode(mdp.Node):
     #   In general one should always give the possibility to set the typecode
     #   and the input dimensions. The default value is None, which means that
     #   the exact value is going to be inherited from the input data:
-    def __init__(self, power, input_dim=None, typecode=None):
+    def __init__(self, power, input_dim=None, dtype=None):
         #   Initialize the parent class:
-        super(PowerNode, self).__init__(input_dim=input_dim, typecode=typecode)
+        super(PowerNode, self).__init__(input_dim=input_dim, dtype=typecode)
         #   Store the power:
         self.power = power
     #   ``PowerNode`` is not trainable...
@@ -78,8 +80,8 @@ class PowerNode(mdp.Node):
 #
 #   The same definition without comments:
 class PowerNode(mdp.Node):
-    def __init__(self, power, input_dim=None, typecode=None):
-        super(PowerNode, self).__init__(input_dim=input_dim, typecode=typecode)
+    def __init__(self, power, input_dim=None, dtype=None):
+        super(PowerNode, self).__init__(input_dim=input_dim, dtype=typecode)
         self.power = power
     def is_trainable(self): return 0
     def is_invertible(self): return 0
@@ -99,9 +101,9 @@ print x, '**', node.power, '=', node(x)
 #   during execution:
 #
 class MeanFreeNode(mdp.FiniteNode):
-    def __init__(self, input_dim=None, typecode=None):
+    def __init__(self, input_dim=None, dtype=None):
         super(MeanFreeNode, self).__init__(input_dim=input_dim,
-                                           typecode=typecode)
+                                           dtype=typecode)
         #   Mean of the input data. We initialize it to None since we still
         #   don't know how large is an input vector:
         self.avg = None
@@ -113,7 +115,7 @@ class MeanFreeNode(mdp.FiniteNode):
         #   typecode if necessary:
         if self.avg is None:
             self.avg = mdp.numx.zeros(self.get_input_dim(),
-                                      typecode=self.get_typecode())
+                                      dtype=self.get_typecode())
         #   Update the mean with the sum of the new data:
         self.avg += sum(x, 0)
         #   Count the number of points processed:
@@ -131,15 +133,15 @@ class MeanFreeNode(mdp.FiniteNode):
 #
 #   The same definition without comments:
 class MeanFreeNode(mdp.FiniteNode):
-    def __init__(self, input_dim=None, typecode=None):
+    def __init__(self, input_dim=None, dtype=None):
         super(MeanFreeNode, self).__init__(input_dim=input_dim,
-                                           typecode=typecode)
+                                           dtype=typecode)
         self.avg = None
         self.tlen = 0
     def _train(self, x):
         if self.avg is None:
             self.avg = mdp.numx.zeros(self.get_input_dim(),
-                                      typecode=self.get_typecode())
+                                      dtype=self.get_typecode())
         self.avg += sum(x, 0)
         self.tlen += x.shape[0]
     def _stop_training(self):

@@ -1,3 +1,5 @@
+## Automatically adapted for numpy Jun 26, 2006 by 
+
 from expansion_nodes import QuadraticExpansionNode, PolynomialExpansionNode
 from pca_nodes import WhiteningNode, PCANode
 from sfa_nodes import SFANode

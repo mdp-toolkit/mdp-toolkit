@@ -1,3 +1,5 @@
+## Automatically adapted for numpy Jun 26, 2006 by 
+
 """These are test functions for MDP flows.
 
 Run them with:

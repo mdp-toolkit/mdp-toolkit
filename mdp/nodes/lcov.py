@@ -1,3 +1,5 @@
+## Automatically adapted for numpy Jun 26, 2006 by 
+
 import mdp
 import warnings
 
@@ -62,7 +64,7 @@ class CovarianceMatrix(object):
         
         # init typecode
         if not self._typecode:
-            self._typecode = x.typecode()
+            self._typecode = x.dtype.char
         dim = x.shape[1]
         self._input_dim = dim
         type = self._typecode
@@ -99,7 +101,7 @@ class CovarianceMatrix(object):
 
         ##### fix the training variables
         # fix the covariance matrix (try to do everything inplace)
-        avg_mtx = numx.outerproduct(avg,avg)
+        avg_mtx = numx.outer(avg,avg)
         avg_mtx /= tlen*(tlen - utils.scast(1, type))
         cov_mtx /= tlen - utils.scast(1, type)
         cov_mtx -= avg_mtx
@@ -158,7 +160,7 @@ class DelayCovarianceMatrix(object):
         
         # init typecode
         if not self._typecode:
-            self._typecode = x.typecode()
+            self._typecode = x.dtype.char
         dim = x.shape[1]
         self._input_dim = dim
         # init covariance matrix
@@ -213,7 +215,7 @@ class DelayCovarianceMatrix(object):
 
         ##### fix the training variables
         # fix the covariance matrix (try to do everything inplace)
-        avg_mtx = numx.outerproduct(avg, avg_dt)
+        avg_mtx = numx.outer(avg, avg_dt)
         avg_mtx /= tlen
                  
         cov_mtx -= avg_mtx

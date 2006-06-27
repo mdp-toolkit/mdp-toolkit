@@ -1,7 +1,8 @@
+## Automatically adapted for numpy Jun 26, 2006 by 
+
 import inspect
 import cPickle
 import mdp
-Array = mdp.numx.ArrayType
 
 class _Walk(object):
     """Recursively crawl an object and search for attributes that
@@ -22,7 +23,7 @@ class _Walk(object):
                 struct = '.'.join((start, name))
             else:
                 struct = name
-            if isinstance(obj, Array):
+            if isinstance(obj, mdp.numx.ndarray):
                 if start is not None:
                     arrays[struct] = obj
                 else:
@@ -69,7 +70,7 @@ def dig_node(x):
             size = 1
         else:
             size = reduce(lambda x,y: x*y, ar.shape)
-        bytes = ar.itemsize()*size
+        bytes = ar.itemsize*size
         arrays[name] = (bytes, ar)
     return arrays, _format_dig(arrays)
 

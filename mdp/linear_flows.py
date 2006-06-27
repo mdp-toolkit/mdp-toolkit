@@ -1,3 +1,5 @@
+## Automatically adapted for numpy Jun 26, 2006 by 
+
 import mdp
 import sys
 import traceback
@@ -118,7 +120,7 @@ class Flow(object):
         #the signal nodes and multiplies them if needed.
         flow = self.flow
 
-        if isinstance(data_iterators, numx.ArrayType):
+        if isinstance(data_iterators, numx.ndarray):
             data_iterators = [[data_iterators]]*len(flow)
 
         if not isinstance(data_iterators, list):
@@ -219,7 +221,7 @@ class Flow(object):
         node nr. 'nodenr'.
         This is equivalent to 'flow[:nodenr+1](iterator)'."""
         # if iterator is one single input sequence
-        if isinstance(iterator, numx.ArrayType):
+        if isinstance(iterator, numx.ndarray):
             return self._execute_seq(iterator, nodenr)
         # otherwise it is a iterator
         res = []
@@ -251,7 +253,7 @@ class Flow(object):
         function of each node."""
         
         # if iterator is one single input sequence
-        if isinstance(iterator, numx.ArrayType):
+        if isinstance(iterator, numx.ndarray):
             return self._inverse_seq(iterator)
         # otherwise it is a iterator
         res = []

@@ -1,3 +1,5 @@
+## Automatically adapted for numpy Jun 26, 2006 by 
+
 import mdp
 
 def pca(x, **kwargs):

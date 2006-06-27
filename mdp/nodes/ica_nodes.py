@@ -1,3 +1,5 @@
+## Automatically adapted for numpy Jun 26, 2006 by 
+
 import math
 import mdp
 
@@ -18,7 +20,7 @@ class ICANode(mdp.Cumulator, mdp.Node):
     
     def __init__(self, limit = 0.001, telescope = 0, verbose = 0, \
                  whitened = 0, white_comp = None, input_dim = None, \
-                 typecode= None):
+                 typecode = None):
         """
         - Set whitened == 1 if input data are already whitened.
           Otherwise the node will whiten the data itself.
@@ -134,14 +136,14 @@ class CuBICANode(ICANode):
         # numeric libraries. they are going to disappear as soon as
         # new casting conventions are established -> Numeric 3,
         # scipy 3.3, ...)
-        scalars = numx.arange(0, 37, typecode=self.typecode)
+        scalars = numx.arange(0, 37, dtype=self.typecode)
         ct_c34 = self._scast(0.0625)
         ct_s34 = self._scast(0.25)
         ct_c44 = self._scast(1./384)
         ct_s44 = self._scast(1./96)
 
         # initial transposed rotation matrix == identity matrix
-        Qt = numx.identity(comp, typecode=self.typecode)
+        Qt = numx.identity(comp, dtype=self.typecode)
 
         # maximum number of sweeps through all possible pairs of signals
         num = int(1+round(numx.sqrt(comp)))
@@ -335,8 +337,8 @@ class FastICANode(ICANode):
             # adjust limit! 
             limit = 1 - limit*limit*0.5
             # create array to store convergence
-            convergence = numx.zeros((comp,),typecode=typecode)
-            Q = numx.zeros((comp,comp),typecode=typecode)
+            convergence = numx.zeros((comp,),dtype=typecode)
+            Q = numx.zeros((comp,comp),dtype=typecode)
             round = 0
             nfail = 0
             while round < comp:

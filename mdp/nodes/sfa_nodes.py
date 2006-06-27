@@ -1,3 +1,5 @@
+## Automatically adapted for numpy Jun 26, 2006 by 
+
 from lcov import CovarianceMatrix
 from mdp import numx, utils, Node, \
      NodeException, TrainingFinishedException
@@ -98,7 +100,7 @@ class SFANode(Node):
 ## def time_derivative(self, x):
 ##     rows = x.shape[0]
 ##     columns = x.shape[1]
-##     deriv = numx.zeros((rows-1, columns), typecode=self.typecode)
+##     deriv = numx.zeros((rows-1, columns), dtype=self.typecode)
 
 ##     weave.inline(_TDERIVATIVE_1ORDER_CCODE,['rows','columns','deriv','x'],
 ##                  type_factories = weave.blitz_tools.blitz_type_factories,

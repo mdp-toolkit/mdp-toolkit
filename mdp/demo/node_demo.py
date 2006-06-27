@@ -1,3 +1,5 @@
+## Automatically adapted for numpy Jun 26, 2006 by 
+
 """This demo shows hot to use nodes.
 """
 import mdp

@@ -1,3 +1,5 @@
+## Automatically adapted for numpy Jun 26, 2006 by 
+
 import mdp
 
 numx = mdp.numx
@@ -49,7 +51,7 @@ class FDANode(mdp.Node):
     def _update_means(self, x, lbl):
         if not self.means.has_key(lbl):
             self.means[lbl] = numx.zeros((1, self.input_dim),
-                                         typecode=self.typecode)
+                                         dtype=self.typecode)
             self.tlens[lbl] = 0
         self.means[lbl] += numx.sum(x, 0)
         self.tlens[lbl] += x.shape[0]
@@ -80,7 +82,7 @@ class FDANode(mdp.Node):
         if self._SW_init == 0:
             self._SW_init = 1
             self.S_W = numx.zeros((self.input_dim, self.input_dim),
-                                  typecode=self.typecode)
+                                  dtype=self.typecode)
 
         # update the covariance matrix of all classes
         self.allcov.update(x)

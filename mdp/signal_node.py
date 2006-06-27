@@ -1,3 +1,5 @@
+## Automatically adapted for numpy Jun 26, 2006 by 
+
 import cPickle as _cPickle
 import warnings as _warnings
 import mdp
@@ -236,7 +238,7 @@ class Node(object):
 
         # set the typecode if necessary
         if self.typecode is None:
-            self.typecode = x.typecode()
+            self.typecode = x.dtype.char
 
         # check the input dimension
         if not x.shape[1] == self.input_dim:
@@ -444,7 +446,7 @@ class Cumulator(Node):
         """Cast the data list to array type and reshape it.
         """
         self._training = False
-        self.data = numx.array(self.data, typecode = self.typecode)
+        self.data = numx.array(self.data, dtype = self.typecode)
         self.data.shape = (self.tlen, self.input_dim)
 
 # deprecated alias

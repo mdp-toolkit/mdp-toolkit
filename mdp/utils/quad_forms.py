@@ -1,3 +1,5 @@
+## Automatically adapted for numpy Jun 26, 2006 by 
+
 import mdp
 
 numx = mdp.numx
@@ -25,7 +27,7 @@ class QuadraticForm(object):
         sf = sfa_node.sf[:, unit]
         c = -mdp.utils.mult(sfa_node.avg, sf)
         N = sfa_node.output_dim
-        H = numx.zeros((N,N),typecode=typecode)
+        H = numx.zeros((N,N),dtype=typecode)
         k = N
         for i in range(N):
             for j in range(N):
@@ -51,7 +53,7 @@ class QuadraticForm(object):
         tol: norm error tolerance
         """
         H, f, c = self.H, self.f, self.c
-        if f is None: f = numx.zeros((H.shape[0],), typecode=self.typecode)
+        if f is None: f = numx.zeros((H.shape[0],), dtype=self.typecode)
         if c is None: c = 0    
         H_definite_positive, H_definite_negative = False, False
         E = mdp.utils.symeig(H, eigenvectors=0, overwrite=0)
@@ -82,7 +84,7 @@ class QuadraticForm(object):
 
     def maximize(self, norm, tol = 1.E-4, x0 = None, factor = None):
         H, f = self.H, self.f
-        if f is None: f = numx.zeros((H.shape[0],), typecode=self.typecode)
+        if f is None: f = numx.zeros((H.shape[0],), dtype=self.typecode)
         if factor is not None:
             H = factor*H
             f = factor*f
@@ -125,7 +127,7 @@ if __name__ == "__main__":
     # check H with negligible linear term
     noise = 1e-7
     x = mdp.numx_rand.random((10,))
-    H = mdp.numx.outerproduct(x, x)+noise*mdp.numx_rand.random((10,10))
+    H = mdp.numx.outer(x, x)+noise*mdp.numx_rand.random((10,10))
     H = H+tr(H)
     q = QuadraticForm(H=H, f=noise*mdp.numx_rand.random((10,)))
     xmax, xmin, vmax, vmin = q.get_extrema(mdp.utils.norm2(x), tol=noise)

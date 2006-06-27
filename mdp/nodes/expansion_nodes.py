@@ -1,3 +1,5 @@
+## Automatically adapted for numpy Jun 26, 2006 by 
+
 import mdp
 
 # import numeric module (scipy, Numeric or numarray)
@@ -56,7 +58,7 @@ class PolynomialExpansionNode(_ExpansionNode):
         
         # preallocate memory
         dexp = numx.zeros((self.output_dim, x.shape[0]), \
-                           typecode=self.typecode)
+                           dtype=self.typecode)
         # copy monomials of degree 1
         dexp[0:n,:] = numx.transpose(x)
 

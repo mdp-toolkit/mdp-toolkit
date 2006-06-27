@@ -1,3 +1,5 @@
+## Automatically adapted for numpy Jun 26, 2006 by 
+
 import graph
 from mdp import numx, numx_rand, utils, Node, NodeException
 
@@ -82,7 +84,7 @@ class GrowingNeuralGasNode(Node):
 
         if start_poss is not None:
             if self.typecode is None:
-                self.typecode = start_poss[0].typecode()
+                self.typecode = start_poss[0].dtype.char
             node1 = self._add_node(self._refcast(start_poss[0]))
             node2 = self._add_node(self._refcast(start_poss[1]))
             self._add_edge(node1, node2)
@@ -162,7 +164,7 @@ class GrowingNeuralGasNode(Node):
 
     def get_nodes_position(self):
         return numx.array(map(lambda n: n.data.pos, self.graph.nodes),
-                          typecode = self.typecode)
+                          dtype = self.typecode)
 
     def _train(self, input):
         g = self.graph

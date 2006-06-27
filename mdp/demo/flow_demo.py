@@ -1,3 +1,5 @@
+## Automatically adapted for numpy Jun 26, 2006 by 
+
 """This demo shows how to build, train and execute a flow.
 
 Plots displayed by this demo are completely bogus. They are there only

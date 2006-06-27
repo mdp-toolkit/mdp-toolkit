@@ -1,3 +1,5 @@
+## Automatically adapted for numpy Jun 26, 2006 by 
+
 """
 This demo shows an example of the use of the Growing Neural Gas Node."""
 

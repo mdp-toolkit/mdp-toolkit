@@ -1,3 +1,5 @@
+## Automatically adapted for numpy Jun 26, 2006 by 
+
 import sys
 import os
 import cPickle
@@ -16,13 +18,13 @@ def refcast(array, typecode):
     """
     Cast the array to typecode only if necessary, otherwise return a reference.
     """
-    if array.typecode()==typecode:
+    if array.dtype.char==typecode:
         return array
     return array.astype(typecode)
 
 def scast(scalar, typecode):
     """Convert a scalar in a 0D array of the given typecode."""
-    return numx.array(scalar, typecode=typecode)
+    return numx.array(scalar, dtype=typecode)
 
 def _gemm_matmult(a,b, alpha=1.0, beta=0.0, c=None, trans_a=0, trans_b=0):
     """Return alpha*(a*b) + beta*c.
@@ -31,8 +33,8 @@ def _gemm_matmult(a,b, alpha=1.0, beta=0.0, c=None, trans_a=0, trans_b=0):
     trans_a: 0 (a not transposed), 1 (a transposed), 2 (a conjugate transposed)
     trans_b: 0 (b not transposed), 1 (b transposed), 2 (b conjugate transposed)
     """
-    typecode = mat.typecode()
-    if a.iscontiguous() and b.iscontiguous() and not trans_a and not trans_b:
+    typecode = mat.dtype.char
+    if a.flags.contiguous and b.flags.contiguous and not trans_a and not trans_b:
         mat = numx.dot(a, b)
         if alpha != 1:
             mat *= scast(alpha, typecode)
@@ -50,7 +52,7 @@ def _matmult(a,b):
     """Return matrix multiplication between 2-dimensional matrices a and b."""
 
     if (numx.rank(a)!=2 or numx.rank(b)!=2) or \
-           (a.iscontiguous() and b.iscontiguous()):
+           (a.flags.contiguous and b.flags.contiguous):
         return numx.dot(a,b)
     else:
         if a.shape[1] != b.shape[0]:
@@ -72,7 +74,7 @@ def rotate(mat, angle, columns = [0, 1], units = 'radians'):
 
     If M=2, columns=[0,1].
     """
-    typecode = mat.typecode()
+    typecode = mat.dtype.char
     if units is 'degrees': angle = angle/180.*numx.pi
     cos_ = scast(numx.cos(angle), typecode)
     sin_ = scast(numx.sin(angle), typecode)
@@ -95,10 +97,10 @@ def symrand(dim_or_eigv, typecode="d"):
     if isinstance(dim_or_eigv, int):
         dim = dim_or_eigv
         d = numx_rand.random(dim)
-    elif isinstance(dim_or_eigv, numx.ArrayType) and \
+    elif isinstance(dim_or_eigv, numx.ndarray) and \
          len(numx.shape(dim_or_eigv)) == 1:
         dim = numx.shape(dim_or_eigv)[0]
-        d = numx.sort(dim_or_eigv)
+        d = dim_or_eigv
     else:
         raise mdp.MDPException, "input type not supported."
     
@@ -108,14 +110,32 @@ def symrand(dim_or_eigv, typecode="d"):
     return refcast(0.5*(hermitian(h)+h), typecode)
 
 def random_rot(dim, typecode='d'):
-    """Return a random rotation matrix."""
-    mtx = numx_rand.random((dim, dim))
-    mtx = mtx + numx.transpose(mtx)
-    d, A = mdp.utils.symeig(mtx, overwrite=1)
-    if mdp.utils.det(A)<0:
-        A[:,0] = -A[:,0]
-    return refcast(A, typecode)
-    
+    """Return a random rotation matrix, drawn from the Haar distribution
+    (the only uniform distribution on SO(n)).
+    The algorithm is described in the paper
+    Stewart, G.W., "The efficient generation of random orthogonal
+    matrices with an application to condition estimators", SIAM Journal
+    on Numerical Analysis, 17(3), pp. 403-409, 1980.
+    For more information see
+    http://en.wikipedia.org/wiki/Orthogonal_matrix#Randomization"""
+    H = mdp.numx.eye(dim, dtype=typecode)
+    D = mdp.numx.ones((dim,), dtype=typecode)
+    for n in range(1, dim):
+        x = mdp.numx_rand.normal(size=(dim-n+1,)).astype(typecode)
+        D[n-1] = mdp.numx.sign(x[0])
+        x[0] -= D[n-1]*mdp.numx.sqrt(mdp.numx.sum(x*x))
+        # Householder transformation
+        Hx = mdp.numx.eye(dim-n+1, dtype=typecode) \
+             - 2.*mdp.numx.outer(x, x)/mdp.numx.sum(x*x)
+        mat = mdp.numx.eye(dim, dtype=typecode)
+        mat[n-1:,n-1:] = Hx
+        H = mdp.utils.mult(H, mat)
+    # Fix the last sign such that the determinant is 1
+    D[n] = -mdp.numx.prod(D)
+    # Equivalent to mult(numx.diag(D), H) but faster
+    H = mdp.numx.transpose(D*mdp.numx.transpose(H))
+    return H
+
 class ProgressBar(object):
     """A text-mode fully configurable progress bar.
        Note: remember that ProgressBar flushes sys.stdout by
@@ -218,6 +238,16 @@ def uniq(alist):
     set = {}
     map(set.__setitem__, alist, [])
     return set.keys()
+
+def cov2(x, y):
+    """Compute the covariance between 2D matrices x and y.
+    Complies with the old scipy.cov function: different variables
+    are on different columns."""
+
+    mnx = numx.mean(x, axis=0)
+    mny = numx.mean(y, axis=0)
+    tlen = x.shape[0]
+    return mdp.utils.mult(numx.transpose(x), y)/(tlen-1) - numx.outer(mnx, mny)
 
 class CrashRecoveryException(mdp.MDPException):
     """Class to handle crash recovery """
