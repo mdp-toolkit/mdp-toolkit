@@ -202,7 +202,8 @@ def progressinfo(sequence, length = None, style = 'bar', custom = {}):
     sys.stdout.write('\n\r')
 
 if __name__ == '__main__':
-    import random
+    #import random
+    import mdp
     import tempfile
     print 'Testing progressinfo...'
     # test various customized layouts
@@ -223,7 +224,8 @@ if __name__ == '__main__':
     # generate random character sequence
     inp_list = []
     for j in range(500):
-        inp_list.append(chr(random.randrange(256)))
+    #    inp_list.append(chr(random.randrange(256)))
+        inp_list.append(chr(mdp.numx_rand.randint(256)))
     string = ''.join(inp_list)
     # test various customized layouts
     cust_list = [ {'position': 'left',
@@ -236,7 +238,7 @@ if __name__ == '__main__':
             time.sleep(0.02)
             out_list.append(i)
         if inp_list != out_list:
-            raise Exception, 'Something wrong with porgressinfo...' 
+            raise Exception, 'Something wrong with progressinfo...' 
 
     # write random file
     fl = tempfile.TemporaryFile(mode='r+')

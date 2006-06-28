@@ -1,7 +1,5 @@
 import math
 import mdp
-
-# import numeric module (scipy, Numeric or numarray)
 numx, numx_rand = mdp.numx, mdp.numx_rand
 
 utils = mdp.utils
@@ -20,15 +18,19 @@ class ICANode(mdp.Cumulator, mdp.Node):
                  whitened = 0, white_comp = None, input_dim = None, \
                  dtype = None):
         """
-        - Set whitened == 1 if input data are already whitened.
-          Otherwise the node will whiten the data itself.
-          When whitened == 0, you can set 'white_comp' to the number
-          of whitened components to keep during the calculation.
-        - limit is the convergence threshold.
-        - if telescope == 1, use the Telescope mode. Instead of using all
-          inputs try larger and larger chunks of the input data until
-          convergence is achieved. This should lead to significantly faster
-          convergence for stationary statistics.
+        Input arguments:
+
+        whitened -- Set whitened == 1 if input data are already whitened.
+                    Otherwise the node will whiten the data itself.
+        white_comp -- If whitened == 0, you can set 'white_comp' to the number
+                      of whitened components to keep during the calculation
+                      (i.e., the input dimensions are reduced to white_comp
+                      by keeping the components of largest variance).
+        limit -- convergence threshold.
+        telescope -- If telescope == 1, use Telescope mode: Instead of using all
+          input data in a single batch try larger and larger chunks of the
+          input data until convergence is achieved. This should lead to
+          significantly faster convergence for stationary statistics.
           This mode has not been thoroughly tested and must be considered beta.
         """
         super(ICANode, self).__init__(input_dim, None, dtype)
@@ -90,7 +92,10 @@ class ICANode(mdp.Cumulator, mdp.Node):
     def _execute(self, x):
         if not self.whitened:
             x = self.white.execute(x)
-        return mult(x,self.filters)
+        # self.filters is applied to the right of the
+        # matrix containing input data. This is the transposed of the matrix
+        # defining the linear transformation.
+        return mult(x, self.filters)
 
     def _inverse(self, y):
         y = mult(y,t(self.filters))
@@ -100,13 +105,16 @@ class ICANode(mdp.Cumulator, mdp.Node):
 
 class CuBICANode(ICANode):
     """
-    CuBICANode receives an input signal and performs Independent Component
-    Analysis using the CuBICA algorithm by Tobias Blaschke (see reference
-    below). Note that CuBICA is a batch-algorithm. This means that it needs
+    CuBICANode performs Independent Component Analysis using the CuBICA
+    algorithm by Tobias Blaschke (see reference below).
+    Note that CuBICA is a batch-algorithm, which means that it needs
     all input data before it can start and compute the ICs.
     The algorithm is here given as a Node for convenience, but it
     actually accumulates all inputs it receives. Remember that to avoid
     running out of memory when you have many components and many time samples.
+
+    As an alternative to this batch mode you might consider the telescope
+    mode (see the docs of the __init__ function).
     
     Reference:
     Blaschke, T. and Wiskott, L. (2003).
@@ -130,11 +138,7 @@ class CuBICANode(ICANode):
         comp = x.shape[1]
         tlen = x.shape[0]
         
-        # some casted constants (this is due to casting issues in the
-        # numeric libraries. they are going to disappear as soon as
-        # new casting conventions are established -> Numeric 3,
-        # scipy 3.3, ...)
-        scalars = numx.arange(0, 37, dtype=self.dtype)
+        # some constants
         ct_c34 = 0.0625
         ct_s34 = 0.25
         ct_c44 = 1./384
@@ -163,24 +167,24 @@ class CuBICANode(ICANode):
                     C112  = mult(sq1,u2)/tlen
                     C122  = mult(sq2,u1)/tlen
                     C222  = mult(sq2,u2)/tlen
-                    C1111 = mult(sq1,sq1)/tlen - scalars[3]
+                    C1111 = mult(sq1,sq1)/tlen - 3.
                     C1112 = mult(sq1*u1,u2)/tlen
-                    C1122 = mult(sq1,sq2)/tlen - scalars[1]
+                    C1122 = mult(sq1,sq2)/tlen - 1.
                     C1222 = mult(sq2*u2,u1)/tlen
-                    C2222 = mult(sq2,sq2)/tlen - scalars[3]
+                    C2222 = mult(sq2,sq2)/tlen - 3.
                                         
-                    c_34 = ct_c34 * (            (C111*C111+C222*C222)-
-                                      scalars[3]*(C112*C112+C122*C122)-
-                                      scalars[2]*(C111*C122+C112*C222)  )
-                    s_34 = ct_s34 * (             C111*C112-C122*C222   )
-                    c_44 = ct_c44 *( scalars[7]*(C1111*C1111+C2222*C2222)-
-                                     scalars[16]*(C1112*C1112+C1222*C1222)-
-                                     scalars[12]*(C1111*C1122+C1122*C2222)-
-                                     scalars[36]*(C1122*C1122)-
-                                     scalars[32]*(C1112*C1222)-
-                                      scalars[2]*(C1111*C2222)              )
-                    s_44 = ct_s44 *( scalars[7]*(C1111*C1112-C1222*C2222)+
-                                     scalars[6]*(C1112*C1122-C1122*C1222)+
+                    c_34 = ct_c34 * (    (C111*C111+C222*C222)-
+                                      3.*(C112*C112+C122*C122)-
+                                      2.*(C111*C122+C112*C222)  )
+                    s_34 = ct_s34 * (     C111*C112-C122*C222   )
+                    c_44 = ct_c44 *(  7.*(C1111*C1111+C2222*C2222)-
+                                     16.*(C1112*C1112+C1222*C1222)-
+                                     12.*(C1111*C1122+C1122*C2222)-
+                                     36.*(C1122*C1122)-
+                                     32.*(C1112*C1222)-
+                                      2.*(C1111*C2222)              )
+                    s_44 = ct_s44 *(  7.*(C1111*C1112-C1222*C2222)+
+                                      6.*(C1112*C1122-C1122*C1222)+
                                                 (C1111*C1222-C1112*C2222)  )
 
                     # rotation angle that maximize the contrast function
@@ -205,7 +209,7 @@ class CuBICANode(ICANode):
             if maxangle <= limit:
                 break
         
-        self.iter = k           
+        self.iter = k
         if verbose:
             print "\nSweeps: ",k
         self.filters = Qt
@@ -215,44 +219,59 @@ class CuBICANode(ICANode):
 
 class FastICANode(ICANode):
     """
-    FastICANode receives an input signal and performs Independent Component
-    Analysis using the FastICA algorithm by Aapo Hyvarinen (see reference
-    below). Note that FastICA is a batch-algorithm. This means that it needs
+    FastICANode performs Independent Component Analysis using the
+    FastICA algorithm by Aapo Hyvarinen (see reference below).
+    Note that FastICA is a batch-algorithm. This means that it needs
     all input data before it can start and compute the ICs.
     The algorithm is here given as a Node for convenience, but it
     actually accumulates all inputs it receives. Remember that to avoid
     running out of memory when you have many components and many time samples.
+
+    FastICA does not support the telescope mode (the convergence
+    criterium is not robust in telescope mode).
     
     Reference:
     Aapo Hyvarinen
     Fast and Robust Fixed-Point Algorithms for Independent Component Analysis
     IEEE Transactions on Neural Networks, 10(3):626--634, 1999.
 
-    Note:
+    History:
     - 1.4.1998  created for Matlab by Jarmo Hurri, Hugo Gavert,
                 Jaakko Sarela, and Aapo Hyvarinen
     - 7.3.2003  modified for Python by Thomas Wendler
     - 3.6.2004  rewritten and adapted for scipy and MDP by MDP's authors
-    - 25.5.2005 now independent from scipy. Requires Numeric or numarray"""
+    - 25.5.2005 now independent from scipy. Requires Numeric or numarray
+    - 26.6.2006 converted to numpy
+    """
     
     def __init__(self, approach = 'defl', g = 'pow3', \
                  fine_tanh = 10, fine_gaus = 1, max_it = 1000, failures = 5,\
                  limit = 0.001, verbose = 0, whitened = 0, white_comp = None,\
                  input_dim = None, dtype=None):
         """
-        - approach:          the approach to use. Possible values are:
-                               'defl' --> deflation
-                               'symm' --> symmetric
-        - g:                 the nonlinearity to use. Possible values are
-                             'pow3','tanh' or 'gaus'
-        - fine_tanh:         parameter for fine-tuning of 'tanh'
-        - fine_gaus:         parameter for fine-tuning of 'gaus'
-        - max_it:            maximum number of iterations
-        - failures           maximum number of failures to allow in
-                             deflation mode
+        Input arguments:
 
-        Note: FastICA does not support the telescope mode (the convergence
-              criterium is not robust in telescope mode)."""
+        General:
+        whitened -- Set whitened == 1 if input data are already whitened.
+                    Otherwise the node will whiten the data itself
+        white_comp -- If whitened == 0, you can set 'white_comp' to the number
+                      of whitened components to keep during the calculation
+                      (i.e., the input dimensions are reduced to white_comp
+                      by keeping the components of largest variance)
+        limit -- convergence threshold.
+        telescope -- FastICA does not support the telescope mode
+                    (the convergence criterium is not robust in telescope mode).
+
+        Specific for FastICA:
+        approach -- Approach to use. Possible values are:
+                                          'defl' --> deflation
+                                          'symm' --> symmetric
+        g -- Nonlinearity to use. Possible values are 'pow3','tanh' or 'gaus'
+        fine_tanh -- parameter for fine-tuning of 'tanh' (see paper for details)
+        fine_gaus -- parameter for fine-tuning of 'gaus' (see paper for details)
+        max_it -- maximum number of iterations
+        failures -- maximum number of failures to allow in deflation mode
+        """
         ICANode.__init__(self, limit, 0, verbose, whitened,\
                          white_comp, input_dim, dtype)
         if approach in ['defl','symm']:
@@ -327,7 +346,7 @@ class FastICANode(ICANode):
                     Q = (mult(X,gauss) - numx.sum(dgauss)*Q)/tlen
             self.convergence = numx.array(convergence)
             ret = convergence[-1]
-         # DEFLATION APPROACH
+        # DEFLATION APPROACH
         elif approach == 'defl':
             # adjust limit! 
             limit = 1 - limit*limit*0.5

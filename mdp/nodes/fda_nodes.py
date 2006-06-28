@@ -8,15 +8,15 @@ class FDANode(mdp.Node):
     that implements FDA using a generalized eigenvalue approach.
 
     FDANode has two training phases and is supervised so make sure to
-    pay attention to the following points when training it:
+    pay attention to the following points when you train it:
     
-    - call the train function passing *two* arguments: the input data
+    - call the 'train' function with *two* arguments: the input data
       and the labels (see the doc string of the train method for details)
       
-    - if you are training the node by hand call the train function twice
+    - if you are training the node by hand, call the train function twice
     
     - if you are training the node using a flow (recommended), the
-      only argument of Flow.train must be a list of (data_point,
+      only argument to Flow.train must be a list of (data_point,
       label) tuples or an iterator returning lists of such tuples,
       *not* a generator.  The Flow.train function can be called just
       once as usual, since it takes care of "rewinding" the iterator
@@ -25,7 +25,7 @@ class FDANode(mdp.Node):
     More information on Fisher Discriminant Analysis can be found for
     example in C. Bishop, Neural Networks for Pattern Recognition,
     Oxford Press, pp. 105-112 ."""
-    
+
     def _get_train_seq(self):
         return [(self._train_means, self._stop_means),
                 (self._train_fda, self._stop_fda)]

@@ -250,7 +250,8 @@ numarray.linear_algebra.eigenvectors with an interface compatible with symeig.
         raise SymeigException, str(exception)
     # workaround to bug in numpy 0.9.9
     except NameError, exception:
-        if str(exception)=="NameError: global name 'Complex' is not defined":
+        if str(exception).strip() == \
+               "NameError: global name 'Complex' is not defined":
             raise SymeigException, 'Complex eigenvalues'
         else:
             raise NameError, str(exception)

@@ -9,7 +9,16 @@ class SFANode(Node):
     """SFANode receives an input signal and extracts its slowly varying
     components. More information about Slow Feature Analysis can be found in
     Wiskott, L. and Sejnowski, T.J., Slow Feature Analysis: Unsupervised
-    Learning of Invariances, Neural Computation, 14(4):715-770 (2002)."""
+    Learning of Invariances, Neural Computation, 14(4):715-770 (2002).
+
+    Internal variables of interest:
+    self.avg -- Mean of the input data (available after training)
+    self.sf -- Matrix of the SFA filters (available after training)
+    self.d -- Delta values corresponding to the SFA components
+              (generalized eigenvalues).
+              (See the docs of the 'get_eta_values' method for
+              more information)
+    """
     
     def __init__(self, input_dim=None, output_dim=None, dtype=None):
         super(SFANode, self).__init__(input_dim, output_dim, dtype)
@@ -79,6 +88,29 @@ class SFANode(Node):
 
     def _inverse(self, y):
         return mult(y, pinv(self.sf))+self.avg
+
+    def get_eta_values(self, t=1):
+        """Return the eta values of the data received during the training
+        phase. If the training phase has not been completed yet, call
+        stop_training.
+        
+        The delta value of a signal is a measure of its temporal
+        variation, and is defined as the mean of the derivative squared,
+        i.e. delta(x) = mean(dx/dt(t)^2).  delta(x) is zero if
+        x is a constant signal, and increases if the temporal variation
+        of the signal is bigger.
+        
+        The eta value is a more intuitive measure of temporal variation,
+        defined as
+            eta(x) = t/(2*pi) * sqrt(delta(x))
+        If x is a signal of length 't' which consists of a sine function
+        that accomplishes exactly N oscillations, then eta(x)=N.
+        
+        Input arguments:
+        t -- Time units (e.g., t=0.01 if you sample at 100Hz)
+        """
+        if self.is_training(): self.stop_training()
+        return self._refcast(t/(2*numx.pi)*numx.sqrt(self.d))
 
 class SFA2Node(SFANode):
     """SFA2Node receives an input signal, expands it in the space of

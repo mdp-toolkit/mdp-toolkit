@@ -20,16 +20,29 @@ class FANode(mdp.Node):
         """Perform Factor Analysis.
 
         The current implementation should be most efficient for long
-        data sets with
+        data sets: the sufficient statistics are collected in the
+        training phase, and all EM-cycles are performed at
+        its end.
 
-        tol -- tolerance (minimum change in log-likelihood)
+        The 'execute' function returns the Maximum A Posteriori estimate
+        of the latent variables, while the 'inverse' function generates
+        data from the prior distribution (see the docstrings of the
+        functions for details).
+
+        tol -- tolerance (minimum change in log-likelihood before exiting
+               the EM algorithm)
         max_cycles -- maximum number of EM cycles
         verbose -- if True, print log-likelihood during the EM-cycles
+
+        Internal variables of interest:
+        self.mu -- Mean of the input data (available after training)
+        self.A -- Generating weights (available after training)
+        self.E_y_mtx -- Weights for Maximum A Posteriori inference
 
         More information about Factor Analysis can be found in
         Max Welling's classnotes:
         http://www.ics.uci.edu/~welling/classnotes/classnotes.html ,
-        under the chapter 'Linear Models'.
+        in the chapter 'Linear Models'.
         """
         # Notation as in Max Welling's notes
         super(FANode, self).__init__(input_dim, output_dim, dtype)
@@ -61,8 +74,6 @@ class FANode(mdp.Node):
         ##### request the covariance matrix and clean up
         cov_mtx, mu, tlen = self._cov_mtx.fix()
         del self._cov_mtx
-        # 'bias' the covariance matrix
-        # (i.e., cov_mtx = 1/tlen sum(x_t x_t^T) instead of 1/(tlen-1))
         cov_diag = diag(cov_mtx)
 
         ##### initialize the parameters
@@ -70,7 +81,7 @@ class FANode(mdp.Node):
         sigma = cov_diag
         # loading factors
         # Zoubin uses the determinant of cov_mtx^1/d as scale but it's
-        # too slow for large matrices. Ss the product of the diagonal a good
+        # too slow for large matrices. Is the product of the diagonal a good
         # approximation?
         #scale = det(cov_mtx)**(1./d)
         scale = numx.product(sigma)**(1./d)
@@ -82,9 +93,7 @@ class FANode(mdp.Node):
         old_lhood = -numx.inf
         for t in xrange(self.max_cycles):
             ## compute B = (A A^T + Sigma)^-1
-            ##???###
-            # copy to make it contiguous, otherwise .ravel() does not work
-            B = mult(A, tr(A)).copy()
+            B = mult(A, tr(A))
             # B += diag(sigma), avoid computing diag(sigma) which is dxd
             put(B.ravel(), idx_diag_d, take(B.ravel(), idx_diag_d)+sigma)
             # this quantity is used later for the log-likelihood
@@ -110,9 +119,7 @@ class FANode(mdp.Node):
             ##### log-likelihood
             trace_B_cov = numx.sum(ravel(B*tr(cov_mtx)))
             # this is actually likelihood/tlen.
-            # cast to float explicitly. Numarray doesn't like
-            # 0-D arrays to be used in logical expressions
-            lhood = float(const - 0.5*log_det_B - 0.5*trace_B_cov)
+            lhood = const - 0.5*log_det_B - 0.5*trace_B_cov
             if verbose: print 'cycle',t,'log-lhood:',lhood
 
             ##### convergence criterion
@@ -123,7 +130,7 @@ class FANode(mdp.Node):
                 if lhood < old_lhood:
                     # this should never happen
                     # it sometimes does, e.g. if the noise is extremely low,
-                    # because of numerical problems
+                    # because of numerical rounding effects
                     warnings.warn(_LHOOD_WARNING, mdp.MDPWarning)
             old_lhood = lhood
             lhood_curve.append(lhood)

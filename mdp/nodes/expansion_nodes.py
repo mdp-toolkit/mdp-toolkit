@@ -1,6 +1,4 @@
 import mdp
-
-# import numeric module (scipy, Numeric or numarray)
 numx = mdp.numx
 
 def nmonomials(degree, nvariables):
@@ -32,21 +30,25 @@ class _ExpansionNode(mdp.Node):
         self._output_dim = self.expanded_dim(n)
 
     def _set_output_dim(self, n):
-        msg = "Output dim can not be explicitly set!"
+        msg = "Output dim cannot be set explicitly!"
         raise mdp.NodeException, msg
 
 class PolynomialExpansionNode(_ExpansionNode):
-    """A PolynomialExpansionNode takes as input a signal of dimension N
-    and returns an expanded signal formed by all monomials of input
-    components up to the specified degree."""
+    """A PolynomialExpansionNode returns an expanded signal
+    formed by all monomials of the input components up to the specified
+    degree."""
 
     def __init__(self, degree, input_dim = None, dtype = None):
+        """
+        Input arguments:
+        degree -- degree of the polynomial space where the input is expanded
+        """
         self._degree = int(degree)
         super(PolynomialExpansionNode, self).__init__(input_dim, dtype)
 
     def expanded_dim(self, dim):
         """Return the size of a vector of dimension 'dim' after
-        a polynomial expansion of degree 'self.degree'."""
+        a polynomial expansion of degree 'self._degree'."""
         return expanded_dim(self._degree, dim)
     
     def _execute(self, x):
@@ -84,7 +86,7 @@ class QuadraticExpansionNode(PolynomialExpansionNode):
     """A QuadraticExpansionNode takes as input a signal of dimension N
     and returns an expanded signal formed by all linear and quadratic
     terms of dimension N+N*(N+1)/2.
-    QuadraticExpansionNode is equivalent to a PolynomialExpansionNode(2)"""
+    QuadraticExpansionNode() is equivalent to a PolynomialExpansionNode(2)"""
 
     def __init__(self, input_dim = None, dtype = None):
         super(QuadraticExpansionNode, self).__init__(2, input_dim = input_dim,

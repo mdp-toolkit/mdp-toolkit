@@ -24,16 +24,19 @@ test_suites = {'nodes': test_nodes.get_suite(),
 
 def test(suitename = 'all', verbosity = 2, seed = None):
     if seed is None:
-        #numx_rand.seed(1268049219)
+        seed = numx_rand.get_state()[1][0]
         pass
     else:
         numx_rand.seed(seed)
-    sys.stderr.write("Random Seed: " + str(numx_rand.get_state()[1][0])+'\n')
+        seed = numx_rand.get_state()[1][0]
+        
+    sys.stderr.write("Random Seed: " + str(seed)+'\n')
     if suitename == 'all':
         suite = unittest.TestSuite(test_suites.values())
     else:
         suite = test_suites[suitename]
     unittest.TextTestRunner(verbosity=verbosity).run(suite)
+    sys.stderr.write("\nRandom Seed was: " + str(seed)+'\n')
 
 benchmark_suites = {'mdp': benchmark_mdp.get_benchmarks()}
     

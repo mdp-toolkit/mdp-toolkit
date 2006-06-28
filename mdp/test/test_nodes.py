@@ -97,6 +97,7 @@ class NodesTestSuite(unittest.TestSuite):
         d = 0
         while d < 1E-3:
             mat = ((rand_func(mat_dim)-0.5)*scale).astype(type)
+            # normalize
             mat -= mean(mat,axis=0)
             mat /= std(mat,axis=0)
             # check that the minimum eigenvalue is finite and positive
@@ -143,7 +144,18 @@ class NodesTestSuite(unittest.TestSuite):
     def _get_testdtype(self, node_class, args=[], sup_args_func=None):
         def _testdtype(node_class=node_class):
             for dtype in testtypes+testtypeschar:
-                mat, mix, inp = self._get_random_mix(type="d")
+                if node_class == mdp.nodes.SFA2Node:
+                    dim = 1000
+                    freqs = [2*numx.pi*1,2*numx.pi*5]
+                    t =  numx.linspace(0,1,num=dim)
+                    mat = tr(numx.array([numx.sin(freqs[0]*t),
+                                         numx.sin(freqs[1]*t)]))
+                    mat = (mat - mean(mat[:-1,:],axis=0))\
+                          /std(mat[:-1,:],axis=0)
+                    inp = mult(mat,numx_rand.random((2,2)))+numx_rand.random(2)
+                    inp = inp.astype('d')
+                else:
+                    mat, mix, inp = self._get_random_mix(type="d")
                 node = node_class(*args, **{'dtype':dtype})
                 self._train_if_necessary(inp, node, args, sup_args_func)
                 out = node.execute(inp)
@@ -344,6 +356,7 @@ class NodesTestSuite(unittest.TestSuite):
         sfa.train(mat)
         out = sfa.execute(mat)
         correlation = mult(tr(des_mat[:-1,:]),out[:-1,:])/(dim-2)
+        assert sfa.get_eta_values(t=0.5) is not None, 'get_eta is None'
         assert_array_almost_equal(abs(correlation),
                                   numx.eye(2), self.decimal-3)
         sfa = mdp.nodes.SFANode(output_dim = 1)
@@ -407,7 +420,7 @@ class NodesTestSuite(unittest.TestSuite):
         
     def testFastICANodeSymmetric(self):
         ica = mdp.nodes.FastICANode\
-              (limit = 10**(-self.decimal),approach="symm")
+              (limit = 10**(-self.decimal), approach="symm")
         self._testICANode(ica)
         
     def testFastICANodeDeflation(self):

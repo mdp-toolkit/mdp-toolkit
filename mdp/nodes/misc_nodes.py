@@ -3,16 +3,17 @@ from mdp import numx, numx_linalg, utils, Node, NodeException
 
 class OneDimensionalHitParade(object):
     """
-    Class to produce hit-parades out of a one-dimensional time-series.
+    Class to produce hit-parades (i.e., a list of the largest
+    and smallest values) out of a one-dimensional time-series.
     """
-    def __init__(self,n,d,real_dtype="d",integer_dtype="l"):
+    def __init__(self, n, d, real_dtype="d", integer_dtype="l"):
         """
-        n - number of maxima and minima to remember
-        d - minimum gap between two hits
+        Input arguments:
+        n -- Number of maxima and minima to remember
+        d -- Minimum gap between two hits
 
-        real_dtype is for sequence items
-        integer_dtype is for sequence indices
-
+        real_dtype -- dtype of sequence items
+        integer_dtype -- dtype of sequence indices
         Note: be careful with dtypes!
         """
         self.n = int(n)
@@ -26,7 +27,8 @@ class OneDimensionalHitParade(object):
 
     def update(self,inp):
         """
-        inp is the tuple (time-series, time-indices)
+        Input arguments:
+        inp -- tuple (time-series, time-indices)
         """
         argmin = numx.argmin
         argmax = numx.argmax
@@ -67,8 +69,8 @@ class OneDimensionalHitParade(object):
 
     def get_maxima(self):
         """
-        return the tuple (maxima,time-indices)
-        maxima are sorted largest-first
+        Return the tuple (maxima, time-indices).
+        Maxima are sorted in descending order.
         """
         iM = self.iM
         M = self.M
@@ -77,8 +79,8 @@ class OneDimensionalHitParade(object):
         
     def get_minima(self):
         """
-        return the tuple (minima,time-indices)
-        minima are sorted smallest-first
+        Return the tuple (minima, time-indices).
+        Minima are sorted in ascending order.
         """
         im = self.im
         m = self.m
@@ -89,8 +91,8 @@ class OneDimensionalHitParade(object):
     
 class HitParadeNode(Node):
     """HitParadeNode gets a multidimensional input signal and stores the first
-    'n' local maxima and minima, which are separated by a minimum gap 'd'.
-    This is called HitParade.
+    'n' local maxima and minima which are separated by a minimum gap 'd'.
+    This is called a 'HitParade'.
 
     Note: this node can be pickled with binary protocols only if
     all HitParade items are different from float 'inf', because
@@ -98,19 +100,20 @@ class HitParadeNode(Node):
     the pickle ASCII protocol '0'.
 
     This is an analysis node, i.e. the data is analyzed during training
-    and the results are stored internally.
+    and the results are stored internally. Use the
+    'get_maxima' and 'get_minima' methods to access them.
 
     References:
     [1] Pickle bug: [ 714733 ] cPickle fails to pickle inf
         https://sourceforge.net/tracker/?func=detail&atid=105470&aid=714733&group_id=5470
 
     """    
-
     
     def __init__(self, n, d, input_dim=None, dtype=None):
         """
-        n - number of maxima and minima to store
-        d - minimum gap between two maxima or two minima
+        Input arguments:
+        n -- Number of maxima and minima to store
+        d -- Minimum gap between two maxima or two minima
         """
         super(HitParadeNode, self).__init__(input_dim, None, dtype)
         self.n = int(n)
@@ -141,15 +144,14 @@ class HitParadeNode(Node):
 
     def copy(self, protocol = 0):
         """Return a deep copy of the node.
-        Note: we use pickle protocol '0' since
-        binary protocols can not pickle
+        Note: we use pickle protocol '0' since binary protocols can not pickle
         float 'inf'."""
         return super(HitParadeNode, self).copy(protocol)
     
     def get_maxima(self):
         """
         Return the tuple (maxima, indices).
-        Maxima are sorted largest-first.
+        Maxima are sorted in descending order.
         """
         cols = self.input_dim
         n = self.n
@@ -163,7 +165,7 @@ class HitParadeNode(Node):
     def get_minima(self):
         """
         Return the tuple (minima, indices).
-        Minima are sorted smallest-first.
+        Minima are sorted in ascending order.
         """
         cols = self.input_dim
         n = self.n
@@ -175,21 +177,32 @@ class HitParadeNode(Node):
         return m,im
 
 class TimeFramesNode(Node):
-    """TimeFramesNode receives a multidimensional input signal and copies on
-    the space dimensions delayed version of the same signal. Example:
+    """TimeFramesNode receives a multidimensional input signal and copies
+    delayed version of the same signal on the space dimensions.
 
-    If time_frames=3 and gap=2: 
+    For example, for time_frames=3 and gap=2: 
     
     [ X(1) Y(1)        [ X(1) Y(1) X(3) Y(3) X(5) Y(5)
-      X(2) Y(2)          X(2) Y(2) X(4) Y(4) X(6) Y(6)]  
-      X(3) Y(3)   -->      
-      X(4) Y(4)
-      X(5) Y(5)
-      X(6) Y(6)]
+      X(2) Y(2)          X(2) Y(2) X(4) Y(4) X(6) Y(6)
+      X(3) Y(3)   -->    X(3) Y(3) X(5) Y(5) X(7) Y(7)
+      X(4) Y(4)          X(4) Y(4) X(6) Y(6) X(8) Y(8)
+      X(5) Y(5)          ...  ...  ...  ...  ...  ... ]
+      X(6) Y(6)
+      X(7) Y(7)
+      X(8) Y(8)
+      ...  ...  ]
 
+    It is not always possible to invert this transformation (the
+    transformation is not surjective. However, the 'pseudo_inverse'
+    method does the correct thing when it is indeed possible.
     """
     
-    def __init__(self, time_frames, gap=1, input_dim=None, dtype=None):     
+    def __init__(self, time_frames, gap=1, input_dim=None, dtype=None):
+        """
+        Input arguments:
+        time_frames -- Number of delayed copies
+        gap -- Time delay between the copies
+        """
         super(TimeFramesNode, self).__init__(input_dim, None, dtype)
         self.time_frames = time_frames
         self.gap = gap
@@ -221,7 +234,9 @@ class TimeFramesNode(Node):
     def pseudo_inverse(self, y):
         """This function returns a pseudo-inverse of the execute frame.
         y == execute(x) only if y belongs to the domain of execute and
-        has been computed with a sufficently large x."""
+        has been computed with a sufficently large x.
+        If gap > 1 some of the last rows will be filled with zeros.
+        """
         
         self._if_training_stop_training()
 
@@ -285,7 +300,8 @@ class EtaComputerNode(Node):
     compatible with that of SFANode.
 
     This is an analysis node, i.e. the data is analyzed during training
-    and the results are stored internally.
+    and the results are stored internally.  Use the functions
+    'get_eta' to access them.
     """
     
     def __init__(self, input_dim=None, dtype=None):
@@ -304,7 +320,7 @@ class EtaComputerNode(Node):
         self._initialized = 1
 
     def _train(self, data):
-        # ?? refcast automatico
+        # here SignalNode.train makes an automatic refcast
         if not self._initialized: self._init_internals()
         #
         rdata = data[:-1]
@@ -322,7 +338,11 @@ class EtaComputerNode(Node):
     def get_eta(self, t=1):
         """Return the eta values of the data received during the training
         phase. If the training phase has not been completed yet, call
-        stop_training."""
+        stop_training.
+
+        Input arguments:
+        t -- Time units (e.g., t=0.01 if you sample at 100Hz)
+        """
         if self.is_training(): self.stop_training()
         return self._refcast(self._eta*t)
 
@@ -332,22 +352,25 @@ class NoiseNode(Node):
 
     Original idea by Mathias Franzius.
     """
+    
     def __init__(self, noise_func = mdp.numx_rand.normal, noise_args = (0,1),
                  noise_type = 'additive', input_dim = None, dtype = None):
         """
         Add noise to input signals.
-        
-        - 'noise_func' must take a 'shape' keyword argument and return
-          a random array of that size. Default is normal noise.
-          
-        - 'noise_args' is a tuple of additional arguments for the noise_func.
-          Default is (0,1) for (mean, standard deviation) of the normal
-          distribution.
 
-        - 'noise_type' is either 'additive' or 'multiplicative':
-            'additive' returns x + noise
-            'multiplicative' returns x * (1 + noise)
-          Default is 'additive'.
+        Input signal:
+        'noise_func' -- A function that generates noise. It must
+                        take a 'size' keyword argument and return
+                        a random array of that size. Default is normal noise.
+          
+        'noise_args' -- Tuple of additional arguments passed to noise_func.
+                        Default is (0,1) for (mean, standard deviation)
+                        of the normal distribution.
+
+        'noise_type' -- Either 'additive' or 'multiplicative':
+                         'additive' returns x + noise
+                         'multiplicative' returns x * (1 + noise)
+                        Default is 'additive'.
         """
         super(NoiseNode, self).__init__(input_dim = input_dim,
                                         dtype = dtype)
@@ -379,7 +402,7 @@ class GaussianClassifierNode(Node):
     def __init__(self, input_dim=None, dtype=None):
         """This node performs a supervised Gaussian classification.
 
-        Given a set of labelled data, this node fits a gaussian distribution
+        Given a set of labelled data, the node fits a gaussian distribution
         to each class. Note that it is written as an analysis node (i.e., the
         execute function is the identity function). To perform classification,
         use the 'classify' method. If instead you need the posterior
@@ -405,9 +428,6 @@ class GaussianClassifierNode(Node):
         self.cov_objs[lbl].update(x)
 
     def _train(self, x, cl):
-        """'cl' can be a list of labels (one for each data point) or
-        a single label, in which case all input data is assigned to
-        the same class."""
         # if cl is a number, all x's belong to the same class
         if type(cl) is int:
             self._update_covs(x, cl)
@@ -416,6 +436,15 @@ class GaussianClassifierNode(Node):
             for lbl in  utils.uniq(cl):
                 x_lbl = numx.compress(cl==lbl, x, axis=0)
                 self._update_covs(x_lbl, lbl)
+
+    def train(self, x, cl):
+        """
+        Additional input arguments:
+        cl -- Can be a list of labels (one for each data point) or
+              a single label, in which case all input data is assigned to
+              the same class.
+        """
+        super(GaussianClassifierNode, self).train(x, cl)
 
     def _stop_training(self):
         self.labels = self.cov_objs.keys()
@@ -444,12 +473,15 @@ class GaussianClassifierNode(Node):
 
         del self.cov_objs
 
-    # ?? if the distribution objects of the scipy.stats module were also
-    # in Numeric and numarray we could use them
     def _gaussian_prob(self, x, lbl_idx):
         """Return the probability of the data points x with respect to a
         gaussian.
-        x: input data, S: covariance matrix, mn: mean"""
+
+        Input arguments:
+        x -- Input data
+        S -- Covariance matrix
+        mn -- Mean
+        """
         x = self._refcast(x)
 
         dim = self.input_dim
@@ -465,7 +497,7 @@ class GaussianClassifierNode(Node):
         return constant * numx.exp(exponent)
 
     def class_probabilities(self, x):
-        """Return the probability of each class given the input."""
+        """Return the posterior probability of each class given the input."""
         self._pre_execution_checks(x)
 
         # compute the probability for each class
@@ -479,7 +511,7 @@ class GaussianClassifierNode(Node):
         # (not necessary, but sometimes useful)
         tmp_tot = numx.sum(tmp_prob, axis=1)
         tmp_tot = tmp_tot[:, numx.newaxis]
-        return tmp_prob/tmp_tot ##???## serve newaxis?
+        return tmp_prob/tmp_tot
         
     def classify(self, x):
         """Classify the input data using Maximum A-Posteriori."""
