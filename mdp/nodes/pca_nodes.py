@@ -6,6 +6,13 @@ from mdp.utils import mult, symeig, CovarianceMatrix, \
 class PCANode(Node):
     """PCANode receives an input signal and filters it through
     the most significatives of its principal components.
+    
+    Internal variables of interest:
+    self.avg -- Mean of the input data (available after training)
+    self.v -- Transpose of the projection matrix (available after training)
+    self.d -- Variance corresponding to the PCA components
+              (eigenvalues of the covariance matrix).
+    
     More information about Principal Component Analysis, a.k.a. discrete
     Karhunen-Loeve transform can be found among others in
     I.T. Jolliffe, Principal Component Analysis, Springer-Verlag (1986)."""
@@ -154,11 +161,14 @@ class PCANode(Node):
         return self.v
 
     def _execute(self, x, n = None):
-        """Project the input on the first 'n' principal components.
-        If 'n' is not set, use all available components."""
         if n is not None:
             return mult(x-self.avg, self.v[:,:n])
         return mult(x-self.avg, self.v)
+
+    def execute(self, x, n=None):
+        """Project the input on the first 'n' principal components.
+        If 'n' is not set, use all available components."""
+        return super(PCANode, self).execute(x, n)
 
     def _inverse(self, y, n = None):
         """Project 'y' to the input space using the first 'n' components.
@@ -173,11 +183,23 @@ class PCANode(Node):
         v = self.get_recmatrix()
         return mult(y, v[:n,:])+self.avg
 
+    def inverse(self, y, n=None):
+        """Project 'y' to the input space using the first 'n' components.
+        If 'n' is not set, use all available components."""
+        return super(PCANode, self).inverse(y, n)
+
 
 class WhiteningNode(PCANode):
     """WhiteningNode receives an input signal and 'whiten' it by filtering
     it through the most significatives of its principal components. All output
-    signals have zero mean, unit variance and are decorrelated."""
+    signals have zero mean, unit variance and are decorrelated.
+    
+    Internal variables of interest:
+    self.avg -- Mean of the input data (available after training)
+    self.v -- Transpose of the projection matrix (available after training)
+    self.d -- Variance corresponding to the PCA components
+              (eigenvalues of the covariance matrix).
+    """
     
     def _stop_training(self):
         super(WhiteningNode, self)._stop_training()

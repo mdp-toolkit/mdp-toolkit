@@ -314,8 +314,7 @@ class Node(object):
             raise NotImplementedError
 
     def _stop_training(self):
-        if self.is_trainable():
-            raise NotImplementedError
+        pass
 
     def _execute(self, x):
         return x
@@ -347,7 +346,7 @@ class Node(object):
 
     def stop_training(self):
         """Stop the training phase."""
-        if self.is_trainable() and self._train_phase_started == False:
+        if self.is_training() and self._train_phase_started == False:
             raise TrainingException, \
                   "The node has not been trained."
         
@@ -358,7 +357,7 @@ class Node(object):
         # close the current phase.
         self._train_seq[self._train_phase][1]()
         self._train_phase += 1
-        self.train_phase_started = False
+        self._train_phase_started = False
         # check if we have some training phase left
         if self.get_remaining_train_phase() == 0:
             self._training = False
@@ -414,10 +413,9 @@ class Node(object):
         inp = "input_dim=%s"%str(self.input_dim)
         out = "output_dim=%s"%str(self.output_dim)
         if self.dtype is None:
-            name = '* not initialized yet *'
+            typ = 'dtype=None'
         else:
-            name = self.dtype.name
-        typ = "dtype='%s'" % name
+            typ = "dtype='%s'" %self.dtype.name
         args = ', '.join((inp, out, typ))
         return name+'('+args+')'
 

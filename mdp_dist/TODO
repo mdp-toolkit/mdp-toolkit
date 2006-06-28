@@ -2,43 +2,18 @@ realistic TODO:
 
 MDP 2.0.0 28.10.2005:
 
-- helper functions
-- test PCANode when output_dim = float (zito)
-- document new nodes, check old ones as well (berkes)
-[ - kalman filters (berkes) ]
-- TUTORIAL:
-    - check code errors
-    - is_trainable etc. return True/False
-    - flow, iterators, generators etc.
-    - generate demos
-- real demos ?
+- invariances and real test in QuadraticForm
+- kalman filters
 - site: add citation section, state email addresses, rewrite 
   description to highlight
   education, framework for new algorithms, title outlook, 
   modify mantainers, modify 
   compilation instruction for scipy, add migration faq.
-[ - memory profiler ]
-[ - real benchmark ]
-- quadratic forms
-[ - write paragraph about the new scipy/numpy thing ]
+- memory profiler
+- real benchmark
+- write paragraph about the new scipy/numpy thing
 
-done:
+- add Independent Slow Feature Analysis node
+- flow to handle acyclic graphs of nodes
 
-- check tests: should run without failures or errors up to 10000 times. (zito)
-- decorators for automagically handle docstrings (zito?)
-- check iterators generators in flow (only allow generators for single
-    phase nodes) also check all Flow docstrings: they contain a lot of
-    'generators'
-- tutorial: supervised / multiple-phase nodes
-
-
-forget about that:
-
-MDP 1.1.0, 13.06.2005:
-
-- Add Independent Slow Feature Analysis node
-
-- Flow to handle acyclic graphs of nodes
-
-- GUI with wxPython
 

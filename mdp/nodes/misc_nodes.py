@@ -109,7 +109,7 @@ class HitParadeNode(Node):
 
     """    
     
-    def __init__(self, n, d, input_dim=None, dtype=None):
+    def __init__(self, n, d=1, input_dim=None, dtype=None):
         """
         Input arguments:
         n -- Number of maxima and minima to store
@@ -139,9 +139,6 @@ class HitParadeNode(Node):
         self.hit = hit
         self.tlen = tlen
 
-    def _stop_training(self):
-        pass
-
     def copy(self, protocol = 0):
         """Return a deep copy of the node.
         Note: we use pickle protocol '0' since binary protocols can not pickle
@@ -152,7 +149,11 @@ class HitParadeNode(Node):
         """
         Return the tuple (maxima, indices).
         Maxima are sorted in descending order.
+
+        If the training phase has not been completed yet, call
+        stop_training.
         """
+        self._if_training_stop_training()
         cols = self.input_dim
         n = self.n
         hit = self.hit
@@ -166,7 +167,11 @@ class HitParadeNode(Node):
         """
         Return the tuple (minima, indices).
         Minima are sorted in ascending order.
+
+        If the training phase has not been completed yet, call
+        stop_training.
         """
+        self._if_training_stop_training()
         cols = self.input_dim
         n = self.n
         hit = self.hit
@@ -208,10 +213,10 @@ class TimeFramesNode(Node):
         self.gap = gap
 
     def is_trainable(self):
-        return 0
+        return False
 
     def is_invertible(self):
-        return 0
+        return False
 
     def _set_input_dim(self, n):
         self._input_dim = n
@@ -343,7 +348,7 @@ class EtaComputerNode(Node):
         Input arguments:
         t -- Time units (e.g., t=0.01 if you sample at 100Hz)
         """
-        if self.is_training(): self.stop_training()
+        self._if_training_stop_training()
         return self._refcast(self._eta*t)
 
 
@@ -384,10 +389,10 @@ class NoiseNode(Node):
             self.noise_type = noise_type
             
     def is_trainable(self):
-        return 0
+        return False
 
     def is_invertible(self):
-        return 0
+        return False
 
     def _execute(self, x):
         noise_mat = self._refcast(self.noise_func(*self.noise_args,
@@ -416,7 +421,8 @@ class GaussianClassifierNode(Node):
         return False
 
     def _check_train_args(self, x, cl):
-        if type(cl) is not int and len(cl)!=x.shape[0]:
+        if isinstance(cl, (list, tuple, numx.ndarray)) \
+               and len(cl)!=x.shape[0]:
             msg = "The number of labels should be equal to the number of " +\
                   "datapoints (%d != %d)" % (len(cl), x.shape[0])
             raise mdp.TrainingException, msg
@@ -429,19 +435,19 @@ class GaussianClassifierNode(Node):
 
     def _train(self, x, cl):
         # if cl is a number, all x's belong to the same class
-        if type(cl) is int:
-            self._update_covs(x, cl)
-        else:
+        if isinstance(cl, (list, tuple, numx.ndarray)):
             # get all classes from cl
             for lbl in  utils.uniq(cl):
                 x_lbl = numx.compress(cl==lbl, x, axis=0)
                 self._update_covs(x_lbl, lbl)
+        else:
+            self._update_covs(x, cl)
 
     def train(self, x, cl):
         """
         Additional input arguments:
-        cl -- Can be a list of labels (one for each data point) or
-              a single label, in which case all input data is assigned to
+        cl -- Can be a list, tuple or array of labels (one for each data point)
+              or a single label, in which case all input data is assigned to
               the same class.
         """
         super(GaussianClassifierNode, self).train(x, cl)

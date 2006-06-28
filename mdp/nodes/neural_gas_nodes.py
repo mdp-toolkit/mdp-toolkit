@@ -21,18 +21,24 @@ class _GNGEdgeData(object):
 class GrowingNeuralGasNode(Node):
     """GrowingNeuralGasNode learns the topological structure of its input,
     by building a corresponding graph approximation.
+    
     More information about the Growing Neural Gas algorithm can be found in
     B. Fritzke, A Growing Neural Gas Network Learns Topologies, in G. Tesauro,
     D. S. Touretzky, and T. K. Leen (editors), Advances in Neural Information
     Processing Systems 7, pages 625-632. MIT Press, Cambridge MA, 1995.
+    
     A java implementation is available at:
     http://www.neuroinformatik.ruhr-uni-bochum.de/ini/VDM/research/gsn/DemoGNG/GNG.html
+
+    Attributes and methods of interest:
+    graph -- The corresponding Graph object
     """
     def __init__(self, start_poss=None, eps_b=0.2, eps_n=0.006, max_age=50,
                  lambda_=100, alpha=0.5, d=0.995, max_nodes=2147483647,
                  input_dim=None, dtype=None):
         """Growing Neural Gas algorithm.
 
+        Input arguments:
         start_pos -- sequence of two arrays containing the position of the
                      first two nodes in the GNG graph. In unspecified, the
                      initial nodes are chosen with a random position generated

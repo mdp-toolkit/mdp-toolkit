@@ -14,7 +14,7 @@ def pca(x, **kwargs):
     return pca.execute(x)
                               
 def whitening(x, **kwargs):
-    """Filters multidimensioanl input data through its principal components,
+    """Filters multidimensional input data through its principal components,
     rescaling the output signals such that they have unit variance.
 
     Observations of the same variable are stored on rows, different variables
@@ -68,6 +68,34 @@ def sfa(x, **kwargs):
     sfa = mdp.nodes.SFANode(**kwargs)
     sfa.train(x)
     return sfa.execute(x)
+
+def sfa2(x, **kwargs):
+    """Perform quadratic Slow Feature Analysis on input data using the SFA
+    algorithm by Laurenz Wiskott.
+
+    Observations of the same variable are stored on rows, different variables
+    are stored on columns.
+
+    This is a shortcut function for the corresponding node SFA2Node.
+    If any keyword arguments are specified, they are passed to its constructor.
+    """
+    sfa = mdp.nodes.SFA2Node(**kwargs)
+    sfa.train(x)
+    return sfa.execute(x)
+
+def factor_analysis(x, **kwargs):
+    """Perform Factor Analysis on the input data and returns the
+    Mximum A Posteriori estimate of the latent variables.
+
+    Observations of the same variable are stored on rows, different variables
+    are stored on columns.
+
+    This is a shortcut function for the corresponding node FANode.
+    If any keyword arguments are specified, they are passed to its constructor.
+    """
+    fa = mdp.nodes.FANode(**kwargs)
+    fa.train(x)
+    return fa.execute(x)
 
 def get_eta(x, **kwargs):
     """Compute eta values (a slowness measure) of the input data.

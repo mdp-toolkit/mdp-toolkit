@@ -145,11 +145,12 @@ class NodesTestSuite(unittest.TestSuite):
         def _testdtype(node_class=node_class):
             for dtype in testtypes+testtypeschar:
                 if node_class == mdp.nodes.SFA2Node:
-                    dim = 1000
-                    freqs = [2*numx.pi*1,2*numx.pi*5]
+                    dim = 10000
+                    freqs = [2*numx.pi*5,2*numx.pi*10]
                     t =  numx.linspace(0,1,num=dim)
                     mat = tr(numx.array([numx.sin(freqs[0]*t),
                                          numx.sin(freqs[1]*t)]))
+                    mat += normal(0., 1e-5, size=(dim, 2))
                     mat = (mat - mean(mat[:-1,:],axis=0))\
                           /std(mat[:-1,:],axis=0)
                     inp = mult(mat,numx_rand.random((2,2)))+numx_rand.random(2)
@@ -344,7 +345,7 @@ class NodesTestSuite(unittest.TestSuite):
 
     def testSFANode(self):
         dim=10000
-        freqs = [2*numx.pi*1,2*numx.pi*5]
+        freqs = [2*numx.pi*1, 2*numx.pi*5]
         t =  numx.linspace(0,1,num=dim)
         mat = tr(numx.array(\
             [numx.sin(freqs[0]*t),numx.sin(freqs[1]*t)]))
@@ -374,6 +375,7 @@ class NodesTestSuite(unittest.TestSuite):
         t =  numx.linspace(0,1,num=dim)
         mat = tr(numx.array(\
             [numx.sin(freqs[0]*t),numx.sin(freqs[1]*t)]))
+        mat += normal(0., 1e-10, size=(dim, 2))
         mat = (mat - mean(mat[:-1,:],axis=0))\
               /std(mat[:-1,:],axis=0)
         des_mat = mat.copy()

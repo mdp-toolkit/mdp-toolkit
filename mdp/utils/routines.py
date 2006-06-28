@@ -18,6 +18,7 @@ def refcast(array, dtype):
     """
     Cast the array to dtype only if necessary, otherwise return a reference.
     """
+    dtype = mdp.numx.dtype(dtype)
     if array.dtype == dtype:
         return array
     return array.astype(dtype)

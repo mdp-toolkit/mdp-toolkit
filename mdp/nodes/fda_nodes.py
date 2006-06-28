@@ -39,7 +39,8 @@ class FDANode(mdp.Node):
         self._SW_init = 0
 
     def _check_train_args(self, x, cl):
-        if not isinstance(cl, int) and len(cl) != x.shape[0]:
+        if isinstance(cl, (list, tuple, numx.ndarray)) \
+               and len(cl) != x.shape[0]:
             msg = "The number of labels should be equal to the number of " +\
                   "datapoints (%d != %d)" % (len(cl), x.shape[0])
             raise mdp.TrainingException, msg
@@ -55,13 +56,13 @@ class FDANode(mdp.Node):
         self.tlens[lbl] += x.shape[0]
     
     def _train_means(self, x, cl):
-        if isinstance(cl, int):
-            self._update_means(x, cl)
-        else:
+        if isinstance(cl, (list, tuple, numx.ndarray)):
             for lbl in mdp.utils.uniq(cl):
                 # group for class
                 x_lbl = numx.compress(cl==lbl, x, axis=0)
                 self._update_means(x_lbl, lbl)
+        else:
+            self._update_means(x, cl)
 
     def _stop_means(self):
         for lbl in self.means.keys():
@@ -86,14 +87,14 @@ class FDANode(mdp.Node):
         self.allcov.update(x)
 
         # if cl is a number, all x's belong to the same class
-        if isinstance(cl, int):
-            self._update_SW(x, cl)
-        else:
+        if isinstance(cl, (list, tuple, numx.ndarray)):
             # get all classes from cl
             for lbl in mdp.utils.uniq(cl):
                 # group for class
                 x_lbl = numx.compress(cl==lbl, x, axis=0)
                 self._update_SW(x_lbl, lbl)
+        else:
+            self._update_SW(x, cl)
 
     def _stop_fda(self):
         S_T, self.avg, tlen = self.allcov.fix()
@@ -116,8 +117,8 @@ class FDANode(mdp.Node):
         
         x -- a matrix having different variables on different columns
              and observations on the rows.
-        cl -- can be a list of labels (one for each data point) or
-              a single label, in which case all input data is assigned to
+        cl -- can be a list, tuple or array of labels (one for each data point)
+              or a single label, in which case all input data is assigned to
               the same class.
         """
         super(FDANode, self).train(x, cl)
@@ -132,6 +133,13 @@ class FDANode(mdp.Node):
             v = self.v
 
         return mdp.utils.mult(x-self.avg, v)
+
+    def execute(self, x, range=None):
+        """Compute the output of the FDA projection.
+        if 'range' is a number, then use the first 'range' functions.
+        if 'range' is the interval=(i,j), then use all functions
+                   between i and j."""
+        return super(FDANode, self).execute(x, range)
 
     def _inverse(self, y):
         return mdp.utils.mult(y, mdp.utils.pinv(self.v))+self.avg

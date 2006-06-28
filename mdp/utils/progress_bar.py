@@ -83,7 +83,7 @@ def _progress(percent, last, style, layout):
         return box
     
 def progressinfo(sequence, length = None, style = 'bar', custom = {}):
-    """A text-mode fully configurable progress info box.
+    """A fully configurable text-mode progress info box.
        To get a progress info box for your loops use it like this:
 
           >>> for i in progressinfo(sequence):
@@ -116,13 +116,13 @@ def progressinfo(sequence, length = None, style = 'bar', custom = {}):
                   [===========60%===>.........]
 
                   If style == 'timer', display a time elapsed / time
-                  remained info box. The default layout is:
+                  remaining info box. The default layout is:
 
                   23% [02:01:28] - [00:12:37]
 
                   where fields have the following meaning:
        
-                  percent_done% [time_elapsed] - [time_remained]
+                  percent_done% [time_elapsed] - [time_remaining]
 
      custom     - a dictionary for customizing the layout.
                   Default layout for the 'bar' style:
@@ -148,8 +148,8 @@ def progressinfo(sequence, length = None, style = 'bar', custom = {}):
         
      
      Note 1: by default sys.stdout is flushed each time a new box is drawn.
-             If you need to rely on buffered stdout better not use this (any?)
-             progress info box.
+             If you need to rely on buffered stdout you'd better not use this
+             (any?) progress info box.
      Note 2: progressinfo slows down your loops. Always profile your scripts
              and check that you are not wasting 99% of the time in drawing
              the progress info box.
@@ -201,6 +201,7 @@ def progressinfo(sequence, length = None, style = 'bar', custom = {}):
     # clean up terminal
     sys.stdout.write('\n\r')
 
+# execute this file for a demo of the progressinfo style
 if __name__ == '__main__':
     #import random
     import mdp

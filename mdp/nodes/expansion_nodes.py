@@ -20,10 +20,10 @@ class _ExpansionNode(mdp.Node):
         return dim
         
     def is_trainable(self):
-        return 0
+        return False
 
     def is_invertible(self):
-        return 0
+        return False
             
     def _set_input_dim(self, n):
         self._input_dim = n

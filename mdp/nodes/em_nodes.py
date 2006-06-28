@@ -25,9 +25,7 @@ class FANode(mdp.Node):
         its end.
 
         The 'execute' function returns the Maximum A Posteriori estimate
-        of the latent variables, while the 'inverse' function generates
-        data from the prior distribution (see the docstrings of the
-        functions for details).
+        of the latent variables.
 
         tol -- tolerance (minimum change in log-likelihood before exiting
                the EM algorithm)
@@ -150,14 +148,14 @@ class FANode(mdp.Node):
         self.lhood = lhood_curve
 
     def _execute(self, x):
-        """Return the Maximum A-Posteriori estimate for the latent
-        variables."""
         return mult(x-self.mu, self.E_y_mtx)
 
-    def _inverse(self, y, noise = False):
-        """Generate observations x.
-
-        noise -- if True, generation includes the estimated noise."""
+    ##???##
+    def _inverse(self, y, noise=False):
+        """
+        Input arguments:
+        noise -- if True, generation includes the estimated noise.
+        """
         res = mult(y, tr(self.A))+self.mu
         if noise:
             ns = numx_rand.normal(0., self.sigma,
@@ -165,3 +163,4 @@ class FANode(mdp.Node):
             res += self.refcast(ns)
         return res
 
+        

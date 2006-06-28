@@ -1,14 +1,23 @@
 import mdp
-
+from routines import refcast
 numx = mdp.numx
 tr = numx.transpose
 epsilon = 1E-15
 
 class QuadraticForm(object):
-    """ """
+    """
+    Define an inhomogeneous quadratic form as 1/2 x'Hx + f'x + c .
+
+    WARNING: EXPERIMENTAL CODE! USE AT YOU OWN RISK!
+    """
+
     def __init__(self, H, f, c, dtype='d'):
-        self.H = H
-        self.f = f
+        """
+        The quadratic form is defined as 1/2 x'Hx + f'x + c .
+        'dtype' specifies the numerical type of the internal structures.
+        """
+        self.H = refcast(H, dtype)
+        self.f = refcast(f, dtype)
         self.c = c
         self.dtype = dtype
 
@@ -22,9 +31,7 @@ class QuadraticForm(object):
     def get_extrema(self, norm, tol = 1.E-4):
         """
         Find the input vectors xmax and xmin with norm 'nrm' that maximize
-        resp. minimize the output of the component 'sf_nr' of the SFA2 flow
-
-        ! The output vectors lie always in the input space.
+        or minimize the quadratic form.
 
         tol: norm error tolerance
         """
@@ -45,20 +52,20 @@ class QuadraticForm(object):
             xmin = x0
             # x0 is a minimum
         else:
-            xmin = self.maximize(norm, tol, factor=-1)
+            xmin = self._maximize(norm, tol, factor=-1)
         vmin = 0.5*mdp.utils.mult(mdp.utils.mult(xmin, H), xmin) + \
                mdp.utils.mult(f, xmin) + c
         if H_definite_negative and mdp.utils.norm2(x0) <= norm :
             xmax= x0
             # x0 is a maximum
         else:
-            xmax = self.maximize(norm, tol, factor=None)
+            xmax = self._maximize(norm, tol, factor=None)
         vmax = 0.5*mdp.utils.mult(mdp.utils.mult(xmax, H), xmax) + \
                mdp.utils.mult(f, xmax) + c 
         self.xmax, self.xmin, self.vmax, self.vmin = xmax, xmin, vmax, vmin
         return xmax, xmin, vmax, vmin
 
-    def maximize(self, norm, tol = 1.E-4, x0 = None, factor = None):
+    def _maximize(self, norm, tol = 1.E-4, x0 = None, factor = None):
         H, f = self.H, self.f
         if f is None: f = numx.zeros((H.shape[0],), dtype=self.dtype)
         if factor is not None:
@@ -96,21 +103,5 @@ class QuadraticForm(object):
             x = x + x0
         return x
 
-    def compute_invariances(self):
+    def invariances(self):
         raise NotImplementedError
-
-if __name__ == "__main__":
-    # check H with negligible linear term
-    noise = 1e-7
-    x = mdp.numx_rand.random((10,))
-    H = mdp.numx.outer(x, x) + numx.eye(10)*0.1
-    H = H+tr(H)
-    q = QuadraticForm(H=H, f=noise*mdp.numx_rand.random((10,)))
-    xmax, xmin, vmax, vmin = q.get_extrema(mdp.utils.norm2(x), tol=noise)
-    print 'Should be zero:', max(abs(x-xmax))
-    # check I + linear term
-    f = x
-    H = numx.eye(10, dtype='d')
-    q = QuadraticForm(H=H,f=f)
-    xmax, xmin, vmax, vmin = q.get_extrema(mdp.utils.norm2(x), tol=noise) 
-    print 'Should be zero:', max(abs(f-xmax))

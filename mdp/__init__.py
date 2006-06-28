@@ -87,10 +87,13 @@ from linear_flows import Flow, SimpleFlow, CheckpointFlow, \
      CheckpointFunction, CheckpointSaveFunction
 
 # import helper functions:
-from helper_funcs import pca, whitening, fastica, cubica, sfa, get_eta
+from helper_funcs import pca, whitening, fastica, cubica, sfa, get_eta, \
+                         sfa2, factor_analysis
+
+# import test functions:
+from test import test
 
 # import our modules
 import nodes
-import test
 
 __version__ = '2.0RC'

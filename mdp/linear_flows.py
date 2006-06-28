@@ -74,14 +74,24 @@ class Flow(object):
         if data_iterator is not None and not node.is_trainable():
             # attempted to train a node although it is not trainable.
             # raise a warning and continue with the next node.
-            wrnstr = "\n! Node %d in not trainable" % nodenr + \
+            wrnstr = "\n! Node %d is not trainable" % nodenr + \
                      "\nYou probably need a 'None' iterator for"+\
                      " this node. Continuing anyway."
             warnings.warn(wrnstr, mdp.MDPWarning)
             return
+        elif data_iterator is None and node.is_training():
+            # A None iterator is passed to a training node
+            errstr = "\n! Node %d is training" % nodenr + \
+                     " but received a 'None' iterator."
+            raise FlowException, errstr
+        elif data_iterator is None and not node.is_trainable():
+            # skip training if node is not trainable
+            return
+            
         try:
-            # we leave the last training phase open:
-            # checkpoint functions must close it explicitly!
+            # We leave the last training phase open for the
+            # CheckpointFlow class.
+            # Checkpoint functions must close it explicitly if needed!
             # Note that the last training_phase is closed
             # automatically when the node is executed.
             while True:
