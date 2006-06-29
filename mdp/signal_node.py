@@ -157,10 +157,10 @@ class Node(object):
         if t is None: return
         t = numx.dtype(t)
         if (self._dtype is not None) and (self._dtype != t):
-            errstr = "Typecode is already set to '%s' " % (self.dtype.name)
+            errstr = "dtype is already set to '%s' " % (self.dtype.name)
             raise NodeException, errstr
         elif t not in self.get_supported_dtypes():
-            errstr = "\nTypecode '%s' is not supported.\n" % t.name+ \
+            errstr = "\ndtype '%s' is not supported.\n" % t.name+ \
                       "Supported dtypes: %s" \
                       %([t.name for t in SUPPORTED_DTYPES])
             raise NodeException, errstr
@@ -172,7 +172,7 @@ class Node(object):
         
     dtype = property(get_dtype,
                         set_dtype,
-                        doc = "Typecode")
+                        doc = "dtype")
 
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node.

@@ -2,12 +2,7 @@ import glob
 import os
 from distutils.core import setup
 
-short_description = "Modular toolkit for Data Processing (MDP) is a "+\
-                    "Python data processing framework."+\
-                    " Implemented algorithms include: Principal Component"+\
-                    " Analysis, Independent Component Analysis"+\
-                    ", Slow Feature Analysis, Growing Neural Gas"+\
-                    ", Factor Analysis and Fisher Discriminant Analysis." 
+short_description = "MDP is a Python data processing framework. Implemented algorithms include: Principal Component Analysis, Independent Component Analysis, Slow Feature Analysis, Growing Neural Gas, Factor Analysis, Fisher Discriminant Analysis, and Gaussian Classifiers."
 
 long_description = """
 Modular toolkit for Data Processing (MDP) is a data processing

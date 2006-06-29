@@ -30,7 +30,7 @@ def assert_array_almost_equal_diff(x,y,digits,err_msg=''):
 
 def assert_type_equal(act, des):
     assert act == numx.dtype(des), \
-           'Typecode mismatch: "%s" (should be "%s") '%(act,des)
+           'dtype mismatch: "%s" (should be "%s") '%(act,des)
 
 #### benchmark tools
 

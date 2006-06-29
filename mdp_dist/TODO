@@ -1,19 +1,14 @@
-realistic TODO:
+TODO:
 
-MDP 2.0.0 28.10.2005:
+MDP 2.0 30.6.2006:
 
-- invariances and real test in QuadraticForm
+- invariances, gradient, and real test in QuadraticForm
+- use numpy.get_limits.finfo instead of fixed thresholds
+- symeig
+- verify symrand theory
 - kalman filters
-- site: add citation section, state email addresses, rewrite 
-  description to highlight
-  education, framework for new algorithms, title outlook, 
-  modify mantainers, modify 
-  compilation instruction for scipy, add migration faq.
 - memory profiler
 - real benchmark
-- write paragraph about the new scipy/numpy thing
-
 - add Independent Slow Feature Analysis node
 - flow to handle acyclic graphs of nodes
-
 

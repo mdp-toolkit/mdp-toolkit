@@ -143,7 +143,7 @@ _type_conv = {('f','d'): 'd', ('f','F'): 'F', ('f','D'): 'D',
 def _greatest_common_dtype(alist):
     """
     Apply conversion rules to find the common conversion type
-    Typecode 'd' is default for 'i' or unknown types
+    dtype 'd' is default for 'i' or unknown types
     (known types: 'f','d','F','D').
     """
     dtype = 'f'
