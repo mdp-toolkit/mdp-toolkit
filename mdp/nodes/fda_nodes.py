@@ -3,9 +3,9 @@ import mdp
 numx = mdp.numx
 
 class FDANode(mdp.Node):
-    """FDANode is a supervised node that performs a (generalized)
-    Fisher Discriminant Analysis of its input. It is a supervised node
-    that implements FDA using a generalized eigenvalue approach.
+    """Perform a (generalized) Fisher Discriminant Analysis of its
+    input. It is a supervised node that implements FDA using a
+    generalized eigenvalue approach.
 
     FDANode has two training phases and is supervised so make sure to
     pay attention to the following points when you train it:
@@ -24,7 +24,7 @@ class FDANode(mdp.Node):
     
     More information on Fisher Discriminant Analysis can be found for
     example in C. Bishop, Neural Networks for Pattern Recognition,
-    Oxford Press, pp. 105-112 ."""
+    Oxford Press, pp. 105-112."""
 
     def _get_train_seq(self):
         return [(self._train_means, self._stop_means),

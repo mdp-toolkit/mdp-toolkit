@@ -1,57 +1,50 @@
 # Modular toolkit for Data Processing (MDP)
 """
-Modular toolkit for Data Processing (MDP) is a Python library to
-implement data processing elements (nodes) and to combine them into
-data processing sequences (flows).
+Modular toolkit for Data Processing (MDP) is a data processing
+framework written in Python.
 
-A node is the basic unit in MDP, and it represents a data processing
-element, like for example a learning algorithm, a filter, a
-visualization step etc. Each node can have a training phase, during
-which the internal structures are learned from training data (e.g. the
-weights of a neural network are adapted or the covariance matrix is
-estimated) and an execution phase, where new data can be processed
-forwards (by processing the data through the node) or backwards (by
-applying the inverse of the transformation computed by the node if
-defined). MDP is designed to make the implementation of new algorithms
-easy and intuitive, for example by setting automatically input and
-output dimension and by casting the data to match the dtype
-(e.g. float or double precision) of the internal structures. Most of
-the nodes were designed to be applied to arbitrarily long sets of
-data: the internal structures can be updated successively by sending
-chunks of the input data (this is equivalent to online learning if the
-chunks consists of single observations, or to batch learning if the
-whole data is sent in a single chunk). Already implemented nodes
-include Principal Component Analysis (PCA), Independent Component
-Analysis (ICA), Slow Feature Analysis (SFA), and Growing Neural Gas
-Network.
+From the user's perspective, MDP consists of a collection of trainable
+supervised and unsupervised algorithms or other data processing units
+(nodes) that can be combined into data processing flows. Given a
+sequence of input data, MDP takes care of successively training or
+executing all nodes in the flow. This structure allows to specify
+complex algorithms as a sequence of simpler data processing steps in a
+natural way. Training can be performed using small chunks of input
+data, so that the use of very large data sets becomes possible while
+reducing the memory requirements. Memory usage can also be minimized
+by defining the internals of the nodes to be single precision.
 
-A flow consists in an acyclic graph of nodes (currently only node
-sequences are implemented). The data is sent to an input node and is
-successively processed by the following nodes on the graph. The
-general flow implementation automatizes the training, execution and
-inverse execution (if defined) of the whole graph. Crash recovery is
-optionally available: in case of failure, the current state of the flow
-is saved for later inspection. A subclass of the basic flow class
-allows user-supplied checkpoint functions to be executed at the end of
-each phase, for example to save the internal structures of a node for
-later analysis.
+The base of readily available algorithms includes Principal Component
+Analysis, two flavors of Independent Component Analysis, Slow Feature
+Analysis, Gaussian Classifiers, Growing Neural Gas, Fisher
+Discriminant Analysis, and Factor Analysis.
 
-MDP supports the most common numerical extensions to Python and the
-symeig package (a Python wrapper for the LAPACK functions to solve
-the standard and generalized eigenvalue problems for symmetric
-(hermitian) positive definite matrices). MDP also includes graph
-(a lightweight package to handle graphs).
+From the developer's perspective, MDP is a framework to make the
+implementation of new algorithms easier. The basic class 'Node' takes
+care of tedious tasks like numerical type and dimensionality checking,
+leaving the developer free to concentrate on the implementation of the
+training and execution phases. The node then automatically integrates
+with the rest of the library and can be used in a flow together with
+other nodes. A node can have multiple training phases and even an
+undetermined number of phases. This allows for example the
+implementation of algorithms that need to collect some statistics on
+the whole input before proceeding with the actual training, or others
+that need to iterate over a training phase until a convergence
+criterion is satisfied. The ability to train each phase using chunks
+of input data is maintained if the chunks are generated with
+iterators. Moreover, crash recovery is optionally available: in case
+of failure, the current state of the flow is saved for later
+inspection.
 
-When used together with SciPy (the scientific Python library) and symeig,
-MDP gives to the scientific programmer the full power of well-known C and
-FORTRAN data processing libraries.  MDP helps the programmer to
-exploit Python object oriented design with C and FORTRAN efficiency.
+MDP has been written in the context of theoretical research in
+neuroscience, but it has been designed to be helpful in any context
+where trainable data processing algorithms are used. Its simplicity on
+the user side together with the reusability of the implemented nodes
+make it also a valid educational tool.
 
-MDP has been written for research in neuroscience, but it has been
-designed to be helpful in any context where trainable data processing
-algorithms are used.  Its simplicity on the user side together with
-the reusability of the implemented nodes could make it also a valid
-educational tool.
+As its user base is steadily increasing, MDP appears as a good
+candidate for becoming a common repository of user-supplied, freely
+available, Python implemented data processing algorithms.
 
 http://mdp-toolkit.sourceforge.net
 """
@@ -79,11 +72,11 @@ import utils
 from signal_node import NodeException, TrainingException, \
      TrainingFinishedException, IsNotTrainableException, \
      IsNotInvertibleException
-from linear_flows import FlowException, FlowExceptionCR
+from linear_flows import CrashRecoveryException, FlowException, FlowExceptionCR
 
 # import base node and flow classes.
-from signal_node import Node, SignalNode, Cumulator
-from linear_flows import Flow, SimpleFlow, CheckpointFlow, \
+from signal_node import Node, Cumulator
+from linear_flows import Flow, CheckpointFlow, \
      CheckpointFunction, CheckpointSaveFunction
 
 # import helper functions:

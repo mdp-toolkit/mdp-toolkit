@@ -21,7 +21,7 @@ def _check_roundoff(t, type):
 
 class CovarianceMatrix(object):
     """This class stores an empirical covariance matrix that can be updated
-    incrementally. A call to the function 'fix' returns the current state of
+    incrementally. A call to the 'fix' method returns the current state of
     the covariance matrix, the average and the number of observations, and
     resets the internal data.
 

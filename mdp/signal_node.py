@@ -9,15 +9,6 @@ class NodeException(mdp.MDPException):
     """Base class for exceptions in Node subclasses."""
     pass
 
-# deprecated alias
-class SignalNodeException(NodeException):
-    """Deprecated, use NodeException instead."""
-    def __init__(self, str = ''):
-        wrnstr = "The alias 'SignalNodeException' is deprecated and won't " + \
-        "be continued in future releases. Use 'NodeException' instead."
-        _warnings.warn(wrnstr, DeprecationWarning)
-        super(SignalNodeException, self).__init__(str)
-
 class TrainingException(NodeException):
     """Base class for exceptions in the training phase."""
     pass
@@ -42,41 +33,39 @@ SUPPORTED_DTYPES = [numx.dtype(ch)
                                  numx.typecodes['AllFloat']]
 
 class Node(object):
-    """A Node corresponds to a learning algorithm or to a generic
-    data processing unit. Each Node can have a training phase,
-    during which the internal structures are learned from training data
-    (e.g. the weights of a neural network are adapted or the covariance
-    matrix is estimated) and an execution phase, where new data can be
-    processed forwards (by processing the data through the node) or
+    """
+    Node is the basic unit in MDP and it represents a data processing
+    element, like for example a learning algorithm, a filter, a
+    visualization step, etc. Each Node can have one or more training
+    phases, during which the internal structures are learned from training
+    data (e.g. the weights of a neural network are adapted or the
+    covariance matrix is estimated) and an execution phase, where new data
+    can be processed forwards (by processing the data through the node) or
     backwards (by applying the inverse of the transformation computed by
     the node if defined). The Node class is designed to make the
     implementation of new algorithms easy and intuitive, for example by
     setting automatically input and output dimension and by casting the
-    data to match the dtype (e.g. float or double) of the internal
-    structures. Node was designed to be applied to arbitrarily
-    long sets of data: the internal structures can be updated successively
-    by sending chunks of the input data (this is equivalent to online
-    learning if the chunks consists of single observations, or to batch
-    learning if the whole data is sent in a single chunk).
+    data to match the numerical type (e.g. float or double) of the
+    internal structures. Node was designed to be applied to arbitrarily
+    long sets of data: the internal structures can be updated
+    incrementally by sending chunks of the input data (this is equivalent
+    to online learning if the chunks consists of single observations, or
+    to batch learning if the whole data is sent in a single chunk).
 
-    A Node can be anything taking a multidimensional input signal
-    and returning a multidimensional output signal. It can have two phases: a
-    'training' phase, were statistics about the data are collected by calling
-    the function 'train', and an 'execution' phase, where the input
-    data is processed somehow and output data is returned by calling
-    the function 'execute'.
-
-    Node subclasses should take care of redefining (if necessary)
-    the functions is_trainable, train, stop_training, execute, is_invertible,
-    inverse, and get_supported_dtypes."""
+    Node subclasses should take care of overwriting (if necessary)
+    the functions is_trainable, _train, _stop_training, _execute,
+    is_invertible, _inverse, _get_train_seq, and _get_supported_dtypes.
+    If you need to overwrite the getters and setters of the
+    node's properties refer to the docstring of get/set_input_dim,
+    get/set_output_dim, and get/set_dtype."""
 
     def __init__(self, input_dim = None, output_dim = None, dtype = None):
         """If the input dimension and the output dimension are
         unspecified, they will be set when the 'train' or 'execute'
         function is called for the first time.
-        If the dtype is unspecified, it will be inherited from the data
+        If dtype is unspecified, it will be inherited from the data
         it receives at the first call of 'train' or 'execute'. Every subclass
-        must take care of up- or down-casting the input and its internal
+        must take care of up- or down-casting the internal
         structures to match this argument (use _refcast private
         method when possible).
         """
@@ -113,8 +102,8 @@ class Node(object):
         """Set input dimensions.
         Performs sanity checks and then calls self._set_input_dim(n), which
         is responsible for setting the internal attribute self._input_dim.
-        Note that self._set_input_dim can be overriden by subclasses,
-        """
+        Note that subclasses should overwrite self._set_input_dim
+        when needed."""
         if n is None:
             pass
         elif (self._input_dim is not None) and (self._input_dim !=  n):
@@ -138,8 +127,8 @@ class Node(object):
         """Set output dimensions.
         Performs sanity checks and then calls self._set_output_dim(n), which
         is responsible for setting the internal attribute self._output_dim.
-        Note that self._set_output_dim can be overriden by subclasses,
-        """
+        Note that subclasses should overwrite self._set_output_dim
+        when needed."""
         if n is None:
             pass
         elif (self._output_dim is not None) and (self._output_dim != n):
@@ -163,9 +152,8 @@ class Node(object):
         """Set Node's internal structures dtype.
         Performs sanity checks and then calls self._set_dtype(n), which
         is responsible for setting the internal attribute self._dtype.
-        Note that self._set_dtype can be overriden by subclasses.
-        Internally the dtype is stored as a numpy.dtype object.
-        """
+        Note that subclasses should overwrite self._set_dtype
+        when needed."""
         if t is None: return
         t = numx.dtype(t)
         if (self._dtype is not None) and (self._dtype != t):
@@ -192,8 +180,10 @@ class Node(object):
         return SUPPORTED_DTYPES
 
     def get_supported_dtypes(self):
-        """Return Node's supported dtypes as a list of numpy.dtype objects.
-        """
+        """Return dtypes supported by the node as a list of numpy.dtype
+        objects.
+        Note that subclasses should overwrite self._get_supported_dtypes
+        when needed."""
         return [numx.dtype(t) for t in self._get_supported_dtypes()]
 
     supported_dtypes = property(get_supported_dtypes,
@@ -329,7 +319,16 @@ class Node(object):
         """Update the internal structures according to the input data 'x'.
         
         'x' is a matrix having different variables on different columns
-        and observations on the rows."""
+        and observations on the rows.
+
+        Be default, subclasses should overwrite _train to implement their
+        training phase. This method can be overwritten to redefine its
+        docstring. For example:
+
+        def train(self, x, arg1, arg2):
+            ""My training method. arg1 is the first argument, arg2 the second""
+            super(MyNode, self).train(x, arg1, arg2)
+        """
 
         if not self.is_trainable():
             raise IsNotTrainableException, "This node is not trainable."
@@ -345,7 +344,9 @@ class Node(object):
         self._train_seq[self._train_phase][0](self._refcast(x), *args)
 
     def stop_training(self):
-        """Stop the training phase."""
+        """Stop the training phase.
+        Be default, subclasses should overwrite _stop_Training to implement
+        their stop-training."""
         if self.is_training() and self._train_phase_started == False:
             raise TrainingException, \
                   "The node has not been trained."
@@ -368,7 +369,16 @@ class Node(object):
         If the object is still in the training phase, the function
         'stop_training' will be called.
         'x' is a matrix having different variables on different columns
-        and observations on the rows."""
+        and observations on the rows.
+        
+        Subclasses should overwrite _execute to implement their
+        execution phase. This method can be overwritten to redefine its
+        docstring. For example:
+
+        def execute(self, x, arg1, karg2=0.):
+            ""My execute method. arg1 is the first argument, karg2 the second""
+            super(MyNode, self).execute(x, arg1, karg2=karg2)
+        """
         self._pre_execution_checks(x)
         return self._execute(self._refcast(x), *args, **kargs)
 
@@ -376,7 +386,16 @@ class Node(object):
         """Invert 'y'.
         
         If the node is invertible, compute the input x such that
-        y = execute(x)."""
+        y = execute(x).
+        
+        Subclasses should overwrite _inverse to implement their
+        inverse function. This method can be overwritten to redefine its
+        docstring. For example:
+
+        def inverse(self, x, arg1, karg2=0.):
+            ""My inverse method. arg1 is the first argument, karg2 the second""
+            super(MyNode, self).inverse(x, arg1, karg2=karg2)
+        """
         
         if not self.is_invertible():
             raise IsNotInvertibleException, "This node is not invertible."
@@ -428,7 +447,7 @@ class Node(object):
 class Cumulator(Node):
     """A Cumulator is a Node whose training phase simply cumulates
     all input data.
-    This makes it possible to implement batch-mode learning.
+    In this way it is possible to easily implement batch-mode learning.
     """
 
     def __init__(self, input_dim = None, output_dim = None, dtype = None):
@@ -443,16 +462,8 @@ class Cumulator(Node):
         self.data.extend(numx.ravel(x).tolist())
 
     def _stop_training(self):
-        """Cast the data list to array type and reshape it.
+        """Transform the data list to an array object and reshape it.
         """
         self._training = False
         self.data = numx.array(self.data, dtype = self.dtype)
         self.data.shape = (self.tlen, self.input_dim)
-
-# deprecated alias
-class SignalNode(Node):
-    def __init__(self, input_dim = None, output_dim = None, dtype = None):
-        wrnstr = "The alias 'SignalNode' is deprecated and won't be " + \
-        "continued in future releases. Use 'Node' instead."
-        _warnings.warn(wrnstr, DeprecationWarning)
-        super(SignalNode, self).__init__(input_dim, output_dim, dtype)

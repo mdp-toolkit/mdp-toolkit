@@ -4,8 +4,8 @@ from mdp.utils import mult, symeig, CovarianceMatrix, \
                       SymeigException #, LeadingMinorException
 
 class PCANode(Node):
-    """PCANode receives an input signal and filters it through
-    the most significatives of its principal components.
+    """Filter the input data throug the most significatives of its
+    principal components.
     
     Internal variables of interest:
     self.avg -- Mean of the input data (available after training)
@@ -190,8 +190,8 @@ class PCANode(Node):
 
 
 class WhiteningNode(PCANode):
-    """WhiteningNode receives an input signal and 'whiten' it by filtering
-    it through the most significatives of its principal components. All output
+    """'Whiten' the input data by filtering it through the most
+    significatives of its principal components. All output
     signals have zero mean, unit variance and are decorrelated.
     
     Internal variables of interest:

@@ -2,10 +2,11 @@
 
 Run them with:
 >>> import mdp
->>> mdp.test.test("flows")
+>>> mdp.test("flows")
 
 """
 import unittest
+import tempfile
 import pickle
 import os
 import mdp
@@ -266,6 +267,23 @@ class FlowsTestCase(unittest.TestCase):
         except Exception, e:
             assert isinstance(e,mdp.FlowExceptionCR)
             assert not hasattr(e,'filename')
+
+    def testCrashRecoveryException(self):
+        a = 3
+        try:
+            raise mdp.CrashRecoveryException, \
+                  ('bogus errstr',a,StandardError())
+        except mdp.CrashRecoveryException, e:
+            filename1 = e.dump()
+            filename2 = e.dump(os.path.join(tempfile.gettempdir(),'removeme'))
+            assert isinstance(e.parent_exception, StandardError)
+
+        for fname in [filename1,filename2]:
+            fl = file(fname)
+            obj = pickle.load(fl)
+            fl.close()
+            os.remove(fname)
+            assert obj == a
 
     def testMultiplePhases(self):
         # test basic multiple phase sequence

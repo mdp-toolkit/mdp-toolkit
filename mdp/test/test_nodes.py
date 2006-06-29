@@ -2,7 +2,7 @@
 
 Run them with:
 >>> import mdp
->>> mdp.test.test("nodes")
+>>> mdp.test("nodes")
 
 """
 import unittest
@@ -69,13 +69,12 @@ class NodesTestSuite(unittest.TestSuite):
             self.addTest(unittest.FunctionTestCase(testfunc,
                                                    description=funcdesc))
             # generate single testinverse_nodeclass test cases
-            if node_class not in [mn.FANode]:
-                funcdesc = 'Test inverse function of '+node_class.__name__
-                testfunc = self._get_testinverse(node_class, args,
-                                                 sup_args_func)
-                # add to the suite
-                self.addTest(unittest.FunctionTestCase(testfunc,
-                                                       description=funcdesc))
+            funcdesc = 'Test inverse function of '+node_class.__name__
+            testfunc = self._get_testinverse(node_class, args,
+                                             sup_args_func)
+            # add to the suite
+            self.addTest(unittest.FunctionTestCase(testfunc,
+                                                   description=funcdesc))
             # generate testoutputdim_nodeclass test cases
             if 'output_dim' in inspect.getargspec(node_class.__init__)[0]:
                 funcdesc ='Test output dim consistency of '+node_class.__name__
@@ -145,16 +144,11 @@ class NodesTestSuite(unittest.TestSuite):
         def _testdtype(node_class=node_class):
             for dtype in testtypes+testtypeschar:
                 if node_class == mdp.nodes.SFA2Node:
-                    dim = 10000
-                    freqs = [2*numx.pi*5,2*numx.pi*10]
-                    t =  numx.linspace(0,1,num=dim)
+                    freqs = [2*numx.pi*100.,2*numx.pi*200.]
+                    t =  numx.linspace(0, 1, num=1000)
                     mat = tr(numx.array([numx.sin(freqs[0]*t),
                                          numx.sin(freqs[1]*t)]))
-                    mat += normal(0., 1e-5, size=(dim, 2))
-                    mat = (mat - mean(mat[:-1,:],axis=0))\
-                          /std(mat[:-1,:],axis=0)
-                    inp = mult(mat,numx_rand.random((2,2)))+numx_rand.random(2)
-                    inp = inp.astype('d')
+                    inp = mat.astype('d')
                 else:
                     mat, mix, inp = self._get_random_mix(type="d")
                 node = node_class(*args, **{'dtype':dtype})
@@ -371,7 +365,7 @@ class NodesTestSuite(unittest.TestSuite):
 
     def testSFA2Node(self):
         dim = 10000
-        freqs = [2*numx.pi*1,2*numx.pi*5]
+        freqs = [2*numx.pi*100.,2*numx.pi*500.]
         t =  numx.linspace(0,1,num=dim)
         mat = tr(numx.array(\
             [numx.sin(freqs[0]*t),numx.sin(freqs[1]*t)]))
@@ -692,7 +686,8 @@ class NodesTestSuite(unittest.TestSuite):
 
         mu = numx_rand.random((1, d))*3.+2.
         sigma = numx_rand.random((d,))*0.01
-        A = utils.random_rot(d)[:k,:]
+        #A = utils.random_rot(d)[:k,:]
+        A = numx_rand.normal(size=(k,d))
 
         # latent variables
         y = numx_rand.normal(0., 1., size=(N, k))
@@ -712,23 +707,25 @@ class NodesTestSuite(unittest.TestSuite):
         # A and its estimation span the same subspace
         AA = numx.concatenate((A,tr(fa.A)),axis=0)
         u,s,vh = utils.svd(AA)
-        assert sum(s/max(s)>1e-2)==k
-        x = x[:100,:]
-        y = fa.execute(x)
-        x2 = fa.inverse(y, noise=False)
-        assert_type_equal(x2.dtype, 'd')
-        assert_array_almost_equal(x, x2, 1)
+        assert sum(s/max(s)>1e-2)==k, \
+               'A and its estimation do not span the same subspace'
 
-        # check dtype consistency:
-        # don't check results here: float type yields large deviations!
-        fa = mdp.nodes.FANode(output_dim=k, dtype='f')
-        fa.train(x)
-        fa.stop_training()
-        
-        x = x[:100,:]
         y = fa.execute(x)
-        x2 = fa.inverse(y, noise=False)
-        assert_type_equal(x2.dtype, 'f')
+        fa.generate_input()
+        fa.generate_input(10)
+        fa.generate_input(y)
+        fa.generate_input(y, noise=True)
+
+        # test that noise has the right mean and variance
+        est = fa.generate_input(numx.zeros((N, k)), noise=True)
+        est -= fa.mu
+        assert_array_almost_equal(numx.diag(numx.cov(est, rowvar=0)),
+                                  fa.sigma, 3)
+        assert_almost_equal(numx.amax(abs(numx.mean(est, axis=0))), 0., 3)
+
+        est = fa.generate_input(100000)
+        assert_array_almost_equal_diff(numx.cov(est, rowvar=0),
+                                       utils.mult(fa.A, tr(fa.A)), 1)
         
 def get_suite():
     return NodesTestSuite()

@@ -25,7 +25,8 @@ class FANode(mdp.Node):
         its end.
 
         The 'execute' function returns the Maximum A Posteriori estimate
-        of the latent variables.
+        of the latent variables. The 'generate' function generates
+        observations from the prior distribution.
 
         tol -- tolerance (minimum change in log-likelihood before exiting
                the EM algorithm)
@@ -36,6 +37,8 @@ class FANode(mdp.Node):
         self.mu -- Mean of the input data (available after training)
         self.A -- Generating weights (available after training)
         self.E_y_mtx -- Weights for Maximum A Posteriori inference
+        self.sigma -- Vector of estimated variance of the noise
+                      for all input components
 
         More information about Factor Analysis can be found in
         Max Welling's classnotes:
@@ -150,17 +153,44 @@ class FANode(mdp.Node):
     def _execute(self, x):
         return mult(x-self.mu, self.E_y_mtx)
 
-    ##???##
-    def _inverse(self, y, noise=False):
+    def is_invertible(self): return False
+
+    def generate_input(self, len_or_y=1, noise=False):
         """
+        Generate data from the prior distribution.
+
+        If the training phase has not been completed yet, call stop_training.
+
         Input arguments:
-        noise -- if True, generation includes the estimated noise.
+        len_or_y -- If integer, it specified the number of observation
+                    to generate. If array, it is used as a set of samples
+                    of the latent variables
+        noise -- if True, generation includes the estimated noise
         """
+        
+        self._if_training_stop_training()
+
+        # set the output dimension if necessary
+        if self.output_dim is None:
+            # if the input_dim is not defined, raise an exception
+            if self.input_dim is None:
+                errstr = "Number of input dimensions undefined. Inversion"+\
+                         "not possible."
+                raise NodeException, errstr
+            self.output_dim = self.input_dim
+
+        if isinstance(len_or_y, int):
+            size = (len_or_y, self.output_dim)
+            y = self._refcast(mdp.numx_rand.normal(size=size))
+        else:
+            y = self._refcast(len_or_y)
+            self._check_output(y)
+        
         res = mult(y, tr(self.A))+self.mu
         if noise:
-            ns = numx_rand.normal(0., self.sigma,
-                              size=(y.shape[0], self.input_dim))
-            res += self.refcast(ns)
+            ns = mdp.numx_rand.normal(size=(y.shape[0], self.input_dim))
+            ns *= numx.sqrt(self.sigma)
+            res += self._refcast(ns)
         return res
 
         

@@ -82,7 +82,7 @@ def dig_node(x):
 
 def get_node_size(x):
     """Get node total byte-size using cPickle with protocol=2. (The byte-size
-    has something to do with the memory needed by the node)."""
+    is related to the memory needed by the node)."""
     size = len(cPickle.dumps(x, protocol = 2))
     return size
 

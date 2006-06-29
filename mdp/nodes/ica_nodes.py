@@ -11,8 +11,8 @@ class ICANode(mdp.Cumulator, mdp.Node):
     ICANode is a general class to handle different batch-mode algorithm for
     Independent Component Analysis. More information about ICA can be found
     among others in
-    Hyvarinen A., Karhunen J., Oja E., Independent Component Analysis,
-    Wiley (2001)."""
+    Hyvarinen A., Karhunen J., Oja E. (2001). Independent Component Analysis,
+    Wiley."""
     
     def __init__(self, limit = 0.001, telescope = 0, verbose = 0, \
                  whitened = 0, white_comp = None, input_dim = None, \
@@ -105,13 +105,12 @@ class ICANode(mdp.Cumulator, mdp.Node):
 
 class CuBICANode(ICANode):
     """
-    CuBICANode performs Independent Component Analysis using the CuBICA
-    algorithm by Tobias Blaschke (see reference below).
+    Perform Independent Component Analysis using the CuBICA algorithm.
     Note that CuBICA is a batch-algorithm, which means that it needs
-    all input data before it can start and compute the ICs.
-    The algorithm is here given as a Node for convenience, but it
-    actually accumulates all inputs it receives. Remember that to avoid
-    running out of memory when you have many components and many time samples.
+    all input data before it can start and compute the ICs.  The
+    algorithm is here given as a Node for convenience, but it actually
+    accumulates all inputs it receives. Remember that to avoid running
+    out of memory when you have many components and many time samples.
 
     As an alternative to this batch mode you might consider the telescope
     mode (see the docs of the __init__ function).
@@ -120,7 +119,7 @@ class CuBICANode(ICANode):
     Blaschke, T. and Wiskott, L. (2003).
     CuBICA: Independent Component Analysis by Simultaneous Third- and
     Fourth-Order Cumulant Diagonalization.
-    IEEE Transactions on Signal Processing, 52(5), pp. 1250--1256."""
+    IEEE Transactions on Signal Processing, 52(5), pp. 1250-1256."""
 
     def core(self,data):
         # keep track of maximum angle of rotation
@@ -219,8 +218,7 @@ class CuBICANode(ICANode):
 
 class FastICANode(ICANode):
     """
-    FastICANode performs Independent Component Analysis using the
-    FastICA algorithm by Aapo Hyvarinen (see reference below).
+    Perform Independent Component Analysis using the FastICA algorithm.
     Note that FastICA is a batch-algorithm. This means that it needs
     all input data before it can start and compute the ICs.
     The algorithm is here given as a Node for convenience, but it
@@ -231,9 +229,9 @@ class FastICANode(ICANode):
     criterium is not robust in telescope mode).
     
     Reference:
-    Aapo Hyvarinen
+    Aapo Hyvarinen (1999).
     Fast and Robust Fixed-Point Algorithms for Independent Component Analysis
-    IEEE Transactions on Neural Networks, 10(3):626--634, 1999.
+    IEEE Transactions on Neural Networks, 10(3):626-634.
 
     History:
     - 1.4.1998  created for Matlab by Jarmo Hurri, Hugo Gavert,

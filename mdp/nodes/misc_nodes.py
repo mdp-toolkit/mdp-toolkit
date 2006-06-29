@@ -90,9 +90,8 @@ class OneDimensionalHitParade(object):
     
     
 class HitParadeNode(Node):
-    """HitParadeNode gets a multidimensional input signal and stores the first
-    'n' local maxima and minima which are separated by a minimum gap 'd'.
-    This is called a 'HitParade'.
+    """Collect the first 'n' local maxima and minima of the training signal
+    which are separated by a minimum gap 'd'.
 
     Note: this node can be pickled with binary protocols only if
     all HitParade items are different from float 'inf', because
@@ -182,8 +181,7 @@ class HitParadeNode(Node):
         return m,im
 
 class TimeFramesNode(Node):
-    """TimeFramesNode receives a multidimensional input signal and copies
-    delayed version of the same signal on the space dimensions.
+    """Copy delayed version of the input signal on the space dimensions.
 
     For example, for time_frames=3 and gap=2: 
     
@@ -276,7 +274,7 @@ class TimeFramesNode(Node):
 
 
 class EtaComputerNode(Node):
-    """Node to compute the eta values of the normalized training data.
+    """Compute the eta values of the normalized training data.
 
     The delta value of a signal is a measure of its temporal
     variation, and is defined as the mean of the derivative squared,
@@ -294,9 +292,9 @@ class EtaComputerNode(Node):
     variance, such that it is possible to compare the temporal
     variation of two signals independently from their scaling.
 
-    Reference: Wiskott, L. and Sejnowski, T.J., Slow Feature Analysis:
-    Unsupervised Learning of Invariances, Neural Computation,
-    14(4):715-770 (2002).
+    Reference: Wiskott, L. and Sejnowski, T.J. (2002).
+    Slow Feature Analysis: Unsupervised Learning of Invariances,
+    Neural Computation, 14(4):715-770.
 
     Important: if a data chunk is tlen data points long, this node is
     going to consider only the first tlen-1 points together with their
@@ -353,7 +351,7 @@ class EtaComputerNode(Node):
 
 
 class NoiseNode(Node):
-    """Node to add noise to input data.
+    """Inject multiplicative or additive noise into the input data.
 
     Original idea by Mathias Franzius.
     """
@@ -405,7 +403,7 @@ class NoiseNode(Node):
 
 class GaussianClassifierNode(Node):
     def __init__(self, input_dim=None, dtype=None):
-        """This node performs a supervised Gaussian classification.
+        """Perform a supervised Gaussian classification.
 
         Given a set of labelled data, the node fits a gaussian distribution
         to each class. Note that it is written as an analysis node (i.e., the

@@ -34,9 +34,7 @@ class _ExpansionNode(mdp.Node):
         raise mdp.NodeException, msg
 
 class PolynomialExpansionNode(_ExpansionNode):
-    """A PolynomialExpansionNode returns an expanded signal
-    formed by all monomials of the input components up to the specified
-    degree."""
+    """Perform expansion in a polynomial space."""
 
     def __init__(self, degree, input_dim = None, dtype = None):
         """
@@ -83,9 +81,8 @@ class PolynomialExpansionNode(_ExpansionNode):
         return numx.transpose(dexp)
         
 class QuadraticExpansionNode(PolynomialExpansionNode):
-    """A QuadraticExpansionNode takes as input a signal of dimension N
-    and returns an expanded signal formed by all linear and quadratic
-    terms of dimension N+N*(N+1)/2.
+    """Perform expansion in the space formed by all linear and quadratic
+    monomials.
     QuadraticExpansionNode() is equivalent to a PolynomialExpansionNode(2)"""
 
     def __init__(self, input_dim = None, dtype = None):

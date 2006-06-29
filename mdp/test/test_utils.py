@@ -2,7 +2,7 @@
 
 Run them with:
 >>> import mdp
->>> mdp.test.test("utils")
+>>> mdp.test("utils")
 
 """
 import unittest
@@ -32,23 +32,6 @@ class UtilsTestCase(unittest.TestCase):
 ##             p.update(i+1)
 ##             for j in xrange(10000): pass
 ##         print
-
-    def testCrashRecoveryException(self):
-        a = 3
-        try:
-            raise utils.CrashRecoveryException, \
-                  ('bogus errstr',a,StandardError())
-        except utils.CrashRecoveryException, e:
-            filename1 = e.dump()
-            filename2 = e.dump(os.path.join(tempfile.gettempdir(),'removeme'))
-            assert isinstance(e.parent_exception, StandardError)
-
-        for fname in [filename1,filename2]:
-            fl = file(fname)
-            obj = pickle.load(fl)
-            fl.close()
-            os.remove(fname)
-            assert obj == a
             
     def testIntrospection(self):
         bogus = BogusNode()

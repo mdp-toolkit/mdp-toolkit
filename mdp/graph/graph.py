@@ -24,7 +24,8 @@ def recursive_map(func, seq):
     return map(_func, seq)
 
 def recursive_reduce(func, seq, *argv):
-    """Apply reduce(func, seq) recursively to a sequence and all its subsequences."""
+    """Apply reduce(func, seq) recursively to a sequence and all its
+    subsequences."""
     def _func(x, y):
         if is_sequence(y):
             return func(x, recursive_reduce(func, y))
@@ -35,7 +36,7 @@ def recursive_reduce(func, seq, *argv):
 
 
 class GraphNode(object):
-    """This class represents a node and all informations attached to it."""
+    """Represent a graph node and all information attached to it."""
     
     def __init__(self, data=None):
         self.data = data
@@ -102,7 +103,7 @@ class GraphNode(object):
         return self.in_neighbors() + self.out_neighbors()
         
 class GraphEdge(object):
-    """This class represents an edge and all informations attached to it."""
+    """Represent a graph edge and all information attached to it."""
 
     def __init__(self, head, tail, data=None):
         # head node
@@ -123,7 +124,7 @@ class GraphEdge(object):
         return self.head
 
 class Graph(object):
-    """Unidirectional graph."""
+    """Represent a directed graph."""
 
     def __init__(self):
         # list of nodes
@@ -230,7 +231,7 @@ class Graph(object):
     ###### graph algorithms
 
     def topological_sort(self):
-        """Performs a topological sort of the nodes. If the graph has a cycle,
+        """Perform a topological sort of the nodes. If the graph has a cycle,
         throw a GraphTopologicalException with the list of successfully
         ordered nodes."""
         # topologically sorted list of the nodes (result)
@@ -298,10 +299,10 @@ class Graph(object):
         return dfs_list
         
     def dfs(self, root, visit_fct=None):
-        """Returns a list of nodes in some Depth First order starting from
+        """Return a list of nodes in some Depth First order starting from
         a root node. If defined, visit_fct is applied on each visited node.
 
-        Note the returned list does not have to contain all nodes in the
+        The returned list does not have to contain all nodes in the
         graph, but only the ones reachable from the root.
         """
         
@@ -334,7 +335,7 @@ class Graph(object):
         return components
 
     def is_weakly_connected(self):
-        """Return 1 if the graph is weakly connected."""
+        """Return True if the graph is weakly connected."""
         return len(self.undirected_dfs(self.nodes[0]))==len(self.nodes)
 
     ### Breadth-First Sort
@@ -371,7 +372,7 @@ class Graph(object):
         return bfs_list
         
     def bfs(self, root, visit_fct=None):
-        """Returns a list of nodes in some Breadth First order starting from
+        """Return a list of nodes in some Breadth First order starting from
         a root node. If defined, visit_fct is applied on each visited node.
 
         Note the returned list does not have to contain all nodes in the

@@ -19,8 +19,8 @@ class _GNGEdgeData(object):
 
 
 class GrowingNeuralGasNode(Node):
-    """GrowingNeuralGasNode learns the topological structure of its input,
-    by building a corresponding graph approximation.
+    """Learn the topological structure of the input data by building a corresponding
+    graph approximation.
     
     More information about the Growing Neural Gas algorithm can be found in
     B. Fritzke, A Growing Neural Gas Network Learns Topologies, in G. Tesauro,

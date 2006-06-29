@@ -2,11 +2,7 @@
 
 Run all tests with:
 >>> import mdp
->>> mdp.test.test()
-
-Run all benchmarks with:
->>> import mdp
->>> mdp.test.benchmark()
+>>> mdp.test()
 
 """
 

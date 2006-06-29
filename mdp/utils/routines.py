@@ -1,7 +1,5 @@
 import sys
-import os
 import cPickle
-import tempfile
 import mdp
 
 # import numeric module (scipy, Numeric or numarray)
@@ -30,7 +28,7 @@ def scast(scalar, dtype):
 def rotate(mat, angle, columns = [0, 1], units = 'radians'):
     """
     Rotate in-place data matrix (NxM) in the plane defined by the columns=[i,j]
-    when observation are stored on rows. Observation are rotated
+    when observation are stored on rows. Observations are rotated
     counterclockwise. This corresponds to the following matrix-multiplication
     for each data-point (unchanged elements omitted):
 
@@ -55,10 +53,13 @@ def hermitian(x):
 
 def symrand(dim_or_eigv, dtype="d"):
     """Return a random symmetric (Hermitian) matrix.
-     if 'dim_or_eigv' is an integer N, return a NxN matrix.
-     if 'dim_or_eigv' is  1-D real array 'a', return a matrix whose
+    
+    If 'dim_or_eigv' is an integer N, return a NxN matrix, with eigenvalues
+        uniformly distributed on (0,1].
+        
+    If 'dim_or_eigv' is  1-D real array 'a', return a matrix whose
                       eigenvalues are sort(a).
-     """
+    """
     if isinstance(dim_or_eigv, int):
         dim = dim_or_eigv
         d = numx_rand.random(dim)
@@ -131,37 +132,6 @@ def cov2(x, y):
     mny = numx.mean(y, axis=0)
     tlen = x.shape[0]
     return mdp.utils.mult(numx.transpose(x), y)/(tlen-1) - numx.outer(mnx, mny)
-
-class CrashRecoveryException(mdp.MDPException):
-    """Class to handle crash recovery """
-    def __init__(self, *args):
-        """Allow crash recovery.
-        Arguments: (error_string, crashing_obj, parent_exception)
-        The crashing object is kept in self.crashing_obj
-        The triggering parent exception is kept in self.parent_exception.
-        """
-        errstr = args[0]
-        self.crashing_obj = args[1]
-        self.parent_exception = args[2]
-        # ?? python 2.5: super(CrashRecoveryException, self).__init__(errstr)
-        mdp.MDPException.__init__(self, errstr)
-
-    def dump(self, filename = None):
-        """
-        Save a pickle dump of the crashing object on filename.
-        If filename is None, the crash dump is saved on a file created by
-        the tempfile module.
-        Return the filename.
-        """
-        if filename is None:
-            (fd, filename) = tempfile.mkstemp(suffix=".pic",prefix="MDPcrash_")
-            fl = os.fdopen(fd, 'w+b', -1)
-        else:
-            fl = file(filename, 'w+b',-1)
-        cPickle.dump(self.crashing_obj,fl)
-        fl.close()
-        return filename
-
 
 # the following functions and classes were part of the scipy_emulation.py file
 
@@ -251,11 +221,7 @@ numarray.linear_algebra.eigenvectors with an interface compatible with symeig.
         raise SymeigException, str(exception)
     # workaround to bug in numpy 0.9.9
     except NameError, exception:
-        if str(exception).strip() == \
-               "NameError: global name 'Complex' is not defined":
-            raise SymeigException, 'Complex eigenvalues'
-        else:
-            raise NameError, str(exception)
+        raise SymeigException, 'Complex eigenvalues'
 
     _assert_eigenvalues_real(w, dtype)
     w = w.real

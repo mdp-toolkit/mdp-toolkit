@@ -1,5 +1,6 @@
 import mdp
 import sys
+import os
 import traceback
 import cPickle
 import warnings
@@ -9,12 +10,43 @@ import types
 # import numeric module (scipy, Numeric or numarray)
 numx = mdp.numx
 
+class CrashRecoveryException(mdp.MDPException):
+    """Class to handle crash recovery """
+    def __init__(self, *args):
+        """Allow crash recovery.
+        Arguments: (error_string, crashing_obj, parent_exception)
+        The crashing object is kept in self.crashing_obj
+        The triggering parent exception is kept in self.parent_exception.
+        """
+        errstr = args[0]
+        self.crashing_obj = args[1]
+        self.parent_exception = args[2]
+        # ?? python 2.5: super(CrashRecoveryException, self).__init__(errstr)
+        mdp.MDPException.__init__(self, errstr)
+
+    def dump(self, filename = None):
+        """
+        Save a pickle dump of the crashing object on filename.
+        If filename is None, the crash dump is saved on a file created by
+        the tempfile module.
+        Return the filename.
+        """
+        if filename is None:
+            (fd, filename) = tempfile.mkstemp(suffix=".pic",prefix="MDPcrash_")
+            fl = os.fdopen(fd, 'w+b', -1)
+        else:
+            fl = file(filename, 'w+b',-1)
+        cPickle.dump(self.crashing_obj,fl)
+        fl.close()
+        return filename
+
 class FlowException(mdp.MDPException):
     """Base class for exceptions in Flow subclasses."""
     pass
 
-class FlowExceptionCR(mdp.utils.CrashRecoveryException, FlowException):
+class FlowExceptionCR(CrashRecoveryException, FlowException):
     """Class to handle flow-crash recovery """
+    
     def __init__(self, *args):
         """Allow crash recovery.
         
@@ -22,7 +54,7 @@ class FlowExceptionCR(mdp.utils.CrashRecoveryException, FlowException):
         The triggering parent exception is kept in self.parent_exception.
         If flow_instance._crash_recovery is set, save a crash dump of
         flow_instance on the file self.filename"""
-        mdp.utils.CrashRecoveryException.__init__(self,*args)
+        CrashRecoveryException.__init__(self,*args)
         rec = self.crashing_obj._crash_recovery 
         errstr = args[0]
         if rec:
@@ -30,7 +62,7 @@ class FlowExceptionCR(mdp.utils.CrashRecoveryException, FlowException):
                 name = rec
             else:
                 name = None
-            name = mdp.utils.CrashRecoveryException.dump(self,name)
+            name = CrashRecoveryException.dump(self,name)
             dumpinfo = '\nA crash dump is available on: "'+name+'"'
             self.filename = name
             errstr = errstr+dumpinfo    
@@ -44,6 +76,11 @@ class Flow(object):
     by the following nodes on the graph. The Flow class
     automatizes training, execution and inverse execution
     (if defined) of the whole nodes sequence.
+    Training can be supervised and can consist of multiple phases.
+    
+    Crash recovery is optionally available: in case of failure the
+    current state of the flow is saved for later inspection.
+
     This class is a Python container class. Most of the builtin 'list'
     methods are available."""
 
@@ -192,9 +229,14 @@ class Flow(object):
         """Train all trainable nodes in the flow.
         
         'data_iterators' is a list of iterators (note that a list is also
-        a iterator), which return data arrays, one for each node in the flow.
+        an iterator), which return data arrays, one for each node in the flow.
         If instead one array is specified, it is used as input training
-        sequence for all nodes."""
+        sequence for all nodes.
+
+        Generator-type iterators are supported only for nodes with
+        a single training phase (this is because they cannot be
+        restarted after they expired).
+        """
 
         data_iterators = self._train_check_iterators(data_iterators)
         
@@ -251,7 +293,9 @@ class Flow(object):
     def inverse(self, iterator):
         """Process the data through all nodes in the flow backwards        
         (starting from the last node up to the first node) by calling the
-        inverse function of each node.
+        inverse function of each node. Of course, all nodes in the
+        flow must be invertible.
+        
         'iterator' is an iterator  (note that a list is also an iterator),
         which returns data arrays that are used as input to the flow.
         Alternatively, one can specify one data array as input.
@@ -392,16 +436,8 @@ class Flow(object):
         del self[i]
         return x
 
-# deprecated alias
-class SimpleFlow(Flow):
-    def __init__(self, flow, verbose = 0):
-        wrnstr = "The alias 'SimpleFlow' is deprecated and won't be " + \
-        "continued in future releases. Use 'Flow' instead."
-        warnings.warn(wrnstr, DeprecationWarning)
-        super(SimpleFlow, self).__init__(flow, verbose)
-        
 class CheckpointFlow(Flow):
-    """Subclass of Flow class allows user-supplied checkpoint functions
+    """Subclass of Flow class that allows user-supplied checkpoint functions
     to be executed at the end of each phase, for example to
     save the internal structures of a node for later analysis."""
     
@@ -461,7 +497,7 @@ class CheckpointSaveFunction(CheckpointFunction):
     The pickle dump can be done either before the training phase is finished or
     right after that.
     In this way, it is for example possible to reload it in successive sessions
-    and prolongate the training.
+    and continue the training.
     """
 
     def __init__(self, filename, stop_training = 0, binary = 1, protocol = 2):

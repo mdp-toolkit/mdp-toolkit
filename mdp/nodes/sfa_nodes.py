@@ -6,8 +6,8 @@ from mdp.utils import mult, pinv, symeig, CovarianceMatrix, QuadraticForm, \
                       #, LeadingMinorException
 
 class SFANode(Node):
-    """SFANode receives an input signal and extracts its slowly varying
-    components. More information about Slow Feature Analysis can be found in
+    """Extract the slowly varying components from the input data.
+    More information about Slow Feature Analysis can be found in
     Wiskott, L. and Sejnowski, T.J., Slow Feature Analysis: Unsupervised
     Learning of Invariances, Neural Computation, 14(4):715-770 (2002).
 
@@ -116,8 +116,8 @@ class SFANode(Node):
         return self._refcast(t/(2*numx.pi)*numx.sqrt(self.d))
 
 class SFA2Node(SFANode):
-    """SFA2Node receives an input signal, expands it in the space of
-    inhomogeneous polynomials of degree 2 and extracts its slowly varying
+    """Get an input signal, expand it in the space of
+    inhomogeneous polynomials of degree 2 and extract its slowly varying
     components. The 'get_quadratic_form' method returns the input-output
     function of one of the learned unit as a QuadraticForm object.
     See the documentation of mdp.utils.QuadraticForm for additional
