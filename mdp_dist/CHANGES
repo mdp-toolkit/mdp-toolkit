@@ -1,10 +1,13 @@
 -------------------------------------------------------------------------------
 MDP-2.0RC:
-
+29.06.2006: Updated tutorial and web site.
+28.06.2006: New random_rot. Added SFA2Node, QuadraticForm, moved graph into the mdp tree.
 27.06.2006: Converted typecode handling to numpy.dtype style; supported_typecodes
-	    is now a property.
+	    is now a property. Added bias in covariance.
 26.06.2006: Converted to numpy. Scipy, Numeric, and numarray are not supported
 	    anymore
+06.12.2005: pca_nodes: added get_explained_variance public method.
+02.12.2005: New introspection utils in mdp.utils.
 01.11.2005: New nodes: FANode, FDANode, GaussianClassifierNode
 31.10.2005: Non back-compatible changes. Node has got three new 'properties':
             output_dim, input_dim, typecode. They are accessible through their

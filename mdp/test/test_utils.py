@@ -88,14 +88,14 @@ class UtilsTestCase(unittest.TestCase):
         f = noise*numx_rand.random((10,))
         q = utils.QuadraticForm(H=H, f=f, c=0.)
         xmax, xmin, vmax, vmin = q.get_extrema(utils.norm2(x), tol=noise)
-        assert_array_almost_equal(x, xmax, 7)
+        assert_array_almost_equal(x, xmax, 5)
         # check I + linear term
         H = numx.eye(10, dtype='d')
         f = x
         q = utils.QuadraticForm(H=H, f=f, c=0.)
         xmax, xmin, vmax, vmin = q.get_extrema(utils.norm2(x), tol=noise) 
-        assert_array_almost_equal(f, xmax, 7)
-                
+        assert_array_almost_equal(f, xmax, 5)
+                 
 def get_suite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(UtilsTestCase))
