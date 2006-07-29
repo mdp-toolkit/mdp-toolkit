@@ -24,7 +24,14 @@ class FDANode(mdp.Node):
     
     More information on Fisher Discriminant Analysis can be found for
     example in C. Bishop, Neural Networks for Pattern Recognition,
-    Oxford Press, pp. 105-112."""
+    Oxford Press, pp. 105-112.
+                  
+    Internal variables of interest:
+    self.avg -- Mean of the input data (available after training)
+    self.v -- Transposed of the projection matrix, so that
+              output = dot(input-self.avg, self.v)
+              (available after training)
+    """
 
     def _get_train_seq(self):
         return [(self._train_means, self._stop_means),

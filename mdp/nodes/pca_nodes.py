@@ -9,7 +9,7 @@ class PCANode(Node):
     
     Internal variables of interest:
     self.avg -- Mean of the input data (available after training)
-    self.v -- Transpose of the projection matrix (available after training)
+    self.v -- Transposed of the projection matrix (available after training)
     self.d -- Variance corresponding to the PCA components
               (eigenvalues of the covariance matrix).
     
