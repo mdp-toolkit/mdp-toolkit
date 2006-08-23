@@ -330,7 +330,7 @@ class EtaComputerNode(Node):
         self._mean += numx.sum(rdata, axis=0)
         self._var += numx.sum(rdata*rdata, axis=0)
         self._tlen += rdata.shape[0]
-        self._diff2 += numx.sum(utils.timediff(data)**2)
+        self._diff2 += numx.sum(utils.timediff(data)**2, axis=0)
 
     def _stop_training(self):
         var_tlen = self._tlen-1
@@ -522,5 +522,5 @@ class GaussianClassifierNode(Node):
         self._pre_execution_checks(x)
 
         class_prob = self.class_probabilities(x)
-        winner = numx.argmax(class_prob)
+        winner = numx.argmax(class_prob, axis=-1)
         return [self.labels[winner[i]] for i in range(len(winner))]

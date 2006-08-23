@@ -570,7 +570,7 @@ class NodesTestSuite(unittest.TestSuite):
         x2 = distr((npoints,2)) + mean2
         utils.rotate(x2, rot, units='degrees')
         x = numx.concatenate((x1, x2), axis=0)
-
+        
         # labels
         cl1 = numx.ones((x1.shape[0],), dtype='d')
         cl2 = 2.*numx.ones((x2.shape[0],), dtype='d')
@@ -578,7 +578,8 @@ class NodesTestSuite(unittest.TestSuite):
 
         # shuffle the data
         perm_idx = numx_rand.permutation(classes.shape[0])
-        x = numx.take(x, perm_idx)
+        x = numx.take(x, perm_idx, axis=0)
+        
         classes = numx.take(classes, perm_idx)
 
         flow = mdp.Flow([mdp.nodes.FDANode()])
@@ -670,9 +671,9 @@ class NodesTestSuite(unittest.TestSuite):
 
         # shuffle the data
         perm_idx = numx_rand.permutation(classes.shape[0])
-        x = numx.take(x, perm_idx)
-        classes = numx.take(classes, perm_idx)
-
+        x = numx.take(x, perm_idx, axis=0)
+        classes = numx.take(classes, perm_idx, axis=0)
+        
         node = mdp.nodes.GaussianClassifierNode()
         node.train(x, classes)
         classification = node.classify(x)
