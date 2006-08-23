@@ -89,4 +89,4 @@ from test import test
 # import our modules
 import nodes
 
-__version__ = '2.0RC'
+__version__ = '2.0RC2'
