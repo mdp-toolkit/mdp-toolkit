@@ -8,6 +8,7 @@ Run them with:
 import unittest
 import tempfile
 import pickle
+import cPickle
 import os
 import mdp
 from testing_tools import assert_array_almost_equal, assert_almost_equal, \
@@ -103,6 +104,31 @@ class FlowsTestCase(unittest.TestCase):
         copy_flow[0].dummy_attr[0] = 10
         assert flow[0].dummy_attr != copy_flow[0].dummy_attr, \
                'Flow copy method did not work'
+
+    def testFlow_save(self):
+        dummy_list = [1,2,3]
+        flow = self._get_default_flow()
+        flow[0].dummy_attr = dummy_list
+        # test string save
+        copy_flow_pic = flow.save(None)
+        copy_flow = cPickle.loads(copy_flow_pic)
+        assert flow[0].dummy_attr == copy_flow[0].dummy_attr, \
+               'Flow save (string) method did not work'
+        copy_flow[0].dummy_attr[0] = 10
+        assert flow[0].dummy_attr != copy_flow[0].dummy_attr, \
+               'Flow save (string) method did not work'
+        # test file save
+        dummy_file = os.path.join(tempfile.gettempdir(),'removeme')
+        flow.save(dummy_file, protocol=1)
+        flh = open(dummy_file, 'rb')
+        copy_flow = cPickle.load(flh)
+        flh.close()
+        os.remove(dummy_file)        
+        assert flow[0].dummy_attr == copy_flow[0].dummy_attr, \
+               'Flow save (file) method did not work'
+        copy_flow[0].dummy_attr[0] = 10
+        assert flow[0].dummy_attr != copy_flow[0].dummy_attr, \
+               'Flow save (file) method did not work'        
         
     def testFlow_container_privmethods(self):
         mat,mix,inp = self._get_random_mix(mat_dim=(100,3))

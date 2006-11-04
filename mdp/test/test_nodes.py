@@ -8,6 +8,9 @@ Run them with:
 import unittest
 import inspect
 import mdp
+import cPickle
+import tempfile
+import os
 from mdp import utils, numx, numx_rand, numx_linalg
 from testing_tools import assert_array_almost_equal, assert_array_equal, \
      assert_almost_equal, assert_equal, assert_array_almost_equal_diff, \
@@ -191,7 +194,33 @@ class NodesTestSuite(unittest.TestSuite):
         copy_node.dummy_attr[0] = 10
         assert generic_node.dummy_attr != copy_node.dummy_attr,\
                'Node copy method did not work'
+
+    def testNodesave(self):
+        test_list = [1,2,3]
+        generic_node = mdp.Node()
+        generic_node.dummy_attr = test_list
+        # test string save
+        copy_node_pic = generic_node.save(None)
+        copy_node = cPickle.loads(copy_node_pic)
+        assert generic_node.dummy_attr == copy_node.dummy_attr,\
+               'Node save (string) method did not work'
+        copy_node.dummy_attr[0] = 10
+        assert generic_node.dummy_attr != copy_node.dummy_attr,\
+               'Node save (string) method did not work'
+        # test file save
+        dummy_file = os.path.join(tempfile.gettempdir(),'removeme')
+        generic_node.save(dummy_file, protocol=1)
+        flh = open(dummy_file, 'rb')
+        copy_node = cPickle.load(flh)
+        flh.close()
+        os.remove(dummy_file)
+        assert generic_node.dummy_attr == copy_node.dummy_attr,\
+               'Node save (file) method did not work'
+        copy_node.dummy_attr[0] = 10
+        assert generic_node.dummy_attr != copy_node.dummy_attr,\
+               'Node save (file) method did not work'
         
+
     def testCovarianceMatrix(self):
         mat,mix,inp = self._get_random_mix()
         des_cov = numx.cov(inp, rowvar=0)

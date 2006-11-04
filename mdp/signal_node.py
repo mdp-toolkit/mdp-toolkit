@@ -444,6 +444,24 @@ class Node(object):
         as_str = _cPickle.dumps(self, protocol)
         return _cPickle.loads(as_str)
 
+    def save(self, filename, protocol = -1):
+        """Save a pickled representation of the node to 'filename'.
+        If 'filename' is None, return a string.
+
+        Note: the pickled Node is not guaranteed to be upward or
+        backward compatible."""
+        if filename is None:
+            return _cPickle.dumps(self, protocol)
+        else:
+            # if protocol != 0 open the file in binary mode
+            if protocol != 0:
+                mode = 'wb'
+            else:
+                mode = 'w'
+            flh = open(filename, mode)
+            _cPickle.dump(self, flh, protocol)
+            flh.close()
+
 class Cumulator(Node):
     """A Cumulator is a Node whose training phase simply cumulates
     all input data.

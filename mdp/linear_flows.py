@@ -1,11 +1,11 @@
 import mdp
-import sys
-import os
-import traceback
-import cPickle
-import warnings
-import tempfile
-import types
+import sys as _sys
+import os as _os
+import traceback as _traceback
+import cPickle as _cPickle
+import warnings as _warnings
+import tempfile as _tempfile
+import types as _types
 
 # import numeric module (scipy, Numeric or numarray)
 numx = mdp.numx
@@ -32,11 +32,11 @@ class CrashRecoveryException(mdp.MDPException):
         Return the filename.
         """
         if filename is None:
-            (fd, filename) = tempfile.mkstemp(suffix=".pic",prefix="MDPcrash_")
-            fl = os.fdopen(fd, 'w+b', -1)
+            (fd, filename)=_tempfile.mkstemp(suffix=".pic",prefix="MDPcrash_")
+            fl = _os.fdopen(fd, 'w+b', -1)
         else:
             fl = file(filename, 'w+b',-1)
-        cPickle.dump(self.crashing_obj,fl)
+        _cPickle.dump(self.crashing_obj,fl)
         fl.close()
         return filename
 
@@ -97,8 +97,8 @@ class Flow(object):
         # capture exception. the traceback of the error is printed and a
         # new exception, containing the identity of the node in the flow
         # is raised. Allow crash recovery.
-        tb = sys.exc_traceback
-        prev = ''.join(traceback.format_exception(except_.__class__,
+        tb = _sys.exc_traceback
+        prev = ''.join(_traceback.format_exception(except_.__class__,
                                                   except_,tb))
         act = "\n! Exception in node #%d (%s):\n" \
               % (nodenr, type(self.flow[nodenr]).__name__)
@@ -114,7 +114,7 @@ class Flow(object):
             wrnstr = "\n! Node %d is not trainable" % nodenr + \
                      "\nYou probably need a 'None' iterator for"+\
                      " this node. Continuing anyway."
-            warnings.warn(wrnstr, mdp.MDPWarning)
+            _warnings.warn(wrnstr, mdp.MDPWarning)
             return
         elif data_iterator is None and node.is_training():
             # A None iterator is passed to a training node
@@ -155,7 +155,7 @@ class Flow(object):
             # finished. raise a warning and continue with the next node.
             wrnstr = "\n! Node %d training phase already finished" % nodenr +\
                      " Continuing anyway."
-            warnings.warn(wrnstr, mdp.MDPWarning)
+            _warnings.warn(wrnstr, mdp.MDPWarning)
         except Exception, e:
             # capture any other exception occured during training.
             self._propagate_exception(e, nodenr)
@@ -189,7 +189,7 @@ class Flow(object):
         # but NOT a generator (since you cannot "rewind" a generator)
         for i in range(len(flow)):
             node, iter = flow[i], data_iterators[i]
-            if len(node._train_seq)>1 and type(iter) is types.GeneratorType:
+            if len(node._train_seq)>1 and type(iter) is _types.GeneratorType:
                 errstr = "Node number %d has multiple training phases " %i +\
                          "but the corresponding iterator is a generator. " +\
                          "This is not allowed since generators cannot be " +\
@@ -316,8 +316,26 @@ class Flow(object):
     def copy(self, protocol = -1):
         """Return a deep copy of the flow.
         Protocol is the pickle protocol."""
-        as_str = cPickle.dumps(self, protocol)
-        return cPickle.loads(as_str)
+        as_str = _cPickle.dumps(self, protocol)
+        return _cPickle.loads(as_str)
+
+    def save(self, filename, protocol = -1):
+        """Save a pickled representation of the flow to 'filename'.
+        If 'filename' is None, return a string.
+        
+        Note: the pickled Flow is not guaranteed to be upward or
+        backward compatible."""
+        if filename is None:
+            return _cPickle.dumps(self, protocol)
+        else:
+            # if protocol != 0 open the file in binary mode
+            if protocol != 0:
+                mode = 'wb'
+            else:
+                mode = 'w'
+            flh = open(filename, mode)
+            _cPickle.dump(self, flh, protocol)
+            flh.close()
 
     def __call__(self, iterator, nodenr = None):
         """Calling an instance is equivalent to call its 'execute' method."""
@@ -525,5 +543,5 @@ class CheckpointSaveFunction(CheckpointFunction):
     def __call__(self, node):
         fid = open(self.filename, self.mode)
         if self.stop_training: node.stop_training()
-        cPickle.dump(node, fid, self.proto)
+        _cPickle.dump(node, fid, self.proto)
         fid.close()
