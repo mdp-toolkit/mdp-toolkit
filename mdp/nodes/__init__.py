@@ -7,3 +7,18 @@ from fda_nodes import FDANode
 from em_nodes import FANode
 from misc_nodes import HitParadeNode, TimeFramesNode, EtaComputerNode, \
      NoiseNode, GaussianClassifierNode
+
+# import internals for use in test_suites
+from misc_nodes import OneDimensionalHitParade as _OneDimensionalHitParade
+from expansion_nodes import expanded_dim as _expanded_dim
+
+
+# clean up namespace
+del expansion_nodes
+del pca_nodes
+del sfa_nodes
+del ica_nodes
+del neural_gas_nodes
+del fda_nodes
+del em_nodes
+del misc_nodes

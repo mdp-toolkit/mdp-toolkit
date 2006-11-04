@@ -287,7 +287,7 @@ class NodesTestSuite(unittest.TestSuite):
     def testPolynomialExpansionNode(self):
         def hardcoded_expansion(x, degree):
             nvars = x.shape[1]
-            exp_dim = mdp.nodes.expansion_nodes.expanded_dim(degree, nvars)
+            exp_dim = mdp.nodes._expanded_dim(degree, nvars)
             exp = numx.zeros((x.shape[0], exp_dim), 'd')
             # degree 1
             exp[:,:nvars] = x.copy()
@@ -464,7 +464,7 @@ class NodesTestSuite(unittest.TestSuite):
         signal[110], signal[113] = 3.1, 2
         signal[120], signal[123] = -2, -3.1
         signal[130], signal[133] = -3, -2
-        hit = mdp.nodes.misc_nodes.OneDimensionalHitParade(5,gap)
+        hit = mdp.nodes._OneDimensionalHitParade(5,gap)
         hit.update((signal[:100],numx.arange(100)))
         hit.update((signal[100:200],numx.arange(100,200)))
         hit.update((signal[200:300],numx.arange(200,300)))

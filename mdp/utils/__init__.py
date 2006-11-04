@@ -28,3 +28,10 @@ def svd(x, _mdp=_mdp):
     tc = x.dtype
     u,s,v = _mdp.numx_linalg.svd(x)
     return refcast(u, tc), refcast(s, tc), refcast(v, tc)
+
+# clean up namespace
+del routines
+del introspection
+del quad_forms
+del covariance
+del progress_bar
