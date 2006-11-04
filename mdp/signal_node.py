@@ -299,11 +299,11 @@ class Node(object):
     # this are the methods the user has to overwrite
     # they receive the data already casted to the correct type
     
-    def _train(self, x, *args):
+    def _train(self, x):
         if self.is_trainable():
             raise NotImplementedError
 
-    def _stop_training(self):
+    def _stop_training(self, *args, **kwargs):
         pass
 
     def _execute(self, x):
@@ -315,7 +315,7 @@ class Node(object):
 
     ### User interface to the overwritten methods
     
-    def train(self, x, *args):
+    def train(self, x, *args, **kwargs):
         """Update the internal structures according to the input data 'x'.
         
         'x' is a matrix having different variables on different columns
@@ -343,7 +343,7 @@ class Node(object):
         self._train_phase_started = True
         self._train_seq[self._train_phase][0](self._refcast(x), *args)
 
-    def stop_training(self):
+    def stop_training(self, *args, **kwargs):
         """Stop the training phase.
         Be default, subclasses should overwrite _stop_Training to implement
         their stop-training."""
