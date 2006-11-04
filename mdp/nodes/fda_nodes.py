@@ -81,7 +81,7 @@ class FDANode(mdp.Node):
     def _update_SW(self, x, lbl):
         x = x - self.means[lbl]
         # update S_W
-        self.S_W += mdp.utils.mult(numx.transpose(x), x)
+        self.S_W += mdp.utils.mult(x.T, x)
  
     def _train_fda(self, x, cl):
         #if self.S_W == None:

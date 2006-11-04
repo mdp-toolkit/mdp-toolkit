@@ -59,7 +59,7 @@ class UtilsTestCase(unittest.TestCase):
         for i in range(tlen):
             x = utils.random_rot(dim, dtype='f')
             assert x.dtype.char=='f', 'Wrong dtype'
-            y = utils.mult(numx.transpose(x), x)
+            y = utils.mult(x.T, x)
             assert_almost_equal(numx_linalg.det(x), 1., 4)
             assert_array_almost_equal(y, numx.eye(dim), 4)
 

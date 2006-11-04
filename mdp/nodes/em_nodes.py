@@ -4,7 +4,7 @@ from mdp.utils import mult, CovarianceMatrix
 import warnings
 
 take, put, diag, ravel = numx.take, numx.put, numx.diag, numx.ravel
-sqrt, tr, inv, det = numx.sqrt, numx.transpose, utils.inv, numx_linalg.det
+sqrt, inv, det = numx.sqrt, utils.inv, numx_linalg.det
 normal = mdp.numx_rand.normal
 
 # decreasing likelihood message
@@ -94,7 +94,7 @@ class FANode(mdp.Node):
         old_lhood = -numx.inf
         for t in xrange(self.max_cycles):
             ## compute B = (A A^T + Sigma)^-1
-            B = mult(A, tr(A))
+            B = mult(A, A.T)
             # B += diag(sigma), avoid computing diag(sigma) which is dxd
             put(B.ravel(), idx_diag_d, take(B.ravel(), idx_diag_d)+sigma)
             # this quantity is used later for the log-likelihood
@@ -104,21 +104,21 @@ class FANode(mdp.Node):
             B = inv(B)
            
             ## other useful quantities
-            trA_B = mult(tr(A), B)
+            trA_B = mult(A.T, B)
             trA_B_cov_mtx = mult(trA_B, cov_mtx)
             
             ##### E-step
             ## E_yyT = E(y_n y_n^T | x_n)
-            E_yyT = - mult(trA_B, A) + mult(trA_B_cov_mtx, tr(trA_B))
+            E_yyT = - mult(trA_B, A) + mult(trA_B_cov_mtx, trA_B.T)
             # E_yyT += numx.eye(k)
             put(E_yyT.ravel(), idx_diag_k, take(E_yyT.ravel(), idx_diag_k)+1.)
             
             ##### M-step
-            A = mult(tr(trA_B_cov_mtx), inv(E_yyT))
+            A = mult(trA_B_cov_mtx.T, inv(E_yyT))
             sigma = cov_diag - diag(mult(A, trA_B_cov_mtx))
 
             ##### log-likelihood
-            trace_B_cov = numx.sum(ravel(B*tr(cov_mtx)))
+            trace_B_cov = numx.sum(ravel(B*cov_mtx.T))
             # this is actually likelihood/tlen.
             lhood = const - 0.5*log_det_B - 0.5*trace_B_cov
             if verbose: print 'cycle',t,'log-lhood:',lhood
@@ -143,10 +143,10 @@ class FANode(mdp.Node):
         
         ## MAP matrix
         # compute B = (A A^T + Sigma)^-1
-        B = mult(A, tr(A)).copy() 
+        B = mult(A, A.T).copy() 
         put(B.ravel(), idx_diag_d, take(B.ravel(), idx_diag_d)+sigma)
         B = inv(B)
-        self.E_y_mtx = mult(tr(B), A)
+        self.E_y_mtx = mult(B.T, A)
         
         self.lhood = lhood_curve
 
@@ -186,7 +186,7 @@ class FANode(mdp.Node):
             y = self._refcast(len_or_y)
             self._check_output(y)
         
-        res = mult(y, tr(self.A))+self.mu
+        res = mult(y, self.A.T)+self.mu
         if noise:
             ns = mdp.numx_rand.normal(size=(y.shape[0], self.input_dim))
             ns *= numx.sqrt(self.sigma)

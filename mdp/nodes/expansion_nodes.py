@@ -58,7 +58,7 @@ class PolynomialExpansionNode(_ExpansionNode):
         dexp = numx.zeros((self.output_dim, x.shape[0]), \
                            dtype=self.dtype)
         # copy monomials of degree 1
-        dexp[0:n,:] = numx.transpose(x)
+        dexp[0:n,:] = x.T
 
         k = n
         prec_end = 0
@@ -78,7 +78,7 @@ class PolynomialExpansionNode(_ExpansionNode):
                 next_lens[j+1] = len
                 k = k+len
 
-        return numx.transpose(dexp)
+        return dexp.T
         
 class QuadraticExpansionNode(PolynomialExpansionNode):
     """Perform expansion in the space formed by all linear and quadratic

@@ -49,7 +49,7 @@ def rotate(mat, angle, columns = [0, 1], units = 'radians'):
 
 def hermitian(x):
     """Compute the Hermitian, i.e. conjugate transpose, of x."""
-    return numx.conjugate(numx.transpose(x))
+    return numx.conjugate(x.T)
 
 def symrand(dim_or_eigv, dtype="d"):
     """Return a random symmetric (Hermitian) matrix.
@@ -99,7 +99,7 @@ def random_rot(dim, dtype='d'):
     # Fix the last sign such that the determinant is 1
     D[n] = -mdp.numx.prod(D)
     # Equivalent to mult(numx.diag(D), H) but faster
-    H = mdp.numx.transpose(D*mdp.numx.transpose(H))
+    H = (D*H.T).T
     return H
 
 def norm2(v):
@@ -131,7 +131,7 @@ def cov2(x, y):
     mnx = numx.mean(x, axis=0)
     mny = numx.mean(y, axis=0)
     tlen = x.shape[0]
-    return mdp.utils.mult(numx.transpose(x), y)/(tlen-1) - numx.outer(mnx, mny)
+    return mdp.utils.mult(x.T, y)/(tlen-1) - numx.outer(mnx, mny)
 
 # the following functions and classes were part of the scipy_emulation.py file
 
@@ -213,7 +213,7 @@ numarray.linear_algebra.eigenvectors with an interface compatible with symeig.
             _assert_eigenvalues_real(wB, dtype)
             ZB = ZB.real / numx.sqrt(wB.real)
             # transform A in the new basis: A = ZB^T * A * ZB
-            A = mdp.utils.mult(mdp.utils.mult(numx.transpose(ZB), A), ZB)
+            A = mdp.utils.mult(mdp.utils.mult(ZB.T, A), ZB)
             # diagonalize A
             w, ZA = numx_linalg.eig(A)
             Z = mdp.utils.mult(ZB, ZA)
@@ -282,7 +282,7 @@ def sqrtm(A, disp=1):
     It works only for symmetric matrices. disp : not implemented."""
     d, V = mdp.utils.symeig(A)
     D = numx.diag(numx.sqrt(d))
-    return mdp.utils.mult(V, mdp.utils.mult(D, numx.transpose(V)))
+    return mdp.utils.mult(V, mdp.utils.mult(D, V.T))
 
 # In file: scipy/common.py
 def comb(N, k, exact=0):

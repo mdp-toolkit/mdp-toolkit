@@ -4,7 +4,6 @@ numx, numx_rand = mdp.numx, mdp.numx_rand
 
 utils = mdp.utils
 mult = utils.mult
-t = numx.transpose
 
 class ICANode(mdp.Cumulator, mdp.Node):
     """
@@ -98,7 +97,7 @@ class ICANode(mdp.Cumulator, mdp.Node):
         return mult(x, self.filters)
 
     def _inverse(self, y):
-        y = mult(y,t(self.filters))
+        y = mult(y,self.filters.T)
         if not self.whitened:
             y = self.white.inverse(y)
         return y
@@ -294,7 +293,7 @@ class FastICANode(ICANode):
         failures = self.failures
         dtype = self.dtype
         verbose = self.verbose
-        X = t(data)
+        X = data.T
         
         # casted constants
         comp = X.shape[0]
@@ -313,11 +312,11 @@ class FastICANode(ICANode):
                     raise mdp.NodeException,\
                           'No convergence after %d steps\n'%max_it
                 # Symmetric orthogonalization. Q = Q * real(inv(Q' * Q)^(1/2));
-                Q = mult(Q, utils.sqrtm(utils.inv(mult(t(Q), Q))))
+                Q = mult(Q, utils.sqrtm(utils.inv(mult(Q.T, Q))))
                 # Test for termination condition.Note that we consider opposite
                 # directions here as well.
                 convergence.append(1 - numx.amin(abs(\
-                    numx.diag(mult(t(Q),QOld))),axis=0))
+                    numx.diag(mult(Q.T,QOld))),axis=0))
                 if convergence[round] < limit:
                     if verbose: print 'Convergence after %d steps\n'%round
                     break
@@ -329,13 +328,13 @@ class FastICANode(ICANode):
 
                 # First calculate the independent components (u_i's).
                 # u_i = b_i' x = x' b_i. For all x:s simultaneously this is
-                u = mult(t(X),Q)
+                u = mult(X.T,Q)
                 # non linearity
                 if g == 'pow3':
                     Q = mult(X,u*u*u)/tlen - 3.*Q
                 elif g == 'tanh':
                     tang = numx.tanh(fine_tanh * u)
-                    temp = t(numx.sum(1.-tang*tang))/tlen
+                    temp = numx.sum(1.-tang*tang).T/tlen
                     Q = mult(X,tang) - temp * Q * fine_tanh
                 elif g == 'gaus':
                     u2 = u*u
@@ -357,7 +356,7 @@ class FastICANode(ICANode):
                 # Take a random initial vector of lenght 1 and orthogonalize it
                 # with respect to the other vectors.
                 w  = self._refcast(numx_rand.random((comp, 1)) - .5)
-                w -= mult(mult(Q,t(Q)),w)
+                w -= mult(mult(Q,Q.T),w)
                 w /= utils.norm2(w)
                 wOld = numx.zeros(numx.shape(w), dtype)
                 # This is the actual fixed-point iteration loop.
@@ -374,7 +373,7 @@ class FastICANode(ICANode):
                     # spanned by the earlier found basis vectors. Note that
                     # we can do the projection with matrix Q, since the zero
                     # entries do not contribute to the projection.
-                    w -= mult(mult(Q,t(Q)),w)
+                    w -= mult(mult(Q,Q.T),w)
                     w /= utils.norm2(w)
                     # Test for termination condition. Note that the algorithm
                     # has converged if the direction of w and wOld is the same.
@@ -393,13 +392,13 @@ class FastICANode(ICANode):
                     # First calculate the independent components (u_i's) for
                     # this w.
                     # u_i = b_i' x = x' b_i. For all x:s simultaneously this is
-                    u = mult(t(X),w)
+                    u = mult(X.T,w)
                     #non linearity
                     if g == 'pow3':
                         w = mult(X,u*u*u)/tlen - 3.*w
                     elif g == 'tanh':
                         tang = numx.tanh(fine_tanh * u)
-                        temp = t(numx.sum(1. - tang*tang))*w
+                        temp = numx.sum(1. - tang*tang).T*w
                         w = mult(X,tang) - fine_tanh/tlen*temp
                     elif g == 'gaus':
                         u2 = u*u

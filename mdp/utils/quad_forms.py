@@ -1,7 +1,6 @@
 import mdp
 from routines import refcast
 numx = mdp.numx
-tr = numx.transpose
 epsilon = 1E-15
 
 class QuadraticForm(object):
@@ -24,7 +23,7 @@ class QuadraticForm(object):
     def apply(self, x):
         """Apply the quadratic form to the input vectors.
         Return 1/2 x'Hx + f'x + c ."""
-        return 0.5*numx.sum(mdp.utils.mult(x, numx.transpose(self.H))*x,
+        return 0.5*numx.sum(mdp.utils.mult(x, self.H.T)*x,
                             axis=1) + \
                mdp.utils.mult(x, self.f) + self.c
         
@@ -76,7 +75,7 @@ class QuadraticForm(object):
             f = mdp.utils.mult(H, x0)+ f
             # c = 0.5*x0'*H*x0 + f'*x0 + c -> do we need it?
         mu, V = mdp.utils.symeig(H, overwrite=0)
-        alpha = numx.reshape(mdp.utils.mult(tr(V), f), (H.shape[0],) )
+        alpha = numx.reshape(mdp.utils.mult(V.T, f), (H.shape[0],) )
         # v_i = alpha_i * v_i (alpha is a raw_vector)
         V = V*alpha
         # left bound for lambda

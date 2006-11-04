@@ -3,7 +3,6 @@ import warnings
 
 # import numeric module (scipy, Numeric or numarray)
 numx = mdp.numx
-tr = numx.transpose
 
 # precision warning parameters
 _limits = { 'd' : 1e13, 'f' : 1e5}
@@ -86,7 +85,7 @@ class CovarianceMatrix(object):
         
         # update the covariance matrix, the average and the number of
         # observations (try to do everything inplace)
-        self._cov_mtx += mdp.utils.mult(tr(x), x)
+        self._cov_mtx += mdp.utils.mult(x.T, x)
         self._avg += numx.sum(x, 0)
         self._tlen += x.shape[0]
 
@@ -200,7 +199,7 @@ class DelayCovarianceMatrix(object):
         
         # update the covariance matrix, the average and the number of
         # observations (try to do everything inplace)
-        self._cov_mtx += mdp.utils.mult(tr(x[:tlen-dt,:]), x[dt:tlen,:])
+        self._cov_mtx += mdp.utils.mult(x[:tlen-dt,:].T, x[dt:tlen,:])
         totalsum = numx.sum(x, 0)
         self._avg += totalsum - numx.sum(x[tlen-dt:,:], 0)
         self._avg_dt += totalsum - numx.sum(x[:dt,:], 0)
@@ -239,7 +238,7 @@ class DelayCovarianceMatrix(object):
             cov_mtx /= tlen - 1
 
         if A is not None:
-            cov_mtx = mdp.utils.mult(A, mdp.utils.mult(cov_mtx, tr(A)))
+            cov_mtx = mdp.utils.mult(A, mdp.utils.mult(cov_mtx, A.T))
         
         # fix the average
         avg /= tlen

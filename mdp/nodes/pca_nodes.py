@@ -150,14 +150,14 @@ class PCANode(Node):
         self._if_training_stop_training()
         if transposed:
             return self.v
-        return numx.transpose(self.v)
+        return self.v.T
 
     def get_recmatrix(self, transposed=1):
         """Return the back-projection matrix (i.e. the reconstruction matrix).
         """
         self._if_training_stop_training()
         if transposed:
-            return numx.transpose(self.v)
+            return self.v.T
         return self.v
 
     def _execute(self, x, n = None):
@@ -219,6 +219,6 @@ class WhiteningNode(PCANode):
         self._if_training_stop_training()
         v_inverse = self.v*self.d
         if transposed:
-            return numx.transpose(v_inverse)
+            return v_inverse.T
         return v_inverse
         

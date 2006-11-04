@@ -17,7 +17,7 @@ def _random_spd_mtx(dim):
     rnd = numx_rand.random((dim,dim))
     v = mdp.utils.random_rot(rnd)
     d = mdp.numx.diag(numx_rand.random(dim) + 1)
-    return  mult(v,mult(d,numx.transpose(v)))
+    return  mult(v,mult(d,v.T))
 
 ####### benchmark function
 
@@ -41,16 +41,16 @@ def matmult_n_MDP_benchmark(dim):
     """    This benchmark multiplies two non-contiguous matrices using the
     MDP internal matrix multiplication routine.
     First argument matrix dimensionality"""
-    a = numx.transpose(numx_rand.random((dim,dim)))
-    b = numx.transpose(numx_rand.random((dim,dim)))
+    a = numx_rand.random((dim,dim)).T
+    b = numx_rand.random((dim,dim)).T
     out = mdp.utils.mult(a,b)
 
 def matmult_n_scipy_benchmark(dim):
     """    This benchmark multiplies two non-contiguous matrices using the
     scipy internal matrix multiplication routine.
     First argument matrix dimensionality"""
-    a = numx.transpose(numx_rand.random((dim,dim)))
-    b = numx.transpose(numx_rand.random((dim,dim)))
+    a = numx_rand.random((dim,dim)).T
+    b = numx_rand.random((dim,dim)).T
     out = numx.dot(a,b)
 
 def matmult_cn_MDP_benchmark(dim):
@@ -58,7 +58,7 @@ def matmult_cn_MDP_benchmark(dim):
     non-contiguous matrix using the MDP internal matrix multiplication
     routine.
     First argument matrix dimensionality"""
-    a = numx.transpose(numx_rand.random((dim,dim)))
+    a = numx_rand.random((dim,dim)).T
     b = numx_rand.random((dim,dim))
     out = mdp.utils.mult(a,b)
 
@@ -67,7 +67,7 @@ def matmult_cn_scipy_benchmark(dim):
     non-contiguous matrix using the scipy internal matrix multiplication
     routine.
     First argument matrix dimensionality"""
-    a = numx.transpose(numx_rand.random((dim,dim)))
+    a = numx_rand.random((dim,dim)).T
     b = numx_rand.random((dim,dim))
     out = numx.dot(a,b)
 

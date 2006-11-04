@@ -20,7 +20,6 @@ mult = utils.mult
 mean = numx.mean
 std = numx.std
 normal = numx_rand.normal
-tr = numx.transpose
 testtypes = [numx.dtype('d'), numx.dtype('f')]
 testtypeschar = [t.char for t in testtypes]
 testdecimals = {'d':16, 'f':7}
@@ -103,14 +102,14 @@ class NodesTestSuite(unittest.TestSuite):
             mat -= mean(mat,axis=0)
             mat /= std(mat,axis=0)
             # check that the minimum eigenvalue is finite and positive
-            d1 = min(utils.symeig(mult(tr(mat), mat), eigenvectors = 0))
+            d1 = min(utils.symeig(mult(mat.T, mat), eigenvectors = 0))
             if std_dev is not None: mat *= std_dev
             if avg is not None: mat += avg
             mix = (rand_func((mat_dim[1],mat_dim[1]))*scale).astype(type)
             matmix = mult(mat,mix)
             matmix_n = matmix - mean(matmix, axis=0)
             matmix_n /= std(matmix_n, axis=0)
-            d2 = min(utils.symeig(mult(tr(matmix_n),matmix_n),eigenvectors=0))
+            d2 = min(utils.symeig(mult(matmix_n.T,matmix_n),eigenvectors=0))
             d = min(d1, d2)
         return mat, mix, matmix
 
@@ -149,8 +148,8 @@ class NodesTestSuite(unittest.TestSuite):
                 if node_class == mdp.nodes.SFA2Node:
                     freqs = [2*numx.pi*100.,2*numx.pi*200.]
                     t =  numx.linspace(0, 1, num=1000)
-                    mat = tr(numx.array([numx.sin(freqs[0]*t),
-                                         numx.sin(freqs[1]*t)]))
+                    mat = numx.array([numx.sin(freqs[0]*t),
+                                      numx.sin(freqs[1]*t)]).T
                     inp = mat.astype('d')
                 else:
                     mat, mix, inp = self._get_random_mix(type="d")
@@ -370,8 +369,7 @@ class NodesTestSuite(unittest.TestSuite):
         dim=10000
         freqs = [2*numx.pi*1, 2*numx.pi*5]
         t =  numx.linspace(0,1,num=dim)
-        mat = tr(numx.array(\
-            [numx.sin(freqs[0]*t),numx.sin(freqs[1]*t)]))
+        mat = numx.array([numx.sin(freqs[0]*t),numx.sin(freqs[1]*t)]).T
         mat = (mat - mean(mat[:-1,:],axis=0))\
               /std(mat[:-1,:],axis=0)
         des_mat = mat.copy()
@@ -379,7 +377,7 @@ class NodesTestSuite(unittest.TestSuite):
         sfa = mdp.nodes.SFANode()
         sfa.train(mat)
         out = sfa.execute(mat)
-        correlation = mult(tr(des_mat[:-1,:]),out[:-1,:])/(dim-2)
+        correlation = mult(des_mat[:-1,:].T,out[:-1,:])/(dim-2)
         assert sfa.get_eta_values(t=0.5) is not None, 'get_eta is None'
         assert_array_almost_equal(abs(correlation),
                                   numx.eye(2), self.decimal-3)
@@ -387,7 +385,7 @@ class NodesTestSuite(unittest.TestSuite):
         sfa.train(mat)
         out = sfa.execute(mat)
         assert out.shape[1]==1, 'Wrong output_dim'
-        correlation = mult(tr(des_mat[:-1,:1]),out[:-1,:])/(dim-2)
+        correlation = mult(des_mat[:-1,:1].T,out[:-1,:])/(dim-2)
         assert_array_almost_equal(abs(correlation),
                                   numx.eye(1), self.decimal-3)
         
@@ -396,8 +394,7 @@ class NodesTestSuite(unittest.TestSuite):
         dim = 10000
         freqs = [2*numx.pi*100.,2*numx.pi*500.]
         t =  numx.linspace(0,1,num=dim)
-        mat = tr(numx.array(\
-            [numx.sin(freqs[0]*t),numx.sin(freqs[1]*t)]))
+        mat = numx.array([numx.sin(freqs[0]*t),numx.sin(freqs[1]*t)]).T
         mat += normal(0., 1e-10, size=(dim, 2))
         mat = (mat - mean(mat[:-1,:],axis=0))\
               /std(mat[:-1,:],axis=0)
@@ -407,7 +404,7 @@ class NodesTestSuite(unittest.TestSuite):
         sfa.train(mat)
         out = sfa.execute(mat)
         assert out.shape[1]==5, "Wrong output_dim" 
-        correlation = mult(tr(des_mat[:-1,:]),
+        correlation = mult(des_mat[:-1,:].T,
                            numx.take(out[:-1,:], (0,2), axis=1))/(dim-2)
         assert_array_almost_equal(abs(correlation),
                                   numx.eye(2), self.decimal-3)
@@ -420,7 +417,7 @@ class NodesTestSuite(unittest.TestSuite):
         sfa.train(mat)
         out = sfa.execute(mat)
         assert out.shape[1]==2, 'Wrong output_dim'
-        correlation = mult(tr(des_mat[:-1,:1]),out[:-1,:1])/(dim-2)
+        correlation = mult(des_mat[:-1,:1].T,out[:-1,:1])/(dim-2)
         assert_array_almost_equal(abs(correlation),
                                   numx.eye(1), self.decimal-3)
 
@@ -495,8 +492,7 @@ class NodesTestSuite(unittest.TestSuite):
         length = 14
         gap = 6
         time_frames = 3
-        inp = tr(numx.array(\
-            [numx.arange(length), -numx.arange(length)]))
+        inp = numx.array([numx.arange(length), -numx.arange(length)]).T
         # create node to be tested
         tf = mdp.nodes.TimeFramesNode(time_frames,gap)
         out = tf.execute(inp)
@@ -516,7 +512,7 @@ class NodesTestSuite(unittest.TestSuite):
     def testEtaComputerNode(self):
         tlen = 1e5
         t = numx.linspace(0,2*numx.pi,tlen)
-        inp = tr(numx.array([numx.sin(t), numx.sin(5*t)]))
+        inp = numx.array([numx.sin(t), numx.sin(5*t)]).T
         # create node to be tested
         ecnode = mdp.nodes.EtaComputerNode()
         ecnode.train(inp)
@@ -542,7 +538,7 @@ class NodesTestSuite(unittest.TestSuite):
         # control that the nodes in the graph lie on the line
         poss = gng.get_nodes_position()-const
         norms = numx.sqrt(numx.sum(poss*poss, axis=1))
-        poss = tr(tr(poss)/norms)
+        poss = (poss.T/norms).T
         assert max(numx.minimum(numx.sum(abs(poss-dir),axis=1),
                                  numx.sum(abs(poss+dir),axis=1)))<1e-7, \
                'At least one node of the graph does lies out of the line.'
@@ -632,7 +628,7 @@ class NodesTestSuite(unittest.TestSuite):
         y = flow.execute(x)
         assert_array_almost_equal(mean(y, axis=0), [0., 0.], self.decimal-2)
         assert_array_almost_equal(std(y, axis=0), [1., 1.], self.decimal-2)
-        assert_almost_equal(mult(y[:,0], tr(y[:,1])), 0., self.decimal-2)
+        assert_almost_equal(mult(y[:,0], y[:,1].T), 0., self.decimal-2)
 
         v1 = fda_node.v[:,0]/fda_node.v[0,0]
         assert_array_almost_equal(v1, [1., -1.], 2)
@@ -735,7 +731,7 @@ class NodesTestSuite(unittest.TestSuite):
         assert_array_almost_equal(fa.sigma, std(noise, axis=0)**2, 2)
         # FA finds A only up to a rotation. here we verify that the
         # A and its estimation span the same subspace
-        AA = numx.concatenate((A,tr(fa.A)),axis=0)
+        AA = numx.concatenate((A,fa.A.T),axis=0)
         u,s,vh = utils.svd(AA)
         assert sum(s/max(s)>1e-2)==k, \
                'A and its estimation do not span the same subspace'
@@ -755,7 +751,7 @@ class NodesTestSuite(unittest.TestSuite):
 
         est = fa.generate_input(100000)
         assert_array_almost_equal_diff(numx.cov(est, rowvar=0),
-                                       utils.mult(fa.A, tr(fa.A)), 1)
+                                       utils.mult(fa.A, fa.A.T), 1)
         
 def get_suite():
     return NodesTestSuite()

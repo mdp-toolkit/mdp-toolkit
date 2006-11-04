@@ -1,5 +1,13 @@
 TODO:
 
+MDP XX 04.11.2006:
+- rewrite using array methods instead of numpy functions:
+  already done: transpose(a) -> a.T
+  todo: argsort, argmax, argmin, astype, conj, conjugate, cumprod
+        cumsum, diagonal, flat, flatten, man, min, mean, prod, put, 
+	reshape, resize, searchsorted, shape, size, sort, squeeze, std, 
+	sum, take, trace, var.
+
 MDP 2.0 30.6.2006:
 
 - invariances, gradient, and real test in QuadraticForm
