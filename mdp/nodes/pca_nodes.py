@@ -44,7 +44,7 @@ class PCANode(Node):
         if y.shape[1]==0 or y.shape[1]>self.output_dim:
             error_str = "y has dimension %d, should be 0<y<=%d" \
                         % (y.shape[1], self.output_dim)
-            raise SignalNodeException, error_str
+            raise NodeException, error_str
 
     def _get_supported_dtypes(self):
         return ['f','d']
