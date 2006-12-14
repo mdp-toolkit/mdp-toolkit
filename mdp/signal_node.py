@@ -254,7 +254,7 @@ class Node(object):
         if not numx.rank(y) == 2:
             error_str = "y has rank %d, should be 2"\
                         %(numx.rank(y))
-            raise SignalNodeException, error_str
+            raise NodeException, error_str
 
         # check the output dimension
         if not y.shape[1] == self.output_dim:

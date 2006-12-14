@@ -39,7 +39,7 @@ class PCANode(Node):
         if not numx.rank(y) == 2:
             error_str = "y has rank %d, should be 2"\
                         %(numx.rank(y))
-            raise SignalNodeException, error_str
+            raise NodeException, error_str
 
         if y.shape[1]==0 or y.shape[1]>self.output_dim:
             error_str = "y has dimension %d, should be 0<y<=%d" \
