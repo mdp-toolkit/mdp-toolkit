@@ -1,9 +1,10 @@
 from routines import timediff, refcast, scast, rotate, random_rot, \
-     symrand, norm2, uniq, ordered_uniq, cov2, \
+     permute, symrand, norm2, uniq, ordered_uniq, cov2, \
      comb, sqrtm, SymeigException
 from introspection import dig_node, get_node_size
 from quad_forms import QuadraticForm
-from covariance import CovarianceMatrix, DelayCovarianceMatrix
+from covariance import CovarianceMatrix, DelayCovarianceMatrix, \
+     MultipleCovarianceMatrices
 from progress_bar import progressinfo
 import mdp as _mdp
 

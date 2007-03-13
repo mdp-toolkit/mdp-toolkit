@@ -47,6 +47,27 @@ def rotate(mat, angle, columns = [0, 1], units = 'radians'):
     mat[:,i] = cos_*col_i - sin_*col_j
     mat[:,j] = sin_*col_i + cos_*col_j
 
+def permute(x,indices=[0,0],rows=0, cols=1):
+    """Swap two columns and (or) two rows of 'x', whose indices are specified
+    in indices=[i,j].
+    Note: permutations are done in-place. You'll lose your original matrix"""
+    ## the nicer option:
+    ## x[i,:],x[j,:] = x[j,:],x[i,:]
+    ## does not work because array-slices are references.
+    ## The following would work:
+    ## x[i,:],x[j,:] = x[j,:].tolist(),x[i,:].tolist()
+    ## because list-slices are copies, but you get 2
+    ## copies instead of the one you need with our method.
+    ## This would also work:
+    ## tmp = x[i,:].copy()
+    ## x[i,:],x[j,:] = x[j,:],tmp
+    ## but it is slower (for larger matrices) than the one we use.
+    [i,j] = indices
+    if rows:
+        x[i,:],x[j,:] = x[j,:],x[i,:]+0
+    if cols:
+        x[:,i],x[:,j] = x[:,j],x[:,i]+0
+
 def hermitian(x):
     """Compute the Hermitian, i.e. conjugate transpose, of x."""
     return numx.conjugate(x.T)

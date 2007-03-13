@@ -22,7 +22,7 @@ std = numx.std
 normal = numx_rand.normal
 testtypes = [numx.dtype('d'), numx.dtype('f')]
 testtypeschar = [t.char for t in testtypes]
-testdecimals = {'d':16, 'f':7}
+testdecimals = {testtypes[0]: 12, testtypes[1]: 6}
 
 def _rand_labels(x):
     return numx.around(numx_rand.random(x.shape[0]))
@@ -283,6 +283,107 @@ class NodesTestSuite(unittest.TestSuite):
         # hope to reset the previous state...
         warnings.filterwarnings("once",'.*',mdp.MDPWarning)
 
+    def testMultipleCovarianceMatricesDtypeAndFuncs(self):
+        for type in testtypes:
+            dec = testdecimals[type]
+            res_type = self._MultipleCovarianceMatrices_funcs(type,dec)
+            assert_type_equal(type,res_type)
+
+
+    def _MultipleCovarianceMatrices_funcs(self,dtype,decimals):
+        def assert_all(des,act, dec=decimals):
+            # check list of matrices equals multcov array 
+            for x in range(nmat):
+                assert_array_almost_equal_diff(des[x],act.covs[:,:,x],dec)
+
+        def rotate(mat,angle,indices):
+            # perform a givens rotation of a single matrix
+            [i,j] = indices
+            c, s = numx.cos(angle), numx.sin(angle)
+            mat_i, mat_j = mat[:,i].copy(), mat[:,j].copy()
+            mat[:,i], mat[:,j] = c*mat_i-s*mat_j, s*mat_i+c*mat_j
+            mat_i, mat_j = mat[i,:].copy(), mat[j,:].copy()
+            mat[i,:], mat[j,:] = c*mat_i-s*mat_j, s*mat_i+c*mat_j
+            return mat.copy()
+        
+        def permute(mat,indices):
+            # permute rows and cols of a single matrix
+            [i,j] = indices
+            mat_i, mat_j = mat[:,i].copy(), mat[:,j].copy()
+            mat[:,i], mat[:,j] = mat_j, mat_i
+            mat_i, mat_j = mat[i,:].copy(), mat[j,:].copy()
+            mat[i,:], mat[j,:] = mat_j, mat_i
+            return mat.copy()
+
+        dim = 7
+        nmat = 13
+        # create mult cov mat
+        covs = [numx_rand.random((dim,dim)).astype(dtype) for x in range(nmat)]
+        mult_cov = mdp.utils.MultipleCovarianceMatrices(covs)
+        assert_equal(nmat,mult_cov.ncovs)
+        # test symmetrize
+        sym_covs = [0.5*(x+x.T) for x in covs]
+        mult_cov.symmetrize()
+        assert_all(sym_covs,mult_cov)
+        # test weight
+        weights = numx_rand.random(nmat)
+        w_covs = [weights[x]*sym_covs[x] for x in range(nmat)]
+        mult_cov.weight(weights)
+        assert_all(w_covs,mult_cov)
+        # test rotate
+        angle = numx_rand.random()*2*numx.pi
+        idx = numx_rand.permutation(dim)[:2]
+        rot_covs = [rotate(x,angle,idx) for x in w_covs]
+        mult_cov.rotate(angle,idx)
+        assert_all(w_covs,mult_cov)
+        # test permute
+        per_covs = [permute(x,idx) for x in rot_covs]
+        mult_cov.permute(idx)
+        assert_all(per_covs,mult_cov)
+        # test transform
+        trans = numx_rand.random((dim,dim))
+        trans_covs = [mult(mult(trans.T,x),trans)\
+                      for x in per_covs]
+        mult_cov.transform(trans)
+        assert_all(trans_covs,mult_cov)
+        # test copy
+        cp_mult_cov = mult_cov.copy()
+        assert_array_equal(mult_cov.covs,cp_mult_cov.covs)
+        # check that we didn't got a reference
+        mult_cov[0][0,0] = 1000
+        assert int(cp_mult_cov[0][0,0]) != 1000
+        # return dtype 
+        return mult_cov.covs.dtype
+
+    def testMultipleCovarianceMatricesTransformations(self):
+        def get_mult_covs(inp,nmat):
+            # return delayed covariance matrices
+            covs = []
+            for delay in range(nmat):
+                tmp = mdp.utils.DelayCovarianceMatrix(delay)
+                tmp.update(inp)
+                cov,avg,avg_dt,tlen = tmp.fix()
+                covs.append(cov)
+            return mdp.utils.MultipleCovarianceMatrices(covs)
+        dim = 7
+        nmat = 13
+        angle = numx_rand.random()*2*numx.pi
+        idx = numx_rand.permutation(dim)[:2]
+        inp = numx_rand.random((100*dim,dim))
+        rot_inp, per_inp = inp.copy(), inp.copy()
+        # test if rotating or permuting the cov matrix is equivalent
+        # to rotate or permute the sources.
+        mdp.utils.rotate(rot_inp,angle,idx)
+        mdp.utils.permute(per_inp,idx,rows=0,cols=1)
+        mcov = get_mult_covs(inp, nmat)
+        mcov2 = mcov.copy()
+        mcov_rot = get_mult_covs(rot_inp, nmat)
+        mcov_per = get_mult_covs(per_inp, nmat)
+        mcov.rotate(angle,idx)
+        mcov2.permute(idx)
+        assert_array_almost_equal_diff(mcov.covs, mcov_rot.covs,self.decimal)
+        assert_array_almost_equal_diff(mcov2.covs, mcov_per.covs,self.decimal)
+                     
     def testPolynomialExpansionNode(self):
         def hardcoded_expansion(x, degree):
             nvars = x.shape[1]

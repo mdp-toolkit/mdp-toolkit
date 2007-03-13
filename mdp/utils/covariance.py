@@ -251,3 +251,77 @@ class DelayCovarianceMatrix(object):
         self._tlen = 0
 
         return cov_mtx, avg, avg_dt, tlen
+
+
+class MultipleCovarianceMatrices:
+    """Container class for multiple covariance matrices to easily
+    execute operations on all matrices at the same time.
+    Note: all operations are done in place where possible."""
+    def __init__(self,covs):
+        """Insantiate with a sequence of covariance matrices."""
+        # swap axes to get the different covmat on to the 3rd axis
+        self.dtype = covs[0].dtype
+        self.covs = (numx.array(covs,dtype=self.dtype)).transpose([1,2,0])
+        self.ncovs = len(covs)
+
+    def __getitem__(self, item):
+        return self.covs[:,:,item]
+
+    def symmetrize(self):
+        """Symmetrize matrices: C -> (C+C^T)/2 ."""
+        # symmetrize cov matrices
+        covs = self.covs
+        covs = 0.5*(covs+covs.transpose([1,0,2]))
+        self.covs = covs
+
+    def weight(self, weights):
+        """Apply a weighting factor to matrices.
+        Argument can be a sequence or a single value. In the latter case
+        the same weight is applied to all matrices."""
+        # apply a weighting vector to cov matrices
+        err = "len(weights)=%d does not match number of matrices (%d)"\
+              %(len(weights),self.ncovs) 
+        assert len(weights) == self.ncovs, err
+        self.covs *= mdp.utils.refcast(weights,self.dtype)
+
+    def rotate(self, angle, indices):
+        """Rotate matrices by angle in the plane defined by indices [i,j]."""
+        covs = self.covs
+        [i,j] = indices
+        cos_ = numx.cos(angle)
+        sin_ = numx.sin(angle)
+        # rotate columns
+        # you need to copy the first column that is modified
+        covs_i = covs[:,i,:] + 0
+        covs_j = covs[:,j,:]
+        covs[:,i,:] =  cos_*covs_i - sin_*covs_j
+        covs[:,j,:] =  sin_*covs_i + cos_*covs_j
+        # rotate rows
+        # you need to copy the first row that is modified
+        covs_i = covs[i,:,:] + 0
+        covs_j = covs[j,:,:]
+        covs[i,:,:] =  cos_*covs_i - sin_*covs_j
+        covs[j,:,:] =  sin_*covs_i + cos_*covs_j
+        self.covs = covs
+
+    def permute(self,indices):
+        """Swap two columns and two rows of all matrices, whose indices are
+        specified as [i,j]."""
+        covs = self.covs
+        [i,j] = indices
+        covs[i,:,:],covs[j,:,:] = covs[j,:,:],covs[i,:,:] + 0
+        covs[:,i,:],covs[:,j,:] = covs[:,j,:],covs[:,i,:] + 0
+        self.covs = covs
+        
+    def transform(self,trans_matrix):
+        """Apply a linear transformation to all matrices, defined by the
+        transformation matrix."""
+        trans_matrix = mdp.utils.refcast(trans_matrix,self.dtype)
+        for cov in range(self.ncovs):
+            self.covs[:,:,cov] = mdp.utils.mult(mdp.utils.mult(trans_matrix.T,
+                                            self.covs[:,:,cov]), trans_matrix)
+    
+    def copy(self):
+        """Return a deep copy of the instance."""
+        return MultipleCovarianceMatrices(self.covs.transpose([2,0,1]))
+
