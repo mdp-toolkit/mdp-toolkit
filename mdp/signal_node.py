@@ -284,7 +284,7 @@ class Node(object):
         if self.output_dim is None:
             self.output_dim = self.input_dim
 
-    def _check_train_args(self, x, *args):
+    def _check_train_args(self, x, *args, **kwargs):
         # implemented by subclasses if needed
         pass
 
@@ -338,10 +338,10 @@ class Node(object):
                   "The training phase has already finished."
 
         self._check_input(x)
-        self._check_train_args(x, *args)        
+        self._check_train_args(x, *args, **kwargs)        
         
         self._train_phase_started = True
-        self._train_seq[self._train_phase][0](self._refcast(x), *args)
+        self._train_seq[self._train_phase][0](self._refcast(x), *args,**kwargs)
 
     def stop_training(self, *args, **kwargs):
         """Stop the training phase.
@@ -356,7 +356,7 @@ class Node(object):
                   "The training phase has already finished."
 
         # close the current phase.
-        self._train_seq[self._train_phase][1]()
+        self._train_seq[self._train_phase][1](*args, **kwargs)
         self._train_phase += 1
         self._train_phase_started = False
         # check if we have some training phase left

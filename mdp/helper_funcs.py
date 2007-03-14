@@ -125,5 +125,10 @@ def get_eta(x, **kwargs):
     eta = mdp.nodes.EtaComputerNode()
     eta.train(x)
     return eta.get_eta(**kwargs)
- 
+
+def isfa(x, **kwargs):
+    isfa = mdp.nodes.ISFANode(**kwargs)
+    isfa.train(x)
+    return isfa.execute(x)
+
 

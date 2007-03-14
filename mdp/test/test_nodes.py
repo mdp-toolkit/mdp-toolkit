@@ -20,13 +20,32 @@ mult = utils.mult
 mean = numx.mean
 std = numx.std
 normal = numx_rand.normal
+uniform = numx_rand.random
 testtypes = [numx.dtype('d'), numx.dtype('f')]
 testtypeschar = [t.char for t in testtypes]
 testdecimals = {testtypes[0]: 12, testtypes[1]: 6}
 
 def _rand_labels(x):
-    return numx.around(numx_rand.random(x.shape[0]))
+    return numx.around(uniform(x.shape[0]))
+
+def _std(x):
+    return std(x, 0)
+    # standard deviation without bias
+    mx = mean(x, axis=0)
+    mx2 = mean(x*x, axis=0)
+    return numx.sqrt((mx2-mx)/(x.shape[0]-1))
     
+def _cov(x,y=None):
+    #return covariance matrix for x and y
+    if y is None: 
+        y = x.copy()
+    x = x - mean(x,0)
+    x = x / _std(x)
+    y = y - mean(y,0)
+    y = y  / _std(y)
+    #return mult(numx.transpose(x),y)/(x.shape[0]-1)
+    return mult(numx.transpose(x),y)/(x.shape[0])
+
 class NodesTestSuite(unittest.TestSuite):
 
     def __init__(self):
@@ -54,7 +73,8 @@ class NodesTestSuite(unittest.TestSuite):
                        mn.NoiseNode,
                        (mn.FDANode, [], _rand_labels),
                        (mn.GaussianClassifierNode, [], _rand_labels),
-                       mn.FANode]
+                       mn.FANode,
+                       mn.ISFANode]
 
         # generate generic test cases
         for node_class in self._nodes:
@@ -92,7 +112,7 @@ class NodesTestSuite(unittest.TestSuite):
                 self.addTest(unittest.FunctionTestCase(meth))
 
     def _get_random_mix(self, mat_dim = None, type = "d", scale = 1,\
-                        rand_func = numx_rand.random, avg = None, \
+                        rand_func = uniform, avg = None, \
                         std_dev = None):
         if mat_dim is None: mat_dim = self.mat_dim
         d = 0
@@ -181,7 +201,7 @@ class NodesTestSuite(unittest.TestSuite):
         return _testoutputdim
 
     def _uniform(self, min_, max_, dims):
-        return numx_rand.random(dims)*(max_-min_)+min_
+        return uniform(dims)*(max_-min_)+min_
 
     def testNodecopy(self):
         test_list = [1,2,3]
@@ -271,7 +291,7 @@ class NodesTestSuite(unittest.TestSuite):
         import warnings
         warnings.filterwarnings("error",'.*',mdp.MDPWarning)
         for type in ['d','f']:
-            inp = numx_rand.random((1,2))
+            inp = uniform((1,2))
             cov = utils.CovarianceMatrix(dtype=type)
             cov._tlen = int(1e+15)
             cov.update(inp)
@@ -318,7 +338,7 @@ class NodesTestSuite(unittest.TestSuite):
         dim = 7
         nmat = 13
         # create mult cov mat
-        covs = [numx_rand.random((dim,dim)).astype(dtype) for x in range(nmat)]
+        covs = [uniform((dim,dim)).astype(dtype) for x in range(nmat)]
         mult_cov = mdp.utils.MultipleCovarianceMatrices(covs)
         assert_equal(nmat,mult_cov.ncovs)
         # test symmetrize
@@ -326,12 +346,12 @@ class NodesTestSuite(unittest.TestSuite):
         mult_cov.symmetrize()
         assert_all(sym_covs,mult_cov)
         # test weight
-        weights = numx_rand.random(nmat)
+        weights = uniform(nmat)
         w_covs = [weights[x]*sym_covs[x] for x in range(nmat)]
         mult_cov.weight(weights)
         assert_all(w_covs,mult_cov)
         # test rotate
-        angle = numx_rand.random()*2*numx.pi
+        angle = uniform()*2*numx.pi
         idx = numx_rand.permutation(dim)[:2]
         rot_covs = [rotate(x,angle,idx) for x in w_covs]
         mult_cov.rotate(angle,idx)
@@ -341,7 +361,7 @@ class NodesTestSuite(unittest.TestSuite):
         mult_cov.permute(idx)
         assert_all(per_covs,mult_cov)
         # test transform
-        trans = numx_rand.random((dim,dim))
+        trans = uniform((dim,dim))
         trans_covs = [mult(mult(trans.T,x),trans)\
                       for x in per_covs]
         mult_cov.transform(trans)
@@ -367,9 +387,9 @@ class NodesTestSuite(unittest.TestSuite):
             return mdp.utils.MultipleCovarianceMatrices(covs)
         dim = 7
         nmat = 13
-        angle = numx_rand.random()*2*numx.pi
+        angle = uniform()*2*numx.pi
         idx = numx_rand.permutation(dim)[:2]
-        inp = numx_rand.random((100*dim,dim))
+        inp = uniform((100*dim,dim))
         rot_inp, per_inp = inp.copy(), inp.copy()
         # test if rotating or permuting the cov matrix is equivalent
         # to rotate or permute the sources.
@@ -441,8 +461,8 @@ class NodesTestSuite(unittest.TestSuite):
         line_y[:,1] = numx.linspace(-0.2,0.2,num=1000,endpoint=1)
         mat = numx.concatenate((line_x,line_y))
         des_var = std(mat,axis=0)
-        utils.rotate(mat,numx_rand.random()*2*numx.pi)
-        mat += numx_rand.random(2)
+        utils.rotate(mat,uniform()*2*numx.pi)
+        mat += uniform(2)
         pca = mdp.nodes.PCANode()
         pca.train(mat)
         act_mat = pca.execute(mat)
@@ -457,7 +477,7 @@ class NodesTestSuite(unittest.TestSuite):
         vars = 5
         dim = (10000,vars)
         mat,mix,inp = self._get_random_mix(mat_dim=dim,
-                                           avg=numx_rand.random(vars))
+                                           avg=uniform(vars))
         w = mdp.nodes.WhiteningNode()
         w.train(inp)
         out = w.execute(inp)
@@ -474,7 +494,7 @@ class NodesTestSuite(unittest.TestSuite):
         mat = (mat - mean(mat[:-1,:],axis=0))\
               /std(mat[:-1,:],axis=0)
         des_mat = mat.copy()
-        mat = mult(mat,numx_rand.random((2,2))) + numx_rand.random(2)
+        mat = mult(mat,uniform((2,2))) + uniform(2)
         sfa = mdp.nodes.SFANode()
         sfa.train(mat)
         out = sfa.execute(mat)
@@ -500,7 +520,7 @@ class NodesTestSuite(unittest.TestSuite):
         mat = (mat - mean(mat[:-1,:],axis=0))\
               /std(mat[:-1,:],axis=0)
         des_mat = mat.copy()
-        mat = mult(mat,numx_rand.random((2,2))) + numx_rand.random(2)
+        mat = mult(mat,uniform((2,2))) + uniform(2)
         sfa = mdp.nodes.SFA2Node()
         sfa.train(mat)
         out = sfa.execute(mat)
@@ -552,7 +572,7 @@ class NodesTestSuite(unittest.TestSuite):
         self._testICANode(ica)
 
     def testOneDimensionalHitParade(self):
-        signal = (numx_rand.random(300)-0.5)*2
+        signal = (uniform(300)-0.5)*2
         gap = 5
         # put some maxima and minima
         signal[0] , signal[10] , signal[50] = 1.5, 1.4, 1.3
@@ -574,7 +594,7 @@ class NodesTestSuite(unittest.TestSuite):
         assert_array_equal(ind_minima,[123,130,1,11,51])
 
     def testHitParadeNode(self):
-        signal = numx_rand.random((300,3))
+        signal = uniform((300,3))
         gap = 5
         signal[10,0], signal[120,1], signal[230,2] = 4,3,2
         signal[11,0], signal[121,1], signal[231,2] = -4,-3,-2
@@ -746,7 +766,7 @@ class NodesTestSuite(unittest.TestSuite):
         node = mdp.nodes.GaussianClassifierNode()
         for i in range(nclasses):
             cov = utils.symrand(dim)
-            mn = numx_rand.random((dim,))*10.
+            mn = uniform((dim,))*10.
 
             x = normal(0., 1., size=(npoints, dim))
             x = mult(x, utils.sqrtm(cov)) + mn
@@ -811,8 +831,8 @@ class NodesTestSuite(unittest.TestSuite):
         N = 5000
         k = 4
 
-        mu = numx_rand.random((1, d))*3.+2.
-        sigma = numx_rand.random((d,))*0.01
+        mu = uniform((1, d))*3.+2.
+        sigma = uniform((d,))*0.01
         #A = utils.random_rot(d)[:k,:]
         A = numx_rand.normal(size=(k,d))
 
@@ -853,6 +873,231 @@ class NodesTestSuite(unittest.TestSuite):
         est = fa.generate_input(100000)
         assert_array_almost_equal_diff(numx.cov(est, rowvar=0),
                                        utils.mult(fa.A, fa.A.T), 1)
+
+    def testISFANodeGivensRotations(self):
+        ncovs = 5
+        dim = 7
+        ratio = uniform(2).tolist()
+        covs = [uniform((dim,dim)) for j in range(ncovs)]
+        covs= mdp.utils.MultipleCovarianceMatrices(covs)
+        covs.symmetrize()
+        i = mdp.nodes.ISFANode(range(1, ncovs+1),sfa_ica_coeff=ratio,
+                               icaweights=uniform(ncovs),
+                               sfaweights=uniform(ncovs),
+                               output_dim = dim-1, dtype="d")
+        ratio = i._get_ica_sfa_coeff()
+        # case 2: only one axis within output space
+        # get contrast using internal function
+        phi, cont1, min_, dummy =\
+                   i._givens_angle_case2(dim-2,dim-1,covs,ratio,complete=1)
+        # get contrast using explicit rotations
+        cont2 = []
+        for angle in phi:
+            cp = covs.copy()
+            cp.rotate(angle,[dim-2,dim-1])
+            cont2.append(numx.sum(i._get_contrast(cp,ratio)))
+        assert_array_almost_equal(cont1,cont2,self.decimal)
+        # case 1: both axes within output space
+        # get contrast using internal function
+        phi,cont1, min_ , dummy =\
+                   i._givens_angle_case1(0,1,covs,ratio,complete = 1)
+        # get contrast using explicit rotations
+        cont2 = []
+        for angle in phi:
+            cp = covs.copy()
+            cp.rotate(angle,[0,1])
+            cont2.append(numx.sum(i._get_contrast(cp,ratio)))
+        assert abs(min_) < numx.pi/4, 'Estimated Minimum out of bounds'
+        assert_array_almost_equal(cont1,cont2,self.decimal)
+
+    def testISFANode_SFAPart(self):
+        # create slow sources
+        PI = numx.pi
+        dim = 80000        
+        freqs = [2*PI*1000,2*PI*5000,2*PI*16000]
+        t =  numx.linspace(0,1,num=dim)
+        mat = numx.transpose(numx.array(
+                            [numx.sin(freqs[0]*t),
+                             numx.sin(freqs[1]*t),
+                             numx.sin(freqs[2]*t)]))
+        src = mdp.sfa(mat)
+        # test with unmixed signals (i.e. the node should make nothing at all)
+        out = mdp.isfa(src,
+                       lags=1,
+                       whitened=True,
+                       sfa_ica_coeff=[1.,0.])
+        max_cv = numx.diag(abs(_cov(out,src)))
+        assert_array_almost_equal(max_cv, numx.ones((3,)),5)
+        # mix linearly the signals
+        mix = mult(src,uniform((3,3))*2-1)
+        out = mdp.isfa(mix,
+                       lags=1,
+                       whitened=False,
+                       sfa_ica_coeff=[1.,0.])
+        max_cv = numx.diag(abs(_cov(out,src)))
+        assert_array_almost_equal(max_cv, numx.ones((3,)),5)
+
+    def testISFANode_ICAPart(self):
+        # create independent sources
+        src = uniform((80000,3))*2-1
+        fsrc = numx.fft.rfft(src,axis=0)
+        # enforce different speeds
+        for i in range(3):
+            fsrc[(i+1)*5000:,i] = 0.
+        src = numx.fft.irfft(fsrc,axis=0)
+        # enforce time-lag-1-independence
+        src = mdp.isfa(src, lags=1, sfa_ica_coeff=[1.,0.])
+        out = mdp.isfa(src,
+                       lags=1,
+                       whitened=True,
+                       sfa_ica_coeff=[0.,1.])
+        max_cv = numx.diag(abs(_cov(out,src)))
+        assert_array_almost_equal(max_cv, numx.ones((3,)),5)
+        # mix linearly the signals
+        mix = mult(src,uniform((3,3))*2-1)
+        out = mdp.isfa(mix,
+                       lags=1,
+                       whitened=False,
+                       sfa_ica_coeff=[0.,1.])
+        max_cv = numx.diag(abs(_cov(out,src)))
+        assert_array_almost_equal(max_cv, numx.ones((3,)),5)
+        
+    def testISFANode_3Complete(self):
+        # test transition from ica to sfa behavior of isfa
+        # use ad hoc sources
+        lag = 25
+        src = numx.zeros((1001,3),"d")
+        idx = [(2,4),(80,1),(2+lag,6)]
+        for i in range(len(idx)):
+            i0, il = idx[i]
+            src[i0:i0+il,i] = 1.
+            src[i0+il:i0+2*il,i] = -1.
+            src[:,i] -= mean(src[:,i])
+            src[:,i] /= std(src[:,i])
+        # test extreme cases
+        # case 1: ICA
+        out = mdp.isfa(src,
+                       lags=[1,lag],
+                       icaweights=[1.,1.],
+                       sfaweights=[1.,0.],
+                       output_dim=2,
+                       whitened=True,
+                       sfa_ica_coeff=[1E-4,1.])
+        cv = abs(_cov(src,out))
+        idx_cv = numx.argmax(cv,axis=0)
+        assert_array_equal(idx_cv,[2,1])
+        max_cv = numx.amax(cv,axis=0)
+        assert_array_almost_equal(max_cv, numx.ones((2,)),5)
+        # case 2: SFA
+        out = mdp.isfa(src,
+                       lags=[1,lag],
+                       icaweights=[1.,1.],
+                       sfaweights=[1.,0.],
+                       output_dim=2,
+                       whitened=True,
+                       sfa_ica_coeff=[1.,0.])
+        cv = abs(_cov(src,out))
+        idx_cv = numx.argmax(cv,axis=0)
+        assert_array_equal(idx_cv,[2,0])
+        max_cv = numx.amax(cv,axis=0)
+        assert_array_almost_equal(max_cv, numx.ones((2,)),5)
+
+    def _ISFA_analytical_solution(self, nsources, nmat, dim, ica_ambiguity):
+        # build a sequence of random diagonal matrices
+        matrices = [numx.eye(dim, dtype='d')]*nmat
+        # build first matrix:
+        #   - create random diagonal with elements
+        #     in [-1, 1]
+        diag = (uniform(dim)-0.5)*2
+        #   - sort it in descending order (in absolute value)
+        #     [large first]
+        diag = numx.take(diag, numx.argsort(abs(diag)))[::-1]
+        #   - save larger elements [sfa solution] 
+        sfa_solution = diag[:nsources].copy()
+        #   - modify diagonal elements order to allow for a
+        #     different solution for isfa:
+        #     create index array
+        idx = range(0,dim)
+        #     take the second slowest element and put it at the end
+        idx = [idx[0]]+idx[2:]+[idx[1]]
+        diag = numx.take(diag, idx)
+        #   - save isfa solution
+        isfa_solution = diag[:nsources]
+        #   - set the first matrix
+        matrices[0] = matrices[0]*diag
+        # build other matrices
+        diag_dim = nsources+ica_ambiguity 
+        for i in range(1,nmat):
+            # get a random symmetric matrix
+            matrices[i] = mdp.utils.symrand(dim)
+            # diagonalize the subspace diag_dim
+            tmp_diag = (uniform(diag_dim)-0.5)*2
+            matrices[i][:diag_dim,:diag_dim] = numx.diag(tmp_diag)
+        # put everything in MultCovMat
+        matrices = mdp.utils.MultipleCovarianceMatrices(matrices)
+        return matrices, sfa_solution, isfa_solution
+
+    def _ISFA_unmixing_error(self, nsources, goal, estimate):
+        check = mult(goal[:nsources,:], estimate[:,:nsources])
+        error = (abs(numx.sum(numx.sum(abs(check),axis=1)-1))+
+                 abs(numx.sum(numx.sum(abs(check),axis=0)-1)))
+        error /= nsources*nsources
+        return error
+
+
+    def testISFANode_AnalyticalSolution(self):
+        nsources = 2
+        # number of time lags
+        nmat = 20
+        # degree of polynomial expansion
+        deg = 3
+        # sfa_ica coefficient
+        sfa_ica_coeff = [1., 1.]
+        # how many independent subspaces in addition to the sources
+        ica_ambiguity = 2
+        # dimensions of expanded space
+        dim = mdp.nodes._expanded_dim(deg, nsources)
+        assert (nsources+ica_ambiguity) < dim, 'Too much ica ambiguity.'
+        # actually we have (theoretically) 100% (10000/10000) percent of
+        # success per trial. Try two times just to exclude
+        # malevolent god intervention.
+        trials = 3
+        for trial in range(trials):
+            # get analytical solution:
+            # prepared matrices, solution for sfa, solution for isf
+            covs,sfa_solution,isfa_solution=self._ISFA_analytical_solution(
+                nsources,nmat,dim,ica_ambiguity)
+            # get contrast of analytical solution
+            # sfasrc, icasrc = _get_matrices_contrast(covs, nsources, dim,
+            #                                         sfa_ica_coeff)
+            # set rotation matrix
+            R = mdp.utils.random_rot(dim)
+            covs_rot = covs.copy()
+            # rotate the analytical solution
+            covs_rot.transform(R)
+            # find the SFA solution to initialize ISFA
+            eigval, SFARP = mdp.utils.symeig(covs_rot.covs[:,:,0])
+            # order SFA solution by slowness
+            SFARP = SFARP[:,-1::-1]
+            # run ISFA
+            isfa = mdp.nodes.ISFANode(lags = covs_rot.ncovs, whitened=True,
+                                      sfa_ica_coeff = sfa_ica_coeff,
+                                      eps_contrast = 1e-7,
+                                      output_dim = nsources,
+                                      max_iter = 500,
+                                      shuffle = 1, 
+                                      verbose = 0,
+                                      RP = SFARP)
+            isfa.train(uniform((100,dim)))
+            isfa.stop_training(covs = covs_rot.copy(), cut = 0)
+            # check that the rotation matrix found by ISFA is R
+            # up to a permutation matrix.
+            # Unmixing error as in Tobias paper
+            error = self._ISFA_unmixing_error(nsources, R, isfa.RP)
+            if error < 1E-4:
+                break
+        assert error < 1E-4, 'Not one out of %d trials succeded.'%trials
+            
         
 def get_suite():
     return NodesTestSuite()

@@ -81,7 +81,7 @@ from linear_flows import Flow, CheckpointFlow, \
 
 # import helper functions:
 from helper_funcs import pca, whitening, fastica, cubica, sfa, get_eta, \
-                         sfa2, factor_analysis
+                         sfa2, factor_analysis, isfa
 
 # import test functions:
 from test import test

@@ -7,6 +7,7 @@ from fda_nodes import FDANode
 from em_nodes import FANode
 from misc_nodes import HitParadeNode, TimeFramesNode, EtaComputerNode, \
      NoiseNode, GaussianClassifierNode
+from isfa_nodes import ISFANode
 
 # import internals for use in test_suites
 from misc_nodes import OneDimensionalHitParade as _OneDimensionalHitParade
