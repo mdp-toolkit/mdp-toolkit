@@ -93,7 +93,7 @@ def polynomial_expansion_benchmark(dim, len, degree, times):
 
 POLY_EXP_ARGS = [(2**i, 100, j, 200) for j in range(2,5) for i in range(2,4)]
 
-if mdp.numx_description in ['symeig', 'scipy']:
+if mdp.numx_description in ['symeig', 'scipy', 'numpy']:
     MUL_MTX_DIMS = [[2**i] for i in range(4,11)]
     # list of (benchmark function, list of arguments)
     BENCH_FUNCS = [(matmult_c_MDP_benchmark, MUL_MTX_DIMS),

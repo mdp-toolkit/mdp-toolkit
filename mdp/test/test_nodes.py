@@ -885,7 +885,8 @@ class NodesTestSuite(unittest.TestSuite):
                                icaweights=uniform(ncovs),
                                sfaweights=uniform(ncovs),
                                output_dim = dim-1, dtype="d")
-        ratio = i._get_ica_sfa_coeff()
+        i._adjust_ica_sfa_coeff()
+        ratio = i._bica_bsfa
         # case 2: only one axis within output space
         # get contrast using internal function
         phi, cont1, min_, dummy =\
@@ -1085,11 +1086,10 @@ class NodesTestSuite(unittest.TestSuite):
                                       eps_contrast = 1e-7,
                                       output_dim = nsources,
                                       max_iter = 500,
-                                      shuffle = 1, 
-                                      verbose = 0,
+                                      verbose = False,
                                       RP = SFARP)
             isfa.train(uniform((100,dim)))
-            isfa.stop_training(covs = covs_rot.copy(), cut = 0)
+            isfa.stop_training(covs = covs_rot.copy(), adjust = False)
             # check that the rotation matrix found by ISFA is R
             # up to a permutation matrix.
             # Unmixing error as in Tobias paper

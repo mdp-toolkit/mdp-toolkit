@@ -23,3 +23,4 @@ del neural_gas_nodes
 del fda_nodes
 del em_nodes
 del misc_nodes
+del isfa_nodes
