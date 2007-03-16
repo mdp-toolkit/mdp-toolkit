@@ -1089,11 +1089,11 @@ class NodesTestSuite(unittest.TestSuite):
                                       verbose = False,
                                       RP = SFARP)
             isfa.train(uniform((100,dim)))
-            isfa.stop_training(covs = covs_rot.copy(), adjust = False)
+            isfa.stop_training(covs = covs_rot.copy())
             # check that the rotation matrix found by ISFA is R
             # up to a permutation matrix.
             # Unmixing error as in Tobias paper
-            error = self._ISFA_unmixing_error(nsources, R, isfa.RP)
+            error = self._ISFA_unmixing_error(nsources, R, isfa.RPC)
             if error < 1E-4:
                 break
         assert error < 1E-4, 'Not one out of %d trials succeded.'%trials
