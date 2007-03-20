@@ -912,15 +912,13 @@ class NodesTestSuite(unittest.TestSuite):
         assert_array_almost_equal(cont1,cont2,self.decimal)
 
     def testISFANode_SFAPart(self):
-        # create slow sources
-        PI = numx.pi
-        dim = 80000        
-        freqs = [2*PI*1000,2*PI*5000,2*PI*16000]
-        t =  numx.linspace(0,1,num=dim)
-        mat = numx.transpose(numx.array(
-                            [numx.sin(freqs[0]*t),
-                             numx.sin(freqs[1]*t),
-                             numx.sin(freqs[2]*t)]))
+        # create independent sources
+        mat = uniform((100000,3))*2-1
+        fmat = numx.fft.rfft(mat,axis=0)
+        # enforce different speeds
+        for i in range(3):
+            fmat[(i+1)*5000:,i] = 0.
+        mat = numx.fft.irfft(fmat,axis=0)
         src = mdp.sfa(mat)
         # test with unmixed signals (i.e. the node should make nothing at all)
         out = mdp.isfa(src,
@@ -928,7 +926,7 @@ class NodesTestSuite(unittest.TestSuite):
                        whitened=True,
                        sfa_ica_coeff=[1.,0.])
         max_cv = numx.diag(abs(_cov(out,src)))
-        assert_array_almost_equal(max_cv, numx.ones((3,)),5)
+        assert_array_almost_equal(max_cv, numx.ones((3,)),6)
         # mix linearly the signals
         mix = mult(src,uniform((3,3))*2-1)
         out = mdp.isfa(mix,
@@ -936,11 +934,11 @@ class NodesTestSuite(unittest.TestSuite):
                        whitened=False,
                        sfa_ica_coeff=[1.,0.])
         max_cv = numx.diag(abs(_cov(out,src)))
-        assert_array_almost_equal(max_cv, numx.ones((3,)),5)
+        assert_array_almost_equal(max_cv, numx.ones((3,)),6)
 
     def testISFANode_ICAPart(self):
         # create independent sources
-        src = uniform((80000,3))*2-1
+        src = uniform((100000,3))*2-1
         fsrc = numx.fft.rfft(src,axis=0)
         # enforce different speeds
         for i in range(3):
@@ -962,7 +960,7 @@ class NodesTestSuite(unittest.TestSuite):
                        sfa_ica_coeff=[0.,1.])
         max_cv = numx.diag(abs(_cov(out,src)))
         assert_array_almost_equal(max_cv, numx.ones((3,)),5)
-        
+
     def testISFANode_3Complete(self):
         # test transition from ica to sfa behavior of isfa
         # use ad hoc sources
