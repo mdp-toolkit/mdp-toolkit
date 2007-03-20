@@ -88,7 +88,39 @@ def polynomial_expansion_benchmark(dim, len, degree, times):
     pnode = mdp.nodes.PolynomialExpansionNode(degree)
     for i in xrange(times):
         pnode(a)
-        
+
+# ISFA benchmark
+
+def _tobias_mix(src):
+    mix = src.copy()
+    mix[:,0]=(src[:,1]+3*src[:,0]+6)*numx.cos(1.5*numx.pi*src[:,0])
+    mix[:,1]=(src[:,1]+3*src[:,0]+6)*numx.sin(1.5*numx.pi*src[:,0])
+    return mix
+
+def isfa_spiral_benchmark():
+    # create independent sources
+    nsrc = 2
+    src = numx_rand.laplace(size=(50000,nsrc))
+    fsrc = numx.fft.rfft(src,axis=0)
+    # enforce different time scales
+    for i in range(nsrc):
+        fsrc[5000+(i+1)*1000:,i] = 0.
+    src = numx.fft.irfft(fsrc,axis=0)
+    # subtract mean and rescale between -1 and 1
+    src -= src.mean(axis=0)
+    src /= abs(src).max()
+    # apply nonlinear "twist" transformation
+    exp_src = _tobias_mix(src)
+    # train
+    flow = mdp.Flow([mdp.nodes.PolynomialExpansionNode(5),
+                     mdp.nodes.ISFANode(lags=30, whitened=False,
+                                        sfa_ica_coeff=[1.,100.],
+                                        output_dim=2, verbose=True)])
+    flow.train([None, exp_src])
+    # get output signal
+    out = flow(exp_src)
+    return src, out
+
 ####### /benchmark function
 
 POLY_EXP_ARGS = [(2**i, 100, j, 200) for j in range(2,5) for i in range(2,4)]
