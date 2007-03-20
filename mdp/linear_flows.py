@@ -176,6 +176,9 @@ class Flow(object):
         # check that all elements are iterable
         for i in range(len(data_iterators)):
             el = data_iterators[i]
+            # allow single array instead of iterator
+            if isinstance(el, numx.ndarray):
+                data_iterators[i] = [el]
             if el is not None and not hasattr(el, '__iter__'):
                 raise FlowException, "Element number %d in the " % i + \
                       "iterators list is not a list or iterator."
