@@ -78,7 +78,7 @@ def polynomial_expansion_benchmark(dim, len, degree, times):
     """    This benchmark expands random data of shape (len, dim)
     'times' times in the space of polynomials of degree 'degree'.
     Arguments: (dim,len,degree,times)."""
-    numx_rand.seed(4253526839)
+    numx_rand.seed(4253529)
     a = numx_rand.random((len,dim))
     pnode = mdp.nodes.PolynomialExpansionNode(degree)
     for i in xrange(times):
@@ -124,7 +124,7 @@ def isfa_spiral_benchmark():
 
 def sfa_benchmark():
     """    Apply SFA to twisted data."""
-    numx_rand.seed(4245017347)
+    numx_rand.seed(424507)
     # create independent sources
     nsrc = 15
     src = _get_random_slow_sources(nsrc, numx_rand.normal)
