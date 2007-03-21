@@ -10,8 +10,6 @@ import unittest
 import sys
 from mdp import numx, numx_rand
 import test_nodes, test_flows, test_utils, test_graph
-import benchmark_mdp
-from testing_tools import run_benchmarks
 
 _err_str = """\nIMPORTANT: some tests use random numbers. This could
 occasionally lead to failures due to numerical degeneracies.
@@ -40,15 +38,3 @@ def test(suitename = 'all', verbosity = 2, seed = None):
         sys.stderr.write(_err_str)
     sys.stderr.write("\nRandom Seed was: " + str(seed)+'\n')
     
-
-benchmark_suites = {'mdp': benchmark_mdp.get_benchmarks()}
-    
-def benchmark(suitename = 'all'):
-    numx_rand.seed(1268049219)
-    if suitename == 'all':
-        suite = []
-        for s in benchmark_suites.itervalues(): suite.extend(s)
-    else:
-        suite = benchmark_suites[suitename]
-    print "Random Seed: ", numx_rand.get_state()[1][0]
-    run_benchmarks(suite)

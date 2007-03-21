@@ -67,7 +67,7 @@ class FlowExceptionCR(CrashRecoveryException, FlowException):
             self.filename = name
             errstr = errstr+dumpinfo    
 
-        Exception.__init__(self,errstr)
+        Exception.__init__(self, errstr)
 
 class Flow(object):
     """A Flow consists in a linear sequence of Nodes.
@@ -84,24 +84,25 @@ class Flow(object):
     This class is a Python container class. Most of the builtin 'list'
     methods are available."""
 
-    def __init__(self, flow, verbose = 0):
+    def __init__(self, flow, crash_recovery= False, verbose = False):
         """
         'flow' is a list of Nodes.
+        The value of 'crash_recovery' is sent to 'set_crash_recovery'.
         If 'verbose' is set print some basic progress information."""
         self._check_nodes_consistency(flow)
         self.flow = flow
         self.verbose = verbose
-        self._crash_recovery = 0
+        self.set_crash_recovery(crash_recovery)
 
     def _propagate_exception(self, except_, nodenr):
         # capture exception. the traceback of the error is printed and a
         # new exception, containing the identity of the node in the flow
         # is raised. Allow crash recovery.
-        tb = _sys.exc_traceback
+        (type, val, tb) = _sys.exc_info()
         prev = ''.join(_traceback.format_exception(except_.__class__,
                                                   except_,tb))
         act = "\n! Exception in node #%d (%s):\n" \
-              % (nodenr, type(self.flow[nodenr]).__name__)
+              % (nodenr, str(self.flow[nodenr]))
         errstr = ''.join(('\n', 40*'-', act, 'Node Traceback:\n', prev, 40*'-'))
         raise FlowExceptionCR,(errstr, self, except_)
 
@@ -111,10 +112,10 @@ class Flow(object):
         if data_iterator is not None and not node.is_trainable():
             # attempted to train a node although it is not trainable.
             # raise a warning and continue with the next node.
-            wrnstr = "\n! Node %d is not trainable" % nodenr + \
-                     "\nYou probably need a 'None' iterator for"+\
-                     " this node. Continuing anyway."
-            _warnings.warn(wrnstr, mdp.MDPWarning)
+            #wrnstr = "\n! Node %d is not trainable" % nodenr + \
+            #         "\nYou probably need a 'None' iterator for"+\
+            #         " this node. Continuing anyway."
+            #_warnings.warn(wrnstr, mdp.MDPWarning)
             return
         elif data_iterator is None and node.is_training():
             # A None iterator is passed to a training node
@@ -156,6 +157,16 @@ class Flow(object):
             wrnstr = "\n! Node %d training phase already finished" % nodenr +\
                      " Continuing anyway."
             _warnings.warn(wrnstr, mdp.MDPWarning)
+        except FlowExceptionCR, e:
+            # this exception was already propagated, probably during the execution
+            # of a node upstream in the flow
+            (type, val) = _sys.exc_info()[:2]
+            prev = ''.join(_traceback.format_exception_only(e.__class__,e))
+            prev = prev[prev.find('\n')+1:]
+            act = "\nWhile training node #%d (%s):\n" \
+              % (nodenr, str(self.flow[nodenr]))
+            errstr = ''.join(('\n', 40*'=', act, prev, 40*'='))
+            raise FlowException(errstr)
         except Exception, e:
             # capture any other exception occured during training.
             self._propagate_exception(e, nodenr)
@@ -176,9 +187,6 @@ class Flow(object):
         # check that all elements are iterable
         for i in range(len(data_iterators)):
             el = data_iterators[i]
-            # allow single array instead of iterator
-            if isinstance(el, numx.ndarray):
-                data_iterators[i] = [el]
             if el is not None and not hasattr(el, '__iter__'):
                 raise FlowException, "Element number %d in the " % i + \
                       "iterators list is not a list or iterator."
@@ -210,7 +218,7 @@ class Flow(object):
         except Exception, e:
             self._propagate_exception(e, len(self.flow)-1)
 
-    def set_crash_recovery(self, state = 1):
+    def set_crash_recovery(self, state = True):
         """Set crash recovery capabilities.
         
         When a node raises an Exception during training, execution, or
