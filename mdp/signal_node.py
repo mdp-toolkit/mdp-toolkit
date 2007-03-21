@@ -162,7 +162,8 @@ class Node(object):
         elif t not in self.get_supported_dtypes():
             errstr = "\ndtype '%s' is not supported.\n" % t.name+ \
                       "Supported dtypes: %s" \
-                      %([t.name for t in SUPPORTED_DTYPES])
+                      %([mdp.numx.dtype(t).name for t in
+                         self.get_supported_dtypes()])
             raise NodeException, errstr
         else:
             self._set_dtype(t)
@@ -171,9 +172,10 @@ class Node(object):
         self._dtype = t
         
     dtype = property(get_dtype,
-                        set_dtype,
-                        doc = "dtype")
+                     set_dtype,
+                     doc = "dtype")
 
+    @classmethod
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node.
         The types can be specified in any format allowed by numpy.dtype."""

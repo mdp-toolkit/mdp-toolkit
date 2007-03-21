@@ -8,6 +8,7 @@ from mdp.utils import DelayCovarianceMatrix, MultipleCovarianceMatrices, \
 
 # rename often used functions
 sum, cos, sin, PI = numx.sum, numx.cos, numx.sin, numx.pi
+SQRT_EPS_D = numx.sqrt(numx.finfo('d').eps)
 
 def _triu(m, k=0):
     """ returns the elements on and above the k-th diagonal of m.  k=0 is the
@@ -33,7 +34,7 @@ class ISFANode(Node):
     def __init__(self, lags=1, sfa_ica_coeff=[1.,1.], icaweights=None,
                  sfaweights=None,
                   whitened=False, 
-                 eps_contrast=1e-7, max_iter=10000, RP=None,verbose=False, 
+                 eps_contrast=1e-6, max_iter=10000, RP=None,verbose=False, 
                  input_dim=None, output_dim=None, dtype=None):
         """
         Perform Independent Slow Feature Analysis.
@@ -213,7 +214,7 @@ class ISFANode(Node):
 
     def get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
-        return ['f','d']
+        return ['d']
 
     def _set_dtype(self, dtype):
         # when typecode is set, we set the whitening node if needed and
@@ -358,7 +359,7 @@ class ISFANode(Node):
                    4*c24*sin(-4*left)- 4*s24*cos(-4*left)
         der_right = 2*c22*sin(-2*right)-2*s22*cos(-2*right)+\
                     4*c24*sin(-4*right)-4*s24*cos(-4*right)
-        if abs(der_left - der_right) < 1e-8:
+        if abs(der_left - der_right) < SQRT_EPS_D:
             minimum = phi[minidx]
         else:
             minimum = right - der_right*(right-left)/(der_right-der_left)

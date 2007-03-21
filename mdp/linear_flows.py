@@ -84,7 +84,7 @@ class Flow(object):
     This class is a Python container class. Most of the builtin 'list'
     methods are available."""
 
-    def __init__(self, flow, crash_recovery= False, verbose = False):
+    def __init__(self, flow, crash_recovery=False, verbose=False):
         """
         'flow' is a list of Nodes.
         The value of 'crash_recovery' is sent to 'set_crash_recovery'.
@@ -228,10 +228,10 @@ class Flow(object):
         can be found as the 'parent_exception' attribute of the
         FlowExceptionCR instance.
         
-        - If 'state' = 0, disable crash recovery.
+        - If 'state' = False, disable crash recovery.
         - If 'state' is a string, the crash dump is saved on a file
           with that name.
-        - If 'state' = 1, the crash dump is saved on a file created by
+        - If 'state' = True, the crash dump is saved on a file created by
           the tempfile module.
         """
         self._crash_recovery = state
