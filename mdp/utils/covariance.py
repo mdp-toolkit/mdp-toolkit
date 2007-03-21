@@ -86,7 +86,7 @@ class CovarianceMatrix(object):
         # update the covariance matrix, the average and the number of
         # observations (try to do everything inplace)
         self._cov_mtx += mdp.utils.mult(x.T, x)
-        self._avg += numx.sum(x, 0)
+        self._avg += x.sum(axis=0)
         self._tlen += x.shape[0]
 
     def fix(self):
@@ -200,9 +200,9 @@ class DelayCovarianceMatrix(object):
         # update the covariance matrix, the average and the number of
         # observations (try to do everything inplace)
         self._cov_mtx += mdp.utils.mult(x[:tlen-dt,:].T, x[dt:tlen,:])
-        totalsum = numx.sum(x, 0)
-        self._avg += totalsum - numx.sum(x[tlen-dt:,:], 0)
-        self._avg_dt += totalsum - numx.sum(x[:dt,:], 0)
+        totalsum = x.sum(axis=0)
+        self._avg += totalsum - x[tlen-dt:,:].sum(axis=0)
+        self._avg_dt += totalsum - x[:dt,:].sum(axis=0)
         self._tlen += tlen-dt
 
     def fix(self, A=None):

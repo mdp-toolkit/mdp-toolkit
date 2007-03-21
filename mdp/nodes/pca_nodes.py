@@ -36,9 +36,9 @@ class PCANode(Node):
         
     def _check_output(self, y):
         # check output rank
-        if not numx.rank(y) == 2:
+        if not y.ndim == 2:
             error_str = "y has rank %d, should be 2"\
-                        %(numx.rank(y))
+                        %(y.ndim)
             raise NodeException, error_str
 
         if y.shape[1]==0 or y.shape[1]>self.output_dim:
@@ -71,7 +71,7 @@ class PCANode(Node):
         # this is a bit counterintuitive, as it reshapes the average vector to
         # be a matrix. in this way, however, we spare the reshape
         # operation every time that 'execute' is called.
-        self.avg = numx.reshape(avg, (1, avg.shape[0]))
+        self.avg = avg.reshape(1, avg.shape[0])
 
         ##### compute the principal components
         # if the number of principal components to keep is not specified,
@@ -102,7 +102,7 @@ class PCANode(Node):
 
         # check that we didn't get negative eigenvalues,
         # if this is the case the covariance matrix may be singular
-        if min(d) <= 0:
+        if d.min() <= 0:
             errs="Got negative eigenvalues: Covariance matrix may be singular."
             raise NodeException, errs 
                   
@@ -126,12 +126,12 @@ class PCANode(Node):
             # been specified by the fraction of variance to be explained
             #
             # total variance
-            vartot = numx.sum(d)
+            vartot = d.sum()
             # cumulative variance (percent)
-            varcum = numx.cumsum(d/vartot, axis = 0)
+            varcum = (d/vartot).cumsum(axis=0)
             # select only the relevant eigenvalues
             # number of relevant eigenvalues
-            neigval = numx.searchsorted(varcum, self.desired_variance)+1
+            neigval = varcum.searchsorted(self.desired_variance) + 1.
             self.explained_variance = varcum[neigval]
             # cut
             d = d[0:neigval]

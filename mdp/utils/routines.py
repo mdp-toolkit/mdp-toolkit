@@ -70,7 +70,7 @@ def permute(x,indices=[0,0],rows=0, cols=1):
 
 def hermitian(x):
     """Compute the Hermitian, i.e. conjugate transpose, of x."""
-    return numx.conjugate(x.T)
+    return x.T.conj()
 
 def symrand(dim_or_eigv, dtype="d"):
     """Return a random symmetric (Hermitian) matrix.
@@ -85,14 +85,15 @@ def symrand(dim_or_eigv, dtype="d"):
         dim = dim_or_eigv
         d = numx_rand.random(dim)
     elif isinstance(dim_or_eigv, numx.ndarray) and \
-         len(numx.shape(dim_or_eigv)) == 1:
-        dim = numx.shape(dim_or_eigv)[0]
+         len(dim_or_eigv.shape) == 1:
+        dim = dim_or_eigv.shape[0]
         d = dim_or_eigv
     else:
         raise mdp.MDPException, "input type not supported."
     
     v = random_rot(dim, dtype=dtype)
-    h = mdp.utils.mult(mdp.utils.mult(hermitian(v), mdp.numx.diag(d)), v)
+    #h = mdp.utils.mult(mdp.utils.mult(hermitian(v), mdp.numx.diag(d)), v)
+    h = mdp.utils.mult(mult_diag(d, hermitian(v), left=False), v)
     # to avoid roundoff errors, symmetrize the matrix (again)
     return refcast(0.5*(hermitian(h)+h), dtype)
 
@@ -110,15 +111,15 @@ def random_rot(dim, dtype='d'):
     for n in range(1, dim):
         x = mdp.numx_rand.normal(size=(dim-n+1,)).astype(dtype)
         D[n-1] = mdp.numx.sign(x[0])
-        x[0] -= D[n-1]*mdp.numx.sqrt(mdp.numx.sum(x*x))
+        x[0] -= D[n-1]*mdp.numx.sqrt((x*x).sum())
         # Householder transformation
         Hx = mdp.numx.eye(dim-n+1, dtype=dtype) \
-             - 2.*mdp.numx.outer(x, x)/mdp.numx.sum(x*x)
+             - 2.*mdp.numx.outer(x, x)/(x*x).sum()
         mat = mdp.numx.eye(dim, dtype=dtype)
         mat[n-1:,n-1:] = Hx
         H = mdp.utils.mult(H, mat)
     # Fix the last sign such that the determinant is 1
-    D[-1] = -mdp.numx.prod(D)
+    D[-1] = -D.prod()
     # Equivalent to mult(numx.diag(D), H) but faster
     H = (D*H.T).T
     return H
@@ -127,7 +128,7 @@ def norm2(v):
     """Compute the 2-norm for 1D arrays.
     norm2(v) = sqrt(sum(v_i^2))"""
     
-    return numx.sqrt(numx.sum(mdp.numx.squeeze(v*v)))
+    return numx.sqrt((v*v).sum())
 
 def ordered_uniq(alist):
     """Return the elements in alist without repetitions.
@@ -149,10 +150,27 @@ def cov2(x, y):
     Complies with the old scipy.cov function: different variables
     are on different columns."""
 
-    mnx = numx.mean(x, axis=0)
-    mny = numx.mean(y, axis=0)
+    mnx = x.mean(axis=0)
+    mny = y.mean(axis=0)
     tlen = x.shape[0]
     return mdp.utils.mult(x.T, y)/(tlen-1) - numx.outer(mnx, mny)
+
+def mult_diag(d, mtx, left=True):
+    """Multiply a full matrix by a diagonal matrix.
+    This function should always be faster than dot.
+    
+    Input:
+      d -- 1D (N,) array (contains the diagonal elements)
+      mtx -- 2D (N,N) array
+
+    Output:
+      mult_diag(d, mts, left=True) == dot(diag(d), mtx)
+      mult_diag(d, mts, left=False) == dot(mtx, diag(d))
+    """
+    if left:
+        return (d*mtx.T).T
+    else:
+        return d*mtx
 
 # the following functions and classes were part of the scipy_emulation.py file
 
@@ -179,7 +197,7 @@ def _greatest_common_dtype(alist):
 
 def _assert_eigenvalues_real(w, dtype):
     tol = numx.finfo(dtype.type).eps * 100
-    if numx.amax(abs(w.imag)) > tol:
+    if abs(w.imag).max() > tol:
         raise SymeigException, \
               "Some eigenvalues have significant imaginary part"
 
@@ -247,10 +265,10 @@ numarray.linear_algebra.eigenvectors with an interface compatible with symeig.
     _assert_eigenvalues_real(w, dtype)
     w = w.real
     Z = Z.real
-        
-    idx = numx.argsort(w)
-    w = numx.take(w, idx)
-    Z = numx.take(Z, idx, axis=1)
+    
+    idx = w.argsort()
+    w = w.take(idx)
+    Z = Z.take(idx, axis=1)
     
     if range is not None:
         lo, hi = range

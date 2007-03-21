@@ -29,7 +29,7 @@ def _rand_labels(x):
     return numx.around(uniform(x.shape[0]))
 
 def _std(x):
-    return std(x, 0)
+    return x.std(axis=0)
     # standard deviation without bias
     mx = mean(x, axis=0)
     mx2 = mean(x*x, axis=0)
@@ -569,6 +569,16 @@ class NodesTestSuite(unittest.TestSuite):
     def testFastICANodeDeflation(self):
         ica = mdp.nodes.FastICANode\
               (limit = 10**(-self.decimal), approach="defl")
+        self._testICANode(ica)
+        
+    def testFastICANodeDeflation_tanh(self):
+        ica = mdp.nodes.FastICANode\
+              (limit = 10**(-self.decimal), approach="defl", g="tanh")
+        self._testICANode(ica)
+        
+    def testFastICANodeDeflation_gauss(self):
+        ica = mdp.nodes.FastICANode\
+              (limit = 10**(-self.decimal), approach="defl", g="gaus")
         self._testICANode(ica)
 
     def testOneDimensionalHitParade(self):

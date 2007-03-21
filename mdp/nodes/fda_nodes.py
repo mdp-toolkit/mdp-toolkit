@@ -59,7 +59,7 @@ class FDANode(mdp.Node):
             self.means[lbl] = numx.zeros((1, self.input_dim),
                                          dtype=self.dtype)
             self.tlens[lbl] = 0
-        self.means[lbl] += numx.sum(x, 0)
+        self.means[lbl] += x.sum(axis=0)
         self.tlens[lbl] += x.shape[0]
     
     def _train_means(self, x, cl):

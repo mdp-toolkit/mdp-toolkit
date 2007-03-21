@@ -79,6 +79,19 @@ class UtilsTestCase(unittest.TestCase):
         y = 3L*x
         assert_type_equal(y.dtype, 'f')
 
+    def testMultDiag(self):
+        dim = 20
+        d = numx_rand.random(size=(dim,))
+        dd = numx.diag(d)
+        mtx = numx_rand.random(size=(dim, dim))
+        
+        res1 = utils.mult(dd, mtx)
+        res2 = utils.mult_diag(d, mtx, left=True)
+        assert_array_almost_equal(res1, res2, 10)
+        res1 = utils.mult(mtx, dd)
+        res2 = utils.mult_diag(d, mtx, left=False)
+        assert_array_almost_equal(res1, res2, 10)
+
 ##     def testQuadraticForms(self):
 ##         # !!!!! add some real test
 ##         # check H with negligible linear term

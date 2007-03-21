@@ -114,10 +114,10 @@ class GrowingNeuralGasNode(Node):
         g = self.graph
         # distances of all graph nodes from x
         distances = numx.array(map(_distance_from_node, g.nodes))
-        ids = numx.argsort(distances)[:2]
+        ids = distances.argsort()[:2]
         #nearest = [g.nodes[idx] for idx in ids]
         #return nearest, distances[ids]
-        return (g.nodes[ids[0]], g.nodes[ids[1]]), numx.take(distances,ids)
+        return (g.nodes[ids[0]], g.nodes[ids[1]]), distances.take(ids)
 
     def _move_node(self, node, x, eps):
         """Move a node by eps in the direction x."""

@@ -30,8 +30,6 @@ class OneDimensionalHitParade(object):
         Input arguments:
         inp -- tuple (time-series, time-indices)
         """
-        argmin = numx.argmin
-        argmax = numx.argmax
         (x,ix) = inp
         rows = len(x)
         d = self.d
@@ -42,8 +40,8 @@ class OneDimensionalHitParade(object):
         lM = self.lM
         lm = self.lm
         for i in xrange(rows):
-            k1 = argmin(M)
-            k2 = argmax(m)
+            k1 = M.argmin()
+            k2 = m.argmax()
             if x[i] > M[k1]:
                 if ix[i]-iM[lM] <= d and x[i] > M[lM]:
                     M[lM] = x[i]
@@ -74,8 +72,8 @@ class OneDimensionalHitParade(object):
         """
         iM = self.iM
         M = self.M
-        sort = numx.argsort(M)
-        return numx.take(M,sort[::-1]),numx.take(iM,sort[::-1])
+        sort = M.argsort()
+        return M[sort[::-1]], iM[sort[::-1]]
         
     def get_minima(self):
         """
@@ -84,9 +82,8 @@ class OneDimensionalHitParade(object):
         """
         im = self.im
         m = self.m
-        sort = numx.argsort(m)
-        return numx.take(m,sort), numx.take(im,sort)
-
+        sort = m.argsort()
+        return m[sort], im[sort]
     
     
 class HitParadeNode(Node):
@@ -327,10 +324,11 @@ class EtaComputerNode(Node):
         if not self._initialized: self._init_internals()
         #
         rdata = data[:-1]
-        self._mean += numx.sum(rdata, axis=0)
-        self._var += numx.sum(rdata*rdata, axis=0)
+        self._mean += rdata.sum(axis=0)
+        self._var += (rdata*rdata).sum(axis=0)
         self._tlen += rdata.shape[0]
-        self._diff2 += numx.sum(utils.timediff(data)**2, axis=0)
+        td_data = utils.timediff(data)
+        self._diff2 += (td_data*td_data).sum(axis=0)
 
     def _stop_training(self):
         var_tlen = self._tlen-1
@@ -494,7 +492,7 @@ class GaussianClassifierNode(Node):
         # subtract the mean
         x_mn = x - self.means[lbl_idx][numx.newaxis,:]
         # exponent
-        exponent = -0.5 * numx.sum(utils.mult(x_mn, invS)*x_mn, axis=1)
+        exponent = -0.5 * (utils.mult(x_mn, invS)*x_mn).sum(axis=1)
         # constant
         constant = (2.*numx.pi)**-(dim/2.)/sqrt_detS
         # probability
@@ -513,7 +511,7 @@ class GaussianClassifierNode(Node):
             
         # normalize to probability 1
         # (not necessary, but sometimes useful)
-        tmp_tot = numx.sum(tmp_prob, axis=1)
+        tmp_tot = tmp_prob.sum(axis=1)
         tmp_tot = tmp_tot[:, numx.newaxis]
         return tmp_prob/tmp_tot
         
@@ -522,5 +520,5 @@ class GaussianClassifierNode(Node):
         self._pre_execution_checks(x)
 
         class_prob = self.class_probabilities(x)
-        winner = numx.argmax(class_prob, axis=-1)
+        winner = class_prob.argmax(axis=-1)
         return [self.labels[winner[i]] for i in range(len(winner))]

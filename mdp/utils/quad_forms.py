@@ -23,8 +23,7 @@ class QuadraticForm(object):
     def apply(self, x):
         """Apply the quadratic form to the input vectors.
         Return 1/2 x'Hx + f'x + c ."""
-        return 0.5*numx.sum(mdp.utils.mult(x, self.H.T)*x,
-                            axis=1) + \
+        return 0.5*(mdp.utils.mult(x, self.H.T)*x).sum(axis=1) + \
                mdp.utils.mult(x, self.f) + self.c
         
     def get_extrema(self, norm, tol = 1.E-4):
@@ -75,7 +74,7 @@ class QuadraticForm(object):
             f = mdp.utils.mult(H, x0)+ f
             # c = 0.5*x0'*H*x0 + f'*x0 + c -> do we need it?
         mu, V = mdp.utils.symeig(H, overwrite=0)
-        alpha = numx.reshape(mdp.utils.mult(V.T, f), (H.shape[0],) )
+        alpha = mdp.utils.mult(V.T, f).reshape((H.shape[0],))
         # v_i = alpha_i * v_i (alpha is a raw_vector)
         V = V*alpha
         # left bound for lambda
@@ -91,13 +90,13 @@ class QuadraticForm(object):
             # eigenvalues of (lambda*Id - H)^-1
             beta = (lambd-mu)**(-1)
             # solution to the second lagragian equation
-            norm_x_2 = numx.sum(alpha**2*beta**2)
+            norm_x_2 = (alpha**2*beta**2).sum()
             #%[ll,lr]
             if norm_x_2 > norm_2:
                 ll=lambd
             else:
                 lr=lambd
-        x = numx.sum(V*beta, axis=1)
+        x = (V*beta).sum(axis=1)
         if x0:
             x = x + x0
         return x

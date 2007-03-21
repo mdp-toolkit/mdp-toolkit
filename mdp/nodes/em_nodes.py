@@ -3,7 +3,6 @@ from mdp import numx, numx_linalg, utils
 from mdp.utils import mult, CovarianceMatrix
 import warnings
 
-take, put, diag, ravel = numx.take, numx.put, numx.diag, numx.ravel
 sqrt, inv, det = numx.sqrt, utils.inv, numx_linalg.det
 normal = mdp.numx_rand.normal
 
@@ -75,7 +74,7 @@ class FANode(mdp.Node):
         ##### request the covariance matrix and clean up
         cov_mtx, mu, tlen = self._cov_mtx.fix()
         del self._cov_mtx
-        cov_diag = diag(cov_mtx)
+        cov_diag = cov_mtx.diagonal()
 
         ##### initialize the parameters
         # noise variances
@@ -96,13 +95,13 @@ class FANode(mdp.Node):
             ## compute B = (A A^T + Sigma)^-1
             B = mult(A, A.T)
             # B += diag(sigma), avoid computing diag(sigma) which is dxd
-            put(B.ravel(), idx_diag_d, take(B.ravel(), idx_diag_d)+sigma)
+            B.ravel().put(idx_diag_d, B.ravel().take(idx_diag_d)+sigma)
             # this quantity is used later for the log-likelihood
             # abs is there to avoid numerical errors when det < 0 
             log_det_B = numx.log(abs(det(B)))
             # end the computation of B
             B = inv(B)
-           
+
             ## other useful quantities
             trA_B = mult(A.T, B)
             trA_B_cov_mtx = mult(trA_B, cov_mtx)
@@ -111,14 +110,14 @@ class FANode(mdp.Node):
             ## E_yyT = E(y_n y_n^T | x_n)
             E_yyT = - mult(trA_B, A) + mult(trA_B_cov_mtx, trA_B.T)
             # E_yyT += numx.eye(k)
-            put(E_yyT.ravel(), idx_diag_k, take(E_yyT.ravel(), idx_diag_k)+1.)
+            E_yyT.ravel().put(idx_diag_k, E_yyT.ravel().take(idx_diag_k)+1.)
             
             ##### M-step
             A = mult(trA_B_cov_mtx.T, inv(E_yyT))
-            sigma = cov_diag - diag(mult(A, trA_B_cov_mtx))
+            sigma = cov_diag - (mult(A, trA_B_cov_mtx)).diagonal()
 
             ##### log-likelihood
-            trace_B_cov = numx.sum(ravel(B*cov_mtx.T))
+            trace_B_cov = (B*cov_mtx.T).sum()
             # this is actually likelihood/tlen.
             lhood = const - 0.5*log_det_B - 0.5*trace_B_cov
             if verbose: print 'cycle',t,'log-lhood:',lhood
@@ -138,13 +137,13 @@ class FANode(mdp.Node):
 
         self.tlen = tlen
         self.A = A
-        self.mu = numx.reshape(mu, (1, d))
+        self.mu = mu.reshape(1, d)
         self.sigma = sigma
         
         ## MAP matrix
         # compute B = (A A^T + Sigma)^-1
         B = mult(A, A.T).copy() 
-        put(B.ravel(), idx_diag_d, take(B.ravel(), idx_diag_d)+sigma)
+        B.ravel().put(idx_diag_d, B.ravel().take(idx_diag_d)+sigma)
         B = inv(B)
         self.E_y_mtx = mult(B.T, A)
         

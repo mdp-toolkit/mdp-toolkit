@@ -226,9 +226,9 @@ class Node(object):
     ### check functions
     def _check_input(self, x):
         # check input rank
-        if not numx.rank(x) == 2:
+        if not x.ndim == 2:
             error_str = "x has rank %d, should be 2"\
-                        %(numx.rank(x))
+                        %(x.ndim)
             raise NodeException, error_str
 
         # set the input dimension if necessary
@@ -251,9 +251,9 @@ class Node(object):
         
     def _check_output(self, y):
         # check output rank
-        if not numx.rank(y) == 2:
+        if not y.ndim == 2:
             error_str = "y has rank %d, should be 2"\
-                        %(numx.rank(y))
+                        %(y.ndim)
             raise NodeException, error_str
 
         # check the output dimension
@@ -477,7 +477,7 @@ class Cumulator(Node):
         """Cumulate all imput data in a one dimensional list.
         """
         self.tlen += x.shape[0]
-        self.data.extend(numx.ravel(x).tolist())
+        self.data.extend(x.ravel().tolist())
 
     def _stop_training(self):
         """Transform the data list to an array object and reshape it.

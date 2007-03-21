@@ -118,8 +118,9 @@ def isfa_spiral_benchmark():
     flow = mdp.Flow([mdp.nodes.PolynomialExpansionNode(5),
                      mdp.nodes.SFANode(),
                      mdp.nodes.ISFANode(lags=30, whitened=False,
-                                        sfa_ica_coeff=[1.,300.], eps_contrast=1e-5,
-                                        output_dim=2)])
+                                        sfa_ica_coeff=[1.,300.],
+                                        eps_contrast=1e-5,
+                                        output_dim=2, verbose=True)])
     flow.train(exp_src)
 
 def sfa_benchmark():
@@ -129,7 +130,8 @@ def sfa_benchmark():
     nsrc = 15
     src = _get_random_slow_sources(nsrc, numx_rand.normal)
     src = src[:5000,:]
-    src = mult(src, numx_rand.uniform(size=(nsrc, nsrc))) + numx_rand.uniform(size=nsrc)
+    src = mult(src, numx_rand.uniform(size=(nsrc, nsrc))) \
+          + numx_rand.uniform(size=nsrc)
     # train
     flow = mdp.Flow([mdp.nodes.PolynomialExpansionNode(3),
                      mdp.nodes.PCANode(output_dim = 100),

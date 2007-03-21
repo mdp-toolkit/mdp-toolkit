@@ -69,7 +69,7 @@ class PolynomialExpansionNode(_ExpansionNode):
             prec_end += nmonomials(i-1, dim)
             prec = dexp[prec_start:prec_end,:]
 
-            lens = numx.cumsum(next_lens[:-1], axis = 0)
+            lens = next_lens[:-1].cumsum(axis=0)
             next_lens = numx.zeros((dim+1,))
             for j in range(dim):
                 factor = prec[lens[j]:,:]

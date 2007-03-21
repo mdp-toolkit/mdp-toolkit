@@ -313,17 +313,17 @@ class ISFANode(Node):
         bica, bsfa = bica_bsfa
 
         Cmm, Cmn, Cnn = covs[m,m,:], covs[m,n,:], covs[n,n,:]
-        d0 =   sum(sfaweights * Cmm*Cmm)
-        d1 = 4*sum(sfaweights * Cmn*Cmm)
-        d2 = 2*sum(sfaweights *(2*Cmn*Cmn + Cmm*Cnn))
-        d3 = 4*sum(sfaweights * Cmn*Cnn)
-        d4 =   sum(sfaweights * Cnn*Cnn)
-        e0 = 2*sum(icaweights *(sum(covs[:R,m,:]*covs[:R,m,:],
-                                    axis=0)-Cmm*Cmm))
-        e1 = 4*sum(icaweights * (sum(covs[:R,m,:]*covs[:R,n,:],
-                                     axis=0)-Cmm*Cmn))
-        e2 = 2*sum(icaweights * (sum(covs[:R,n,:]*covs[:R,n,:],
-                                     axis=0)-Cmn*Cmn))
+        d0 =   (sfaweights * Cmm*Cmm).sum()
+        d1 = 4*(sfaweights * Cmn*Cmm).sum()
+        d2 = 2*(sfaweights * (2*Cmn*Cmn + Cmm*Cnn)).sum()
+        d3 = 4*(sfaweights * Cmn*Cnn).sum()
+        d4 =   (sfaweights * Cnn*Cnn).sum()
+        e0 = 2*(icaweights * ((covs[:R,m,:]*covs[:R,m,:]).sum(axis=0)
+                              - Cmm*Cmm)).sum()
+        e1 = 4*(icaweights * ((covs[:R,m,:]*covs[:R,n,:]).sum(axis=0)
+                              - Cmm*Cmn)).sum()
+        e2 = 2*(icaweights * ((covs[:R,n,:]*covs[:R,n,:]).sum(axis=0)
+                              - Cmn*Cmn)).sum()
 
         s22 = 0.25 * bsfa*(d1+d3)   + 0.5* bica*(e1)
         c22 = 0.5  * bsfa*(d0-d4)   + 0.5* bica*(e0-e2)
@@ -345,7 +345,7 @@ class ISFANode(Node):
             phi = numx.linspace(left, right, npoints+3)
             contrast = c22*cos(-2*phi)+s22*sin(-2*phi)+\
                        c24*cos(-4*phi)+s24*sin(-4*phi)
-            minidx = numx.argmin(contrast)
+            minidx = contrast.argmin()
             left = phi[max(minidx-1,0)]
             right = phi[min(minidx+1,len(phi)-1)]
 
@@ -365,14 +365,15 @@ class ISFANode(Node):
 
         dc = numx.zeros((ncovs,), dtype = self.dtype)
         for t in range(ncovs):
-            dc[t] = sum(numx.diag(covs[:R,:R,t])**2, axis=0)
-        dc = sum((dc-Cmm*Cmm)*sfaweights)
+            dg = covs[:R,:R,t].diagonal()
+            dc[t] = (dg*dg).sum(axis=0)
+        dc = ((dc-Cmm*Cmm)*sfaweights).sum()
         
         ec = numx.zeros((ncovs,), dtype = self.dtype)
         for t in range(ncovs):
-            ec[t] = sum([covs[i,j,t]**2 for i in range(R-1) \
+            ec[t] = sum([covs[i,j,t]*covs[i,j,t] for i in range(R-1) \
                          for j in range(i+1,R) if i!=m and j!=m])
-        ec = 2*sum(ec*icaweights)
+        ec = 2*(ec*icaweights).sum()
         a20 = 0.125*bsfa*(3*d0+d2+3*d4+8*dc)+0.5*bica*(e0+e2+2*ec)
         minimum_contrast = a20+c22*cos(-2*minimum)+s22*sin(-2*minimum)+\
                            c24*cos(-4*minimum)+s24*sin(-4*minimum)
@@ -404,12 +405,12 @@ class ISFANode(Node):
         bica, bsfa = bica_bsfa
         
         Cmm, Cmn, Cnn = covs[m,m,:], covs[m,n,:], covs[n,n,:]
-        d0 =   sum(sfaweights * (Cmm*Cmm+Cnn*Cnn))
-        d1 = 4*sum(sfaweights * (Cmm*Cmn-Cmn*Cnn))
-        d2 = 2*sum(sfaweights * (2*Cmn*Cmn+Cmm*Cnn))
-        e0 = 2*sum(icaweights * Cmn*Cmn)
-        e1 = 4*sum(icaweights * (Cmn*Cnn-Cmm*Cmn))
-        e2 =   sum(icaweights * ((Cmm-Cnn)*(Cmm-Cnn)-2*Cmn*Cmn))
+        d0 =   (sfaweights * (Cmm*Cmm+Cnn*Cnn)).sum()
+        d1 = 4*(sfaweights * (Cmm*Cmn-Cmn*Cnn)).sum()
+        d2 = 2*(sfaweights * (2*Cmn*Cmn+Cmm*Cnn)).sum()
+        e0 = 2*(icaweights * Cmn*Cmn).sum()
+        e1 = 4*(icaweights * (Cmn*Cnn-Cmm*Cmn)).sum()
+        e2 =   (icaweights * ((Cmm-Cnn)*(Cmm-Cnn)-2*Cmn*Cmn)).sum()
 
         s24 = 0.25* (bsfa * d1    + bica * e1)
         c24 = 0.25* (bsfa *(d0-d2)+ bica *(e0-e2))
@@ -430,13 +431,14 @@ class ISFANode(Node):
         R = self.output_dim
         dc = numx.zeros((ncovs,), dtype = self.dtype)
         for t in range(ncovs):
-            dc[t] = sum(numx.diag(covs[:R,:R,t])**2, axis=0)
-        dc = sum((dc-Cnn*Cnn-Cmm*Cmm)*sfaweights)
+            dg = covs[:R,:R,t].diagonal()
+            dc[t] = (dg*dg).sum(axis=0)
+        dc = ((dc-Cnn*Cnn-Cmm*Cmm)*sfaweights).sum()
         ec = numx.zeros((ncovs,), dtype = self.dtype)
         for t in range(ncovs):
-            ec[t] = (sum(numx.ravel(_triu(covs[:R,:R,t],1))**2)-
-                     covs[m,n,t]**2)
-        ec = 2*sum(icaweights*ec)
+            triu_covs = _triu(covs[:R,:R,t],1).ravel()
+            ec[t] = ((triu_covs*triu_covs).sum() - covs[m,n,t]*covs[m,n,t])
+        ec = 2*(icaweights*ec).sum()
         a20 = 0.25*(bsfa*(4*dc+d2+3*d0)+bica*(4*ec+e2+3*e0))
         minimum_contrast = a20+c24*cos(-4*minimum)+s24*sin(-4*minimum)
         npoints = 1000
@@ -455,7 +457,6 @@ class ISFANode(Node):
     
 
     def _get_contrast(self, covs, bica_bsfa = None):
-        
         if bica_bsfa is None:
             bica_bsfa = self._bica_bsfa
         # return current value of the contrast
@@ -470,9 +471,9 @@ class ISFANode(Node):
         ica = numx.zeros((ncovs,),dtype=self.dtype)
         for t in range(ncovs):
             sq_corr =  covs[:R,:R,t]*covs[:R,:R,t]
-            sfa[t]=numx.trace(sq_corr)
-            ica[t]=2*numx.sum(numx.ravel(_triu(sq_corr,1)))
-        return numx.sum(bsfa*sfaweights*sfa), numx.sum(bica*icaweights*ica)
+            sfa[t]=sq_corr.trace()
+            ica[t]=2*_triu(sq_corr,1).ravel().sum()
+        return (bsfa*sfaweights*sfa).sum(), (bica*icaweights*ica).sum()
         
     def _adjust_ica_sfa_coeff(self):
         # adjust sfa/ica ratio. ica and sfa term are scaled
@@ -734,9 +735,9 @@ class ISFANode(Node):
         # covariance matrice with time lag = 1 (covs[:,:,0]) are
         # -1 <= v' <= +1
         # reorder the components to have them ordered by slowness
-        d = numx.diag(self.covs.covs[:self.output_dim,:self.output_dim,0])
-        idx = numx.argsort(d)[::-1]
-        self.RP = numx.take(RP,idx,axis=1)
+        d = (self.covs.covs[:self.output_dim,:self.output_dim,0]).diagonal()
+        idx = d.argsort()[::-1]
+        self.RP = RP.take(idx,axis=1)
         
         # we could in principle clean up self.covs, as we do in SFANode or
         # PCANode, but this algorithm is not stable enough to rule out

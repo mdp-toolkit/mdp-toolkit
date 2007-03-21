@@ -276,7 +276,11 @@ class FastICANode(ICANode):
         else:
             raise mdp.NodeException, \
                   '%s approach method not known' % approach
-        self.g = g
+        if g in ['pow3', 'tanh', 'gaus']:
+            self.g = g
+        else:
+            raise mdp.NodeException, \
+                  '%s nonlinearity function not known' % g
         self.fine_tanh = fine_tanh
         self.fine_gaus = fine_gaus
         self.max_it = max_it
@@ -305,7 +309,7 @@ class FastICANode(ICANode):
             convergence = []
             # Take random orthonormal initial vectors.
             Q = utils.random_rot(comp, dtype)
-            QOld = numx.zeros(numx.shape(Q),dtype)
+            QOld = numx.zeros(Q.shape, dtype)
             # This is the actual fixed-point iteration loop.
             for round in range(max_it + 1):
                 if round == max_it:
@@ -315,8 +319,8 @@ class FastICANode(ICANode):
                 Q = mult(Q, utils.sqrtm(utils.inv(mult(Q.T, Q))))
                 # Test for termination condition.Note that we consider opposite
                 # directions here as well.
-                convergence.append(1 - numx.amin(abs(\
-                    numx.diag(mult(Q.T,QOld))),axis=0))
+                convergence.append(1. - \
+                                   abs((mult(Q.T,QOld)).diagonal()).min(axis=0))
                 if convergence[round] < limit:
                     if verbose: print 'Convergence after %d steps\n'%round
                     break
@@ -334,13 +338,13 @@ class FastICANode(ICANode):
                     Q = mult(X,u*u*u)/tlen - 3.*Q
                 elif g == 'tanh':
                     tang = numx.tanh(fine_tanh * u)
-                    temp = numx.sum(1.-tang*tang).T/tlen
+                    temp = (1.-tang*tang).sum(axis=0)/tlen
                     Q = mult(X,tang) - temp * Q * fine_tanh
                 elif g == 'gaus':
                     u2 = u*u
                     gauss =  u*numx.exp(-fine_gaus*u2*0.5)
                     dgauss = (1. - fine_gaus*u2)*numx.exp(-fine_gaus*u2*0.5)
-                    Q = (mult(X,gauss) - numx.sum(dgauss)*Q)/tlen
+                    Q = (mult(X,gauss) - (dgauss).sum()*Q)/tlen
             self.convergence = numx.array(convergence)
             ret = convergence[-1]
         # DEFLATION APPROACH
@@ -358,7 +362,7 @@ class FastICANode(ICANode):
                 w  = self._refcast(numx_rand.random((comp, 1)) - .5)
                 w -= mult(mult(Q,Q.T),w)
                 w /= utils.norm2(w)
-                wOld = numx.zeros(numx.shape(w), dtype)
+                wOld = numx.zeros(w.shape, dtype)
                 # This is the actual fixed-point iteration loop.
                 for i in range(max_it + 1):
                     if i == max_it:
@@ -377,7 +381,7 @@ class FastICANode(ICANode):
                     w /= utils.norm2(w)
                     # Test for termination condition. Note that the algorithm
                     # has converged if the direction of w and wOld is the same.
-                    conv = float(numx.squeeze(abs(numx.sum(w*wOld))))
+                    conv = float(abs((w*wOld).sum()))
                     if conv >= limit:
                         nfail = 0
                         convergence[round] = 1 - conv
@@ -398,14 +402,14 @@ class FastICANode(ICANode):
                         w = mult(X,u*u*u)/tlen - 3.*w
                     elif g == 'tanh':
                         tang = numx.tanh(fine_tanh * u)
-                        temp = numx.sum(1. - tang*tang).T*w
+                        temp = (1. - tang*tang).sum(axis=0)*w
                         w = mult(X,tang) - fine_tanh/tlen*temp
                     elif g == 'gaus':
                         u2 = u*u
                         temp = numx.exp(-fine_gaus * u2*0.5)
                         gauss =  u *temp
                         dgauss = (1. - fine_gaus *u2)*temp
-                        w = (mult(X,gauss) - numx.sum(dgauss) * w) / tlen
+                        w = (mult(X,gauss) - dgauss.sum() * w) / tlen
                     # Normalize the new w.
                     w /= utils.norm2(w)
                 round = round + 1
@@ -413,6 +417,6 @@ class FastICANode(ICANode):
             dummy_cond = numx.logical_and(convergence<0, convergence>-1E-5)
             convergence = numx.where(dummy_cond, 0, convergence)
             self.convergence = self._refcast(numx.sqrt(convergence*2))
-            ret = numx.amax(self.convergence)
+            ret = self.convergence.max()
         self.filters = Q
         return ret
