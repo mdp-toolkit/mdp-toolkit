@@ -1,6 +1,6 @@
 from routines import timediff, refcast, scast, rotate, random_rot, \
      permute, symrand, norm2, uniq, ordered_uniq, cov2, mult_diag, \
-     comb, sqrtm, SymeigException
+     comb, sqrtm, get_dtypes, SymeigException
 from introspection import dig_node, get_node_size
 from quad_forms import QuadraticForm
 from covariance import CovarianceMatrix, DelayCovarianceMatrix, \

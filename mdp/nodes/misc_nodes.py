@@ -129,9 +129,14 @@ class HitParadeNode(Node):
         self.hit = None
         self.tlen = 0
 
-    @classmethod
     def _get_supported_dtypes(self):
-        return ['int32','int64','float32','float64']
+        """Return the list of dtypes supported by this node."""
+        return ['f', 'd']
+
+    #def _get_supported_dtypes(self):
+    #    """Return the list of dtypes supported by this node."""
+    #    return mdp.utils.get_dtypes('AllFloat') + \
+    #           mdp.utils.get_dtypes('AllInteger')
 
     def _train(self, x):
         hit = self.hit
@@ -219,6 +224,11 @@ class TimeFramesNode(Node):
         self.time_frames = time_frames
         self.gap = gap
 
+    def _get_supported_dtypes(self):
+        """Return the list of dtypes supported by this node."""
+        return mdp.utils.get_dtypes('AllFloat') + \
+               mdp.utils.get_dtypes('AllInteger')
+
     def is_trainable(self):
         return False
 
@@ -235,7 +245,7 @@ class TimeFramesNode(Node):
             
     def _execute(self, x):
         gap = self.gap
-        tf = x.shape[0]- (self.time_frames-1)*gap
+        tf = x.shape[0] - (self.time_frames-1)*gap
         rows = self.input_dim
         cols = self.output_dim
         y = numx.zeros((tf,cols),dtype=self.dtype)
@@ -320,9 +330,9 @@ class EtaComputerNode(Node):
         super(EtaComputerNode, self).__init__(input_dim, None, dtype)
         self._initialized = 0
 
-    @classmethod
     def _get_supported_dtypes(self):
-        return ['f','d']
+        """Return the list of dtypes supported by this node."""
+        return ['float32', 'float64']
 
     def _init_internals(self):
         input_dim = self.input_dim
@@ -396,6 +406,11 @@ class NoiseNode(Node):
             raise NodeException, err_str
         else:
             self.noise_type = noise_type
+
+    def _get_supported_dtypes(self):
+        """Return the list of dtypes supported by this node."""
+        return mdp.utils.get_dtypes('AllFloat') + \
+               mdp.utils.get_dtypes('AllInteger')
             
     def is_trainable(self):
         return False
@@ -426,6 +441,10 @@ class GaussianClassifierNode(Node):
         super(GaussianClassifierNode, self).__init__(input_dim, None, dtype)
         self.cov_objs = {}
 
+    def _get_supported_dtypes(self):
+        """Return the list of dtypes supported by this node."""
+        return ['float32', 'float64']
+    
     def is_invertible(self):
         return False
 

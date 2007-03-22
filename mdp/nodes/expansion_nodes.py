@@ -44,6 +44,11 @@ class PolynomialExpansionNode(_ExpansionNode):
         self._degree = int(degree)
         super(PolynomialExpansionNode, self).__init__(input_dim, dtype)
 
+    def _get_supported_dtypes(self):
+        """Return the list of dtypes supported by this node."""
+        return mdp.utils.get_dtypes('AllFloat') + \
+               mdp.utils.get_dtypes('AllInteger')
+    
     def expanded_dim(self, dim):
         """Return the size of a vector of dimension 'dim' after
         a polynomial expansion of degree 'self._degree'."""

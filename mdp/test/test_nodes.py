@@ -151,7 +151,9 @@ class NodesTestSuite(unittest.TestSuite):
         # generates testinverse_nodeclass test functions
         def _testinverse(node_class=node_class):
             mat,mix,inp = self._get_random_mix()
-            node = node_class(dtype='f', *args)
+            # take the first available dtype for the test
+            dtype = node_class(*args).get_supported_dtypes()[0]
+            node = node_class(dtype=dtype, *args)
             if not node.is_invertible():return
             self._train_if_necessary(inp, node, args, sup_args_func)
             # execute the node
@@ -159,12 +161,14 @@ class NodesTestSuite(unittest.TestSuite):
             # compute the inverse
             rec = node.inverse(out)
             assert_array_almost_equal_diff(rec,inp,self.decimal-3)
-            assert_type_equal(rec.dtype, 'f')
+            assert_type_equal(rec.dtype, dtype)
         return _testinverse
 
     def _get_testdtype(self, node_class, args=[], sup_args_func=None):
         def _testdtype(node_class=node_class):
-            for dtype in testtypes+testtypeschar:
+            supported_types = node_class(*args).get_supported_dtypes()
+            for dtype in supported_types:
+            #for dtype in testtypes+testtypeschar:
                 if node_class == mdp.nodes.SFA2Node:
                     freqs = [2*numx.pi*100.,2*numx.pi*200.]
                     t =  numx.linspace(0, 1, num=1000)

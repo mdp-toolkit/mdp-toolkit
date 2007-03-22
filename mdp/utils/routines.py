@@ -172,6 +172,13 @@ def mult_diag(d, mtx, left=True):
     else:
         return d*mtx
 
+def get_dtypes(typecodes_key):
+    """Return the list of dtypes corresponding to the set of
+    typecodes defined in numpy.typecodes[typecodes_key].
+    E.g., get_dtypes('Float') = [dtype('f'), dtype('d'), dtype('g')].
+    """
+    return [numx.dtype(c) for c in numx.typecodes[typecodes_key]]
+
 # the following functions and classes were part of the scipy_emulation.py file
 
 _type_keys = ['f', 'd', 'F', 'D']

@@ -29,9 +29,9 @@ class SFANode(Node):
         # one for the derivatives
         self._dcov_mtx = CovarianceMatrix(dtype)
 
-    @classmethod
+    
     def _get_supported_dtypes(self):
-        return ['f','d']
+        return [numx.single, numx.double]
 
     def time_derivative(self, x):
         """Compute the linear approximation of the time derivative."""

@@ -28,10 +28,6 @@ class IsNotInvertibleException(NodeException):
     node is not invertible."""
     pass
 
-SUPPORTED_DTYPES = [numx.dtype(ch)
-                       for ch in numx.typecodes['AllInteger']+
-                                 numx.typecodes['AllFloat']]
-
 class Node(object):
     """
     Node is the basic unit in MDP and it represents a data processing
@@ -175,11 +171,10 @@ class Node(object):
                      set_dtype,
                      doc = "dtype")
 
-    @classmethod
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node.
         The types can be specified in any format allowed by numpy.dtype."""
-        return SUPPORTED_DTYPES
+        return mdp.utils.get_dtypes('All')
 
     def get_supported_dtypes(self):
         """Return dtypes supported by the node as a list of numpy.dtype
@@ -189,7 +184,7 @@ class Node(object):
         return [numx.dtype(t) for t in self._get_supported_dtypes()]
 
     supported_dtypes = property(get_supported_dtypes,
-                                   doc = "Supported dtypes")
+                                doc = "Supported dtypes")
 
     _train_seq = property(lambda self: self._get_train_seq(),
                           doc = "List of tuples: [(training-phase1, " +\

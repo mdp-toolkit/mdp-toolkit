@@ -51,10 +51,9 @@ class FANode(mdp.Node):
         self.verbose = verbose
         self._cov_mtx = CovarianceMatrix(dtype, bias=True)
 
-    @classmethod
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
-        return ['f', 'd']
+        return ['float32', 'float64']
     
     def _train(self, x):
         # update the covariance matrix

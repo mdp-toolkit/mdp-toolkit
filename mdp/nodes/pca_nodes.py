@@ -46,9 +46,8 @@ class PCANode(Node):
                         % (y.shape[1], self.output_dim)
             raise NodeException, error_str
 
-    @classmethod
     def _get_supported_dtypes(self):
-        return ['f','d']
+        return [numx.single, numx.double]
     
     def get_explained_variance(self):
         """Return the fraction of the original variance that can be
