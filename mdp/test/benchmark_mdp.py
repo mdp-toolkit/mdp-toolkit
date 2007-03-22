@@ -1,10 +1,4 @@
 """These are some benchmark functions for MDP.
-
-Run them with:
-
->>> import mdp
->>> mdp.test.benchmark()
-
 """
 
 import mdp
