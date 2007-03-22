@@ -1,7 +1,9 @@
 import mdp
 from routines import refcast
 numx = mdp.numx
-epsilon = 1E-15
+
+# 10 times machine eps
+epsilon = 10*numx.finfo(numx.double).eps
 
 class QuadraticForm(object):
     """
@@ -10,12 +12,19 @@ class QuadraticForm(object):
     WARNING: EXPERIMENTAL CODE! USE AT YOU OWN RISK!
     """
 
-    def __init__(self, H, f, c, dtype='d'):
+    def __init__(self, H, f=None, c=None, dtype='d'):
         """
         The quadratic form is defined as 1/2 x'Hx + f'x + c .
         'dtype' specifies the numerical type of the internal structures.
         """
+        local_eps = 10*numx.finfo(numx.dtype(dtype)).eps
+        # check that H is almost symmetric
+        if not numx.allclose(H,H.T,rtol=100*local_eps, atol=local_eps):
+            raise mdp.MDPException, 'H does not seem to be symmetric'
+        
         self.H = refcast(H, dtype)
+        if f is None: f = numx.zeros((H.shape[0],), dtype=dtype)
+        if c is None: c = 0
         self.f = refcast(f, dtype)
         self.c = c
         self.dtype = dtype
@@ -23,6 +32,7 @@ class QuadraticForm(object):
     def apply(self, x):
         """Apply the quadratic form to the input vectors.
         Return 1/2 x'Hx + f'x + c ."""
+        x = numx.atleast_2d(x)
         return 0.5*(mdp.utils.mult(x, self.H.T)*x).sum(axis=1) + \
                mdp.utils.mult(x, self.f) + self.c
         
@@ -31,41 +41,40 @@ class QuadraticForm(object):
         Find the input vectors xmax and xmin with norm 'nrm' that maximize
         or minimize the quadratic form.
 
-        tol: norm error tolerance
+       tol: norm error tolerance
         """
         H, f, c = self.H, self.f, self.c
-        if f is None: f = numx.zeros((H.shape[0],), dtype=self.dtype)
-        if c is None: c = 0
-        H_definite_positive, H_definite_negative = False, False
-        E = mdp.utils.symeig(H, eigenvectors=0, overwrite=0)
-        if E[0] >= 0:
-            # H is positive definite
-            H_definite_positive = True
-        elif E[-1] <= 0:
-            # H is negative definite
-            H_definite_negative = True
+        if max(abs(f)) < numx.finfo(self.dtype).eps:
+            E, W = mdp.utils.symeig(H)
+            xmax = W[:,-1]*norm
+            xmin = W[:,0]*norm
+        else:    
+            H_definite_positive, H_definite_negative = False, False
+            E = mdp.utils.symeig(H, eigenvectors=0, overwrite=0)
+            if E[0] >= 0:
+                # H is positive definite
+                H_definite_positive = True
+            elif E[-1] <= 0:
+                # H is negative definite
+                H_definite_negative = True
 
-        x0 = mdp.numx_linalg.solve(-H, f)
-        if H_definite_positive and mdp.utils.norm2(x0) <= norm:
-            xmin = x0
-            # x0 is a minimum
-        else:
-            xmin = self._maximize(norm, tol, factor=-1)
-        vmin = 0.5*mdp.utils.mult(mdp.utils.mult(xmin, H), xmin) + \
-               mdp.utils.mult(f, xmin) + c
-        if H_definite_negative and mdp.utils.norm2(x0) <= norm :
-            xmax= x0
-            # x0 is a maximum
-        else:
-            xmax = self._maximize(norm, tol, factor=None)
-        vmax = 0.5*mdp.utils.mult(mdp.utils.mult(xmax, H), xmax) + \
-               mdp.utils.mult(f, xmax) + c 
-        self.xmax, self.xmin, self.vmax, self.vmin = xmax, xmin, vmax, vmin
-        return xmax, xmin, vmax, vmin
+            x0 = mdp.numx_linalg.solve(-H, f)
+            if H_definite_positive and mdp.utils.norm2(x0) <= norm:
+                xmin = x0
+                # x0 is a minimum
+            else:
+                xmin = self._maximize(norm, tol, factor=-1)
+            if H_definite_negative and mdp.utils.norm2(x0) <= norm :
+                xmax= x0
+                # x0 is a maximum
+            else:
+                xmax = self._maximize(norm, tol, factor=None)
+
+        self.xmax, self.xmin = xmax, xmin
+        return xmax, xmin
 
     def _maximize(self, norm, tol = 1.E-4, x0 = None, factor = None):
         H, f = self.H, self.f
-        if f is None: f = numx.zeros((H.shape[0],), dtype=self.dtype)
         if factor is not None:
             H = factor*H
             f = factor*f
@@ -101,6 +110,28 @@ class QuadraticForm(object):
             x = x + x0
         return x
 
-    def invariances(self):
-        pass
-        raise NotImplementedError
+    def get_invariances(self, xstar):
+        """Compute invariances of the quadratic form at extremum 'xstar'.
+        Outputs:
+
+         w  -- w[:,i] is the direction of the i-th invariance 
+         nu -- nu[i] second derivative on the sphere in the direction w[:,i]
+         """
+        # find a basis for the tangential plane of the sphere in x+
+        # e(1) ... e(N) is the canonical basis for R^N
+        r = mdp.utils.norm2(xstar)
+        P = numx.eye(xstar.shape[0], dtype=xstar.dtype)
+        P[:,0] = xstar
+        Q, R = numx.linalg.qr(P)
+        # the orthogonal subspace
+        B = Q[:,1:]
+        # restrict the matrix H to the tangential plane
+        Ht = mdp.utils.mult(B.T,mdp.utils.mult(self.H,B))
+        # compute the invariances
+        nu, w = mdp.utils.symeig(Ht)
+        nu = nu[::-1]
+        w = w[:,::-1]
+        nu -= self.apply(xstar)/(r*r)
+        w = mdp.utils.mult(B,w)
+        return w, nu
+        

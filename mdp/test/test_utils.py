@@ -9,7 +9,7 @@ import unittest
 import pickle
 import os
 import tempfile
-from mdp import numx, utils, numx_rand, numx_linalg, Node, nodes
+from mdp import numx, utils, numx_rand, numx_linalg, Node, nodes, MDPException
 from testing_tools import assert_array_almost_equal, assert_array_equal, \
      assert_almost_equal, assert_equal, assert_array_almost_equal_diff, \
      assert_type_equal
@@ -92,24 +92,44 @@ class UtilsTestCase(unittest.TestCase):
         res2 = utils.mult_diag(d, mtx, left=False)
         assert_array_almost_equal(res1, res2, 10)
 
-##     def testQuadraticForms(self):
-##         # !!!!! add some real test
-##         # check H with negligible linear term
-##         noise = 1e-8
-##         tol = 1e-6
-##         x = numx_rand.random((10,))
-##         H = numx.outer(x, x) + numx.eye(10)*0.1
-##         f = noise*numx_rand.random((10,))
-##         q = utils.QuadraticForm(H=H, f=f, c=0.)
-##         xmax, xmin, vmax, vmin = q.get_extrema(utils.norm2(x), tol=tol)
-##         assert_array_almost_equal(x, xmax, 5)
-##         # check I + linear term
-##         H = numx.eye(10, dtype='d')
-##         f = x
-##         q = utils.QuadraticForm(H=H, f=f, c=0.)
-##         xmax, xmin, vmax, vmin = q.get_extrema(utils.norm2(x), tol=tol) 
-##         assert_array_almost_equal(f, xmax, 5)
-                 
+    def testQuadraticFormsExtrema(self):
+        # !!!!! add some real test
+        # check H with negligible linear term
+        noise = 1e-8
+        tol = 1e-6
+        x = numx_rand.random((10,))
+        H = numx.outer(x, x) + numx.eye(10)*0.1
+        f = noise*numx_rand.random((10,))
+        q = utils.QuadraticForm(H, f)
+        xmax, xmin = q.get_extrema(utils.norm2(x), tol=tol)
+        assert_array_almost_equal(x, xmax, 5)
+        # check I + linear term
+        H = numx.eye(10, dtype='d')
+        f = x
+        q = utils.QuadraticForm(H, f=f)
+        xmax, xmin = q.get_extrema(utils.norm2(x), tol=tol) 
+        assert_array_almost_equal(f, xmax, 5)
+
+    def testQuadraticFormInvariances(self):
+        # eigenvalues
+        nu = numx.linspace(2.,-3,10)
+        H = utils.symrand(nu)
+        q = utils.QuadraticForm(H)
+        xmax, xmin = q.get_extrema(5.)
+        e_w, e_sd = q.get_invariances(xmax)
+        assert_array_almost_equal(e_sd,nu[1:]-nu[0],6)
+
+    def testQuadraticFormsException(self):
+        H = numx_rand.random((10,10))
+        try:
+            q = utils.QuadraticForm(H)
+        except MDPException, e:
+            if 'H does not seem to be symmetric' in str(e):
+                return
+            else:
+                raise e
+        raise Exception, 'Did not detect non symmetric H!'
+    
 def get_suite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(UtilsTestCase))
