@@ -92,6 +92,7 @@ class GrowingNeuralGasNode(Node):
             node2 = self._add_node(self._refcast(start_poss[1]))
             self._add_edge(node1, node2)
 
+    @classmethod
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
         return ['f','d']

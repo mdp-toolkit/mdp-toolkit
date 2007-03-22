@@ -1,6 +1,16 @@
 import mdp
 from mdp import numx, numx_linalg, utils, Node, NodeException
 
+MAX_NUM = {numx.int32: 2147483647,
+           numx.int64: 9223372036854775807L,
+           numx.float32: numx.finfo(numx.float32).max,
+           numx.float64: numx.finfo(numx.float64).max}
+
+MIN_NUM = {numx.int32: -12147483648,
+           numx.int64: -9223372036854775808L,
+           numx.float32: numx.finfo(numx.float32).min,
+           numx.float64: numx.finfo(numx.float64).min}
+
 class OneDimensionalHitParade(object):
     """
     Class to produce hit-parades (i.e., a list of the largest
@@ -20,8 +30,9 @@ class OneDimensionalHitParade(object):
         self.d = int(d)
         self.iM = numx.zeros((n,),dtype=integer_dtype)
         self.im = numx.zeros((n,),dtype=integer_dtype)
-        self.M = numx.array([-numx.inf]*n, dtype=real_dtype)
-        self.m = numx.array([numx.inf]*n, dtype=real_dtype)
+        real_dtype = numx.dtype(real_dtype)
+        self.M = numx.array([MIN_NUM[real_dtype.type]]*n, dtype=real_dtype)
+        self.m = numx.array([MAX_NUM[real_dtype.type]]*n, dtype=real_dtype)
         self.lM = 0
         self.lm = 0
 
@@ -114,12 +125,13 @@ class HitParadeNode(Node):
         super(HitParadeNode, self).__init__(input_dim, None, dtype)
         self.n = int(n)
         self.d = int(d)
-        self.itype = 'l'
+        self.itype = 'int64'
         self.hit = None
         self.tlen = 0
 
+    @classmethod
     def _get_supported_dtypes(self):
-        return ['i','l','f','d']
+        return ['int32','int64','float32','float64']
 
     def _train(self, x):
         hit = self.hit
@@ -308,6 +320,7 @@ class EtaComputerNode(Node):
         super(EtaComputerNode, self).__init__(input_dim, None, dtype)
         self._initialized = 0
 
+    @classmethod
     def _get_supported_dtypes(self):
         return ['f','d']
 

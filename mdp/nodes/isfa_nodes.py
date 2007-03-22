@@ -212,7 +212,8 @@ class ISFANode(Node):
         # finally call base class constructor
         super(ISFANode, self).__init__(input_dim, output_dim, dtype)
 
-    def get_supported_dtypes(self):
+    @classmethod
+    def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
         return ['d']
 

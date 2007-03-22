@@ -46,6 +46,7 @@ class PCANode(Node):
                         % (y.shape[1], self.output_dim)
             raise NodeException, error_str
 
+    @classmethod
     def _get_supported_dtypes(self):
         return ['f','d']
     

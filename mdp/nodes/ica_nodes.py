@@ -39,6 +39,7 @@ class ICANode(mdp.Cumulator, mdp.Node):
         self.whitened = whitened
         self.white_comp = white_comp
 
+    @classmethod
     def _get_supported_dtypes(self):
         return ['f','d']
 

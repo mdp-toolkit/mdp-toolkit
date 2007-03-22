@@ -45,6 +45,11 @@ class FDANode(mdp.Node):
         self.tlens = {}
         self._SW_init = 0
 
+    @classmethod
+    def _get_supported_dtypes(self):
+        """Return the list of dtypes supported by this node."""
+        return ['f', 'd']
+
     def _check_train_args(self, x, cl):
         if isinstance(cl, (list, tuple, numx.ndarray)) \
                and len(cl) != x.shape[0]:
