@@ -102,4 +102,5 @@ class QuadraticForm(object):
         return x
 
     def invariances(self):
+        pass
         raise NotImplementedError
