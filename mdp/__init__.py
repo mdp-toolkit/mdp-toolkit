@@ -94,4 +94,4 @@ del signal_node
 del linear_flows
 del helper_funcs
 
-__version__ = '2.0RC2'
+__version__ = '2.1'

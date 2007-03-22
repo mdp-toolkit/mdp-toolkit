@@ -1,5 +1,5 @@
 import mdp
-dir(mdp.helper_funcs)
+#dir(mdp.helper_funcs)
 # ['__builtins__', '__doc__', '__file__', '__name__',
 # 'cubica', 'factor_analysis', 'fastica', 'get_eta', 'mdp',
 # 'pca', 'sfa', 'sfa2', 'whitening']

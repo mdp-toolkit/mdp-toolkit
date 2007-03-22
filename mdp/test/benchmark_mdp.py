@@ -120,7 +120,7 @@ def isfa_spiral_benchmark():
                      mdp.nodes.ISFANode(lags=30, whitened=False,
                                         sfa_ica_coeff=[1.,300.],
                                         eps_contrast=1e-5,
-                                        output_dim=2, verbose=True)])
+                                        output_dim=2, verbose=False)])
     flow.train(exp_src)
 
 def sfa_benchmark():

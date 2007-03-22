@@ -8,8 +8,12 @@ from covariance import CovarianceMatrix, DelayCovarianceMatrix, \
 from progress_bar import progressinfo
 import mdp as _mdp
 
-
-symeig = routines._symeig_fake
+try:
+    import symeig
+    symeig = symeig.symeig
+    print '!!!!!!!!!!!!!!!!!!!!!!!1 using symeig'
+except ImportError:
+    symeig = routines._symeig_fake
 
 # matrix multiplication function
 # we use an alias to be able to use the wrapper for the 'gemm' Lapack
