@@ -2,41 +2,16 @@ TODO:
 
 MDP 2.1 21.3.2006:
 
-!- API
-!- CHANGES and TODO
-?- link a papers online
+- offer 'gemm' interface and use it in the nodes
+- verify 'utils.symrand' theoretical foundations
+- 'HitParadeNode' for any input dtype
+- fix 'fftpack' calls in benchmarks and tests
+- check weird Segmentation Fault in testRoundOffWarningCovMatrix with type='g'
+  (it's probably a numpy.dot bug)
 
-?- gemm nei nodi
-?- verify symrand theory
-? hitparadenode for any input dtype
-? fix fftpack calls in benchmarks, tests
-?- weird Segmentation Fault in testRoundOffWarningCovMatrix with type='g'
-
-??- better tests for QuadraticForms
-??- update FastICA to match new Matlab version
-??- kalman filters
-??- memory profiler
-??- flow to handle acyclic graphs of nodes
-??- GUI
-
-X- documentare symeig
-X- revise weppage and tutorial
-X- check ISFA documentation
-X- non usare i caratteri per i tipi, usare 'int32', 'int64', ... numpy.single
-X- use numpy.get_limits.finfo instead of fixed thresholds
-X- use scipy if possible
-X- invariances, gradient, and real test in QuadraticForm
-X- symeig
-X- symrand: mult per diagonal piu' svelto
-X control use of std and var (bias convention changed in numpy)
-X rewrite using array methods instead of numpy functions:
-  already done: transpose(a) -> a.T
-  todo: Xargsort, Xargmax, Xargmin, Xastype, Xconj, Xconjugate, Xcumprod
-        Xcumsum, Xdiagonal, Xflat, Xflatten, Xmax, Xmin, Xmean, Xprod, Xput,
-    Xravel,
-    Xrepeat, Xround,
-	Xreshape, Xresize, Xsearchsorted, Xshape, Xsize, Xsort, Xsqueeze, Xstd, 
-	Xsum, Xtake, Xtrace, Xvar, Xrank(->ndim), |**2
-X real benchmark
-X add Independent Slow Feature Analysis node
-
+- better tests for 'QuadraticForms'
+- update FastICA to match new Matlab version
+- kalman filters
+- memory profiler
+- flow to handle acyclic graphs of nodes
+- GUI
