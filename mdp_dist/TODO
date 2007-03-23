@@ -2,19 +2,18 @@ TODO:
 
 MDP 2.1 21.3.2006:
 
-
-
+!- CHANGES and TODO
+!- remove FAQ
 !- documentare symeig
-- link a papers online
+?- link a papers online
 !- revise weppage and tutorial (update nodes list, warning for not-trainable nodes that get an input for training)
 !- color (yellow-orange)
-!- check ISFA documentation
 
 ?- gemm nei nodi
 ?- verify symrand theory
-?- non usare i caratteri per i tipi, usare 'int32', 'int64', ... numpy.single
 ? hitparadenode for any input dtype
 ? fix fftpack calls in benchmarks, tests
+?- weird Segmentation Fault in testRoundOffWarningCovMatrix with type='g'
 
 ??- better tests for QuadraticForms
 ??- update FastICA to match new Matlab version
@@ -23,6 +22,8 @@ MDP 2.1 21.3.2006:
 ??- flow to handle acyclic graphs of nodes
 ??- GUI
 
+X- check ISFA documentation
+X- non usare i caratteri per i tipi, usare 'int32', 'int64', ... numpy.single
 X- use numpy.get_limits.finfo instead of fixed thresholds
 X- use scipy if possible
 X- invariances, gradient, and real test in QuadraticForm

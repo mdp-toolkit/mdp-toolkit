@@ -246,7 +246,6 @@ class NodesTestSuite(unittest.TestSuite):
         assert generic_node.dummy_attr != copy_node.dummy_attr,\
                'Node save (file) method did not work'
         
-
     def testCovarianceMatrix(self):
         mat,mix,inp = self._get_random_mix()
         des_cov = numx.cov(inp, rowvar=0)
@@ -297,7 +296,7 @@ class NodesTestSuite(unittest.TestSuite):
     def testRoundOffWarningCovMatrix(self):
         import warnings
         warnings.filterwarnings("error",'.*',mdp.MDPWarning)
-        for type in ['d','f']:
+        for type in ['f','d']:
             inp = uniform((1,2))
             cov = utils.CovarianceMatrix(dtype=type)
             cov._tlen = int(1e+15)

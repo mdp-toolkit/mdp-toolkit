@@ -4,13 +4,13 @@ import warnings
 # import numeric module (scipy, Numeric or numarray)
 numx = mdp.numx
 
-def _check_roundoff(t, type):
+def _check_roundoff(t, dtype):
     """Check if t is so large that t+1 == t up to 2 precision digits"""
     # limit precision
-    limit = 10.**(numx.finfo(type).precision-2)
+    limit = 10.**(numx.finfo(dtype).precision-2)
     if int(t) >= limit:
         wr = 'You have summed %e entries in the covariance matrix.'%t+\
-             '\nAs you are using dtype \'%s\', you are '%type+\
+             '\nAs you are using dtype \'%s\', you are '%dtype.name+\
              'probably getting severe round off'+\
              '\nerrors. See CovarianceMatrix docstring for more'+\
              ' information.'
