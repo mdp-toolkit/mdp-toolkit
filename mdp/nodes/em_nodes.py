@@ -1,4 +1,4 @@
-import mdp
+#import mdp
 from mdp import numx, numx_linalg, utils
 from mdp.utils import mult, CovarianceMatrix
 import warnings
