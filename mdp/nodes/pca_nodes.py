@@ -47,7 +47,7 @@ class PCANode(Node):
             raise NodeException, error_str
 
     def _get_supported_dtypes(self):
-        return [numx.single, numx.double]
+        return ['float32', 'float64']
     
     def get_explained_variance(self):
         """Return the fraction of the original variance that can be

@@ -25,6 +25,36 @@ class ISFANode(Node):
     """
     Perform Independent Slow Feature Analysis on the input data.
 
+    Internal variables of interest:
+    self.RP -- the global rotation-permutation matrix. This is the filter
+               applied on input_data to get output_data
+
+    self.RPC -- the *complete* global rotation-permutation matrix. This
+                is a matrix of dimension input_dim x input_dim
+                (the 'outer space' is retained)
+
+    self.covs -- A mdp.utils.MultipleCovarianceMatrices instance containing
+                 the current time-delayed covariance matrices of the
+                 input_data. After convergence the uppermost
+                 output_dim x output_dim submatrices should be almost
+                 diagonal.
+                 
+                 self.covs[n-1] is the covariance matrix relative to
+                 the n-th time-lag
+                 
+                 Note: they are not cleared after convergence. If you
+                 need to free some memory, you can safely delete them with
+                 >>> del self.covs
+
+    self.initial_contrast -- a dictionary with the starting contrast
+                             and the SFA and ICA parts of it.
+
+    self.final_contrast   -- like the above but after convergence.
+
+    Note: If you intend to use this node for large datasets please have
+          a look at the stop_training method documentation for
+          speeding things up.
+
     References:
     Blaschke, T. , Zito, T., and Wiskott, L. (2007).
     Independent Slow Feature Analysis and Nonlinear Blind Source Separation.
@@ -38,31 +68,31 @@ class ISFANode(Node):
                  input_dim=None, output_dim=None, dtype=None):
         """
         Perform Independent Slow Feature Analysis.
-        The notation is the same used inthe paper by Blaschke et al. Please
+        The notation is the same used in the paper by Blaschke et al. Please
         refer to the paper for more information.
         
         Keyword arguments:
         
-        lags    -- list of time-lags for generating the time-delayed covariance
+        lags    -- list of time-lags to generate the time-delayed covariance
                    matrices (in the paper this is the set of \tau). If
                    lags is an integer, time-lags 1,2,...,'lags' are used.
                    Note that time-lag == 0 (instantaneous correlation) is
-                   implicitly used.
+                   always implicitly used.
 
-        sfa_ica_coeff -- a list of float with two entries defines the
-                         relative weight of the SFA and ICA part of the
-                         objective function. Those are called b_{SFA} and
+        sfa_ica_coeff -- a list of float with two entries, which defines the
+                         weights of the SFA and ICA part of the
+                         objective function. They are called b_{SFA} and
                          b_{ICA} in the paper.
         
-        sfaweights -- weighting factors for the cov matrices relative
-                      to the SFA part of the objective function (in the paper
-                      those are the \kappa_{SFA}^{\tau}. Default is
+        sfaweights -- weighting factors for the covariance matrices relative
+                      to the SFA part of the objective function (called
+                      \kappa_{SFA}^{\tau} in the paper). Default is
                       [1., 0., ..., 0.]
-                      For possible values see the description of icaweights
+                      For possible values see the description of icaweights.
 
         icaweights -- weighting factors for the cov matrices relative
-                      to the ICA part of the objective function (in the paper
-                      those are the \kappa_{ICA}^{\tau}. Default is 1.
+                      to the ICA part of the objective function (called
+                      \kappa_{ICA}^{\tau} in the paper). Default is 1.
                       Possible values are:
                           an integer n: all matrices are weighted the same
                                         (note that it does not make sense to
@@ -74,65 +104,30 @@ class ISFANode(Node):
                                         
         whitened   -- True if input data is already white, False otherwise (the
                       data will be whitened internally).
-                      
-                        Otherwise the node will whiten the data itself.
-
         
         eps_contrast -- Convergence is achieved when the relative
                         improvement in the contrast is below this threshold.
-                        Values in the range [1E-4, 1E-10] are reasonable.
+                        Values in the range [1E-4, 1E-10] are usually reasonable.
         
         max_iter     -- If the algorithms does not achieve convergence within
                         max_iter iterations raise an Exception. Should be
                         larger than 100.
 
-        RP     -- Starting rotation-permutation matrix. Is a matrix
-                  input_dimXinput_dim used to initially rotate the input
-                  components. If not set an identity matrix is used instead.
+        RP     -- Starting rotation-permutation matrix. It is an
+                  input_dim x input_dim matrix used to initially rotate the
+                  input components. If not set, the identity matrix is used.
                   In the paper this is used to start the algorithm at the
                   SFA solution (which is often quite near to the optimum).
 
-        verbose -- print progress information during convergence. It can
+        verbose -- print progress information during convergence. This can
                    slow down the algorithm, but it's the only way to see
                    the rate of improvement and immediately spot if something
                    is going wrong.
-                   
        
-        output_dim -- sets the number of independent components that are to
+        output_dim -- sets the number of independent components that have to
                       be extracted. Note that if this is not smaller than
                       input_dim, the problem is solved linearly and SFA
-                      would give the same solution but much faster.
-
-
-        Internal variables of interest:
-
-        self.RP -- the global rotation-permutation matrix. This is the filter
-                   applied on input_data to get output_data
-
-        self.RPC -- the *complete* global rotation-permutation matrix. This
-                    is a matrix input_dimXinput_dim (the outer space
-                    is retained)
-
-        self.covs -- A mdp.utils.MultipleCovarianceMAtrices instance containing
-                     the current time-delayed covariance matrices of the
-                     input_data. After convergence the upper most
-                     output_dimXoutput_dim submatrices shoudl be almost
-                     diagonal. To get the covariance matrix relative to
-                     the n-th time-lag you can do:
-                     self.covs[n-1]
-                     Note: they are not cleared after convergence. If you
-                     need memory, you can safely delete them after convergence
-                     with
-                     del self.covs
-
-        self.initial_contrast -- a dictionary with the starting contrast
-                                 and the SFA and ICA parts of it.
-
-        self.final_contrast   -- like the above but after convergence.
-
-        Note: If you intend to use this node for large datasets please have
-              a look at the stop_training method doc-string for
-              speeding things up.
+                      would give the same solution only much faster.
         """
         # check that the "lags" argument has some meaningful value
         if isinstance(lags, (int, long)):
@@ -214,7 +209,7 @@ class ISFANode(Node):
 
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
-        return [numx.dtype('d')]
+        return ['float64']
 
     def _set_dtype(self, dtype):
         # when typecode is set, we set the whitening node if needed and
@@ -509,7 +504,6 @@ class ISFANode(Node):
             covs.symmetrize()
         self.covs = covs
 
-            
     def _optimize(self):
         # optimize contrast function
 
@@ -671,12 +665,12 @@ class ISFANode(Node):
 
     def stop_training(self, covs=None):
         """Stop the training phase.
-        If the node is used on large datasets it may be wise to
-        first learn the covariance matrices, and then tune the parameters
-        until a suitable parameter set has been found. Because for large
-        datasets learning the covariance matrices is the slowest part, one
-        could first learn them doing for example (assuming the data is
-        already white):
+        If the node is used on large datasets it may be wise to first
+        learn the covariance matrices, and then tune the parameters
+        until a suitable parameter set has been found (learning the
+        covariance matrices is the slowest part in this case).  This
+        could be done for example in the following way (assuming the
+        data is already white):
         
         covs=[mdp.utils.DelayCovarianceMatrix(dt, dtype=dtype) for dt in lags]
         for block in data:
@@ -693,7 +687,8 @@ class ISFANode(Node):
         isfa.stop_training(covs=covs)
 
         This trick has been used in the paper to apply ISFA to surrogate
-        matrices, i.e. covariance matrices were not learnt on a real dataset.
+        matrices, i.e. covariance matrices that were not learnt on a
+        real dataset.
         """
         return super(ISFANode, self).stop_training(covs)
     

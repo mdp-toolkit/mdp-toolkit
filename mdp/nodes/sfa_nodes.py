@@ -31,7 +31,7 @@ class SFANode(Node):
 
     
     def _get_supported_dtypes(self):
-        return [numx.single, numx.double]
+        return ['float32', 'float64']
 
     def time_derivative(self, x):
         """Compute the linear approximation of the time derivative."""
