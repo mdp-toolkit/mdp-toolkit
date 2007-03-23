@@ -6,6 +6,7 @@ from mdp.utils import symeig, mult
 
 numx = mdp.numx
 numx_rand = mdp.numx_rand
+numx_fft = mdp.numx_fft
 
 ####### benchmark function
 
@@ -91,11 +92,11 @@ def _get_random_slow_sources(nsrc, distr_fun):
     # distr_fun: random numbers function
     
     src = distr_fun(size=(50000, nsrc))
-    fsrc = numx.fft.rfft(src, axis=0)
+    fsrc = numx_fft.rfft(src, axis=0)
     # enforce different time scales
     for i in range(nsrc):
         fsrc[5000+(i+1)*1000:,i] = 0.
-    src = numx.fft.irfft(fsrc,axis=0)
+    src = numx_fft.irfft(fsrc,axis=0)
     return src
     
 def isfa_spiral_benchmark():

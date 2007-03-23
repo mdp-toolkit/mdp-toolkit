@@ -11,7 +11,7 @@ import mdp
 import cPickle
 import tempfile
 import os
-from mdp import utils, numx, numx_rand, numx_linalg
+from mdp import utils, numx, numx_rand, numx_linalg, numx_fft
 from testing_tools import assert_array_almost_equal, assert_array_equal, \
      assert_almost_equal, assert_equal, assert_array_almost_equal_diff, \
      assert_type_equal
@@ -928,11 +928,11 @@ class NodesTestSuite(unittest.TestSuite):
     def testISFANode_SFAPart(self):
         # create independent sources
         mat = uniform((100000,3))*2-1
-        fmat = numx.fft.rfft(mat,axis=0)
+        fmat = numx_fft.rfft(mat,axis=0)
         # enforce different speeds
         for i in range(3):
             fmat[(i+1)*5000:,i] = 0.
-        mat = numx.fft.irfft(fmat,axis=0)
+        mat = numx_fft.irfft(fmat,axis=0)
         src = mdp.sfa(mat)
         # test with unmixed signals (i.e. the node should make nothing at all)
         out = mdp.isfa(src,
@@ -953,11 +953,11 @@ class NodesTestSuite(unittest.TestSuite):
     def testISFANode_ICAPart(self):
         # create independent sources
         src = uniform((100000,3))*2-1
-        fsrc = numx.fft.rfft(src,axis=0)
+        fsrc = numx_fft.rfft(src,axis=0)
         # enforce different speeds
         for i in range(3):
             fsrc[(i+1)*5000:,i] = 0.
-        src = numx.fft.irfft(fsrc,axis=0)
+        src = numx_fft.irfft(fsrc,axis=0)
         # enforce time-lag-1-independence
         src = mdp.isfa(src, lags=1, sfa_ica_coeff=[1.,0.])
         out = mdp.isfa(src,

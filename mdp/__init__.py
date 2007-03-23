@@ -49,13 +49,6 @@ available, Python implemented data processing algorithms.
 http://mdp-toolkit.sourceforge.net
 """
 
-
-import numpy as numx
-import numpy.random as numx_rand
-import numpy.linalg as numx_linalg
-
-numx_description = 'numpy'
-
 class MDPException(Exception):
     """Base class for exceptions in MDP."""
     pass
@@ -63,6 +56,57 @@ class MDPException(Exception):
 class MDPWarning(UserWarning):
     """Base class for warnings in MDP."""
     pass
+
+import os as _os
+
+# list of supported numerical extensions
+_NUMX_LABELS = ['scipy', 'numpy']
+
+# To force MDP to use one specific extension module
+# set the environment variable MDPNUMX
+# Mainly useful for testing
+_USR_LABEL = _os.getenv('MDPNUMX')
+if _USR_LABEL in _NUMX_LABELS:
+    _NUMX_LABELS = [_USR_LABEL]
+elif _USR_LABEL is None:
+    pass
+else:
+    _errstr = "\nExtension '%s' not supported. "%(_USR_LABEL) + \
+              "Supported extensions:\n %s"%(str(_NUMX_LABELS))
+    raise ImportError(_errstr)
+    del _errstr
+
+# try to load in sequence: scipy, numpy
+numx_description = None
+for _label in _NUMX_LABELS:
+    try:
+        if _label == 'scipy':
+            import scipy, scipy.linalg, scipy.fftpack
+            numx = scipy
+            numx_rand = scipy.random
+            numx_linalg = scipy.linalg
+            numx_fft = scipy.fftpack
+            numx_description = 'scipy'
+            del scipy
+            break
+        else:
+            import numpy
+            import numpy as numx
+            import numpy.random as numx_rand
+            import numpy.linalg as numx_linalg
+            import numpy.fft as numx_fft
+            numx_description = 'numpy'
+            del numpy
+            break
+    except ImportError:
+        pass
+        
+if numx_description is None:
+    raise ImportError, \
+          "Could not find any of the numeric modules "+ \
+          "scipy or numpy"
+
+del _os, _NUMX_LABELS, _USR_LABEL, _label
 
 # import the utils module (used by other modules)
 # here we set scipy_emulation if needed.

@@ -3,7 +3,7 @@
 import time
 import mdp
 numx = mdp.numx
-testing = mdp.numx.testing
+import numpy.testing as testing
 assert_array_equal, assert_array_almost_equal, \
      assert_equal, assert_almost_equal = \
      testing.assert_array_equal, testing.assert_array_almost_equal, \

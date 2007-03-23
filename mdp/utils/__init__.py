@@ -11,7 +11,6 @@ import mdp as _mdp
 try:
     import symeig
     symeig = symeig.symeig
-    print '!!!!!!!!!!!!!!!!!!!!!!!1 using symeig'
 except ImportError:
     symeig = routines._symeig_fake
 
