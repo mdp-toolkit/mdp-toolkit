@@ -4,19 +4,17 @@ import warnings
 # import numeric module (scipy, Numeric or numarray)
 numx = mdp.numx
 
-# precision warning parameters
-_limits = { 'd' : 1e13, 'f' : 1e5}
-
 def _check_roundoff(t, type):
-    """Check if t is so large that t+1 == t up to 2 precision digits"""   
-    if type.char in _limits:
-        if int(t) >= _limits[type.char]:
-            wr = 'You have summed %e entries in the covariance matrix.'%t+\
-                 '\nAs you are using dtype \'%s\', you are '%type+\
-                 'probably getting severe round off'+\
-                 '\nerrors. See CovarianceMatrix docstring for more'+\
-                 ' information.'
-            warnings.warn(wr, mdp.MDPWarning)
+    """Check if t is so large that t+1 == t up to 2 precision digits"""
+    # limit precision
+    limit = 10.**(numx.finfo(type).precision-2)
+    if int(t) >= limit:
+        wr = 'You have summed %e entries in the covariance matrix.'%t+\
+             '\nAs you are using dtype \'%s\', you are '%type+\
+             'probably getting severe round off'+\
+             '\nerrors. See CovarianceMatrix docstring for more'+\
+             ' information.'
+        warnings.warn(wr, mdp.MDPWarning)
 
 class CovarianceMatrix(object):
     """This class stores an empirical covariance matrix that can be updated
@@ -253,7 +251,7 @@ class DelayCovarianceMatrix(object):
         return cov_mtx, avg, avg_dt, tlen
 
 
-class MultipleCovarianceMatrices:
+class MultipleCovarianceMatrices(object):
     """Container class for multiple covariance matrices to easily
     execute operations on all matrices at the same time.
     Note: all operations are done in place where possible."""

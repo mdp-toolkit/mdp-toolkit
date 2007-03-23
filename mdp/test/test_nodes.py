@@ -11,7 +11,10 @@ import mdp
 import cPickle
 import tempfile
 import os
-from mdp import utils, numx, numx_rand, numx_linalg, numx_fft
+from mdp import utils, numx, numx_rand, numx_linalg
+# !!! scipy.fft seems to be extremely slow, this is a workaround until
+# !!! it's fixed
+import numpy.fft as numx_fft
 from testing_tools import assert_array_almost_equal, assert_array_equal, \
      assert_almost_equal, assert_equal, assert_array_almost_equal_diff, \
      assert_type_equal

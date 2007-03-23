@@ -6,7 +6,10 @@ from mdp.utils import symeig, mult
 
 numx = mdp.numx
 numx_rand = mdp.numx_rand
-numx_fft = mdp.numx_fft
+# !!! scipy.fft seems to be extremely slow, this is a workaround until
+# !!! it's fixed
+import numpy.fft as numx_fft
+#numx_fft = mdp.numx_fft
 
 ####### benchmark function
 

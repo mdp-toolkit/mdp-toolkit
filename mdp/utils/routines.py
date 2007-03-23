@@ -172,24 +172,6 @@ def mult_diag(d, mtx, left=True):
     else:
         return d*mtx
 
-def gram_schmidt(mat):
-    """Perform Gram-Schmidt Orthogonalization.
-
-    Return (Q, W) such that
-    mat = dot(Q, W) and dot(Q^T, Q) = I
-    """
-    A = mat.copy()
-    Q = numx.zeros(A.shape, dtype=A.dtype)
-    W = numx.zeros(A.shape, dtype=A.dtype)
-    for j in range(A.shape[1]):
-        for i in range(j-1):
-            W[i, j] = mdp.utils.mult(Q[:, i], x[:, j]) 
-        A[:, j] = A[:, j] - mdp.utils.mult(Q[:, :j-1], W[:j-1, j])
-        W[j, j] = norm2(A[:, j])
-        Q[:, j] = A[:, j] / W[j, j]
-    return Q, W
-
-
 def get_dtypes(typecodes_key):
     """Return the list of dtypes corresponding to the set of
     typecodes defined in numpy.typecodes[typecodes_key].

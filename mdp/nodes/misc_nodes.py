@@ -1,13 +1,13 @@
 import mdp
 from mdp import numx, numx_linalg, utils, Node, NodeException
 
-MAX_NUM = {numx.int32: 2147483647,
-           numx.int64: 9223372036854775807L,
+MAX_NUM = {#numx.int32: 2147483647,
+           #numx.int64: 9223372036854775807L,
            numx.float32: numx.finfo(numx.float32).max,
            numx.float64: numx.finfo(numx.float64).max}
 
-MIN_NUM = {numx.int32: -12147483648,
-           numx.int64: -9223372036854775808L,
+MIN_NUM = {#numx.int32: -2147483648,
+           #numx.int64: -9223372036854775808L,
            numx.float32: numx.finfo(numx.float32).min,
            numx.float64: numx.finfo(numx.float64).min}
 
@@ -131,12 +131,7 @@ class HitParadeNode(Node):
 
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
-        return ['f', 'd']
-
-    #def _get_supported_dtypes(self):
-    #    """Return the list of dtypes supported by this node."""
-    #    return mdp.utils.get_dtypes('AllFloat') + \
-    #           mdp.utils.get_dtypes('AllInteger')
+        return ['float32', 'float64']
 
     def _train(self, x):
         hit = self.hit
