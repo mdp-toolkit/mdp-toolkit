@@ -1,8 +1,8 @@
 import mdp
-#dir(mdp.helper_funcs)
+dir(mdp.helper_funcs)
 # ['__builtins__', '__doc__', '__file__', '__name__',
-# 'cubica', 'factor_analysis', 'fastica', 'get_eta', 'mdp',
-# 'pca', 'sfa', 'sfa2', 'whitening']
+# 'cubica', 'factor_analysis', 'fastica', 'get_eta',
+# 'isfa', 'mdp', 'pca', 'sfa', 'sfa2', 'whitening']
 pcanode1 = mdp.nodes.PCANode()
 pcanode1
 # PCANode(input_dim=None, output_dim=None, dtype=None)
@@ -12,11 +12,11 @@ pcanode2
 pcanode3 = mdp.nodes.PCANode(output_dim = 0.8)
 pcanode3.desired_variance
 # 0.80000000000000004
-pcanode4 = mdp.nodes.PCANode(dtype = 'f')
+pcanode4 = mdp.nodes.PCANode(dtype = 'float32')
 pcanode4
-# PCANode(input_dim=None, output_dim=None, dtype='f')
-pcanode4.get_supported_dtypes()
-# [dtype('<f4'), dtype('<f8')]
+# PCANode(input_dim=None, output_dim=None, dtype='float32')
+pcanode4.supported_dtypes
+# [dtype('float32'), dtype('float64')]
 expnode = mdp.nodes.PolynomialExpansionNode(3)
 x = mdp.numx_rand.random((100, 25))  # 25 variables, 100 observations
 pcanode1.train(x)
@@ -67,7 +67,7 @@ class TimesTwoNode(mdp.Node):
         return y/2
 # ...
 # >>>
-node = TimesTwoNode(dtype = 'i')
+node = TimesTwoNode(dtype = 'int32')
 x = mdp.numx.array([[1.0, 2.0, 3.0]])
 y = node(x)
 print x, '* 2 =  ', y
@@ -81,7 +81,7 @@ class PowerNode(mdp.Node):
     def is_trainable(self): return False
     def is_invertible(self): return False
     def _get_supported_dtypes(self):
-        return ['f', 'd']
+        return ['float32', 'float64']
     def _execute(self, x):
         return self._refcast(x**self.power)
 # ...
@@ -163,7 +163,7 @@ for phase in range(2):
 # ...
 # execute
 y = node.execute(x)
-print 'Standard deviation of y (should be one): ', mdp.numx.std(y, 0)
+print 'Standard deviation of y (should be one): ', mdp.numx.std(y, axis=0)
 # Standard deviation of y (should be one):  [ 1.  1.  1.  1.]
 class TwiceNode(mdp.Node):
     def is_trainable(self): return False
@@ -220,8 +220,8 @@ cov = mdp.numx.amax(abs(mdp.utils.cov2(inp[:,:5], out)))
 print cov
 # [ 0.98992083  0.99244511  0.99227319  0.99663185  0.9871812 ]
 rec = flow.inverse(out)
-cov = mdp.numx.amax(abs(mdp.utils.cov2(x/mdp.numx.std(x,0),
-                                       rec/mdp.numx.std(rec,0))))
+cov = mdp.numx.amax(abs(mdp.utils.cov2(x/mdp.numx.std(x,axis=0),
+                                       rec/mdp.numx.std(rec,axis=0))))
 print cov
 # [ 0.99839606  0.99744461  0.99616208  0.99772863  0.99690947
 # 0.99864056  0.99734378  0.98722502  0.98118101  0.99407939
@@ -280,7 +280,7 @@ def gen_data(blocks):
 # >>>
 flow = mdp.Flow([BogusNode(),BogusNode()], verbose=1)
 flow.train([gen_data(5000),gen_data(3000)])
-# Training node #0 (IdentityNode)
+# Training node #0 (BogusNode)
 # [===================================100%==================================>]
 flow = mdp.Flow([BogusNode(),BogusNode()])
 block_x = mdp.numx.atleast_2d(mdp.numx.arange(2,1001,2))
@@ -291,29 +291,15 @@ flow = mdp.Flow([BogusNode2(),BogusNode()], verbose=1)
 flow.train([None, gen_data(5000)])
 # Training node #0 (BogusNode2)
 # Training finished
-# Training node #1 (IdentityNode)
+# Training node #1 (BogusNode)
 # [===================================100%==================================>]
 flow = mdp.Flow([BogusNode2(),BogusNode()], verbose=1)
 flow.train(single_block)
 # Training node #0 (BogusNode2)
-# /.../linear_flows.py:94: MDPWarning:
-# ! Node 0 in not trainable
-# You probably need a 'None' generator for this node. Continuing anyway.
-# warnings.warn(wrnstr, mdp.MDPWarning)
 # Training finished
-# Training node #1 (IdentityNode)
+# Training node #1 (BogusNode)
 # Training finished
 # Close the training phase of the last node
-import warnings
-warnings.filterwarnings("ignore",'.*',mdp.MDPWarning)
-flow = mdp.Flow([BogusNode2(),BogusNode()], verbose=1)
-flow.train(single_block)
-# Training node #0 (BogusNode2)
-# Training finished
-# Training node #1 (IdentityNode)
-# Training finished
-# Close the training phase of the last node
-warnings.filterwarnings("always",'.*',mdp.MDPWarning)
 flow = mdp.Flow([BogusNode(),BogusNode()], verbose=1)
 flow.train([gen_data(1), gen_data(1)])
 # Training node #0 (BogusNode2)
@@ -426,7 +412,7 @@ sequence = [mdp.nodes.EtaComputerNode(),
 # >>>
 flow = mdp.Flow(sequence, verbose=1)
 flow.train(series)
-slow = flow.execute(series)
+slow = flow(series)
 resc_dforce = (dforce - mdp.numx.mean(dforce,0))/mdp.numx.std(dforce,0)
 mdp.utils.cov2(resc_dforce[:-9],slow)
 # 0.99992501533859179
@@ -470,7 +456,7 @@ r2 = rectangle_distr([+1.5,0], 1, 4, N)
 r3 = rectangle_distr([0,+1.5], 2, 1, N/2)
 r4 = rectangle_distr([0,-1.5], 2, 1, N/2)
 x = mdp.numx.concatenate([cf1, cf2, cl1, cl2, r1,r2,r3,r4], axis=0)
-x = mdp.numx.take(x,mdp.numx_rand.permutation(x.shape[0]))
+x = mdp.numx.take(x,mdp.numx_rand.permutation(x.shape[0]), axis=0)
 gng = mdp.nodes.GrowingNeuralGasNode(max_nodes=75)
 STEP = 500
 for i in range(0,x.shape[0],STEP):

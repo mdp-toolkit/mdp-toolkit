@@ -136,6 +136,5 @@ import nodes
 # clean up namespace
 del signal_node
 del linear_flows
-del helper_funcs
 
 __version__ = '2.1'
