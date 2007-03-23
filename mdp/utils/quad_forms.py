@@ -8,8 +8,12 @@ epsilon = 10*numx.finfo(numx.double).eps
 class QuadraticForm(object):
     """
     Define an inhomogeneous quadratic form as 1/2 x'Hx + f'x + c .
+    This class implements the quadratic form analysis methods
+    presented in:
 
-    WARNING: EXPERIMENTAL CODE! USE AT YOU OWN RISK!
+    Berkes, P. and Wiskott, L. (2006). On the analysis and interpretation
+    of inhomogeneous quadratic forms as receptive fields. Neural
+    Computation, 18(8): 1868-1895.
     """
 
     def __init__(self, H, f=None, c=None, dtype='d'):
@@ -41,7 +45,7 @@ class QuadraticForm(object):
         Find the input vectors xmax and xmin with norm 'nrm' that maximize
         or minimize the quadratic form.
 
-       tol: norm error tolerance
+        tol: norm error tolerance
         """
         H, f, c = self.H, self.f, self.c
         if max(abs(f)) < numx.finfo(self.dtype).eps:
@@ -116,7 +120,12 @@ class QuadraticForm(object):
 
          w  -- w[:,i] is the direction of the i-th invariance 
          nu -- nu[i] second derivative on the sphere in the direction w[:,i]
-         """
+
+        IMPORTANT: this method will crash python on 64bit platforms because
+        of a bug in numpy.linalg.qr (as of numpy version 1.0.1). This bug
+        is fixed in the current numpy subversion repository.
+        """
+        
         # find a basis for the tangential plane of the sphere in x+
         # e(1) ... e(N) is the canonical basis for R^N
         r = mdp.utils.norm2(xstar)
@@ -129,9 +138,10 @@ class QuadraticForm(object):
         Ht = mdp.utils.mult(B.T,mdp.utils.mult(self.H,B))
         # compute the invariances
         nu, w = mdp.utils.symeig(Ht)
-        nu = nu[::-1]
-        w = w[:,::-1]
-        nu -= self.apply(xstar)/(r*r)
+        nu -= ((mdp.utils.mult(self.H, xstar)*xstar).sum()-(self.f*xstar).sum())/(r*r)
+        idx = abs(nu).argsort()
+        nu = nu[idx]
+        w = w[:,idx]
         w = mdp.utils.mult(B,w)
         return w, nu
         

@@ -9,6 +9,7 @@ import unittest
 import pickle
 import os
 import tempfile
+import platform
 from mdp import numx, utils, numx_rand, numx_linalg, Node, nodes, MDPException
 from testing_tools import assert_array_almost_equal, assert_array_equal, \
      assert_almost_equal, assert_equal, assert_array_almost_equal_diff, \
@@ -110,14 +111,22 @@ class UtilsTestCase(unittest.TestCase):
         xmax, xmin = q.get_extrema(utils.norm2(x), tol=tol) 
         assert_array_almost_equal(f, xmax, 5)
 
-    def testQuadraticFormInvariances(self):
-        # eigenvalues
+    def testQuadraticFormsInvariances(self):
+        # don't run test on 64bit platform because
+        # of bug in linalg.qr (already fixed in numpy svn)
+        if platform.architecture()[0] != '32bit':
+            return
         nu = numx.linspace(2.,-3,10)
         H = utils.symrand(nu)
+        E, W = utils.symeig(H)
         q = utils.QuadraticForm(H)
         xmax, xmin = q.get_extrema(5.)
         e_w, e_sd = q.get_invariances(xmax)
         assert_array_almost_equal(e_sd,nu[1:]-nu[0],6)
+        assert_array_almost_equal(abs(e_w),abs(W[:,-2::-1]),6)
+        e_w, e_sd = q.get_invariances(xmin)
+        assert_array_almost_equal(e_sd,nu[-2::-1]-nu[-1],6)
+        assert_array_almost_equal(abs(e_w),abs(W[:,1:]),6)
 
     def testQuadraticFormsException(self):
         H = numx_rand.random((10,10))
