@@ -556,36 +556,66 @@ class NodesTestSuite(unittest.TestSuite):
         icanode.train(inp)
         act_mat = icanode.execute(inp)
         cov = utils.cov2((mat-mean(mat,axis=0))/std(mat,axis=0), act_mat)
-        maxima = numx.amax(abs(cov))
-        assert_array_almost_equal(maxima,numx.ones(vars),3)
+        maxima = numx.amax(abs(cov), axis=0)
+        assert_array_almost_equal(maxima,numx.ones(vars),3)        
+
+    def _testICANodeMatrices(self, icanode):
+        vars = 3
+        dim = (8000,vars) 
+
+        mat,mix,inp = self._get_random_mix(mat_dim=dim, avg = 0)
+        icanode.train(inp)
+        # test projection matrix
+        act_mat = icanode.execute(inp)
+        T = icanode.get_projmatrix()
+        exp_mat = mult(inp, T)
+        assert_array_almost_equal(act_mat,exp_mat,6)
+        # test reconstruction matrix
+        out = act_mat.copy()
+        act_mat = icanode.inverse(out)
+        B = icanode.get_recmatrix()
+        exp_mat = mult(out, B)
+        assert_array_almost_equal(act_mat,exp_mat,6)
         
     def testCuBICANodeBatch(self):
         ica = mdp.nodes.CuBICANode(limit = 10**(-self.decimal))
+        ica2 = ica.copy()
         self._testICANode(ica)
+        self._testICANodeMatrices(ica2)
         
     def testCuBICANodeTelescope(self):
         ica = mdp.nodes.CuBICANode(limit = 10**(-self.decimal), telescope = 1)
+        ica2 = ica.copy()
         self._testICANode(ica)
+        self._testICANodeMatrices(ica2)
         
     def testFastICANodeSymmetric(self):
         ica = mdp.nodes.FastICANode\
               (limit = 10**(-self.decimal), approach="symm")
+        ica2 = ica.copy()
         self._testICANode(ica)
+        self._testICANodeMatrices(ica2)
         
     def testFastICANodeDeflation(self):
         ica = mdp.nodes.FastICANode\
               (limit = 10**(-self.decimal), approach="defl")
+        ica2 = ica.copy()
         self._testICANode(ica)
+        self._testICANodeMatrices(ica2)
         
     def testFastICANodeDeflation_tanh(self):
         ica = mdp.nodes.FastICANode\
               (limit = 10**(-self.decimal), approach="defl", g="tanh")
+        ica2 = ica.copy()
         self._testICANode(ica)
+        self._testICANodeMatrices(ica2)
         
     def testFastICANodeDeflation_gauss(self):
         ica = mdp.nodes.FastICANode\
               (limit = 10**(-self.decimal), approach="defl", g="gaus")
+        ica2 = ica.copy()
         self._testICANode(ica)
+        self._testICANodeMatrices(ica2)
 
     def testOneDimensionalHitParade(self):
         signal = (uniform(300)-0.5)*2
@@ -687,8 +717,8 @@ class NodesTestSuite(unittest.TestSuite):
         assert_array_equal(deg[2:], [2 for i in range(len(deg)-2)])
         # check the distribution of the nodes' position is uniform
         # this node is at one of the extrema of the graph
-        x0 = numx.outer(numx.amin(x), dir)+const
-        x1 = numx.outer(numx.amax(x), dir)+const
+        x0 = numx.outer(numx.amin(x, axis=0), dir)+const
+        x1 = numx.outer(numx.amax(x, axis=0), dir)+const
         linelen = utils.norm2(x0-x1)
         # this is the mean distance the node should have
         dist = linelen/poss.shape[0]
@@ -884,7 +914,7 @@ class NodesTestSuite(unittest.TestSuite):
         est -= fa.mu
         assert_array_almost_equal(numx.diag(numx.cov(est, rowvar=0)),
                                   fa.sigma, 3)
-        assert_almost_equal(numx.amax(abs(numx.mean(est, axis=0))), 0., 3)
+        assert_almost_equal(numx.amax(abs(numx.mean(est, axis=0)), axis=None), 0., 3)
 
         est = fa.generate_input(100000)
         assert_array_almost_equal_diff(numx.cov(est, rowvar=0),

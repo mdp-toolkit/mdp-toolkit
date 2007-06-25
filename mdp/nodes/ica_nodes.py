@@ -103,6 +103,35 @@ class ICANode(mdp.Cumulator, mdp.Node):
             y = self.white.inverse(y)
         return y
 
+    def get_projmatrix(self, transposed=1):
+        """Return the projection matrix."""
+        self._if_training_stop_training()
+        Q = self.filters.T
+        if not self.whitened:
+            W = self.white.get_projmatrix(transposed=0)
+            T = mult(Q,W)
+        else:
+            T = Q
+        if transposed:
+            return T.T
+        return T
+
+    def get_recmatrix(self, transposed=1):
+        """Return the back-projection matrix (i.e. the reconstruction matrix).
+        Note that if the unknown sources are white, this is a good
+        approximation of the mixing matrix (up to a permutation matrix). 
+        """
+        self._if_training_stop_training()
+        Q = self.filters.T
+        if not self.whitened:
+            W = self.white.get_recmatrix(transposed=1)
+            T = mult(Q, W)
+        else:
+            T = Q
+        if transposed:
+            return T
+        return T.T
+
 class CuBICANode(ICANode):
     """
     Perform Independent Component Analysis using the CuBICA algorithm.
