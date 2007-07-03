@@ -134,7 +134,7 @@ class ISFANode(Node):
             lags=range(1,lags+1)
         elif isinstance(lags, (list, tuple)):
             lags = numx.array(lags, "i")
-        elif type(lags) is numx.ArrayType:
+        elif isinstance(lags, numx.ndarray):
             if not (lags.dtype.char in ['i', 'l']):
                 err_str = "lags must be integer!"
                 raise NodeException, err_str
