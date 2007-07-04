@@ -3,7 +3,6 @@ from mdp import numx, utils, Node, \
      NodeException, TrainingFinishedException
 from mdp.utils import mult, pinv, symeig, CovarianceMatrix, QuadraticForm, \
                       SymeigException
-                      #, LeadingMinorException
 
 class SFANode(Node):
     """Extract the slowly varying components from the input data.
@@ -44,11 +43,11 @@ class SFANode(Node):
         self._cov_mtx.update(x[:-1,:])
         self._dcov_mtx.update(self.time_derivative(x))
 
-    def _stop_training(self):
+    def _stop_training(self, debug=False):
         ##### request the covariance matrices and clean up
-        cov_mtx, self.avg, self.tlen = self._cov_mtx.fix()
+        self.cov_mtx, self.avg, self.tlen = self._cov_mtx.fix()
         del self._cov_mtx
-        dcov_mtx, davg, dtlen = self._dcov_mtx.fix()
+        self.dcov_mtx, davg, dtlen = self._dcov_mtx.fix()
         del self._dcov_mtx
 
         if self.output_dim is not None and self.output_dim < self.input_dim:
@@ -61,17 +60,20 @@ class SFANode(Node):
         #### solve the generalized eigenvalue problem
         # the eigenvalues are already ordered in ascending order
         try:
-            self.d, self.sf = symeig(dcov_mtx, cov_mtx, range=rng, overwrite=1)
-        #except LeadingMinorException, exception:
+            self.d, self.sf = symeig(self.dcov_mtx, self.cov_mtx,
+                                     range=rng, overwrite=(not debug))
         except SymeigException, exception:
             errstr = str(exception)+"\n Covariance matrices may be singular."
-            raise NodeException,errstr
+            raise NodeException, errstr
 
         # check that we didn't get negative eigenvalues,
         # if this is the case the covariance matrix may be singular
         if self.d.min() <= 0:
             errs="Got negative eigenvalues: Covariance matrix may be singular."
             raise NodeException, errs 
+        # delete covariance matrix if no exception occurred
+        del self.cov_mtx
+        del self.dcov_mtx
         
     def _execute(self, x, range=None):
         if range:
@@ -145,8 +147,8 @@ class SFA2Node(SFANode):
         # expand in the space of polynomials of degree 2
         super(SFA2Node, self)._train(self._expnode(x))
 
-    def _stop_training(self):
-        super(SFA2Node, self)._stop_training()
+    def _stop_training(self, debug=False):
+        super(SFA2Node, self)._stop_training(debug)
 
         # set the output dimension if necessary
         if self.output_dim is None:

@@ -63,9 +63,9 @@ class PCANode(Node):
         # update the covariance matrix
         self._cov_mtx.update(x)
         
-    def _stop_training(self):
+    def _stop_training(self, debug=False):
         ##### request the covariance matrix and clean up
-        cov_mtx, avg, self.tlen = self._cov_mtx.fix()
+        self.cov_mtx, avg, self.tlen = self._cov_mtx.fix()
         del self._cov_mtx
         
         # this is a bit counterintuitive, as it reshapes the average vector to
@@ -94,7 +94,7 @@ class PCANode(Node):
         # compute the eigenvectors of the covariance matrix (inplace)
         # (eigenvalues sorted in ascending order)
         try:
-            d, v = symeig(cov_mtx, range = rng, overwrite = 1)
+            d, v = symeig(self.cov_mtx, range = rng, overwrite = (not debug))
         #except LeadingMinorException, exception:
         except SymeigException, exception:
             errstr = str(exception)+"\n Covariance matrix may be singular."
@@ -106,6 +106,8 @@ class PCANode(Node):
             errs="Got negative eigenvalues: Covariance matrix may be singular."
             raise NodeException, errs 
                   
+        # delete covariance matrix if no exception occurred
+        del self.cov_mtx
         
         # sort by descending order
         d = numx.take(d, range(d.shape[0]-1,-1,-1))
@@ -201,8 +203,8 @@ class WhiteningNode(PCANode):
               (eigenvalues of the covariance matrix).
     """
     
-    def _stop_training(self):
-        super(WhiteningNode, self)._stop_training()
+    def _stop_training(self, debug=False):
+        super(WhiteningNode, self)._stop_training(debug)
 
         ##### whiten the filters
         # self.v is now the _whitening_ matrix

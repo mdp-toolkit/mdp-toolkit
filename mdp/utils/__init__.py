@@ -10,6 +10,7 @@ import mdp as _mdp
 
 try:
     import symeig
+    SymeigException = symeig.SymeigException
     symeig = symeig.symeig
 except ImportError:
     symeig = routines._symeig_fake
