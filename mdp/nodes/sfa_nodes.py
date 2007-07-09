@@ -50,7 +50,7 @@ class SFANode(Node):
         self.dcov_mtx, davg, dtlen = self._dcov_mtx.fix()
         del self._dcov_mtx
 
-        if self.output_dim is not None and self.output_dim < self.input_dim:
+        if self.output_dim is not None and self.output_dim <= self.input_dim:
             # (eigenvalues sorted in ascending order)
             rng = (1, self.output_dim)
         else:
