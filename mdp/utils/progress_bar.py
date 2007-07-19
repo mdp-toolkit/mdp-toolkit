@@ -50,15 +50,19 @@ def _progress(percent, last, style, layout):
                                box[percent_idx+len(percent_s):]]) 
         else:
             now = time.time()
-            elapsed = now - layout['t_start']
-            # Estimated total time
             if percent == 0:
                 # write the time box directly
                 tbox = ''.join(['?', layout['separator'], '?'])
             else:
-                total = elapsed/percent
-                # time_remained
-                e_t_a = total - elapsed
+                # Elapsed 
+                elapsed = now - layout['t_start']
+                # Estimated total time
+                if layout['speed'] == 'mean':
+                    e_t_a = elapsed/percent - elapsed
+                else:
+                    # instantaneous speed
+                    progress = percent-_progress.last_percent
+                    e_t_a = (1 - percent)/progress*(now-_progress.last_time)
                 # build the time box
                 tbox = ''.join([fmt_time(elapsed, layout['delimiters']),
                                 layout['separator'],
@@ -76,6 +80,9 @@ def _progress(percent, last, style, layout):
                                tbox,
                                ' ',
                                percent_s])
+            _progress.last_percent = percent
+            _progress.last_time = now
+
         # print it only if something changed from last time
         if box != last:
             sys.stdout.write(box)
@@ -94,6 +101,18 @@ def progressinfo(sequence, length = None, style = 'bar', custom = {}):
 
           >>> for line in progressinfo(open_file, nlines):
           ...     do_something(line)
+
+      If the number of iterations is not known in advance, you may prefer
+      to iterate on the items directly. This can be useful for example if
+      you are downloading a big file in a subprocess and want to monitor
+      the progress. If the file to be downloaded is TOTAL bytes large and
+      you are downloading it on local:
+          >>> def done():
+          ...     yield os.path.getsize(localfile)
+          >>> for bytes in progressinfo(done(), -TOTAL)
+          ...     time.sleep(1)
+          ...     if download_process_has_finished():
+          ...         break
           
        
      Arguments:
@@ -108,7 +127,8 @@ def progressinfo(sequence, length = None, style = 'bar', custom = {}):
      Keyword arguments:
 
      length     - length of the sequence. Automatically set
-                  if `sequence' has the __len__ method.
+                  if `sequence' has the __len__ method. If length is
+                  negative, iterate on items.
 
      style      - If style == 'bar', display a progress bar. The
                   default layout is:
@@ -136,12 +156,16 @@ def progressinfo(sequence, length = None, style = 'bar', custom = {}):
 
 
                   Default layout for the 'timer' style:
-                   custom = { 'indent': '',
+                   custom = { 'speed': 'mean',
+                              'indent': '',
                               'position' : 'left',
                               'delimiters' : '[]',
                               'separator' : ' - ' }
 
                   Description:
+                    speed = completion time estimation method, must be one of
+                            ['mean', 'last']. 'mean' uses average speed, 'last'
+                            uses last step speed.
                     indent = string used for indenting the progress info box
                     position = position of the percent done string,
                                must be one out of ['left', 'middle', 'right']
@@ -154,6 +178,7 @@ def progressinfo(sequence, length = None, style = 'bar', custom = {}):
              and check that you are not wasting 99% of the time in drawing
              the progress info box.
     """
+    iterate_on_items = False
     # try to get the length of the sequence
     try:
         length = len(sequence)
@@ -162,6 +187,9 @@ def progressinfo(sequence, length = None, style = 'bar', custom = {}):
         if length is None:
             err_str = "Must specify 'length' if sequence is unsized."
             raise Exception, err_str
+        elif length < 0:
+            iterate_on_items = True
+            length = -length
     length = float(length)
     # set layout
     if style == 'bar':
@@ -178,13 +206,16 @@ def progressinfo(sequence, length = None, style = 'bar', custom = {}):
             fixed_lengths += 4
         layout['width'] = layout['width'] - fixed_lengths
     elif style == 'timer':
-        layout = { 'indent': '',
+        layout = { 'speed': 'mean',
+                   'indent': '',
                    'position' : 'left',
                    'delimiters' : '[]',
                    'separator': ' - ',
                    't_start' : time.time()
                    }
         layout.update(custom)
+        _progress.last_percent = 0
+        _progress.last_time = layout['t_start']
     else:
         err_str = "Style `%s' not known." %(style)
         raise ValueError, err_str
@@ -192,12 +223,18 @@ def progressinfo(sequence, length = None, style = 'bar', custom = {}):
     # start main loop
     last = None
     for count, value in enumerate(sequence):
-         # generate progress info
-        last = _progress(count/length, last, style, layout)
+        # generate progress info
+        if iterate_on_items: 
+            last = _progress(value/length, last, style, layout)
+        else:
+            last = _progress(count/length, last, style, layout)
         yield value
     else:
         # we need this for the 100% notice
-        last = _progress((count+1)/length, last, style, layout)
+        if iterate_on_items:
+            last = _progress(1., last, style, layout)
+        else:
+            last = _progress((count+1)/length, last, style, layout)
     # clean up terminal
     sys.stdout.write('\n\r')
 
@@ -254,5 +291,18 @@ if __name__ == '__main__':
         time.sleep(0.01)
     if lines != range(1000):
         raise Exception, 'Something wrong with porgressinfo...' 
+
+    # test iterate on items
+    fl = tempfile.TemporaryFile(mode='r+')
+    for i in range(10):
+        fl.write(str(i)+'\n')
+    fl.flush()
+    # rewind
+    fl.seek(0)
+    def gen():
+        for line in fl:
+            yield int(line)
+    for line in progressinfo(gen(), -10,style='timer',custom={'speed':'last'}):
+        time.sleep(1)
     print 'Done.'
         
