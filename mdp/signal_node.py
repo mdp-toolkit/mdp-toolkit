@@ -281,6 +281,27 @@ class Node(object):
         if self.output_dim is None:
             self.output_dim = self.input_dim
 
+    def _pre_inversion_checks(self, y):
+        """This method contains all pre-inversion checks.
+        It can be used when a subclass defines multiple inversion methods."""
+        
+        if not self.is_invertible():
+            raise IsNotInvertibleException, "This node is not invertible."
+
+        self._if_training_stop_training()
+
+        # set the output dimension if necessary
+        if self.output_dim is None:
+            # if the input_dim is not defined, raise an exception
+            if self.input_dim is None:
+                errstr = "Number of input dimensions undefined. Inversion"+\
+                         "not possible."
+                raise NodeException, errstr
+            self.output_dim = self.input_dim
+        
+        # control the dimension of y
+        self._check_output(y)
+
     def _check_train_args(self, x, *args, **kwargs):
         # implemented by subclasses if needed
         pass
@@ -393,24 +414,7 @@ class Node(object):
             ""My inverse method. arg1 is the first argument, karg2 the second""
             super(MyNode, self).inverse(x, arg1, karg2=karg2)
         """
-        
-        if not self.is_invertible():
-            raise IsNotInvertibleException, "This node is not invertible."
-
-        self._if_training_stop_training()
-
-        # set the output dimension if necessary
-        if self.output_dim is None:
-            # if the input_dim is not defined, raise an exception
-            if self.input_dim is None:
-                errstr = "Number of input dimensions undefined. Inversion"+\
-                         "not possible."
-                raise NodeException, errstr
-            self.output_dim = self.input_dim
-        
-        # control the dimension of y
-        self._check_output(y)
-
+        self._pre_inversion_checks(y)
         return self._inverse(self._refcast(y), *args, **kargs)
 
     def __call__(self, x):

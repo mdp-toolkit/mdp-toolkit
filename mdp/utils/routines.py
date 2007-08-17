@@ -327,8 +327,7 @@ def sqrtm(A, disp=1):
     """This is a weak matrix sqrt function.
     It works only for symmetric matrices. disp : not implemented."""
     d, V = mdp.utils.symeig(A)
-    D = numx.diag(numx.sqrt(d))
-    return mdp.utils.mult(V, mdp.utils.mult(D, V.T))
+    return mdp.utils.mult(V, mult_diag(numx.sqrt(d), V.T))
 
 # In file: scipy/common.py
 def comb(N, k, exact=0):
