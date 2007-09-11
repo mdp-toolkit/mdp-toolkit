@@ -66,11 +66,6 @@ class SFANode(Node):
             errstr = str(exception)+"\n Covariance matrices may be singular."
             raise NodeException, errstr
 
-        # check that we didn't get negative eigenvalues,
-        # if this is the case the covariance matrix may be singular
-        if self.d.min() <= 0:
-            errs="Got negative eigenvalues: Covariance matrix may be singular."
-            raise NodeException, errs 
         # delete covariance matrix if no exception occurred
         del self.cov_mtx
         del self.dcov_mtx

@@ -208,7 +208,7 @@ def _assert_eigenvalues_real_and_positive(w, dtype):
         err_str="Some eigenvalues have significant imaginary part: "+str(w)
         raise SymeigException, err_str
     if w.real.min() < 0:
-        err_str="Got negative eigenvalues: matrix may be singular."\
+        err_str="Got negative eigenvalues: "\
                  +str(w)
         raise SymeigException, err_str
               
