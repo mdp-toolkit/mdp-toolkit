@@ -1,6 +1,6 @@
 from mdp import numx, Node, \
      NodeException, TrainingFinishedException
-from mdp.utils import mult, symeig, CovarianceMatrix, \
+from mdp.utils import mult, symeig, nongeneral_svd, CovarianceMatrix, \
                       SymeigException #, LeadingMinorException
 
 class PCANode(Node):
@@ -230,3 +230,58 @@ class WhiteningNode(PCANode):
             return v_inverse.T
         return v_inverse
     
+class PCASVDNode(PCANode):
+    """Perform PCA (see docs for PCANode) using Singular Value Decomposition
+    instead of the standard Eigenvalue Problem Solver. Use it when PCANode
+    complains about singular covariance matrices or when you know that the
+    covariance matrix of your data has zero eigenvalues."""
+
+    def __init__(self, input_dim = None, output_dim = None, dtype = None,
+                 reduce=False, eps_abs=1E-15, eps_rel=1E-15):
+        
+        """Keyword Arguments
+
+        reduce -- if True automatically delete dimensions"""    
+        super(PCASVDNode, self).__init__(input_dim, output_dim, dtype)
+        self._symeig = nongeneral_svd
+        self.eps_abs = eps_abs
+        self.eps_rel = eps_rel
+        self.reduce = reduce
+
+    def _stop_training(self, debug=False):
+        super(PCASVDNode, self)._stop_training(debug)
+        if self.reduce:
+            # remove entries that are smaller then eps_abs and
+            # smaller then eps_rel relative to the maximum
+            self.d = self.d[ self.d > self.eps_abs ]
+            self.d = self.d[ self.d/self.d.max() > self.eps_rel ]
+            self.v = self.v[:,0:self.d.shape[0]]
+            self._output_dim = self.d.shape[0]
+    
+class WhiteningSVDNode(PCASVDNode):
+    """Perform Whitening (see docs for WhiteningNode) using Singular Value
+    Decomposition instead of the standard Eigenvalue Problem Solver. Use it
+    when WhiteningNode complains about singular covariance matrices or when
+    you know that the covariance matrix of your data has zero eigenvalues."""
+
+    def _stop_training(self, debug=False):
+        super(WhiteningSVDNode, self)._stop_training(debug)
+
+        ##### whiten the filters
+        # self.v is now the _whitening_ matrix
+        # automatically correct for negative eigenvalues
+        self.v = self.v / numx.sqrt(abs(self.d))
+
+    def get_eigenvectors(self):
+        """Return the eigenvectors of the covariance matrix."""
+        self._if_training_stop_training()
+        return numx.sqrt(self.d)*self.v
+
+    def get_recmatrix(self, transposed=1):
+        """Return the back-projection matrix (i.e. the reconstruction matrix).
+        """
+        self._if_training_stop_training()
+        v_inverse = self.v*self.d
+        if transposed:
+            return v_inverse.T
+        return v_inverse

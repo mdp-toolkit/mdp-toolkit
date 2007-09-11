@@ -62,7 +62,9 @@ class NodesTestSuite(unittest.TestSuite):
         #              (node_class, constructuctor_args,
         #               function_that_returns_argument_for_the_train_func)
         self._nodes = [mn.PCANode,
+                       mn.PCASVDNode,
                        mn.WhiteningNode,
+                       mn.WhiteningSVDNode,
                        mn.SFANode,
                        mn.SFA2Node,
                        mn.CuBICANode,
@@ -479,6 +481,92 @@ class NodesTestSuite(unittest.TestSuite):
         # test a bug in v.1.1.1, should not crash
         pca.inverse(act_mat[:,:1])
 
+    def testPCASVDNode(self):
+        # it should pass atleast the same test as PCANode
+        line_x = numx.zeros((1000,2),"d")
+        line_y = numx.zeros((1000,2),"d")
+        line_x[:,0] = numx.linspace(-1,1,num=1000,endpoint=1)
+        line_y[:,1] = numx.linspace(-0.2,0.2,num=1000,endpoint=1)
+        mat = numx.concatenate((line_x,line_y))
+        des_var = std(mat,axis=0)
+        utils.rotate(mat,uniform()*2*numx.pi)
+        mat += uniform(2)
+        pca = mdp.nodes.PCASVDNode()
+        pca.train(mat)
+        act_mat = pca.execute(mat)
+        assert_array_almost_equal(mean(act_mat,axis=0),\
+                                  [0,0],self.decimal)
+        assert_array_almost_equal(std(act_mat,axis=0),\
+                                  des_var,self.decimal)
+        # Now a more difficult test, create singular cov matrices
+        # and test that PCANode crashes whereas PCASVDNode doesn't
+        mat, mix, inp = self._get_random_mix(mat_dim=(1000, 100), avg=1E+8)
+        # now create a degenerate input
+        for i in range(1,100):
+            inp[:,i] = inp[:,1].copy()
+        # check that standard PCA fails
+        pca = mdp.nodes.PCANode()
+        pca.train(inp)
+        try:
+            pca.stop_training()
+            raise Exception, "PCANode didn't catch singular covariance matrix"
+        except mdp.NodeException:
+            pass
+        # now try the SVD version
+        pca = mdp.nodes.PCASVDNode()
+        pca.train(inp)
+        pca.stop_training()
+
+        # now check the undetermined case
+        mat, mix, inp = self._get_random_mix(mat_dim=(500, 2))
+        inp = inp.T
+        pca = mdp.nodes.PCANode()
+        pca.train(inp)
+        try:
+            pca.stop_training()
+            raise Exception, "PCANode didn't catch singular covariance matrix"
+        except mdp.NodeException:
+            pass
+        # now try the SVD version
+        pca = mdp.nodes.PCASVDNode()
+        pca.train(inp)
+        pca.stop_training()
+
+        # try using the automatic dimensionality reduction function
+        mat, mix, inp = self._get_random_mix(mat_dim=(1000, 3))
+        # first make them decorellated
+        pca = mdp.nodes.PCANode()
+        pca.train(mat)
+        mat = pca.execute(mat)
+        mat *= [1E+5,1E-3, 1E-4]
+        mat -= mat.mean(axis=0)
+        pca = mdp.nodes.PCASVDNode(reduce=True, eps_rel=1E-2)
+        pca.train(mat)
+        out = pca.execute(mat)
+        # check that we got the only large dimension
+        assert_array_almost_equal(mat[:,0].mean(axis=0),out.mean(axis=0),
+                                  self.decimal)
+        assert_array_almost_equal(mat[:,0].std(axis=0),out.std(axis=0),
+                                  self.decimal)
+
+        # second test for automatic dimansionality reduction
+        # try using the automatic dimensionality reduction function
+        mat, mix, inp = self._get_random_mix(mat_dim=(1000, 3))
+        # first make them decorellated
+        pca = mdp.nodes.PCANode()
+        pca.train(mat)
+        mat = pca.execute(mat)
+        mat *= [1E+5,1E-3, 1E-18]
+        mat -= mat.mean(axis=0)
+        pca = mdp.nodes.PCASVDNode(reduce=True, eps_abs=1E-8, eps_rel=1E-30)
+        pca.train(mat)
+        out = pca.execute(mat)
+        # check that we got the only large dimension
+        assert_array_almost_equal(mat[:,:2].mean(axis=0),out.mean(axis=0),
+                                  self.decimal)
+        assert_array_almost_equal(mat[:,:2].std(axis=0),out.std(axis=0),
+                                  self.decimal)
+        
     def testWhiteningNode(self):
         vars = 5
         dim = (10000,vars)
@@ -487,6 +575,20 @@ class NodesTestSuite(unittest.TestSuite):
         w = mdp.nodes.WhiteningNode()
         w.train(inp)
         out = w.execute(inp)
+        assert_array_almost_equal(mean(out,axis=0),\
+                                  numx.zeros((dim[1])),self.decimal)
+        assert_array_almost_equal(std(out,axis=0),\
+                                  numx.ones((dim[1])),self.decimal-3)
+
+    def testWhiteningSVDNode(self):
+        vars = 5
+        dim = (10000,vars)
+        mat,mix,inp = self._get_random_mix(mat_dim=dim,
+                                           avg=uniform(vars))
+        w = mdp.nodes.WhiteningSVDNode()
+        w.train(inp)
+        out = w.execute(inp)
+        
         assert_array_almost_equal(mean(out,axis=0),\
                                   numx.zeros((dim[1])),self.decimal)
         assert_array_almost_equal(std(out,axis=0),\
@@ -598,7 +700,7 @@ class NodesTestSuite(unittest.TestSuite):
         
     def testFastICANodeDeflation(self):
         ica = mdp.nodes.FastICANode\
-              (limit = 10**(-self.decimal), approach="defl")
+              (limit = 10**(-self.decimal-2), approach="defl")
         ica2 = ica.copy()
         self._testICANode(ica)
         self._testICANodeMatrices(ica2)

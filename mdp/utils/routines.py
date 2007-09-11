@@ -292,6 +292,22 @@ numarray.linear_algebra.eigenvectors with an interface compatible with symeig.
     else:
         return mdp.utils.refcast(w, dtype)
 
+def nongeneral_svd(A, range=None, **kwargs):
+    """SVD routine for simple eigenvalue problem, API is compatible with
+    symeig."""
+    Z2, w, Z = mdp.utils.svd(A)
+    # sort eigenvalues and corresponding eigenvectors
+    idx = w.argsort()
+    w = w.take(idx)
+    Z = Z.take(idx, axis=1)
+    # sort eigenvectors
+    Z = (Z[-1::-1,-1::-1]).T
+    if range is not None:
+        lo, hi = range
+        Z = Z[:, lo-1:hi]
+        w = w[lo-1:hi]    
+    return w, Z
+
 # Code found below this line is part, or derived from, SciPy 0.3.2.
 # Copyright Notice:
 #
