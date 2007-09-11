@@ -116,7 +116,8 @@ class UtilsTestCase(unittest.TestCase):
         # of bug in linalg.qr (already fixed in numpy svn)
         if platform.architecture()[0] != '32bit':
             return
-        nu = numx.linspace(2.,-3,10)
+        #nu = numx.linspace(2.,-3,10)
+        nu = numx.linspace(6., 1, 10)
         H = utils.symrand(nu)
         E, W = utils.symeig(H)
         q = utils.QuadraticForm(H)

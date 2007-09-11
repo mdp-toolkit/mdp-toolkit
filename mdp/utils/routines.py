@@ -202,11 +202,16 @@ def _greatest_common_dtype(alist):
             dtype = _type_conv[transition]
     return dtype
 
-def _assert_eigenvalues_real(w, dtype):
+def _assert_eigenvalues_real_and_positive(w, dtype):
     tol = numx.finfo(dtype.type).eps * 100
     if abs(w.imag).max() > tol:
-        raise SymeigException, \
-              "Some eigenvalues have significant imaginary part"
+        err_str="Some eigenvalues have significant imaginary part: "+str(w)
+        raise SymeigException, err_str
+    if w.real.min() < 0:
+        err_str="Got negative eigenvalues: matrix may be singular."\
+                 +str(w)
+        raise SymeigException, err_str
+              
 
 def _symeig_fake(A, B = None, eigenvectors = 1, turbo = "on", range = None,
                  type = 1, overwrite = 0):
@@ -256,7 +261,7 @@ numarray.linear_algebra.eigenvectors with an interface compatible with symeig.
         else:
             # make B the identity matrix
             wB, ZB = numx_linalg.eig(B)
-            _assert_eigenvalues_real(wB, dtype)
+            _assert_eigenvalues_real_and_positive(wB, dtype)
             ZB = ZB.real / numx.sqrt(wB.real)
             # transform A in the new basis: A = ZB^T * A * ZB
             A = mdp.utils.mult(mdp.utils.mult(ZB.T, A), ZB)
@@ -265,11 +270,8 @@ numarray.linear_algebra.eigenvectors with an interface compatible with symeig.
             Z = mdp.utils.mult(ZB, ZA)
     except numx_linalg.LinAlgError, exception:
         raise SymeigException, str(exception)
-    # workaround to bug in numpy 0.9.9
-    except NameError, exception:
-        raise SymeigException, 'Complex eigenvalues'
 
-    _assert_eigenvalues_real(w, dtype)
+    _assert_eigenvalues_real_and_positive(w, dtype)
     w = w.real
     Z = Z.real
     

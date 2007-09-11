@@ -1052,8 +1052,8 @@ class NodesTestSuite(unittest.TestSuite):
         matrices = [numx.eye(dim, dtype='d')]*nmat
         # build first matrix:
         #   - create random diagonal with elements
-        #     in [-1, 1]
-        diag = (uniform(dim)-0.5)*2
+        #     in [0, 1]
+        diag = uniform(dim)
         #   - sort it in descending order (in absolute value)
         #     [large first]
         diag = numx.take(diag, numx.argsort(abs(diag)))[::-1]

@@ -30,7 +30,9 @@ class PCANode(Node):
             self.desired_variance = None
         
         super(PCANode, self).__init__(input_dim, output_dim, dtype)
-        
+
+        # routine for eigenvalues
+        self._symeig = symeig
         # empirical covariance matrix, updated during the training phase
         self._cov_mtx = CovarianceMatrix(dtype)
         
@@ -62,6 +64,17 @@ class PCANode(Node):
     def _train(self, x):
         # update the covariance matrix
         self._cov_mtx.update(x)
+
+    def stop_training(self, debug=False):
+        """Stop the training phase.
+
+        Keyword arguments:
+
+        debug=True     if stop_training fails because of singular cov
+                       matrices, the singular matrices itselves are stored in
+                       self.cov_mtx and self.dcov_mtx to be examined.
+        """
+        return super(PCANode, self).stop_training(debug=debug)
         
     def _stop_training(self, debug=False):
         ##### request the covariance matrix and clean up
@@ -94,17 +107,10 @@ class PCANode(Node):
         # compute the eigenvectors of the covariance matrix (inplace)
         # (eigenvalues sorted in ascending order)
         try:
-            d, v = symeig(self.cov_mtx, range = rng, overwrite = (not debug))
-        #except LeadingMinorException, exception:
+            d, v = self._symeig(self.cov_mtx, range=rng, overwrite=(not debug))
         except SymeigException, exception:
             errstr = str(exception)+"\n Covariance matrix may be singular."
             raise NodeException,errstr
-
-        # check that we didn't get negative eigenvalues,
-        # if this is the case the covariance matrix may be singular
-        if d.min() <= 0:
-            errs="Got negative eigenvalues: Covariance matrix may be singular."
-            raise NodeException, errs 
                   
         # delete covariance matrix if no exception occurred
         del self.cov_mtx
@@ -223,4 +229,4 @@ class WhiteningNode(PCANode):
         if transposed:
             return v_inverse.T
         return v_inverse
-        
+    
