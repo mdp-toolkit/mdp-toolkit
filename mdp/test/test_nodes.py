@@ -62,9 +62,7 @@ class NodesTestSuite(unittest.TestSuite):
         #              (node_class, constructuctor_args,
         #               function_that_returns_argument_for_the_train_func)
         self._nodes = [mn.PCANode,
-                       mn.PCASVDNode,
                        mn.WhiteningNode,
-                       mn.WhiteningSVDNode,
                        mn.SFANode,
                        mn.SFA2Node,
                        mn.CuBICANode,
@@ -481,7 +479,7 @@ class NodesTestSuite(unittest.TestSuite):
         # test a bug in v.1.1.1, should not crash
         pca.inverse(act_mat[:,:1])
 
-    def testPCASVDNode(self):
+    def testPCANode_SVD(self):
         # it should pass atleast the same test as PCANode
         line_x = numx.zeros((1000,2),"d")
         line_y = numx.zeros((1000,2),"d")
@@ -491,7 +489,7 @@ class NodesTestSuite(unittest.TestSuite):
         des_var = std(mat,axis=0)
         utils.rotate(mat,uniform()*2*numx.pi)
         mat += uniform(2)
-        pca = mdp.nodes.PCASVDNode()
+        pca = mdp.nodes.PCANode(svd=True)
         pca.train(mat)
         act_mat = pca.execute(mat)
         assert_array_almost_equal(mean(act_mat,axis=0),\
@@ -513,7 +511,7 @@ class NodesTestSuite(unittest.TestSuite):
         except mdp.NodeException:
             pass
         # now try the SVD version
-        pca = mdp.nodes.PCASVDNode()
+        pca = mdp.nodes.PCANode(svd=True)
         pca.train(inp)
         pca.stop_training()
 
@@ -528,7 +526,7 @@ class NodesTestSuite(unittest.TestSuite):
         except mdp.NodeException:
             pass
         # now try the SVD version
-        pca = mdp.nodes.PCASVDNode()
+        pca = mdp.nodes.PCANode(svd=True)
         pca.train(inp)
         pca.stop_training()
 
@@ -540,7 +538,7 @@ class NodesTestSuite(unittest.TestSuite):
         mat = pca.execute(mat)
         mat *= [1E+5,1E-3, 1E-4]
         mat -= mat.mean(axis=0)
-        pca = mdp.nodes.PCASVDNode(reduce=True, eps_rel=1E-2)
+        pca = mdp.nodes.PCANode(svd=True,reduce=True, var_rel=1E-2)
         pca.train(mat)
         out = pca.execute(mat)
         # check that we got the only large dimension
@@ -558,7 +556,8 @@ class NodesTestSuite(unittest.TestSuite):
         mat = pca.execute(mat)
         mat *= [1E+5,1E-3, 1E-18]
         mat -= mat.mean(axis=0)
-        pca = mdp.nodes.PCASVDNode(reduce=True, eps_abs=1E-8, eps_rel=1E-30)
+        pca = mdp.nodes.PCANode(svd=True,reduce=True,
+                                   var_abs=1E-8, var_rel=1E-30)
         pca.train(mat)
         out = pca.execute(mat)
         # check that we got the only large dimension
@@ -580,12 +579,12 @@ class NodesTestSuite(unittest.TestSuite):
         assert_array_almost_equal(std(out,axis=0),\
                                   numx.ones((dim[1])),self.decimal-3)
 
-    def testWhiteningSVDNode(self):
+    def testWhiteningNode_SVD(self):
         vars = 5
         dim = (10000,vars)
         mat,mix,inp = self._get_random_mix(mat_dim=dim,
                                            avg=uniform(vars))
-        w = mdp.nodes.WhiteningSVDNode()
+        w = mdp.nodes.WhiteningNode(svd=True)
         w.train(inp)
         out = w.execute(inp)
         
