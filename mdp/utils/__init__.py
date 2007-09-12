@@ -31,7 +31,10 @@ solve = lambda x,y: refcast(_solve(x,y), x.dtype)
 
 def svd(x, _mdp=_mdp):
     tc = x.dtype
-    u,s,v = _mdp.numx_linalg.svd(x)
+    try:
+        u,s,v = _mdp.numx_linalg.svd(x)
+    except _mdp.numx_linalg.LinAlgError, exc:
+        raise SymeigException, str(exc)        
     return refcast(u, tc), refcast(s, tc), refcast(v, tc)
 
 # clean up namespace
