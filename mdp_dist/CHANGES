@@ -1,3 +1,29 @@
+MDP-2.2:
+2007-09-12: Added new funcionality for PCA and Whitening. The nodes can now
+            be instantiated with svd=True, to use SVD instead of the standard
+            eigenvalue problem solver. Setting reduce=True and var_abs and 
+            var_rel it is possible to automatically discard irrelevant 
+            principal components. See the nodes documentation for more info
+2007-09-11: added check for positive eigenvalues in symeg and symeig_fake
+2007-08-17: added pre_inversion_checks, inversion equivalent to 
+            pre_execution_checks
+2007-07-20: enable iteration on items and time completion estimation method in 
+            progress_bar
+2007-07-09: fixed bug in SFA2Node: when instantiated with 
+            input_dim==output_dim, the range in symeig was not set and 
+	    output_dim was wrong
+2007-07-04: - fixed bug in mdp.utils.__init__.py about SymeigException not 
+              caught
+            - fixed bug in ISFANode when perturbing eps_contrast was not 
+	      respected (it was perturing indefinitely)
+	    - added a 'debug' kwarg to stop_training in PCANode, WhiteningNode,
+              and SFANode. When stop_training fails because of singular 
+	      matrices, the matrices itselves are not deleted (as before) but
+	      kept in self.cov_mtx and self.dcov_mtx for later inspection
+2007-07-03: fixed bug in ISFANode when lags was array.
+2007-06-25: Added get_{proj,rec}matrix method to the ICANodes. 
+            'get_recmatrix' returns an estimate of the mixing matrix.
+
 -------------------------------------------------------------------------------
 MDP-2.1:
 
