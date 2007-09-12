@@ -138,7 +138,8 @@ class PCANode(Node):
         try:
             d, v = self._symeig(self.cov_mtx, range=rng, overwrite=(not debug))
         except SymeigException, exception:
-            errstr = str(exception)+"\n Covariance matrix may be singular."
+            errstr = str(exception)+"\n Covariance matrix may be singular."+\
+                     "Try instantiating the node with svd=True."
             raise NodeException,errstr
                   
         # delete covariance matrix if no exception occurred
