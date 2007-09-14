@@ -1,4 +1,13 @@
 MDP-2.2:
+2007-09-14: FastICANode has been completely rewritten. It is now up-to-date
+            with the original Matlab version (2.5) published on 19.10.2005.
+	    Highlights: 
+	    - fine tuning is implemented
+	    - the stabilized version of the algorithm is implemented
+	    - the new 'skew' non linearity for skewed input data is implemented
+	    - bug fix in 'tanh' non linearity
+	    - bug fix in 'gaus' non linearity in 'symm' approach
+	    - all combinations of input parameters are being tested
 2007-09-12: Added new funcionality for PCA and Whitening. The nodes can now
             be instantiated with svd=True, to use SVD instead of the standard
             eigenvalue problem solver. Setting reduce=True and var_abs and 

@@ -108,6 +108,35 @@ class NodesTestSuite(unittest.TestSuite):
                 # add to the suite
                 self.addTest(unittest.FunctionTestCase(testfunc,
                                                        description=funcdesc))
+        # generate FastICANode testcases
+        fica_parm = []
+        for approach in ['symm', 'defl']:
+            for g in ['pow3', 'tanh', 'gaus', 'skew']:
+                for fine_g in [ None, 'pow3', 'tanh', 'gaus', 'skew']:
+                    for sample_size in [ 1, 0.99999 ]:
+                        for mu in [1, 0.999999 ]:
+                            for stab in [False, True]:
+                                if mu != 1 and stab is False:
+                                    # mu != 1 implies setting stabilization
+                                    continue
+                                # skew nonlinearity only wroks with skewed
+                                # input data
+                                if g != 'skew' and fine_g == 'skew':
+                                    continue
+                                if g == 'skew' and fine_g != 'skew':
+                                    continue
+                                fica_parm.append({
+                                    'approach': approach,
+                                    'g': g,
+                                    'fine_g': fine_g,
+                                    'sample_size' : sample_size,
+                                    'mu' : mu,
+                                    'stabilization' : stab
+                                    })
+        for parms in fica_parm:
+            testfunc, funcdesc = self._get_testFastICA(parms)
+            self.addTest(unittest.FunctionTestCase(testfunc,
+                                                   description=funcdesc))
             
         for methname in dir(self):
             meth = getattr(self,methname)
@@ -115,12 +144,13 @@ class NodesTestSuite(unittest.TestSuite):
                 self.addTest(unittest.FunctionTestCase(meth))
 
     def _get_random_mix(self, mat_dim = None, type = "d", scale = 1,\
-                        rand_func = uniform, avg = None, \
-                        std_dev = None):
+                        rand_func = uniform, avg = 0, \
+                        std_dev = 1):
         if mat_dim is None: mat_dim = self.mat_dim
         d = 0
         while d < 1E-3:
-            mat = ((rand_func(mat_dim)-0.5)*scale).astype(type)
+            #mat = ((rand_func(size=mat_dim)-0.5)*scale).astype(type)
+            mat = rand_func(size=mat_dim).astype(type)
             # normalize
             mat -= mean(mat,axis=0)
             mat /= std(mat,axis=0)
@@ -128,7 +158,7 @@ class NodesTestSuite(unittest.TestSuite):
             d1 = min(utils.symeig(mult(mat.T, mat), eigenvectors = 0))
             if std_dev is not None: mat *= std_dev
             if avg is not None: mat += avg
-            mix = (rand_func((mat_dim[1],mat_dim[1]))*scale).astype(type)
+            mix = (rand_func(size=(mat_dim[1],mat_dim[1]))*scale).astype(type)
             matmix = mult(mat,mix)
             matmix_n = matmix - mean(matmix, axis=0)
             matmix_n /= std(matmix_n, axis=0)
@@ -650,21 +680,22 @@ class NodesTestSuite(unittest.TestSuite):
                                   numx.eye(1), self.decimal-3)
 
 
-    def _testICANode(self,icanode):
+    def _testICANode(self,icanode, rand_func = uniform):
         vars = 3
         dim = (8000,vars) 
-        mat,mix,inp = self._get_random_mix(mat_dim=dim)
+        mat,mix,inp = self._get_random_mix(rand_func=rand_func,mat_dim=dim)
         icanode.train(inp)
         act_mat = icanode.execute(inp)
         cov = utils.cov2((mat-mean(mat,axis=0))/std(mat,axis=0), act_mat)
         maxima = numx.amax(abs(cov), axis=0)
         assert_array_almost_equal(maxima,numx.ones(vars),3)        
 
-    def _testICANodeMatrices(self, icanode):
+    def _testICANodeMatrices(self, icanode, rand_func = uniform):
         vars = 3
         dim = (8000,vars) 
 
-        mat,mix,inp = self._get_random_mix(mat_dim=dim, avg = 0)
+        mat,mix,inp = self._get_random_mix(rand_func=rand_func,
+                                           mat_dim=dim, avg = 0)
         icanode.train(inp)
         # test projection matrix
         act_mat = icanode.execute(inp)
@@ -690,33 +721,72 @@ class NodesTestSuite(unittest.TestSuite):
         self._testICANode(ica)
         self._testICANodeMatrices(ica2)
         
-    def testFastICANodeSymmetric(self):
-        ica = mdp.nodes.FastICANode\
-              (limit = 10**(-self.decimal), approach="symm")
-        ica2 = ica.copy()
-        self._testICANode(ica)
-        self._testICANodeMatrices(ica2)
+    def _get_testFastICA(self, parms):
+        # create a function description
+        header = 'TestFastICANode:'
+        app =     'Approach:     '+parms['approach']
+        nl =      'Nonlinearity: '+parms['g']
+        fine_nl = 'Fine-tuning:  '+str(parms['fine_g'])
+        if parms['sample_size'] == 1:
+            compact = 'Samples  100%, '
+        else:
+            compact = 'Samples <100%, '
+        if parms['mu'] == 1:
+            compact = compact + 'Step:  1, '
+        else:
+            compact = compact + 'Step: <1, '
+        if parms['stabilization'] is True:
+            compact = compact +'Stabilized algorithm'
+        else:
+            compact = compact +'Standard   algorithm'
+        desc = '\n'.join([header, app, nl, fine_nl, compact])
+        def _testFastICA(parms=parms):
+            if parms['g'] == 'skew':
+                rand_func = numx_rand.exponential
+            else:
+                rand_func = uniform
+                
+            ica=mdp.nodes.FastICANode(limit=10**(-self.decimal),**parms)
+            ica2 = ica.copy()
+            self._testICANode(ica, rand_func=rand_func)
+            self._testICANodeMatrices(ica2, rand_func=rand_func)
+        return _testFastICA, desc
+            
+
+    def _testFastICANodeSymmetric(self):
+        for approach in ['symm', 'defl']:
+            for g in ['pow3', 'tanh', 'gaus', 'skew']:
+                for fine_g in [ None, 'pow3', 'tanh', 'gaus', 'skew']:
+                    for sample_size in [ 1, 0.99999 ]:
+                        for mu in [1, 0.999999 ]:
+                            for stab in [False, True]:
+                                if mu != 1 and stab is False:
+                                    continue
+                                if g != 'skew' and fine_g == 'skew':
+                                    continue
+                                if g == 'skew' and fine_g != 'skew':
+                                    continue
+                                if g == 'skew':
+                                    rand_func = numx_rand.exponential
+                                else:
+                                    rand_func = uniform
+                                print 'Approach='+approach+\
+                                ',G='+g+',Fine='+str(fine_g)+\
+                                ',SS='+str(sample_size)+\
+                                ',Mu='+str(mu)+\
+                                ',Stab='+str(stab)
+                                ica=mdp.nodes.FastICANode(\
+                                    limit=10**(-self.decimal),
+                                    approach=approach,
+                                    g=g, fine_g = fine_g,
+                                    sample_size = sample_size,
+                                    mu = mu,
+                                    stabilization = stab)
+                                ica2 = ica.copy()
+                                self._testICANode(ica, rand_func=rand_func)
+                                self._testICANodeMatrices(ica2,
+                                                          rand_func=rand_func)
         
-    def testFastICANodeDeflation(self):
-        ica = mdp.nodes.FastICANode\
-              (limit = 10**(-self.decimal-2), approach="defl")
-        ica2 = ica.copy()
-        self._testICANode(ica)
-        self._testICANodeMatrices(ica2)
-        
-    def testFastICANodeDeflation_tanh(self):
-        ica = mdp.nodes.FastICANode\
-              (limit = 10**(-self.decimal), approach="defl", g="tanh")
-        ica2 = ica.copy()
-        self._testICANode(ica)
-        self._testICANodeMatrices(ica2)
-        
-    def testFastICANodeDeflation_gauss(self):
-        ica = mdp.nodes.FastICANode\
-              (limit = 10**(-self.decimal), approach="defl", g="gaus")
-        ica2 = ica.copy()
-        self._testICANode(ica)
-        self._testICANodeMatrices(ica2)
 
     def testOneDimensionalHitParade(self):
         signal = (uniform(300)-0.5)*2
@@ -1207,7 +1277,7 @@ class NodesTestSuite(unittest.TestSuite):
         # actually we have (theoretically) 100% (10000/10000) percent of
         # success per trial. Try two times just to exclude
         # malevolent god intervention.
-        trials = 3
+        trials = 4
         for trial in range(trials):
             # get analytical solution:
             # prepared matrices, solution for sfa, solution for isf
