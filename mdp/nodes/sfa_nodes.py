@@ -28,6 +28,9 @@ class SFANode(Node):
         # one for the derivatives
         self._dcov_mtx = CovarianceMatrix(dtype)
 
+        # set routine for eigenproblem
+        self._symeig = symeig
+
     
     def _get_supported_dtypes(self):
         return ['float32', 'float64']
@@ -60,7 +63,7 @@ class SFANode(Node):
         #### solve the generalized eigenvalue problem
         # the eigenvalues are already ordered in ascending order
         try:
-            self.d, self.sf = symeig(self.dcov_mtx, self.cov_mtx,
+            self.d, self.sf = self._symeig(self.dcov_mtx, self.cov_mtx,
                                      range=rng, overwrite=(not debug))
         except SymeigException, exception:
             errstr = str(exception)+"\n Covariance matrices may be singular."

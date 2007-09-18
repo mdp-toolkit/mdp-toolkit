@@ -350,8 +350,9 @@ class EtaComputerNode(Node):
 
     def _stop_training(self):
         var_tlen = self._tlen-1
-        var = (self._var/var_tlen) - (self._mean/self._tlen)**2
+        var = (self._var - self._mean*self._mean/self._tlen)/var_tlen
         delta = (self._diff2/self._tlen)/var
+        self._delta = delta
         self._eta = numx.sqrt(delta)/(2*numx.pi)
 
     def get_eta(self, t=1):
