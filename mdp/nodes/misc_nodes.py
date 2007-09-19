@@ -350,7 +350,16 @@ class EtaComputerNode(Node):
 
     def _stop_training(self):
         var_tlen = self._tlen-1
+        # unbiased
         var = (self._var - self._mean*self._mean/self._tlen)/var_tlen
+
+        # biased
+        #var = (self._var - self._mean*self._mean/self._tlen)/self._tlen
+
+        # old formula: wrong! is neither biased nor unbiased
+        #var = (self._var/var_tlen) - (self._mean/self._tlen)**2
+
+        self._var = var
         delta = (self._diff2/self._tlen)/var
         self._delta = delta
         self._eta = numx.sqrt(delta)/(2*numx.pi)

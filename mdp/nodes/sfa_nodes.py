@@ -94,9 +94,9 @@ class SFANode(Node):
         return mult(y, pinv(self.sf))+self.avg
 
     def get_eta_values(self, t=1):
-        """Return the eta values of the data received during the training
-        phase. If the training phase has not been completed yet, call
-        stop_training.
+        """Return the eta values of the slow components learned during
+        the training phase. If the training phase has not been completed
+        yet, call stop_training.
         
         The delta value of a signal is a measure of its temporal
         variation, and is defined as the mean of the derivative squared,
