@@ -15,6 +15,10 @@ from testing_tools import assert_array_almost_equal, assert_array_equal, \
      assert_almost_equal, assert_equal, assert_array_almost_equal_diff, \
      assert_type_equal
 
+testtypes = [numx.dtype('d'),numx.dtype('f'),numx.dtype('D'),numx.dtype('F')]
+testdecimals = {testtypes[0]: 12, testtypes[1]: 4,
+                testtypes[2]: 12, testtypes[3]: 4}
+
 class BogusClass(object):
     def __init__(self):
         self.x = numx_rand.random((2,2))
@@ -33,7 +37,48 @@ class UtilsTestCase(unittest.TestCase):
 ##             p.update(i+1)
 ##             for j in xrange(10000): pass
 ##         print
-            
+
+    def eigenproblem(self, dtype, range, func=utils._symeig_fake):
+        """Solve a standard eigenvalue problem."""
+        dtype = numx.dtype(dtype)
+        dim = 5
+        if range:
+            range = (2, dim -1)
+        else:
+            range = None
+        a = utils.symrand(dim, dtype)
+        w,z = func(a, range=range)
+        # assertions
+        assert_type_equal(z.dtype, dtype)
+        w = w.astype(dtype)
+        diag = numx.diagonal(utils.mult(utils.hermitian(z),
+                                        utils.mult(a, z))).real
+        assert_array_almost_equal(diag, w, testdecimals[dtype])
+
+    def geneigenproblem(self, dtype, range):
+        """Solve a generalized eigenvalue problem."""
+        """Solve a standard eigenvalue problem."""
+        dtype = numx.dtype(dtype)
+        dim = 5
+        if range:
+            range = (2, dim -1)
+        else:
+            range = None
+        a = utils.symrand(dim, dtype)
+        b = utils.symrand(dim, dtype)
+        w,z = utils._symeig_fake(a,b,range=range)
+        # assertions
+        assert_type_equal(z.dtype, dtype)
+        w = w.astype(dtype)
+        diag1 = numx.diagonal(utils.mult(utils.hermitian(z),
+                                         utils.mult(a, z))).real
+        assert_array_almost_equal(diag1, w, testdecimals[dtype])
+        diag2 = numx.diagonal(utils.mult(utils.hermitian(z),
+                                         utils.mult(b, z))).real
+        assert_array_almost_equal(diag2, numx.ones(diag2.shape[0]),
+                                  testdecimals[dtype] )
+
+
     def testIntrospection(self):
         bogus = BogusNode()
         arrays, string = utils.dig_node(bogus)
@@ -92,6 +137,47 @@ class UtilsTestCase(unittest.TestCase):
         res1 = utils.mult(mtx, dd)
         res2 = utils.mult_diag(d, mtx, left=False)
         assert_array_almost_equal(res1, res2, 10)
+
+    def testSymeig_fake_standard(self):
+        self.eigenproblem('d',False)
+        self.eigenproblem('f',False)
+        self.eigenproblem('d',True)
+        self.eigenproblem('f',True)
+
+    def testSVD_standard(self):
+        func = utils.nongeneral_svd
+        self.eigenproblem('d',False, func=func)
+        self.eigenproblem('f',False, func=func)
+        self.eigenproblem('d',True, func=func)
+        self.eigenproblem('f',True, func=func)
+
+    def testSymeig_fake_general(self):
+        self.geneigenproblem('d',False)
+        self.geneigenproblem('f',False)
+        self.geneigenproblem('d',True)
+        self.geneigenproblem('f',True)
+
+    def testSymeig_fake_integer(self):
+        a = numx.array([[1,2],[2,7]])
+        b = numx.array([[3,1],[1,5]])
+        w,z = utils._symeig_fake(a)
+        w,z = utils._symeig_fake(a,b)
+
+    def testSymeig_fake_LAPACK_bug(self):
+        # bug. when input matrix is almost an identity matrix
+        # but not exactly, the lapack dgeev routine returns a
+        # matrix of eigenvectors which is not orthogonal.
+        # this bug was present when we used numx_linalg.eig
+        # instead of numx_linalg.eigh .
+        # Note: this is a LAPACK bug.
+        y = numx_rand.random((4,4))*1E-16
+        y = (y+y.T)/2
+        for i in range(4):
+            y[i,i]=1
+        val, vec = utils._symeig_fake(y)
+        assert_almost_equal(abs(numx_linalg.det(vec)), 1., 12)
+
+
 
     def testQuadraticFormsExtrema(self):
         # !!!!! add some real test

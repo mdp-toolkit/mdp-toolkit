@@ -751,41 +751,6 @@ class NodesTestSuite(unittest.TestSuite):
             self._testICANode(ica, rand_func=rand_func)
             self._testICANodeMatrices(ica2, rand_func=rand_func)
         return _testFastICA, desc
-            
-
-    def _testFastICANodeSymmetric(self):
-        for approach in ['symm', 'defl']:
-            for g in ['pow3', 'tanh', 'gaus', 'skew']:
-                for fine_g in [ None, 'pow3', 'tanh', 'gaus', 'skew']:
-                    for sample_size in [ 1, 0.99999 ]:
-                        for mu in [1, 0.999999 ]:
-                            for stab in [False, True]:
-                                if mu != 1 and stab is False:
-                                    continue
-                                if g != 'skew' and fine_g == 'skew':
-                                    continue
-                                if g == 'skew' and fine_g != 'skew':
-                                    continue
-                                if g == 'skew':
-                                    rand_func = numx_rand.exponential
-                                else:
-                                    rand_func = uniform
-                                print 'Approach='+approach+\
-                                ',G='+g+',Fine='+str(fine_g)+\
-                                ',SS='+str(sample_size)+\
-                                ',Mu='+str(mu)+\
-                                ',Stab='+str(stab)
-                                ica=mdp.nodes.FastICANode(\
-                                    limit=10**(-self.decimal),
-                                    approach=approach,
-                                    g=g, fine_g = fine_g,
-                                    sample_size = sample_size,
-                                    mu = mu,
-                                    stabilization = stab)
-                                ica2 = ica.copy()
-                                self._testICANode(ica, rand_func=rand_func)
-                                self._testICANodeMatrices(ica2,
-                                                          rand_func=rand_func)
         
 
     def testOneDimensionalHitParade(self):

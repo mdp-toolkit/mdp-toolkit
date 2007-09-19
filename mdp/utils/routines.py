@@ -257,16 +257,16 @@ numarray.linear_algebra.eigenvectors with an interface compatible with symeig.
     dtype = numx.dtype(_greatest_common_dtype([A, B]))
     try:
         if B is None:
-            w, Z = numx_linalg.eig(A)
+            w, Z = numx_linalg.eigh(A)
         else:
             # make B the identity matrix
-            wB, ZB = numx_linalg.eig(B)
+            wB, ZB = numx_linalg.eigh(B)
             _assert_eigenvalues_real_and_positive(wB, dtype)
             ZB = ZB.real / numx.sqrt(wB.real)
             # transform A in the new basis: A = ZB^T * A * ZB
             A = mdp.utils.mult(mdp.utils.mult(ZB.T, A), ZB)
             # diagonalize A
-            w, ZA = numx_linalg.eig(A)
+            w, ZA = numx_linalg.eigh(A)
             Z = mdp.utils.mult(ZB, ZA)
     except numx_linalg.LinAlgError, exception:
         raise SymeigException, str(exception)
