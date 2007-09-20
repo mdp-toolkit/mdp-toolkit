@@ -16,8 +16,8 @@ from testing_tools import assert_array_almost_equal, assert_array_equal, \
      assert_type_equal
 
 testtypes = [numx.dtype('d'),numx.dtype('f'),numx.dtype('D'),numx.dtype('F')]
-testdecimals = {testtypes[0]: 12, testtypes[1]: 4,
-                testtypes[2]: 12, testtypes[3]: 4}
+testdecimals = {testtypes[0]: 12, testtypes[1]: 3,
+                testtypes[2]: 12, testtypes[3]: 3}
 
 class BogusClass(object):
     def __init__(self):
