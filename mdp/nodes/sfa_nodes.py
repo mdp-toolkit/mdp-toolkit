@@ -39,7 +39,16 @@ class SFANode(Node):
         """Compute the linear approximation of the time derivative."""
         # this is faster than a linear_filter or a weave-inline solution
         return x[1:,:]-x[:-1,:]
-        
+
+    def _set_range(self):
+        if self.output_dim is not None and self.output_dim <= self.input_dim:
+            # (eigenvalues sorted in ascending order)
+            rng = (1, self.output_dim)
+        else:
+            # otherwise, keep all output components
+            rng = None        
+        return rng
+
     def _train(self, x):
         ## update the covariance matrices
         # cut the final point to avoid a trivial solution in special cases
@@ -53,12 +62,7 @@ class SFANode(Node):
         self.dcov_mtx, davg, dtlen = self._dcov_mtx.fix()
         del self._dcov_mtx
 
-        if self.output_dim is not None and self.output_dim <= self.input_dim:
-            # (eigenvalues sorted in ascending order)
-            rng = (1, self.output_dim)
-        else:
-            # otherwise, keep all output components
-            rng = None        
+        rng = self._set_range()
         
         #### solve the generalized eigenvalue problem
         # the eigenvalues are already ordered in ascending order
@@ -145,6 +149,16 @@ class SFA2Node(SFANode):
         # expand in the space of polynomials of degree 2
         super(SFA2Node, self)._train(self._expnode(x))
 
+    def _set_range(self):
+        if self.output_dim is not None and \
+               self.output_dim <= self._expnode.output_dim:
+            # (eigenvalues sorted in ascending order)
+            rng = (1, self.output_dim)
+        else:
+            # otherwise, keep all output components
+            rng = None        
+        return rng
+    
     def _stop_training(self, debug=False):
         super(SFA2Node, self)._stop_training(debug)
 
