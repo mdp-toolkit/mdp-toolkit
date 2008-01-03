@@ -680,6 +680,20 @@ class NodesTestSuite(unittest.TestSuite):
                                   numx.eye(1), self.decimal-3)
 
 
+    def testSFA2Node_input_dim_bug(self):
+        dim = 10000
+        freqs = [2*numx.pi*100.,2*numx.pi*500.]
+        t =  numx.linspace(0,1,num=dim)
+        mat = numx.array([numx.sin(freqs[0]*t),numx.sin(freqs[1]*t)]).T
+        mat += normal(0., 1e-10, size=(dim, 2))
+        mat = (mat - mean(mat[:-1,:],axis=0))\
+              /std(mat[:-1,:],axis=0)
+        des_mat = mat.copy()
+        mat = mult(mat,uniform((2,2))) + uniform(2)
+        sfa = mdp.nodes.SFA2Node(input_dim=2)
+        sfa.train(mat)
+        out = sfa.execute(mat)
+        
     def _testICANode(self,icanode, rand_func = uniform, vars = 3):
         dim = (8000,vars) 
         mat,mix,inp = self._get_random_mix(rand_func=rand_func,mat_dim=dim)

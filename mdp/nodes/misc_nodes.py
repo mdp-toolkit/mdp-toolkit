@@ -402,6 +402,7 @@ class NoiseNode(Node):
                         Default is 'additive'.
         """
         super(NoiseNode, self).__init__(input_dim = input_dim,
+                                        output_dim = input_dim,
                                         dtype = dtype)
         self.noise_func = noise_func
         self.noise_args = noise_args

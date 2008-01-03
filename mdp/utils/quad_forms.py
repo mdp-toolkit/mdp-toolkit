@@ -1,6 +1,7 @@
 import mdp
 from routines import refcast
 numx = mdp.numx
+numx_linalg = mdp.numx_linalg
 
 # 10 times machine eps
 epsilon = 10*numx.finfo(numx.double).eps
@@ -39,6 +40,14 @@ class QuadraticForm(object):
         x = numx.atleast_2d(x)
         return 0.5*(mdp.utils.mult(x, self.H.T)*x).sum(axis=1) + \
                mdp.utils.mult(x, self.f) + self.c
+
+    def _eig_sort(self, x):
+        E, W = numx_linalg.eig(x)
+        E, W = E.real, W.real
+        idx = E.argsort()
+        E = E.take(idx)
+        W = W.take(idx, axis=1)
+        return E, W
         
     def get_extrema(self, norm, tol = 1.E-4):
         """
@@ -49,12 +58,12 @@ class QuadraticForm(object):
         """
         H, f, c = self.H, self.f, self.c
         if max(abs(f)) < numx.finfo(self.dtype).eps:
-            E, W = mdp.utils.symeig(H)
+            E, W = self._eig_sort(H)
             xmax = W[:,-1]*norm
             xmin = W[:,0]*norm
         else:    
             H_definite_positive, H_definite_negative = False, False
-            E = mdp.utils.symeig(H, eigenvectors=0, overwrite=0)
+            E, W = self._eig_sort(H)
             if E[0] >= 0:
                 # H is positive definite
                 H_definite_positive = True
@@ -86,7 +95,7 @@ class QuadraticForm(object):
             x0 = mdp.utils.refcast(x0, self.dtype)
             f = mdp.utils.mult(H, x0)+ f
             # c = 0.5*x0'*H*x0 + f'*x0 + c -> do we need it?
-        mu, V = mdp.utils.symeig(H, overwrite=0)
+        mu, V = self._eig_sort(H)
         alpha = mdp.utils.mult(V.T, f).reshape((H.shape[0],))
         # v_i = alpha_i * v_i (alpha is a raw_vector)
         V = V*alpha
@@ -137,7 +146,7 @@ class QuadraticForm(object):
         # restrict the matrix H to the tangential plane
         Ht = mdp.utils.mult(B.T,mdp.utils.mult(self.H,B))
         # compute the invariances
-        nu, w = mdp.utils.symeig(Ht)
+        nu, w = self._eig_sort(Ht)
         nu -= ((mdp.utils.mult(self.H, xstar)*xstar).sum()-(self.f*xstar).sum())/(r*r)
         idx = abs(nu).argsort()
         nu = nu[idx]

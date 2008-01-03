@@ -129,9 +129,9 @@ class SFA2Node(SFANode):
     Learning of Invariances, Neural Computation, 14(4):715-770 (2002)."""
 
     def __init__(self, input_dim=None, output_dim=None, dtype=None):
-        super(SFA2Node, self).__init__(input_dim, output_dim, dtype)
         self._expnode = mdp.nodes.QuadraticExpansionNode(input_dim=input_dim,
                                                          dtype=dtype)
+        super(SFA2Node, self).__init__(input_dim, output_dim, dtype)
 
     def is_invertible(self):
         """Return True if the node can be inverted, False otherwise."""
