@@ -1,0 +1,93 @@
+-------------------------------------------------------------------------------
+MDP-2.1:
+
+2007-03-23: Updated tutorial and web site.
+2007-03-23: Use get_limits.finfo to set precision limits
+2007-03-23: Use symeig if found
+2007-03-23: Use scipy instead of numpy when possible
+2007-03-23: Numpy functions substituted with array method where possible
+2007-03-22: Implemented invariances in Quadraticforms
+2007-03-21: MDP now fully compatible with numpy 1.0
+2007-03-15: Added ISFANode
+2007-03-13: Added MultipleCovarianceMatrices utility class
+2006-11-04: Added 'save' method to Node and Flow
+2006-11-04: Node's train and stop_training methods now accept *args and **kwargs
+
+-------------------------------------------------------------------------------
+MDP-2.0RC:
+
+29.06.2006: Updated tutorial and web site.
+28.06.2006: New random_rot. Added SFA2Node, QuadraticForm, moved graph into the mdp tree.
+27.06.2006: Converted typecode handling to numpy.dtype style; supported_typecodes
+	    is now a property. Added bias in covariance.
+26.06.2006: Converted to numpy. Scipy, Numeric, and numarray are not supported
+	    anymore
+06.12.2005: pca_nodes: added get_explained_variance public method.
+02.12.2005: New introspection utils in mdp.utils.
+01.11.2005: New nodes: FANode, FDANode, GaussianClassifierNode
+31.10.2005: Non back-compatible changes. Node has got three new 'properties':
+            output_dim, input_dim, typecode. They are accessible through their
+	        getters (get_PROPERTY). They can be set using the default setters
+	        (set_PROPERTY). Subclasses can customize the setters, overriding
+	        the _set_PROEPRTY private methods. All nodes had to be changed to 
+	        conform with the new structure. All tests pass.
+26.10.2005: To force MDP to use a particular numerical extension, you
+            can now set the enviroment variable MDPNUMX. Supported
+            values are 'symeig', 'scipy', 'Numeric', 'numarray'.
+            Mainly useful for testing purposes. 
+06.10.2005: The SfaNode, CuBICA, and FastICA aliases have been deleted.
+06.10.2005: Node supports multiple and even an infinite number of training
+            phases. FiniteNode makes the implementation of a class with
+            a finite number of phases easy and one with just one phase
+            trivial.
+06.10.2005: Flow supports the new nodes and even nodes requiring a
+            supervision signal during training.
+06.10.2005: SignalNode, SignalNodeException, and SimpleFlow are now
+            deprecated aliases. Use Node, NodeException and Flow instead.
+06.10.2005: some bug fixes.
+05.10.2005: fixed failing 'import mdp' in test_symeig when mdp is not installed
+12.07.2005: bug in utils.symrand (global name "mult" is not defined) 
+06.07.2005: changed round off error checking in FastICANode (it was 1e-15 and
+            it is now 1e-5). it failed on a MacOSX machine.
+23.06.2005: _check_roundoff in lcov.py issues a MDPWarning using warnings.warn.
+            it was using 'raise' before, and it was caught as a FlowException.
+21.06.2005: node consistency is assured at flow instantiation.
+-------------------------------------------------------------------------------
+MDP-1.1.0:
+
+13.06.2005: MDP 1.1.0 released.
+01.06.2005: Crash_recovery is now off by default.
+            To switch it on do: flow.set_crash_recovery(1)
+30.05.2005: New NoiseNode.
+30.05.2005: SimpleFlow and SignalNode now have a 'copy' method.
+30.05.2005: SimpleFlow is now a mutable sequence type and implements
+            many of the 'list' methods.
+30.05.2005: removed scipy dependency. Now mdp runs with either Numeric, 
+            numarray or scipy.
+24.05.2005: symeig removed from mdp.
+23.05.2005: all classes are now new-style.
+-------------------------------------------------------------------------------
+MDP-1.0.0:
+
+15.11.2004: MDP 1.0.0 released
+09.11.2004: Added crash recovery capabilities to SimpleFlow (on by default).
+05.11.2004: New GrowingNeuralGasNode. New graph module.
+04.11.2004: New IdentityNode subclass added. All analysis nodes are
+            now subclasses of IdentityNode.
+	    	Use of input_dim and output_dim in the nodes' constructor
+	    	is now consistent.
+02.11.2004: Now symeig works reliably also for complex matrices.
+            symeig now can be distributed as an independent package
+            It is still contained in mdp.utils for convenience.
+	    	Default value for option overwrite changed from 1 to 0.
+14.10.2004: With the release of Scypy 0.3.2, the installation of MDP got much
+            simpler.
+06.10.2004: Fixed a bug in symeig (when B=None and overwrite=0,
+	    	symeig raised an exception)
+04.09.2004: Fixed Windows-xspecific problems.
+-------------------------------------------------------------------------------
+MDP-0.9.0:
+
+24.08.2004: MDP 0.9.0 released. First public release. 
+16.08.2004: MDP project registered at SourceForge.
+-------------------------------------------------------------------------------
