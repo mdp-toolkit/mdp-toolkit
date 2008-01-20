@@ -1,4 +1,6 @@
-mdp (2.1-1) unstable; urgency=low
+mdp (2.1-1~1.gbp90cedc) unstable; urgency=low
+
+  ** SNAPSHOT build @90cedcde8cd32a1f1e0f4f27a70f869b4fd3f389 **
 
   * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
 
