@@ -1,17 +1,19 @@
 This package was debianized by Yaroslav Halchenko <debian@onerussian.com> on
 Sat, 19 Jan 2008 16:41:20 -0500.
 
-It was downloaded from <url://example.com>
+It was downloaded from http://mdp-toolkit.sourceforge.net
 
 Upstream Author(s): 
 
-    <put author's name and email here>
-    <likewise for another author>
+    Pietro Berkes <berkes@gatsby.ucl.ac.uk>
+    Tiziano Zito <tiziano.zito@bccn-berlin.de>
 
 Copyright: 
+    
+ 2004-2008, Pietro Berkes <berkes@gatsby.ucl.ac.uk> and
+		    Tiziano Zito  <t.zito@biologie.hu-berlin.de>
 
-    <Copyright (C) YYYY Name OfAuthor>
-    <likewise for another author>
+XXX clarify scipy code's destiny
 
 License:
 
@@ -34,6 +36,3 @@ Public License can be found in `/usr/share/common-licenses/LGPL'.
 
 The Debian packaging is (C) 2008, Yaroslav Halchenko <debian@onerussian.com> and
 is licensed under the GPL, see `/usr/share/common-licenses/GPL'.
-
-# Please also look if there are files or directories which have a
-# different copyright/license attached and list them here.
