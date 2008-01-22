@@ -3,7 +3,7 @@ Sat, 19 Jan 2008 16:41:20 -0500.
 
 It was downloaded from http://mdp-toolkit.sourceforge.net
 
-Upstream Author(s): 
+Upstream Authors: 
 
     Pietro Berkes <berkes@gatsby.ucl.ac.uk>
     Tiziano Zito <tiziano.zito@bccn-berlin.de>
@@ -12,8 +12,6 @@ Copyright:
     
  2004-2008, Pietro Berkes <berkes@gatsby.ucl.ac.uk> and
 		    Tiziano Zito  <t.zito@biologie.hu-berlin.de>
-
-              XXX clarify scipy code's destiny
 
 License:
 
