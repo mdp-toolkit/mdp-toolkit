@@ -4,12 +4,12 @@ numx = mdp.numx
 def nmonomials(degree, nvariables):
     """Return the number of monomials of a given degree in a given number
     of variables."""
-    return int(mdp.utils.comb(nvariables+degree-1, degree, exact=1))
+    return int(mdp.utils.comb(nvariables+degree-1, degree))
 
 def expanded_dim(degree, nvariables):
     """Return the size of a vector of dimension 'nvariables' after
     a polynomial expansion of degree 'degree'."""
-    return int(mdp.utils.comb(nvariables+degree, degree, exact=1))-1
+    return int(mdp.utils.comb(nvariables+degree, degree))-1
 
 class _ExpansionNode(mdp.Node):
     

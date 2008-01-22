@@ -172,6 +172,15 @@ def mult_diag(d, mtx, left=True):
     else:
         return d*mtx
 
+def comb(N,k):
+    ret = 1
+    for mlt in xrange(N,N-k,-1):
+        ret *= mlt
+    for dv in xrange(1,k+1):
+        ret /= dv
+    return ret
+
+
 def get_dtypes(typecodes_key):
     """Return the list of dtypes corresponding to the set of
     typecodes defined in numpy.typecodes[typecodes_key].
@@ -202,11 +211,16 @@ def _greatest_common_dtype(alist):
             dtype = _type_conv[transition]
     return dtype
 
-def _assert_eigenvalues_real(w, dtype):
+def _assert_eigenvalues_real_and_positive(w, dtype):
     tol = numx.finfo(dtype.type).eps * 100
     if abs(w.imag).max() > tol:
-        raise SymeigException, \
-              "Some eigenvalues have significant imaginary part"
+        err_str="Some eigenvalues have significant imaginary part: "+str(w)
+        raise SymeigException, err_str
+    if w.real.min() < 0:
+        err_str="Got negative eigenvalues: "\
+                 +str(w)
+        raise SymeigException, err_str
+              
 
 def _symeig_fake(A, B = None, eigenvectors = 1, turbo = "on", range = None,
                  type = 1, overwrite = 0):
@@ -252,24 +266,21 @@ numarray.linear_algebra.eigenvectors with an interface compatible with symeig.
     dtype = numx.dtype(_greatest_common_dtype([A, B]))
     try:
         if B is None:
-            w, Z = numx_linalg.eig(A)
+            w, Z = numx_linalg.eigh(A)
         else:
             # make B the identity matrix
-            wB, ZB = numx_linalg.eig(B)
-            _assert_eigenvalues_real(wB, dtype)
+            wB, ZB = numx_linalg.eigh(B)
+            _assert_eigenvalues_real_and_positive(wB, dtype)
             ZB = ZB.real / numx.sqrt(wB.real)
             # transform A in the new basis: A = ZB^T * A * ZB
             A = mdp.utils.mult(mdp.utils.mult(ZB.T, A), ZB)
             # diagonalize A
-            w, ZA = numx_linalg.eig(A)
+            w, ZA = numx_linalg.eigh(A)
             Z = mdp.utils.mult(ZB, ZA)
     except numx_linalg.LinAlgError, exception:
         raise SymeigException, str(exception)
-    # workaround to bug in numpy 0.9.9
-    except NameError, exception:
-        raise SymeigException, 'Complex eigenvalues'
 
-    _assert_eigenvalues_real(w, dtype)
+    _assert_eigenvalues_real_and_positive(w, dtype)
     w = w.real
     Z = Z.real
     
@@ -290,69 +301,23 @@ numarray.linear_algebra.eigenvectors with an interface compatible with symeig.
     else:
         return mdp.utils.refcast(w, dtype)
 
-# Code found below this line is part, or derived from, SciPy 0.3.2.
-# Copyright Notice:
-#
-##  Copyright (c) 2001, 2002 Enthought, Inc.
-##
-## All rights reserved.
-##
-## Redistribution and use in source and binary forms, with or without
-## modification, are permitted provided that the following conditions are met:
-##
-##   a. Redistributions of source code must retain the above copyright notice,
-##      this list of conditions and the following disclaimer.
-##   b. Redistributions in binary form must reproduce the above copyright
-##      notice, this list of conditions and the following disclaimer in the
-##      documentation and/or other materials provided with the distribution.
-##   c. Neither the name of the Enthought nor the names of its contributors
-##      may be used to endorse or promote products derived from this software
-##      without specific prior written permission.
-##
-##
-## THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-## AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-## IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-## ARE DISCLAIMED. IN NO EVENT SHALL THE REGENTS OR CONTRIBUTORS BE LIABLE FOR
-## ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-## DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-## SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-## CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
-## LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
-## OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
-## DAMAGE.
-##
+def nongeneral_svd(A, range=None, **kwargs):
+    """SVD routine for simple eigenvalue problem, API is compatible with
+    symeig."""
+    Z2, w, Z = mdp.utils.svd(A)
+    # sort eigenvalues and corresponding eigenvectors
+    idx = w.argsort()
+    w = w.take(idx)
+    Z = Z.take(idx, axis=1)
+    # sort eigenvectors
+    Z = (Z[-1::-1,-1::-1]).T
+    if range is not None:
+        lo, hi = range
+        Z = Z[:, lo-1:hi]
+        w = w[lo-1:hi]    
+    return w, Z
 
-def sqrtm(A, disp=1):
-    """This is a weak matrix sqrt function.
-    It works only for symmetric matrices. disp : not implemented."""
+def sqrtm(A):
+    """This is a symmetric definite positive matrix sqrt function"""
     d, V = mdp.utils.symeig(A)
-    D = numx.diag(numx.sqrt(d))
-    return mdp.utils.mult(V, mdp.utils.mult(D, V.T))
-
-# In file: scipy/common.py
-def comb(N, k, exact=0):
-    """Combinations of N things taken k at a time.
-
-    Notes:
-      - If k > N, N < 0, or k < 0, then a 0 is returned.
-
-    Note:
-    The exact=0 variant of scipy is not implemented.
-    """
-    if exact:
-        if (k > N) or (N < 0) or (k < 0):
-            return 0L
-        N,k = map(long,(N,k))
-        top = N
-        val = 1L
-        while (top > (N-k)):
-            val *= top
-            top -= 1
-        n = 1L
-        while (n < k+1L):
-            val /= n
-            n += 1
-        return val
-    else:
-        raise NotImplementedError
+    return mdp.utils.mult(V, mult_diag(numx.sqrt(d), V.T))

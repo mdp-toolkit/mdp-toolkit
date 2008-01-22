@@ -137,4 +137,4 @@ import nodes
 del signal_node
 del linear_flows
 
-__version__ = '2.1'
+__version__ = '2.2'

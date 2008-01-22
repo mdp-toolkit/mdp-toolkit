@@ -1,6 +1,6 @@
 from mdp import numx, Node, \
      NodeException, TrainingFinishedException
-from mdp.utils import mult, symeig, CovarianceMatrix, \
+from mdp.utils import mult, symeig, nongeneral_svd, CovarianceMatrix, \
                       SymeigException #, LeadingMinorException
 
 class PCANode(Node):
@@ -11,18 +11,37 @@ class PCANode(Node):
     self.avg -- Mean of the input data (available after training)
     self.v -- Transposed of the projection matrix (available after training)
     self.d -- Variance corresponding to the PCA components
-              (eigenvalues of the covariance matrix).
+              (eigenvalues of the covariance matrix)
+    self.explained_variance -- When output_dim has been specified as a fraction
+                               of the total variance, this is the fraction
+                               of the total variance that is actually explained
+    
     
     More information about Principal Component Analysis, a.k.a. discrete
     Karhunen-Loeve transform can be found among others in
     I.T. Jolliffe, Principal Component Analysis, Springer-Verlag (1986)."""
     
-    def __init__(self, input_dim = None, output_dim = None, dtype = None):
+    def __init__(self, input_dim = None, output_dim = None, dtype = None,
+                 svd=False, reduce = False, var_rel = 1E-15, var_abs = 1E-15):
         """The number of principal components to be kept can be specified as
         'output_dim' directly (e.g. 'output_dim=10' means 10 components
         are kept) or by the fraction of variance to be explained
         (e.g. 'output_dim=0.95' means that as many components as necessary
-        will be kept in order to explain 95% of the input variance)."""
+        will be kept in order to explain 95% of the input variance).
+
+        Other Keyword Agruments:
+
+        svd -- if True use Singular Valude Decomposition instead of the
+               standard eigenvalue problem solver. Use it when PCANode
+               complains about singular covariance matrices
+
+        reduce -- Keep only those principal components which have a variance
+                  larger than 'var_abs' and a variance relative to the
+                  first principal component larger than 'var_rel'. Note:
+                  when the 'reduce' switch is enabled, the actual number of
+                  principal components (self.output_dim) may be different from
+                  that set when creating the instance.
+        """
         if output_dim <= 1 and isinstance(output_dim, float):
             self.desired_variance = output_dim
             output_dim = None
@@ -30,9 +49,21 @@ class PCANode(Node):
             self.desired_variance = None
         
         super(PCANode, self).__init__(input_dim, output_dim, dtype)
-        
+
+        self.svd = svd
+        # set routine for eigenproblem
+        if svd:
+            self._symeig = nongeneral_svd
+        else:
+            self._symeig = symeig
+
+        self.var_abs = var_abs
+        self.var_rel = var_rel
+        self.reduce = reduce
+
         # empirical covariance matrix, updated during the training phase
         self._cov_mtx = CovarianceMatrix(dtype)
+
         
     def _check_output(self, y):
         # check output rank
@@ -62,10 +93,21 @@ class PCANode(Node):
     def _train(self, x):
         # update the covariance matrix
         self._cov_mtx.update(x)
+
+    def stop_training(self, debug=False):
+        """Stop the training phase.
+
+        Keyword arguments:
+
+        debug=True     if stop_training fails because of singular cov
+                       matrices, the singular matrices itselves are stored in
+                       self.cov_mtx and self.dcov_mtx to be examined.
+        """
+        return super(PCANode, self).stop_training(debug=debug)
         
-    def _stop_training(self):
+    def _stop_training(self, debug=False):
         ##### request the covariance matrix and clean up
-        cov_mtx, avg, self.tlen = self._cov_mtx.fix()
+        self.cov_mtx, avg, self.tlen = self._cov_mtx.fix()
         del self._cov_mtx
         
         # this is a bit counterintuitive, as it reshapes the average vector to
@@ -94,23 +136,20 @@ class PCANode(Node):
         # compute the eigenvectors of the covariance matrix (inplace)
         # (eigenvalues sorted in ascending order)
         try:
-            d, v = symeig(cov_mtx, range = rng, overwrite = 1)
-        #except LeadingMinorException, exception:
+            d, v = self._symeig(self.cov_mtx, range=rng, overwrite=(not debug))
         except SymeigException, exception:
-            errstr = str(exception)+"\n Covariance matrix may be singular."
+            errstr = str(exception)+"\n Covariance matrix may be singular."+\
+                     "Try instantiating the node with svd=True."
             raise NodeException,errstr
-
-        # check that we didn't get negative eigenvalues,
-        # if this is the case the covariance matrix may be singular
-        if d.min() <= 0:
-            errs="Got negative eigenvalues: Covariance matrix may be singular."
-            raise NodeException, errs 
                   
+        # delete covariance matrix if no exception occurred
+        del self.cov_mtx
         
         # sort by descending order
         d = numx.take(d, range(d.shape[0]-1,-1,-1))
         v = v[:,::-1]
 
+        vartot = None
         ## compute the explained variance
         # if the number of principal components to keep has been
         # specified directly
@@ -138,7 +177,19 @@ class PCANode(Node):
             v = v[:,0:neigval]
             # define the new output dimension
             self.output_dim = neigval
-            
+
+        # automatic dimension reduction
+        if self.reduce:
+            # remove entries that are smaller then var_abs and
+            # smaller then var_rel relative to the maximum
+            d = d[ d > self.var_abs ]
+            d = d[ d/d.max() > self.var_rel ]
+            v = v[:,0:d.shape[0]]
+            self._output_dim = d.shape[0]
+            # set explained variance
+            if vartot is not None:
+                self.explained_variance = d.sum()/vartot
+        
         ## store the eigenvalues
         self.d = d
 
@@ -199,10 +250,14 @@ class WhiteningNode(PCANode):
     self.v -- Transpose of the projection matrix (available after training)
     self.d -- Variance corresponding to the PCA components
               (eigenvalues of the covariance matrix).
+    self.explained_variance -- When output_dim has been specified as a fraction
+                               of the total variance, this is the fraction
+                               of the total variance that is actually explained
+   
     """
     
-    def _stop_training(self):
-        super(WhiteningNode, self)._stop_training()
+    def _stop_training(self, debug=False):
+        super(WhiteningNode, self)._stop_training(debug)
 
         ##### whiten the filters
         # self.v is now the _whitening_ matrix
@@ -221,4 +276,3 @@ class WhiteningNode(PCANode):
         if transposed:
             return v_inverse.T
         return v_inverse
-        

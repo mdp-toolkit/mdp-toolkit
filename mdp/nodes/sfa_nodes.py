@@ -3,7 +3,6 @@ from mdp import numx, utils, Node, \
      NodeException, TrainingFinishedException
 from mdp.utils import mult, pinv, symeig, CovarianceMatrix, QuadraticForm, \
                       SymeigException
-                      #, LeadingMinorException
 
 class SFANode(Node):
     """Extract the slowly varying components from the input data.
@@ -29,6 +28,9 @@ class SFANode(Node):
         # one for the derivatives
         self._dcov_mtx = CovarianceMatrix(dtype)
 
+        # set routine for eigenproblem
+        self._symeig = symeig
+
     
     def _get_supported_dtypes(self):
         return ['float32', 'float64']
@@ -37,41 +39,43 @@ class SFANode(Node):
         """Compute the linear approximation of the time derivative."""
         # this is faster than a linear_filter or a weave-inline solution
         return x[1:,:]-x[:-1,:]
-        
+
+    def _set_range(self):
+        if self.output_dim is not None and self.output_dim <= self.input_dim:
+            # (eigenvalues sorted in ascending order)
+            rng = (1, self.output_dim)
+        else:
+            # otherwise, keep all output components
+            rng = None        
+        return rng
+
     def _train(self, x):
         ## update the covariance matrices
         # cut the final point to avoid a trivial solution in special cases
         self._cov_mtx.update(x[:-1,:])
         self._dcov_mtx.update(self.time_derivative(x))
 
-    def _stop_training(self):
+    def _stop_training(self, debug=False):
         ##### request the covariance matrices and clean up
-        cov_mtx, self.avg, self.tlen = self._cov_mtx.fix()
+        self.cov_mtx, self.avg, self.tlen = self._cov_mtx.fix()
         del self._cov_mtx
-        dcov_mtx, davg, dtlen = self._dcov_mtx.fix()
+        self.dcov_mtx, davg, dtlen = self._dcov_mtx.fix()
         del self._dcov_mtx
 
-        if self.output_dim is not None and self.output_dim < self.input_dim:
-            # (eigenvalues sorted in ascending order)
-            rng = (1, self.output_dim)
-        else:
-            # otherwise, keep all output components
-            rng = None        
+        rng = self._set_range()
         
         #### solve the generalized eigenvalue problem
         # the eigenvalues are already ordered in ascending order
         try:
-            self.d, self.sf = symeig(dcov_mtx, cov_mtx, range=rng, overwrite=1)
-        #except LeadingMinorException, exception:
+            self.d, self.sf = self._symeig(self.dcov_mtx, self.cov_mtx,
+                                     range=rng, overwrite=(not debug))
         except SymeigException, exception:
             errstr = str(exception)+"\n Covariance matrices may be singular."
-            raise NodeException,errstr
+            raise NodeException, errstr
 
-        # check that we didn't get negative eigenvalues,
-        # if this is the case the covariance matrix may be singular
-        if self.d.min() <= 0:
-            errs="Got negative eigenvalues: Covariance matrix may be singular."
-            raise NodeException, errs 
+        # delete covariance matrix if no exception occurred
+        del self.cov_mtx
+        del self.dcov_mtx
         
     def _execute(self, x, range=None):
         if range:
@@ -94,9 +98,9 @@ class SFANode(Node):
         return mult(y, pinv(self.sf))+self.avg
 
     def get_eta_values(self, t=1):
-        """Return the eta values of the data received during the training
-        phase. If the training phase has not been completed yet, call
-        stop_training.
+        """Return the eta values of the slow components learned during
+        the training phase. If the training phase has not been completed
+        yet, call stop_training.
         
         The delta value of a signal is a measure of its temporal
         variation, and is defined as the mean of the derivative squared,
@@ -129,9 +133,9 @@ class SFA2Node(SFANode):
     Learning of Invariances, Neural Computation, 14(4):715-770 (2002)."""
 
     def __init__(self, input_dim=None, output_dim=None, dtype=None):
-        super(SFA2Node, self).__init__(input_dim, output_dim, dtype)
         self._expnode = mdp.nodes.QuadraticExpansionNode(input_dim=input_dim,
                                                          dtype=dtype)
+        super(SFA2Node, self).__init__(input_dim, output_dim, dtype)
 
     def is_invertible(self):
         """Return True if the node can be inverted, False otherwise."""
@@ -145,8 +149,18 @@ class SFA2Node(SFANode):
         # expand in the space of polynomials of degree 2
         super(SFA2Node, self)._train(self._expnode(x))
 
-    def _stop_training(self):
-        super(SFA2Node, self)._stop_training()
+    def _set_range(self):
+        if self.output_dim is not None and \
+               self.output_dim <= self._expnode.output_dim:
+            # (eigenvalues sorted in ascending order)
+            rng = (1, self.output_dim)
+        else:
+            # otherwise, keep all output components
+            rng = None        
+        return rng
+    
+    def _stop_training(self, debug=False):
+        super(SFA2Node, self)._stop_training(debug)
 
         # set the output dimension if necessary
         if self.output_dim is None:

@@ -108,6 +108,35 @@ class NodesTestSuite(unittest.TestSuite):
                 # add to the suite
                 self.addTest(unittest.FunctionTestCase(testfunc,
                                                        description=funcdesc))
+        # generate FastICANode testcases
+        fica_parm = []
+        for approach in ['symm', 'defl']:
+            for g in ['pow3', 'tanh', 'gaus', 'skew']:
+                for fine_g in [ None, 'pow3', 'tanh', 'gaus', 'skew']:
+                    for sample_size in [ 1, 0.99999 ]:
+                        for mu in [1, 0.999999 ]:
+                            for stab in [False, True]:
+                                if mu != 1 and stab is False:
+                                    # mu != 1 implies setting stabilization
+                                    continue
+                                # skew nonlinearity only wroks with skewed
+                                # input data
+                                if g != 'skew' and fine_g == 'skew':
+                                    continue
+                                if g == 'skew' and fine_g != 'skew':
+                                    continue
+                                fica_parm.append({
+                                    'approach': approach,
+                                    'g': g,
+                                    'fine_g': fine_g,
+                                    'sample_size' : sample_size,
+                                    'mu' : mu,
+                                    'stabilization' : stab
+                                    })
+        for parms in fica_parm:
+            testfunc, funcdesc = self._get_testFastICA(parms)
+            self.addTest(unittest.FunctionTestCase(testfunc,
+                                                   description=funcdesc))
             
         for methname in dir(self):
             meth = getattr(self,methname)
@@ -115,12 +144,13 @@ class NodesTestSuite(unittest.TestSuite):
                 self.addTest(unittest.FunctionTestCase(meth))
 
     def _get_random_mix(self, mat_dim = None, type = "d", scale = 1,\
-                        rand_func = uniform, avg = None, \
-                        std_dev = None):
+                        rand_func = uniform, avg = 0, \
+                        std_dev = 1):
         if mat_dim is None: mat_dim = self.mat_dim
         d = 0
         while d < 1E-3:
-            mat = ((rand_func(mat_dim)-0.5)*scale).astype(type)
+            #mat = ((rand_func(size=mat_dim)-0.5)*scale).astype(type)
+            mat = rand_func(size=mat_dim).astype(type)
             # normalize
             mat -= mean(mat,axis=0)
             mat /= std(mat,axis=0)
@@ -128,7 +158,7 @@ class NodesTestSuite(unittest.TestSuite):
             d1 = min(utils.symeig(mult(mat.T, mat), eigenvectors = 0))
             if std_dev is not None: mat *= std_dev
             if avg is not None: mat += avg
-            mix = (rand_func((mat_dim[1],mat_dim[1]))*scale).astype(type)
+            mix = (rand_func(size=(mat_dim[1],mat_dim[1]))*scale).astype(type)
             matmix = mult(mat,mix)
             matmix_n = matmix - mean(matmix, axis=0)
             matmix_n /= std(matmix_n, axis=0)
@@ -479,6 +509,93 @@ class NodesTestSuite(unittest.TestSuite):
         # test a bug in v.1.1.1, should not crash
         pca.inverse(act_mat[:,:1])
 
+    def testPCANode_SVD(self):
+        # it should pass atleast the same test as PCANode
+        line_x = numx.zeros((1000,2),"d")
+        line_y = numx.zeros((1000,2),"d")
+        line_x[:,0] = numx.linspace(-1,1,num=1000,endpoint=1)
+        line_y[:,1] = numx.linspace(-0.2,0.2,num=1000,endpoint=1)
+        mat = numx.concatenate((line_x,line_y))
+        des_var = std(mat,axis=0)
+        utils.rotate(mat,uniform()*2*numx.pi)
+        mat += uniform(2)
+        pca = mdp.nodes.PCANode(svd=True)
+        pca.train(mat)
+        act_mat = pca.execute(mat)
+        assert_array_almost_equal(mean(act_mat,axis=0),\
+                                  [0,0],self.decimal)
+        assert_array_almost_equal(std(act_mat,axis=0),\
+                                  des_var,self.decimal)
+        # Now a more difficult test, create singular cov matrices
+        # and test that PCANode crashes whereas PCASVDNode doesn't
+        mat, mix, inp = self._get_random_mix(mat_dim=(1000, 100), avg=1E+8)
+        # now create a degenerate input
+        for i in range(1,100):
+            inp[:,i] = inp[:,1].copy()
+        # check that standard PCA fails
+        pca = mdp.nodes.PCANode()
+        pca.train(inp)
+        try:
+            pca.stop_training()
+            raise Exception, "PCANode didn't catch singular covariance matrix"
+        except mdp.NodeException:
+            pass
+        # now try the SVD version
+        pca = mdp.nodes.PCANode(svd=True)
+        pca.train(inp)
+        pca.stop_training()
+
+        # now check the undetermined case
+        mat, mix, inp = self._get_random_mix(mat_dim=(500, 2))
+        inp = inp.T
+        pca = mdp.nodes.PCANode()
+        pca.train(inp)
+        try:
+            pca.stop_training()
+            raise Exception, "PCANode didn't catch singular covariance matrix"
+        except mdp.NodeException:
+            pass
+        # now try the SVD version
+        pca = mdp.nodes.PCANode(svd=True)
+        pca.train(inp)
+        pca.stop_training()
+
+        # try using the automatic dimensionality reduction function
+        mat, mix, inp = self._get_random_mix(mat_dim=(1000, 3))
+        # first make them decorellated
+        pca = mdp.nodes.PCANode()
+        pca.train(mat)
+        mat = pca.execute(mat)
+        mat *= [1E+5,1E-3, 1E-4]
+        mat -= mat.mean(axis=0)
+        pca = mdp.nodes.PCANode(svd=True,reduce=True, var_rel=1E-2)
+        pca.train(mat)
+        out = pca.execute(mat)
+        # check that we got the only large dimension
+        assert_array_almost_equal(mat[:,0].mean(axis=0),out.mean(axis=0),
+                                  self.decimal)
+        assert_array_almost_equal(mat[:,0].std(axis=0),out.std(axis=0),
+                                  self.decimal)
+
+        # second test for automatic dimansionality reduction
+        # try using the automatic dimensionality reduction function
+        mat, mix, inp = self._get_random_mix(mat_dim=(1000, 3))
+        # first make them decorellated
+        pca = mdp.nodes.PCANode()
+        pca.train(mat)
+        mat = pca.execute(mat)
+        mat *= [1E+5,1E-3, 1E-18]
+        mat -= mat.mean(axis=0)
+        pca = mdp.nodes.PCANode(svd=True,reduce=True,
+                                   var_abs=1E-8, var_rel=1E-30)
+        pca.train(mat)
+        out = pca.execute(mat)
+        # check that we got the only large dimension
+        assert_array_almost_equal(mat[:,:2].mean(axis=0),out.mean(axis=0),
+                                  self.decimal)
+        assert_array_almost_equal(mat[:,:2].std(axis=0),out.std(axis=0),
+                                  self.decimal)
+        
     def testWhiteningNode(self):
         vars = 5
         dim = (10000,vars)
@@ -487,6 +604,20 @@ class NodesTestSuite(unittest.TestSuite):
         w = mdp.nodes.WhiteningNode()
         w.train(inp)
         out = w.execute(inp)
+        assert_array_almost_equal(mean(out,axis=0),\
+                                  numx.zeros((dim[1])),self.decimal)
+        assert_array_almost_equal(std(out,axis=0),\
+                                  numx.ones((dim[1])),self.decimal-3)
+
+    def testWhiteningNode_SVD(self):
+        vars = 5
+        dim = (10000,vars)
+        mat,mix,inp = self._get_random_mix(mat_dim=dim,
+                                           avg=uniform(vars))
+        w = mdp.nodes.WhiteningNode(svd=True)
+        w.train(inp)
+        out = w.execute(inp)
+        
         assert_array_almost_equal(mean(out,axis=0),\
                                   numx.zeros((dim[1])),self.decimal)
         assert_array_almost_equal(std(out,axis=0),\
@@ -549,43 +680,112 @@ class NodesTestSuite(unittest.TestSuite):
                                   numx.eye(1), self.decimal-3)
 
 
-    def _testICANode(self,icanode):
-        vars = 3
+    def testSFA2Node_input_dim_bug(self):
+        dim = 10000
+        freqs = [2*numx.pi*100.,2*numx.pi*500.]
+        t =  numx.linspace(0,1,num=dim)
+        mat = numx.array([numx.sin(freqs[0]*t),numx.sin(freqs[1]*t)]).T
+        mat += normal(0., 1e-10, size=(dim, 2))
+        mat = (mat - mean(mat[:-1,:],axis=0))\
+              /std(mat[:-1,:],axis=0)
+        des_mat = mat.copy()
+        mat = mult(mat,uniform((2,2))) + uniform(2)
+        sfa = mdp.nodes.SFA2Node(input_dim=2)
+        sfa.train(mat)
+        out = sfa.execute(mat)
+
+    def testSFA2Node_output_dim_bug(self):
+        dim = 10000
+        freqs = [2*numx.pi*100.,2*numx.pi*500.]
+        t =  numx.linspace(0,1,num=dim)
+        mat = numx.array([numx.sin(freqs[0]*t),numx.sin(freqs[1]*t)]).T
+        mat += normal(0., 1e-10, size=(dim, 2))
+        mat = (mat - mean(mat[:-1,:],axis=0))\
+              /std(mat[:-1,:],axis=0)
+        des_mat = mat.copy()
+        mat = mult(mat,uniform((2,2))) + uniform(2)
+        sfa = mdp.nodes.SFA2Node(output_dim=3)
+        sfa.train(mat)
+        out = sfa.execute(mat)
+        assert out.shape[1]==3, 'SFA2Node output has wrong output dimensions!'
+        
+    def _testICANode(self,icanode, rand_func = uniform, vars = 3):
         dim = (8000,vars) 
-        mat,mix,inp = self._get_random_mix(mat_dim=dim)
+        mat,mix,inp = self._get_random_mix(rand_func=rand_func,mat_dim=dim)
         icanode.train(inp)
         act_mat = icanode.execute(inp)
         cov = utils.cov2((mat-mean(mat,axis=0))/std(mat,axis=0), act_mat)
-        maxima = numx.amax(abs(cov))
-        assert_array_almost_equal(maxima,numx.ones(vars),3)
+        maxima = numx.amax(abs(cov), axis=0)
+        assert_array_almost_equal(maxima,numx.ones(vars),3)        
+
+    def _testICANodeMatrices(self, icanode, rand_func = uniform, vars = 3):
+        dim = (8000,vars) 
+        mat,mix,inp = self._get_random_mix(rand_func=rand_func,
+                                           mat_dim=dim, avg = 0)
+        icanode.train(inp)
+        # test projection matrix
+        act_mat = icanode.execute(inp)
+        T = icanode.get_projmatrix()
+        exp_mat = mult(inp, T)
+        assert_array_almost_equal(act_mat,exp_mat,6)
+        # test reconstruction matrix
+        out = act_mat.copy()
+        act_mat = icanode.inverse(out)
+        B = icanode.get_recmatrix()
+        exp_mat = mult(out, B)
+        assert_array_almost_equal(act_mat,exp_mat,6)
         
     def testCuBICANodeBatch(self):
         ica = mdp.nodes.CuBICANode(limit = 10**(-self.decimal))
+        ica2 = ica.copy()
         self._testICANode(ica)
+        self._testICANodeMatrices(ica2)
         
     def testCuBICANodeTelescope(self):
         ica = mdp.nodes.CuBICANode(limit = 10**(-self.decimal), telescope = 1)
+        ica2 = ica.copy()
         self._testICANode(ica)
+        self._testICANodeMatrices(ica2)
         
-    def testFastICANodeSymmetric(self):
-        ica = mdp.nodes.FastICANode\
-              (limit = 10**(-self.decimal), approach="symm")
-        self._testICANode(ica)
+    def _get_testFastICA(self, parms):
+        # create a function description
+        header = 'TestFastICANode:'
+        app =     'Approach:     '+parms['approach']
+        nl =      'Nonlinearity: '+parms['g']
+        fine_nl = 'Fine-tuning:  '+str(parms['fine_g'])
+        if parms['sample_size'] == 1:
+            compact = 'Samples  100%, '
+        else:
+            compact = 'Samples <100%, '
+        if parms['mu'] == 1:
+            compact = compact + 'Step:  1, '
+        else:
+            compact = compact + 'Step: <1, '
+        if parms['stabilization'] is True:
+            compact = compact +'Stabilized algorithm'
+        else:
+            compact = compact +'Standard   algorithm'
+        desc = '\n'.join([header, app, nl, fine_nl, compact])
+        def _testFastICA(parms=parms):
+            if parms['g'] == 'skew':
+                rand_func = numx_rand.exponential
+            else:
+                rand_func = uniform
+                
+            # try two times just to clear failures due to randomness
+            try:
+                ica=mdp.nodes.FastICANode(limit=10**(-self.decimal),**parms)
+                ica2 = ica.copy()
+                self._testICANode(ica, rand_func=rand_func, vars=2)
+                self._testICANodeMatrices(ica2, rand_func=rand_func, vars=2)
+            except Exception:
+                ica=mdp.nodes.FastICANode(limit=10**(-self.decimal),**parms)
+                ica2 = ica.copy()
+                self._testICANode(ica, rand_func=rand_func, vars=2)
+                self._testICANodeMatrices(ica2, rand_func=rand_func, vars=2)
+
+        return _testFastICA, desc
         
-    def testFastICANodeDeflation(self):
-        ica = mdp.nodes.FastICANode\
-              (limit = 10**(-self.decimal), approach="defl")
-        self._testICANode(ica)
-        
-    def testFastICANodeDeflation_tanh(self):
-        ica = mdp.nodes.FastICANode\
-              (limit = 10**(-self.decimal), approach="defl", g="tanh")
-        self._testICANode(ica)
-        
-    def testFastICANodeDeflation_gauss(self):
-        ica = mdp.nodes.FastICANode\
-              (limit = 10**(-self.decimal), approach="defl", g="gaus")
-        self._testICANode(ica)
 
     def testOneDimensionalHitParade(self):
         signal = (uniform(300)-0.5)*2
@@ -687,8 +887,8 @@ class NodesTestSuite(unittest.TestSuite):
         assert_array_equal(deg[2:], [2 for i in range(len(deg)-2)])
         # check the distribution of the nodes' position is uniform
         # this node is at one of the extrema of the graph
-        x0 = numx.outer(numx.amin(x), dir)+const
-        x1 = numx.outer(numx.amax(x), dir)+const
+        x0 = numx.outer(numx.amin(x, axis=0), dir)+const
+        x1 = numx.outer(numx.amax(x, axis=0), dir)+const
         linelen = utils.norm2(x0-x1)
         # this is the mean distance the node should have
         dist = linelen/poss.shape[0]
@@ -884,7 +1084,7 @@ class NodesTestSuite(unittest.TestSuite):
         est -= fa.mu
         assert_array_almost_equal(numx.diag(numx.cov(est, rowvar=0)),
                                   fa.sigma, 3)
-        assert_almost_equal(numx.amax(abs(numx.mean(est, axis=0))), 0., 3)
+        assert_almost_equal(numx.amax(abs(numx.mean(est, axis=0)), axis=None), 0., 3)
 
         est = fa.generate_input(100000)
         assert_array_almost_equal_diff(numx.cov(est, rowvar=0),
@@ -1022,8 +1222,8 @@ class NodesTestSuite(unittest.TestSuite):
         matrices = [numx.eye(dim, dtype='d')]*nmat
         # build first matrix:
         #   - create random diagonal with elements
-        #     in [-1, 1]
-        diag = (uniform(dim)-0.5)*2
+        #     in [0, 1]
+        diag = uniform(dim)
         #   - sort it in descending order (in absolute value)
         #     [large first]
         diag = numx.take(diag, numx.argsort(abs(diag)))[::-1]
@@ -1073,10 +1273,7 @@ class NodesTestSuite(unittest.TestSuite):
         # dimensions of expanded space
         dim = mdp.nodes._expanded_dim(deg, nsources)
         assert (nsources+ica_ambiguity) < dim, 'Too much ica ambiguity.'
-        # actually we have (theoretically) 100% (10000/10000) percent of
-        # success per trial. Try two times just to exclude
-        # malevolent god intervention.
-        trials = 3
+        trials = 20
         for trial in range(trials):
             # get analytical solution:
             # prepared matrices, solution for sfa, solution for isf

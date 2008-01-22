@@ -350,8 +350,18 @@ class EtaComputerNode(Node):
 
     def _stop_training(self):
         var_tlen = self._tlen-1
-        var = (self._var/var_tlen) - (self._mean/self._tlen)**2
+        # unbiased
+        var = (self._var - self._mean*self._mean/self._tlen)/var_tlen
+
+        # biased
+        #var = (self._var - self._mean*self._mean/self._tlen)/self._tlen
+
+        # old formula: wrong! is neither biased nor unbiased
+        #var = (self._var/var_tlen) - (self._mean/self._tlen)**2
+
+        self._var = var
         delta = (self._diff2/self._tlen)/var
+        self._delta = delta
         self._eta = numx.sqrt(delta)/(2*numx.pi)
 
     def get_eta(self, t=1):
@@ -392,6 +402,7 @@ class NoiseNode(Node):
                         Default is 'additive'.
         """
         super(NoiseNode, self).__init__(input_dim = input_dim,
+                                        output_dim = input_dim,
                                         dtype = dtype)
         self.noise_func = noise_func
         self.noise_args = noise_args
