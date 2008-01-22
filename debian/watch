@@ -1,6 +1,6 @@
 # Compulsory line, this is a version 3 file
 version=3
 
-http://sf.net/mdp-toolkit/MDP-(.*)\.tar\.gz
+http://sf.net/mdp-toolkit/ MDP-(.*)\.tar\.gz debian dh_wraporig
 
 

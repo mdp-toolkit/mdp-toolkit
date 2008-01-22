@@ -4,7 +4,7 @@
 source='svn export https://mdp-toolkit.svn.sourceforge.net/svnroot/mdp-toolkit/mdp/trunk/mdp/'
 
 # suffix to attach
-suffix_out="+svn`mdate`"
+suffix_out="+svn`date +'20%y%m%d'`"
 suffix_version_out="$suffix_out"
 #
 # for now we better simply create a symlink
@@ -19,3 +19,6 @@ do_create_readme=" of course "
 #
 # where to put the new tarball
 dest_dir=".."
+
+# and after
+post_command=
