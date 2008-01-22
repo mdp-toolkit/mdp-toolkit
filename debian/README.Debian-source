@@ -8,8 +8,10 @@ http://svn.debian.org/wsvn/pkg-exppsy/tools/dh_wraporig
 
 For this package dh_wraporig performed following actions:
 * Exported files from VC using
- svn export https://mdp-toolkit.svn.sourceforge.net/svnroot/mdp-toolkit/mdp/trunk/mdp/
+ svn export https://mdp-toolkit.svn.sourceforge.net/svnroot/mdp-toolkit/mdp/trunk/mdp_dist
 * Provided file ../mdp_2.1.orig.tar.gz was discarded.
+* Following commands has been run:
+  rm mdp; svn export https://mdp-toolkit.svn.sourceforge.net/svnroot/mdp-toolkit/mdp/trunk/mdp mdp
 * Additional parameters for tar on tarball creation were:
   --exclude *~
 

@@ -1,7 +1,9 @@
 #
 # Parameters file for dh_wraporig, so it can be easily reused
 #
-source='svn export https://mdp-toolkit.svn.sourceforge.net/svnroot/mdp-toolkit/mdp/trunk/mdp/'
+source='svn export https://mdp-toolkit.svn.sourceforge.net/svnroot/mdp-toolkit/mdp/trunk/mdp_dist'
+
+run_commands='rm mdp; svn export https://mdp-toolkit.svn.sourceforge.net/svnroot/mdp-toolkit/mdp/trunk/mdp mdp'
 
 # suffix to attach
 suffix_out="+svn`date +'20%y%m%d'`"
