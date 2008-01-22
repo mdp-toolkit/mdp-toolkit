@@ -2,6 +2,8 @@ TODO:
 
 MDP 2.1 21.3.2006:
 
+- short and long description in a single file, automatically updated everywhere
+  (tutorial, sf.net, setup.py, webpage, MDP announcement, ...)
 - offer 'gemm' interface and use it in the nodes
 - verify 'utils.symrand' theoretical foundations
 - 'HitParadeNode' for any input dtype

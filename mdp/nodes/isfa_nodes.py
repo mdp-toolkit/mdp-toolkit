@@ -134,7 +134,7 @@ class ISFANode(Node):
             lags=range(1,lags+1)
         elif isinstance(lags, (list, tuple)):
             lags = numx.array(lags, "i")
-        elif type(lags) is numx.ArrayType:
+        elif isinstance(lags, numx.ndarray):
             if not (lags.dtype.char in ['i', 'l']):
                 err_str = "lags must be integer!"
                 raise NodeException, err_str
@@ -549,6 +549,7 @@ class ISFANode(Node):
         # main loop
         # we'll keep on sweeping until the contrast has improved less
         # then self.eps_contrast
+        part_sweep = 0
         while sweeping:
             # update number of sweeps
             sweep += 1
@@ -569,7 +570,6 @@ class ISFANode(Node):
                 if perturbed == 0:
                     # perturbe the outer space one time with a random rotation
                     perturbed = 1
-                    part_sweep = sweep
                 elif perturbed >= 1 and part_sweep == sweep-1:
                     # after the last pertubation no useful step has
                     # been done. exit!
@@ -577,7 +577,9 @@ class ISFANode(Node):
                 elif perturbed < 0:
                     # we can't perturbe anymore
                     sweeping = False
-
+                # keep track of the last sweep we perturbed
+                part_sweep = sweep
+                
             # perform perturbation if needed
             if perturbed >= 1 and sweeping is True:
                 # generate a random rotation matrix for the external subspace

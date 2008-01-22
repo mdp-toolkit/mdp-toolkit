@@ -1,6 +1,7 @@
 from routines import timediff, refcast, scast, rotate, random_rot, \
      permute, symrand, norm2, uniq, ordered_uniq, cov2, mult_diag, \
-     comb, sqrtm, get_dtypes, SymeigException
+     comb, sqrtm, get_dtypes, nongeneral_svd, SymeigException, \
+     hermitian, _symeig_fake
 from introspection import dig_node, get_node_size
 from quad_forms import QuadraticForm
 from covariance import CovarianceMatrix, DelayCovarianceMatrix, \
@@ -10,6 +11,7 @@ import mdp as _mdp
 
 try:
     import symeig
+    SymeigException = symeig.SymeigException
     symeig = symeig.symeig
 except ImportError:
     symeig = routines._symeig_fake
@@ -30,7 +32,10 @@ solve = lambda x,y: refcast(_solve(x,y), x.dtype)
 
 def svd(x, _mdp=_mdp):
     tc = x.dtype
-    u,s,v = _mdp.numx_linalg.svd(x)
+    try:
+        u,s,v = _mdp.numx_linalg.svd(x)
+    except _mdp.numx_linalg.LinAlgError, exc:
+        raise SymeigException, str(exc)        
     return refcast(u, tc), refcast(s, tc), refcast(v, tc)
 
 # clean up namespace
