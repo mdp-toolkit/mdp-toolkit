@@ -1,5 +1,7 @@
 MDP-2.2:
 
+2009-01-22: removed utils.comb scipy code and obsolete SciPy copyright
+            notice from utils/routines.py
 2008-01-03: fixed bug in SFA2Node when input_dim was set on instantiation,
 	    fixed bug in SFA2Node._stop_training when output_dim was set and
             larger than input_dim,
