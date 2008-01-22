@@ -1,0 +1,21 @@
+#
+# Parameters file for dh_wraporig, so it can be easily reused
+#
+source='svn export https://mdp-toolkit.svn.sourceforge.net/svnroot/mdp-toolkit/mdp/trunk/mdp/'
+
+# suffix to attach
+suffix_out="+svn`mdate`"
+suffix_version_out="$suffix_out"
+#
+# for now we better simply create a symlink
+# do_orig_symlink=" pleasedo ;-) "
+#
+# do we need original tarball? I guess so for now,
+# if not - uncomment
+# do_delete_originals=" kill the beast "
+#
+# Create README.Debian-source
+do_create_readme=" of course "
+#
+# where to put the new tarball
+dest_dir=".."
