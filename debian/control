@@ -11,7 +11,6 @@ Homepage: http://mdp-toolkit.sourceforge.net/
 Package: python-mdp
 Architecture: all
 Depends: ${python:Depends}, python-numpy
-Recommends: python-symeig
 Suggests: python-scipy
 Description: Modular toolkit for Data Processing
  Python data processing framework. Implemented algorithms include:
