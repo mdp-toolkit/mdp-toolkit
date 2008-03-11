@@ -15,7 +15,7 @@ reducing the memory requirements. Memory usage can also be minimized
 by defining the internals of the nodes to be single precision.
 
 The base of readily available algorithms includes Principal Component
-Analysis, two flavors of Independent Component Analysis, Slow Feature
+Analysis, three flavors of Independent Component Analysis, Slow Feature
 Analysis, Gaussian Classifiers, Growing Neural Gas, Fisher
 Discriminant Analysis, and Factor Analysis.
 

@@ -901,7 +901,7 @@ class JADENode(ICANode):
     Main references:
     * Cardoso, Jean-Francois and Souloumiac, Antoine (1993)
       Blind beamforming for non Gaussian signals
-      IEE Proceedings-F, 140(6): 362-370
+      Radar and Signal Processing, IEE Proceedings F, 140(6): 362-370
     * Cardoso, Jean-Francois (1999)
       High-order contrasts for independent component analysis
       Neural Computation, 11(1): 157-192
@@ -910,6 +910,7 @@ class JADENode(ICANode):
     - May 2005    version 1.8 for MATLAB released by Jean-Francois Cardoso
     - Dec 2007    MATLAB version 1.8 ported to Python/NumPy by Gabriel Beckers
     - Feb 15 2008 Python/NumPy version adapted for MDP by Gabriel Beckers
+    - Mar 11 2008 finally ported to MDP by Tiziano Zito
     """
 
     def __init__(self, limit = 0.001, max_it=1000, verbose = False,
