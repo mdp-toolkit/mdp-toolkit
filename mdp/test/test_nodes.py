@@ -67,6 +67,7 @@ class NodesTestSuite(unittest.TestSuite):
                        mn.SFA2Node,
                        mn.CuBICANode,
                        mn.FastICANode,
+                       mn.JADENode,
                        mn.QuadraticExpansionNode,
                        (mn.PolynomialExpansionNode, [3], None),
                        (mn.HitParadeNode, [2, 5], None),
@@ -108,6 +109,14 @@ class NodesTestSuite(unittest.TestSuite):
                 # add to the suite
                 self.addTest(unittest.FunctionTestCase(testfunc,
                                                        description=funcdesc))
+            # generate testdimset_nodeclass test cases
+            funcdesc ='Test dimensions settings of '+node_class.__name__
+            testfunc = self._get_testdimset(node_class, args,
+                                               sup_args_func)
+            # add to the suite
+            self.addTest(unittest.FunctionTestCase(testfunc,
+                                                   description=funcdesc))
+            
         # generate FastICANode testcases
         fica_parm = []
         for approach in ['symm', 'defl']:
@@ -179,6 +188,12 @@ class NodesTestSuite(unittest.TestSuite):
                     node.stop_training()
                 else:
                     break
+                
+    def _stop_training_or_execute(self, node, inp):
+        if node.is_trainable():
+            node.stop_training()
+        else:
+            out = node(inp)
     
     def _get_testinverse(self, node_class, args=[], sup_args_func=None):
         # generates testinverse_nodeclass test functions
@@ -236,6 +251,18 @@ class NodesTestSuite(unittest.TestSuite):
             assert out.shape[1]==output_dim
             assert node._output_dim==output_dim
         return _testoutputdim
+
+    def _get_testdimset(self, node_class, args=[], sup_args_func=None):
+        def _testdimset(node_class=node_class):
+            mat,mix,inp = self._get_random_mix()
+            # case 1: output dim set in the constructor
+            node = node_class(*args)
+            self._train_if_necessary(inp, node, args, sup_args_func)
+            # execute or stop_training the node
+            self._stop_training_or_execute(node, inp)
+            assert node.output_dim is not None
+            assert node.input_dim is not None
+        return _testdimset
 
     def _uniform(self, min_, max_, dims):
         return uniform(dims)*(max_-min_)+min_
@@ -688,7 +715,6 @@ class NodesTestSuite(unittest.TestSuite):
         mat += normal(0., 1e-10, size=(dim, 2))
         mat = (mat - mean(mat[:-1,:],axis=0))\
               /std(mat[:-1,:],axis=0)
-        des_mat = mat.copy()
         mat = mult(mat,uniform((2,2))) + uniform(2)
         sfa = mdp.nodes.SFA2Node(input_dim=2)
         sfa.train(mat)
@@ -746,6 +772,19 @@ class NodesTestSuite(unittest.TestSuite):
         ica2 = ica.copy()
         self._testICANode(ica)
         self._testICANodeMatrices(ica2)
+
+    def testJADENode(self):
+        trials = 3
+        for i in range(trials):
+            try: 
+                ica = mdp.nodes.JADENode(limit = 10**(-self.decimal))
+                ica2 = ica.copy()
+                self._testICANode(ica, rand_func=numx_rand.exponential)
+                self._testICANodeMatrices(ica2)
+                return
+            except Exception, exc:
+                pass
+        raise exc
         
     def _get_testFastICA(self, parms):
         # create a function description

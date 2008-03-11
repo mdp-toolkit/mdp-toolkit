@@ -12,7 +12,6 @@ MDP 2.1 21.3.2006:
   (it's probably a numpy.dot bug)
 
 - better tests for 'QuadraticForms'
-- update FastICA to match new Matlab version
 - kalman filters
 - memory profiler
 - flow to handle acyclic graphs of nodes

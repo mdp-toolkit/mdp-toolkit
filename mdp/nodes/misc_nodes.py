@@ -129,6 +129,10 @@ class HitParadeNode(Node):
         self.hit = None
         self.tlen = 0
 
+    def _set_input_dim(self, n):
+        self._input_dim = n
+        self.output_dim = n
+
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
         return ['float32', 'float64']
@@ -325,6 +329,10 @@ class EtaComputerNode(Node):
         super(EtaComputerNode, self).__init__(input_dim, None, dtype)
         self._initialized = 0
 
+    def _set_input_dim(self, n):
+        self._input_dim = n
+        self.output_dim = n
+
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
         return ['float32', 'float64']
@@ -446,6 +454,10 @@ class GaussianClassifierNode(Node):
         """
         super(GaussianClassifierNode, self).__init__(input_dim, None, dtype)
         self.cov_objs = {}
+
+    def _set_input_dim(self, n):
+        self._input_dim = n
+        self.output_dim = n
 
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
