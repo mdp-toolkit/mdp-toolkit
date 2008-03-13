@@ -1,7 +1,8 @@
 from mdp import numx, Node, \
-     NodeException, TrainingFinishedException
+     NodeException, TrainingFinishedException, MDPWarning
 from mdp.utils import mult, symeig, nongeneral_svd, CovarianceMatrix, \
                       SymeigException #, LeadingMinorException
+import warnings
 
 class PCANode(Node):
     """Filter the input data throug the most significatives of its
@@ -29,7 +30,7 @@ class PCANode(Node):
         (e.g. 'output_dim=0.95' means that as many components as necessary
         will be kept in order to explain 95% of the input variance).
 
-        Other Keyword Agruments:
+        Other Keyword Arguments:
 
         svd -- if True use Singular Valude Decomposition instead of the
                standard eigenvalue problem solver. Use it when PCANode
@@ -132,6 +133,14 @@ class PCANode(Node):
         else:
             rng = None
 
+        # if we have more variables then observations we are bound to fail here.
+        # suggest to use the NIPALSNode instead.
+        if debug and self.tlen < self.input_dim:
+            wrn = 'The number of observations (%d) is larger than the '%(self.tlen)+\
+                  'number of input variables (%d). You may want to use '%(self.input_dim)+\
+                  'the NIPALSNode instead.'
+            warnings.warn('The', MDPWarning)
+        
         ## compute and sort the eigenvalues
         # compute the eigenvectors of the covariance matrix (inplace)
         # (eigenvalues sorted in ascending order)

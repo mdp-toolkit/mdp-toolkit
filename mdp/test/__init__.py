@@ -35,7 +35,7 @@ def test(suitename = 'all', verbosity = 2, seed = None):
                                               key=lambda y: y[1])]
         suite = unittest.TestSuite(sorted_suites)
     else:
-        suite = test_suites[suitename]
+        suite = test_suites[suitename][0]
     res = unittest.TextTestRunner(verbosity=verbosity).run(suite)
     if len(res.errors+res.failures) > 0:
         sys.stderr.write(_err_str)

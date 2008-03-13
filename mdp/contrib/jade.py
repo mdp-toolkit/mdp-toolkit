@@ -23,11 +23,13 @@ class JADENode(ICANode):
       High-order contrasts for independent component analysis
       Neural Computation, 11(1): 157-192
 
+    Code contributed by:
+    Gabriel Beckers (2008).
+    
     History:
     - May 2005    version 1.8 for MATLAB released by Jean-Francois Cardoso
     - Dec 2007    MATLAB version 1.8 ported to Python/NumPy by Gabriel Beckers
     - Feb 15 2008 Python/NumPy version adapted for MDP by Gabriel Beckers
-    - Mar 11 2008 finally ported to MDP by Tiziano Zito
     """
 
     def __init__(self, limit = 0.001, max_it=1000, verbose = False,

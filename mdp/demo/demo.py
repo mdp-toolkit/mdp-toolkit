@@ -107,6 +107,8 @@ class MeanFreeNode(mdp.Node):
         self.tlen += x.shape[0]
     def _stop_training(self):
         self.avg /= self.tlen
+        if self.output_dim is None:
+            self.output_dim = self.input_dim
     def _execute(self, x):
         return x - self.avg
     def _inverse(self, y):

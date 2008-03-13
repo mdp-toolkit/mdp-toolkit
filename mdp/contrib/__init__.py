@@ -1,2 +1,6 @@
 from jade import JADENode
-__all__ = ["JADENode"]
+from nipals import NIPALSNode
+__all__ = ["JADENode","NIPALSNode"]
+
+del jade
+del nipals

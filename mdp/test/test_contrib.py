@@ -17,7 +17,8 @@ class ContribTestSuite(NodesTestSuite):
 
     def _set_nodes(self):
         mc = mdp.contrib
-        self._nodes = [mc.JADENode]
+        self._nodes = [mc.JADENode,
+                       mc.NIPALSNode]
 
     def _fastica_test_factory(self):
         # we don't want the fastica tests here
@@ -52,8 +53,28 @@ class ContribTestSuite(NodesTestSuite):
             except Exception, exc:
                 pass
         raise exc
-
-
+    
+    def testNIPALSNode(self):
+        line_x = numx.zeros((1000,2),"d")
+        line_y = numx.zeros((1000,2),"d")
+        line_x[:,0] = numx.linspace(-1,1,num=1000,endpoint=1)
+        line_y[:,1] = numx.linspace(-0.2,0.2,num=1000,endpoint=1)
+        mat = numx.concatenate((line_x,line_y))
+        des_var = std(mat,axis=0)
+        utils.rotate(mat,uniform()*2*numx.pi)
+        mat += uniform(2)
+        pca = mdp.nodes.NIPALSNode(conv=1E-15, max_it=1000)
+        pca.train(mat)
+        act_mat = pca.execute(mat)
+        assert_array_almost_equal(mean(act_mat,axis=0),\
+                                  [0,0],self.decimal)
+        assert_array_almost_equal(std(act_mat,axis=0),\
+                                  des_var,self.decimal)
+        # test a bug in v.1.1.1, should not crash
+        pca.inverse(act_mat[:,:1])
+        # try standard PCA on the same data and compare the variances
+        pca2 = mdp.nodes.PCANode()
+        
 
 def get_suite():
     return ContribTestSuite()
