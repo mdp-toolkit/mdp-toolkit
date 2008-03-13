@@ -133,7 +133,7 @@ class PCANode(Node):
         else:
             rng = None
 
-        # if we have more variables then observations we are bound to fail here.
+        # if we have more variables then observations we are bound to fail here
         # suggest to use the NIPALSNode instead.
         if debug and self.tlen < self.input_dim:
             wrn = 'The number of observations (%d) is larger than the '%(self.tlen)+\
