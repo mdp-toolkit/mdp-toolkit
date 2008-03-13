@@ -1,7 +1,7 @@
 from expansion_nodes import QuadraticExpansionNode, PolynomialExpansionNode
 from pca_nodes import WhiteningNode, PCANode
 from sfa_nodes import SFANode, SFA2Node
-from ica_nodes import ICANode, CuBICANode, FastICANode, JADENode
+from ica_nodes import ICANode, CuBICANode, FastICANode
 from neural_gas_nodes import GrowingNeuralGasNode
 from fda_nodes import FDANode
 from em_nodes import FANode
@@ -13,8 +13,12 @@ from isfa_nodes import ISFANode
 from misc_nodes import OneDimensionalHitParade as _OneDimensionalHitParade
 from expansion_nodes import expanded_dim as _expanded_dim
 
+# import contributed nodes
+import mdp
+from mdp.contrib import *
 
 # clean up namespace
+del mdp
 del expansion_nodes
 del pca_nodes
 del sfa_nodes

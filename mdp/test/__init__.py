@@ -9,7 +9,7 @@ Run all tests with:
 import unittest
 import sys
 from mdp import numx, numx_rand
-import test_nodes, test_flows, test_utils, test_graph
+import test_nodes, test_flows, test_utils, test_graph, test_contrib
 
 _err_str = """\nIMPORTANT: some tests use random numbers. This could
 occasionally lead to failures due to numerical degeneracies.
@@ -17,10 +17,11 @@ To rule this out, please run the tests more than once.
 If you get reproducible failures please report a bug!
 """
 
-test_suites = {'nodes': test_nodes.get_suite(),
-               'flows': test_flows.get_suite(),
-               'utils': test_utils.get_suite(),
-               'graph': test_graph.get_suite()}
+test_suites = {'nodes':   (test_nodes.get_suite(),   3),
+               'contrib': (test_contrib.get_suite(), 4),
+               'flows':   (test_flows.get_suite(),   0),
+               'utils':   (test_utils.get_suite(),   1),
+               'graph':   (test_graph.get_suite(),   2)}
 
 def test(suitename = 'all', verbosity = 2, seed = None):
     if seed is None:
@@ -30,7 +31,9 @@ def test(suitename = 'all', verbosity = 2, seed = None):
         
     sys.stderr.write("Random Seed: " + str(seed)+'\n')
     if suitename == 'all':
-        suite = unittest.TestSuite(test_suites.values())
+        sorted_suites = [x[0] for x in sorted(test_suites.values(),
+                                              key=lambda y: y[1])]
+        suite = unittest.TestSuite(sorted_suites)
     else:
         suite = test_suites[suitename]
     res = unittest.TextTestRunner(verbosity=verbosity).run(suite)

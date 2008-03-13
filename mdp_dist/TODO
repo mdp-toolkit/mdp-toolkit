@@ -2,6 +2,7 @@ TODO:
 
 MDP 2.1 21.3.2006:
 
+- do screenshots on the web site still make any sense?
 - short and long description in a single file, automatically updated everywhere
   (tutorial, sf.net, setup.py, webpage, MDP announcement, ...)
 - offer 'gemm' interface and use it in the nodes

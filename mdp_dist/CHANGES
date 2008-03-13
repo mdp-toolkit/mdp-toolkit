@@ -1,5 +1,7 @@
 MDP-2.2:
-2008-03-11: added JadeNode with tests
+2008-03-13: created contrib subpackage and test_contrib test suites.
+            JADENode moved to contrib. Tests are now sorted by test_suite.
+2008-03-11: added JADENode with tests
 2008-03-10: added test for dimensions settings (nodes should have 
             output_dim and input_dim set after training)
 2008-01-22: removed utils.comb scipy code and obsolete SciPy copyright

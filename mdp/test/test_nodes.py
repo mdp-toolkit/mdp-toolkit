@@ -57,17 +57,25 @@ class NodesTestSuite(unittest.TestSuite):
         # constants
         self.mat_dim = (500,5)
         self.decimal = 7
+
+        # set nodes to be tested
+        self._set_nodes()
+        
+        # get generic tests
+        self._generic_test_factory()
+        # get FastICA tests
+        self._fastica_test_factory()
+        # get nodes tests
+        self._nodes_test_factory()
+
+    def _set_nodes(self):
         mn = mdp.nodes
-        # self._nodes = node_class or
-        #              (node_class, constructuctor_args,
-        #               function_that_returns_argument_for_the_train_func)
         self._nodes = [mn.PCANode,
                        mn.WhiteningNode,
                        mn.SFANode,
                        mn.SFA2Node,
                        mn.CuBICANode,
                        mn.FastICANode,
-                       mn.JADENode,
                        mn.QuadraticExpansionNode,
                        (mn.PolynomialExpansionNode, [3], None),
                        (mn.HitParadeNode, [2, 5], None),
@@ -79,7 +87,14 @@ class NodesTestSuite(unittest.TestSuite):
                        (mn.GaussianClassifierNode, [], _rand_labels),
                        mn.FANode,
                        mn.ISFANode]
+        
+    def _nodes_test_factory(self):
+        for methname in dir(self):
+            meth = getattr(self,methname)
+            if inspect.ismethod(meth) and meth.__name__[:4] == "test":
+                self.addTest(unittest.FunctionTestCase(meth))
 
+    def _generic_test_factory(self):
         # generate generic test cases
         for node_class in self._nodes:
             if isinstance(node_class, tuple):
@@ -116,7 +131,9 @@ class NodesTestSuite(unittest.TestSuite):
             # add to the suite
             self.addTest(unittest.FunctionTestCase(testfunc,
                                                    description=funcdesc))
-            
+        
+
+    def _fastica_test_factory(self):
         # generate FastICANode testcases
         fica_parm = []
         for approach in ['symm', 'defl']:
@@ -147,10 +164,6 @@ class NodesTestSuite(unittest.TestSuite):
             self.addTest(unittest.FunctionTestCase(testfunc,
                                                    description=funcdesc))
             
-        for methname in dir(self):
-            meth = getattr(self,methname)
-            if inspect.ismethod(meth) and meth.__name__[:4] == "test":
-                self.addTest(unittest.FunctionTestCase(meth))
 
     def _get_random_mix(self, mat_dim = None, type = "d", scale = 1,\
                         rand_func = uniform, avg = 0, \
@@ -772,20 +785,7 @@ class NodesTestSuite(unittest.TestSuite):
         ica2 = ica.copy()
         self._testICANode(ica)
         self._testICANodeMatrices(ica2)
-
-    def testJADENode(self):
-        trials = 3
-        for i in range(trials):
-            try: 
-                ica = mdp.nodes.JADENode(limit = 10**(-self.decimal))
-                ica2 = ica.copy()
-                self._testICANode(ica, rand_func=numx_rand.exponential)
-                self._testICANodeMatrices(ica2)
-                return
-            except Exception, exc:
-                pass
-        raise exc
-        
+      
     def _get_testFastICA(self, parms):
         # create a function description
         header = 'TestFastICANode:'
