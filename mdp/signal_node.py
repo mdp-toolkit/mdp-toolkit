@@ -103,7 +103,8 @@ class Node(object):
         if n is None:
             pass
         elif (self._input_dim is not None) and (self._input_dim !=  n):
-            msg = "Input dim are set already (%d)!"%(self.input_dim)
+            msg = "Input dim are set already (%d) "%(self.input_dim)+\
+                  "(%d given)!"%n
             raise NodeException, msg
         else:
             self._set_input_dim(n)
@@ -128,7 +129,8 @@ class Node(object):
         if n is None:
             pass
         elif (self._output_dim is not None) and (self._output_dim != n):
-            msg = "Output dim are set already (%d)!"%(self.output_dim)
+            msg = "Output dim are set already (%d) "%(self.output_dim)+\
+                  "(%d given)!"%(n)
             raise NodeException, msg
         else:
             self._set_output_dim(n)
@@ -153,7 +155,8 @@ class Node(object):
         if t is None: return
         t = numx.dtype(t)
         if (self._dtype is not None) and (self._dtype != t):
-            errstr = "dtype is already set to '%s' " % (self.dtype.name)
+            errstr = "dtype is already set to '%s' " % (self.dtype.name)+\
+                     "('%s' given)!"%t
             raise NodeException, errstr
         elif t not in self.get_supported_dtypes():
             errstr = "\ndtype '%s' is not supported.\n" % t.name+ \

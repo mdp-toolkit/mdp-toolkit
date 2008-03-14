@@ -213,8 +213,9 @@ class NodesTestSuite(unittest.TestSuite):
         def _testinverse(node_class=node_class):
             mat,mix,inp = self._get_random_mix()
             # take the first available dtype for the test
-            dtype = node_class(*args).get_supported_dtypes()[0]
-            node = node_class(dtype=dtype, *args)
+            node_args = self._set_node_args(args)
+            dtype = node_class(*node_args).get_supported_dtypes()[0]
+            node = node_class(dtype=dtype, *node_args)
             if not node.is_invertible():return
             self._train_if_necessary(inp, node, args, sup_args_func)
             # execute the node
@@ -225,11 +226,26 @@ class NodesTestSuite(unittest.TestSuite):
             assert_type_equal(rec.dtype, dtype)
         return _testinverse
 
+    def _set_node_args(self, args=None):
+        # used so that node instantiation arguments can be specified as
+        # functions, which can return the real arguments (in case they
+        # are immutable objects, so they are recreated each time a node
+        # is instantiated)
+        node_args = []
+        if args is not None:
+            for item in args:
+                if callable(item):
+                    node_args.append(item())
+                else:
+                    node_args.append(item)
+            return node_args
+
     def _get_testdtype(self, node_class, args=[], sup_args_func=None):
         def _testdtype(node_class=node_class):
-            supported_types = node_class(*args).get_supported_dtypes()
+            node_args = self._set_node_args(args)
+            supported_types = node_class(*node_args).get_supported_dtypes()
             for dtype in supported_types:
-            #for dtype in testtypes+testtypeschar:
+                node_args = self._set_node_args(args)
                 if node_class == mdp.nodes.SFA2Node:
                     freqs = [2*numx.pi*100.,2*numx.pi*200.]
                     t =  numx.linspace(0, 1, num=1000)
@@ -238,8 +254,8 @@ class NodesTestSuite(unittest.TestSuite):
                     inp = mat.astype('d')
                 else:
                     mat, mix, inp = self._get_random_mix(type="d")
-                node = node_class(*args, **{'dtype':dtype})
-                self._train_if_necessary(inp, node, args, sup_args_func)
+                node = node_class(*node_args, **{'dtype':dtype})
+                self._train_if_necessary(inp, node, node_args, sup_args_func)
                 out = node.execute(inp)
                 assert_type_equal(out.dtype, dtype) 
         return _testdtype
@@ -249,27 +265,31 @@ class NodesTestSuite(unittest.TestSuite):
             mat,mix,inp = self._get_random_mix()
             output_dim = self.mat_dim[1]/2
             # case 1: output dim set in the constructor
-            node = node_class(*args, **{'output_dim':output_dim})
+            node_args = self._set_node_args(args)
+            node = node_class(*node_args, **{'output_dim':output_dim})
             self._train_if_necessary(inp, node, args, sup_args_func)
             # execute the node
             out = node(inp)
-            assert out.shape[1]==output_dim
-            assert node._output_dim==output_dim
+            assert out.shape[1]==output_dim,"%d!=%d"%(out.shape[1],output_dim)
+            assert node._output_dim==output_dim,\
+                   "%d!=%d"%(node._output_dim,output_dim)
             # case 2: output_dim set explicitly
-            node = node_class(*args)
+            node_args = self._set_node_args(args)
+            node = node_class(*node_args)
             self._train_if_necessary(inp, node, args, sup_args_func)
-            node.set_output_dim(output_dim)
+            node.output_dim = output_dim
             # execute the node
             out = node(inp)
-            assert out.shape[1]==output_dim
-            assert node._output_dim==output_dim
+            assert out.shape[1]==output_dim, "%d!=%d"%(out.shape[1],output_dim)
+            assert node._output_dim==output_dim,\
+                   "%d!=%d"%(node._output_dim,output_dim)
         return _testoutputdim
 
     def _get_testdimset(self, node_class, args=[], sup_args_func=None):
         def _testdimset(node_class=node_class):
             mat,mix,inp = self._get_random_mix()
-            # case 1: output dim set in the constructor
-            node = node_class(*args)
+            node_args = self._set_node_args(args)
+            node = node_class(*node_args)
             self._train_if_necessary(inp, node, args, sup_args_func)
             # execute or stop_training the node
             self._stop_training_or_execute(node, inp)

@@ -10,15 +10,20 @@ Run them with:
 # stuff we don't need. I know, this is a dirty trick.
 from test_nodes import *
 
+mc = mdp.contrib
+
+import itertools    
+
+
 class ContribTestSuite(NodesTestSuite):
     def __init__(self):
         NodesTestSuite.__init__(self)
         self._cleanup_tests()
 
     def _set_nodes(self):
-        mc = mdp.contrib
         self._nodes = [mc.JADENode,
-                       mc.NIPALSNode]
+                       mc.NIPALSNode,
+                       (mc.FlowNode, [self._get_new_flow], None)]
 
     def _fastica_test_factory(self):
         # we don't want the fastica tests here
@@ -40,6 +45,11 @@ class ContribTestSuite(NodesTestSuite):
                 except Exception, e:
                     pass
             i += 1
+
+    def _get_new_flow(self):
+        flow = mdp.Flow([mdp.nodes.NoiseNode(), 
+                         mdp.nodes.SFANode()])
+        return flow
 
     def testJADENode(self):
         trials = 3
@@ -74,8 +84,160 @@ class ContribTestSuite(NodesTestSuite):
         pca.inverse(act_mat[:,:1])
         # try standard PCA on the same data and compare the variances
         pca2 = mdp.nodes.PCANode()
-        
 
+    def testFlowNode_training(self):
+        flow = mdp.Flow([mdp.nodes.PolynomialExpansionNode(degree=2), 
+                         mdp.nodes.PCANode(output_dim=15, reduce=True),
+                         mdp.nodes.PolynomialExpansionNode(degree=2),
+                         mdp.nodes.PCANode(output_dim=3, reduce=True)])
+        flownode = mc.FlowNode(flow)
+        x = numx_rand.random([300,20])
+        while flownode.get_remaining_train_phase() > 0:
+            flownode.train(x)
+            flownode.stop_training()
+        flownode.execute(x)
+
+    def testFlowNode_trainability(self):
+        flow = mdp.Flow([mdp.nodes.PolynomialExpansionNode(degree=2)])
+        flownode = mc.FlowNode(flow)
+        assert flownode.is_trainable() is False
+        flow = mdp.Flow([mdp.nodes.PolynomialExpansionNode(degree=2), 
+                         mdp.nodes.PCANode(output_dim=15),
+                         mdp.nodes.PolynomialExpansionNode(degree=2),
+                         mdp.nodes.PCANode(output_dim=3)])
+        flownode = mc.FlowNode(flow)
+        assert flownode.is_trainable() is True
+        
+    def testFlowNode_invertibility(self):
+        flow = mdp.Flow([mdp.nodes.PolynomialExpansionNode(degree=2)])
+        flownode = mc.FlowNode(flow)
+        assert flownode.is_invertible() is False
+        flow = mdp.Flow([mdp.nodes.PCANode(output_dim=15),
+                         mdp.nodes.SFANode(),
+                         mdp.nodes.PCANode(output_dim=3)])
+        flownode = mc.FlowNode(flow)
+        assert flownode.is_invertible() is True
+    
+    def testFlowNode_pretrained_node(self):
+        x = numx_rand.random([100,10])
+        pretrained_node = mdp.nodes.PCANode(output_dim=6)
+        pretrained_node.train(x)
+        pretrained_node.stop_training()
+        flow = mdp.Flow([pretrained_node,
+                         mdp.nodes.PolynomialExpansionNode(degree=2),
+                         mdp.nodes.PCANode(output_dim=3)])
+        flownode = mc.FlowNode(flow)
+        while flownode.get_remaining_train_phase() > 0:
+            flownode.train(x)
+            flownode.stop_training()
+        flownode.execute(x)
+
+    def testLayer(self):
+        node1 = mdp.nodes.PCANode(input_dim=10, output_dim=5, dtype='d')
+        node2 = mdp.nodes.PCANode(input_dim=17, output_dim=3,dtype='d')
+        node3 = mdp.nodes.PCANode(input_dim=3, output_dim=1,dtype='d')
+        x = numx_rand.random([100,30])
+        layer = mc.Layer([node1, node2, node3])
+        layer.train(x)
+        layer.execute(x)
+
+    def testCloneLayer(self):
+        node = mdp.nodes.PCANode(input_dim=10, output_dim=5, dtype='f')
+        x = numx_rand.random([10,70])
+        layer = mc.CloneLayer(node, 7)
+        layer.train(x)
+        layer.execute(x)
+
+    def testSwitchboardRouting1(self):
+        sboard = mc.Rectangular2dSwitchboard(x_in_channels=3, 
+                                             y_in_channels=2,
+                                             dtype='d',
+                                             in_channel_dim=2,
+                                             x_field_channels=2, 
+                                             y_field_channels=1,
+                                             x_field_spacing=1, 
+                                             y_field_spacing=1)
+        assert numx.all(sboard.connections == 
+                               numx.array([0, 1, 2, 3, 2, 3, 4, 5, 6, 7, 
+                                           8, 9, 8, 9, 10, 11])) == True
+        x = numx.array([range(0, sboard.input_dim), 
+                        range(101, 101+sboard.input_dim)])
+        sboard.execute(x)
+        # test generated switchboard
+        channel_sboard = sboard.get_out_channel_node(0)
+        channel_sboard.execute(x)
+
+    def testSwitchboardRouting2(self):
+        sboard = mc.Rectangular2dSwitchboard(x_in_channels=2, 
+                                             y_in_channels=4, 
+                                             dtype='d',
+                                             in_channel_dim=1,
+                                             x_field_channels=1, 
+                                             y_field_channels=2,
+                                             x_field_spacing=1, 
+                                             y_field_spacing=2)
+        assert numx.all(sboard.connections == 
+                        numx.array([0, 2, 1, 3, 4, 6, 5, 7])) == True
+        x = numx.array([range(0, sboard.input_dim), 
+                        range(101, 101+sboard.input_dim)])
+        sboard.execute(x)
+        # test generated switchboard
+        channel_sboard = sboard.get_out_channel_node(0)
+        channel_sboard.execute(x)
+        
+    def testSwitchboard_get_out_channel_node(self):
+        sboard = mc.Rectangular2dSwitchboard(x_in_channels=5, 
+                                             y_in_channels=4,
+                                             dtype='d',
+                                             in_channel_dim=2,
+                                             x_field_channels=3, 
+                                             y_field_channels=2,
+                                             x_field_spacing=1, 
+                                             y_field_spacing=2)
+        x = numx.array([range(0, sboard.input_dim), 
+                     range(101, 101+sboard.input_dim)])
+        y = sboard.execute(x)
+        # routing layer
+        nodes = [sboard.get_out_channel_node(index) 
+                 for index in range(sboard.output_channels)]
+        layer = mc.Layer(nodes, same_input=True)
+        layer_y = layer.execute(x)
+        assert numx.all(y==layer_y) == True
+
+    def testHinetSimpleNet(self):
+        switchboard = mc.Rectangular2dSwitchboard(x_in_channels=12, 
+                                                  y_in_channels=8,
+                                                  dtype='d',
+                                                  x_field_channels=4, 
+                                                  y_field_channels=4,
+                                                  x_field_spacing=2, 
+                                                  y_field_spacing=2,
+                                                  in_channel_dim=3)
+        
+        node = mdp.nodes.PCANode(input_dim=4*4*3, output_dim=5, dtype='d')
+        flownode = mc.FlowNode(mdp.Flow([node,]))
+        layer = mc.CloneLayer(flownode, switchboard.output_channels)
+        flow = mdp.Flow([switchboard, layer])
+        x = numx_rand.random([5, switchboard.input_dim])
+        flow.train(x)
+
+    def testSFANet(self):
+        noisenode = mdp.nodes.NoiseNode(input_dim=20*20, 
+                                        noise_args=(0, 0.0001))
+        sfa_node = mdp.nodes.SFANode(input_dim=20*20, output_dim=10,dtype='f')
+        switchboard = mc.Rectangular2dSwitchboard(x_in_channels=100, 
+                                                  y_in_channels=100,
+                                                  dtype='d',
+                                                  x_field_channels=20, 
+                                                  y_field_channels=20,
+                                                  x_field_spacing=10, 
+                                                  y_field_spacing=10)
+        flownode = mc.FlowNode(mdp.Flow([noisenode, sfa_node]))
+        sfa_layer = mc.CloneLayer(flownode, switchboard.output_channels)
+        flow = mdp.Flow([switchboard, sfa_layer])
+        train_gen = numx_rand.random((3, 10, 100*100))
+        flow.train([None, train_gen])
+            
 def get_suite():
     return ContribTestSuite()
 
