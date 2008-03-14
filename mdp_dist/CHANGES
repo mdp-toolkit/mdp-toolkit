@@ -1,4 +1,5 @@
 MDP-2.2:
+2008-03-14: added hinet contributions
 2008-03-13: created contrib subpackage and test_contrib test suites.
             JADENode moved to contrib. Tests are now sorted by test_suite.
 	    Added the NIPALSNode for iterative PCA.
