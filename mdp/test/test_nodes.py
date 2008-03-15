@@ -222,6 +222,8 @@ class NodesTestSuite(unittest.TestSuite):
             out = node.execute(inp)
             # compute the inverse
             rec = node.inverse(out)
+            # cast inp for comparison
+            inp = inp.astype(dtype)
             assert_array_almost_equal_diff(rec,inp,self.decimal-3)
             assert_type_equal(rec.dtype, dtype)
         return _testinverse

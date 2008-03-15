@@ -1,13 +1,13 @@
 import mdp
 from mdp import numx, numx_linalg, utils, Node, NodeException
 
-MAX_NUM = {#numx.int32: 2147483647,
-           #numx.int64: 9223372036854775807L,
+MAX_NUM = {numx.int32: 2147483647,
+           numx.int64: 9223372036854775807L,
            numx.float32: numx.finfo(numx.float32).max,
            numx.float64: numx.finfo(numx.float64).max}
 
-MIN_NUM = {#numx.int32: -2147483648,
-           #numx.int64: -9223372036854775808L,
+MIN_NUM = {numx.int32: -2147483648,
+           numx.int64: -9223372036854775808L,
            numx.float32: numx.finfo(numx.float32).min,
            numx.float64: numx.finfo(numx.float64).min}
 
@@ -111,9 +111,9 @@ class HitParadeNode(Node):
     'get_maxima' and 'get_minima' methods to access them.
 
     References:
-    [1] Pickle bug: [ 714733 ] cPickle fails to pickle inf
-        https://sourceforge.net/tracker/?func=detail&atid=105470&aid=714733&group_id=5470
-
+    [1] http://bugs.python.org/issue445484
+        Note that this bug has been fixed in python2.5
+    
     """    
     
     def __init__(self, n, d=1, input_dim=None, dtype=None):
@@ -135,7 +135,7 @@ class HitParadeNode(Node):
 
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
-        return ['float32', 'float64']
+        return ['int32','int64','float32', 'float64']
 
     def _train(self, x):
         hit = self.hit
