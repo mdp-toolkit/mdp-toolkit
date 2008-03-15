@@ -161,7 +161,7 @@ class Layer(mdp.Node):
             
 
 class CloneLayer(Layer):
-    """Layer with a single flow that is used in parallel multiple times."""
+    """Layer with a single node that is used in parallel multiple times."""
     
     def __init__(self, node, n_nodes=1):
         """Setup the layer with the given list of nodes.
