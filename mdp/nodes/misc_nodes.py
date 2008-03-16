@@ -1,15 +1,19 @@
 import mdp
 from mdp import numx, numx_linalg, utils, Node, NodeException
 
-MAX_NUM = {numx.int32: 2147483647,
-           numx.int64: 9223372036854775807L,
-           numx.float32: numx.finfo(numx.float32).max,
-           numx.float64: numx.finfo(numx.float64).max}
+MAX_NUM = {numx.dtype('b'): 127,
+           numx.dtype('h'): 32767,
+           numx.dtype('i'): 2147483647,
+           numx.dtype('q'): 9223372036854775807L,
+           numx.dtype('f'): numx.finfo(numx.float32).max,
+           numx.dtype('d'): numx.finfo(numx.float64).max}
 
-MIN_NUM = {numx.int32: -2147483648,
-           numx.int64: -9223372036854775808L,
-           numx.float32: numx.finfo(numx.float32).min,
-           numx.float64: numx.finfo(numx.float64).min}
+MIN_NUM = {numx.dtype('b'): -128,
+           numx.dtype('h'): -32768,
+           numx.dtype('i'): -2147483648,
+           numx.dtype('q'): -9223372036854775808L,
+           numx.dtype('f'): numx.finfo(numx.float32).min,
+           numx.dtype('d'): numx.finfo(numx.float64).min}
 
 class OneDimensionalHitParade(object):
     """
@@ -31,8 +35,8 @@ class OneDimensionalHitParade(object):
         self.iM = numx.zeros((n,),dtype=integer_dtype)
         self.im = numx.zeros((n,),dtype=integer_dtype)
         real_dtype = numx.dtype(real_dtype)
-        self.M = numx.array([MIN_NUM[real_dtype.type]]*n, dtype=real_dtype)
-        self.m = numx.array([MAX_NUM[real_dtype.type]]*n, dtype=real_dtype)
+        self.M = numx.array([MIN_NUM[real_dtype]]*n, dtype=real_dtype)
+        self.m = numx.array([MAX_NUM[real_dtype]]*n, dtype=real_dtype)
         self.lM = 0
         self.lm = 0
 
@@ -135,7 +139,7 @@ class HitParadeNode(Node):
 
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
-        return ['int32','int64','float32', 'float64']
+        return ['b','h','i','q','f','d']
 
     def _train(self, x):
         hit = self.hit
@@ -225,9 +229,8 @@ class TimeFramesNode(Node):
 
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
-        return mdp.utils.get_dtypes('AllFloat') + \
-               mdp.utils.get_dtypes('AllInteger')
-
+        return ['int8','int16','int32','int64','float32','float64']
+    
     def is_trainable(self):
         return False
 

@@ -222,7 +222,7 @@ class NodesTestSuite(unittest.TestSuite):
             out = node.execute(inp)
             # compute the inverse
             rec = node.inverse(out)
-            # cast inp for comparison
+            # cast inp for comparison!
             inp = inp.astype(dtype)
             assert_array_almost_equal_diff(rec,inp,self.decimal-3)
             assert_type_equal(rec.dtype, dtype)
@@ -885,7 +885,23 @@ class NodesTestSuite(unittest.TestSuite):
         assert_array_equal(max_ind,numx.array([[10,120,230]]))
         assert_array_equal(minima,numx.array([[-4,-3,-2]]))
         assert_array_equal(min_ind,numx.array([[11,121,231]]))
-
+        # test integer type:
+        signal = (uniform((300,3))*10).astype('i')
+        gap = 5
+        signal[10,0], signal[120,1], signal[230,2] = 40,30,20
+        signal[11,0], signal[121,1], signal[231,2] = -40,-30,-20
+        hit = mdp.nodes.HitParadeNode(1,gap,3)
+        hit.train(signal[:100,:])
+        hit.train(signal[100:200,:])
+        hit.train(signal[200:300,:])
+        maxima, max_ind = hit.get_maxima()
+        minima, min_ind = hit.get_minima()
+        assert_array_equal(maxima,numx.array([[40,30,20]]))
+        assert_array_equal(max_ind,numx.array([[10,120,230]]))
+        assert_array_equal(minima,numx.array([[-40,-30,-20]]))
+        assert_array_equal(min_ind,numx.array([[11,121,231]]))
+        
+        
     def testTimeFramesNode(self):
         length = 14
         gap = 6
