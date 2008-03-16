@@ -133,25 +133,28 @@ class ContribTestSuite(NodesTestSuite):
         flownode.execute(x)
 
     def testLayer(self):
-        node1 = mdp.nodes.PCANode(input_dim=10, output_dim=5, dtype='d')
-        node2 = mdp.nodes.PCANode(input_dim=17, output_dim=3,dtype='d')
-        node3 = mdp.nodes.PCANode(input_dim=3, output_dim=1,dtype='d')
-        x = numx_rand.random([100,30])
+        node1 = mdp.nodes.PCANode(input_dim=10, output_dim=5)
+        node2 = mdp.nodes.PCANode(input_dim=17, output_dim=3)
+        node3 = mdp.nodes.PCANode(input_dim=3, output_dim=1)
+        x = numx_rand.random([100,30]).astype('f')
         layer = mc.Layer([node1, node2, node3])
         layer.train(x)
-        layer.execute(x)
+        y = layer.execute(x)
+        assert layer.dtype == numx.dtype('f')
+        assert y.dtype == layer.dtype
 
     def testCloneLayer(self):
-        node = mdp.nodes.PCANode(input_dim=10, output_dim=5, dtype='f')
-        x = numx_rand.random([10,70])
+        node = mdp.nodes.PCANode(input_dim=10, output_dim=5)
+        x = numx_rand.random([10,70]).astype('f')
         layer = mc.CloneLayer(node, 7)
         layer.train(x)
-        layer.execute(x)
+        y = layer.execute(x)
+        assert layer.dtype == numx.dtype('f')
+        assert y.dtype == layer.dtype
 
     def testSwitchboardRouting1(self):
         sboard = mc.Rectangular2dSwitchboard(x_in_channels=3, 
                                              y_in_channels=2,
-                                             dtype='d',
                                              in_channel_dim=2,
                                              x_field_channels=2, 
                                              y_field_channels=1,
@@ -170,7 +173,6 @@ class ContribTestSuite(NodesTestSuite):
     def testSwitchboardRouting2(self):
         sboard = mc.Rectangular2dSwitchboard(x_in_channels=2, 
                                              y_in_channels=4, 
-                                             dtype='d',
                                              in_channel_dim=1,
                                              x_field_channels=1, 
                                              y_field_channels=2,
@@ -188,7 +190,6 @@ class ContribTestSuite(NodesTestSuite):
     def testSwitchboard_get_out_channel_node(self):
         sboard = mc.Rectangular2dSwitchboard(x_in_channels=5, 
                                              y_in_channels=4,
-                                             dtype='d',
                                              in_channel_dim=2,
                                              x_field_channels=3, 
                                              y_field_channels=2,
@@ -207,14 +208,13 @@ class ContribTestSuite(NodesTestSuite):
     def testHinetSimpleNet(self):
         switchboard = mc.Rectangular2dSwitchboard(x_in_channels=12, 
                                                   y_in_channels=8,
-                                                  dtype='d',
                                                   x_field_channels=4, 
                                                   y_field_channels=4,
                                                   x_field_spacing=2, 
                                                   y_field_spacing=2,
                                                   in_channel_dim=3)
         
-        node = mdp.nodes.PCANode(input_dim=4*4*3, output_dim=5, dtype='d')
+        node = mdp.nodes.PCANode(input_dim=4*4*3, output_dim=5)
         flownode = mc.FlowNode(mdp.Flow([node,]))
         layer = mc.CloneLayer(flownode, switchboard.output_channels)
         flow = mdp.Flow([switchboard, layer])
@@ -227,7 +227,6 @@ class ContribTestSuite(NodesTestSuite):
         sfa_node = mdp.nodes.SFANode(input_dim=20*20, output_dim=10,dtype='f')
         switchboard = mc.Rectangular2dSwitchboard(x_in_channels=100, 
                                                   y_in_channels=100,
-                                                  dtype='d',
                                                   x_field_channels=20, 
                                                   y_field_channels=20,
                                                   x_field_spacing=10, 

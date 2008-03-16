@@ -33,7 +33,7 @@ numx = mdp.numx
 
 # TODO: late initialization of dimensions
 # TODO: save input range for each node?
-# TODO: Test if the nodes are compatible
+# TODO: Test if the nodes are compatible (somewhat done, could go further)
 
 class Layer(mdp.Node):
     """Layers are nodes which consist of multiple horizontally parallel nodes.
@@ -45,7 +45,7 @@ class Layer(mdp.Node):
     use a FlowNode.
     """
     
-    def __init__(self, nodes, same_input=False):
+    def __init__(self, nodes, same_input=False, dtype=None):
         """Setup the layer with the given list of nodes.
         
         The input and output dimensions as well as the dtype for the nodes
@@ -59,6 +59,7 @@ class Layer(mdp.Node):
             node dimensions."""
         self.nodes = nodes
         self.same_input = same_input
+        self._dtype = None
         self._check_props(nodes)
         # get dimensions
         self.node_input_dims = [0,] * len(self.nodes)
@@ -71,23 +72,40 @@ class Layer(mdp.Node):
             input_dim = nodes[0].input_dim
         super(Layer, self).__init__(input_dim=input_dim,
                                     output_dim=output_dim,
-                                    dtype=nodes[0].dtype)
+                                    dtype=dtype)
         
     def _check_props(self, nodes):
         # input_dim, output_dim and dtype for each node must be set
         dtype_list = []
         for i, node in enumerate(nodes):
-            cond = node.input_dim and node.output_dim and node.dtype
+            cond = node.input_dim and node.output_dim
             if cond is None:
-                msg = 'input_dim output_dim and dtype of must be set '+\
+                msg = 'input_dim output_dim must be set '+\
                       'for every node. Node #%d (%s) does not comply!'%(i,node)
                 raise mdp.NodeException(msg)
-            dtype_list.append(node.dtype)
-        # dtype must be the same for all nodes (can we relax that?)    
-        if len(set(dtype_list)) > 1:
-            msg = 'All nodes must have the same dtype (found: %s)'%dtype_list
+            if node.dtype is not None:
+                dtype_list.append(node.dtype)
+        dtypes = set(dtype_list)
+        dtypes.discard(None)
+        # dtype must be None or the same for every node    
+        if len(dtypes) > 1:
+            msg = 'All nodes must have the same dtype (found: %s)'%dtypes
             raise mdp.NodeException(msg)
-
+        elif len(dtypes) == 1:
+            # set dtype
+            self.dtype = list(dtypes)[0]
+        else:
+            # all dtypes where unset, do nothing
+            pass
+            
+    def _set_dtype(self, t):
+        # dtype can not be set for sure in arbitrary flows
+        # but here we want to be sure that FlowNode *can*
+        # offer a dtype that is consistent
+        for node in self.nodes:
+            node.dtype = t
+        self._dtype = t
+            
     # Node method overrides
     
     def is_trainable(self):
@@ -128,7 +146,7 @@ class Layer(mdp.Node):
                 stop_index += node.input_dim
                 if node.is_training():
                     node.train(x[:, start_index : stop_index])
-            
+
     def _stop_training(self):
         """Stop training of the internal nodes."""
         for node in self.nodes:
@@ -156,7 +174,7 @@ class Layer(mdp.Node):
         return result
     
     def _inverse(self, x):
-        pass
+        raise NotImplementedError
         # TODO: implement
             
 
@@ -183,11 +201,16 @@ class CloneLayer(Layer):
                           dtype=node.dtype)
 
     def _check_props(self, node):
-        cond = node.input_dim and node.output_dim and node.dtype
+        cond = node.input_dim and node.output_dim
         if cond is None:
-            msg = 'input_dim output_dim and dtype of the node must be set!'
+            msg = 'input_dim output_dim of the node must be set!'
             raise mdp.NodeException(msg)
 
+    def _set_dtype(self, t):
+        for node in self.nodes:
+            node.dtype = t
+        self._dtype = t
+        
     def is_trainable(self):
         return self.node.is_trainable()
     
@@ -248,8 +271,8 @@ class FlowNode(mdp.Node):
         # dtype can not be set for sure in arbitrary flows
         # but here we want to be sure that FlowNode *can*
         # offer a dtype that is consistent
-        #for node in self._flow:
-        self._flow[-1].dtype = t
+        for node in self._flow:
+            node.dtype = t
         self._dtype = t
 
     def _get_supported_dtypes(self):
@@ -326,7 +349,7 @@ class Switchboard(mdp.Node):
     applications should often derive more specialized classes.
     """
     
-    def __init__(self, input_dim, connections, dtype):
+    def __init__(self, input_dim, connections):
         """Create a generic switchboard.
         
         The input and output dimension as well as dtype have to be fixed
@@ -340,7 +363,7 @@ class Switchboard(mdp.Node):
         self.connections = connections
         output_dim = len(connections)
         super(Switchboard, self).__init__(input_dim=input_dim,
-                                          output_dim=output_dim, dtype=dtype)
+                                          output_dim=output_dim)
         
     # Node method overrides
     
@@ -405,7 +428,7 @@ class Rectangular2dSwitchboard(Switchboard):
     """
     
     def __init__(self, x_in_channels, y_in_channels, 
-                 x_field_channels, y_field_channels, dtype,
+                 x_field_channels, y_field_channels,
                  x_field_spacing=1, y_field_spacing=1, 
                  in_channel_dim=1):
         """Calculate the connection table and connection matrix.
@@ -478,8 +501,7 @@ class Rectangular2dSwitchboard(Switchboard):
                                          + in_channel_dim] \
                             = range(first_in_con, first_in_con +in_channel_dim)
         # finish initialization
-        Switchboard.__init__(self, input_dim=input_dim,connections=connections,
-                             dtype=dtype)
+        Switchboard.__init__(self, input_dim=input_dim,connections=connections)
     
     def get_out_channel_node(self, channel):
         """Create a Switchboard that does the routing to a specific 
@@ -492,5 +514,4 @@ class Rectangular2dSwitchboard(Switchboard):
         index *= self.out_channel_dim
         # out_cons = self.out_channel_dim // self.in_channel_dim
         return Switchboard(self.input_dim, 
-                    self.connections[index : index+self.out_channel_dim],
-                           dtype=self.dtype)
+                    self.connections[index : index+self.out_channel_dim])
