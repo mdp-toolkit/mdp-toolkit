@@ -48,8 +48,7 @@ class Layer(mdp.Node):
     def __init__(self, nodes, same_input=False, dtype=None):
         """Setup the layer with the given list of nodes.
         
-        The input and output dimensions as well as the dtype for the nodes
-        must be already set.
+        The input and output dimensions for the nodes must be already set.
         The training phases for the nodes are allowed to differ.
         
         Keyword arguments:
@@ -59,8 +58,17 @@ class Layer(mdp.Node):
             node dimensions."""
         self.nodes = nodes
         self.same_input = same_input
-        self._dtype = None
-        self._check_props(nodes)
+        nodes_dtype = self._check_props(nodes)
+        if (nodes_dtype is not None) and (dtype is not None):
+            if numx.dtype(nodes_dtype) != numx.dtype(dtype):
+                msg = 'Cannot set dtype to %s: '%numx.dtype(nodes_dtype).name+\
+                      'an internal node requires %s'%numx.dtype(dtype).name
+                raise mdp.NodeException(msg)
+        elif (nodes_dtype is None) and (dtype is not None):
+            dtype = dtype
+        elif (nodes_dtype is not None) and (dtype is None):
+            dtype = nodes_dtype
+        
         # get dimensions
         self.node_input_dims = [0,] * len(self.nodes)
         input_dim, output_dim = 0, 0
@@ -73,9 +81,9 @@ class Layer(mdp.Node):
         super(Layer, self).__init__(input_dim=input_dim,
                                     output_dim=output_dim,
                                     dtype=dtype)
-        
+                
     def _check_props(self, nodes):
-        # input_dim, output_dim and dtype for each node must be set
+        # input_dim and output_dim for each node must be set
         dtype_list = []
         for i, node in enumerate(nodes):
             cond = node.input_dim and node.output_dim
@@ -93,19 +101,25 @@ class Layer(mdp.Node):
             raise mdp.NodeException(msg)
         elif len(dtypes) == 1:
             # set dtype
-            self.dtype = list(dtypes)[0]
+            dtype = list(dtypes)[0]
         else:
             # all dtypes where unset, do nothing
-            pass
+            dtype = None
+        return dtype
+        
             
     def _set_dtype(self, t):
-        # dtype can not be set for sure in arbitrary flows
-        # but here we want to be sure that FlowNode *can*
-        # offer a dtype that is consistent
         for node in self.nodes:
             node.dtype = t
         self._dtype = t
-            
+
+    def _get_supported_dtypes(self):
+        # we supported the minimal common dtype set
+        types = set(mdp.utils.get_dtypes('All'))
+        for node in self.nodes:
+            types = types.intersection(node.get_supported_dtypes())
+        return list(types)
+
     # Node method overrides
     
     def is_trainable(self):
@@ -115,10 +129,11 @@ class Layer(mdp.Node):
         return False
     
     def is_invertible(self): 
-        for node in self.nodes:
-            if not node.is_invertible():
-                return False
-        return True
+##         for node in self.nodes:
+##             if not node.is_invertible():
+##                 return False
+##         return True
+        return False
     
     def _get_train_seq(self):
         """Return the train sequence.
@@ -181,48 +196,16 @@ class Layer(mdp.Node):
 class CloneLayer(Layer):
     """Layer with a single node that is used in parallel multiple times."""
     
-    def __init__(self, node, n_nodes=1):
+    def __init__(self, node, n_nodes=1, dtype=None):
         """Setup the layer with the given list of nodes.
         
         Keyword arguments:
         node -- Node to be cloned.
-        node_number -- Number of repetitions/clones of the given node.
-        same_input -- True if the complete input should be used for all nodes,
-            False if the input should be split up according to the
-            node dimensions. 
+        n_nodes -- Number of repetitions/clones of the given node.
         """
-        self._check_props(node)
-        input_dim = node.input_dim * n_nodes
-        output_dim = node.output_dim * n_nodes
-        self.node = node
-        self.same_input = False
-        self.nodes = (node,) * n_nodes
-        mdp.Node.__init__(self, input_dim=input_dim, output_dim=output_dim,
-                          dtype=node.dtype)
-
-    def _check_props(self, node):
-        cond = node.input_dim and node.output_dim
-        if cond is None:
-            msg = 'input_dim output_dim of the node must be set!'
-            raise mdp.NodeException(msg)
-
-    def _set_dtype(self, t):
-        for node in self.nodes:
-            node.dtype = t
-        self._dtype = t
-        
-    def is_trainable(self):
-        return self.node.is_trainable()
+        super(CloneLayer, self).__init__((node,) * n_nodes, same_input=False,
+                                         dtype=dtype)
     
-    def is_invertible(self): 
-        return self.node.is_invertible()
-    
-    def _stop_training(self):
-        """Stop training of the internal nodes."""
-        if self.node.is_training():
-            self.node.stop_training()
-        
-
 # TODO: self._flow as property?
 
 class FlowNode(mdp.Node):

@@ -18,12 +18,15 @@ import itertools
 class ContribTestSuite(NodesTestSuite):
     def __init__(self):
         NodesTestSuite.__init__(self)
+        self.mat_dim = (500,4)
         self._cleanup_tests()
 
     def _set_nodes(self):
         self._nodes = [mc.JADENode,
                        mc.NIPALSNode,
-                       (mc.FlowNode, [self._get_new_flow], None)]
+                       (mc.FlowNode, [self._get_new_flow], None),
+                       (mc.Layer, [self._get_new_nodes], None),
+                       (mc.CloneLayer, [self._get_sigle_node, 2], None),]
 
     def _fastica_test_factory(self):
         # we don't want the fastica tests here
@@ -50,6 +53,16 @@ class ContribTestSuite(NodesTestSuite):
         flow = mdp.Flow([mdp.nodes.NoiseNode(), 
                          mdp.nodes.SFANode()])
         return flow
+
+    def _get_new_nodes(self):
+        node1 = mdp.nodes.CuBICANode(input_dim=1, whitened=True)
+        node2 = mdp.nodes.CuBICANode(input_dim=2, whitened=True)
+        node3 = mdp.nodes.CuBICANode(input_dim=1, whitened=True)
+        return [node1, node2, node3]
+
+    def _get_sigle_node(self): 
+        node1 = mdp.nodes.CuBICANode(input_dim=2, whitened=True)
+        return node1
 
     def testJADENode(self):
         trials = 3

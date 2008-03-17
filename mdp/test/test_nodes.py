@@ -114,8 +114,9 @@ class NodesTestSuite(unittest.TestSuite):
             testfunc = self._get_testinverse(node_class, args,
                                              sup_args_func)
             # add to the suite
-            self.addTest(unittest.FunctionTestCase(testfunc,
-                                                   description=funcdesc))
+            if testfunc is not None:
+                self.addTest(unittest.FunctionTestCase(testfunc,
+                                                       description=funcdesc))
             # generate testoutputdim_nodeclass test cases
             if 'output_dim' in inspect.getargspec(node_class.__init__)[0]:
                 funcdesc ='Test output dim consistency of '+node_class.__name__
@@ -125,8 +126,8 @@ class NodesTestSuite(unittest.TestSuite):
                 self.addTest(unittest.FunctionTestCase(testfunc,
                                                        description=funcdesc))
             # generate testdimset_nodeclass test cases
-            funcdesc ='Test dimensions settings of '+node_class.__name__
-            testfunc = self._get_testdimset(node_class, args,
+            funcdesc='Test dimensions and dtype settings of '+node_class.__name__
+            testfunc = self._get_testdimdtypeset(node_class, args,
                                                sup_args_func)
             # add to the suite
             self.addTest(unittest.FunctionTestCase(testfunc,
@@ -210,13 +211,17 @@ class NodesTestSuite(unittest.TestSuite):
     
     def _get_testinverse(self, node_class, args=[], sup_args_func=None):
         # generates testinverse_nodeclass test functions
+        # only if invertible
+        node_args = self._set_node_args(args)
+        node = node_class(*node_args)
+        if not node.is_invertible():
+            return None
         def _testinverse(node_class=node_class):
             mat,mix,inp = self._get_random_mix()
             # take the first available dtype for the test
             node_args = self._set_node_args(args)
             dtype = node_class(*node_args).get_supported_dtypes()[0]
             node = node_class(dtype=dtype, *node_args)
-            if not node.is_invertible():return
             self._train_if_necessary(inp, node, args, sup_args_func)
             # execute the node
             out = node.execute(inp)
@@ -287,8 +292,8 @@ class NodesTestSuite(unittest.TestSuite):
                    "%d!=%d"%(node._output_dim,output_dim)
         return _testoutputdim
 
-    def _get_testdimset(self, node_class, args=[], sup_args_func=None):
-        def _testdimset(node_class=node_class):
+    def _get_testdimdtypeset(self, node_class, args=[], sup_args_func=None):
+        def _testdimdtypeset(node_class=node_class):
             mat,mix,inp = self._get_random_mix()
             node_args = self._set_node_args(args)
             node = node_class(*node_args)
@@ -296,8 +301,9 @@ class NodesTestSuite(unittest.TestSuite):
             # execute or stop_training the node
             self._stop_training_or_execute(node, inp)
             assert node.output_dim is not None
+            assert node.dtype is not None
             assert node.input_dim is not None
-        return _testdimset
+        return _testdimdtypeset
 
     def _uniform(self, min_, max_, dims):
         return uniform(dims)*(max_-min_)+min_

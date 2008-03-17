@@ -28,13 +28,14 @@ class ICANode(mdp.Cumulator, mdp.Node):
         """
         Input arguments:
 
-        whitened -- Set whitened == True if input data are already whitened.
+        whitened -- Set whitened is True if input data are already whitened.
                     Otherwise the node will whiten the data itself.
 
-        white_comp -- If whitened == True, you can set 'white_comp' to the
+        white_comp -- If whitened is False, you can set 'white_comp' to the
                       number of whitened components to keep during the
                       calculation (i.e., the input dimensions are reduced to
                       white_comp by keeping the components of largest variance).
+
         white_parm -- a dictionary with additional parameters for whitening.
                       It is passed directly to the WhiteningNode constructor.
                       Ex: white_parm = { 'svd' : True }
@@ -47,14 +48,22 @@ class ICANode(mdp.Cumulator, mdp.Node):
           significantly faster convergence for stationary statistics. This mode
           has not been thoroughly tested and must be considered beta.
         """
-        super(ICANode, self).__init__(input_dim, None, dtype)
         self.telescope = telescope
         self.verbose = verbose
         self.limit = limit
         self.whitened = whitened
         self.white_comp = white_comp
         self.white_parm = {}
+        super(ICANode, self).__init__(input_dim, None, dtype)
 
+
+    def _set_input_dim(self, n):
+        self._input_dim = n
+        if self.whitened:
+            self.output_dim = n
+        elif self.white_comp is None:
+            self.output_dim = n
+            
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
         return ['float32', 'float64']
