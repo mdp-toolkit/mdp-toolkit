@@ -31,6 +31,9 @@ testdecimals = {testtypes[0]: 12, testtypes[1]: 6}
 def _rand_labels(x):
     return numx.around(uniform(x.shape[0]))
 
+def _rand_labels_array(x):
+    return numx.around(uniform(x.shape[0])).reshape((x.shape[0],1))
+
 def _std(x):
     return x.std(axis=0)
     # standard deviation without bias
@@ -64,9 +67,9 @@ class NodesTestSuite(unittest.TestSuite):
         # get generic tests
         self._generic_test_factory()
         # get FastICA tests
-        self._fastica_test_factory()
+        #self._fastica_test_factory()
         # get nodes tests
-        self._nodes_test_factory()
+        #self._nodes_test_factory()
 
     def _set_nodes(self):
         mn = mdp.nodes
@@ -86,7 +89,9 @@ class NodesTestSuite(unittest.TestSuite):
                        (mn.FDANode, [], _rand_labels),
                        (mn.GaussianClassifierNode, [], _rand_labels),
                        mn.FANode,
-                       mn.ISFANode]
+                       mn.ISFANode,
+                       (mn.RBMNode, [5],None),
+                       (mn.RBMWithLabelsNode, [5, 1], _rand_labels_array)]
         
     def _nodes_test_factory(self):
         for methname in dir(self):
@@ -266,7 +271,10 @@ class NodesTestSuite(unittest.TestSuite):
                     mat, mix, inp = self._get_random_mix(type="d")
                 node = node_class(*node_args, **{'dtype':dtype})
                 self._train_if_necessary(inp, node, node_args, sup_args_func)
-                out = node.execute(inp)
+                if node_class == mdp.nodes.RBMWithLabelsNode:
+                    out = node.execute(inp, sup_args_func(inp))
+                else:
+                    out = node.execute(inp)
                 assert_type_equal(out.dtype, dtype) 
         return _testdtype
 
@@ -1364,7 +1372,6 @@ class NodesTestSuite(unittest.TestSuite):
         error /= nsources*nsources
         return error
 
-
     def testISFANode_AnalyticalSolution(self):
         nsources = 2
         # number of time lags
@@ -1414,6 +1421,221 @@ class NodesTestSuite(unittest.TestSuite):
                 break
         assert error < 1E-4, 'Not one out of %d trials succeded.'%trials
             
+    def testRBMSample_h(self):
+        # number of visible and hidden units
+        I, J = 2, 4
+
+        # create RBM node
+        bm = mdp.nodes.RBMNode(J, I)
+        # fake training to initialize internals
+        bm.train(numx.zeros((1,I)))
+        # init to deterministic model
+        bm.w[0,:] = [1,0,1,0]
+        bm.w[1,:] = [0,1,0,1]
+        bm.w *= 2e4
+        bm.bv *= 0.
+        bm.bh *= 0.
+
+        # ### test 1
+        v = numx.array([[0,0],[1,0],[0,1],[1,1.]])
+        h = []
+        for n in range(1000):
+            prob, sample = bm.sample_h(v)
+            h.append(sample)
+
+        # check inferred probabilities
+        expected_probs = numx.array([[0.5, 0.5, 0.5, 0.5],
+                                      [1.0, 0.5, 1.0, 0.5],
+                                      [0.5, 1.0, 0.5, 1.0],
+                                      [1.0, 1.0, 1.0, 1.0]])
+        assert_array_almost_equal(prob, expected_probs, 8)
+
+        # check sampled units
+        h = numx.array(h)
+        for n in range(4):
+            distr = h[:,n,:].mean(axis=0)
+            assert_array_almost_equal(distr, expected_probs[n,:], 1)
+
+        # ### test 2, with bias
+        bm.bh -= 1e4
+        h = []
+        for n in range(100):
+            prob, sample = bm.sample_h(v)
+            h.append(sample)
+
+        # check inferred probabilities
+        expected_probs = numx.array([[0., 0., 0., 0.],
+                                      [1.0, 0., 1.0, 0.],
+                                      [0., 1.0, 0., 1.0],
+                                      [1.0, 1.0, 1.0, 1.0]])
+        assert_array_almost_equal(prob, expected_probs, 8)
+
+        # check sampled units
+        h = numx.array(h)
+        for n in range(4):
+            distr = h[:,n,:].mean(axis=0)
+            assert_array_almost_equal(distr, expected_probs[n,:], 1)
+
+    def testRBMSample_v(self):
+        # number of visible and hidden units
+        I, J = 4, 2
+
+        # create RBM node
+        bm = mdp.nodes.RBMNode(J, I)
+        # fake training to initialize internals
+        bm.train(numx.zeros((1,I)))
+        # init to deterministic model
+        bm.w[:,0] = [1,0,1,0]
+        bm.w[:,1] = [0,1,0,1]
+        bm.w *= 2e4
+        bm.bv *= 0
+        bm.bh *= 0
+
+        # test 1
+        h = numx.array([[0,0],[1,0],[0,1],[1,1.]])
+        v = []
+        for n in range(100):
+            prob, sample = bm.sample_v(h)
+            v.append(sample)
+
+        # check inferred probabilities
+        expected_probs = numx.array([[0.5, 0.5, 0.5, 0.5],
+                                      [1.0, 0.5, 1.0, 0.5],
+                                      [0.5, 1.0, 0.5, 1.0],
+                                      [1.0, 1.0, 1.0, 1.0]])
+        assert_array_almost_equal(prob, expected_probs, 8)
+
+        # check sampled units
+        v = numx.array(v)
+        for n in range(4):
+            distr = v[:,n,:].mean(axis=0)
+            assert_array_almost_equal(distr, expected_probs[n,:], 1)
+
+        # test 2, with bias
+        bm.bv -= 1e4
+        v = []
+        for n in range(100):
+            prob, sample = bm.sample_v(h)
+            v.append(sample)
+
+        # check inferred probabilities
+        expected_probs = numx.array([[0., 0., 0., 0.],
+                                      [1.0, 0., 1.0, 0.],
+                                      [0., 1.0, 0., 1.0],
+                                      [1.0, 1.0, 1.0, 1.0]])
+        assert_array_almost_equal(prob, expected_probs, 8)
+
+        # check sampled units
+        v = numx.array(v)
+        for n in range(4):
+            distr = v[:,n,:].mean(axis=0)
+            assert_array_almost_equal(distr, expected_probs[n,:], 1)
+
+    def testRBMStability(self):
+        # number of visible and hidden units
+        I, J = 8, 2
+
+        # create RBM node
+        bm = mdp.nodes.RBMNode(J, I)
+        bm._init_weights()
+        # init to random model
+        bm.w = mdp.utils.random_rot(max(I,J), dtype='d')[:I, :J]
+        bm.bv = numx_rand.randn(I)
+        bm.bh = numx_rand.randn(J)
+
+        # save original weights
+        real_w = bm.w.copy()
+        real_bv = bm.bv.copy()
+        real_bh = bm.bh.copy()
+
+        # Gibbs sample to reach the equilibrium distribution
+        N = 1e4
+        v = numx_rand.randint(0,2,(N,I)).astype('d')
+        for k in range(100):
+            p, h = bm._sample_h(v)
+            p, v = bm._sample_v(h)
+
+        # see that w remains stable after learning
+        delta = (0.,0.,0.)
+        for k in range(100):
+            err = bm.train(v)
+        bm.stop_training()
+
+        assert_array_almost_equal(real_w, bm.w, 1)
+        assert_array_almost_equal(real_bv, bm.bv, 1)
+        assert_array_almost_equal(real_bh, bm.bh, 1)
+
+    def testRBMLearning(self):
+        # number of visible and hidden units
+        I, J = 4, 2
+        
+        bm = mdp.nodes.RBMNode(J, I)
+        bm.w = mdp.utils.random_rot(max(I,J), dtype='d')[:I, :J]
+
+        # the observations consist of two disjunct patterns that
+        # never appear together
+        N=10000
+        v = numx.zeros((N,I))
+        for n in range(N):
+            r = numx_rand.random()
+            if r>0.666: v[n,:] = [0,1,0,1]
+            elif r>0.333: v[n,:] = [1,0,1,0]
+
+        delta = (0.,0.,0.)
+        for k in range(1500):
+            mom = 0.9 if k>5 else 0.5
+            bm.train(v, epsilon=0.3, momentum=mom)
+            if bm._train_err/N<0.1: break
+            #print '-------', bm._train_err
+
+        assert bm._train_err/N<0.1
+
+    def testRBMWithLabelsNode(self):
+        I, J, L = 4, 4, 2
+        bm = mdp.nodes.RBMWithLabelsNode(J,L,I)
+        assert bm.input_dim == I+L
+
+        # generate input data
+        N = 2500
+        v = numx.zeros((2*N,I))
+        l = numx.zeros((2*N,L))
+        for n in range(N):
+            r = numx_rand.random()
+            if r>0.666:
+                v[n,:] = [0,1,0,0]
+                l[n,:] = [1,0]
+            elif r>0.333:
+                v[n,:] = [1,0,0,0]
+                l[n,:] = [1,0]
+        for n in range(N):
+            r = numx_rand.random()
+            if r>0.666:
+                v[N+n,:] = [0,0,0,1]
+                l[N+n,:] = [0,1]
+            elif r>0.333:
+                v[N+n,:] = [0,0,1,0]
+                l[N+n,:] = [0,1]
+
+        x = numx.concatenate((v, l), axis=1)
+        for k in range(1500):
+            mom = 0.9 if k>100 else 0.5
+            bm.train(v, l, momentum=mom)
+
+            ph, sh = bm._sample_h(x)
+            pv, pl, sv, sl = bm._sample_v(sh, concatenate=False)
+
+            v_train_err = float(((v-sv)**2.).sum())
+            #print '-------', k, v_train_err/(2*N)
+            if v_train_err/(2*N)<0.1: break
+
+        # visible units are reconstructed
+        assert v_train_err/(2*N)<0.1
+        # units with 0 input have 50/50 labels
+        idxzeros = v.sum(axis=1)==0
+        nzeros = idxzeros.sum()
+        point5 = numx.zeros((nzeros, L)) + 0.5
+        assert_array_almost_equal(pl[idxzeros], point5, 2)
+        
         
 def get_suite():
     return NodesTestSuite()
