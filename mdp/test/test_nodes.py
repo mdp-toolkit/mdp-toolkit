@@ -67,9 +67,9 @@ class NodesTestSuite(unittest.TestSuite):
         # get generic tests
         self._generic_test_factory()
         # get FastICA tests
-        #self._fastica_test_factory()
+        self._fastica_test_factory()
         # get nodes tests
-        #self._nodes_test_factory()
+        self._nodes_test_factory()
 
     def _set_nodes(self):
         mn = mdp.nodes
@@ -1590,7 +1590,12 @@ class NodesTestSuite(unittest.TestSuite):
 
         assert bm._train_err/N<0.1
 
-    def testRBMWithLabelsNode(self):
+        # test generate_input
+        h = bm(v)
+        v_gen = bm.generate_input(h, return_probs=False)
+        assert float(((v-v_gen)**2.).sum())/N < 0.1
+
+    def _testRBMWithLabelsNode(self):
         I, J, L = 4, 4, 2
         bm = mdp.nodes.RBMWithLabelsNode(J,L,I)
         assert bm.input_dim == I+L

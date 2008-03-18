@@ -8,6 +8,7 @@ from em_nodes import FANode
 from misc_nodes import HitParadeNode, TimeFramesNode, EtaComputerNode, \
      NoiseNode, GaussianClassifierNode
 from isfa_nodes import ISFANode
+from rbm_nodes import RBMNode, RBMWithLabelsNode
 
 # import internals for use in test_suites
 from misc_nodes import OneDimensionalHitParade as _OneDimensionalHitParade
