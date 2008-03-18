@@ -11,10 +11,11 @@ MDP 2.1 21.3.2006:
 - fix 'fftpack' calls in benchmarks and tests
 - check weird Segmentation Fault in testRoundOffWarningCovMatrix with type='g'
   (it's probably a numpy.dot bug)
-
+- in the tutorial should the list of implemented nodes link back to the
+  API?
 - better tests for 'QuadraticForms'
 - update FastICA to match new Matlab version (done)
 - kalman filters
 - memory profiler
-- flow to handle acyclic graphs of nodes
+- flow to handle acyclic graphs of nodes (done by niko?)
 - GUI
