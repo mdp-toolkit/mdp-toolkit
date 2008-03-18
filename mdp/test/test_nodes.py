@@ -92,7 +92,10 @@ class NodesTestSuite(unittest.TestSuite):
         for methname in dir(self):
             meth = getattr(self,methname)
             if inspect.ismethod(meth) and meth.__name__[:4] == "test":
-                self.addTest(unittest.FunctionTestCase(meth))
+                # create a nice description
+                descr = 'Test '+(meth.__name__[4:]).replace('_',' ')
+                self.addTest(unittest.FunctionTestCase(meth,
+                             description=descr))
 
     def _generic_test_factory(self):
         # generate generic test cases
@@ -577,6 +580,25 @@ class NodesTestSuite(unittest.TestSuite):
         # test a bug in v.1.1.1, should not crash
         pca.inverse(act_mat[:,:1])
 
+    def testPCANode_desired_variance(self):
+        mat, mix, inp = self._get_random_mix(mat_dim=(1000, 3))
+        # first make them white
+        pca = mdp.nodes.WhiteningNode()
+        pca.train(mat)
+        mat = pca.execute(mat)
+        # set the variances
+        mat *= [0.6,0.3,0.1]
+        #mat -= mat.mean(axis=0)
+        pca = mdp.nodes.PCANode(output_dim=0.8)
+        pca.train(mat)
+        out = pca.execute(mat)
+        # check that we got exactly two output_dim:
+        assert pca.output_dim == 2
+        assert out.shape[1] == 2
+        # check that explained variance is > 0.8 and < 1
+        assert (pca.explained_variance > 0.8 and pca.explained_variance < 1)
+        
+    
     def testPCANode_SVD(self):
         # it should pass atleast the same test as PCANode
         line_x = numx.zeros((1000,2),"d")

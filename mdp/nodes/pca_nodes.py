@@ -105,17 +105,9 @@ class PCANode(Node):
                        self.cov_mtx and self.dcov_mtx to be examined.
         """
         return super(PCANode, self).stop_training(debug=debug)
-        
-    def _stop_training(self, debug=False):
-        ##### request the covariance matrix and clean up
-        self.cov_mtx, avg, self.tlen = self._cov_mtx.fix()
-        del self._cov_mtx
-        
-        # this is a bit counterintuitive, as it reshapes the average vector to
-        # be a matrix. in this way, however, we spare the reshape
-        # operation every time that 'execute' is called.
-        self.avg = avg.reshape(1, avg.shape[0])
 
+
+    def _adjust_output_dim(self):
         ##### compute the principal components
         # if the number of principal components to keep is not specified,
         # keep all components
@@ -132,12 +124,28 @@ class PCANode(Node):
         # specified by the fraction of variance to be explained
         else:
             rng = None
+        return rng
+        
 
+    def _stop_training(self, debug=False):
+        ##### request the covariance matrix and clean up
+        self.cov_mtx, avg, self.tlen = self._cov_mtx.fix()
+        del self._cov_mtx
+        
+        # this is a bit counterintuitive, as it reshapes the average vector to
+        # be a matrix. in this way, however, we spare the reshape
+        # operation every time that 'execute' is called.
+        self.avg = avg.reshape(1, avg.shape[0])
+
+
+        rng = self._adjust_output_dim()
+        
         # if we have more variables then observations we are bound to fail here
         # suggest to use the NIPALSNode instead.
         if debug and self.tlen < self.input_dim:
-            wrn = 'The number of observations (%d) is larger than the '%(self.tlen)+\
-                  'number of input variables (%d). You may want to use '%(self.input_dim)+\
+            wrn = 'The number of observations (%d) '%(self.tlen)+\
+                  'is larger than the number of input variables '+\
+                  '(%d). You may want to use '%(self.input_dim)+\
                   'the NIPALSNode instead.'
             warnings.warn('The', MDPWarning)
         
@@ -180,7 +188,7 @@ class PCANode(Node):
             # select only the relevant eigenvalues
             # number of relevant eigenvalues
             neigval = varcum.searchsorted(self.desired_variance) + 1.
-            self.explained_variance = varcum[neigval]
+            self.explained_variance = varcum[neigval-1]
             # cut
             d = d[0:neigval]
             v = v[:,0:neigval]

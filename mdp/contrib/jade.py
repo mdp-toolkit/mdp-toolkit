@@ -23,7 +23,7 @@ class JADENode(ICANode):
       High-order contrasts for independent component analysis
       Neural Computation, 11(1): 157-192
 
-    Code contributed by:
+    Original code contributed by:
     Gabriel Beckers (2008).
     
     History:
