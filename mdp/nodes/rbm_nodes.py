@@ -137,13 +137,19 @@ class RBMNode(mdp.Node):
 
     def _execute(self, v, ignore=None, return_probs = True):
         probs, h = self._sample_h(v)
-        return probs if return_probs else h
+        if return_probs:
+            return probs
+        else:
+            return h
 
     def is_invertible(self): return False
 
     def generate_input(self, h, return_probs = True):
         probs, v = self._sample_v(h)
-        return probs if return_probs else v
+        if return_probs:
+            return probs
+        else:
+            return v
 
 class RBMWithLabelsNode(RBMNode):
     """Binary <-> binary RBM class with softmax labels."""
@@ -222,7 +228,10 @@ class RBMWithLabelsNode(RBMNode):
         self._pre_execution_checks(x)
         
         probs, h = self._sample_h(self._refcast(x))
-        return probs if return_probs else h
+        if return_probs:
+            return probs
+        else:
+            return h
 
     def is_invertible(self): return False
 
@@ -231,7 +240,10 @@ class RBMWithLabelsNode(RBMNode):
         self._pre_inversion_checks(h)
         probs_v, probs_l, v, l = self._sample_v(h, sample_l=False,
                                                 concatenate=False)
-        return (probs_v, probs_l) if return_probs else (v, l)
+        if return_probs:
+            return (probs_v, probs_l)
+        else:
+            return (v, l)
 
     def _secret_train(self, v, l, *args, **kwargs):
         x = numx.concatenate((v, l), axis=1)

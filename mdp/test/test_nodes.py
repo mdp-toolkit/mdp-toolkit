@@ -1583,7 +1583,10 @@ class NodesTestSuite(unittest.TestSuite):
 
         delta = (0.,0.,0.)
         for k in range(1500):
-            mom = 0.9 if k>5 else 0.5
+            if k>5:
+                mom = 0.9
+            else:
+                mom = 0.5
             bm.train(v, epsilon=0.3, momentum=mom)
             if bm._train_err/N<0.1: break
             #print '-------', bm._train_err
@@ -1623,7 +1626,10 @@ class NodesTestSuite(unittest.TestSuite):
 
         x = numx.concatenate((v, l), axis=1)
         for k in range(1500):
-            mom = 0.9 if k>100 else 0.5
+            if k>100:
+                mom = 0.9
+            else:
+                mom = 0.5
             bm.train(v, l, momentum=mom)
 
             ph, sh = bm._sample_h(x)
