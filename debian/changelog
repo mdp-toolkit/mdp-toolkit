@@ -1,3 +1,10 @@
+mdp (2.2+svn20080321-1) unstable; urgency=low
+
+  * New Upstream Version
+  * Temporarily modified debian/watch to overcome problem with sf.net redirector
+
+ -- Yaroslav Halchenko <debian@onerussian.com>  Fri, 21 Mar 2008 16:59:48 -0400
+
 mdp (2.1+svn20080122-1) unstable; urgency=low
 
   * Initial release (Closes: #461634)
