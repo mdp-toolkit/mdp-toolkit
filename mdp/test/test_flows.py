@@ -10,6 +10,7 @@ import tempfile
 import pickle
 import cPickle
 import os
+import inspect
 import mdp
 from testing_tools import assert_array_almost_equal, assert_almost_equal, \
      assert_array_equal, assert_equal
@@ -65,8 +66,31 @@ class _BogusMultiNode(mdp.Node):
     def stop2(self):
         self.visited.append(4)
 
-class FlowsTestCase(unittest.TestCase):
+class FlowsTestSuite(unittest.TestSuite):
 
+    def __init__(self, testname=None):
+        unittest.TestSuite.__init__(self)
+
+        if testname is not None:
+            self._flows_test_factory([testname])
+        else:
+            # get all tests
+            self._flows_test_factory()
+
+    def _flows_test_factory(self, methods_list=None):
+        if methods_list is None:
+            methods_list = dir(self)
+        for methname in methods_list:
+            try:
+                meth = getattr(self,methname)
+            except AttributeError:
+                continue
+            if inspect.ismethod(meth) and meth.__name__[:4] == "test":
+                # create a nice description
+                descr = 'Test '+(meth.__name__[4:]).replace('_',' ')
+                self.addTest(unittest.FunctionTestCase(meth,
+                             description=descr))
+        
     def _get_random_mix(self,mat_dim = None, type = "d", scale = 1,
                         rand_func = numx_rand.random, avg = 0, std = 0):
         if mat_dim is None: mat_dim = self.mat_dim
@@ -331,12 +355,14 @@ class FlowsTestCase(unittest.TestCase):
         def testgenerator():
             yield mdp.numx.zeros((1,2), 'd')
         flow = mdp.Flow([_BogusMultiNode()])
-        self.assertRaises(mdp.FlowException, flow.train, [testgenerator()])
+        try:
+            flow.train([testgenerator()])
+            raise Exception('Expected mdp.FlowException')
+        except mdp.FlowException:
+            pass
 
-def get_suite():
-    suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(FlowsTestCase))
-    return suite
+def get_suite(testname=None):
+    return FlowsTestSuite(testname=testname)
 
 if __name__ == '__main__':
     numx_rand.seed(1268049219)

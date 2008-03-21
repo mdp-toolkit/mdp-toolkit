@@ -103,7 +103,7 @@ class Flow(object):
                                                   except_,tb))
         act = "\n! Exception in node #%d (%s):\n" \
               % (nodenr, str(self.flow[nodenr]))
-        errstr = ''.join(('\n', 40*'-', act, 'Node Traceback:\n', prev, 40*'-'))
+        errstr =''.join(('\n', 40*'-', act, 'Node Traceback:\n', prev, 40*'-'))
         raise FlowExceptionCR,(errstr, self, except_)
 
     def _train_node(self, data_iterator, nodenr):
@@ -158,8 +158,8 @@ class Flow(object):
                      " Continuing anyway."
             _warnings.warn(wrnstr, mdp.MDPWarning)
         except FlowExceptionCR, e:
-            # this exception was already propagated, probably during the execution
-            # of a node upstream in the flow
+            # this exception was already propagated,
+            # probably during the execution  of a node upstream in the flow
             (type, val) = _sys.exc_info()[:2]
             prev = ''.join(_traceback.format_exception_only(e.__class__,e))
             prev = prev[prev.find('\n')+1:]
@@ -378,8 +378,10 @@ class Flow(object):
             errstr = "dimensions mismatch: %d != %d" % (out, inp)
             raise ValueError, errstr
 
-    def _check_nodes_consistency(self, flow):
+    def _check_nodes_consistency(self, flow = None):
         """Check the dimension consistency of a list of nodes."""
+        if flow is None:
+            flow = self.flow
         len_flow = len(flow)
         for i in range(1,len_flow):
             out = flow[i-1].output_dim

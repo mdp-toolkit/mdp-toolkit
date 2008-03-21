@@ -46,7 +46,8 @@ class SFANode(Node):
             rng = (1, self.output_dim)
         else:
             # otherwise, keep all output components
-            rng = None        
+            rng = None
+            self.output_dim = self.input_dim
         return rng
 
     def _train(self, x):
@@ -76,7 +77,7 @@ class SFANode(Node):
         # delete covariance matrix if no exception occurred
         del self.cov_mtx
         del self.dcov_mtx
-        
+
     def _execute(self, x, range=None):
         if range:
             if isinstance(range, (list, tuple)):

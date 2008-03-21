@@ -10,6 +10,7 @@ import pickle
 import os
 import tempfile
 import platform
+import inspect
 from mdp import numx, utils, numx_rand, numx_linalg, Node, nodes, MDPException
 from testing_tools import assert_array_almost_equal, assert_array_equal, \
      assert_almost_equal, assert_equal, assert_array_almost_equal_diff, \
@@ -29,7 +30,7 @@ class BogusNode(Node):
     z = BogusClass()
     z.z = BogusClass()
 
-class UtilsTestCase(unittest.TestCase):
+class UtilsTestSuite(unittest.TestSuite):
 ##     def testProgressBar(self):
 ##         print
 ##         p = utils.ProgressBar(minimum=0,maximum=1000)
@@ -37,6 +38,29 @@ class UtilsTestCase(unittest.TestCase):
 ##             p.update(i+1)
 ##             for j in xrange(10000): pass
 ##         print
+
+    def __init__(self, testname=None):
+        unittest.TestSuite.__init__(self)
+
+        if testname is not None:
+            self._utils_test_factory([testname])
+        else:
+            # get all tests
+            self._utils_test_factory()
+
+    def _utils_test_factory(self, methods_list=None):
+        if methods_list is None:
+            methods_list = dir(self)
+        for methname in methods_list:
+            try:
+                meth = getattr(self,methname)
+            except AttributeError:
+                continue
+            if inspect.ismethod(meth) and meth.__name__[:4] == "test":
+                # create a nice description
+                descr = 'Test '+(meth.__name__[4:]).replace('_',' ')
+                self.addTest(unittest.FunctionTestCase(meth,
+                             description=descr))
 
     def eigenproblem(self, dtype, range, func=utils._symeig_fake):
         """Solve a standard eigenvalue problem."""
@@ -226,10 +250,8 @@ class UtilsTestCase(unittest.TestCase):
                 raise e
         raise Exception, 'Did not detect non symmetric H!'
     
-def get_suite():
-    suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(UtilsTestCase))
-    return suite
+def get_suite(testname=None):
+    return UtilsTestSuite(testname=testname)
 
 if __name__ == '__main__':
     numx_rand.seed(1268049219)

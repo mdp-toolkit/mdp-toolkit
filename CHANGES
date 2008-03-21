@@ -1,6 +1,15 @@
 MDP-2.2:
-
-2009-01-22: removed utils.comb scipy code and obsolete SciPy copyright
+2008-03-21: added hinet package
+2008-03-19: added RBM nodes 
+2008-03-18: fixed bug in PCANode when output_dim was specified as float.
+2008-03-16: HitParadeNode now supports integer dtypes.
+2008-03-13: created contrib subpackage and test_contrib test suites.
+            JADENode moved to contrib. Tests are now sorted by test_suite.
+	    Added the NIPALSNode for iterative PCA.
+2008-03-11: added JADENode with tests
+2008-03-10: added test for dimensions settings (nodes should have 
+            output_dim and input_dim set after training)
+2008-01-22: removed utils.comb scipy code and obsolete SciPy copyright
             notice from utils/routines.py
 2008-01-03: fixed bug in SFA2Node when input_dim was set on instantiation,
 	    fixed bug in SFA2Node._stop_training when output_dim was set and
