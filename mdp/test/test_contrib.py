@@ -16,8 +16,8 @@ import itertools
 
 
 class ContribTestSuite(NodesTestSuite):
-    def __init__(self):
-        NodesTestSuite.__init__(self)
+    def __init__(self, testname=None):
+        NodesTestSuite.__init__(self, testname=testname)
         self.mat_dim = (500,4)
         self._cleanup_tests()
 
@@ -271,8 +271,8 @@ class ContribTestSuite(NodesTestSuite):
         train_gen = numx_rand.random((3, 10, 100*100))
         flow.train([None, train_gen])
             
-def get_suite():
-    return ContribTestSuite()
+def get_suite(testname=None):
+    return ContribTestSuite(testname=testname)
 
 if __name__ == '__main__':
     numx_rand.seed(1268049219)

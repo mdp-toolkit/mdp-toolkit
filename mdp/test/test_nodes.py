@@ -11,6 +11,8 @@ import mdp
 import cPickle
 import tempfile
 import os
+import itertools
+import sys
 from mdp import utils, numx, numx_rand, numx_linalg
 # !!! scipy.fft seems to be extremely slow, this is a workaround until
 # !!! it's fixed
@@ -52,9 +54,15 @@ def _cov(x,y=None):
     #return mult(numx.transpose(x),y)/(x.shape[0]-1)
     return mult(numx.transpose(x),y)/(x.shape[0])
 
+_spinner = itertools.cycle((' /\b\b', ' -\b\b', ' \\\b\b', ' |\b\b'))
+# create spinner
+def spinner():
+    sys.stderr.write(_spinner.next())
+    sys.stderr.flush()
+
 class NodesTestSuite(unittest.TestSuite):
 
-    def __init__(self):
+    def __init__(self, testname=None):
         unittest.TestSuite.__init__(self)
         
         # constants
@@ -63,13 +71,16 @@ class NodesTestSuite(unittest.TestSuite):
 
         # set nodes to be tested
         self._set_nodes()
-        
-        # get generic tests
-        self._generic_test_factory()
-        # get FastICA tests
-        self._fastica_test_factory()
-        # get nodes tests
-        self._nodes_test_factory()
+
+        if testname is not None:
+            self._nodes_test_factory([testname])
+        else:
+            # get generic tests
+            self._generic_test_factory()
+            # get FastICA tests
+            self._fastica_test_factory()
+            # get nodes tests
+            self._nodes_test_factory()
 
     def _set_nodes(self):
         mn = mdp.nodes
@@ -92,10 +103,15 @@ class NodesTestSuite(unittest.TestSuite):
                        mn.ISFANode,
                        (mn.RBMNode, [5],None),
                        (mn.RBMWithLabelsNode, [5, 1], _rand_labels_array)]
-        
-    def _nodes_test_factory(self):
-        for methname in dir(self):
-            meth = getattr(self,methname)
+
+    def _nodes_test_factory(self, methods_list=None):
+        if methods_list is None:
+            methods_list = dir(self)
+        for methname in methods_list:
+            try:
+                meth = getattr(self,methname)
+            except AttributeError:
+                continue
             if inspect.ismethod(meth) and meth.__name__[:4] == "test":
                 # create a nice description
                 descr = 'Test '+(meth.__name__[4:]).replace('_',' ')
@@ -1593,12 +1609,7 @@ class NodesTestSuite(unittest.TestSuite):
 
         assert bm._train_err/N<0.1
 
-        # test generate_input
-        h = bm(v)
-        v_gen = bm.generate_input(h, return_probs=False)
-        assert float(((v-v_gen)**2.).sum())/N < 0.1
-
-    def _testRBMWithLabelsNode(self):
+    def testRBMWithLabelsNode(self):
         I, J, L = 4, 4, 2
         bm = mdp.nodes.RBMWithLabelsNode(J,L,I)
         assert bm.input_dim == I+L
@@ -1609,28 +1620,26 @@ class NodesTestSuite(unittest.TestSuite):
         l = numx.zeros((2*N,L))
         for n in range(N):
             r = numx_rand.random()
-            if r>0.666:
-                v[n,:] = [0,1,0,0]
-                l[n,:] = [1,0]
-            elif r>0.333:
-                v[n,:] = [1,0,0,0]
+            if r>0.1:
+                v[n,:] = [1,0,1,0]
                 l[n,:] = [1,0]
         for n in range(N):
             r = numx_rand.random()
-            if r>0.666:
-                v[N+n,:] = [0,0,0,1]
-                l[N+n,:] = [0,1]
-            elif r>0.333:
-                v[N+n,:] = [0,0,1,0]
-                l[N+n,:] = [0,1]
+            if r>0.1:
+                v[n,:] = [0,1,0,1]
+                l[n,:] = [1,0]
 
         x = numx.concatenate((v, l), axis=1)
-        for k in range(1500):
-            if k>100:
+        for k in range(2500):
+            if k%5==0: spinner()
+            
+            if k>200:
                 mom = 0.9
+                eps = 0.7
             else:
                 mom = 0.5
-            bm.train(v, l, momentum=mom)
+                eps = 0.2
+            bm.train(v, l, epsilon=eps, momentum=mom)
 
             ph, sh = bm._sample_h(x)
             pv, pl, sv, sl = bm._sample_v(sh, concatenate=False)
@@ -1648,9 +1657,8 @@ class NodesTestSuite(unittest.TestSuite):
         assert_array_almost_equal(pl[idxzeros], point5, 2)
         
         
-def get_suite():
-    return NodesTestSuite()
-
+def get_suite(testname=None):
+    return NodesTestSuite(testname=testname)
 
 if __name__ == '__main__':
     numx_rand.seed(1268049219)

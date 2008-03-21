@@ -1,8 +1,33 @@
 """Test functions for the graph library."""
+import inspect
 import unittest
 from mdp import graph
 
-class GraphTestCase(unittest.TestCase):
+class GraphTestSuite(unittest.TestSuite):
+
+    def __init__(self, testname=None):
+        unittest.TestSuite.__init__(self)
+
+        if testname is not None:
+            self._graph_test_factory([testname])
+        else:
+            # get all tests
+            self._graph_test_factory()
+
+    def _graph_test_factory(self, methods_list=None):
+        if methods_list is None:
+            methods_list = dir(self)
+        for methname in methods_list:
+            try:
+                meth = getattr(self,methname)
+            except AttributeError:
+                continue
+            if inspect.ismethod(meth) and meth.__name__[:4] == "test":
+                # create a nice description
+                descr = 'Test '+(meth.__name__[4:]).replace('_',' ')
+                self.addTest(unittest.FunctionTestCase(meth,
+                             description=descr))
+
     def testAddNode(self):
         # add_node
         g = graph.Graph()
@@ -94,7 +119,11 @@ class GraphTestCase(unittest.TestCase):
         assert data==[0,1,2,3]
         # make graph cyclic
         g.add_edge(nds[1], nds[0])
-        self.assertRaises(graph.GraphTopologicalException, g.topological_sort)
+        try:
+            g.topological_sort()
+            raise Exception('Expected graph.GraphTopologicalException.')
+        except graph.GraphTopologicalException:
+            pass
 
     def testDFS(self):
         g = graph.Graph()
@@ -140,10 +169,8 @@ class GraphTestCase(unittest.TestCase):
         g.add_edge(nds0[0], nds1[0])
         assert g.is_weakly_connected()        
 
-def get_suite():
-    suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(GraphTestCase))
-    return suite
+def get_suite(testname=None):
+    return GraphTestSuite(testname=testname)
 
 if __name__ == '__main__':
     unittest.TextTestRunner(verbosity=2).run(get_suite())

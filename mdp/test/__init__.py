@@ -17,13 +17,13 @@ To rule this out, please run the tests more than once.
 If you get reproducible failures please report a bug!
 """
 
-test_suites = {'nodes':   (test_nodes.get_suite(),   3),
-               'contrib': (test_contrib.get_suite(), 4),
-               'flows':   (test_flows.get_suite(),   0),
-               'utils':   (test_utils.get_suite(),   1),
-               'graph':   (test_graph.get_suite(),   2)}
+test_suites = {'nodes':   (test_nodes.get_suite,   3),
+               'contrib': (test_contrib.get_suite, 4),
+               'flows':   (test_flows.get_suite,   0),
+               'utils':   (test_utils.get_suite,   1),
+               'graph':   (test_graph.get_suite,   2)}
 
-def test(suitename = 'all', verbosity = 2, seed = None):
+def test(suitename = 'all', verbosity = 2, seed = None, testname = None):
     if seed is None:
         seed = int(numx_rand.randint(2**31-1))
 
@@ -31,11 +31,12 @@ def test(suitename = 'all', verbosity = 2, seed = None):
         
     sys.stderr.write("Random Seed: " + str(seed)+'\n')
     if suitename == 'all':
-        sorted_suites = [x[0] for x in sorted(test_suites.values(),
-                                              key=lambda y: y[1])]
+        sorted_suites = [x[0](testname=testname)
+                         for x in sorted(test_suites.values(),
+                                         key=lambda y: y[1])]
         suite = unittest.TestSuite(sorted_suites)
     else:
-        suite = test_suites[suitename][0]
+        suite = test_suites[suitename][0](testname=testname)
     res = unittest.TextTestRunner(verbosity=verbosity).run(suite)
     if len(res.errors+res.failures) > 0:
         sys.stderr.write(_err_str)
