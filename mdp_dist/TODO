@@ -1,21 +1,15 @@
 TODO:
 
-MDP 2.1 21.3.2006:
+MDP 2.2 21.3.2008:
 
-- do screenshots on the web site still make any sense?
+- do new screenshots
 - short and long description in a single file, automatically updated everywhere
   (tutorial, sf.net, setup.py, webpage, MDP announcement, ...)
 - offer 'gemm' interface and use it in the nodes
-- verify 'utils.symrand' theoretical foundations
-- 'HitParadeNode' for any input dtype (almost done: added integer types)
 - fix 'fftpack' calls in benchmarks and tests
 - check weird Segmentation Fault in testRoundOffWarningCovMatrix with type='g'
   (it's probably a numpy.dot bug)
-- in the tutorial should the list of implemented nodes link back to the
-  API?
 - better tests for 'QuadraticForms'
-- update FastICA to match new Matlab version (done)
 - kalman filters
 - memory profiler
-- flow to handle acyclic graphs of nodes (done by niko?)
 - GUI
