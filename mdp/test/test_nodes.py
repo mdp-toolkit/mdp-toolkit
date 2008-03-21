@@ -1568,12 +1568,14 @@ class NodesTestSuite(unittest.TestSuite):
         N = 1e4
         v = numx_rand.randint(0,2,(N,I)).astype('d')
         for k in range(100):
+            if k%5==0: spinner()
             p, h = bm._sample_h(v)
             p, v = bm._sample_v(h)
 
         # see that w remains stable after learning
         delta = (0.,0.,0.)
         for k in range(100):
+            if k%5==0: spinner()
             err = bm.train(v)
         bm.stop_training()
 
@@ -1599,6 +1601,8 @@ class NodesTestSuite(unittest.TestSuite):
 
         delta = (0.,0.,0.)
         for k in range(1500):
+            if k%5==0: spinner()
+
             if k>5:
                 mom = 0.9
             else:
