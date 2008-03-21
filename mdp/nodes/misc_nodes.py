@@ -105,19 +105,9 @@ class HitParadeNode(Node):
     """Collect the first 'n' local maxima and minima of the training signal
     which are separated by a minimum gap 'd'.
 
-    Note: this node can be pickled with binary protocols only if
-    all HitParade items are different from float 'inf', because
-    of a bug in pickle [1]. If this is the case for you please use
-    the pickle ASCII protocol '0'.
-
     This is an analysis node, i.e. the data is analyzed during training
     and the results are stored internally. Use the
     'get_maxima' and 'get_minima' methods to access them.
-
-    References:
-    [1] http://bugs.python.org/issue445484
-        Note that this bug has been fixed in python2.5
-    
     """    
     
     def __init__(self, n, d=1, input_dim=None, dtype=None):
@@ -154,12 +144,6 @@ class HitParadeNode(Node):
             hit[c].update((x[:,c],indices))
         self.hit = hit
         self.tlen = tlen
-
-    def copy(self, protocol = 0):
-        """Return a deep copy of the node.
-        Note: we use pickle protocol '0' since binary protocols can not pickle
-        float 'inf'."""
-        return super(HitParadeNode, self).copy(protocol)
     
     def get_maxima(self):
         """
