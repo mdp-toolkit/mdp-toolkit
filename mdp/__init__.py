@@ -127,11 +127,13 @@ from linear_flows import Flow, CheckpointFlow, \
 from helper_funcs import pca, whitening, fastica, cubica, sfa, get_eta, \
                          sfa2, factor_analysis, isfa
 
-# import test functions:
-from test import test
 
 # import our modules
 import nodes
+import hinet
+
+# import test functions:
+from test import test
 
 # clean up namespace
 del signal_node

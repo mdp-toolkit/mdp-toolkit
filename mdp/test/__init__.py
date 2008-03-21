@@ -9,7 +9,7 @@ Run all tests with:
 import unittest
 import sys
 from mdp import numx, numx_rand
-import test_nodes, test_flows, test_utils, test_graph, test_contrib
+import test_nodes, test_flows, test_utils, test_graph, test_contrib, test_hinet
 
 _err_str = """\nIMPORTANT: some tests use random numbers. This could
 occasionally lead to failures due to numerical degeneracies.
@@ -18,7 +18,8 @@ If you get reproducible failures please report a bug!
 """
 
 test_suites = {'nodes':   (test_nodes.get_suite,   3),
-               'contrib': (test_contrib.get_suite, 4),
+               'hinet':   (test_hinet.get_suite,   4),
+               'contrib': (test_contrib.get_suite, 5),
                'flows':   (test_flows.get_suite,   0),
                'utils':   (test_utils.get_suite,   1),
                'graph':   (test_graph.get_suite,   2)}

@@ -1,12 +1,8 @@
  This file is part of Modular toolkit for Data Processing (MDP).
 
-<<<<<<< .mine
- Copyright (c) 2004-2008, Pietro Berkes <berkes@gatsby.ucl.ac.uk> and 
-                     Tiziano Zito  <tiziano.zito@bccn-berlin.de>
-=======
- Copyright (c) 2004-2007, Pietro Berkes <berkes@gatsby.ucl.ac.uk> and 
-                     Tiziano Zito  <tiziano.zito@bccn-berlin.de>
->>>>>>> .r206
+ Copyright (c) 2004-2008, Pietro Berkes <berkes@gatsby.ucl.ac.uk>,
+                          Niko Wilbert <mail@nikowilbert.de>,   
+                          Tiziano Zito  <tiziano.zito@bccn-berlin.de>
  
  All the code in this package is distributed under the following conditions:
 
