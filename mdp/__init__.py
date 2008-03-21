@@ -5,19 +5,22 @@ framework written in Python.
 
 From the user's perspective, MDP consists of a collection of trainable
 supervised and unsupervised algorithms or other data processing units
-(nodes) that can be combined into data processing flows. Given a
+(nodes) that can be combined into data processing flows and more 
+complex feed-forward network architectures. Given a
 sequence of input data, MDP takes care of successively training or
-executing all nodes in the flow. This structure allows to specify
+executing all nodes in the network. This structure allows to specify
 complex algorithms as a sequence of simpler data processing steps in a
 natural way. Training can be performed using small chunks of input
 data, so that the use of very large data sets becomes possible while
 reducing the memory requirements. Memory usage can also be minimized
 by defining the internals of the nodes to be single precision.
 
-The base of readily available algorithms includes Principal Component
-Analysis, three flavors of Independent Component Analysis, Slow Feature
-Analysis, Gaussian Classifiers, Growing Neural Gas, Fisher
-Discriminant Analysis, and Factor Analysis.
+The set of readily available algorithms includes Principal Component
+Analysis (PCA and NIPALS), three flavors of Independent Component
+Analysis (CuBICA, FastICA, and JADE), Slow Feature Analysis,
+Independent Slow Feature Analysis, Gaussian Classifiers, Growing
+Neural Gas, Fisher Discriminant Analysis, Factor Analysis, Restricted
+Boltzmann Machine, and many more.
 
 From the developer's perspective, MDP is a framework to make the
 implementation of new algorithms easier. The basic class 'Node' takes
@@ -42,8 +45,8 @@ where trainable data processing algorithms are used. Its simplicity on
 the user side together with the reusability of the implemented nodes
 make it also a valid educational tool.
 
-As its user base is steadily increasing, MDP appears as a good
-candidate for becoming a common repository of user-supplied, freely
+As its users' and contributors' base is steadily increasing, MDP appears
+as a good candidate for becoming a common repository of user-supplied, freely
 available, Python implemented data processing algorithms.
 
 http://mdp-toolkit.sourceforge.net
