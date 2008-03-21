@@ -1,5 +1,8 @@
 MDP-2.2:
-2008-03-14: added hinet contributions
+2008-03-21: added hinet package
+2008-03-19: added RBM nodes 
+2008-03-18: fixed bug in PCANode when output_dim was specified as float.
+2008-03-16: HitParadeNode now supports integer dtypes.
 2008-03-13: created contrib subpackage and test_contrib test suites.
             JADENode moved to contrib. Tests are now sorted by test_suite.
 	    Added the NIPALSNode for iterative PCA.
