@@ -24,7 +24,7 @@ class FANode(mdp.Node):
         its end.
 
         The 'execute' function returns the Maximum A Posteriori estimate
-        of the latent variables. The 'generate' function generates
+        of the latent variables. The 'generate_input' function generates
         observations from the prior distribution.
 
         tol -- tolerance (minimum change in log-likelihood before exiting

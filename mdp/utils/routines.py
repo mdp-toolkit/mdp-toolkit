@@ -288,8 +288,19 @@ numarray.linear_algebra.eigenvectors with an interface compatible with symeig.
     w = w.take(idx)
     Z = Z.take(idx, axis=1)
     
+    # sanitize range:
+    n = A.shape[0]
     if range is not None:
         lo, hi = range
+        if lo < 1:
+            lo = 1
+        if lo > n:
+            lo = n
+        if hi > n:
+            hi = n
+        if lo > hi:
+            lo, hi = hi, lo
+        
         Z = Z[:, lo-1:hi]
         w = w[lo-1:hi]
 

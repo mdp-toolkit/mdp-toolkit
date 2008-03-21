@@ -1,15 +1,19 @@
 import mdp
 from mdp import numx, numx_linalg, utils, Node, NodeException
 
-MAX_NUM = {#numx.int32: 2147483647,
-           #numx.int64: 9223372036854775807L,
-           numx.float32: numx.finfo(numx.float32).max,
-           numx.float64: numx.finfo(numx.float64).max}
+MAX_NUM = {numx.dtype('b'): 127,
+           numx.dtype('h'): 32767,
+           numx.dtype('i'): 2147483647,
+           numx.dtype('q'): 9223372036854775807L,
+           numx.dtype('f'): numx.finfo(numx.float32).max,
+           numx.dtype('d'): numx.finfo(numx.float64).max}
 
-MIN_NUM = {#numx.int32: -2147483648,
-           #numx.int64: -9223372036854775808L,
-           numx.float32: numx.finfo(numx.float32).min,
-           numx.float64: numx.finfo(numx.float64).min}
+MIN_NUM = {numx.dtype('b'): -128,
+           numx.dtype('h'): -32768,
+           numx.dtype('i'): -2147483648,
+           numx.dtype('q'): -9223372036854775808L,
+           numx.dtype('f'): numx.finfo(numx.float32).min,
+           numx.dtype('d'): numx.finfo(numx.float64).min}
 
 class OneDimensionalHitParade(object):
     """
@@ -31,8 +35,8 @@ class OneDimensionalHitParade(object):
         self.iM = numx.zeros((n,),dtype=integer_dtype)
         self.im = numx.zeros((n,),dtype=integer_dtype)
         real_dtype = numx.dtype(real_dtype)
-        self.M = numx.array([MIN_NUM[real_dtype.type]]*n, dtype=real_dtype)
-        self.m = numx.array([MAX_NUM[real_dtype.type]]*n, dtype=real_dtype)
+        self.M = numx.array([MIN_NUM[real_dtype]]*n, dtype=real_dtype)
+        self.m = numx.array([MAX_NUM[real_dtype]]*n, dtype=real_dtype)
         self.lM = 0
         self.lm = 0
 
@@ -101,19 +105,9 @@ class HitParadeNode(Node):
     """Collect the first 'n' local maxima and minima of the training signal
     which are separated by a minimum gap 'd'.
 
-    Note: this node can be pickled with binary protocols only if
-    all HitParade items are different from float 'inf', because
-    of a bug in pickle [1]. If this is the case for you please use
-    the pickle ASCII protocol '0'.
-
     This is an analysis node, i.e. the data is analyzed during training
     and the results are stored internally. Use the
     'get_maxima' and 'get_minima' methods to access them.
-
-    References:
-    [1] Pickle bug: [ 714733 ] cPickle fails to pickle inf
-        https://sourceforge.net/tracker/?func=detail&atid=105470&aid=714733&group_id=5470
-
     """    
     
     def __init__(self, n, d=1, input_dim=None, dtype=None):
@@ -129,9 +123,13 @@ class HitParadeNode(Node):
         self.hit = None
         self.tlen = 0
 
+    def _set_input_dim(self, n):
+        self._input_dim = n
+        self.output_dim = n
+
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
-        return ['float32', 'float64']
+        return ['b','h','i','q','f','d']
 
     def _train(self, x):
         hit = self.hit
@@ -146,12 +144,6 @@ class HitParadeNode(Node):
             hit[c].update((x[:,c],indices))
         self.hit = hit
         self.tlen = tlen
-
-    def copy(self, protocol = 0):
-        """Return a deep copy of the node.
-        Note: we use pickle protocol '0' since binary protocols can not pickle
-        float 'inf'."""
-        return super(HitParadeNode, self).copy(protocol)
     
     def get_maxima(self):
         """
@@ -221,9 +213,8 @@ class TimeFramesNode(Node):
 
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
-        return mdp.utils.get_dtypes('AllFloat') + \
-               mdp.utils.get_dtypes('AllInteger')
-
+        return ['int8','int16','int32','int64','float32','float64']
+    
     def is_trainable(self):
         return False
 
@@ -325,6 +316,10 @@ class EtaComputerNode(Node):
         super(EtaComputerNode, self).__init__(input_dim, None, dtype)
         self._initialized = 0
 
+    def _set_input_dim(self, n):
+        self._input_dim = n
+        self.output_dim = n
+
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
         return ['float32', 'float64']
@@ -379,7 +374,7 @@ class EtaComputerNode(Node):
 class NoiseNode(Node):
     """Inject multiplicative or additive noise into the input data.
 
-    Original idea by Mathias Franzius.
+    Original code contributed by Mathias Franzius.
     """
     
     def __init__(self, noise_func = mdp.numx_rand.normal, noise_args = (0,1),
@@ -446,6 +441,10 @@ class GaussianClassifierNode(Node):
         """
         super(GaussianClassifierNode, self).__init__(input_dim, None, dtype)
         self.cov_objs = {}
+
+    def _set_input_dim(self, n):
+        self._input_dim = n
+        self.output_dim = n
 
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""

@@ -11,6 +11,8 @@ import mdp
 import cPickle
 import tempfile
 import os
+import itertools
+import sys
 from mdp import utils, numx, numx_rand, numx_linalg
 # !!! scipy.fft seems to be extremely slow, this is a workaround until
 # !!! it's fixed
@@ -31,6 +33,9 @@ testdecimals = {testtypes[0]: 12, testtypes[1]: 6}
 def _rand_labels(x):
     return numx.around(uniform(x.shape[0]))
 
+def _rand_labels_array(x):
+    return numx.around(uniform(x.shape[0])).reshape((x.shape[0],1))
+
 def _std(x):
     return x.std(axis=0)
     # standard deviation without bias
@@ -49,18 +54,36 @@ def _cov(x,y=None):
     #return mult(numx.transpose(x),y)/(x.shape[0]-1)
     return mult(numx.transpose(x),y)/(x.shape[0])
 
+_spinner = itertools.cycle((' /\b\b', ' -\b\b', ' \\\b\b', ' |\b\b'))
+# create spinner
+def spinner():
+    sys.stderr.write(_spinner.next())
+    sys.stderr.flush()
+
 class NodesTestSuite(unittest.TestSuite):
 
-    def __init__(self):
+    def __init__(self, testname=None):
         unittest.TestSuite.__init__(self)
         
         # constants
         self.mat_dim = (500,5)
         self.decimal = 7
+
+        # set nodes to be tested
+        self._set_nodes()
+
+        if testname is not None:
+            self._nodes_test_factory([testname])
+        else:
+            # get generic tests
+            self._generic_test_factory()
+            # get FastICA tests
+            self._fastica_test_factory()
+            # get nodes tests
+            self._nodes_test_factory()
+
+    def _set_nodes(self):
         mn = mdp.nodes
-        # self._nodes = node_class or
-        #              (node_class, constructuctor_args,
-        #               function_that_returns_argument_for_the_train_func)
         self._nodes = [mn.PCANode,
                        mn.WhiteningNode,
                        mn.SFANode,
@@ -77,8 +100,25 @@ class NodesTestSuite(unittest.TestSuite):
                        (mn.FDANode, [], _rand_labels),
                        (mn.GaussianClassifierNode, [], _rand_labels),
                        mn.FANode,
-                       mn.ISFANode]
+                       mn.ISFANode,
+                       (mn.RBMNode, [5],None),
+                       (mn.RBMWithLabelsNode, [5, 1], _rand_labels_array)]
 
+    def _nodes_test_factory(self, methods_list=None):
+        if methods_list is None:
+            methods_list = dir(self)
+        for methname in methods_list:
+            try:
+                meth = getattr(self,methname)
+            except AttributeError:
+                continue
+            if inspect.ismethod(meth) and meth.__name__[:4] == "test":
+                # create a nice description
+                descr = 'Test '+(meth.__name__[4:]).replace('_',' ')
+                self.addTest(unittest.FunctionTestCase(meth,
+                             description=descr))
+
+    def _generic_test_factory(self):
         # generate generic test cases
         for node_class in self._nodes:
             if isinstance(node_class, tuple):
@@ -98,8 +138,9 @@ class NodesTestSuite(unittest.TestSuite):
             testfunc = self._get_testinverse(node_class, args,
                                              sup_args_func)
             # add to the suite
-            self.addTest(unittest.FunctionTestCase(testfunc,
-                                                   description=funcdesc))
+            if testfunc is not None:
+                self.addTest(unittest.FunctionTestCase(testfunc,
+                                                       description=funcdesc))
             # generate testoutputdim_nodeclass test cases
             if 'output_dim' in inspect.getargspec(node_class.__init__)[0]:
                 funcdesc ='Test output dim consistency of '+node_class.__name__
@@ -108,6 +149,16 @@ class NodesTestSuite(unittest.TestSuite):
                 # add to the suite
                 self.addTest(unittest.FunctionTestCase(testfunc,
                                                        description=funcdesc))
+            # generate testdimset_nodeclass test cases
+            funcdesc='Test dimensions and dtype settings of '+node_class.__name__
+            testfunc = self._get_testdimdtypeset(node_class, args,
+                                               sup_args_func)
+            # add to the suite
+            self.addTest(unittest.FunctionTestCase(testfunc,
+                                                   description=funcdesc))
+        
+
+    def _fastica_test_factory(self):
         # generate FastICANode testcases
         fica_parm = []
         for approach in ['symm', 'defl']:
@@ -138,10 +189,6 @@ class NodesTestSuite(unittest.TestSuite):
             self.addTest(unittest.FunctionTestCase(testfunc,
                                                    description=funcdesc))
             
-        for methname in dir(self):
-            meth = getattr(self,methname)
-            if inspect.ismethod(meth) and meth.__name__[:4] == "test":
-                self.addTest(unittest.FunctionTestCase(meth))
 
     def _get_random_mix(self, mat_dim = None, type = "d", scale = 1,\
                         rand_func = uniform, avg = 0, \
@@ -179,29 +226,57 @@ class NodesTestSuite(unittest.TestSuite):
                     node.stop_training()
                 else:
                     break
+                
+    def _stop_training_or_execute(self, node, inp):
+        if node.is_trainable():
+            node.stop_training()
+        else:
+            out = node(inp)
     
     def _get_testinverse(self, node_class, args=[], sup_args_func=None):
         # generates testinverse_nodeclass test functions
+        # only if invertible
+        node_args = self._set_node_args(args)
+        node = node_class(*node_args)
+        if not node.is_invertible():
+            return None
         def _testinverse(node_class=node_class):
             mat,mix,inp = self._get_random_mix()
             # take the first available dtype for the test
-            dtype = node_class(*args).get_supported_dtypes()[0]
-            node = node_class(dtype=dtype, *args)
-            if not node.is_invertible():return
+            node_args = self._set_node_args(args)
+            dtype = node_class(*node_args).get_supported_dtypes()[0]
+            node = node_class(dtype=dtype, *node_args)
             self._train_if_necessary(inp, node, args, sup_args_func)
             # execute the node
             out = node.execute(inp)
             # compute the inverse
             rec = node.inverse(out)
+            # cast inp for comparison!
+            inp = inp.astype(dtype)
             assert_array_almost_equal_diff(rec,inp,self.decimal-3)
             assert_type_equal(rec.dtype, dtype)
         return _testinverse
 
+    def _set_node_args(self, args=None):
+        # used so that node instantiation arguments can be specified as
+        # functions, which can return the real arguments (in case they
+        # are immutable objects, so they are recreated each time a node
+        # is instantiated)
+        node_args = []
+        if args is not None:
+            for item in args:
+                if callable(item):
+                    node_args.append(item())
+                else:
+                    node_args.append(item)
+            return node_args
+
     def _get_testdtype(self, node_class, args=[], sup_args_func=None):
         def _testdtype(node_class=node_class):
-            supported_types = node_class(*args).get_supported_dtypes()
+            node_args = self._set_node_args(args)
+            supported_types = node_class(*node_args).get_supported_dtypes()
             for dtype in supported_types:
-            #for dtype in testtypes+testtypeschar:
+                node_args = self._set_node_args(args)
                 if node_class == mdp.nodes.SFA2Node:
                     freqs = [2*numx.pi*100.,2*numx.pi*200.]
                     t =  numx.linspace(0, 1, num=1000)
@@ -210,9 +285,12 @@ class NodesTestSuite(unittest.TestSuite):
                     inp = mat.astype('d')
                 else:
                     mat, mix, inp = self._get_random_mix(type="d")
-                node = node_class(*args, **{'dtype':dtype})
-                self._train_if_necessary(inp, node, args, sup_args_func)
-                out = node.execute(inp)
+                node = node_class(*node_args, **{'dtype':dtype})
+                self._train_if_necessary(inp, node, node_args, sup_args_func)
+                if node_class == mdp.nodes.RBMWithLabelsNode:
+                    out = node.execute(inp, sup_args_func(inp))
+                else:
+                    out = node.execute(inp)
                 assert_type_equal(out.dtype, dtype) 
         return _testdtype
 
@@ -221,21 +299,38 @@ class NodesTestSuite(unittest.TestSuite):
             mat,mix,inp = self._get_random_mix()
             output_dim = self.mat_dim[1]/2
             # case 1: output dim set in the constructor
-            node = node_class(*args, **{'output_dim':output_dim})
+            node_args = self._set_node_args(args)
+            node = node_class(*node_args, **{'output_dim':output_dim})
             self._train_if_necessary(inp, node, args, sup_args_func)
             # execute the node
             out = node(inp)
-            assert out.shape[1]==output_dim
-            assert node._output_dim==output_dim
+            assert out.shape[1]==output_dim,"%d!=%d"%(out.shape[1],output_dim)
+            assert node._output_dim==output_dim,\
+                   "%d!=%d"%(node._output_dim,output_dim)
             # case 2: output_dim set explicitly
-            node = node_class(*args)
+            node_args = self._set_node_args(args)
+            node = node_class(*node_args)
             self._train_if_necessary(inp, node, args, sup_args_func)
-            node.set_output_dim(output_dim)
+            node.output_dim = output_dim
             # execute the node
             out = node(inp)
-            assert out.shape[1]==output_dim
-            assert node._output_dim==output_dim
+            assert out.shape[1]==output_dim, "%d!=%d"%(out.shape[1],output_dim)
+            assert node._output_dim==output_dim,\
+                   "%d!=%d"%(node._output_dim,output_dim)
         return _testoutputdim
+
+    def _get_testdimdtypeset(self, node_class, args=[], sup_args_func=None):
+        def _testdimdtypeset(node_class=node_class):
+            mat,mix,inp = self._get_random_mix()
+            node_args = self._set_node_args(args)
+            node = node_class(*node_args)
+            self._train_if_necessary(inp, node, args, sup_args_func)
+            # execute or stop_training the node
+            self._stop_training_or_execute(node, inp)
+            assert node.output_dim is not None
+            assert node.dtype is not None
+            assert node.input_dim is not None
+        return _testdimdtypeset
 
     def _uniform(self, min_, max_, dims):
         return uniform(dims)*(max_-min_)+min_
@@ -509,6 +604,25 @@ class NodesTestSuite(unittest.TestSuite):
         # test a bug in v.1.1.1, should not crash
         pca.inverse(act_mat[:,:1])
 
+    def testPCANode_desired_variance(self):
+        mat, mix, inp = self._get_random_mix(mat_dim=(1000, 3))
+        # first make them white
+        pca = mdp.nodes.WhiteningNode()
+        pca.train(mat)
+        mat = pca.execute(mat)
+        # set the variances
+        mat *= [0.6,0.3,0.1]
+        #mat -= mat.mean(axis=0)
+        pca = mdp.nodes.PCANode(output_dim=0.8)
+        pca.train(mat)
+        out = pca.execute(mat)
+        # check that we got exactly two output_dim:
+        assert pca.output_dim == 2
+        assert out.shape[1] == 2
+        # check that explained variance is > 0.8 and < 1
+        assert (pca.explained_variance > 0.8 and pca.explained_variance < 1)
+        
+    
     def testPCANode_SVD(self):
         # it should pass atleast the same test as PCANode
         line_x = numx.zeros((1000,2),"d")
@@ -688,7 +802,6 @@ class NodesTestSuite(unittest.TestSuite):
         mat += normal(0., 1e-10, size=(dim, 2))
         mat = (mat - mean(mat[:-1,:],axis=0))\
               /std(mat[:-1,:],axis=0)
-        des_mat = mat.copy()
         mat = mult(mat,uniform((2,2))) + uniform(2)
         sfa = mdp.nodes.SFA2Node(input_dim=2)
         sfa.train(mat)
@@ -746,7 +859,7 @@ class NodesTestSuite(unittest.TestSuite):
         ica2 = ica.copy()
         self._testICANode(ica)
         self._testICANodeMatrices(ica2)
-        
+      
     def _get_testFastICA(self, parms):
         # create a function description
         header = 'TestFastICANode:'
@@ -824,7 +937,23 @@ class NodesTestSuite(unittest.TestSuite):
         assert_array_equal(max_ind,numx.array([[10,120,230]]))
         assert_array_equal(minima,numx.array([[-4,-3,-2]]))
         assert_array_equal(min_ind,numx.array([[11,121,231]]))
-
+        # test integer type:
+        signal = (uniform((300,3))*10).astype('i')
+        gap = 5
+        signal[10,0], signal[120,1], signal[230,2] = 40,30,20
+        signal[11,0], signal[121,1], signal[231,2] = -40,-30,-20
+        hit = mdp.nodes.HitParadeNode(1,gap,3)
+        hit.train(signal[:100,:])
+        hit.train(signal[100:200,:])
+        hit.train(signal[200:300,:])
+        maxima, max_ind = hit.get_maxima()
+        minima, min_ind = hit.get_minima()
+        assert_array_equal(maxima,numx.array([[40,30,20]]))
+        assert_array_equal(max_ind,numx.array([[10,120,230]]))
+        assert_array_equal(minima,numx.array([[-40,-30,-20]]))
+        assert_array_equal(min_ind,numx.array([[11,121,231]]))
+        
+        
     def testTimeFramesNode(self):
         length = 14
         gap = 6
@@ -1259,7 +1388,6 @@ class NodesTestSuite(unittest.TestSuite):
         error /= nsources*nsources
         return error
 
-
     def testISFANode_AnalyticalSolution(self):
         nsources = 2
         # number of time lags
@@ -1309,10 +1437,232 @@ class NodesTestSuite(unittest.TestSuite):
                 break
         assert error < 1E-4, 'Not one out of %d trials succeded.'%trials
             
-        
-def get_suite():
-    return NodesTestSuite()
+    def testRBMSample_h(self):
+        # number of visible and hidden units
+        I, J = 2, 4
 
+        # create RBM node
+        bm = mdp.nodes.RBMNode(J, I)
+        # fake training to initialize internals
+        bm.train(numx.zeros((1,I)))
+        # init to deterministic model
+        bm.w[0,:] = [1,0,1,0]
+        bm.w[1,:] = [0,1,0,1]
+        bm.w *= 2e4
+        bm.bv *= 0.
+        bm.bh *= 0.
+
+        # ### test 1
+        v = numx.array([[0,0],[1,0],[0,1],[1,1.]])
+        h = []
+        for n in range(1000):
+            prob, sample = bm.sample_h(v)
+            h.append(sample)
+
+        # check inferred probabilities
+        expected_probs = numx.array([[0.5, 0.5, 0.5, 0.5],
+                                      [1.0, 0.5, 1.0, 0.5],
+                                      [0.5, 1.0, 0.5, 1.0],
+                                      [1.0, 1.0, 1.0, 1.0]])
+        assert_array_almost_equal(prob, expected_probs, 8)
+
+        # check sampled units
+        h = numx.array(h)
+        for n in range(4):
+            distr = h[:,n,:].mean(axis=0)
+            assert_array_almost_equal(distr, expected_probs[n,:], 1)
+
+        # ### test 2, with bias
+        bm.bh -= 1e4
+        h = []
+        for n in range(100):
+            prob, sample = bm.sample_h(v)
+            h.append(sample)
+
+        # check inferred probabilities
+        expected_probs = numx.array([[0., 0., 0., 0.],
+                                      [1.0, 0., 1.0, 0.],
+                                      [0., 1.0, 0., 1.0],
+                                      [1.0, 1.0, 1.0, 1.0]])
+        assert_array_almost_equal(prob, expected_probs, 8)
+
+        # check sampled units
+        h = numx.array(h)
+        for n in range(4):
+            distr = h[:,n,:].mean(axis=0)
+            assert_array_almost_equal(distr, expected_probs[n,:], 1)
+
+    def testRBMSample_v(self):
+        # number of visible and hidden units
+        I, J = 4, 2
+
+        # create RBM node
+        bm = mdp.nodes.RBMNode(J, I)
+        # fake training to initialize internals
+        bm.train(numx.zeros((1,I)))
+        # init to deterministic model
+        bm.w[:,0] = [1,0,1,0]
+        bm.w[:,1] = [0,1,0,1]
+        bm.w *= 2e4
+        bm.bv *= 0
+        bm.bh *= 0
+
+        # test 1
+        h = numx.array([[0,0],[1,0],[0,1],[1,1.]])
+        v = []
+        for n in range(100):
+            prob, sample = bm.sample_v(h)
+            v.append(sample)
+
+        # check inferred probabilities
+        expected_probs = numx.array([[0.5, 0.5, 0.5, 0.5],
+                                      [1.0, 0.5, 1.0, 0.5],
+                                      [0.5, 1.0, 0.5, 1.0],
+                                      [1.0, 1.0, 1.0, 1.0]])
+        assert_array_almost_equal(prob, expected_probs, 8)
+
+        # check sampled units
+        v = numx.array(v)
+        for n in range(4):
+            distr = v[:,n,:].mean(axis=0)
+            assert_array_almost_equal(distr, expected_probs[n,:], 1)
+
+        # test 2, with bias
+        bm.bv -= 1e4
+        v = []
+        for n in range(100):
+            prob, sample = bm.sample_v(h)
+            v.append(sample)
+
+        # check inferred probabilities
+        expected_probs = numx.array([[0., 0., 0., 0.],
+                                      [1.0, 0., 1.0, 0.],
+                                      [0., 1.0, 0., 1.0],
+                                      [1.0, 1.0, 1.0, 1.0]])
+        assert_array_almost_equal(prob, expected_probs, 8)
+
+        # check sampled units
+        v = numx.array(v)
+        for n in range(4):
+            distr = v[:,n,:].mean(axis=0)
+            assert_array_almost_equal(distr, expected_probs[n,:], 1)
+
+    def testRBMStability(self):
+        # number of visible and hidden units
+        I, J = 8, 2
+
+        # create RBM node
+        bm = mdp.nodes.RBMNode(J, I)
+        bm._init_weights()
+        # init to random model
+        bm.w = mdp.utils.random_rot(max(I,J), dtype='d')[:I, :J]
+        bm.bv = numx_rand.randn(I)
+        bm.bh = numx_rand.randn(J)
+
+        # save original weights
+        real_w = bm.w.copy()
+        real_bv = bm.bv.copy()
+        real_bh = bm.bh.copy()
+
+        # Gibbs sample to reach the equilibrium distribution
+        N = 1e4
+        v = numx_rand.randint(0,2,(N,I)).astype('d')
+        for k in range(100):
+            if k%5==0: spinner()
+            p, h = bm._sample_h(v)
+            p, v = bm._sample_v(h)
+
+        # see that w remains stable after learning
+        delta = (0.,0.,0.)
+        for k in range(100):
+            if k%5==0: spinner()
+            err = bm.train(v)
+        bm.stop_training()
+
+        assert_array_almost_equal(real_w, bm.w, 1)
+        assert_array_almost_equal(real_bv, bm.bv, 1)
+        assert_array_almost_equal(real_bh, bm.bh, 1)
+
+    def testRBMLearning(self):
+        # number of visible and hidden units
+        I, J = 4, 2
+        
+        bm = mdp.nodes.RBMNode(J, I)
+        bm.w = mdp.utils.random_rot(max(I,J), dtype='d')[:I, :J]
+
+        # the observations consist of two disjunct patterns that
+        # never appear together
+        N=10000
+        v = numx.zeros((N,I))
+        for n in range(N):
+            r = numx_rand.random()
+            if r>0.666: v[n,:] = [0,1,0,1]
+            elif r>0.333: v[n,:] = [1,0,1,0]
+
+        delta = (0.,0.,0.)
+        for k in range(1500):
+            if k%5==0: spinner()
+
+            if k>5:
+                mom = 0.9
+            else:
+                mom = 0.5
+            bm.train(v, epsilon=0.3, momentum=mom)
+            if bm._train_err/N<0.1: break
+            #print '-------', bm._train_err
+
+        assert bm._train_err/N<0.1
+
+    def testRBMWithLabelsNode(self):
+        I, J, L = 4, 4, 2
+        bm = mdp.nodes.RBMWithLabelsNode(J,L,I)
+        assert bm.input_dim == I+L
+
+        # generate input data
+        N = 2500
+        v = numx.zeros((2*N,I))
+        l = numx.zeros((2*N,L))
+        for n in range(N):
+            r = numx_rand.random()
+            if r>0.1:
+                v[n,:] = [1,0,1,0]
+                l[n,:] = [1,0]
+        for n in range(N):
+            r = numx_rand.random()
+            if r>0.1:
+                v[n,:] = [0,1,0,1]
+                l[n,:] = [1,0]
+
+        x = numx.concatenate((v, l), axis=1)
+        for k in range(2500):
+            if k%5==0: spinner()
+            
+            if k>200:
+                mom = 0.9
+                eps = 0.7
+            else:
+                mom = 0.5
+                eps = 0.2
+            bm.train(v, l, epsilon=eps, momentum=mom)
+
+            ph, sh = bm._sample_h(x)
+            pv, pl, sv, sl = bm._sample_v(sh, concatenate=False)
+
+            v_train_err = float(((v-sv)**2.).sum())
+            #print '-------', k, v_train_err/(2*N)
+            if v_train_err/(2*N)<0.1: break
+
+        # visible units are reconstructed
+        assert v_train_err/(2*N)<0.1
+        # units with 0 input have 50/50 labels
+        idxzeros = v.sum(axis=1)==0
+        nzeros = idxzeros.sum()
+        point5 = numx.zeros((nzeros, L)) + 0.5
+        assert_array_almost_equal(pl[idxzeros], point5, 2)
+        
+        
+def get_suite(testname=None):
+    return NodesTestSuite(testname=testname)
 
 if __name__ == '__main__':
     numx_rand.seed(1268049219)
