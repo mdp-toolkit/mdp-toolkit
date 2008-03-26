@@ -29,3 +29,4 @@ del fda_nodes
 del em_nodes
 del misc_nodes
 del isfa_nodes
+del rbm_nodes
