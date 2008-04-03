@@ -142,4 +142,15 @@ from test import test
 del signal_node
 del linear_flows
 
+# explicitly set __all__, mainly needed for epydoc
+__all__ = ['CheckpointFlow', 'CheckpointFunction', 'CheckpointSaveFunction',
+           'CrashRecoveryException', 'Cumulator', 'Flow', 'FlowException',
+           'FlowExceptionCR', 'IsNotInvertibleException',
+           'IsNotTrainableException', 'MDPException', 'MDPWarning', 'Node',
+           'NodeException', 'TrainingException', 'TrainingFinishedException',
+           'contrib', 'cubica', 'factor_analysis', 'fastica', 'get_eta',
+           'graph', 'helper_funcs', 'hinet', 'isfa', 'nodes', 
+           'numx_description', 
+           'pca', 'sfa', 'sfa2', 'test', 'utils', 'whitening']
+
 __version__ = '2.2'

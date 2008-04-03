@@ -1,1 +1,9 @@
-from graph import *
+from graph import Graph, GraphEdge, GraphException, GraphNode,\
+           GraphTopologicalException, is_sequence,\
+           recursive_map, recursive_reduce
+
+del graph
+
+__all__ = ['Graph', 'GraphEdge', 'GraphException', 'GraphNode',
+           'GraphTopologicalException', 'is_sequence',
+           'recursive_map', 'recursive_reduce']
