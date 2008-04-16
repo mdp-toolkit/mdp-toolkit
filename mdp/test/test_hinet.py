@@ -12,9 +12,12 @@ from test_nodes import *
 
 import itertools    
 
+import StringIO
+
 mh = mdp.hinet
 
 class HinetTestSuite(NodesTestSuite):
+    
     def __init__(self, testname=None):
         NodesTestSuite.__init__(self, testname=testname)
         self.mat_dim = (500,4)
@@ -118,7 +121,18 @@ class HinetTestSuite(NodesTestSuite):
         y = layer.execute(x)
         assert layer.dtype == numx.dtype('f')
         assert y.dtype == layer.dtype
-
+        
+    def testLayer_invertibility(self):
+        node1 = mdp.nodes.PCANode(input_dim=10, output_dim=10)
+        node2 = mdp.nodes.PCANode(input_dim=17, output_dim=17)
+        node3 = mdp.nodes.PCANode(input_dim=3, output_dim=3)
+        x = numx_rand.random([100,30]).astype('f')
+        layer = mh.Layer([node1, node2, node3])
+        layer.train(x)
+        y = layer.execute(x)
+        x_inverse = layer.inverse(y)
+        assert numx.all(numx.absolute(x - x_inverse) < 0.001)
+        
     def testCloneLayer(self):
         node = mdp.nodes.PCANode(input_dim=10, output_dim=5)
         x = numx_rand.random([10,70]).astype('f')
@@ -177,7 +191,7 @@ class HinetTestSuite(NodesTestSuite):
         # routing layer
         nodes = [sboard.get_out_channel_node(index) 
                  for index in range(sboard.output_channels)]
-        layer = mh.Layer(nodes, same_input=True)
+        layer = mh.SameInputLayer(nodes)
         layer_y = layer.execute(x)
         assert numx.all(y==layer_y)
 
@@ -200,7 +214,7 @@ class HinetTestSuite(NodesTestSuite):
     def testSFANet(self):
         noisenode = mdp.nodes.NoiseNode(input_dim=20*20, 
                                         noise_args=(0, 0.0001))
-        sfa_node = mdp.nodes.SFANode(input_dim=20*20, output_dim=10,dtype='f')
+        sfa_node = mdp.nodes.SFANode(input_dim=20*20, output_dim=10, dtype='f')
         switchboard = mh.Rectangular2dSwitchboard(x_in_channels=100, 
                                                   y_in_channels=100,
                                                   x_field_channels=20, 
@@ -210,9 +224,29 @@ class HinetTestSuite(NodesTestSuite):
         flownode = mh.FlowNode(mdp.Flow([noisenode, sfa_node]))
         sfa_layer = mh.CloneLayer(flownode, switchboard.output_channels)
         flow = mdp.Flow([switchboard, sfa_layer])
-        train_gen = numx_rand.random((3, 10, 100*100))
+        train_gen = numx.cast['f'](numx_rand.random((3, 10, 100*100)))
         flow.train([None, train_gen])
-
+        
+    def testHiNetHTML(self):
+        # create some flow for testing
+        noisenode = mdp.nodes.NoiseNode(input_dim=20*20, 
+                                        noise_args=(0, 0.0001))
+        sfa_node = mdp.nodes.SFANode(input_dim=20*20, output_dim=10)
+        switchboard = mh.Rectangular2dSwitchboard(x_in_channels=100, 
+                                                  y_in_channels=100,
+                                                  x_field_channels=20, 
+                                                  y_field_channels=20,
+                                                  x_field_spacing=10, 
+                                                  y_field_spacing=10)
+        flownode = mh.FlowNode(mdp.Flow([noisenode, sfa_node]))
+        sfa_layer = mh.CloneLayer(flownode, switchboard.output_channels)
+        flow = mdp.Flow([switchboard, sfa_layer])
+        # create dummy file like string to write the representation to
+        file = StringIO.StringIO()
+        hinet_html = mdp.hinet.HiNetHTML(file=file)
+        hinet_html.parse_flow(flow)
+        file.close()
+    
 
 def get_suite(testname=None):
     return HinetTestSuite(testname=testname)
