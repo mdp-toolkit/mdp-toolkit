@@ -88,6 +88,7 @@ class NodesTestSuite(unittest.TestSuite):
                        mn.WhiteningNode,
                        mn.SFANode,
                        mn.SFA2Node,
+                       mn.TDSEPNode,
                        mn.CuBICANode,
                        mn.FastICANode,
                        mn.QuadraticExpansionNode,
@@ -824,8 +825,8 @@ class NodesTestSuite(unittest.TestSuite):
         out = sfa.execute(mat)
         assert out.shape[1]==3, 'SFA2Node output has wrong output dimensions!'
         
-    def _testICANode(self,icanode, rand_func = uniform, vars = 3):
-        dim = (8000,vars) 
+    def _testICANode(self,icanode, rand_func = uniform, vars = 3, N=8000):
+        dim = (N,vars) 
         mat,mix,inp = self._get_random_mix(rand_func=rand_func,mat_dim=dim)
         icanode.train(inp)
         act_mat = icanode.execute(inp)
@@ -833,8 +834,8 @@ class NodesTestSuite(unittest.TestSuite):
         maxima = numx.amax(abs(cov), axis=0)
         assert_array_almost_equal(maxima,numx.ones(vars),3)        
 
-    def _testICANodeMatrices(self, icanode, rand_func = uniform, vars = 3):
-        dim = (8000,vars) 
+    def _testICANodeMatrices(self, icanode, rand_func = uniform, vars = 3, N=8000):
+        dim = (N,vars) 
         mat,mix,inp = self._get_random_mix(rand_func=rand_func,
                                            mat_dim=dim, avg = 0)
         icanode.train(inp)
@@ -912,7 +913,7 @@ class NodesTestSuite(unittest.TestSuite):
         fsrc = numx_fft.rfft(src,axis=0)
         # enforce different speeds
         for i in range(N):
-            fsrc[(i+1)*T//20:,i] = 0.
+            fsrc[(i+1)*(T//20):,i] = 0.
         src = numx_fft.irfft(fsrc,axis=0)
         return src
         
@@ -920,8 +921,8 @@ class NodesTestSuite(unittest.TestSuite):
     def testTDSEPNode(self):
         ica = mdp.nodes.TDSEPNode(lags=20,limit = 1E-10)
         ica2 = ica.copy()
-        self._testICANode(ica, rand_func=self._rand_with_timestruct,vars=2)
-        self._testICANodeMatrices(ica2, rand_func=self._rand_with_timestruct,vars=2)
+        self._testICANode(ica, rand_func=self._rand_with_timestruct,vars=2, N=2**14)
+        self._testICANodeMatrices(ica2, rand_func=self._rand_with_timestruct,vars=2,N=2**14)
         
 
     def testOneDimensionalHitParade(self):
