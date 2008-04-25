@@ -1,7 +1,7 @@
 from expansion_nodes import QuadraticExpansionNode, PolynomialExpansionNode
 from pca_nodes import WhiteningNode, PCANode
 from sfa_nodes import SFANode, SFA2Node
-from ica_nodes import ICANode, CuBICANode, FastICANode
+from ica_nodes import ICANode, CuBICANode, FastICANode, TDSEPNode
 from neural_gas_nodes import GrowingNeuralGasNode
 from fda_nodes import FDANode
 from em_nodes import FANode
@@ -36,5 +36,5 @@ __all__ = ['CuBICANode', 'EtaComputerNode', 'FANode', 'FDANode', 'FastICANode',
            'ICANode', 'ISFANode', 'JADENode', 'NIPALSNode', 'NoiseNode',
            'PCANode', 'PolynomialExpansionNode', 'QuadraticExpansionNode',
            'RBMNode', 'RBMWithLabelsNode', 'SFA2Node', 'SFANode',
-           'TimeFramesNode', 'WhiteningNode', '_OneDimensionalHitParade',
-           '_expanded_dim']
+           'TDSEPNode', 'TimeFramesNode','WhiteningNode',
+           '_OneDimensionalHitParade', '_expanded_dim']

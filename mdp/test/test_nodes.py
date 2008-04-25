@@ -194,10 +194,12 @@ class NodesTestSuite(unittest.TestSuite):
                         rand_func = uniform, avg = 0, \
                         std_dev = 1):
         if mat_dim is None: mat_dim = self.mat_dim
+        T = mat_dim[0]
+        N = mat_dim[1]
         d = 0
         while d < 1E-3:
             #mat = ((rand_func(size=mat_dim)-0.5)*scale).astype(type)
-            mat = rand_func(size=mat_dim).astype(type)
+            mat = rand_func(size=(T,N)).astype(type)
             # normalize
             mat -= mean(mat,axis=0)
             mat /= std(mat,axis=0)
@@ -205,7 +207,7 @@ class NodesTestSuite(unittest.TestSuite):
             d1 = min(utils.symeig(mult(mat.T, mat), eigenvectors = 0))
             if std_dev is not None: mat *= std_dev
             if avg is not None: mat += avg
-            mix = (rand_func(size=(mat_dim[1],mat_dim[1]))*scale).astype(type)
+            mix = (rand_func(size=(N,N))*scale).astype(type)
             matmix = mult(mat,mix)
             matmix_n = matmix - mean(matmix, axis=0)
             matmix_n /= std(matmix_n, axis=0)
@@ -898,6 +900,28 @@ class NodesTestSuite(unittest.TestSuite):
                 self._testICANodeMatrices(ica2, rand_func=rand_func, vars=2)
 
         return _testFastICA, desc
+
+    def _rand_with_timestruct(self, size=None):    
+        T, N = size
+        # do something special only if T!=N, otherwise
+        # we were asked to generate a mixing matrix
+        if T == N:
+            return uniform(size=size)
+        # create independent sources
+        src = uniform((T,N))*2-1
+        fsrc = numx_fft.rfft(src,axis=0)
+        # enforce different speeds
+        for i in range(N):
+            fsrc[(i+1)*T//20:,i] = 0.
+        src = numx_fft.irfft(fsrc,axis=0)
+        return src
+        
+        
+    def testTDSEPNode(self):
+        ica = mdp.nodes.TDSEPNode(lags=20,limit = 1E-10)
+        ica2 = ica.copy()
+        self._testICANode(ica, rand_func=self._rand_with_timestruct)
+        self._testICANodeMatrices(ica2, rand_func=self._rand_with_timestruct)
         
 
     def testOneDimensionalHitParade(self):

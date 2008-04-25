@@ -16,8 +16,8 @@ reducing the memory requirements. Memory usage can also be minimized
 by defining the internals of the nodes to be single precision.
 
 The set of readily available algorithms includes Principal Component
-Analysis (PCA and NIPALS), three flavors of Independent Component
-Analysis (CuBICA, FastICA, and JADE), Slow Feature Analysis,
+Analysis (PCA and NIPALS), four flavors of Independent Component
+Analysis (CuBICA, FastICA, TDSEP, and JADE), Slow Feature Analysis,
 Independent Slow Feature Analysis, Gaussian Classifiers, Growing
 Neural Gas, Fisher Discriminant Analysis, Factor Analysis, Restricted
 Boltzmann Machine, and many more.
@@ -153,4 +153,4 @@ __all__ = ['CheckpointFlow', 'CheckpointFunction', 'CheckpointSaveFunction',
            'numx_description', 
            'pca', 'sfa', 'sfa2', 'test', 'utils', 'whitening']
 
-__version__ = '2.2'
+__version__ = '2.3'

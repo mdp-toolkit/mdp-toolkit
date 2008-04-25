@@ -62,8 +62,8 @@ class ISFANode(Node):
     http://itb.biologie.hu-berlin.de/~wiskott/Publications/BlasZitoWisk2007-ISFA-NeurComp.pdf
     """
     def __init__(self, lags=1, sfa_ica_coeff=[1.,1.], icaweights=None,
-                 sfaweights=None,
-                  whitened=False, 
+                 sfaweights=None, whitened=False, white_comp = None,
+                 white_parm = {},
                  eps_contrast=1e-6, max_iter=10000, RP=None,verbose=False, 
                  input_dim=None, output_dim=None, dtype=None):
         """
@@ -104,6 +104,14 @@ class ISFANode(Node):
                                         
         whitened   -- True if input data is already white, False otherwise (the
                       data will be whitened internally).
+
+        white_comp -- If whitened is False, you can set 'white_comp' to the
+                      number of whitened components to keep during the
+                      calculation (i.e., the input dimensions are reduced to
+                      white_comp by keeping the components of largest variance).
+        white_parm -- a dictionary with additional parameters for whitening.
+                      It is passed directly to the WhiteningNode constructor.
+                      Ex: white_parm = { 'svd' : True }        
         
         eps_contrast -- Convergence is achieved when the relative
                         improvement in the contrast is below this threshold.
@@ -175,9 +183,13 @@ class ISFANode(Node):
         # if input is not white, insert a WhiteningNode
         self.whitened = whitened
         if not whitened:
+            if output_dim is not None:
+                white_comp = output_dim
+            elif white_comp is not None:
+                output_dim = white_comp        
             self.white = WhiteningNode(input_dim=input_dim,\
-                                       output_dim=input_dim,\
-                                       dtype=dtype)
+                                       output_dim=white_comp,\
+                                       dtype=dtype, **white_parm)
 
         # initialize covariance matrices
         self.covs = [ mdp.utils.DelayCovarianceMatrix(dt, dtype=dtype) \
@@ -219,7 +231,14 @@ class ISFANode(Node):
             self.white.dtype = dtype
         self.icaweights = numx.array(self.icaweights, dtype)
         self.sfaweights = numx.array(self.sfaweights, dtype)
-        
+
+    def _set_input_dim(self, n):
+        self._input_dim = n
+        if not self.whitened and self.white.output_dim is not None:
+            self._effective_input_dim = self.white.output_dim
+        else:
+            self._effective_input_dim = n
+            
     def _train(self, x):
         # train the whitening node if needed
         if not self.whitened: self.white.train(x)
@@ -265,7 +284,7 @@ class ISFANode(Node):
         
     def _get_eye(self):
         # return an identity matrix with the right dimensions and type
-        return numx.eye(self.input_dim, dtype=self.dtype)
+        return numx.eye(self._effective_input_dim, dtype=self.dtype)
     
     def _get_rnd_rotation(self,dim):
         # return a random rot matrix with the right dimensions and type
@@ -537,10 +556,10 @@ class ISFANode(Node):
         perturbed = 0
 
         # size of the perturbation matrix
-        psize = self.input_dim-self.output_dim
+        psize = self._effective_input_dim-self.output_dim
                         
         # if there is no outer space don't perturbe
-        if self.input_dim == self.output_dim:
+        if self._effective_input_dim == self.output_dim:
             perturbed = -1
 
         # local eye matrix
@@ -700,12 +719,12 @@ class ISFANode(Node):
         self._fix_covs(covs)
         # if output_dim were not set, set it to be the number of input comps
         if self.output_dim is None:
-            self.output_dim = self.input_dim
+            self.output_dim = self._effective_input_dim
         # adjust b_sfa and b_ica
         self._adjust_ica_sfa_coeff()
         # initialize all possible rotation axes
         self.rot_axis = [(i, j) for i in range(0, self.output_dim) \
-                         for j in range(i+1, self.input_dim)]
+                         for j in range(i+1, self._effective_input_dim)]
 
         # initialize the global rotation-permutation matrix (RP):
         RP = self.RP
