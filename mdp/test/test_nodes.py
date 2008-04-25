@@ -920,8 +920,8 @@ class NodesTestSuite(unittest.TestSuite):
     def testTDSEPNode(self):
         ica = mdp.nodes.TDSEPNode(lags=20,limit = 1E-10)
         ica2 = ica.copy()
-        self._testICANode(ica, rand_func=self._rand_with_timestruct)
-        self._testICANodeMatrices(ica2, rand_func=self._rand_with_timestruct)
+        self._testICANode(ica, rand_func=self._rand_with_timestruct,vars=2)
+        self._testICANodeMatrices(ica2, rand_func=self._rand_with_timestruct,vars=2)
         
 
     def testOneDimensionalHitParade(self):
