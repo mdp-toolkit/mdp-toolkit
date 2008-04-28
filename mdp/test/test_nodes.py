@@ -1535,7 +1535,7 @@ class NodesTestSuite(unittest.TestSuite):
         # test 1
         h = numx.array([[0,0],[1,0],[0,1],[1,1.]])
         v = []
-        for n in range(100):
+        for n in range(1000):
             prob, sample = bm.sample_v(h)
             v.append(sample)
 
@@ -1555,7 +1555,7 @@ class NodesTestSuite(unittest.TestSuite):
         # test 2, with bias
         bm.bv -= 1e4
         v = []
-        for n in range(100):
+        for n in range(1000):
             prob, sample = bm.sample_v(h)
             v.append(sample)
 
