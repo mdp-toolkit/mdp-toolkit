@@ -92,7 +92,7 @@ def _write_rect2dswitchboard(node, file):
     file.write('# of rec. fields (output channels): %d x %d = %d<br>'
                % (node.x_out_channels, node.y_out_channels,
                   node.x_out_channels * node.y_out_channels))
-    file.write('rec. field distances (in channels): %d, %d <br>'
+    file.write('rec. field distances (in channels): (%d, %d) <br>'
                % (node.x_field_spacing, node.y_field_spacing))
     file.write('channel width: %d' % node.in_channel_dim)
     

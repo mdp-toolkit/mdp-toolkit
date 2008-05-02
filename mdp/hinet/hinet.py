@@ -365,11 +365,11 @@ class FlowNode(mdp.Node):
         # then we have to set the output dimensions of the FlowNode.
         if self._flow[-1].is_trainable():
             train_seq[-1][1] = self._get_stop_training_wrapper(self._flow[-1],
-                                                           train_seq[-1][1])
+                                                               train_seq[-1][1])
         return train_seq
 
     def _get_stop_training_wrapper(self, node, func):
-        # wrap stop_training to set FlowNode outputdim
+        """Return wrapper for stop_training to set FlowNode outputdim."""
         def _stop_training_wrapper(*args, **kwargs):
             func(*args, **kwargs)
             self.output_dim = node.output_dim
@@ -423,6 +423,11 @@ class Switchboard(mdp.Node):
         return x[:,self.connections]
     
 
+class Rectangular2dSwitchboardException(mdp.NodeException):
+    """Exception for routing problems in the Rectangular2dSwitchboard class."""
+    pass
+
+
 class Rectangular2dSwitchboard(Switchboard):
     """Switchboard for a 2-dimensional topology.
     
@@ -470,9 +475,15 @@ class Rectangular2dSwitchboard(Switchboard):
         # number of output channels in x-direction
         self.x_out_channels = \
             (x_in_channels - x_field_channels) // x_field_spacing + 1
+        if (x_in_channels - x_field_channels) % x_field_spacing:
+            raise Rectangular2dRoutingException("Channel fields do not cover " + 
+                                        "all input channels in x-direction.")
         # number of output channels in y-direction                       
         self.y_out_channels = \
             (y_in_channels - y_field_channels) // y_field_spacing + 1
+        if (y_in_channels - y_field_channels) % y_field_spacing:
+            raise Rectangular2dSwitchboardException("Channel fields do not " + 
+                                    "cover all input channels in y-direction.")
         self.output_channels = self.x_out_channels * self.y_out_channels
         input_dim = self.in_channels * in_channel_dim
         output_dim = self.output_channels * self.out_channel_dim
