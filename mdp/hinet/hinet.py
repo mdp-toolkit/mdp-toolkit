@@ -447,7 +447,7 @@ class Rectangular2dSwitchboard(Switchboard):
     def __init__(self, x_in_channels, y_in_channels, 
                  x_field_channels, y_field_channels,
                  x_field_spacing=1, y_field_spacing=1, 
-                 in_channel_dim=1):
+                 in_channel_dim=1, ignore_cover=False):
         """Calculate the connections.
         
         Keyword arguments:
@@ -460,6 +460,10 @@ class Rectangular2dSwitchboard(Switchboard):
         y_field_channels -- Number of channels in each field in the y-direction
         x_field_spacing -- Offset between two fields in the x-direction.
         y_field_spacing -- Offset between two fields in the y-direction.
+        ignore_cover -- Boolean value defines if an 
+            Rectangular2dSwitchboardException is raised when the fields do not
+            cover all input channels. Set this to True if you are willing to
+            risk loosing input channels at the border.
         """
         ## count channels and stuff
         self.in_channel_dim = in_channel_dim
@@ -475,13 +479,15 @@ class Rectangular2dSwitchboard(Switchboard):
         # number of output channels in x-direction
         self.x_out_channels = \
             (x_in_channels - x_field_channels) // x_field_spacing + 1
-        if (x_in_channels - x_field_channels) % x_field_spacing:
-            raise Rectangular2dRoutingException("Channel fields do not cover " + 
-                                        "all input channels in x-direction.")
+        if (((x_in_channels - x_field_channels) % x_field_spacing) and
+            not ignore_cover):
+            raise Rectangular2dSwitchboardException("Channel fields do not " + 
+                                    "cover all input channels in x-direction.")
         # number of output channels in y-direction                       
         self.y_out_channels = \
             (y_in_channels - y_field_channels) // y_field_spacing + 1
-        if (y_in_channels - y_field_channels) % y_field_spacing:
+        if (((y_in_channels - y_field_channels) % y_field_spacing) and
+            not ignore_cover):
             raise Rectangular2dSwitchboardException("Channel fields do not " + 
                                     "cover all input channels in y-direction.")
         self.output_channels = self.x_out_channels * self.y_out_channels

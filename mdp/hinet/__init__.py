@@ -6,5 +6,5 @@ del hinet
 del hinet_html
 
 __all__ = ['Layer', 'SameInputLayer', 'CloneLayer', 'FlowNode',
-           'Rectangular2dSwitchboard', 'Rectangular2dRoutingException',
+           'Rectangular2dSwitchboard', 'Rectangular2dSwitchboardException',
            'Switchboard', 'NODE_PARAM_WRITERS', 'HiNetHTML']
