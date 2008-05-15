@@ -429,16 +429,16 @@ class NoiseNode(Node):
 
 
 class GaussianClassifierNode(Node):
-    def __init__(self, input_dim=None, dtype=None):
-        """Perform a supervised Gaussian classification.
+    """Perform a supervised Gaussian classification.
 
-        Given a set of labelled data, the node fits a gaussian distribution
-        to each class. Note that it is written as an analysis node (i.e., the
-        execute function is the identity function). To perform classification,
-        use the 'classify' method. If instead you need the posterior
-        probability of the classes given the data use the 'class_probabilities'
-        method.
-        """
+    Given a set of labelled data, the node fits a gaussian distribution
+    to each class. Note that it is written as an analysis node (i.e., the
+    execute function is the identity function). To perform classification,
+    use the 'classify' method. If instead you need the posterior
+    probability of the classes given the data use the 'class_probabilities'
+    method.
+    """
+    def __init__(self, input_dim=None, dtype=None):
         super(GaussianClassifierNode, self).__init__(input_dim, None, dtype)
         self.cov_objs = {}
 

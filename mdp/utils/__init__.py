@@ -30,7 +30,7 @@ pinv = lambda x: refcast(_pinv(x), x.dtype)
 _solve = _mdp.numx_linalg.solve
 solve = lambda x,y: refcast(_solve(x,y), x.dtype)
 
-def svd(x, _mdp=_mdp):
+def svd(x):
     tc = x.dtype
     try:
         u,s,v = _mdp.numx_linalg.svd(x)
@@ -44,3 +44,11 @@ del introspection
 del quad_forms
 del covariance
 del progress_bar
+
+__all__ = ['CovarianceMatrix', 'DelayCovarianceMatrix',
+           'MultipleCovarianceMatrices', 'QuadraticForm', 'SymeigException',
+           'comb', 'cov2', 'dig_node', 'get_dtypes', 'get_node_size',
+           'hermitian', 'inv', 'mult', 'mult_diag', 'nongeneral_svd',
+           'norm2', 'ordered_uniq', 'permute', 'pinv', 'progressinfo',
+           'random_rot', 'refcast', 'rotate', 'scast', 'solve', 'sqrtm',
+           'svd', 'symeig', 'symrand', 'timediff', 'uniq']

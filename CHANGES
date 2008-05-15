@@ -1,4 +1,11 @@
-MDP-2.2:
+MDP-2.3:
+2008-05-08: fixed bug in the raising of the switchboard exception.
+2008-05-02: added exception for hinet.Rectangular2dSwitchboard 
+            and corresponding unittest.
+2008-04-25: added new TDSEPNode, updated ISFANode.
+2008-04-16: added an HTML visualisation tool for hinet flows to the hinet
+            package. Added a hinet section in the tutorial.
+2008-03-22: released MDP 2.2, this release is intended for internal use only
 2008-03-21: added hinet package
 2008-03-19: added RBM nodes 
 2008-03-18: fixed bug in PCANode when output_dim was specified as float.

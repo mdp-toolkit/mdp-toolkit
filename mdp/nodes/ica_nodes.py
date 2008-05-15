@@ -1,9 +1,35 @@
 import math
 import mdp
+from isfa_nodes import ISFANode
 numx, numx_rand, numx_linalg = mdp.numx, mdp.numx_rand, mdp.numx_linalg
 
 utils = mdp.utils
 mult = utils.mult
+
+
+def _get_projmatrix(node, transposed=1):
+    node._if_training_stop_training()
+    Q = node.filters.T
+    if not node.whitened:
+        W = node.white.get_projmatrix(transposed=0)
+        T = mult(Q,W)
+    else:
+        T = Q
+    if transposed:
+        return T.T
+    return T
+
+def _get_recmatrix(node, transposed=1):
+    node._if_training_stop_training()
+    Q = node.filters.T
+    if not node.whitened:
+        W = node.white.get_recmatrix(transposed=1)
+        T = mult(Q, W)
+    else:
+        T = Q
+    if transposed:
+        return T
+    return T.T
 
 class ICANode(mdp.Cumulator, mdp.Node):
     """
@@ -13,13 +39,6 @@ class ICANode(mdp.Cumulator, mdp.Node):
     Hyvarinen A., Karhunen J., Oja E. (2001). Independent Component Analysis,
     Wiley.
 
-    Internal variables of interest:
-
-    self.white       -- the whitening node used for preprocessing.
-    self.filters     -- the ICA filters matrix (this is the transposed of the
-                        projection matrix after whitening).
-    self.convergence -- the value of the convergence threshold.
-    
     """
     
     def __init__(self, limit = 0.001, telescope = False, verbose = False,
@@ -83,6 +102,7 @@ class ICANode(mdp.Cumulator, mdp.Node):
         if not self.whitened:
             self.output_dim = self.white_comp
             white = mdp.nodes.WhiteningNode(output_dim = self.white_comp,
+                                            dtype=self.dtype,
                                             **self.white_parm)
             white.train(self.data)
             self.data = white.execute(self.data)
@@ -135,32 +155,14 @@ class ICANode(mdp.Cumulator, mdp.Node):
 
     def get_projmatrix(self, transposed=1):
         """Return the projection matrix."""
-        self._if_training_stop_training()
-        Q = self.filters.T
-        if not self.whitened:
-            W = self.white.get_projmatrix(transposed=0)
-            T = mult(Q,W)
-        else:
-            T = Q
-        if transposed:
-            return T.T
-        return T
-
+        return _get_projmatrix(self, transposed)
+    
     def get_recmatrix(self, transposed=1):
         """Return the back-projection matrix (i.e. the reconstruction matrix).
         Note that if the unknown sources are white, this is a good
         approximation of the mixing matrix (up to a permutation matrix). 
         """
-        self._if_training_stop_training()
-        Q = self.filters.T
-        if not self.whitened:
-            W = self.white.get_recmatrix(transposed=1)
-            T = mult(Q, W)
-        else:
-            T = Q
-        if transposed:
-            return T
-        return T.T
+        return _get_recmatrix(self, transposed)
 
 class CuBICANode(ICANode):
     """
@@ -178,7 +180,16 @@ class CuBICANode(ICANode):
     Blaschke, T. and Wiskott, L. (2003).
     CuBICA: Independent Component Analysis by Simultaneous Third- and
     Fourth-Order Cumulant Diagonalization.
-    IEEE Transactions on Signal Processing, 52(5), pp. 1250-1256."""
+    IEEE Transactions on Signal Processing, 52(5), pp. 1250-1256.
+
+
+    Internal variables of interest:
+
+      self.white       -- the whitening node used for preprocessing.
+      self.filters     -- the ICA filters matrix (this is the transposed of the
+                        projection matrix after whitening).
+      self.convergence -- the value of the convergence threshold.
+    """
 
     def core(self,data):
         # keep track of maximum angle of rotation
@@ -291,6 +302,13 @@ class FastICANode(ICANode):
     Aapo Hyvarinen (1999).
     Fast and Robust Fixed-Point Algorithms for Independent Component Analysis
     IEEE Transactions on Neural Networks, 10(3):626-634.
+
+    Internal variables of interest:
+
+      self.white       -- the whitening node used for preprocessing.
+      self.filters     -- the ICA filters matrix (this is the transposed of the
+                        projection matrix after whitening).
+      self.convergence -- the value of the convergence threshold.
 
     History:
     - 1.4.1998  created for Matlab by Jarmo Hurri, Hugo Gavert,
@@ -896,4 +914,81 @@ class FastICANode(ICANode):
         return ret
 
 
+class TDSEPNode(ISFANode):
+    """Perform Independent Component Analysis using the TDSEP algorithm.
+    Note that TDSEP, as implemented in this Node, is an online algorithm,
+    i.e. it is suited to be trained on huge data sets, provided that the
+    training is done sending small chunks of data for each time.
 
+    Reference:
+    Ziehe, Andreas and Muller, Klaus-Robert (1998).
+    TDSEP an efficient algorithm for blind separation using time structure
+    in Niklasson, L, Boden, M, and Ziemke, T (Editors), Proc. 8th Int. Conf. 
+    Artificial Neural Networks (ICANN 1998).
+
+    Internal variables of interest:
+
+      self.white       -- the whitening node used for preprocessing.
+      self.filters     -- the ICA filters matrix (this is the transposed of the
+                        projection matrix after whitening).
+      self.convergence -- the value of the convergence threshold.
+    """
+    def __init__(self, lags=1, limit = 0.00001, max_iter=10000,
+                 verbose = False, whitened = False, white_comp = None,
+                 white_parm = {}, input_dim = None, dtype = None):
+        """
+        Input arguments:
+
+        lags    -- list of time-lags to generate the time-delayed covariance
+                   matrices. If lags is an integer, time-lags 1,2,...,'lags'
+                   are used.
+                   Note that time-lag == 0 (instantaneous correlation) is
+                   always implicitly used.
+
+        whitened -- Set whitened is True if input data are already whitened.
+                    Otherwise the node will whiten the data itself.
+
+        white_comp -- If whitened is False, you can set 'white_comp' to the
+                      number of whitened components to keep during the
+                      calculation (i.e., the input dimensions are reduced to
+                      white_comp by keeping the components of largest variance).
+
+        white_parm -- a dictionary with additional parameters for whitening.
+                      It is passed directly to the WhiteningNode constructor.
+                      Ex: white_parm = { 'svd' : True }
+
+        limit -- convergence threshold.
+
+        max_iter     -- If the algorithms does not achieve convergence within
+                        max_iter iterations raise an Exception. Should be
+                        larger than 100.
+        """
+        super(TDSEPNode, self).__init__(lags=lags, sfa_ica_coeff=[0.,1.],
+                                       icaweights=None, sfaweights=None,
+                                       whitened=whitened,white_comp=white_comp,
+                                       white_parm = {},
+                                       eps_contrast=limit,
+                                       max_iter=max_iter, RP=None,
+                                       verbose=verbose, 
+                                       input_dim=input_dim,
+                                       output_dim=None,
+                                       dtype=dtype)
+
+    def _stop_training(self, covs):
+        super(TDSEPNode, self)._stop_training(covs)
+        # set filters
+        self.filters = self.RP
+        # set convergence
+        self.convergence = self.final_contrast
+        
+    def get_projmatrix(self, transposed=1):
+        """Return the projection matrix."""
+        return _get_projmatrix(self, transposed)
+    
+    def get_recmatrix(self, transposed=1):
+        """Return the back-projection matrix (i.e. the reconstruction matrix).
+        Note that if the unknown sources are white, this is a good
+        approximation of the mixing matrix (up to a permutation matrix). 
+        """
+        return _get_recmatrix(self, transposed)
+        

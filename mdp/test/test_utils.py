@@ -116,11 +116,11 @@ class UtilsTestSuite(unittest.TestSuite):
         sfa.train(numx_rand.random((1000, 10)))
         a_sfa, string = utils.dig_node(sfa)
         keys = ['_cov_mtx._avg', '_cov_mtx._cov_mtx',
-                '_dcov_mtx._avg', '_dcov_mtx._cov_mtx',]
+                '_dcov_mtx._avg', '_dcov_mtx._cov_mtx']
         assert sorted(a_sfa.keys()) == keys, 'Wrong arrays in SFANode'
         sfa.stop_training()
         a_sfa, string = utils.dig_node(sfa)
-        keys = ['avg', 'd', 'sf']
+        keys = ['_bias', 'avg', 'd', 'sf']
         assert sorted(a_sfa.keys()) == keys, 'Wrong arrays in SFANode'
 
     def testRandomRot(self):

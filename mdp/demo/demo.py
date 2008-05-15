@@ -392,6 +392,24 @@ sfa_reloaded
 fl.close()
 import os
 os.remove('dummy.pic')
+node1 = mdp.nodes.PCANode(input_dim=100, output_dim=10)
+node2 = mdp.nodes.SFANode(input_dim=100, output_dim=20)
+layer = mdp.hinet.Layer([node1, node2])
+layer
+# Layer(input_dim=200, output_dim=30, dtype=None)
+node1_1 = mdp.nodes.PCANode(input_dim=100, output_dim=50)
+node1_2 = mdp.nodes.SFANode(input_dim=50, output_dim=10)
+node1_flow = mdp.Flow([node1_1, node1_2])
+node1 = mdp.hinet.FlowNode(node1_flow)
+layer = mdp.hinet.Layer([node1, node2])
+layer
+# Layer(input_dim=200, output_dim=30, dtype=None)
+switchboard = mdp.hinet.Switchboard(input_dim=6, connections=[0,1,2,3,4,3,4,5])
+switchboard
+# Switchboard(input_dim=3, output_dim=2, dtype=None)
+x = mdp.numx.array([[2,4,6,8,10,12]])
+switchboard.execute(x)
+# array([[ 2,  4,  6,  8, 10,  8, 10, 12]])
 p2 = mdp.numx.pi*2
 t = mdp.numx.linspace(0,1,10000,endpoint=0) # time axis 1s, samplerate 10KHz
 dforce = mdp.numx.sin(p2*5*t) + mdp.numx.sin(p2*11*t) + mdp.numx.sin(p2*13*t)
