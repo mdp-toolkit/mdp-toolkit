@@ -865,23 +865,43 @@ class NodesTestSuite(unittest.TestSuite):
       
     def _get_testFastICA(self, parms):
         # create a function description
-        header = 'TestFastICANode:'
-        app =     'Approach:     '+parms['approach']
-        nl =      'Nonlinearity: '+parms['g']
-        fine_nl = 'Fine-tuning:  '+str(parms['fine_g'])
+##         # old func description: verbose and with newlines
+##         header = 'TestFastICANode:'
+##         app =     '  Approach:     '+parms['approach']
+##         nl =      '  Nonlinearity: '+parms['g']
+##         fine_nl = '  Fine-tuning:  '+str(parms['fine_g'])
+##         if parms['sample_size'] == 1:
+##             compact = '  Samples  100%, '
+##         else:
+##             compact = '  Samples <100%, '
+##         if parms['mu'] == 1:
+##             compact = compact + 'Step:  1, '
+##         else:
+##             compact = compact + 'Step: <1, '
+##         if parms['stabilization'] is True:
+##             compact = compact +'Stabilized algorithm'
+##         else:
+##             compact = compact +'Standard   algorithm'
+##         desc = '\n'.join([header, app, nl, fine_nl, compact])
+        # new func description: compact and one line
+        header = 'Test FastICANode'
+        app =     'AP:'+parms['approach']
+        nl =      'NL:'+parms['g']
+        fine_nl = 'FT:'+str(parms['fine_g'])
         if parms['sample_size'] == 1:
-            compact = 'Samples  100%, '
+            compact = 'SA:01 '
         else:
-            compact = 'Samples <100%, '
+            compact = 'SA:<1 '
         if parms['mu'] == 1:
-            compact = compact + 'Step:  1, '
+            compact = compact + 'S:01 '
         else:
-            compact = compact + 'Step: <1, '
+            compact = compact + 'S:<1 '
         if parms['stabilization'] is True:
-            compact = compact +'Stabilized algorithm'
+            compact = compact +'STB'
         else:
-            compact = compact +'Standard   algorithm'
-        desc = '\n'.join([header, app, nl, fine_nl, compact])
+            compact = compact +'STD'
+        desc = ' '.join([header, app, nl, fine_nl, compact])
+        
         def _testFastICA(parms=parms):
             if parms['g'] == 'skew':
                 rand_func = numx_rand.exponential
