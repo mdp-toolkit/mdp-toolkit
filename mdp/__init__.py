@@ -16,8 +16,8 @@ reducing the memory requirements. Memory usage can also be minimized
 by defining the internals of the nodes to be single precision.
 
 The set of readily available algorithms includes Principal Component
-Analysis (PCA and NIPALS), three flavors of Independent Component
-Analysis (CuBICA, FastICA, and JADE), Slow Feature Analysis,
+Analysis (PCA and NIPALS), four flavors of Independent Component
+Analysis (CuBICA, FastICA, TDSEP, and JADE), Slow Feature Analysis,
 Independent Slow Feature Analysis, Gaussian Classifiers, Growing
 Neural Gas, Fisher Discriminant Analysis, Factor Analysis, Restricted
 Boltzmann Machine, and many more.
@@ -142,4 +142,19 @@ from test import test
 del signal_node
 del linear_flows
 
-__version__ = '2.2'
+# explicitly set __all__, mainly needed for epydoc
+__all__ = ['CheckpointFlow', 'CheckpointFunction', 'CheckpointSaveFunction',
+           'CrashRecoveryException', 'Cumulator', 'Flow', 'FlowException',
+           'FlowExceptionCR', 'IsNotInvertibleException',
+           'IsNotTrainableException', 'MDPException', 'MDPWarning', 'Node',
+           'NodeException', 'TrainingException', 'TrainingFinishedException',
+           'contrib', 'cubica', 'factor_analysis', 'fastica', 'get_eta',
+           'graph', 'helper_funcs', 'hinet', 'isfa', 'nodes', 
+           'numx_description', 
+           'pca', 'sfa', 'sfa2', 'test', 'utils', 'whitening']
+
+__version__ = '2.3'
+__authors__ = 'Pietro Berkes, Niko Wilbert, and Tiziano Zito'
+__copyright__ = '(c) 2003-2008 Pietro Berkes, Niko Wilbert, Tiziano Zito'
+__license__ = 'LGPL v3, http://www.gnu.org/licenses/lgpl.html'
+__contact__ = 'mdp-toolkit-users AT lists.sourceforge.net'

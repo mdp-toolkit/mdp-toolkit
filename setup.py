@@ -21,7 +21,7 @@ requirements. Memory usage can also be minimized by defining the
 internals of the nodes to be single precision.
 
 The base of readily available algorithms includes Principal Component
-Analysis (PCA and NIPALS), three flavors of Independent Component
+Analysis (PCA and NIPALS), four flavors of Independent Component
 Analysis (CuBICA, FastICA, and JADE), Slow Feature Analysis,
 Independent Slow Feature Analysis, Gaussian Classifiers, Growing
 Neural Gas, Fisher Discriminant Analysis, Factor Analysis, Restricted
@@ -69,12 +69,12 @@ classifiers = ["Development Status :: 5 - Production/Stable",
                "Topic :: Scientific/Engineering :: Mathematics",
                "Topic :: Software Development :: Algorithms"]
 
-setup(name = 'MDP', version = '2.2',
+setup(name = 'MDP', version = '2.3',
       author = 'Pietro Berkes, Niko Wilbert, and Tiziano Zito',
       author_email = 'berkes@gatsby.ucl.ac.uk, mail@nikowilbert.de, tiziano.zito@bccn-berlin.de',
       maintainer = 'Pietro Berkes, Niko Wilbert, and Tiziano Zito',
       maintainer_email = 'berkes@gatsby.ucl.ac.uk, mail@nikowilbert.de, tiziano.zito@bccn-berlin.de',
-      license = "http://www.gnu.org/copyleft/lesser.html",
+      license = "http://www.gnu.org/licenses/lgpl.html",
       platforms = ["Any"],
       url = 'http://mdp-toolkit.sourceforge.net',
       download_url = 'http://sourceforge.net/project/showfiles.php?group_id=116959',

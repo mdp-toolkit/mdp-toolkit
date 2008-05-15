@@ -88,6 +88,7 @@ class NodesTestSuite(unittest.TestSuite):
                        mn.WhiteningNode,
                        mn.SFANode,
                        mn.SFA2Node,
+                       mn.TDSEPNode,
                        mn.CuBICANode,
                        mn.FastICANode,
                        mn.QuadraticExpansionNode,
@@ -194,10 +195,12 @@ class NodesTestSuite(unittest.TestSuite):
                         rand_func = uniform, avg = 0, \
                         std_dev = 1):
         if mat_dim is None: mat_dim = self.mat_dim
+        T = mat_dim[0]
+        N = mat_dim[1]
         d = 0
         while d < 1E-3:
             #mat = ((rand_func(size=mat_dim)-0.5)*scale).astype(type)
-            mat = rand_func(size=mat_dim).astype(type)
+            mat = rand_func(size=(T,N)).astype(type)
             # normalize
             mat -= mean(mat,axis=0)
             mat /= std(mat,axis=0)
@@ -205,7 +208,7 @@ class NodesTestSuite(unittest.TestSuite):
             d1 = min(utils.symeig(mult(mat.T, mat), eigenvectors = 0))
             if std_dev is not None: mat *= std_dev
             if avg is not None: mat += avg
-            mix = (rand_func(size=(mat_dim[1],mat_dim[1]))*scale).astype(type)
+            mix = (rand_func(size=(N,N))*scale).astype(type)
             matmix = mult(mat,mix)
             matmix_n = matmix - mean(matmix, axis=0)
             matmix_n /= std(matmix_n, axis=0)
@@ -822,8 +825,8 @@ class NodesTestSuite(unittest.TestSuite):
         out = sfa.execute(mat)
         assert out.shape[1]==3, 'SFA2Node output has wrong output dimensions!'
         
-    def _testICANode(self,icanode, rand_func = uniform, vars = 3):
-        dim = (8000,vars) 
+    def _testICANode(self,icanode, rand_func = uniform, vars = 3, N=8000):
+        dim = (N,vars) 
         mat,mix,inp = self._get_random_mix(rand_func=rand_func,mat_dim=dim)
         icanode.train(inp)
         act_mat = icanode.execute(inp)
@@ -831,8 +834,8 @@ class NodesTestSuite(unittest.TestSuite):
         maxima = numx.amax(abs(cov), axis=0)
         assert_array_almost_equal(maxima,numx.ones(vars),3)        
 
-    def _testICANodeMatrices(self, icanode, rand_func = uniform, vars = 3):
-        dim = (8000,vars) 
+    def _testICANodeMatrices(self, icanode, rand_func = uniform, vars = 3, N=8000):
+        dim = (N,vars) 
         mat,mix,inp = self._get_random_mix(rand_func=rand_func,
                                            mat_dim=dim, avg = 0)
         icanode.train(inp)
@@ -862,23 +865,43 @@ class NodesTestSuite(unittest.TestSuite):
       
     def _get_testFastICA(self, parms):
         # create a function description
-        header = 'TestFastICANode:'
-        app =     'Approach:     '+parms['approach']
-        nl =      'Nonlinearity: '+parms['g']
-        fine_nl = 'Fine-tuning:  '+str(parms['fine_g'])
+##         # old func description: verbose and with newlines
+##         header = 'TestFastICANode:'
+##         app =     '  Approach:     '+parms['approach']
+##         nl =      '  Nonlinearity: '+parms['g']
+##         fine_nl = '  Fine-tuning:  '+str(parms['fine_g'])
+##         if parms['sample_size'] == 1:
+##             compact = '  Samples  100%, '
+##         else:
+##             compact = '  Samples <100%, '
+##         if parms['mu'] == 1:
+##             compact = compact + 'Step:  1, '
+##         else:
+##             compact = compact + 'Step: <1, '
+##         if parms['stabilization'] is True:
+##             compact = compact +'Stabilized algorithm'
+##         else:
+##             compact = compact +'Standard   algorithm'
+##         desc = '\n'.join([header, app, nl, fine_nl, compact])
+        # new func description: compact and one line
+        header = 'Test FastICANode'
+        app =     'AP:'+parms['approach']
+        nl =      'NL:'+parms['g']
+        fine_nl = 'FT:'+str(parms['fine_g'])
         if parms['sample_size'] == 1:
-            compact = 'Samples  100%, '
+            compact = 'SA:01 '
         else:
-            compact = 'Samples <100%, '
+            compact = 'SA:<1 '
         if parms['mu'] == 1:
-            compact = compact + 'Step:  1, '
+            compact = compact + 'S:01 '
         else:
-            compact = compact + 'Step: <1, '
+            compact = compact + 'S:<1 '
         if parms['stabilization'] is True:
-            compact = compact +'Stabilized algorithm'
+            compact = compact +'STB'
         else:
-            compact = compact +'Standard   algorithm'
-        desc = '\n'.join([header, app, nl, fine_nl, compact])
+            compact = compact +'STD'
+        desc = ' '.join([header, app, nl, fine_nl, compact])
+        
         def _testFastICA(parms=parms):
             if parms['g'] == 'skew':
                 rand_func = numx_rand.exponential
@@ -898,6 +921,28 @@ class NodesTestSuite(unittest.TestSuite):
                 self._testICANodeMatrices(ica2, rand_func=rand_func, vars=2)
 
         return _testFastICA, desc
+
+    def _rand_with_timestruct(self, size=None):    
+        T, N = size
+        # do something special only if T!=N, otherwise
+        # we were asked to generate a mixing matrix
+        if T == N:
+            return uniform(size=size)
+        # create independent sources
+        src = uniform((T,N))*2-1
+        fsrc = numx_fft.rfft(src,axis=0)
+        # enforce different speeds
+        for i in range(N):
+            fsrc[(i+1)*(T//20):,i] = 0.
+        src = numx_fft.irfft(fsrc,axis=0)
+        return src
+        
+        
+    def testTDSEPNode(self):
+        ica = mdp.nodes.TDSEPNode(lags=20,limit = 1E-10)
+        ica2 = ica.copy()
+        self._testICANode(ica, rand_func=self._rand_with_timestruct,vars=2, N=2**14)
+        self._testICANodeMatrices(ica2, rand_func=self._rand_with_timestruct,vars=2,N=2**14)
         
 
     def testOneDimensionalHitParade(self):
@@ -1510,7 +1555,7 @@ class NodesTestSuite(unittest.TestSuite):
         # test 1
         h = numx.array([[0,0],[1,0],[0,1],[1,1.]])
         v = []
-        for n in range(100):
+        for n in range(1000):
             prob, sample = bm.sample_v(h)
             v.append(sample)
 
@@ -1530,7 +1575,7 @@ class NodesTestSuite(unittest.TestSuite):
         # test 2, with bias
         bm.bv -= 1e4
         v = []
-        for n in range(100):
+        for n in range(1000):
             prob, sample = bm.sample_v(h)
             v.append(sample)
 

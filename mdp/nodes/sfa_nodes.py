@@ -78,15 +78,21 @@ class SFANode(Node):
         del self.cov_mtx
         del self.dcov_mtx
 
+        # store bias
+        self._bias = mult(self.avg, self.sf)
+
     def _execute(self, x, range=None):
         if range:
             if isinstance(range, (list, tuple)):
                 sf = self.sf[:,range[0]:range[1]]
+                bias = self._bias[:,range[0]:range[1]]
             else:
                 sf = self.sf[:,0:range]
+                bias = self._bias[:,0:range]
         else:
             sf = self.sf
-        return mult(x-self.avg, sf)
+            bias = self._bias
+        return mult(x, sf) - bias
 
     def execute(self, x, range=None):
         """Compute the output of the slowest functions.

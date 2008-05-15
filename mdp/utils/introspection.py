@@ -4,7 +4,7 @@ import mdp
 
 class _Walk(object):
     """Recursively crawl an object and search for attributes that
-    are reference to Numeric arrays, return a dictionary:
+    are reference to numpy arrays, return a dictionary:
     {attribute_name: array_reference}.
 
     Usage:

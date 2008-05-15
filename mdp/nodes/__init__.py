@@ -1,7 +1,7 @@
 from expansion_nodes import QuadraticExpansionNode, PolynomialExpansionNode
 from pca_nodes import WhiteningNode, PCANode
 from sfa_nodes import SFANode, SFA2Node
-from ica_nodes import ICANode, CuBICANode, FastICANode
+from ica_nodes import ICANode, CuBICANode, FastICANode, TDSEPNode
 from neural_gas_nodes import GrowingNeuralGasNode
 from fda_nodes import FDANode
 from em_nodes import FANode
@@ -16,7 +16,7 @@ from expansion_nodes import expanded_dim as _expanded_dim
 
 # import contributed nodes
 import mdp
-from mdp.contrib import *
+from mdp.contrib import JADENode, NIPALSNode
 
 # clean up namespace
 del mdp
@@ -29,3 +29,12 @@ del fda_nodes
 del em_nodes
 del misc_nodes
 del isfa_nodes
+del rbm_nodes
+
+__all__ = ['CuBICANode', 'EtaComputerNode', 'FANode', 'FDANode', 'FastICANode',
+           'GaussianClassifierNode', 'GrowingNeuralGasNode', 'HitParadeNode',
+           'ICANode', 'ISFANode', 'JADENode', 'NIPALSNode', 'NoiseNode',
+           'PCANode', 'PolynomialExpansionNode', 'QuadraticExpansionNode',
+           'RBMNode', 'RBMWithLabelsNode', 'SFA2Node', 'SFANode',
+           'TDSEPNode', 'TimeFramesNode','WhiteningNode',
+           '_OneDimensionalHitParade', '_expanded_dim']
