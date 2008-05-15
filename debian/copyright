@@ -3,34 +3,37 @@ Sat, 19 Jan 2008 16:41:20 -0500.
 
 It was downloaded from http://mdp-toolkit.sourceforge.net
 
-Upstream Authors: 
+Upstream Authors:
 
     Pietro Berkes <berkes@gatsby.ucl.ac.uk>
+    Niko Wilbert <mail@nikowilbert.de>
     Tiziano Zito <tiziano.zito@bccn-berlin.de>
 
-Copyright: 
-    
- 2004-2008, Pietro Berkes <berkes@gatsby.ucl.ac.uk> and
-		    Tiziano Zito  <t.zito@biologie.hu-berlin.de>
+Copyright:
+
+ 2004-2008, Pietro Berkes <berkes@gatsby.ucl.ac.uk>,
+            Niko Wilbert <mail@nikowilbert.de>, and
+	        Tiziano Zito  <t.zito@biologie.hu-berlin.de>
 
 License:
 
-    This package is free software; you can redistribute it and/or
+    This program is free software; you can redistribute it and/or
     modify it under the terms of the GNU Lesser General Public
     License as published by the Free Software Foundation; either
-    version 2 of the License, or (at your option) any later version.
+    version 3 of the License, or (at your option) any later version.
 
-    This package is distributed in the hope that it will be useful,
+    This program is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
     Lesser General Public License for more details.
 
     You should have received a copy of the GNU Lesser General Public
-    License along with this package; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+    License along with this package; if not, write to the Free
+    Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
+    02110-1301 USA, or see <http://www.gnu.org/licenses/>
 
 On Debian systems, the complete text of the GNU Lesser General
-Public License can be found in `/usr/share/common-licenses/LGPL'.
+Public License can be found in `/usr/share/common-licenses/LGPL-3'.
 
-The Debian packaging is (C) 2008, Yaroslav Halchenko <debian@onerussian.com> and
-is licensed under the GPL, see `/usr/share/common-licenses/GPL'.
+The Debian packaging is (C) 2008, Yaroslav Halchenko <debian@onerussian.com>
+and is licensed under the GPL, see `/usr/share/common-licenses/GPL'.
