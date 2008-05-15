@@ -9,3 +9,4 @@ ls mdp/demo/*py > MANIFEST3
 cat MANIFEST1 MANIFEST2 MANIFEST3 > MANIFEST
 rm -rf MANIFEST1 MANIFEST2 MANIFEST3
 python ./setup.py sdist --formats=zip,gztar
+python ./setup.py bdist_wininst
