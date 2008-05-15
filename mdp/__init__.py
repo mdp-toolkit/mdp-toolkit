@@ -154,3 +154,7 @@ __all__ = ['CheckpointFlow', 'CheckpointFunction', 'CheckpointSaveFunction',
            'pca', 'sfa', 'sfa2', 'test', 'utils', 'whitening']
 
 __version__ = '2.3'
+__authors__ = 'Pietro Berkes, Niko Wilbert, and Tiziano Zito'
+__copyright__ = '(c) 2003-2008 Pietro Berkes, Niko Wilbert, Tiziano Zito'
+__license__ = 'LGPL v3, http://www.gnu.org/licenses/lgpl.html'
+__contact__ = 'mdp-toolkit-users AT lists.sourceforge.net'
