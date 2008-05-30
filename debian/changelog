@@ -1,3 +1,9 @@
+mdp (2.3+svn20080515-2) unstable; urgency=low
+
+  * Recommends symeig
+
+ -- Yaroslav Halchenko <debian@onerussian.com>  Fri, 30 May 2008 09:38:35 -0400
+
 mdp (2.3+svn20080515-1) unstable; urgency=low
 
   * New Upstream Version
