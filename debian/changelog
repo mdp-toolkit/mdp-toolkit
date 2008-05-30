@@ -1,6 +1,7 @@
 mdp (2.3+svn20080515-2) unstable; urgency=low
 
   * Recommends symeig
+  * Fixed copyright file with correct years
 
  -- Yaroslav Halchenko <debian@onerussian.com>  Fri, 30 May 2008 09:38:35 -0400
 
