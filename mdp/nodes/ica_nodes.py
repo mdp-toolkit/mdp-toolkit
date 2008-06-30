@@ -72,7 +72,7 @@ class ICANode(mdp.Cumulator, mdp.Node):
         self.limit = limit
         self.whitened = whitened
         self.white_comp = white_comp
-        self.white_parm = {}
+        self.white_parm = white_parm
         super(ICANode, self).__init__(input_dim, None, dtype)
 
 
