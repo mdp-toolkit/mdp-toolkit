@@ -63,7 +63,7 @@ class ISFANode(Node):
     """
     def __init__(self, lags=1, sfa_ica_coeff=[1.,1.], icaweights=None,
                  sfaweights=None, whitened=False, white_comp = None,
-                 white_parm = {},
+                 white_parm = None,
                  eps_contrast=1e-6, max_iter=10000, RP=None,verbose=False, 
                  input_dim=None, output_dim=None, dtype=None):
         """
@@ -183,6 +183,8 @@ class ISFANode(Node):
         # if input is not white, insert a WhiteningNode
         self.whitened = whitened
         if not whitened:
+            if white_parm is None:
+                white_parm = {}
             if output_dim is not None:
                 white_comp = output_dim
             elif white_comp is not None:
