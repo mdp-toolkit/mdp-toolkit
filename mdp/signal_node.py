@@ -420,10 +420,10 @@ class Node(object):
         self._pre_inversion_checks(y)
         return self._inverse(self._refcast(y), *args, **kargs)
 
-    def __call__(self, x):
+    def __call__(self, x, *args, **kargs):
         """Calling an instance if Node is equivalent to call
         its 'execute' method."""
-        return self.execute(x)
+        return self.execute(x, *args, **kargs)
 
     ###### string representation
     
