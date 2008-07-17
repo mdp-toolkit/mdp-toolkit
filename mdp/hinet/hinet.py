@@ -353,6 +353,7 @@ class FlowNode(mdp.Node):
                 # (see pep-3104 for the usage of default arguments in this way)
                 def train_flow_node(x, i_node=i_node, node=node):
                     if i_node > 0:
+                        # TODO: use _execute_seq instead?
                         prior_flow = self._flow[:i_node]
                         node.train(prior_flow.execute(x))
                     else:
