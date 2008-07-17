@@ -285,10 +285,10 @@ class HinetTestSuite(NodesTestSuite):
         sfa_layer = mh.CloneLayer(flownode, switchboard.output_channels)
         flow = mdp.Flow([switchboard, sfa_layer])
         # create dummy file like string to write the representation to
-        file = StringIO.StringIO()
-        hinet_html = mdp.hinet.HiNetHTML(file=file)
+        html_file = StringIO.StringIO()
+        hinet_html = mdp.hinet.HiNetHTML(html_file=html_file)
         hinet_html.parse_flow(flow)
-        file.close()
+        html_file.close()
     
 
 def get_suite(testname=None):
