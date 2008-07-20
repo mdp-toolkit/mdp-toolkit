@@ -7,8 +7,8 @@ This is done via the HiNetHTML class.
 import mdp
 import hinet
 
-### CSS for hinet representation. ###
-#
+## CSS for hinet representation. ##
+
 # Warning: In nested tables the top table css overwrites the nested css if
 #    they are specified like 'table.flow td' (i.e. all td's below this table).
 #    So be careful about hiding/overriding nested td's.
@@ -78,26 +78,27 @@ td.dim {
 """
 
 
-### Node Parameter Writers ###
+## Node Parameter Writers ##
 
-# These are used to define how the internal node structure is represented in
-# the HTML file. Custom write functions can be appended to the list.
+# These functions are used to define how the internal node structure is 
+# represented in the HTML file (the report argument). 
+# Custom write functions can be appended to the list.
 # Note that the list is worked starting from the end (so subclasses can
 # be appended to the end of the list to override their parent class writer).
     
-def _write_rect2dswitchboard(node, file):
-    file.write('rec. field size (in channels): %d x %d = %d<br>' 
-               % (node.x_field_channels, node.y_field_channels,
-                  node.x_field_channels * node.y_field_channels))
-    file.write('# of rec. fields (output channels): %d x %d = %d<br>'
-               % (node.x_out_channels, node.y_out_channels,
-                  node.x_out_channels * node.y_out_channels))
-    file.write('rec. field distances (in channels): (%d, %d) <br>'
-               % (node.x_field_spacing, node.y_field_spacing))
-    file.write('channel width: %d' % node.in_channel_dim)
+def _write_rect2dswitchboard(node, report):
+    report.write('rec. field size (in channels): %d x %d = %d<br>' 
+                 % (node.x_field_channels, node.y_field_channels,
+                    node.x_field_channels * node.y_field_channels))
+    report.write('# of rec. fields (output channels): %d x %d = %d<br>'
+                 % (node.x_out_channels, node.y_out_channels,
+                    node.x_out_channels * node.y_out_channels))
+    report.write('rec. field distances (in channels): (%d, %d) <br>'
+                 % (node.x_field_spacing, node.y_field_spacing))
+    report.write('channel width: %d' % node.in_channel_dim)
     
-def _write_sfa2(node, file):
-    file.write('expansion dim: ' + str(node._expnode.output_dim) + ' <br>')
+def _write_sfa2(node, report):
+    report.write('expansion dim: ' + str(node._expnode.output_dim) + ' <br>')
     
 # (node class type, write function)
 NODE_PARAM_WRITERS = [
@@ -114,16 +115,16 @@ class NewlineWriteFile(object):
     Adds a newline character to each line written with write().
     """
     
-    def __init__(self, file):
+    def __init__(self, file_obj):
         """Wrap the given file-like object."""
-        self.file = file
+        self.file_obj = file_obj
     
-    def write(self, str):
+    def write(self, str_obj):
         """Write a string to the file object and append a newline character."""
-        self.file.write(str + "\n")
+        self.file_obj.write(str_obj + "\n")
         
     def close(self):
-        self.file.close()
+        self.file_obj.close()
         
         
 class HiNetHTML(object):
@@ -134,11 +135,11 @@ class HiNetHTML(object):
     parses the internal structure of such a flow to create schematic view. 
     """
     
-    def __init__(self, file, node_param_writers=NODE_PARAM_WRITERS,
+    def __init__(self, html_file, node_param_writers=tuple(NODE_PARAM_WRITERS),
                  css=CSS_HINET):
         """Prepare everything for the parsing of an actual flow.
         
-        file -- File like object to which the HTML code is written.
+        html_file -- File like object to which the HTML code is written.
         node_param_writers -- This list specifies functions for special nodes
             to integrate node properties into the HMTL view. The list consists
             of tuples of length two, the first element is the node class name.
@@ -149,7 +150,7 @@ class HiNetHTML(object):
             This is then written to the file. Take a look at the default CSS
             before using a custom style
         """
-        self.report = NewlineWriteFile(file)
+        self.report = NewlineWriteFile(html_file)
         self.node_param_writers = node_param_writers
         self.report.write(css)
     
