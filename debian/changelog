@@ -1,3 +1,10 @@
+mdp (2.3+svn20080720-1) unstable; urgency=low
+
+  * New Upstream Version
+  * Boosted policy complience to 3.8.0 (no changes needed)
+
+ -- Yaroslav Halchenko <debian@onerussian.com>  Sun, 20 Jul 2008 11:37:39 -0400
+
 mdp (2.3+svn20080515-3) UNRELEASED; urgency=low
 
   * Adjusted vcs paths in the header
