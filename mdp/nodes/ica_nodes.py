@@ -42,7 +42,7 @@ class ICANode(mdp.Cumulator, mdp.Node):
     """
     
     def __init__(self, limit = 0.001, telescope = False, verbose = False,
-                 whitened = False, white_comp = None, white_parm = {},
+                 whitened = False, white_comp = None, white_parm = None,
                  input_dim = None, dtype = None):
         """
         Input arguments:
@@ -72,7 +72,10 @@ class ICANode(mdp.Cumulator, mdp.Node):
         self.limit = limit
         self.whitened = whitened
         self.white_comp = white_comp
-        self.white_parm = {}
+        if white_parm is None:
+            self.white_parm = {}
+        else:
+            self.white_parm = white_parm
         super(ICANode, self).__init__(input_dim, None, dtype)
 
 
@@ -325,7 +328,7 @@ class FastICANode(ICANode):
                  sample_size = 1, fine_tanh = 1, fine_gaus = 1,
                  max_it = 1000, max_it_fine = 100, 
                  failures = 5, limit = 0.001, verbose = False,
-                 whitened = False, white_comp = None, white_parm = {},
+                 whitened = False, white_comp = None, white_parm = None,
                  input_dim = None, dtype=None):
         """
         Input arguments:
@@ -935,7 +938,7 @@ class TDSEPNode(ISFANode):
     """
     def __init__(self, lags=1, limit = 0.00001, max_iter=10000,
                  verbose = False, whitened = False, white_comp = None,
-                 white_parm = {}, input_dim = None, dtype = None):
+                 white_parm = None, input_dim = None, dtype = None):
         """
         Input arguments:
 
@@ -966,7 +969,7 @@ class TDSEPNode(ISFANode):
         super(TDSEPNode, self).__init__(lags=lags, sfa_ica_coeff=[0.,1.],
                                        icaweights=None, sfaweights=None,
                                        whitened=whitened,white_comp=white_comp,
-                                       white_parm = {},
+                                       white_parm = None,
                                        eps_contrast=limit,
                                        max_iter=max_iter, RP=None,
                                        verbose=verbose, 

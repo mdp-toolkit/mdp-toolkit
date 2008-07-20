@@ -13,37 +13,37 @@ warnings.filterwarnings('always', _LHOOD_WARNING, mdp.MDPWarning)
 
 
 class FANode(mdp.Node):
+    """Perform Factor Analysis.
 
+    The current implementation should be most efficient for long
+    data sets: the sufficient statistics are collected in the
+    training phase, and all EM-cycles are performed at
+    its end.
+
+    The 'execute' function returns the Maximum A Posteriori estimate
+    of the latent variables. The 'generate_input' function generates
+    observations from the prior distribution.
+
+    tol -- tolerance (minimum change in log-likelihood before exiting
+           the EM algorithm)
+    max_cycles -- maximum number of EM cycles
+    verbose -- if True, print log-likelihood during the EM-cycles
+
+    Internal variables of interest:
+    self.mu -- Mean of the input data (available after training)
+    self.A -- Generating weights (available after training)
+    self.E_y_mtx -- Weights for Maximum A Posteriori inference
+    self.sigma -- Vector of estimated variance of the noise
+                  for all input components
+
+    More information about Factor Analysis can be found in
+    Max Welling's classnotes:
+    http://www.ics.uci.edu/~welling/classnotes/classnotes.html ,
+    in the chapter 'Linear Models'.
+    """    
     def __init__(self, tol=1e-4, max_cycles=100, verbose=False,
                  input_dim=None, output_dim=None, dtype=None):
-        """Perform Factor Analysis.
 
-        The current implementation should be most efficient for long
-        data sets: the sufficient statistics are collected in the
-        training phase, and all EM-cycles are performed at
-        its end.
-
-        The 'execute' function returns the Maximum A Posteriori estimate
-        of the latent variables. The 'generate_input' function generates
-        observations from the prior distribution.
-
-        tol -- tolerance (minimum change in log-likelihood before exiting
-               the EM algorithm)
-        max_cycles -- maximum number of EM cycles
-        verbose -- if True, print log-likelihood during the EM-cycles
-
-        Internal variables of interest:
-        self.mu -- Mean of the input data (available after training)
-        self.A -- Generating weights (available after training)
-        self.E_y_mtx -- Weights for Maximum A Posteriori inference
-        self.sigma -- Vector of estimated variance of the noise
-                      for all input components
-
-        More information about Factor Analysis can be found in
-        Max Welling's classnotes:
-        http://www.ics.uci.edu/~welling/classnotes/classnotes.html ,
-        in the chapter 'Linear Models'.
-        """
         # Notation as in Max Welling's notes
         super(FANode, self).__init__(input_dim, output_dim, dtype)
         self.tol = tol
