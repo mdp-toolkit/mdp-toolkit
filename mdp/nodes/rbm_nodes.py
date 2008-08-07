@@ -363,7 +363,7 @@ class RBMWithLabelsNode(RBMNode):
         """?? Insert documentation."""
 
         if not self.is_training():
-            raise TrainingFinishedException, \
+            raise mdp.TrainingFinishedException, \
                   "The training phase has already finished."
 
         x = numx.concatenate((v, l), axis=1)
