@@ -1091,6 +1091,11 @@ class NodesTestSuite(unittest.TestSuite):
         node = mdp.nodes.NoiseNode(bogus_noise, (1.,), 'multiplicative')
         out = node.execute(numx.zeros((100,10),'d'))
         assert_array_equal(out, numx.zeros((100,10),'d'))
+        
+    def testNormalNoiseNode(self):
+        node = mdp.nodes.NormalNoiseNode(noise_args=(2.1, 0.001))
+        x = numx.array([range(100), range(100)])
+        node.execute(x)
 
     def testFDANode(self):
         mean1 = [0., 2.]

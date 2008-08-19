@@ -396,9 +396,9 @@ class NoiseNode(Node):
                          'multiplicative' returns x * (1 + noise)
                         Default is 'additive'.
         """
-        super(NoiseNode, self).__init__(input_dim = input_dim,
-                                        output_dim = input_dim,
-                                        dtype = dtype)
+        super(NoiseNode, self).__init__(input_dim=input_dim,
+                                        output_dim=input_dim,
+                                        dtype=dtype)
         self.noise_func = noise_func
         self.noise_args = noise_args
         valid_noise_types = ['additive', 'multiplicative']
@@ -426,6 +426,37 @@ class NoiseNode(Node):
             return x+noise_mat
         elif self.noise_type == 'multiplicative':
             return x*(1.+noise_mat)
+        
+        
+class NormalNoiseNode(mdp.Node):
+    """Special version of NoiseNode for Gaussian additive noise.
+    
+    Unlike NoiseNode it does not store a noise function reference but simply
+    uses numx_rand.normal. This has the advantage that the node can be pickled 
+    (which does not work for a normal NoiseNode).
+    """
+
+    def __init__(self, noise_args=(0,1), input_dim=None, dtype=None):
+        """Set the noise parameters.
+        
+        noise_args -- Tuple of (mean, standard deviation) for the normal 
+            distribution, default is (0,1).
+        """
+        super(NormalNoiseNode, self).__init__(input_dim=input_dim,
+                                              output_dim=input_dim,
+                                              dtype=dtype)
+        self.noise_args = noise_args
+
+    def is_trainable(self):
+        return False
+
+    def is_invertible(self):
+        return False
+            
+    def _execute(self, x):
+        noise = (mdp.numx_rand.normal(x.shape[-1]) * self.noise_args[1]
+                 + self.noise_args[0]) 
+        return x + noise
 
 
 class GaussianClassifierNode(Node):

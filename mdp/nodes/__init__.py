@@ -6,7 +6,7 @@ from neural_gas_nodes import GrowingNeuralGasNode
 from fda_nodes import FDANode
 from em_nodes import FANode
 from misc_nodes import HitParadeNode, TimeFramesNode, EtaComputerNode, \
-     NoiseNode, GaussianClassifierNode
+     NoiseNode, NormalNoiseNode, GaussianClassifierNode
 from isfa_nodes import ISFANode
 from rbm_nodes import RBMNode, RBMWithLabelsNode
 
