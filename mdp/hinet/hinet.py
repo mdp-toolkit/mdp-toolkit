@@ -221,8 +221,9 @@ class SameInputLayer(Layer):
         for node in self.nodes:
             output_dim += node.output_dim
             if not node.input_dim == input_dim:
-                msg = ('The nodes have different input dimensions.')
+                msg = 'The nodes have different input dimensions.'
                 raise mdp.NodeException(msg)
+        # TODO: use SameInputLayer instead of Layer, modify our usage of super?
         super(Layer, self).__init__(input_dim=input_dim,
                                     output_dim=output_dim,
                                     dtype=dtype)
@@ -294,11 +295,11 @@ class FlowNode(mdp.Node):
             output_dim = self._flow[-1].output_dim
         if dtype is None:
             dtype = self._flow[-1].dtype
+        # store which nodes are pretrained up to what phase
+        self._pretrained_phase = [node.get_current_train_phase()
+                                  for node in flow]
         super(FlowNode, self).__init__(input_dim=input_dim,
                                        output_dim=output_dim, dtype=dtype)
-        # store which nodes are pretrained up to what phase
-        self.pretrained_phase = [node.get_current_train_phase()
-                                 for node in flow]
         
     def _set_input_dim(self, n):
         # try setting the input_dim of the first node
@@ -335,7 +336,7 @@ class FlowNode(mdp.Node):
         for node in self._flow:
             if node.is_trainable():
                 return True
-        return False    
+        return False
 
     def is_invertible(self):
         for node in self._flow:
@@ -345,28 +346,32 @@ class FlowNode(mdp.Node):
         
     def _get_train_seq(self):
         """Return a training sequence containing all training phases."""
+        def get_train_function(_i_node, _node):
+            # This internal function is needed to channel the data through
+            # the nodes in front of the current nodes.
+            # using nested scopes here instead of default args, see pep-0227
+            def _train(x):
+                if i_node > 0:
+                    # do not use _execute_seq, no crash recovery here
+                    prior_flow = self._flow[:_i_node]
+                    _node.train(prior_flow.execute(x))
+                else:
+                    _node.train(x)
+            return _train
         train_seq = []
         for i_node, node in enumerate(self._flow):
             if node.is_trainable():
-                # This internal function is needed to channel the data through
-                # the nodes in front of the current nodes.
-                # (see pep-3104 for the usage of default arguments in this way)
-                def train_flow_node(x, i_node=i_node, node=node):
-                    if i_node > 0:
-                        # TODO: use _execute_seq instead?
-                        prior_flow = self._flow[:i_node]
-                        node.train(prior_flow.execute(x))
-                    else:
-                        node.train(x)
-                remaining_len = ( len(node._get_train_seq())
-                                  - self.pretrained_phase[i_node] )
-                train_seq += ( [[train_flow_node, node.stop_training]]
-                               * remaining_len )
+                remaining_len = (len(node._get_train_seq())
+                                 - self._pretrained_phase[i_node])
+                train_seq += ([(get_train_function(i_node, node), 
+                                node.stop_training)] 
+                              * remaining_len)
         # If the last node is trainable,
         # then we have to set the output dimensions of the FlowNode.
         if self._flow[-1].is_trainable():
-            train_seq[-1][1] = self._get_stop_training_wrapper(self._flow[-1],
-                                                               train_seq[-1][1])
+            train_seq[-1] = (train_seq[-1][0],
+                             self._get_stop_training_wrapper(self._flow[-1],
+                                                             train_seq[-1][1]))
         return train_seq
 
     def _get_stop_training_wrapper(self, node, func):
