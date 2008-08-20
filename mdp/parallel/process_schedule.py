@@ -7,8 +7,7 @@ import thread
 import subprocess
 import time
 import inspect
-
-# sys.path.append(os.path.abspath("../.."))
+import traceback
 
 import scheduling
 
@@ -37,10 +36,15 @@ class ProcessScheduler(scheduling.Scheduler):
     The execution of each job is internally managed by dedicated thread.
     """
     
-    def __init__(self, result_container=scheduling.ListResultContainer(), 
+    def __init__(self, code_path=None, 
+                 result_container=scheduling.ListResultContainer(), 
                  verbose=False, n_processes=1):
         """Initialize the scheduler and start the slave processes.
         
+        code_path -- Path to the source code of the project using the scheduler.
+            Can also be None if no sources are needed for unpickling the job.
+        result_container -- ResultContainer used to store the results.
+        verbose -- If  True to get progress reports from the scheduler.
         n_processes -- Number of processes used in parallel. This should
             correspond to the number of processors / cores.
         """
@@ -50,14 +54,16 @@ class ProcessScheduler(scheduling.Scheduler):
         # list of processes not in use, start the processes now
         module_path = os.path.abspath(get_module_path())
         module_path = os.path.join(module_path, "process_schedule.py")
-        # TODO: set current working directory, cwd="..."
+        # TODO: set current working directory, cwd="..."?
         # Note: -u argument is important on Windows 
         #    to set stdout to binary mode. Otherwise you might get a
         #    strange error message regarding copy_reg.
-        self.free_processes = [subprocess.Popen(
-                                        args=("python", "-u", module_path),
-                                        stdout=subprocess.PIPE, 
-                                        stdin=subprocess.PIPE)
+        process_args = ("python", "-u", module_path)
+        if code_path is not None:
+            process_args += (code_path,)
+        self.free_processes = [subprocess.Popen(args=process_args,
+                                                stdout=subprocess.PIPE, 
+                                                stdin=subprocess.PIPE)
                                for i in range(self.n_processes)]
         
     def cleanup(self):
@@ -104,12 +110,14 @@ class ProcessScheduler(scheduling.Scheduler):
         result on stdout, passes the result to the result container, frees
         the process and then exits. 
         """
-        # push the job the process
-        cPickle.dump(job, process.stdin)
-        # wait for result to arrive
-        result = cPickle.load(process.stdout)
-        if isinstance(result, Exception):
-            raise result 
+        try:
+            # push the job the process
+            cPickle.dump(job, process.stdin)
+            # wait for result to arrive
+            result = cPickle.load(process.stdout)
+        except:
+            print "\nFAILED TO EXECUTE JOB IN PROCESS!\n"
+            sys.exit()
         # store the result and clean up
         self.lock.acquire()
         self._store_result(result)
@@ -125,7 +133,8 @@ def process_execute():
     """This is the process execute method."""
     # use sys.stdout only for pickled objects, everything else goes to stderr
     pickle_out = sys.stdout
-    sys.stdout = sys.stderr  # TODO: add process identifier prefix
+    # TODO: add process identifier prefix?
+    sys.stdout = sys.stderr
     exit_loop = False
     while not exit_loop:
         try:
@@ -139,14 +148,21 @@ def process_execute():
                 pickle_out.flush()
         except Exception, exception:
             # return the exception instead of the result
-            cPickle.dump(exception, pickle_out)
-            pickle_out.flush()
-        sys.stdout.flush()
+            print "\nJOB CAUSED EXCEPTION IN PROCESS:\n"
+            print exception
+            traceback.print_exc()
+            sys.stdout.flush()
+            sys.exit()
+        
                     
 if __name__ == "__main__":
-    # project code import path
-    # add general code path since the executer is started from its own path
-    # TODO: pass this via command line argument when starting the scheduler
+    # append MDP source path 
+    module_file = os.path.abspath(inspect.getfile(sys._getframe(0)))
+    module_path = os.path.dirname(module_file)
+    sys.path.append(os.path.join(module_path.split("mdp")[0])[0:-1])
+    # append project source path, which is the first argument
+    if len(sys.argv) > 1:
+        sys.path.append(sys.argv[1])
     process_execute()
     
     
