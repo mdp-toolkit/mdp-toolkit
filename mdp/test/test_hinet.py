@@ -228,7 +228,8 @@ class HinetTestSuite(NodesTestSuite):
             assert False, 'Did not raise correct exception.'
             
     def testSwitchboardException3(self):
-        mh.Rectangular2dSwitchboard(x_in_channels=12, 
+        try:
+            mh.Rectangular2dSwitchboard(x_in_channels=12, 
                                         y_in_channels=8,
                                         x_field_channels=4,
                                         # this is the problematic value: 
@@ -237,6 +238,10 @@ class HinetTestSuite(NodesTestSuite):
                                         y_field_spacing=2,
                                         in_channel_dim=3,
                                         ignore_cover=True)
+        except mh.Rectangular2dSwitchboardException:
+            pass
+        else:
+            assert False, 'Did not raise correct exception.'
 
     def testHinetSimpleNet(self):
         switchboard = mh.Rectangular2dSwitchboard(x_in_channels=12, 

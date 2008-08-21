@@ -31,10 +31,10 @@ then feed the output into a Layer and each Node will get the correct input.
 # TODO: Test if the nodes are compatible (somewhat done, could go further)
 # TODO: add ChannelSwitchboard with get_out_channel_node?
 
-import mdp
 from operator import isSequenceType
 
-numx = mdp.numx
+import mdp
+from mdp import numx
 
 
 class Layer(mdp.Node):
@@ -388,6 +388,11 @@ class FlowNode(mdp.Node):
         return self._flow.inverse(x)
 
 
+class SwitchboardException(mdp.NodeException):
+    """Exception for routing problems in the Switchboard class."""
+    pass
+
+
 class Switchboard(mdp.Node):
     """Does the routing associated with the connections between layers.
     
@@ -410,10 +415,17 @@ class Switchboard(mdp.Node):
        
         Keyword arguments:
         input_dim -- Dimension of the input data (number of connections).
-        connections -- 1d Array or list with an entry for each output 
+        connections -- 1d Array or sequence with an entry for each output 
             connection, containing the corresponding index of the 
             input connection.
         """
+        # check connections for inconsistencies
+        if len(connections) == 0:
+            raise SwitchboardException("Received empty connection list.")
+        if numx.nanmax(connections) >= input_dim:
+            raise SwitchboardException("One or more switchboard connection " +
+                                       "indices exceed the input dimension.")
+        # checks passed
         self.connections = connections
         output_dim = len(connections)
         super(Switchboard, self).__init__(input_dim=input_dim,
@@ -429,7 +441,7 @@ class Switchboard(mdp.Node):
         return x[:,self.connections]
     
 
-class Rectangular2dSwitchboardException(mdp.NodeException):
+class Rectangular2dSwitchboardException(SwitchboardException):
     """Exception for routing problems in the Rectangular2dSwitchboard class."""
     pass
 
@@ -482,6 +494,15 @@ class Rectangular2dSwitchboard(Switchboard):
                                 x_field_channels * y_field_channels)
         self.x_field_spacing = x_field_spacing
         self.y_field_spacing = y_field_spacing
+        ## check parameters for inconsistencies ##
+        if (x_field_channels > x_in_channels):
+            raise Rectangular2dSwitchboardException("Number of field channels" +
+                    "exceeds the number of input channels in x-direction. " +
+                    "This would lead to an empty connection list.")
+        if (y_field_channels > y_in_channels):
+            raise Rectangular2dSwitchboardException("Number of field channels" +
+                    "exceeds the number of input channels in y-direction. " +
+                    "This would lead to an empty connection list.")
         # number of output channels in x-direction
         self.x_out_channels = \
             (x_in_channels - x_field_channels) // x_field_spacing + 1
@@ -498,6 +519,7 @@ class Rectangular2dSwitchboard(Switchboard):
              and not ignore_cover):
             raise Rectangular2dSwitchboardException("Channel fields do not " + 
                                     "cover all input channels in y-direction.")
+        ## end of parameters checks ##
         self.output_channels = self.x_out_channels * self.y_out_channels
         input_dim = self.in_channels * in_channel_dim
         output_dim = self.output_channels * self.out_channel_dim
