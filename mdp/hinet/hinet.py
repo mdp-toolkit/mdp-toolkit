@@ -426,19 +426,34 @@ class Switchboard(mdp.Node):
             raise SwitchboardException("One or more switchboard connection " +
                                        "indices exceed the input dimension.")
         # checks passed
-        self.connections = connections
+        self.connections = numx.array(connections)
         output_dim = len(connections)
         super(Switchboard, self).__init__(input_dim=input_dim,
                                           output_dim=output_dim)
+        # try to invert connections
+        if (self.input_dim == self.output_dim and
+            len(numx.unique(self.connections)) == self.input_dim):
+            self.inverse_connections = numx.argsort(self.connections)
+        else:
+            self.inverse_connections = None
+            
+    def _execute(self, x):
+        return x[:,self.connections]
         
     def is_trainable(self): 
         return False
     
-    def is_invertible(self): 
-        return False
+    def is_invertible(self):
+        if self.inverse_connections is None:
+            return False
+        else:
+            return True
     
-    def _execute(self, x):
-        return x[:,self.connections]
+    def _inverse(self, x):
+        if self.inverse_connections is None:
+            raise SwitchboardException("Connections are not invertible.")
+        else:
+            return x[:,self.inverse_connections]
     
 
 class Rectangular2dSwitchboardException(SwitchboardException):

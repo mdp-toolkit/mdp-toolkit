@@ -141,6 +141,19 @@ class HinetTestSuite(NodesTestSuite):
         y = layer.execute(x)
         assert layer.dtype == numx.dtype('f')
         assert y.dtype == layer.dtype
+        
+    def testSwitchboardInverse1(self):
+        sboard = mh.Switchboard(input_dim=3,
+                                connections=[2,0,1])
+        assert sboard.is_invertible()
+        y = numx.array([[2,3,4],[5,6,7]])
+        x = sboard.inverse(y)
+        assert numx.all(x == numx.array([[3,4,2],[6,7,5]]))
+    
+    def testSwitchboardInverse2(self):
+        sboard = mh.Switchboard(input_dim=3,
+                                connections=[2,1,1])
+        assert not sboard.is_invertible()
 
     def testSwitchboardRouting1(self):
         sboard = mh.Rectangular2dSwitchboard(x_in_channels=3, 
