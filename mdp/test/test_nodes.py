@@ -1523,7 +1523,7 @@ class NodesTestSuite(unittest.TestSuite):
             assert_array_almost_equal(distr, expected_probs[n,:], 1)
 
         # ### test 2, with bias
-        bm.bh -= 1e4
+        bm.bh -= 1e2
         h = []
         for n in range(100):
             prob, sample = bm.sample_h(v)
@@ -1578,7 +1578,7 @@ class NodesTestSuite(unittest.TestSuite):
             assert_array_almost_equal(distr, expected_probs[n,:], 1)
 
         # test 2, with bias
-        bm.bv -= 1e4
+        bm.bv -= 1e2
         v = []
         for n in range(1000):
             prob, sample = bm.sample_v(h)
