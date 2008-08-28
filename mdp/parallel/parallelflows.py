@@ -1,37 +1,43 @@
 """
 Module for parallel MDP flows, which handle the jobs.
 
-Corresponding classes for Job and ResultContainer are derived. 
+Corresponding classes for Job and ResultContainer are derived. Node that
+ParallelFlow training depends on these classes and their specific arguments and 
+output values.
+
+A ParallelFlowNode is used to simplify the forking process and to encapsulate 
+the flow in the job.
 """
 
 import mdp
+from mdp import numx
+from mdp import hinet
 
 import parallelnodes
 import resultorder
 import scheduling
+import parallelhinet
 
 
 class FlowTrainJob(scheduling.Job):
     """Job implementing a single training phase in a flow for a data block."""
 
-    def __init__(self, preflow, node, x):
+    def __init__(self, flownode, x):
         """Store everything for the training.
         
         keyword arguments:
-        preflow -- x is executed by the preflow, the result is used for the
-            training of the node
-        node -- node to be trained
+        flownode -- FlowNode containing the flow to be trained.
         x -- training data block
         """
-        self._preflow = preflow
-        self._node = node
+        self._flownode = flownode
         self._x = x
     
     def __call__(self):
         """Do the training and return only the trained node."""
-        x = self._preflow.execute(self._x)
-        self._node.train(x)
-        return self._node
+        self._flownode.train(self._x)
+        for node in self._flownode._flow:
+            if node.is_training():
+                return node
     
     
 class FlowExecuteJob(scheduling.Job):
@@ -155,8 +161,14 @@ class ParallelFlow(mdp.Flow):
     Training may require multiple phases, which are each closed by calling
     use_results.
     
-    The training can only be parallelized for nodes that are derived from
-    ParallelNode, otherwise the training is done locally. 
+    The training is only parallelized for nodes that are derived from 
+    ParallelNode, otherwise the training is done locally. The training is also
+    done locally if fork() raises a TrainingPhaseNotParallelException. This can
+    be used by the node to request local training without forking.
+    
+    Note that train phases are always closed, so e.g. CheckpointSaveFunction
+    should not expect open train phases. This is necessary since otherwise
+    stop_training() would be called remotely.
     """
     
     def __init__(self, flow, crash_recovery=False, verbose=False):
@@ -169,6 +181,7 @@ class ParallelFlow(mdp.Flow):
         # index of currently trained node, also used as flag for training 
         # takes value None for not training
         self._i_train_node = None
+        self._flownode = None  # used during training
         # iterator for execution data 
         # also signals if parallel execution is underway
         self._exec_data_iter = None  
@@ -196,10 +209,10 @@ class ParallelFlow(mdp.Flow):
         iterator -- Iterator for data chunks. If an array is given instead,
             then the standard flow train is used.
         train_job_class -- Class used to create training jobs. By using a
-            different class you can implementent data transformations (e.g.
+            different class you can implement data transformations (e.g.
             from 8 bit image to 64 bit double precision.
         """
-        if isinstance(data_iterators, mdp.numx.ndarray):
+        if isinstance(data_iterators, numx.ndarray):
             self.train(self, data_iterators)
         else:
             self._train_job_class = train_job_class
@@ -207,87 +220,60 @@ class ParallelFlow(mdp.Flow):
                                 self._train_check_iterators(data_iterators)
             self._i_train_node = 0
             self._next_train_phase()
-           
+            
     def _next_train_phase(self):
         """Find the next phase or node for parallel training.
         
         When it is found the corresponding internal variables are set.
-        Nodes which are not derived from ParallelNode are directly trained 
-        here. If a fork() fails due to a TrainingPhaseNotParallelException
+        Nodes which are not derived from ParallelNode are trained locally. 
+        If a fork() fails due to a TrainingPhaseNotParallelException
         in a certain train phase, then the training is done locally as well
         (but fork() is tested again for the next phase).
         """
-        i_node = self._i_train_node  # keep these synchronized at all times
-        can_fork = False  # flag which can be set in inner loop
-        while i_node < len(self.flow) and not can_fork:
-            if self.flow[i_node].is_training():
-                if isinstance(self.flow[i_node], parallelnodes.ParallelNode):
-                    while self.flow[i_node].get_remaining_train_phase() >= 1:
-                        # Test if node can actually fork, otherwise perform 
-                        # the single training phase locally. Go through 
-                        # all train phases for this node if necessary.
-                        try:
-                            self.flow[i_node].fork()
-                        except parallelnodes.TrainingPhaseNotParallelException:
-                            if self.verbose:
-                                print ("start local training phase of " + 
-                                       "node no. %d in parallel flow" % 
-                                       (i_node+1))
-                            data_iterator = self._train_data_iters[i_node]
-                            node = self.flow[i_node]
-                            ## begin code taken from flow._train_node()
-                            for x in data_iterator:
-                                if isinstance(x, (list, tuple)):
-                                    arg = x[1:]
-                                    x = x[0]
-                                else:
-                                    arg = ()
-                                if i_node > 0: 
-                                    x = self._execute_seq(x, i_node-1)
-                                node.train(x, *arg)
-                            ## end code taken from flow._train_node()
-                            if self.verbose:
-                                print ("finished local training phase of " + 
-                                       "node no. %d in parallel flow" % 
-                                       (i_node+1))
-                            if node.get_remaining_train_phase() > 1:
-                                node.stop_training()
-                            else:
-                                self._i_train_node += 1
-                                i_node = self._i_train_node
-                                break
-                        else:
-                            # fork successful, prepare parallel training
-                            if self.verbose:
-                                print ("start parallel training phase of " +
-                                       "node no. %d in parallel flow" % 
-                                       (i_node+1))
-                            self._train_data_iter = iter(
-                                                self._train_data_iters[i_node])
-                            self._next_job = self._create_train_job()
-                            can_fork = True
-                            break
-                    else:
-                        # training of this node is done, pick next one
-                        self._i_train_node += 1
-                        i_node = self._i_train_node
-                else:
-                    # train non-parallel nodes locally
-                    if self.verbose:
-                        print ("start local training of non-parallel node " + 
-                               "no. %d in parallel flow" % (i_node+1))
-                    self._train_node(
-                        data_iterator=self._train_data_iters[i_node], 
-                        nodenr=i_node)
-                    if self.verbose:
-                        print ("finished local training of non-parallel node " + 
-                               "no. %d in parallel flow" % (i_node+1))
-                    self._i_train_node += 1
-                    i_node = self._i_train_node
-            else:
+        self._flownode = parallelhinet.ParallelFlowNode(mdp.Flow(self.flow))
+        # find next node that can be forked, if required do local training
+        while self._i_train_node < len(self.flow):
+            if not self.flow[self._i_train_node].is_training():
                 self._i_train_node += 1
-                i_node = self._i_train_node
-        if i_node >= len(self.flow):
+                continue
+            try:
+                if isinstance(self.flow[self._i_train_node], 
+                              parallelnodes.ParallelNode):
+                    self._flownode.fork()
+                else:
+                    raise parallelnodes.TrainingPhaseNotParallelException()
+            except parallelnodes.TrainingPhaseNotParallelException:
+                if self.verbose:
+                    print ("start local training phase of " + 
+                           "node no. %d in parallel flow" % 
+                           (self._i_train_node+1))
+                data_iterator = self._train_data_iters[self._i_train_node]
+                for x in data_iterator:
+                    if isinstance(x, (list, tuple)):
+                        arg = x[1:]
+                        x = x[0]
+                    else:
+                        arg = ()
+                    self._flownode.train(x, *arg)
+                if self.verbose:
+                    print ("finished local training phase of " + 
+                           "node no. %d in parallel flow" % 
+                           (self._i_train_node+1))
+                # workaround to keep the last training phase of each node open
+                self._flownode.stop_training()
+                if not self.flow[self._i_train_node].is_training():
+                    self._i_train_node += 1
+            else:
+                # fork successful, prepare parallel training
+                if self.verbose:
+                    print ("start parallel training phase of " +
+                           "node no. %d in parallel flow" % 
+                           (self._i_train_node+1))
+                self._train_data_iter = iter(
+                                    self._train_data_iters[self._i_train_node])
+                self._next_job = self._create_train_job()
+                break
+        else:
             # training is finished
             self._i_train_node = None
             self._train_data_iters = None
@@ -299,9 +285,7 @@ class ParallelFlow(mdp.Flow):
         Raises NoJobException if none are available.
         """
         try:
-            preflow = mdp.Flow(self.flow[:self._i_train_node])
-            node = self.flow[self._i_train_node].fork()
-            return self._train_job_class(preflow, node,
+            return self._train_job_class(self._flownode.fork(), 
                                          self._train_data_iter.next())
         except StopIteration:
             return None
@@ -329,7 +313,7 @@ class ParallelFlow(mdp.Flow):
         """
         if self.is_parallel_training():
             raise ParallelFlowException("Parallel training is underway.")
-        if isinstance(iterator, mdp.numx.ndarray):
+        if isinstance(iterator, numx.ndarray):
             return mdp.Flow.execute(self, iterator)
         else:
             self._execute_job_class = execute_job_class
@@ -413,14 +397,13 @@ class ParallelFlow(mdp.Flow):
             if self.verbose:
                 print ("finished parallel training phase of node no. " + 
                        "%d in parallel flow" % (self._i_train_node+1))
-            if node.get_remaining_train_phase() > 1:
-                    node.stop_training()
-            else:
+            node.stop_training()
+            if not node.is_training():
                 self._i_train_node += 1
             self._next_train_phase()
         elif self.is_parallel_executing():
             self._exec_data_iter = None
-            return mdp.numx.concatenate(results)
+            return numx.concatenate(results)
    
     
 class ParallelCheckpointFlow(ParallelFlow, mdp.CheckpointFlow):

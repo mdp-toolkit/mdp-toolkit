@@ -8,8 +8,8 @@ n = mdp.numx
 class TestScheduler(unittest.TestCase):
 
     def test_scheduler(self):
-        """Test process scheduler with 6 jobs and 2 processes."""
-        scheduler = parallel.ProcessScheduler(verbose=False, n_processes=2)
+        """Test process scheduler with 6 jobs and 3 processes."""
+        scheduler = parallel.ProcessScheduler(verbose=False, n_processes=3)
         for i in range(6):
             job = parallel.TestJob(x=i)
             scheduler.add_job(job)
