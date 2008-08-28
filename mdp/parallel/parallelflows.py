@@ -249,7 +249,7 @@ class ParallelFlow(mdp.Flow):
                            (self._i_train_node+1))
                 data_iterator = self._train_data_iters[self._i_train_node]
                 for x in data_iterator:
-                    if isinstance(x, (list, tuple)):
+                    if type(x) is tuple:
                         arg = x[1:]
                         x = x[0]
                     else:

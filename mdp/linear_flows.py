@@ -137,7 +137,7 @@ class Flow(object):
                     # the arguments following the first are passed only to the
                     # currently trained node, allowing the implementation of
                     # supervised nodes
-                    if isinstance(x, tuple):
+                    if type(x) is tuple:
                         arg = x[1:]
                         x = x[0]
                     else:
@@ -160,7 +160,7 @@ class Flow(object):
         except FlowExceptionCR, e:
             # this exception was already propagated,
             # probably during the execution  of a node upstream in the flow
-            (type, val) = _sys.exc_info()[:2]
+            (exc_type, val) = _sys.exc_info()[:2]
             prev = ''.join(_traceback.format_exception_only(e.__class__,e))
             prev = prev[prev.find('\n')+1:]
             act = "\nWhile training node #%d (%s):\n" \
