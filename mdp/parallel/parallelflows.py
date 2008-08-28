@@ -259,7 +259,6 @@ class ParallelFlow(mdp.Flow):
                     print ("finished local training phase of " + 
                            "node no. %d in parallel flow" % 
                            (self._i_train_node+1))
-                # workaround to keep the last training phase of each node open
                 self._flownode.stop_training()
                 if not self.flow[self._i_train_node].is_training():
                     self._i_train_node += 1
