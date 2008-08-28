@@ -43,11 +43,8 @@ class PCANode(Node):
                   principal components (self.output_dim) may be different from
                   that set when creating the instance.
         """
-        if output_dim <= 1 and isinstance(output_dim, float):
-            self.desired_variance = output_dim
-            output_dim = None
-        else:
-            self.desired_variance = None
+        # this must occur *before* calling super!
+        self.desired_variance = None
         
         super(PCANode, self).__init__(input_dim, output_dim, dtype)
 
@@ -64,7 +61,12 @@ class PCANode(Node):
 
         # empirical covariance matrix, updated during the training phase
         self._cov_mtx = CovarianceMatrix(dtype)
-
+        
+    def _set_output_dim(self, n):
+        if n <= 1 and isinstance(n, float):
+            self.desired_variance = n
+        else:
+            self._output_dim = n
         
     def _check_output(self, y):
         # check output rank
@@ -193,7 +195,7 @@ class PCANode(Node):
             d = d[0:neigval]
             v = v[:,0:neigval]
             # define the new output dimension
-            self.output_dim = neigval
+            self.output_dim = int(neigval)
 
         # automatic dimension reduction
         if self.reduce:

@@ -624,7 +624,26 @@ class NodesTestSuite(unittest.TestSuite):
         assert out.shape[1] == 2
         # check that explained variance is > 0.8 and < 1
         assert (pca.explained_variance > 0.8 and pca.explained_variance < 1)
-        
+
+    def testPCANode_desired_variance_after_train(self):
+        mat, mix, inp = self._get_random_mix(mat_dim=(1000, 3))
+        # first make them white
+        pca = mdp.nodes.WhiteningNode()
+        pca.train(mat)
+        mat = pca.execute(mat)
+        # set the variances
+        mat *= [0.6,0.3,0.1]
+        #mat -= mat.mean(axis=0)
+        pca = mdp.nodes.PCANode()
+        pca.train(mat)
+        # this was not working before the bug fix
+        pca.output_dim = 0.8
+        out = pca.execute(mat)
+        # check that we got exactly two output_dim:
+        assert pca.output_dim == 2
+        assert out.shape[1] == 2
+        # check that explained variance is > 0.8 and < 1
+        assert (pca.explained_variance > 0.8 and pca.explained_variance < 1)    
     
     def testPCANode_SVD(self):
         # it should pass atleast the same test as PCANode
