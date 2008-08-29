@@ -47,14 +47,15 @@ class ListResultContainer(ResultContainer):
     """
     
     def __init__(self):
-        self.results = []
+        super(ListResultContainer, self).__init__()
+        self._results = []
         
     def add_result(self, result):
-        self.results.append(result)
+        self._results.append(result)
         
     def get_results(self):
-        results = self.results
-        self.results = []
+        results = self._results
+        self._results = []
         return results
 
 

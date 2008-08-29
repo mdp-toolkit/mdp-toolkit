@@ -17,8 +17,8 @@ class OrderedListResultContainer(scheduling.ListResultContainer):
     
     def get_results(self):
         """Return the ordered results."""
-        marked_results = self.results
-        self.results = []
+        marked_results = self._results
+        self._results = []
         def compare_marker(x, y):
             return x[0] - y[0]
         marked_results.sort(compare_marker)

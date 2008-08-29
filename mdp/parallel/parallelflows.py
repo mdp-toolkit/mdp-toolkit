@@ -342,7 +342,7 @@ class ParallelFlow(mdp.Flow):
         if self.is_parallel_training():
             raise ParallelFlowException("Parallel training is underway.")
         if isinstance(iterator, numx.ndarray):
-            return mdp.Flow.execute(self, iterator)
+            return self.execute(self, iterator)
         else:
             self._execute_job_class = execute_job_class
             self._exec_data_iter = iterator.__iter__()
