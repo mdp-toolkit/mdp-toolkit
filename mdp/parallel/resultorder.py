@@ -27,7 +27,10 @@ class OrderedListResultContainer(scheduling.ListResultContainer):
     
 class OrderedJob(scheduling.Job):
     """Abstract base class to remove the order number from the data
-    and then reapply it."""
+    and then reapply it.
+    
+    OrderedIterable can be used to create the marked data for this Job.
+    """
     
     def __init__(self, marked_x):
         """Split up marker and data and store them."""

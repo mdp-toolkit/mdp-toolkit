@@ -19,6 +19,8 @@ import scheduling
 import parallelhinet
 
 
+### Train Job Classes ###
+
 class FlowTrainJob(scheduling.Job):
     """Job implementing a single training phase in a flow for a data block."""
 
@@ -38,8 +40,33 @@ class FlowTrainJob(scheduling.Job):
         for node in self._flownode._flow:
             if node.is_training():
                 return node
+            
+
+class NodeResultContainer(scheduling.ResultContainer):
+    """Container for parallel nodes.
     
+    Expects parallel nodes as results and joins them to save memory.
+    A list containing one node is returned, so this container can replace
+    the standard list container without any changes elsewhere.
+    """
     
+    def __init__(self):
+        self._node = None
+        
+    def add_result(self, result):
+        if not self._node:
+            self._node = result
+        else:
+            self._node.join(result)
+            
+    def get_results(self):
+        node = self._node
+        self._node = None
+        return [node,]
+    
+
+### Execute Job Classes ###
+
 class FlowExecuteJob(scheduling.Job):
     """Job implementing data execution through the whole flow."""
 
@@ -72,37 +99,7 @@ class OrderedFlowExecuteJob(resultorder.OrderedJob):
         return self._apply_marker(result)
     
 
-class NodeResultContainer(scheduling.ResultContainer):
-    """Container for parallel nodes.
-    
-    Expects parallel nodes as results and joins them to save memory.
-    A list containing one node is returned, so this container can replace
-    the standard list container without any changes elsewhere.
-    """
-    
-    def __init__(self):
-        self._node = None
-        
-    def add_result(self, result):
-        if not self._node:
-            self._node = result
-        else:
-            self._node.join(result)
-            
-    def get_results(self):
-        node = self._node
-        self._node = None
-        return [node,]
-
-
-class ParallelFlowException(mdp.FlowException):
-    """Exception for calling execute while _flow is in parallel training."""
-    pass
-
-class NoJobException(ParallelFlowException):
-    """Exception for problems with the job creation."""
-    pass
-
+### Standard Helper Functions ###    
 
 def train_parallelflow(flow, data_iterators, scheduler=None, checkpoints=None,
                        train_job_class=FlowTrainJob):
@@ -150,6 +147,38 @@ def execute_parallelflow(flow, data_iterator, scheduler=None,
         scheduler.add_job(job)
     results = scheduler.get_results()
     return flow.use_results(results)
+
+
+def ordered_execute_parallelflow(flow, data_iterator, scheduler=None, 
+                                 execute_job_class=OrderedFlowExecuteJob):
+    """Execute a parallel flow via the provided scheduler.
+    
+    The results will be returned in the correct order. If an
+    execute_job_class is provided it should be derived from 
+    OrderedFlowExecuteJob.
+    """
+    if not isinstance(execute_job_class, resultorder.OrderedJob):
+        try:
+            # workaround to test if job class does support marked results
+            execute_job_class._apply_marker
+        except:
+            raise Exception("Provided execute_job_class does not seem to " +
+                            "support ordered results.")
+    data_iterator = resultorder.OrderedIterable(data_iterator)
+    return execute_parallelflow(flow, data_iterator, scheduler, 
+                                execute_job_class)
+
+
+### ParallelFlow Class ###    
+
+class ParallelFlowException(mdp.FlowException):
+    """Exception for calling execute while _flow is in parallel training."""
+    pass
+
+
+class NoJobException(ParallelFlowException):
+    """Exception for problems with the job creation."""
+    pass
 
 
 class ParallelFlow(mdp.Flow):

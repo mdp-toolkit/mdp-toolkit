@@ -28,6 +28,7 @@ from parallelflows import (FlowTrainJob, FlowExecuteJob, OrderedFlowExecuteJob,
                            NodeResultContainer, 
                            ParallelFlowException, NoJobException, 
                            train_parallelflow, execute_parallelflow,
+                           ordered_execute_parallelflow,
                            ParallelFlow, ParallelCheckpointFlow)
 from parallelhinet import (ParallelFlowNode, ParallelLayer, ParallelCloneLayer)
 
