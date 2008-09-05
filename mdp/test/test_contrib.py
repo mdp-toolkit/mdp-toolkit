@@ -18,12 +18,14 @@ import itertools
 class ContribTestSuite(NodesTestSuite):
     def __init__(self, testname=None):
         NodesTestSuite.__init__(self, testname=testname)
-        self.mat_dim = (500,4)
+        self.mat_dim = (500, 5)
         self._cleanup_tests()
 
     def _set_nodes(self):
         self._nodes = [mc.JADENode,
-                       mc.NIPALSNode]
+                       mc.NIPALSNode,
+                       (mc.LLENode, [3, 0.001, False], None),
+                       (mc.LLENode, [3, 0.001, True], None)]
 
     def _fastica_test_factory(self):
         # we don't want the fastica tests here
