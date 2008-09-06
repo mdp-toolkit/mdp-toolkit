@@ -46,6 +46,8 @@ class LLENode(Cumulator):
               computed using the method presented in deRidder and Duin;
               this method involves solving one eigenvalue problem for
               every data point, and can slow down the algorithm
+              If specified, it multiplies the trace of the local covariance
+              matrix of the distances, as in Saul & Roweis (faster)
          svd -- if True, use SVD to compute the projection matrix;
                 SVD is slower but more stable
 
@@ -53,8 +55,7 @@ class LLENode(Cumulator):
                        or a float between 0.0 and 1.0
         """
 
-        # this must occur *before* calling super!
-         if output_dim <= 1 and isinstance(output_dim,float):
+        if output_dim <= 1 and isinstance(output_dim,float):
             self.desired_variance = output_dim
             output_dim = None
         else:
@@ -112,31 +113,32 @@ class LLENode(Cumulator):
             #-----------------------------------------------
             M_Mi = M_Mi[nbrs]
             
+            # ?? these are not used anywhere
             #compute locus and stdev of neighbors
             #compute thickness
-            locus = M_Mi.sum(0)/k
-            
-            stdev = numx.sqrt( numx.sum((M_Mi - locus)**2) * 1./k )
-            dist =  numx.sqrt( (locus**2).sum() )
-            thickness = numx.sqrt( ( mult(M_Mi,locus)**2 ).sum()/N  )/dist
+            #locus = M_Mi.sum(0)/k
+            #stdev = numx.sqrt( numx.sum((M_Mi - locus)**2) * 1./k )
+            #dist =  numx.sqrt( (locus**2).sum() )
+            #thickness = numx.sqrt( ( mult(M_Mi,locus)**2 ).sum()/N  )/dist
             
             #compute covariance matrix of distances
             Q = mult(M_Mi,M_Mi.T)
         
             #Covariance matrix may be nearly singular:
             # add a diagonal correction to prevent numerical errors
-            # correction is equal to the sum of the (k-d_out) unused variances
-            #  (as in deRidder & Duin)
             if r is None and k>d_out:
+                # automatic mode: correction is equal to the sum of
+                # the (k-d_out) unused variances (as in deRidder &
+                # Duin)
                 sig2 = (numx_linalg.svd(M_Mi,compute_uv=0))**2
                 r = numx.sum(sig2[d_out:])
                 Q[Q_diag_idx, Q_diag_idx] += r
             if r is not None:
-                Q[Q_diag_idx, Q_diag_idx] += r
-            #Note that Roweis et al instead uses "a correction that 
-            #   is small compared to the trace" e.g.:
-            #r = 0.001 * float(Q.trace())
-            #this is equivalent to assuming 0.1% of the variance is unused
+                # Roweis et al instead use "a correction that 
+                #   is small compared to the trace" e.g.:
+                # r = 0.001 * float(Q.trace())
+                # this is equivalent to assuming 0.1% of the variance is unused
+                Q[Q_diag_idx, Q_diag_idx] += r*Q.trace()
     
             #solve for weight
             # weight is w such that sum(Q_ij * w_j) = 1 for all i
