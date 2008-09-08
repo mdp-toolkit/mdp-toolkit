@@ -1,5 +1,6 @@
 from mdp import numx, numx_linalg, numx_rand
 from mdp.utils import mult, symeig, nongeneral_svd
+from mdp.nodes import LLENode
 import pylab
 from matplotlib import ticker, axes3d
 
