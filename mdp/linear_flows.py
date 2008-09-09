@@ -137,7 +137,7 @@ class Flow(object):
                     # the arguments following the first are passed only to the
                     # currently trained node, allowing the implementation of
                     # supervised nodes
-                    if type(x) is tuple:
+                    if (type(x) is tuple) or (type(x) is list):
                         arg = x[1:]
                         x = x[0]
                     else:
@@ -244,9 +244,9 @@ class Flow(object):
         If instead one array is specified, it is used as input training
         sequence for all nodes.
         
-        Instead of a data array x the iterators can also return a tuple, where
-        the first entry is x and the following are args for the training of
-        the node (e.g. for supervised training). 
+        Instead of a data array x the iterators can also return a list or tuple, 
+        where the first entry is x and the following are args for the training 
+        of the node (e.g. for supervised training). 
 
         Generator-type iterators are supported only for nodes with
         a single training phase (this is because they cannot be
