@@ -1,5 +1,19 @@
 TODO:
 
+MDP 2.4 x.x.x:
+
+- code restyling by PEP8
+- wrappers for external libraries? (which ones?)
+- (try python 2.6 -3 and get rid of all warnings, to have code 
+  forward compatible with python 3)
+- metaclass for Node to avoid overwriting methods for documentation
+  purposes
+- full integration of the LLE nodes (how do we test them?)
+- updating the tutorial using the text we wrote for the paper,
+  adding an example similar to the LLE demo
+- choose a new color for the website :-))
+
+
 MDP 2.3 15.5.2008:
 
 - do new screenshots
