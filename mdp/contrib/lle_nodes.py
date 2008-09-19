@@ -219,7 +219,6 @@ class LLENode(Cumulator):
             #   at this point
             #-----------------------------------------------
             sig2 = (numx_linalg.svd(M_Mi,compute_uv=0))**2
-            print sig2.shape, sig2s.shape, self.data.shape
             sig2s[row,:] = sig2
 
             #-----------------------------------------------
