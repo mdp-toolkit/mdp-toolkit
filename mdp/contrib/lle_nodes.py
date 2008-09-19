@@ -51,7 +51,7 @@ class LLENode(Cumulator):
                        or a float between 0.0 and 1.0
         """
 
-        if output_dim <= 1 and isinstance(output_dim,float):
+        if output_dim <= 1 and isinstance(output_dim, float):
             self.desired_variance = output_dim
             output_dim = None
         else:
@@ -70,26 +70,40 @@ class LLENode(Cumulator):
     def _stop_training(self):
         super(LLENode, self)._stop_training()
 
+        if self.verbose:
+            print 'training LLE on %i points in %i dimensions...' % self.data.shape
+
         # some useful quantities
         M = self.data
         N = M.shape[0]
         k = self.k
         r = self.r
+
         # indices of diagonal elements
         W_diag_idx = numx.arange(N)
         Q_diag_idx = numx.arange(k)
 
         if k>N:
             raise TrainingError,'LLENode: k=%i must be less than or equal to number of training points N=%i' %(k,N)
-       
-        if self.verbose:
-            print 'training LLE on %i points in %i dimensions...' % M.shape
-        
-        self._adjust_output_dim()
-        d_out = self.output_dim
-        d_in = self.input_dim
+ 
+        # determines number of output dimensions: if desired_variance
+        # is specified, we need to learn it from the data. Otherwise,
+        # it's easy
+        learn_outdim = False
+        if self.output_dim is None:
+            if self.desired_variance is None:
+                self.output_dim = self.input_dim
+            else:
+                learn_outdim = True
 
-        #build the weight matrix
+        # do we need to automatically determine the regularization term?
+        auto_reg = r is None
+
+        # determine number of output dims, precalculate useful stuff
+        if learn_outdim:
+            Qs, sig2s, nbrss = self._adjust_output_dim()
+
+        # build the weight matrix
         #XXX future work:
         #XXX   for faster implementation, W should be a sparse matrix
         W = numx.zeros((N,N), dtype=self.dtype)
@@ -98,44 +112,42 @@ class LLENode(Cumulator):
             print ' - constructing [%i x %i] weight matrix...' % W.shape
     
         for row in range(N):
-            #-----------------------------------------------
-            #  find k nearest neighbors
-            #-----------------------------------------------
-            M_Mi = M-M[row]
-            nbrs = numx.argsort( (M_Mi**2).sum(1) )[1:k+1]
-        
-            #-----------------------------------------------
+            if learn_outdim:
+                Q = Qs[row,:,:]
+                nbrs = nbrss[row,:]
+            else:
+                # -----------------------------------------------
+                #  find k nearest neighbors
+                # -----------------------------------------------
+                M_Mi = M-M[row]
+                nbrs = numx.argsort( (M_Mi**2).sum(1) )[1:k+1]
+                M_Mi = M_Mi[nbrs]
+                # compute covariance matrix of distances
+                Q = mult(M_Mi,M_Mi.T)
+                
+            # -----------------------------------------------
             #  compute weight vector based on neighbors
-            #-----------------------------------------------
-            M_Mi = M_Mi[nbrs]
-            
-            # ?? these are not used anywhere
-            #compute locus and stdev of neighbors
-            #compute thickness
-            #locus = M_Mi.sum(0)/k
-            #stdev = numx.sqrt( numx.sum((M_Mi - locus)**2) * 1./k )
-            #dist =  numx.sqrt( (locus**2).sum() )
-            #thickness = numx.sqrt( ( mult(M_Mi,locus)**2 ).sum()/N  )/dist
-            
-            #compute covariance matrix of distances
-            Q = mult(M_Mi,M_Mi.T)
-        
+            # -----------------------------------------------
+
             #Covariance matrix may be nearly singular:
             # add a diagonal correction to prevent numerical errors
-            if r is None and k>d_out:
+            if auto_reg:
                 # automatic mode: correction is equal to the sum of
-                # the (k-d_out) unused variances (as in deRidder &
+                # the (d_in-d_out) unused variances (as in deRidder &
                 # Duin)
-                sig2 = (numx_linalg.svd(M_Mi,compute_uv=0))**2
-                r = numx.sum(sig2[d_out:])
+                if learn_outdim:
+                    sig2 = sig2s[row,:]
+                else:
+                    sig2 = (numx_linalg.svd(M_Mi,compute_uv=0))**2
+                r = numx.sum(sig2[self.output_dim:])
                 Q[Q_diag_idx, Q_diag_idx] += r
-            if r is not None:
+            else:
                 # Roweis et al instead use "a correction that 
                 #   is small compared to the trace" e.g.:
                 # r = 0.001 * float(Q.trace())
                 # this is equivalent to assuming 0.1% of the variance is unused
                 Q[Q_diag_idx, Q_diag_idx] += r*Q.trace()
-    
+                
             #solve for weight
             # weight is w such that sum(Q_ij * w_j) = 1 for all i
             w = self._refcast(numx_linalg.solve(Q, numx.ones(k)))
@@ -145,9 +157,10 @@ class LLENode(Cumulator):
             W[nbrs,row] = w
 
         if self.verbose:
-            print ' - finding [%i x %i] null space' % (d_out,N)+\
+            print ' - finding [%i x %i] null space' % (self.output_dim,N)+\
                   ' of weight matrix\n     (may take a while)...'
 
+        self.W = W.copy()
         #to find the null space, we need the bottom d+1
         #  eigenvectors of (W-I).T*(W-I)
         #Compute this using the svd of (W-I):
@@ -158,7 +171,7 @@ class LLENode(Cumulator):
         #XXX   of a sparse matrix will significantly increase the speed
         #XXX   of the next step
         if self.svd:
-            sig, U = nongeneral_svd(W.T, range=(2, d_out+1))
+            sig, U = nongeneral_svd(W.T, range=(2, self.output_dim+1))
         else:
             # the following code does the same computation, but uses
             # symeig, which computes only the required eigenvectors, and
@@ -166,25 +179,17 @@ class LLENode(Cumulator):
             WW = mult(W, W.T)
             # regularizes the eigenvalues, does not change the eigenvectors:
             WW[W_diag_idx, W_diag_idx] += 0.1
-            sig, U = symeig(WW, range=(2, d_out+1), overwrite=True)
+            sig, U = symeig(WW, range=(2, self.output_dim+1), overwrite=True)
+
         self.training_projection = U
 
     def _adjust_output_dim(self):
+        # this function is called if we need to compute the number of
+        # output dimensions automatically; some quantities that are
+        # useful later are pre-calculated to spare precious time
+
         if self.verbose:
             print ' - adjusting output dim:'
-
-        if self.output_dim != None:
-            if self.input_dim < self.output_dim:
-                msg = "LLENode: output_dim = %i "%self.output_dim +\
-                      "is larger than input_dim = %i. "%self.input_dim+\
-                      "Aborting"
-                raise TrainingException,msg
-            return
-
-        #otherwise, if self.output_dim==None...
-        if self.desired_variance is None:
-            self.output_dim = self.input_dim
-            return
 
         #otherwise, we need to compute output_dim
         #                  from desired_variance
@@ -193,6 +198,9 @@ class LLENode(Cumulator):
         N,d_in = M.shape
 
         m_est_array = []
+        Qs = numx.zeros((N,k,k))
+        sig2s = numx.zeros((N,d_in))
+        nbrss = numx.zeros((N,k), dtype='i')
         
         for row in range(N):
             #-----------------------------------------------
@@ -201,6 +209,9 @@ class LLENode(Cumulator):
             M_Mi = M-M[row]
             nbrs = numx.argsort( (M_Mi**2).sum(1) )[1:k+1]
             M_Mi = M_Mi[nbrs]
+            # compute covariance matrix of distances
+            Qs[row,:,:] = mult(M_Mi,M_Mi.T)
+            nbrss[row,:] = nbrs
 
             #-----------------------------------------------
             # singular values of M_Mi give the variance:
@@ -208,6 +219,8 @@ class LLENode(Cumulator):
             #   at this point
             #-----------------------------------------------
             sig2 = (numx_linalg.svd(M_Mi,compute_uv=0))**2
+            print sig2.shape, sig2s.shape, self.data.shape
+            sig2s[row,:] = sig2
 
             #-----------------------------------------------
             # use sig2 to compute intrinsic dimensionality of the
@@ -229,13 +242,14 @@ class LLENode(Cumulator):
         if self.verbose:
             print '      output_dim = %i for variance of %.2f'\
                 % (self.output_dim,self.desired_variance)
+
+        return Qs, sig2s, nbrss
     
     def _execute(self, x):
         #----------------------------------------------------
         # similar algorithm to that within self.stop_training()
         #  refer there for notes & comments on code
         #----------------------------------------------------
-        x = numx.asarray(x)
         N = self.data.shape[0]
         Nx = x.shape[0]
         W = numx.zeros((Nx,N), dtype=self.dtype)
@@ -246,14 +260,14 @@ class LLENode(Cumulator):
         
         for row in range(Nx):
             #find nearest neighbors of x in M
-            M_xi = numx.array(self.data-x[row])
+            M_xi = self.data-x[row]
             nbrs = numx.argsort( (M_xi**2).sum(1) )[:k]
             M_xi = M_xi[nbrs]
 
             #find corrected covariance matrix Q
             Q = mult(M_xi,M_xi.T)
             if r is None and k>d_out:
-                sig2 = (numx_linalg.svd(M_Mi,compute_uv=0))**2
+                sig2 = (numx_linalg.svd(M_xi,compute_uv=0))**2
                 r = numx.sum(sig2[d_out:])
                 Q[Q_diag_idx, Q_diag_idx] += r
             if r is not None:
@@ -455,6 +469,3 @@ class HLLENode(LLENode):
             S = numx.asmatrix(numx.diag( (1.0*sig2)**-1.5))
             self.training_projection = numx.asarray(Y * U * S * U.T * C)
     
-
-
-

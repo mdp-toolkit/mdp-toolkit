@@ -16,7 +16,7 @@ from expansion_nodes import expanded_dim as _expanded_dim
 
 # import contributed nodes
 import mdp
-from mdp.contrib import JADENode, NIPALSNode
+from mdp.contrib import JADENode, NIPALSNode, LLENode
 
 # clean up namespace
 del mdp

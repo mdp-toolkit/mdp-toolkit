@@ -103,11 +103,36 @@ class ContribTestSuite(NodesTestSuite):
         # check that explained variance is > 0.8 and < 1
         assert (pca.explained_variance > 0.8 and pca.explained_variance < 1)
 
+    def testLLENode(self):
+        # 3 points describing a 2D plane
+        assert 1
         
 def get_suite(testname=None):
     return ContribTestSuite(testname=testname)
 
-if __name__ == '__main__':
-    numx_rand.seed(1268049219)
-    unittest.TextTestRunner(verbosity=2).run(get_suite())
+#if __name__ == '__main__':
+#    numx_rand.seed(1268049219)
+#    unittest.TextTestRunner(verbosity=2).run(get_suite())
+
+# x = numx.array([[1.,0.], [0.,1.], [1., 1.]])
+# # random 3D rotation
+# r = utils.random_rot(3)[:2,:]
+# # random 3D translation
+# v = numx_rand.random(3)
+
+# y = utils.mult(x, r) 
+
+# llenode = mdp.nodes.LLENode(2, r=0.01, output_dim=0.99, verbose=True, svd=True)
+# llenode.train(y)
+# llenode.stop_training()
+
+# a = llenode.execute(y)
+
+# import pylab
+# from matplotlib import ticker, axes3d
+# fig = pylab.figure(1)
+# pylab.clf()
+# ax = axes3d.Axes3D(fig,rect=[0,0.5,1,0.5])
+# ax.scatter3D(y[:,0], y[:,1], y[:,2])
+# pylab.draw()
 
