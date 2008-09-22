@@ -105,7 +105,7 @@ class Node(object):
         elif (self._input_dim is not None) and (self._input_dim !=  n):
             msg = "Input dim are set already (%d) "%(self.input_dim)+\
                   "(%d given)!"%n
-            raise NodeException, msg
+            raise NodeException(msg)
         else:
             self._set_input_dim(n)
 
@@ -131,7 +131,7 @@ class Node(object):
         elif (self._output_dim is not None) and (self._output_dim != n):
             msg = "Output dim are set already (%d) "%(self.output_dim)+\
                   "(%d given)!"%(n)
-            raise NodeException, msg
+            raise NodeException(msg)
         else:
             self._set_output_dim(n)
 
@@ -157,13 +157,13 @@ class Node(object):
         if (self._dtype is not None) and (self._dtype != t):
             errstr = "dtype is already set to '%s' " % (self.dtype.name)+\
                      "('%s' given)!"%t
-            raise NodeException, errstr
+            raise NodeException(errstr)
         elif t not in self.get_supported_dtypes():
             errstr = "\ndtype '%s' is not supported.\n" % t.name+ \
                       "Supported dtypes: %s" \
                       %([mdp.numx.dtype(t).name for t in
                          self.get_supported_dtypes()])
-            raise NodeException, errstr
+            raise NodeException(errstr)
         else:
             self._set_dtype(t)
 
@@ -190,10 +190,10 @@ class Node(object):
                                 doc = "Supported dtypes")
 
     _train_seq = property(lambda self: self._get_train_seq(),
-                          doc = "List of tuples: [(training-phase1, " +\
-                          "stop-training-phase1), (training-phase2, " +\
-                          "stop_training-phase2), ... ].\n" +\
-                          " By default _train_seq = [(self._train," +\
+                          doc = "List of tuples: [(training-phase1, "
+                          "stop-training-phase1), (training-phase2, "
+                          "stop_training-phase2), ... ].\n"
+                          " By default _train_seq = [(self._train,"
                           " self._stop_training]")
 
     def _get_train_seq(self):
@@ -227,9 +227,8 @@ class Node(object):
     def _check_input(self, x):
         # check input rank
         if not x.ndim == 2:
-            error_str = "x has rank %d, should be 2"\
-                        %(x.ndim)
-            raise NodeException, error_str
+            error_str = "x has rank %d, should be 2"%(x.ndim)
+            raise NodeException(error_str)
 
         # set the input dimension if necessary
         if self.input_dim is None:
@@ -241,26 +240,25 @@ class Node(object):
 
         # check the input dimension
         if not x.shape[1] == self.input_dim:
-            error_str = "x has dimension %d, should be %d" \
-                        % (x.shape[1], self.input_dim)
-            raise NodeException, error_str
+            error_str = "x has dimension %d, should be %d"%(x.shape[1],
+                                                            self.input_dim)
+            raise NodeException(error_str)
 
         if x.shape[0] == 0:
             error_str = "x must have at least one observation (zero given)"
-            raise NodeException, error_str
+            raise NodeException(error_str)
         
     def _check_output(self, y):
         # check output rank
         if not y.ndim == 2:
-            error_str = "y has rank %d, should be 2"\
-                        %(y.ndim)
-            raise NodeException, error_str
+            error_str = "y has rank %d, should be 2"%(y.ndim)
+            raise NodeException(error_str)
 
         # check the output dimension
         if not y.shape[1] == self.output_dim:
-            error_str = "y has dimension %d, should be %d" \
-                        % (y.shape[1], self.output_dim)
-            raise NodeException, error_str
+            error_str = "y has dimension %d, should be %d"%(y.shape[1],
+                                                            self.output_dim)
+            raise NodeException(error_str)
 
     def _if_training_stop_training(self):
         if self.is_training():
@@ -268,8 +266,8 @@ class Node(object):
             # if there is some training phases left
             # we shouldn't be here!
             if self.get_remaining_train_phase() > 0:
-                raise TrainingException, \
-                      "The training phases are not completed yet."
+                raise TrainingException("The training phases are not "
+                                        "completed yet.")
 
     def _pre_execution_checks(self, x):
         """This method contains all pre-execution checks.
@@ -289,7 +287,7 @@ class Node(object):
         It can be used when a subclass defines multiple inversion methods."""
         
         if not self.is_invertible():
-            raise IsNotInvertibleException, "This node is not invertible."
+            raise IsNotInvertibleException("This node is not invertible.")
 
         self._if_training_stop_training()
 
@@ -297,9 +295,9 @@ class Node(object):
         if self.output_dim is None:
             # if the input_dim is not defined, raise an exception
             if self.input_dim is None:
-                errstr = "Number of input dimensions undefined. Inversion"+\
-                         "not possible."
-                raise NodeException, errstr
+                errstr = "Number of input dimensions undefined. Inversion"
+                "not possible."
+                raise NodeException(errstr)
             self.output_dim = self.input_dim
         
         # control the dimension of y
@@ -352,11 +350,11 @@ class Node(object):
         """
 
         if not self.is_trainable():
-            raise IsNotTrainableException, "This node is not trainable."
+            raise IsNotTrainableException("This node is not trainable.")
 
         if not self.is_training():
-            raise TrainingFinishedException, \
-                  "The training phase has already finished."
+            raise TrainingFinishedException("The training phase has already"
+            " finished.")
 
         self._check_input(x)
         self._check_train_args(x, *args, **kwargs)        
@@ -369,12 +367,11 @@ class Node(object):
         Be default, subclasses should overwrite _stop_Training to implement
         their stop-training."""
         if self.is_training() and self._train_phase_started == False:
-            raise TrainingException, \
-                  "The node has not been trained."
+            raise TrainingException("The node has not been trained.")
         
         if not self.is_training():
-            raise TrainingFinishedException, \
-                  "The training phase has already finished."
+            raise TrainingFinishedException("The training phase has already"
+                                            "finished.")
 
         # close the current phase.
         self._train_seq[self._train_phase][1](*args, **kwargs)
@@ -436,9 +433,9 @@ class Node(object):
             flow_copy.insert(0, self)
             return flow_copy.copy()
         else:
-            err_str = 'can only concatenate node'+ \
-                      ' (not \'%s\') to node'%(type(other).__name__) 
-            raise TypeError, err_str
+            err_str = 'can only concatenate node'
+            ' (not \'%s\') to node'%(type(other).__name__) 
+            raise TypeError(err_str)
         
     ###### string representation
     

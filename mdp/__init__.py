@@ -116,19 +116,19 @@ del _os, _NUMX_LABELS, _USR_LABEL, _label
 import utils
 
 # import exceptions from nodes and flows
-from signal_node import NodeException, TrainingException, \
-     TrainingFinishedException, IsNotTrainableException, \
-     IsNotInvertibleException
+from signal_node import (NodeException, TrainingException,
+                         TrainingFinishedException, IsNotTrainableException,
+                         IsNotInvertibleException)
 from linear_flows import CrashRecoveryException, FlowException, FlowExceptionCR
 
 # import base node and flow classes.
 from signal_node import Node, Cumulator
-from linear_flows import Flow, CheckpointFlow, \
-     CheckpointFunction, CheckpointSaveFunction
+from linear_flows import (Flow, CheckpointFlow,
+                          CheckpointFunction, CheckpointSaveFunction)
 
 # import helper functions:
-from helper_funcs import pca, whitening, fastica, cubica, sfa, get_eta, \
-                         sfa2, factor_analysis, isfa
+from helper_funcs import (pca, whitening, fastica, cubica, sfa, get_eta,
+                          sfa2, factor_analysis, isfa)
 
 
 # import our modules
