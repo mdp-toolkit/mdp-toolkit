@@ -286,6 +286,13 @@ class FlowsTestSuite(unittest.TestSuite):
         flow = node1+node2+node3
         assert type(flow) is mdp.Flow
         assert len(flow) == 3
+        node4 = _BogusNode()
+        flow = node4 + flow
+        assert type(flow) is mdp.Flow
+        assert len(flow) == 4
+
+        
+        
         
         
     
