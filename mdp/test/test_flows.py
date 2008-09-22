@@ -275,7 +275,20 @@ class FlowsTestSuite(unittest.TestSuite):
             raise Exception, 'flow.pop left inconsistent flow'
         except ValueError:
             assert_equal(len(flow), length)
+
+    def testFlow_as_sum_of_nodes(self):
+        node1 = _BogusNode()
+        node2 = _BogusNode()
+        flow = node1+node2
+        assert type(flow) is mdp.Flow
+        assert len(flow) == 2
+        node3 = _BogusNode()
+        flow = node1+node2+node3
+        assert type(flow) is mdp.Flow
+        assert len(flow) == 3
         
+        
+    
     def testCheckpointFlow(self):
         lst = []
         # checkpoint function, it collects a '1' for each call

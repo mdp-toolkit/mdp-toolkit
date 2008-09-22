@@ -435,15 +435,20 @@ class Flow(object):
     
     def __add__(self, other):
         # append other to self
-        if not isinstance(other, Flow):
+        if isinstance(other, Flow):
+            flow_copy = list(self.flow).__add__(other.flow)
+            # check dimension consistency
+            self._check_nodes_consistency(flow_copy)
+            # if no exception was raised, accept the new sequence
+            return self.__class__(flow_copy)
+        elif isinstance(other, mdp.Node):
+            flow_copy = self.copy()
+            flow_copy.append(other)
+            return flow_copy
+        else:
             err_str = 'can only concatenate flow'+ \
                       ' (not \'%s\') to flow'%(type(other).__name__) 
             raise TypeError, err_str
-        flow_copy = list(self.flow).__add__(other.flow)
-        # check dimension consistency
-        self._check_nodes_consistency(flow_copy)
-        # if no exception was raised, accept the new sequence
-        return self.__class__(flow_copy)
 
     ###### public container methods
 

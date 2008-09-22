@@ -425,6 +425,16 @@ class Node(object):
         its 'execute' method."""
         return self.execute(x, *args, **kargs)
 
+    ###### adding nodes returns flows
+
+    def __add__(self, other):
+        # check other is a node
+        if not isinstance(other, Node):
+            err_str = 'can only concatenate node'+ \
+                      ' (not \'%s\') to node'%(type(other).__name__) 
+            raise TypeError, err_str
+        return mdp.Flow([self, other])
+    
     ###### string representation
     
     def __str__(self):
