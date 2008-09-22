@@ -1,4 +1,6 @@
-"""Process based scheduler for distribution across multiple CPU cores."""
+"""
+Process based scheduler for distribution across multiple CPU cores.
+"""
 
 import sys
 import os
@@ -49,7 +51,7 @@ class ProcessScheduler(scheduling.Scheduler):
             correspond to the number of processors / cores.
         """
         scheduling.Scheduler.__init__(self, result_container=result_container,
-                                     verbose=verbose)
+                                      verbose=verbose)
         self.n_processes = n_processes
         # list of processes not in use, start the processes now
         module_path = os.path.abspath(get_module_path())
@@ -86,8 +88,7 @@ class ProcessScheduler(scheduling.Scheduler):
         while not job_started:
             self.lock.acquire()
             if not len(self.free_processes):
-                # block and wait for a free process
-                # release lock for other threads
+                # release lock for other threads and wait
                 self.lock.release()
                 time.sleep(0.5)
             else:
@@ -111,7 +112,7 @@ class ProcessScheduler(scheduling.Scheduler):
         the process and then exits. 
         """
         try:
-            # push the job the process
+            # push the job to the process
             cPickle.dump(job, process.stdin)
             # wait for result to arrive
             result = cPickle.load(process.stdout)
@@ -119,18 +120,19 @@ class ProcessScheduler(scheduling.Scheduler):
             print "\nFAILED TO EXECUTE JOB IN PROCESS!\n"
             sys.exit()
         # store the result and clean up
-        self.lock.acquire()
         self._store_result(result)
         self.free_processes.append(process)
-        self.n_jobs_finished += 1
         self.n_jobs_running -= 1
         if self.verbose:
             print "    finished job no. %d" % self.n_jobs_finished
-        self.lock.release()
 
 
 def process_execute():
-    """This is the process execute method."""
+    """This is the process execute method.
+    
+    It is called in the new processes to receive jobs via stdin, execute them
+    and send the results back via stdout.
+    """
     # use sys.stdout only for pickled objects, everything else goes to stderr
     pickle_out = sys.stdout
     # TODO: add process identifier prefix?
@@ -156,6 +158,7 @@ def process_execute():
         
                     
 if __name__ == "__main__":
+    # TODO: make this more robust?
     # append MDP source path 
     module_file = os.path.abspath(inspect.getfile(sys._getframe(0)))
     module_path = os.path.dirname(module_file)

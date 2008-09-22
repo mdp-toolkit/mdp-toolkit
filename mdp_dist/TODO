@@ -12,6 +12,12 @@ MDP 2.4 x.x.x:
 - updating the tutorial using the text we wrote for the paper,
   adding an example similar to the LLE demo
 - choose a new color for the website :-))
+- provide different versions of the MDP logo which includes the website address,
+  possibly one higher quality print version, available in "how to cite" section
+- include the XSFA Node from Henning (maybe wait for later release)
+- think about a better structure for the unittests in the future,
+  the transition could happen package by package (starting with parallel)
+- try to bring the parallel package into shape for a release
 
 
 MDP 2.3 15.5.2008:

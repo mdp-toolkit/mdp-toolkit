@@ -17,7 +17,7 @@ have to know anything about flows or nodes.
 
 
 from scheduling import (Job, TestJob, ResultContainer, ListResultContainer,
-                        Scheduler, SimpleScheduler)
+                        Scheduler)
 from resultorder import (OrderedListResultContainer, OrderedJob, 
                          OrderedIterable)
 from process_schedule import ProcessScheduler

@@ -118,7 +118,7 @@ def train_parallelflow(flow, data_iterators, scheduler=None, checkpoints=None,
         flow.parallel_train(data_iterators, train_job_class=train_job_class)
     while flow.is_parallel_training():
         if scheduler == None:
-            scheduler = scheduling.SimpleScheduler(result_container=
+            scheduler = scheduling.Scheduler(result_container=
                                                          NodeResultContainer())
         while flow.job_available():
             job = flow.get_job()
@@ -444,8 +444,8 @@ class ParallelCheckpointFlow(ParallelFlow, mdp.CheckpointFlow):
                        train_job_class=FlowTrainJob):
         """Checkpoint version of parallel training."""
         self._checkpoints = self._train_check_checkpoints(checkpoints)
-        ParallelFlow.parallel_train(self, data_iterators, 
-                                    train_job_class=train_job_class)
+        super(ParallelCheckpointFlow, self).parallel_train(data_iterators, 
+                                                train_job_class=train_job_class)
     
     def use_results(self, results):
         """Checkpoint version of use_results.

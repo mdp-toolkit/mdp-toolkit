@@ -60,35 +60,57 @@ class ListResultContainer(ResultContainer):
 
 
 class Scheduler(object):
-    """Abstract base class for schedulers.
+    """Base class and trivial implementation for schedulers.
     
     New jobs are added with add_task(job) where job, is an object with a 
     __call__() function or simply a function.
-    
     get_results then returns the result container (and locks if jobs are
     pending).
+    
+    In this simple scheduler implementation the jobs are simply executed in the 
+    add_job method.
     """
 
     def __init__(self, result_container=ListResultContainer(), verbose=False):
-        """Initialize the scheduler."""
+        """Initialize the scheduler.
+        
+        result_container -- Instance of ResultContainer that is used to store
+            the results (default is ListResultContainer).
+        verbose -- If True then status messages will be printed to sys.stdout.
+        """
         self.result_container = result_container
         self.verbose = verbose
-        self.n_jobs_running = 0
-        self.n_jobs_finished = 0  # count the jobs of all finished jobs
-        # this lock can be used by subthreads responsible for job allocation
-        self.lock = thread.allocate()
+        self.n_jobs_running = 0  # number of jobs that are currently running
+        self.n_jobs_finished = 0  # count the number of all finished jobs
+        self.lock = thread.allocate()  # general lock for this class
     
     def add_job(self, job):
         """Add a job to be executed.
         
-        Depending on the scheduler state this function is non-blocking or
-        blocking. One reason for blocking can be a full job-queue.
+        job -- Executable which returns a result.
+        
+        In this simple implementation the job is simply executed. The method
+        blocks if another job is already running (which may happen if multiple 
+        threads are used). 
+        
+        This method is overridden in more complex schedulers. Generally this
+        method is potentially blocking (e.g. when the job queue is full).
         """
-        pass
-    
+        self.lock.acquire()
+        self.n_jobs_running += 1
+        result = job()
+        self.n_jobs_running -= 1
+        self.lock.release()
+        self._store_result(result)
+        if self.verbose:
+            print "    finished job no. %d" % self.n_jobs_finished
+        
     def _store_result(self, result):
-        """Store result in the result container."""
+        """Store a result in the internal result container."""
+        self.lock.acquire()
         self.result_container.add_result(result)
+        self.n_jobs_finished += 1
+        self.lock.release()
     
     def get_results(self):
         """Get the accumulated results from the result container.
@@ -106,23 +128,12 @@ class Scheduler(object):
                 time.sleep(1); 
 
     def cleanup(self):
-        """Controlled shutdown, should be called at the end."""
+        """Controlled shutdown.
+        
+        Should be called when the scheduler is no longer needed (e.g. to shut
+        down slave processes and such).
+        """
         pass
     
-    
-class SimpleScheduler(Scheduler):
-    """Most simple scheduler implementation.
-    
-    The jobs are simply executed in the add_job function.
-    """
-    
-    def add_job(self, job):
-        """Execute job directly and blocks until job is done."""
-        self.lock.acquire()
-        self._store_result(job())
-        self.n_jobs_finished += 1
-        self.lock.release()
-            
- 
                     
     

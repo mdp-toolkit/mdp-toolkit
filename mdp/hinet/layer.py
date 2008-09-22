@@ -173,12 +173,16 @@ class Layer(mdp.Node):
 
 
 class CloneLayer(Layer):
-    """Layer with a single node that is used in parallel multiple times.
+    """Layer with a single node instance that is used multiple times.
     
-    The same single node is used multiple times, so Clonelayer(node, 3)
-    executes in the same way as Layer([node]*3). But Layer([node]*3) would
-    lead to problems when closing a training phase, which can be avoided
-    by using CloneLayer.
+    The same single node instance is used to build the layer, so 
+    Clonelayer(node, 3) executes in the same way as Layer([node]*3). 
+    But Layer([node]*3) would have a problem when closing a training phase, 
+    so one has to use CloneLayer.
+    
+    A CloneLayer can be used for weight sharing in the training phase. It might
+    be also useful for reducing the memory footprint use during the execution
+    phase (since only a single node instance is needed).
     """
     
     def __init__(self, node, n_nodes=1, dtype=None):

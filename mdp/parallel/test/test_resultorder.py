@@ -29,7 +29,7 @@ class TestOrderedExcecution(unittest.TestCase):
                 results.append(job())
             flow.use_results(results)
         ## test ordered parallel execution ###
-        scheduler = parallel.SimpleScheduler(result_container=
+        scheduler = parallel.Scheduler(result_container=
                                         parallel.OrderedListResultContainer())
         shape = [20,10]  # mark first job by consisting of zeros
         data_iter = [n.zeros(shape)]
