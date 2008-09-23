@@ -10,8 +10,7 @@ the flow in the job.
 """
 
 import mdp
-from mdp import numx
-from mdp import hinet
+from mdp import numx as n
 
 import parallelnodes
 import resultorder
@@ -140,7 +139,7 @@ def execute_parallelflow(flow, data_iterator, scheduler=None,
     """
     flow.parallel_execute(data_iterator, execute_job_class=execute_job_class)
     if scheduler == None:
-        scheduler = scheduling.SimpleScheduler(result_container=
+        scheduler = scheduling.Scheduler(result_container=
                                                 scheduler.ListResultContainer())
     while flow.job_available():
         job = flow.get_job()
@@ -241,7 +240,7 @@ class ParallelFlow(mdp.Flow):
             different class you can implement data transformations (e.g.
             from 8 bit image to 64 bit double precision.
         """
-        if isinstance(data_iterators, numx.ndarray):
+        if isinstance(data_iterators, n.ndarray):
             self.train(self, data_iterators)
         else:
             self._train_job_class = train_job_class
@@ -341,7 +340,7 @@ class ParallelFlow(mdp.Flow):
         """
         if self.is_parallel_training():
             raise ParallelFlowException("Parallel training is underway.")
-        if isinstance(iterator, numx.ndarray):
+        if isinstance(iterator, n.ndarray):
             return self.execute(self, iterator)
         else:
             self._execute_job_class = execute_job_class
@@ -431,7 +430,7 @@ class ParallelFlow(mdp.Flow):
             self._next_train_phase()
         elif self.is_parallel_executing():
             self._exec_data_iter = None
-            return numx.concatenate(results)
+            return n.concatenate(results)
    
     
 class ParallelCheckpointFlow(ParallelFlow, mdp.CheckpointFlow):

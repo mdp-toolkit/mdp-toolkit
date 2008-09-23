@@ -3,7 +3,8 @@ import unittest
 
 import mdp
 import mdp.parallel as parallel
-n = mdp.numx
+from mdp import numx as n
+# TODO: replace this with the MDP testing tools
 import numpy.testing as testing_tools
 
 

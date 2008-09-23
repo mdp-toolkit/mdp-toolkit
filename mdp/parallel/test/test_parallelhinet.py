@@ -4,7 +4,7 @@ import unittest
 import mdp
 import mdp.parallel as parallel
 import mdp.hinet as hinet
-n = mdp.numx
+from mdp import numx as n
 
 
 class TestParallelFlowNode(unittest.TestCase):

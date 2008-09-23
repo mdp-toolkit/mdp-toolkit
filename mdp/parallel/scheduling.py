@@ -106,11 +106,14 @@ class Scheduler(object):
             print "    finished job no. %d" % self.n_jobs_finished
         
     def _store_result(self, result):
-        """Store a result in the internal result container."""
+        """Store a result in the internal result container.
+        
+        This function blocks to avoid any problems during result storage.
+        """
         self.lock.acquire()
         self.result_container.add_result(result)
-        self.n_jobs_finished += 1
         self.lock.release()
+        self.n_jobs_finished += 1
     
     def get_results(self):
         """Get the accumulated results from the result container.

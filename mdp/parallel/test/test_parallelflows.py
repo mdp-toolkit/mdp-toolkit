@@ -3,7 +3,7 @@ import unittest
 
 import mdp
 import mdp.parallel as parallel
-n = mdp.numx
+from mdp import numx as n
 
 
 class TestParallelFlows(unittest.TestCase):
