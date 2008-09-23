@@ -11,6 +11,7 @@ MDP 2.4 x.x.x:
 - full integration of the LLE nodes (how do we test them?)
 - updating the tutorial using the text we wrote for the paper,
   adding an example similar to the LLE demo
+- what about helper functions? should we add an intrface to new nodes?
 - choose a new color for the website :-))
 - provide different versions of the MDP logo which includes the website address,
   possibly one higher quality print version, available in "how to cite" section
