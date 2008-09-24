@@ -81,7 +81,16 @@ class RBMNode(mdp.Node):
 
     def _train(self, v, n_updates=1, epsilon=0.1, decay=0., momentum=0.,
                verbose=False):
-        
+        """Update the internal structures according to the input data 'v'.
+        The training is performed using Contrastive Divergence (CD).
+
+        v -- a binary matrix having different variables on different columns
+             and observations on the rows
+        n_updates -- number of CD iterations. Default value: 1
+        epsilon -- learning rate. Default value: 0.1
+        decay -- weight decay term. Default value: 0.
+        momentum -- momentum term. Default value: 0.
+        """        
         if not self._initialized:
             self._init_weights()
 
@@ -129,21 +138,6 @@ class RBMNode(mdp.Node):
             ph, h = self._sample_h(v)
             print 'energy', self._energy(v, ph).sum()
 
-    def train(self, v, n_updates=1, epsilon=0.1, decay=0., momentum=0.,
-               verbose=False):
-        """Update the internal structures according to the input data 'v'.
-        The training is performed using Contrastive Divergence (CD).
-
-        v -- a binary matrix having different variables on different columns
-             and observations on the rows
-        n_updates -- number of CD iterations. Default value: 1
-        epsilon -- learning rate. Default value: 0.1
-        decay -- weight decay term. Default value: 0.
-        momentum -- momentum term. Default value: 0.
-        """
-        super(RBMNode, self).train(v, n_updates=n_updates, epsilon=epsilon,
-                                   decay=decay, momentum=momentum, verbose=verbose)
-
     def _stop_training(self):
         #del self._delta
         #del self._train_err
@@ -188,18 +182,15 @@ class RBMNode(mdp.Node):
         return self._energy(v, h)
 
     def _execute(self, v, return_probs=True):
+        """If 'return_probs' is True, returns the probability of the
+        hidden variables h[n,i] being 1 given the observations v[n,:].
+        If 'return_probs' is False, return a sample from that probability.
+        """
         probs, h = self._sample_h(v)
         if return_probs:
             return probs
         else:
             return h
-
-    def execute(self, v, return_probs=True):
-        """If 'return_probs' is True, returns the probability of the
-        hidden variables h[n,i] being 1 given the observations v[n,:].
-        If 'return_probs' is False, return a sample from that probability.
-        """
-        return super(RBMNode, self).execute(v, return_probs=return_probs)
 
 class RBMWithLabelsNode(RBMNode):
     """Restricted Boltzmann Machine with softmax labels. An RBM is an

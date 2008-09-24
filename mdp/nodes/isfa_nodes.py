@@ -685,8 +685,8 @@ class ISFANode(Node):
             prev_contrast = contrast
             
         return max_increase, covs, Q, contrast
-
-    def stop_training(self, covs=None):
+    
+    def _stop_training(self, covs=None):
         """Stop the training phase.
         If the node is used on large datasets it may be wise to first
         learn the covariance matrices, and then tune the parameters
@@ -713,9 +713,6 @@ class ISFANode(Node):
         matrices, i.e. covariance matrices that were not learnt on a
         real dataset.
         """
-        return super(ISFANode, self).stop_training(covs)
-    
-    def _stop_training(self, covs):
         # fix, whiten, symmetrize and weight the covariance matrices
         # the functions sets also the number of input components self.ncomp
         self._fix_covs(covs)

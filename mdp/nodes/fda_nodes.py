@@ -123,7 +123,7 @@ class FDANode(mdp.Node):
             
         d, self.v = mdp.utils.symeig(S_W, S_T, range=rng, overwrite = 1)
 
-    def train(self, x, cl):
+    def _train(self, x, cl):
         """Update the internal structures according to the input data 'x'.
         
         x -- a matrix having different variables on different columns
@@ -135,6 +135,10 @@ class FDANode(mdp.Node):
         super(FDANode, self).train(x, cl)
 
     def _execute(self, x, range=None):
+        """Compute the output of the FDA projection.
+        if 'range' is a number, then use the first 'range' functions.
+        if 'range' is the interval=(i,j), then use all functions
+                   between i and j."""
         if range:
             if isinstance(range, (list, tuple)):
                 v = self.v[:,range[0]:range[1]]
@@ -144,13 +148,6 @@ class FDANode(mdp.Node):
             v = self.v
 
         return mdp.utils.mult(x-self.avg, v)
-
-    def execute(self, x, range=None):
-        """Compute the output of the FDA projection.
-        if 'range' is a number, then use the first 'range' functions.
-        if 'range' is the interval=(i,j), then use all functions
-                   between i and j."""
-        return super(FDANode, self).execute(x, range)
 
     def _inverse(self, y):
         return mdp.utils.mult(y, mdp.utils.pinv(self.v))+self.avg

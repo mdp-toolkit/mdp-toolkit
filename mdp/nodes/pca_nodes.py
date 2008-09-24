@@ -97,18 +97,6 @@ class PCANode(Node):
         # update the covariance matrix
         self._cov_mtx.update(x)
 
-    def stop_training(self, debug=False):
-        """Stop the training phase.
-
-        Keyword arguments:
-
-        debug=True     if stop_training fails because of singular cov
-                       matrices, the singular matrices itselves are stored in
-                       self.cov_mtx and self.dcov_mtx to be examined.
-        """
-        return super(PCANode, self).stop_training(debug=debug)
-
-
     def _adjust_output_dim(self):
         ##### compute the principal components
         # if the number of principal components to keep is not specified,
@@ -130,6 +118,14 @@ class PCANode(Node):
         
 
     def _stop_training(self, debug=False):
+        """Stop the training phase.
+
+        Keyword arguments:
+
+        debug=True     if stop_training fails because of singular cov
+                       matrices, the singular matrices itselves are stored in
+                       self.cov_mtx and self.dcov_mtx to be examined.
+        """
         ##### request the covariance matrix and clean up
         self.cov_mtx, avg, self.tlen = self._cov_mtx.fix()
         del self._cov_mtx
@@ -231,14 +227,11 @@ class PCANode(Node):
         return self.v
 
     def _execute(self, x, n = None):
+        """Project the input on the first 'n' principal components.
+        If 'n' is not set, use all available components."""
         if n is not None:
             return mult(x-self.avg, self.v[:,:n])
         return mult(x-self.avg, self.v)
-
-    def execute(self, x, n=None):
-        """Project the input on the first 'n' principal components.
-        If 'n' is not set, use all available components."""
-        return super(PCANode, self).execute(x, n)
 
     def _inverse(self, y, n = None):
         """Project 'y' to the input space using the first 'n' components.
@@ -252,11 +245,6 @@ class PCANode(Node):
         
         v = self.get_recmatrix()
         return mult(y, v[:n,:])+self.avg
-
-    def inverse(self, y, n=None):
-        """Project 'y' to the input space using the first 'n' components.
-        If 'n' is not set, use all available components."""
-        return super(PCANode, self).inverse(y, n)
 
 
 class WhiteningNode(PCANode):

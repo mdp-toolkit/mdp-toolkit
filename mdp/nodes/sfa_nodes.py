@@ -82,6 +82,10 @@ class SFANode(Node):
         self._bias = mult(self.avg, self.sf)
 
     def _execute(self, x, range=None):
+        """Compute the output of the slowest functions.
+        if 'range' is a number, then use the first 'range' functions.
+        if 'range' is the interval=(i,j), then use all functions
+                   between i and j."""
         if range:
             if isinstance(range, (list, tuple)):
                 sf = self.sf[:,range[0]:range[1]]
@@ -93,13 +97,6 @@ class SFANode(Node):
             sf = self.sf
             bias = self._bias
         return mult(x, sf) - bias
-
-    def execute(self, x, range=None):
-        """Compute the output of the slowest functions.
-        if 'range' is a number, then use the first 'range' functions.
-        if 'range' is the interval=(i,j), then use all functions
-                   between i and j."""
-        return super(SFANode, self).execute(x, range)
 
     def _inverse(self, y):
         return mult(y, pinv(self.sf))+self.avg

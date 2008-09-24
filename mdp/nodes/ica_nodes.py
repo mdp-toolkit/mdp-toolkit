@@ -8,6 +8,7 @@ mult = utils.mult
 
 
 def _get_projmatrix(node, transposed=1):
+    """Return the projection matrix."""
     node._if_training_stop_training()
     Q = node.filters.T
     if not node.whitened:
@@ -20,6 +21,10 @@ def _get_projmatrix(node, transposed=1):
     return T
 
 def _get_recmatrix(node, transposed=1):
+    """Return the back-projection matrix (i.e. the reconstruction matrix).
+    Note that if the unknown sources are white, this is a good
+    approximation of the mixing matrix (up to a permutation matrix). 
+    """
     node._if_training_stop_training()
     Q = node.filters.T
     if not node.whitened:
@@ -157,14 +162,9 @@ class ICANode(mdp.Cumulator, mdp.Node):
         return y
 
     def get_projmatrix(self, transposed=1):
-        """Return the projection matrix."""
         return _get_projmatrix(self, transposed)
     
     def get_recmatrix(self, transposed=1):
-        """Return the back-projection matrix (i.e. the reconstruction matrix).
-        Note that if the unknown sources are white, this is a good
-        approximation of the mixing matrix (up to a permutation matrix). 
-        """
         return _get_recmatrix(self, transposed)
 
 class CuBICANode(ICANode):
@@ -977,7 +977,7 @@ class TDSEPNode(ISFANode):
                                        output_dim=None,
                                        dtype=dtype)
 
-    def _stop_training(self, covs):
+    def _stop_training(self, covs=None):
         super(TDSEPNode, self)._stop_training(covs)
         # set filters
         self.filters = self.RP

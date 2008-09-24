@@ -1,5 +1,7 @@
 import cPickle as _cPickle
 import warnings as _warnings
+import new as _new
+import inspect as _inspect
 import mdp
 
 # import numeric module (scipy, Numeric or numarray)
@@ -28,6 +30,122 @@ class IsNotInvertibleException(NodeException):
     node is not invertible."""
     pass
 
+
+# The next three functions (getinfo, wrapper)
+# are adapted version of functions in the
+# decorator module by Michele Simionato
+
+################## START decorator ###########################
+# Author: 	Michele Simionato
+# E-mail:	michele.simionato@gmail.com
+# Version: 	2.3.1 (25 July 2008)
+# Download page:	http://www.phyast.pitt.edu/~micheles/python/decorator-2.3.1.zip
+# License:	BSD license
+##   Redistributions of source code must retain the above copyright 
+##   notice, this list of conditions and the following disclaimer.
+##   Redistributions in bytecode form must reproduce the above copyright
+##   notice, this list of conditions and the following disclaimer in
+##   the documentation and/or other materials provided with the
+##   distribution. 
+
+##   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+##   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+##   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+##   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+##   HOLDERS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+##   INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+##   BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
+##   OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+##   ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
+##   TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+##   USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+##   DAMAGE.
+
+
+def getinfo(func):
+    """
+    Returns an info dictionary containing:
+    - name (the name of the function : str)
+    - argnames (the names of the arguments : list)
+    - defaults (the values of the default arguments : tuple)
+    - signature (the signature : str)
+    - doc (the docstring : str)
+    - module (the module name : str)
+    - dict (the function __dict__ : str)
+    
+    >>> def f(self, x=1, y=2, *args, **kw): pass
+
+    >>> info = getinfo(f)
+
+    >>> info["name"]
+    'f'
+    >>> info["argnames"]
+    ['self', 'x', 'y', 'args', 'kw']
+    
+    >>> info["defaults"]
+    (1, 2)
+
+    >>> info["signature"]
+    'self, x, y, *args, **kw'
+    """
+    regargs, varargs, varkwargs, defaults = _inspect.getargspec(func)
+    argnames = list(regargs)
+    if varargs:
+        argnames.append(varargs)
+    if varkwargs:
+        argnames.append(varkwargs)
+    signature = _inspect.formatargspec(regargs, varargs, varkwargs, defaults,
+                                      formatvalue=lambda value: "")[1:-1]
+    return dict(name=func.__name__, argnames=argnames, signature=signature,
+                defaults = func.func_defaults, doc=func.__doc__,
+                module=func.__module__, dict=func.__dict__,
+                globals=func.func_globals, closure=func.func_closure)
+
+
+def wrapper(wrapper, infodict):
+    src = "lambda %(signature)s: _wrapper_(%(signature)s)" % infodict
+    funcopy = eval(src, dict(_wrapper_=wrapper))
+    funcopy.__name__ = infodict['name']
+    funcopy.__doc__ = infodict['doc']
+    funcopy.__module__ = infodict['module']
+    funcopy.__dict__.update(infodict['dict'])
+    funcopy.func_defaults = infodict['defaults']
+    funcopy.undecorated = infodict
+    return funcopy
+
+################## END decorator ###########################
+
+# the NodeMetaclass metaclass has been inspired by a 
+# suggestion by "sdefresne" to a stackoverflow.com post:
+# http://stackoverflow.com/questions/71817/
+
+class NodeMetaclass(type):
+    """This Metaclass is meant to overwrite doc strings of methods like
+    execute, stop_training, inverse with the ones defined in the corresponding
+    private methods _execute, _stop_training, _inverse.
+
+    This should enable subclasses of Node to document the usage of public
+    methods, without the need to """
+    def __new__(meta, name, bases, members):
+        for subname in members.keys():
+            submember = members[subname]
+            # select all private methods
+            if subname[0] == '_' and _inspect.isfunction(submember):
+                sub_dict = getinfo(submember)
+                ancname = subname[1:]
+                # look for public method by same name in ancestors
+                for base in bases:
+                    ancestor = base.__dict__
+                    if ancname in ancestor:
+                        # we found a method by the same name in the ancestor
+                        # create a wrapper of the submethod
+                        # (preserving the name of the ancestor method)
+                        new_dict = dict(sub_dict)
+                        new_dict['name'] = ancname
+                        members[ancname] = wrapper(ancestor[ancname],new_dict)
+                        break
+        return type.__new__(meta, name, bases, members)
+
 class Node(object):
     """
     Node is the basic unit in MDP and it represents a data processing
@@ -54,6 +172,8 @@ class Node(object):
     If you need to overwrite the getters and setters of the
     node's properties refer to the docstring of get/set_input_dim,
     get/set_output_dim, and get/set_dtype."""
+
+    __metaclass__ = NodeMetaclass
 
     def __init__(self, input_dim = None, output_dim = None, dtype = None):
         """If the input dimension and the output dimension are

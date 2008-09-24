@@ -223,9 +223,6 @@ class GrowingNeuralGasNode(Node):
             def _mult_err(node): node.data.cum_error *= d
             map(_mult_err, g.nodes)
 
-    def _stop_training(self):
-        pass
-
     def nearest_neighbor(self, input):
         """Assign each point in the input data to the nearest node in
         the graph. Return the list of the nearest node instances, and
