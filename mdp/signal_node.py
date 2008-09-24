@@ -1,6 +1,5 @@
 import cPickle as _cPickle
 import warnings as _warnings
-import new as _new
 import inspect as _inspect
 import mdp
 
@@ -125,7 +124,7 @@ class NodeMetaclass(type):
     private methods _execute, _stop_training, _inverse.
 
     This should enable subclasses of Node to document the usage of public
-    methods, without the need to """
+    methods, without the need to overwrite the ancestor's methods"""
     def __new__(meta, name, bases, members):
         for subname in members.keys():
             submember = members[subname]
