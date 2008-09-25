@@ -124,10 +124,11 @@ DOC_METHODS = ['_train', '_stop_training', '_execute', '_inverse']
 class NodeMetaclass(type):
     """This Metaclass is meant to overwrite doc strings of methods like
     execute, stop_training, inverse with the ones defined in the corresponding
-    private methods _execute, _stop_training, _inverse.
+    private methods %s.
 
     This should enable subclasses of Node to document the usage of public
-    methods, without the need to overwrite the ancestor's methods"""
+    methods, without the need to overwrite the ancestor's methods
+    """%str(DOC_METHODS)
     def __new__(meta, classname, bases, members):
         # select private methods that can overwrite the docstring
         for privname in DOC_METHODS:

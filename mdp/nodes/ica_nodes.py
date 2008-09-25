@@ -1,42 +1,43 @@
 import math
 import mdp
+import types
 from isfa_nodes import ISFANode
 numx, numx_rand, numx_linalg = mdp.numx, mdp.numx_rand, mdp.numx_linalg
 
 utils = mdp.utils
 mult = utils.mult
 
-
-def _get_projmatrix(node, transposed=1):
-    """Return the projection matrix."""
-    node._if_training_stop_training()
-    Q = node.filters.T
-    if not node.whitened:
-        W = node.white.get_projmatrix(transposed=0)
-        T = mult(Q,W)
-    else:
-        T = Q
-    if transposed:
-        return T.T
-    return T
-
-def _get_recmatrix(node, transposed=1):
-    """Return the back-projection matrix (i.e. the reconstruction matrix).
-    Note that if the unknown sources are white, this is a good
-    approximation of the mixing matrix (up to a permutation matrix). 
-    """
-    node._if_training_stop_training()
-    Q = node.filters.T
-    if not node.whitened:
-        W = node.white.get_recmatrix(transposed=1)
-        T = mult(Q, W)
-    else:
-        T = Q
-    if transposed:
+class ProjectMatrix(object):
+    def get_projmatrix(self, transposed=1):
+        """Return the projection matrix."""
+        self._if_training_stop_training()
+        Q = self.filters.T
+        if not self.whitened:
+            W = self.white.get_projmatrix(transposed=0)
+            T = mult(Q,W)
+        else:
+            T = Q
+        if transposed:
+            return T.T
         return T
-    return T.T
 
-class ICANode(mdp.Cumulator, mdp.Node):
+    def get_recmatrix(self, transposed=1):
+        """Return the back-projection matrix (i.e. the reconstruction matrix).
+        Note that if the unknown sources are white, this is a good
+        approximation of the mixing matrix (up to a permutation matrix). 
+        """
+        self._if_training_stop_training()
+        Q = self.filters.T
+        if not self.whitened:
+            W = self.white.get_recmatrix(transposed=1)
+            T = mult(Q, W)
+        else:
+            T = Q
+        if transposed:
+            return T
+        return T.T
+
+class ICANode(mdp.Cumulator, mdp.Node, ProjectMatrix):
     """
     ICANode is a general class to handle different batch-mode algorithm for
     Independent Component Analysis. More information about ICA can be found
@@ -160,12 +161,6 @@ class ICANode(mdp.Cumulator, mdp.Node):
         if not self.whitened:
             y = self.white.inverse(y)
         return y
-
-    def get_projmatrix(self, transposed=1):
-        return _get_projmatrix(self, transposed)
-    
-    def get_recmatrix(self, transposed=1):
-        return _get_recmatrix(self, transposed)
 
 class CuBICANode(ICANode):
     """
@@ -917,7 +912,7 @@ class FastICANode(ICANode):
         return ret
 
 
-class TDSEPNode(ISFANode):
+class TDSEPNode(ISFANode, ProjectMatrix):
     """Perform Independent Component Analysis using the TDSEP algorithm.
     Note that TDSEP, as implemented in this Node, is an online algorithm,
     i.e. it is suited to be trained on huge data sets, provided that the
@@ -983,15 +978,3 @@ class TDSEPNode(ISFANode):
         self.filters = self.RP
         # set convergence
         self.convergence = self.final_contrast
-        
-    def get_projmatrix(self, transposed=1):
-        """Return the projection matrix."""
-        return _get_projmatrix(self, transposed)
-    
-    def get_recmatrix(self, transposed=1):
-        """Return the back-projection matrix (i.e. the reconstruction matrix).
-        Note that if the unknown sources are white, this is a good
-        approximation of the mixing matrix (up to a permutation matrix). 
-        """
-        return _get_recmatrix(self, transposed)
-        
