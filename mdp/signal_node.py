@@ -38,7 +38,7 @@ class IsNotInvertibleException(NodeException):
 # Author: 	Michele Simionato
 # E-mail:	michele.simionato@gmail.com
 # Version: 	2.3.1 (25 July 2008)
-# Download page:	http://www.phyast.pitt.edu/~micheles/python/decorator-2.3.1.zip
+# Download page:http://www.phyast.pitt.edu/~micheles/python/decorator-2.3.1.zip
 # License:	BSD license
 ##   Redistributions of source code must retain the above copyright 
 ##   notice, this list of conditions and the following disclaimer.
@@ -118,6 +118,9 @@ def wrapper(wrapper, infodict):
 # suggestion by "sdefresne" to a stackoverflow.com post:
 # http://stackoverflow.com/questions/71817/
 
+# methods that can overwrite docs:
+DOC_METHODS = ['_train', '_stop_training', '_execute', '_inverse']
+
 class NodeMetaclass(type):
     """This Metaclass is meant to overwrite doc strings of methods like
     execute, stop_training, inverse with the ones defined in the corresponding
@@ -125,25 +128,27 @@ class NodeMetaclass(type):
 
     This should enable subclasses of Node to document the usage of public
     methods, without the need to overwrite the ancestor's methods"""
-    def __new__(meta, name, bases, members):
-        for subname in members.keys():
-            submember = members[subname]
-            # select all private methods
-            if subname[0] == '_' and _inspect.isfunction(submember):
-                sub_dict = getinfo(submember)
-                ancname = subname[1:]
+    def __new__(meta, classname, bases, members):
+        # select private methods that can overwrite the docstring
+        for privname in DOC_METHODS:
+            if privname in members:
+                # the private method is present in the class
+                # inspect the private method
+                priv_info = getinfo(members[privname])
+                # get the name of the corresponding public method
+                pubname = privname[1:]
                 # look for public method by same name in ancestors
                 for base in bases:
                     ancestor = base.__dict__
-                    if ancname in ancestor:
+                    if pubname in ancestor:
                         # we found a method by the same name in the ancestor
-                        # create a wrapper of the submethod
-                        # (preserving the name of the ancestor method)
-                        new_dict = dict(sub_dict)
-                        new_dict['name'] = ancname
-                        members[ancname] = wrapper(ancestor[ancname],new_dict)
+                        # add the class a wrapper of the ancestor public method
+                        # with docs, argument defaults, and signature of the
+                        # private method and name of the public method.
+                        priv_info['name'] = pubname
+                        members[pubname] = wrapper(ancestor[pubname],priv_info)
                         break
-        return type.__new__(meta, name, bases, members)
+        return type.__new__(meta, classname, bases, members)
 
 class Node(object):
     """
@@ -459,13 +464,9 @@ class Node(object):
         'x' is a matrix having different variables on different columns
         and observations on the rows.
 
-        Be default, subclasses should overwrite _train to implement their
-        training phase. This method can be overwritten to redefine its
-        docstring. For example:
-
-        def train(self, x, arg1, arg2):
-            ""My training method. arg1 is the first argument, arg2 the second""
-            super(MyNode, self).train(x, arg1, arg2)
+        By default, subclasses should overwrite _train to implement their
+        training phase. The docstring of the '_train' method overwrites this
+        docstring.
         """
 
         if not self.is_trainable():
@@ -483,8 +484,11 @@ class Node(object):
 
     def stop_training(self, *args, **kwargs):
         """Stop the training phase.
-        Be default, subclasses should overwrite _stop_Training to implement
-        their stop-training."""
+
+        By default, subclasses should overwrite _stop_training to implement
+        their stop-training. The docstring of the '_stop_trainining' method
+        overwrites this docstring.
+        """
         if self.is_training() and self._train_phase_started == False:
             raise TrainingException("The node has not been trained.")
         
@@ -508,13 +512,9 @@ class Node(object):
         'x' is a matrix having different variables on different columns
         and observations on the rows.
         
-        Subclasses should overwrite _execute to implement their
-        execution phase. This method can be overwritten to redefine its
-        docstring. For example:
-
-        def execute(self, x, arg1, karg2=0.):
-            ""My execute method. arg1 is the first argument, karg2 the second""
-            super(MyNode, self).execute(x, arg1, karg2=karg2)
+        By default, subclasses should overwrite _execute to implement
+        their execution phase. The docstring of the '_execute' method
+        overwrites this docstring.
         """
         self._pre_execution_checks(x)
         return self._execute(self._refcast(x), *args, **kargs)
@@ -525,13 +525,9 @@ class Node(object):
         If the node is invertible, compute the input x such that
         y = execute(x).
         
-        Subclasses should overwrite _inverse to implement their
-        inverse function. This method can be overwritten to redefine its
-        docstring. For example:
-
-        def inverse(self, x, arg1, karg2=0.):
-            ""My inverse method. arg1 is the first argument, karg2 the second""
-            super(MyNode, self).inverse(x, arg1, karg2=karg2)
+        By default, subclasses should overwrite _inverse to implement
+        their inverse function. The docstring of the '_inverse' method
+        overwrites this docstring.
         """
         self._pre_inversion_checks(y)
         return self._inverse(self._refcast(y), *args, **kargs)
