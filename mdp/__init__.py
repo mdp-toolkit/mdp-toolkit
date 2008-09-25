@@ -74,10 +74,8 @@ if _USR_LABEL in _NUMX_LABELS:
 elif _USR_LABEL is None:
     pass
 else:
-    _errstr = "\nExtension '%s' not supported. "%(_USR_LABEL) + \
-              "Supported extensions:\n %s"%(str(_NUMX_LABELS))
-    raise ImportError(_errstr)
-    del _errstr
+    raise ImportError("\nExtension '%s' not supported. "
+               "Supported extensions:\n %s"%(_USR_LABEL, str(_NUMX_LABELS)))
 
 # try to load in sequence: scipy, numpy
 numx_description = None
@@ -105,9 +103,8 @@ for _label in _NUMX_LABELS:
         pass
         
 if numx_description is None:
-    raise ImportError, \
-          "Could not find any of the numeric modules "+ \
-          "scipy or numpy"
+    raise ImportError("Could not find any of the numeric modules "
+                      "scipy or numpy")
 
 del _os, _NUMX_LABELS, _USR_LABEL, _label
 

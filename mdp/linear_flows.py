@@ -63,7 +63,7 @@ class FlowExceptionCR(CrashRecoveryException, FlowException):
             else:
                 name = None
             name = CrashRecoveryException.dump(self,name)
-            dumpinfo = '\nA crash dump is available on: "'+name+'"'
+            dumpinfo = '\nA crash dump is available on: "%s"'%name
             self.filename = name
             errstr = errstr+dumpinfo    
 
@@ -101,8 +101,8 @@ class Flow(object):
         (type, val, tb) = _sys.exc_info()
         prev = ''.join(_traceback.format_exception(except_.__class__,
                                                   except_,tb))
-        act = "\n! Exception in node #%d (%s):\n" \
-              % (nodenr, str(self.flow[nodenr]))
+        act = "\n! Exception in node #%d (%s):\n"%(nodenr,
+                                                   str(self.flow[nodenr]))
         errstr =''.join(('\n', 40*'-', act, 'Node Traceback:\n', prev, 40*'-'))
         raise FlowExceptionCR,(errstr, self, except_)
 
@@ -119,9 +119,8 @@ class Flow(object):
             return
         elif data_iterator is None and node.is_training():
             # A None iterator is passed to a training node
-            errstr = "\n! Node %d is training" % nodenr + \
-                     " but received a 'None' iterator."
-            raise FlowException, errstr
+            raise FlowException("\n! Node %d is training"
+                                " but received a 'None' iterator."%nodenr)
         elif data_iterator is None and not node.is_trainable():
             # skip training if node is not trainable
             return
@@ -154,8 +153,8 @@ class Flow(object):
         except mdp.TrainingFinishedException, e:
             # attempted to train a node although its training phase is already
             # finished. raise a warning and continue with the next node.
-            wrnstr = "\n! Node %d training phase already finished" % nodenr +\
-                     " Continuing anyway."
+            wrnstr = ("\n! Node %d training phase already finished"
+                      " Continuing anyway."%nodenr)
             _warnings.warn(wrnstr, mdp.MDPWarning)
         except FlowExceptionCR, e:
             # this exception was already propagated,
@@ -163,8 +162,8 @@ class Flow(object):
             (exc_type, val) = _sys.exc_info()[:2]
             prev = ''.join(_traceback.format_exception_only(e.__class__,e))
             prev = prev[prev.find('\n')+1:]
-            act = "\nWhile training node #%d (%s):\n" \
-              % (nodenr, str(self.flow[nodenr]))
+            act = "\nWhile training node #%d (%s):\n"%(nodenr,
+                                                       str(self.flow[nodenr]))
             errstr = ''.join(('\n', 40*'=', act, prev, 40*'='))
             raise FlowException(errstr)
         except Exception, e:
@@ -180,32 +179,32 @@ class Flow(object):
             data_iterators = [[data_iterators]]*len(flow)
 
         if not isinstance(data_iterators, list):
-            errstr = "'data_iterators' is "+ str(type(data_iterators)) + \
-                     " must be either a list of iterators or an array"
-            raise FlowException, errstr
+            errstr = "'data_iterators' is %s must be either a"
+            " list of iterators or an array"%str(type(data_iterators))
+            raise FlowException(errstr)
 
         # check that all elements are iterable
         for i in range(len(data_iterators)):
             el = data_iterators[i]
             if el is not None and not hasattr(el, '__iter__'):
-                raise FlowException, "Element number %d in the " % i + \
-                      "iterators list is not a list or iterator."
+                raise FlowException("Element number %d in the iterators"
+                                    " list is not a list or iterator."%i)
        
         # check that the number of data_iterators is correct
         if len(data_iterators)!=len(flow):
             error_str = "%d data iterators specified, %d needed"
-            raise FlowException, error_str % (len(data_iterators), len(flow))
+            raise FlowException(error_str % (len(data_iterators), len(flow)))
 
         # check that every node with multiple phases has an iterator
         # but NOT a generator (since you cannot "rewind" a generator)
         for i in range(len(flow)):
             node, iter = flow[i], data_iterators[i]
             if len(node._train_seq)>1 and type(iter) is _types.GeneratorType:
-                errstr = "Node number %d has multiple training phases " %i +\
-                         "but the corresponding iterator is a generator. " +\
-                         "This is not allowed since generators cannot be " +\
-                         "'rewinded' for further training."
-                raise FlowException, errstr
+                errstr = ("Node number %d has multiple training phases "
+                          "but the corresponding iterator is a generator. "
+                          "This is not allowed since generators cannot be "
+                          "'rewinded' for further training."%i)
+                raise FlowException(errstr)
 
         return data_iterators
 
@@ -244,9 +243,9 @@ class Flow(object):
         If instead one array is specified, it is used as input training
         sequence for all nodes.
         
-        Instead of a data array x the iterators can also return a list or tuple, 
-        where the first entry is x and the following are args for the training 
-        of the node (e.g. for supervised training). 
+        Instead of a data array x the iterators can also return a list or
+        tuple, where the first entry is x and the following are args for the
+        training of the node (e.g. for supervised training). 
 
         Generator-type iterators are supported only for nodes with
         a single training phase (this is because they cannot be
@@ -257,10 +256,11 @@ class Flow(object):
         
         # train each Node successively
         for i in range(len(self.flow)):
-            if self.verbose: print "Training node #%d (%s)" \
-               % (i,str(self.flow[i]))
+            if self.verbose:
+                print "Training node #%d (%s)"%(i,str(self.flow[i]))
             self._train_node(data_iterators[i], i)
-            if self.verbose: print "Training finished"
+            if self.verbose:
+                print "Training finished"
 
         self._close_last_node()
 
@@ -380,7 +380,7 @@ class Flow(object):
         """Raise ValueError when both dimensions are set and different."""
         if ((out and inp) is not None) and out != inp:
             errstr = "dimensions mismatch: %d != %d" % (out, inp)
-            raise ValueError, errstr
+            raise ValueError(errstr)
 
     def _check_nodes_consistency(self, flow = None):
         """Check the dimension consistency of a list of nodes."""
@@ -394,7 +394,7 @@ class Flow(object):
 
     def _check_value_type_isnode(self, value):
         if not isinstance(value, mdp.Node):
-            raise TypeError, "flow item must be Node instance"
+            raise TypeError("flow item must be Node instance")
 
     def __getitem__(self, key):
         if isinstance(key, slice):
@@ -446,9 +446,9 @@ class Flow(object):
             flow_copy.append(other)
             return flow_copy
         else:
-            err_str = 'can only concatenate flow'+ \
-                      ' (not \'%s\') to flow'%(type(other).__name__) 
-            raise TypeError, err_str
+            err_str = ('can only concatenate flow'
+                       ' (not \'%s\') to flow'%(type(other).__name__))
+            raise TypeError(err_str)
 
     ###### public container methods
 
@@ -460,9 +460,9 @@ class Flow(object):
         """flow.extend(iterable) -- extend flow by appending
         elements from the iterable"""
         if not isinstance(x, Flow):
-            err_str = 'can only concatenate flow'+ \
-                      ' (not \'%s\') to flow'%(type(x).__name__) 
-            raise TypeError, err_str
+            err_str = ('can only concatenate flow'
+                       ' (not \'%s\') to flow'%(type(x).__name__))
+            raise TypeError(err_str)
         self[len(self):len(self)] = x
 
     def insert(self, i, x):
@@ -487,7 +487,7 @@ class CheckpointFlow(Flow):
         
         if len(checkpoints) != len(self.flow):
             error_str = "%d checkpoints specified, %d needed"
-            raise FlowException, error_str % (len(checkpoints), len(self.flow))
+            raise FlowException(error_str%(len(checkpoints), len(self.flow)))
 
         return checkpoints
 
