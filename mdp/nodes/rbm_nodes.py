@@ -351,7 +351,6 @@ class RBMWithLabelsNode(RBMNode):
         decay -- weight decay term. Default value: 0.
         momentum -- momentum term. Default value: 0.
         """
-        """?? Insert documentation."""
 
         if not self.is_training():
             raise mdp.TrainingFinishedException, \

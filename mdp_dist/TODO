@@ -21,6 +21,7 @@ MDP 2.4 x.x.x:
 - try to bring the parallel package into shape for a release
 - why are in RBMWithLabelsNode the train and execute method overwritten 
   (instead of _train and _execute)?
+- make the 'mdp' module reloadable
 
 MDP 2.3 15.5.2008:
 

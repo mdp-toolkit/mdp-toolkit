@@ -136,8 +136,16 @@ class NodeMetaclass(type):
                 # the private method is present in the class
                 # inspect the private method
                 priv_info = getinfo(members[privname])
+                # if the docstring is empty, we keep the one of 'execute'
+                if not priv_info['doc']:
+                    continue
                 # get the name of the corresponding public method
                 pubname = privname[1:]
+                # if public method has been overwritten in this
+                # subclass, keep it
+                if pubname in members:
+                    pubname.__doc__ == priv_info['doc']
+                    continue
                 # look for public method by same name in ancestors
                 for base in bases:
                     ancestor = base.__dict__
