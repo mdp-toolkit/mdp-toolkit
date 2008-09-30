@@ -55,6 +55,9 @@ def _cov(x,y=None):
     return mult(numx.transpose(x),y)/(x.shape[0])
 
 _spinner = itertools.cycle((' /\b\b', ' -\b\b', ' \\\b\b', ' |\b\b'))
+#_spinner = itertools.cycle((' .\b\b', ' o\b\b', ' 0\b\b', ' O\b\b',
+#                            ' 0\b\b', ' o\b\b'))
+
 # create spinner
 def spinner():
     sys.stderr.write(_spinner.next())
