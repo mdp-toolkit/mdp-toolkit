@@ -18,7 +18,7 @@ class Job(object):
     
     
 class TestJob(Job):
-    """Simple test job to play around."""
+    """Simple test job, returns the square of a given number."""
 
     def __init__(self, x):
         self.x = x
@@ -102,8 +102,6 @@ class Scheduler(object):
         self.n_jobs_running -= 1
         self.lock.release()
         self._store_result(result)
-        if self.verbose:
-            print "    finished job no. %d" % self.n_jobs_finished
         
     def _store_result(self, result):
         """Store a result in the internal result container.
@@ -114,6 +112,8 @@ class Scheduler(object):
         self.result_container.add_result(result)
         self.lock.release()
         self.n_jobs_finished += 1
+        if self.verbose:
+            print "    finished job no. %d" % self.n_jobs_finished
     
     def get_results(self):
         """Get the accumulated results from the result container.

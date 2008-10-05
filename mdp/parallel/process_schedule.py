@@ -4,7 +4,7 @@ Process based scheduler for distribution across multiple CPU cores.
 
 import sys
 import os
-import cPickle
+import cPickle as pickle
 import thread
 import subprocess
 import time
@@ -47,19 +47,19 @@ class ProcessScheduler(scheduling.Scheduler):
         module_path = os.path.dirname(inspect.getfile(sys._getframe(0)))
         module_path = os.path.abspath(module_path)
         module_file = os.path.join(module_path, "process_schedule.py")
-        # Note: -u argument is important on Windows 
-        #    to set stdout to binary mode. Otherwise you might get a
-        #    strange error message regarding copy_reg.
+        # Note: -u argument is important on Windows to set stdout to binary 
+        #    mode. Otherwise you might get a strange error message for 
+        #    copy_reg.
         process_args = ["python", "-u", module_file]
         if type(source_paths) is str:
-            code_paths = [source_paths]
+            source_paths = [source_paths]
         if source_paths is not None:
             process_args += source_paths
         # list of processes not in use, start the processes now
         self._free_processes = [subprocess.Popen(args=process_args,
                                                 stdout=subprocess.PIPE, 
                                                 stdin=subprocess.PIPE)
-                                for i in range(self.n_processes)]
+                                for _ in range(self.n_processes)]
         
     def cleanup(self):
         """Shut down the slave processes.
@@ -70,7 +70,7 @@ class ProcessScheduler(scheduling.Scheduler):
         if len(self._free_processes) < self.n_processes:
             raise Exception("Some slave process is still working.")
         for process in self._free_processes:
-            cPickle.dump("EXIT", process.stdin) 
+            pickle.dump("EXIT", process.stdin) 
         self.lock.release()
         
     def add_job(self, job):
@@ -108,9 +108,9 @@ class ProcessScheduler(scheduling.Scheduler):
         """
         try:
             # push the job to the process
-            cPickle.dump(job, process.stdin)
+            pickle.dump(job, process.stdin)
             # wait for result to arrive
-            result = cPickle.load(process.stdout)
+            result = pickle.load(process.stdout)
         except:
             print "\nFAILED TO EXECUTE JOB IN PROCESS!\n"
             sys.exit()
@@ -118,15 +118,12 @@ class ProcessScheduler(scheduling.Scheduler):
         self._store_result(result)
         self._free_processes.append(process)
         self.n_jobs_running -= 1
-        if self.verbose:
-            print "    finished job no. %d" % self.n_jobs_finished
 
 
-def process_execute():
-    """This is the process execute method.
+def _process_run():
+    """Run this function in a worker process to receive and run jobs.
     
-    It is called in the new processes to receive jobs via stdin, execute them
-    and send the results back via stdout.
+    It waits for jobs on stdin, and sends the results back via stdout.
     """
     # use sys.stdout only for pickled objects, everything else goes to stderr
     pickle_out = sys.stdout
@@ -136,12 +133,12 @@ def process_execute():
     while not exit_loop:
         try:
             # wait for job to arrive
-            job = cPickle.load(sys.stdin)
+            job = pickle.load(sys.stdin)
             if job == "EXIT":
                 exit_loop = True
             else:
                 result = job()
-                cPickle.dump(result, pickle_out)
+                pickle.dump(result, pickle_out)
                 pickle_out.flush()
         except Exception, exception:
             # return the exception instead of the result
@@ -153,10 +150,11 @@ def process_execute():
         
                     
 if __name__ == "__main__":
+    # all arguments are expected to be code paths to be appended to sys.path
     if len(sys.argv) > 1:
         for sys_arg in sys.argv[1:]:
             sys.path.append(sys_arg)
-    process_execute()
+    _process_run()
     
     
     

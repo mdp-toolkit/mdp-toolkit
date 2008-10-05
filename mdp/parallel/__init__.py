@@ -15,6 +15,17 @@ to deal with the more technical aspects of the parallelization, but do not
 have to know anything about flows or nodes.
 """
 
+#### T O D O: ###
+
+# TODO: split jobs into job_data and job_executer, transmit only hash at first 
+#    and then check if the executer has to be loaded
+#    use hashlib or fall back to sha
+#    change add_job to add_job(job_executer=None, job_data=None)
+#    if no job executer is specified the last one is used,
+#    also add method update_executer(job_executer)
+
+# TODO: hardwire order option in scheduler? use n_jobs as job index
+
 
 from scheduling import (Job, TestJob, ResultContainer, ListResultContainer,
                         Scheduler)
