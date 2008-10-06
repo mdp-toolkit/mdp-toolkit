@@ -22,6 +22,7 @@ MDP 2.4 x.x.x:
 - why are in RBMWithLabelsNode the train and execute method overwritten 
   (instead of _train and _execute)?
 - make the 'mdp' module reloadable
+- failure in introspection.py for python2.6 (maximum recursion depth exceeded)
 
 MDP 2.3 15.5.2008:
 
