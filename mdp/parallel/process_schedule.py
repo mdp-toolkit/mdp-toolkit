@@ -26,7 +26,7 @@ class ProcessScheduler(scheduling.Scheduler):
     
     def __init__(self, result_container=scheduling.ListResultContainer(), 
                  verbose=False, n_processes=1,
-                 source_paths=None, python_executable="python"):
+                 source_paths=None, python_executable=None):
         """Initialize the scheduler and start the slave processes.
         
         result_container -- ResultContainer used to store the results.
@@ -39,12 +39,15 @@ class ProcessScheduler(scheduling.Scheduler):
             A single path instead of a list is also accepted.
             Set to None if no sources are needed for unpickling the job (this is
             the default value).
-        python_executable -- Python executable that is used for the processes,
-            default value is 'python'.
+        python_executable -- Python executable that is used for the processes.
+            The default value is None, in which case sys.executable will be
+            used.
         """
         scheduling.Scheduler.__init__(self, result_container=result_container,
                                       verbose=verbose)
         self.n_processes = n_processes
+        if python_executable is None:
+            python_executable = sys.executable
         # get the location of this module to start the processes
         module_path = os.path.dirname(inspect.getfile(sys._getframe(0)))
         module_path = os.path.abspath(module_path)
