@@ -1,4 +1,4 @@
-import inspect
+import types
 import cPickle
 import mdp
 
@@ -17,31 +17,42 @@ class _Walk(object):
         
     def __call__(self, x, start = None):
         arrays = self.arrays
+        # loop through the object dictionary
         for name in dir(x):
+            # get the corresponding member
             obj = getattr(x, name)
             if id(obj) in self.allobjs.keys():
+                # if we already examined the member, skip to the next
                 continue
             else:
+                # add the id of this object to the list of know members
                 self.allobjs[id(obj)] = None
-                
-            if start:
-                struct = '.'.join((start, name))
-            else:
+
+            if start is None:
+                # initialize a string structure to keep track of array names
                 struct = name
-               
+            else:
+                # struct is x.y.z (where x and y are objects and z an array)
+                struct = '.'.join((start, name))
+
             if isinstance(obj, mdp.numx.ndarray):
+                # the present member is an array
+                # add it to the dictionary of all arrays
                 if start is not None:
                     arrays[struct] = obj
                 else:
                     arrays[name] = obj
-            elif name.startswith('__'):
+            elif name.startswith('__') or type(obj) in (int, long, float,
+                                                        types.MethodType):
+                # the present member is a private member or a known
+                # type that does not support arrays as attributes
+                # ??? Note: this is a bad hack to avoid infinite
+                # recursion in python2.6. Just remove the "or type in ..."
+                # condition to see the error. There must be a better way.
                 continue
-            elif inspect.ismethod(obj):
-                continue        
-            elif isinstance(obj, object):
-                arrays.update(self(obj, start = struct))
             else:
-                raise NotImplementedError, 'object %s not known'%(str(obj))
+                # we need to examine the present member in more detail
+                arrays.update(self(obj, start = struct))
         self.start = start
         return arrays
 
