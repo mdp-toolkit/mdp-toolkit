@@ -26,7 +26,7 @@ class ProcessScheduler(scheduling.Scheduler):
     
     def __init__(self, result_container=scheduling.ListResultContainer(), 
                  verbose=False, n_processes=1,
-                 source_paths=None):
+                 source_paths=None, python_executable="python"):
         """Initialize the scheduler and start the slave processes.
         
         result_container -- ResultContainer used to store the results.
@@ -39,6 +39,8 @@ class ProcessScheduler(scheduling.Scheduler):
             A single path instead of a list is also accepted.
             Set to None if no sources are needed for unpickling the job (this is
             the default value).
+        python_executable -- Python executable that is used for the processes,
+            default value is 'python'.
         """
         scheduling.Scheduler.__init__(self, result_container=result_container,
                                       verbose=verbose)
@@ -50,7 +52,7 @@ class ProcessScheduler(scheduling.Scheduler):
         # Note: -u argument is important on Windows to set stdout to binary 
         #    mode. Otherwise you might get a strange error message for 
         #    copy_reg.
-        process_args = ["python", "-u", module_file]
+        process_args = [python_executable, "-u", module_file]
         if type(source_paths) is str:
             source_paths = [source_paths]
         if source_paths is not None:
