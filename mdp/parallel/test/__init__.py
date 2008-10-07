@@ -12,7 +12,8 @@ test_suites = {"parallelnodes": test_parallelnodes.get_suite(),
                "parallelflows": test_parallelflows.get_suite(),
                "parallelhinet": test_parallelhinet.get_suite(),
                "resultorder": test_resultorder.get_suite(),
-               "process_schedule": test_process_schedule.get_suite()}
+               "process_schedule": test_process_schedule.get_suite(),
+               }
 
 def get_suite():
     return unittest.TestSuite(test_suites.values())

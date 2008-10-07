@@ -9,13 +9,10 @@ implementations of MDP nodes.
 
 WARNING: There is a problem with unpickled arrays in NumPy < 1.1.x, see
 http://projects.scipy.org/scipy/numpy/ticket/551
-To circumvent this, use a copy() of all unpickled arrays. 
+To circumvent this, you can use a copy() of all unpickled arrays. 
 """
 
 import mdp
-
-# TODO: use parallel_train instead of modifying normal train, same for execute,
-#    maybe add check in normal training, execute for parallel under way
 
 
 class TrainingPhaseNotParallelException(mdp.NodeException):
@@ -112,12 +109,7 @@ class ParallelPCANode(mdp.nodes.PCANode, ParallelNode):
         """Combine the covariance matrices."""
         if self._cov_mtx._cov_mtx == None:
             self.set_dtype(self._cov_mtx._dtype)
-            # This may look overcomplicated, but it prevents segfaults
-            # after unpickling. The important thing is to copy the arrays.
-            self._cov_mtx = mdp.utils.CovarianceMatrix(self.dtype)
-            self._cov_mtx._cov_mtx = forked_node._cov_mtx._cov_mtx.copy()
-            self._cov_mtx._avg = forked_node._cov_mtx._avg.copy()
-            self._cov_mtx._tlen = forked_node._cov_mtx._tlen
+            self._cov_mtx = forked_node._cov_mtx
         else:
             self._cov_mtx._cov_mtx += forked_node._cov_mtx._cov_mtx
             self._cov_mtx._avg += forked_node._cov_mtx._avg
@@ -150,9 +142,6 @@ class ParallelWhiteningNode(mdp.nodes.WhiteningNode, ParallelPCANode):
 class ParallelSFANode(mdp.nodes.SFANode, ParallelNode):
     """Parallel version of MDP SFA node."""
     
-    # Warning: __init__ and _fork must be updated when the arguments 
-    #    of the corresponding SFANode methods change.
-    
     def _fork(self):
         """Fork the node and (if necessary) init the covariance matrices."""
         forked_node = ParallelSFANode(input_dim=self.input_dim, 
@@ -164,14 +153,8 @@ class ParallelSFANode(mdp.nodes.SFANode, ParallelNode):
         """Combine the covariance matrices."""
         if self._cov_mtx._cov_mtx == None:
             self.set_dtype(self._cov_mtx._dtype)
-            # TODO: can remove the copy for numpy 1.1.x + 
-            self._cov_mtx = mdp.utils.CovarianceMatrix(self.dtype)
-            self._cov_mtx._cov_mtx = forked_node._cov_mtx._cov_mtx.copy()
-            self._cov_mtx._avg = forked_node._cov_mtx._avg.copy()
-            self._cov_mtx._tlen = forked_node._cov_mtx._tlen
-            self._dcov_mtx._cov_mtx = forked_node._dcov_mtx._cov_mtx.copy()
-            self._dcov_mtx._avg = forked_node._dcov_mtx._avg.copy()
-            self._dcov_mtx._tlen = forked_node._dcov_mtx._tlen
+            self._cov_mtx = forked_node._cov_mtx
+            self._dcov_mtx = forked_node._dcov_mtx
         else:
             self._cov_mtx._cov_mtx += forked_node._cov_mtx._cov_mtx
             self._cov_mtx._avg += forked_node._cov_mtx._avg
