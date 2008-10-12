@@ -1,8 +1,7 @@
-from mdp import numx, Node, \
-     NodeException, TrainingFinishedException, MDPWarning
-from mdp.utils import mult, symeig, nongeneral_svd, CovarianceMatrix, \
-                      SymeigException #, LeadingMinorException
-import warnings
+from mdp import numx, Node, NodeException, MDPWarning
+from mdp.utils import (mult, symeig, nongeneral_svd, CovarianceMatrix,
+                       SymeigException)
+import warnings as _warnings
 
 class PCANode(Node):
     """Filter the input data throug the most significatives of its
@@ -71,14 +70,13 @@ class PCANode(Node):
     def _check_output(self, y):
         # check output rank
         if not y.ndim == 2:
-            error_str = "y has rank %d, should be 2"\
-                        %(y.ndim)
-            raise NodeException, error_str
+            error_str = "y has rank %d, should be 2" % (y.ndim)
+            raise NodeException(error_str)
 
-        if y.shape[1]==0 or y.shape[1]>self.output_dim:
-            error_str = "y has dimension %d, should be 0<y<=%d" \
-                        % (y.shape[1], self.output_dim)
-            raise NodeException, error_str
+        if y.shape[1] == 0 or y.shape[1] > self.output_dim:
+            error_str = "y has dimension %d"
+            ", should be 0<y<=%d" % (y.shape[1], self.output_dim)
+            raise NodeException(error_str)
 
     def _get_supported_dtypes(self):
         return ['float32', 'float64']
@@ -141,11 +139,11 @@ class PCANode(Node):
         # if we have more variables then observations we are bound to fail here
         # suggest to use the NIPALSNode instead.
         if debug and self.tlen < self.input_dim:
-            wrn = 'The number of observations (%d) '%(self.tlen)+\
-                  'is larger than the number of input variables '+\
-                  '(%d). You may want to use '%(self.input_dim)+\
-                  'the NIPALSNode instead.'
-            warnings.warn('The', MDPWarning)
+            wrn = 'The number of observations (%d) '
+            'is larger than the number of input variables '
+            '(%d). You may want to use '
+            'the NIPALSNode instead.' % (self.tlen, self.input_dim)
+            _warnings.warn(wrn, MDPWarning)
         
         ## compute and sort the eigenvalues
         # compute the eigenvectors of the covariance matrix (inplace)
@@ -153,16 +151,16 @@ class PCANode(Node):
         try:
             d, v = self._symeig(self.cov_mtx, range=rng, overwrite=(not debug))
         except SymeigException, exception:
-            errstr = str(exception)+"\n Covariance matrix may be singular."+\
-                     "Try instantiating the node with svd=True."
-            raise NodeException,errstr
+            errstr = str(exception)+"\n Covariance matrix may be singular."
+            "Try instantiating the node with svd=True."
+            raise NodeException(errstr)
                   
         # delete covariance matrix if no exception occurred
         del self.cov_mtx
         
         # sort by descending order
-        d = numx.take(d, range(d.shape[0]-1,-1,-1))
-        v = v[:,::-1]
+        d = numx.take(d, range(d.shape[0]-1, -1, -1))
+        v = v[:, ::-1]
 
         vartot = None
         ## compute the explained variance
@@ -189,7 +187,7 @@ class PCANode(Node):
             self.explained_variance = varcum[neigval-1]
             # cut
             d = d[0:neigval]
-            v = v[:,0:neigval]
+            v = v[:, 0:neigval]
             # define the new output dimension
             self.output_dim = int(neigval)
 
@@ -199,7 +197,7 @@ class PCANode(Node):
             # smaller then var_rel relative to the maximum
             d = d[ d > self.var_abs ]
             d = d[ d/d.max() > self.var_rel ]
-            v = v[:,0:d.shape[0]]
+            v = v[:, 0:d.shape[0]]
             self._output_dim = d.shape[0]
             # set explained variance
             if vartot is not None:
@@ -230,7 +228,7 @@ class PCANode(Node):
         """Project the input on the first 'n' principal components.
         If 'n' is not set, use all available components."""
         if n is not None:
-            return mult(x-self.avg, self.v[:,:n])
+            return mult(x-self.avg, self.v[:, :n])
         return mult(x-self.avg, self.v)
 
     def _inverse(self, y, n = None):
@@ -239,12 +237,12 @@ class PCANode(Node):
         if n is None:
             n = y.shape[1]
         if n > self.output_dim:
-            error_str = "y has dimension %d, should be at most %d" \
-                        %(n, self.output_dim)
-            raise NodeException, error_str
+            error_str = "y has dimension %d,"
+            " should be at most %d" % (n, self.output_dim)
+            raise NodeException(error_str)
         
         v = self.get_recmatrix()
-        return mult(y, v[:n,:])+self.avg
+        return mult(y, v[:n, :])+self.avg
 
 
 class WhiteningNode(PCANode):

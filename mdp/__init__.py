@@ -75,7 +75,8 @@ elif _USR_LABEL is None:
     pass
 else:
     raise ImportError("\nExtension '%s' not supported. "
-               "Supported extensions:\n %s"%(_USR_LABEL, str(_NUMX_LABELS)))
+                      "Supported extensions:\n %s" % (_USR_LABEL,
+                                                      str(_NUMX_LABELS)))
 
 # try to load in sequence: scipy, numpy
 numx_description = None

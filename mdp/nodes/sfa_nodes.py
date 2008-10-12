@@ -1,8 +1,7 @@
 import mdp
-from mdp import numx, utils, Node, \
-     NodeException, TrainingFinishedException
-from mdp.utils import mult, pinv, symeig, CovarianceMatrix, QuadraticForm, \
-                      SymeigException
+from mdp import numx, Node, NodeException
+from mdp.utils import (mult, pinv, symeig, CovarianceMatrix, QuadraticForm,
+                       SymeigException)
 
 class SFANode(Node):
     """Extract the slowly varying components from the input data.
@@ -38,7 +37,7 @@ class SFANode(Node):
     def time_derivative(self, x):
         """Compute the linear approximation of the time derivative."""
         # this is faster than a linear_filter or a weave-inline solution
-        return x[1:,:]-x[:-1,:]
+        return x[1:, :]-x[:-1, :]
 
     def _set_range(self):
         if self.output_dim is not None and self.output_dim <= self.input_dim:
@@ -53,7 +52,7 @@ class SFANode(Node):
     def _train(self, x):
         ## update the covariance matrices
         # cut the final point to avoid a trivial solution in special cases
-        self._cov_mtx.update(x[:-1,:])
+        self._cov_mtx.update(x[:-1, :])
         self._dcov_mtx.update(self.time_derivative(x))
 
     def _stop_training(self, debug=False):
@@ -72,7 +71,7 @@ class SFANode(Node):
                                      range=rng, overwrite=(not debug))
         except SymeigException, exception:
             errstr = str(exception)+"\n Covariance matrices may be singular."
-            raise NodeException, errstr
+            raise NodeException(errstr)
 
         # delete covariance matrix if no exception occurred
         del self.cov_mtx
@@ -88,11 +87,11 @@ class SFANode(Node):
                    between i and j."""
         if range:
             if isinstance(range, (list, tuple)):
-                sf = self.sf[:,range[0]:range[1]]
-                bias = self._bias[:,range[0]:range[1]]
+                sf = self.sf[:, range[0]:range[1]]
+                bias = self._bias[:, range[0]:range[1]]
             else:
-                sf = self.sf[:,0:range]
-                bias = self._bias[:,0:range]
+                sf = self.sf[:, 0:range]
+                bias = self._bias[:, 0:range]
         else:
             sf = self.sf
             bias = self._bias
@@ -121,7 +120,8 @@ class SFANode(Node):
         Input arguments:
         t -- Time units (e.g., t=0.01 if you sample at 100Hz)
         """
-        if self.is_training(): self.stop_training()
+        if self.is_training():
+            self.stop_training()
         return self._refcast(t/(2*numx.pi)*numx.sqrt(self.d))
 
 class SFA2Node(SFANode):
@@ -154,8 +154,8 @@ class SFA2Node(SFANode):
         super(SFA2Node, self)._train(self._expnode(x))
 
     def _set_range(self):
-        if self.output_dim is not None and \
-               self.output_dim <= self._expnode.output_dim:
+        if (self.output_dim is not None) and (
+            self.output_dim <= self._expnode.output_dim):
             # (eigenvalues sorted in ascending order)
             rng = (1, self.output_dim)
         else:
@@ -187,23 +187,23 @@ class SFA2Node(SFANode):
         self._if_training_stop_training()
 
         sf = self.sf[:, nr]
-        c = -mdp.utils.mult(self.avg, sf)
-        N = self.input_dim
-        f = sf[:N]
-        H = numx.zeros((N,N), dtype = self.dtype)
-        k = N
-        for i in range(N):
-            for j in range(N):
+        c = -mult(self.avg, sf)
+        n = self.input_dim
+        f = sf[:n]
+        h = numx.zeros((n, n), dtype = self.dtype)
+        k = n
+        for i in range(n):
+            for j in range(n):
                 if j > i:
-                    H[i,j] = sf[k]
+                    h[i, j] = sf[k]
                     k = k+1
                 elif j == i:
-                    H[i,j] = 2*sf[k]
+                    h[i, j] = 2*sf[k]
                     k = k+1
                 else:
-                    H[i,j] = H[j,i]
+                    h[i, j] = h[j, i]
 
-        return QuadraticForm(H, f, c, dtype = self.dtype)
+        return QuadraticForm(h, f, c, dtype = self.dtype)
 
                
 

@@ -1,10 +1,7 @@
 import cPickle as _cPickle
-import warnings as _warnings
 import inspect as _inspect
 import mdp
-
-# import numeric module (scipy, Numeric or numarray)
-numx = mdp.numx
+from mdp import numx
 
 class NodeException(mdp.MDPException):
     """Base class for exceptions in Node subclasses."""
@@ -15,17 +12,17 @@ class TrainingException(NodeException):
     pass
 
 class TrainingFinishedException(TrainingException):
-    """Raised when the 'train' function is called although the
+    """Raised when the 'train' method is called although the
     training phase is closed."""
     pass
 
 class IsNotTrainableException(TrainingException):
-    """Raised when the 'train' function is called although the
+    """Raised when the 'train' method is called although the
     node is not trainable."""
     pass
 
 class IsNotInvertibleException(NodeException):
-    """Raised when the 'inverse' function is called although the
+    """Raised when the 'inverse' method is called although the
     node is not invertible."""
     pass
 
@@ -93,12 +90,12 @@ DOC_METHODS = ['_train', '_stop_training', '_execute', '_inverse']
 class NodeMetaclass(type):
     """This Metaclass is meant to overwrite doc strings of methods like
     execute, stop_training, inverse with the ones defined in the corresponding
-    private methods %s.
+    private methods _execute, _stop_training, _inverse, etc...
 
-    This should enable subclasses of Node to document the usage of public
-    methods, without the need to overwrite the ancestor's methods
-    """%str(DOC_METHODS)
-    def __new__(meta, classname, bases, members):
+    This makes it possible for subclasses of Node to document the usage
+    of public methods, without the need to overwrite the ancestor's methods.
+    """
+    def __new__(mcs, classname, bases, members):
         # select private methods that can overwrite the docstring
         for privname in DOC_METHODS:
             if privname in members:
@@ -123,9 +120,9 @@ class NodeMetaclass(type):
                         # with docs, argument defaults, and signature of the
                         # private method and name of the public method.
                         priv_info['name'] = pubname
-                        members[pubname] = wrapper(ancestor[pubname],priv_info)
+                        members[pubname] = wrapper(ancestor[pubname], priv_info)
                         break
-        return type.__new__(meta, classname, bases, members)
+        return type.__new__(mcs, classname, bases, members)
 
 class Node(object):
     """
@@ -159,7 +156,7 @@ class Node(object):
     def __init__(self, input_dim = None, output_dim = None, dtype = None):
         """If the input dimension and the output dimension are
         unspecified, they will be set when the 'train' or 'execute'
-        function is called for the first time.
+        method is called for the first time.
         If dtype is unspecified, it will be inherited from the data
         it receives at the first call of 'train' or 'execute'. Every subclass
         must take care of up- or down-casting the internal
@@ -197,7 +194,7 @@ class Node(object):
 
     def set_input_dim(self, n):
         """Set input dimensions.
-        Performs sanity checks and then calls self._set_input_dim(n), which
+        Perform sanity checks and then calls self._set_input_dim(n), which
         is responsible for setting the internal attribute self._input_dim.
         Note that subclasses should overwrite self._set_input_dim
         when needed."""
@@ -205,7 +202,7 @@ class Node(object):
             pass
         elif (self._input_dim is not None) and (self._input_dim !=  n):
             msg = ("Input dim are set already (%d) "
-                   "(%d given)!"%(self.input_dim, n))
+                   "(%d given)!" % (self.input_dim, n))
             raise NodeException(msg)
         else:
             self._set_input_dim(n)
@@ -223,7 +220,7 @@ class Node(object):
 
     def set_output_dim(self, n):
         """Set output dimensions.
-        Performs sanity checks and then calls self._set_output_dim(n), which
+        Perform sanity checks and then calls self._set_output_dim(n), which
         is responsible for setting the internal attribute self._output_dim.
         Note that subclasses should overwrite self._set_output_dim
         when needed."""
@@ -248,12 +245,13 @@ class Node(object):
         return self._dtype
     
     def set_dtype(self, t):
-        """Set Node's internal structures dtype.
-        Performs sanity checks and then calls self._set_dtype(n), which
+        """Set internal structures' dtype.
+        Perform sanity checks and then calls self._set_dtype(n), which
         is responsible for setting the internal attribute self._dtype.
         Note that subclasses should overwrite self._set_dtype
         when needed."""
-        if t is None: return
+        if t is None:
+            return
         t = numx.dtype(t)
         if (self._dtype is not None) and (self._dtype != t):
             errstr = ("dtype is already set to '%s' " 
@@ -261,9 +259,9 @@ class Node(object):
             raise NodeException(errstr)
         elif t not in self.get_supported_dtypes():
             errstr = ("\ndtype '%s' is not supported.\n"
-                      "Supported dtypes: %s"%(t.name,
-                                              [mdp.numx.dtype(t).name for t in
-                                               self.get_supported_dtypes()]))
+                      "Supported dtypes: %s" % (t.name,
+                                                [numx.dtype(t).name for t in
+                                                 self.get_supported_dtypes()]))
             raise NodeException(errstr)
         else:
             self._set_dtype(t)
@@ -328,7 +326,7 @@ class Node(object):
     def _check_input(self, x):
         # check input rank
         if not x.ndim == 2:
-            error_str = "x has rank %d, should be 2"%(x.ndim)
+            error_str = "x has rank %d, should be 2" % (x.ndim)
             raise NodeException(error_str)
 
         # set the input dimension if necessary
@@ -341,8 +339,8 @@ class Node(object):
 
         # check the input dimension
         if not x.shape[1] == self.input_dim:
-            error_str = "x has dimension %d, should be %d"%(x.shape[1],
-                                                            self.input_dim)
+            error_str = "x has dimension %d, should be %d" % (x.shape[1],
+                                                              self.input_dim)
             raise NodeException(error_str)
 
         if x.shape[0] == 0:
@@ -352,13 +350,13 @@ class Node(object):
     def _check_output(self, y):
         # check output rank
         if not y.ndim == 2:
-            error_str = "y has rank %d, should be 2"%(y.ndim)
+            error_str = "y has rank %d, should be 2" % (y.ndim)
             raise NodeException(error_str)
 
         # check the output dimension
         if not y.shape[1] == self.output_dim:
-            error_str = "y has dimension %d, should be %d"%(y.shape[1],
-                                                            self.output_dim)
+            error_str = "y has dimension %d, should be %d" % (y.shape[1],
+                                                              self.output_dim)
             raise NodeException(error_str)
 
     def _if_training_stop_training(self):
@@ -404,10 +402,6 @@ class Node(object):
         # control the dimension of y
         self._check_output(y)
 
-    def _check_train_args(self, x, *args, **kwargs):
-        # implemented by subclasses if needed
-        pass
-
     ### casting helper functions
 
     def _refcast(self, x):
@@ -433,6 +427,10 @@ class Node(object):
         if self.is_invertible():
             return x
 
+    def _check_train_args(self, x, *args, **kwargs):
+        # implemented by subclasses if needed
+        pass
+
     ### User interface to the overwritten methods
     
     def train(self, x, *args, **kwargs):
@@ -457,13 +455,13 @@ class Node(object):
         self._check_train_args(x, *args, **kwargs)        
         
         self._train_phase_started = True
-        self._train_seq[self._train_phase][0](self._refcast(x), *args,**kwargs)
+        self._train_seq[self._train_phase][0](self._refcast(x), *args, **kwargs)
 
     def stop_training(self, *args, **kwargs):
         """Stop the training phase.
 
         By default, subclasses should overwrite _stop_training to implement
-        their stop-training. The docstring of the '_stop_trainining' method
+        their stop-training. The docstring of the '_stop_training' method
         overwrites this docstring.
         """
         if self.is_training() and self._train_phase_started == False:
@@ -510,7 +508,7 @@ class Node(object):
         return self._inverse(self._refcast(y), *args, **kargs)
 
     def __call__(self, x, *args, **kargs):
-        """Calling an instance if Node is equivalent to call
+        """Calling an instance of Node is equivalent to call
         its 'execute' method."""
         return self.execute(x, *args, **kargs)
 
@@ -526,7 +524,7 @@ class Node(object):
             return flow_copy.copy()
         else:
             err_str = 'can only concatenate node'
-            ' (not \'%s\') to node'%(type(other).__name__) 
+            ' (not \'%s\') to node' % (type(other).__name__) 
             raise TypeError(err_str)
         
     ###### string representation
@@ -537,12 +535,12 @@ class Node(object):
     def __repr__(self):
         # print input_dim, output_dim, dtype 
         name = type(self).__name__
-        inp = "input_dim=%s"%str(self.input_dim)
-        out = "output_dim=%s"%str(self.output_dim)
+        inp = "input_dim=%s" % str(self.input_dim)
+        out = "output_dim=%s" % str(self.output_dim)
         if self.dtype is None:
             typ = 'dtype=None'
         else:
-            typ = "dtype='%s'" %self.dtype.name
+            typ = "dtype='%s'" % self.dtype.name
         args = ', '.join((inp, out, typ))
         return name+'('+args+')'
 
@@ -553,7 +551,7 @@ class Node(object):
         return _cPickle.loads(as_str)
 
     def save(self, filename, protocol = -1):
-        """Save a pickled representation of the node to 'filename'.
+        """Save a pickled serialization of the node to 'filename'.
         If 'filename' is None, return a string.
 
         Note: the pickled Node is not guaranteed to be upward or
@@ -582,12 +580,12 @@ class Cumulator(Node):
         self.tlen = 0
 
     def _train(self, x):
-        """Cumulate all imput data in a one dimensional list.
+        """Cumulate all input data in a one dimensional list.
         """
         self.tlen += x.shape[0]
         self.data.extend(x.ravel().tolist())
 
-    def _stop_training(self):
+    def _stop_training(self, *args, **kwargs):
         """Transform the data list to an array object and reshape it.
         """
         self._training = False

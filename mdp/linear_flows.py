@@ -7,8 +7,7 @@ import warnings as _warnings
 import tempfile as _tempfile
 import types as _types
 
-# import numeric module (scipy, Numeric or numarray)
-numx = mdp.numx
+from mdp import numx
 
 class CrashRecoveryException(mdp.MDPException):
     """Class to handle crash recovery """
@@ -32,11 +31,11 @@ class CrashRecoveryException(mdp.MDPException):
         Return the filename.
         """
         if filename is None:
-            (fd, filename)=_tempfile.mkstemp(suffix=".pic",prefix="MDPcrash_")
+            (fd, filename)=_tempfile.mkstemp(suffix=".pic", prefix="MDPcrash_")
             fl = _os.fdopen(fd, 'w+b', -1)
         else:
-            fl = file(filename, 'w+b',-1)
-        _cPickle.dump(self.crashing_obj,fl)
+            fl = file(filename, 'w+b', -1)
+        _cPickle.dump(self.crashing_obj, fl)
         fl.close()
         return filename
 
@@ -54,7 +53,7 @@ class FlowExceptionCR(CrashRecoveryException, FlowException):
         The triggering parent exception is kept in self.parent_exception.
         If flow_instance._crash_recovery is set, save a crash dump of
         flow_instance on the file self.filename"""
-        CrashRecoveryException.__init__(self,*args)
+        CrashRecoveryException.__init__(self, *args)
         rec = self.crashing_obj._crash_recovery 
         errstr = args[0]
         if rec:
@@ -62,8 +61,8 @@ class FlowExceptionCR(CrashRecoveryException, FlowException):
                 name = rec
             else:
                 name = None
-            name = CrashRecoveryException.dump(self,name)
-            dumpinfo = '\nA crash dump is available on: "%s"'%name
+            name = CrashRecoveryException.dump(self, name)
+            dumpinfo = '\nA crash dump is available on: "%s"' % name
             self.filename = name
             errstr = errstr+dumpinfo    
 
@@ -98,13 +97,13 @@ class Flow(object):
         # capture exception. the traceback of the error is printed and a
         # new exception, containing the identity of the node in the flow
         # is raised. Allow crash recovery.
-        (type, val, tb) = _sys.exc_info()
+        (etype, val, tb) = _sys.exc_info()
         prev = ''.join(_traceback.format_exception(except_.__class__,
-                                                  except_,tb))
-        act = "\n! Exception in node #%d (%s):\n"%(nodenr,
-                                                   str(self.flow[nodenr]))
-        errstr =''.join(('\n', 40*'-', act, 'Node Traceback:\n', prev, 40*'-'))
-        raise FlowExceptionCR,(errstr, self, except_)
+                                                   except_,tb))
+        act = "\n! Exception in node #%d (%s):\n" % (nodenr,
+                                                     str(self.flow[nodenr]))
+        errstr = ''.join(('\n', 40*'-', act, 'Node Traceback:\n', prev, 40*'-'))
+        raise FlowExceptionCR(errstr, self, except_)
 
     def _train_node(self, data_iterator, nodenr):
         #trains a single node in the flow
@@ -142,7 +141,8 @@ class Flow(object):
                     else:
                         arg = ()
                     # filter x through the previous nodes
-                    if nodenr > 0: x = self._execute_seq(x, nodenr-1)
+                    if nodenr > 0:
+                        x = self._execute_seq(x, nodenr-1)
                     # train current node
                     node.train(x, *arg)
                 if node.get_remaining_train_phase() > 1:
@@ -160,10 +160,10 @@ class Flow(object):
             # this exception was already propagated,
             # probably during the execution  of a node upstream in the flow
             (exc_type, val) = _sys.exc_info()[:2]
-            prev = ''.join(_traceback.format_exception_only(e.__class__,e))
+            prev = ''.join(_traceback.format_exception_only(e.__class__, e))
             prev = prev[prev.find('\n')+1:]
-            act = "\nWhile training node #%d (%s):\n"%(nodenr,
-                                                       str(self.flow[nodenr]))
+            act = "\nWhile training node #%d (%s):\n" % (nodenr,
+                                                         str(self.flow[nodenr]))
             errstr = ''.join(('\n', 40*'=', act, prev, 40*'='))
             raise FlowException(errstr)
         except Exception, e:
@@ -180,7 +180,7 @@ class Flow(object):
 
         if not isinstance(data_iterators, list):
             errstr = "'data_iterators' is %s must be either a"
-            " list of iterators or an array"%str(type(data_iterators))
+            " list of iterators or an array" % str(type(data_iterators))
             raise FlowException(errstr)
 
         # check that all elements are iterable
@@ -188,7 +188,7 @@ class Flow(object):
             el = data_iterators[i]
             if el is not None and not hasattr(el, '__iter__'):
                 raise FlowException("Element number %d in the iterators"
-                                    " list is not a list or iterator."%i)
+                                    " list is not a list or iterator." % i)
        
         # check that the number of data_iterators is correct
         if len(data_iterators)!=len(flow):
@@ -198,18 +198,19 @@ class Flow(object):
         # check that every node with multiple phases has an iterator
         # but NOT a generator (since you cannot "rewind" a generator)
         for i in range(len(flow)):
-            node, iter = flow[i], data_iterators[i]
-            if len(node._train_seq)>1 and type(iter) is _types.GeneratorType:
+            node, iter_ = flow[i], data_iterators[i]
+            if len(node._train_seq)>1 and type(iter_) is _types.GeneratorType:
                 errstr = ("Node number %d has multiple training phases "
                           "but the corresponding iterator is a generator. "
                           "This is not allowed since generators cannot be "
-                          "'rewinded' for further training."%i)
+                          "'rewinded' for further training." % i)
                 raise FlowException(errstr)
 
         return data_iterators
 
     def _close_last_node(self):
-        if self.verbose: print "Close the training phase of the last node"
+        if self.verbose:
+            print "Close the training phase of the last node"
         try:
             self.flow[-1].stop_training()
         except mdp.TrainingFinishedException:
@@ -257,7 +258,7 @@ class Flow(object):
         # train each Node successively
         for i in range(len(self.flow)):
             if self.verbose:
-                print "Training node #%d (%s)"%(i,str(self.flow[i]))
+                print "Training node #%d (%s)" % (i, str(self.flow[i]))
             self._train_node(data_iterators[i], i)
             if self.verbose:
                 print "Training finished"
@@ -267,7 +268,8 @@ class Flow(object):
     def _execute_seq(self, x, nodenr = None):
         # Filters input data 'x' through the nodes 0..'node_nr' included
         flow = self.flow
-        if nodenr is None: nodenr = len(flow)-1
+        if nodenr is None:
+            nodenr = len(flow)-1
         for i in range(nodenr+1):
             try:
                 x = flow[i].execute(x)
@@ -297,7 +299,7 @@ class Flow(object):
     def _inverse_seq(self, x):
         #Successively invert input data 'x' through all nodes backwards
         flow = self.flow
-        for i in range(len(flow)-1,-1,-1):
+        for i in range(len(flow)-1, -1, -1):
             try:
                 x = flow[i].inverse(x)
             except Exception, e:
@@ -334,8 +336,8 @@ class Flow(object):
         as_str = _cPickle.dumps(self, protocol)
         return _cPickle.loads(as_str)
 
-    def save(self, filename, protocol = -1):
-        """Save a pickled representation of the flow to 'filename'.
+    def save(self, filename, protocol=-1):
+        """Save a pickled serialization of the flow to 'filename'.
         If 'filename' is None, return a string.
         
         Note: the pickled Flow is not guaranteed to be upward or
@@ -369,7 +371,7 @@ class Flow(object):
         pad = len(name)+2
         sep = ',\n'+' '*pad
         nodes = sep.join([repr(x) for x in self.flow])
-        return '%s(%s)' %(name, '['+nodes+']')
+        return '%s(%s)' % (name, '['+nodes+']')
 
     ###### private container methods
 
@@ -387,7 +389,7 @@ class Flow(object):
         if flow is None:
             flow = self.flow
         len_flow = len(flow)
-        for i in range(1,len_flow):
+        for i in range(1, len_flow):
             out = flow[i-1].output_dim
             inp = flow[i].input_dim
             self._check_dimension_consistency(out, inp)
@@ -447,7 +449,7 @@ class Flow(object):
             return flow_copy
         else:
             err_str = ('can only concatenate flow'
-                       ' (not \'%s\') to flow'%(type(other).__name__))
+                       ' (not \'%s\') to flow' % (type(other).__name__))
             raise TypeError(err_str)
 
     ###### public container methods
@@ -461,7 +463,7 @@ class Flow(object):
         elements from the iterable"""
         if not isinstance(x, Flow):
             err_str = ('can only concatenate flow'
-                       ' (not \'%s\') to flow'%(type(x).__name__))
+                       ' (not \'%s\') to flow' % (type(x).__name__))
             raise TypeError(err_str)
         self[len(self):len(self)] = x
 
@@ -487,7 +489,7 @@ class CheckpointFlow(Flow):
         
         if len(checkpoints) != len(self.flow):
             error_str = "%d checkpoints specified, %d needed"
-            raise FlowException(error_str%(len(checkpoints), len(self.flow)))
+            raise FlowException(error_str % (len(checkpoints), len(self.flow)))
 
         return checkpoints
 
@@ -510,12 +512,14 @@ class CheckpointFlow(Flow):
         for i in range(len(self.flow)):
             node = self.flow[i]
             if self.verbose:
-                print "Training node #%d (%s)" % (i,type(node).__name__)
+                print "Training node #%d (%s)" % (i, type(node).__name__)
             self._train_node(data_iterators[i], i)
             if (i <= len(checkpoints)) and (checkpoints[i] is not None):
-                dict = checkpoints[i](node)
-                if dict: self.__dict__.update(dict)
-            if self.verbose: print "Training finished"
+                dic = checkpoints[i](node)
+                if dic:
+                    self.__dict__.update(dic)
+            if self.verbose:
+                print "Training finished"
 
         self._close_last_node()
 
@@ -564,6 +568,7 @@ class CheckpointSaveFunction(CheckpointFunction):
 
     def __call__(self, node):
         fid = open(self.filename, self.mode)
-        if self.stop_training: node.stop_training()
+        if self.stop_training:
+            node.stop_training()
         _cPickle.dump(node, fid, self.proto)
         fid.close()
