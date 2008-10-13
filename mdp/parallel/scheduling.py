@@ -110,10 +110,10 @@ class Scheduler(object):
         """
         self.lock.acquire()
         self.result_container.add_result(result)
-        self.lock.release()
         self.n_jobs_finished += 1
         if self.verbose:
             print "    finished job no. %d" % self.n_jobs_finished
+        self.lock.release()
     
     def get_results(self):
         """Get the accumulated results from the result container.
