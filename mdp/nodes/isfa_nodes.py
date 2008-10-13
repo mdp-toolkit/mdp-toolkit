@@ -115,7 +115,8 @@ class ISFANode(Node):
         
         eps_contrast -- Convergence is achieved when the relative
                         improvement in the contrast is below this threshold.
-                        Values in the range [1E-4, 1E-10] are usually reasonable.
+                        Values in the range [1E-4, 1E-10] are usually
+                        reasonable.
         
         max_iter     -- If the algorithms does not achieve convergence within
                         max_iter iterations raise an Exception. Should be
@@ -159,9 +160,9 @@ class ISFANode(Node):
             self.icaweights = 1.
         else:
             if (len(icaweights) != len(lags)):
-                err_str = "icaweights vector length is %d"
-                ", should be %d" % (str(len(icaweights)), str(len(lags)))
-                raise NodeException(err_str)
+                err = "icaweights vector length is %d" % str(len(icaweights))
+                ", should be %d" % str(len(lags))
+                raise NodeException(err)
             self.icaweights = icaweights
             
         if sfaweights is None:
@@ -169,9 +170,9 @@ class ISFANode(Node):
             self.sfaweights[0] = 1.
         else:
             if (len(sfaweights) != len(lags)):
-                err_str = "sfaweights vector length is %d"
-                ", should be %d" % (str(len(sfaweights)), str(len(lags)))
-                raise NodeException(err_str)
+                err = "sfaweights vector length is %d" % str(len(sfaweights))
+                ", should be %d" % str(len(lags))
+                raise NodeException(err)
             self.sfaweights = sfaweights        
 
         # store attributes

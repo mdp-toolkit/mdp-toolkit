@@ -56,19 +56,19 @@ class _Walk(object):
         self.start = start
         return arrays
 
-def _format_dig(dict):
-    longest_name = max(map(len, dict.keys()))
-    longest_size = max(map(lambda x: len('%d'%x[0]), dict.values()))
+def _format_dig(dict_):
+    longest_name = max(map(len, dict_.keys()))
+    longest_size = max(map(lambda x: len('%d'%x[0]), dict_.values()))
     msgs = []
     total_size = 0
-    for name in sorted(dict.keys()):
-        size = dict[name][0]
+    for name in sorted(dict_.keys()):
+        size = dict_[name][0]
         total_size += size
         pname = (name+':').ljust(longest_name+1)
-        psize = ('%d bytes'%size).rjust(longest_size+6)
-        msg = "%s %s"%(pname, psize)
+        psize = ('%d bytes' % size).rjust(longest_size+6)
+        msg = "%s %s" % (pname, psize)
         msgs.append(msg)
-    final = "Total %d arrays (%d bytes)"%(len(dict), total_size)
+    final = "Total %d arrays (%d bytes)" % (len(dict_), total_size)
     msgs.append(final)
     return '\n'.join(msgs)
     
@@ -79,14 +79,14 @@ def dig_node(x):
     and string is a nice string representation of it.
     """
     if not isinstance(x, mdp.Node):
-        raise Exception, 'Cannot dig %s'%(str(type(x)))
+        raise Exception('Cannot dig %s' % (str(type(x))))
     arrays = _Walk()(x)
     for name in arrays.keys():
         ar = arrays[name]
         if len(ar.shape) == 0:
             size = 1
         else:
-            size = reduce(lambda x,y: x*y, ar.shape)
+            size = reduce(lambda x, y: x*y, ar.shape)
         bytes = ar.itemsize*size
         arrays[name] = (bytes, ar)
     return arrays, _format_dig(arrays)

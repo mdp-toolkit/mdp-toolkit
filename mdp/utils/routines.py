@@ -1,11 +1,10 @@
-import sys
-import cPickle
 import mdp
 
 # import numeric module (scipy, Numeric or numarray)
 numx, numx_rand, numx_linalg  = mdp.numx, mdp.numx_rand, mdp.numx_linalg
 
-class SymeigException(mdp.MDPException): pass
+class SymeigException(mdp.MDPException):
+    pass
 
 def timediff(data):
     """Returns the array of the time differences of data."""
@@ -37,17 +36,17 @@ def rotate(mat, angle, columns = [0, 1], units = 'radians'):
 
     If M=2, columns=[0,1].
     """
-    dtype = mat.dtype
-    if units is 'degrees': angle = angle/180.*numx.pi
+    if units is 'degrees':
+        angle = angle/180.*numx.pi
     cos_ = numx.cos(angle)
     sin_ = numx.sin(angle)
-    [i,j] = columns
-    col_i = mat[:,i] + 0.
-    col_j = mat[:,j]
-    mat[:,i] = cos_*col_i - sin_*col_j
-    mat[:,j] = sin_*col_i + cos_*col_j
+    [i, j] = columns
+    col_i = mat[:, i] + 0.
+    col_j = mat[:, j]
+    mat[:, i] = cos_*col_i - sin_*col_j
+    mat[:, j] = sin_*col_i + cos_*col_j
 
-def permute(x,indices=[0,0],rows=0, cols=1):
+def permute(x, indices=[0, 0], rows=0, cols=1):
     """Swap two columns and (or) two rows of 'x', whose indices are specified
     in indices=[i,j].
     Note: permutations are done in-place. You'll lose your original matrix"""
@@ -62,11 +61,11 @@ def permute(x,indices=[0,0],rows=0, cols=1):
     ## tmp = x[i,:].copy()
     ## x[i,:],x[j,:] = x[j,:],tmp
     ## but it is slower (for larger matrices) than the one we use.
-    [i,j] = indices
+    [i, j] = indices
     if rows:
-        x[i,:],x[j,:] = x[j,:],x[i,:]+0
+        x[i, :], x[j, :] = x[j, :], x[i, :] + 0
     if cols:
-        x[:,i],x[:,j] = x[:,j],x[:,i]+0
+        x[:, i], x[:, j] = x[:, j], x[:, i] + 0
 
 def hermitian(x):
     """Compute the Hermitian, i.e. conjugate transpose, of x."""
@@ -84,12 +83,12 @@ def symrand(dim_or_eigv, dtype="d"):
     if isinstance(dim_or_eigv, int):
         dim = dim_or_eigv
         d = numx_rand.random(dim)
-    elif isinstance(dim_or_eigv, numx.ndarray) and \
-         len(dim_or_eigv.shape) == 1:
+    elif isinstance(dim_or_eigv,
+                    numx.ndarray) and len(dim_or_eigv.shape) == 1:
         dim = dim_or_eigv.shape[0]
         d = dim_or_eigv
     else:
-        raise mdp.MDPException, "input type not supported."
+        raise mdp.MDPException("input type not supported.")
     
     v = random_rot(dim, dtype=dtype)
     #h = mdp.utils.mult(mdp.utils.mult(hermitian(v), mdp.numx.diag(d)), v)
@@ -113,10 +112,10 @@ def random_rot(dim, dtype='d'):
         D[n-1] = mdp.numx.sign(x[0])
         x[0] -= D[n-1]*mdp.numx.sqrt((x*x).sum())
         # Householder transformation
-        Hx = mdp.numx.eye(dim-n+1, dtype=dtype) \
-             - 2.*mdp.numx.outer(x, x)/(x*x).sum()
+        Hx = ( mdp.numx.eye(dim-n+1, dtype=dtype)
+               - 2.*mdp.numx.outer(x, x)/(x*x).sum() )
         mat = mdp.numx.eye(dim, dtype=dtype)
-        mat[n-1:,n-1:] = Hx
+        mat[n-1:, n-1:] = Hx
         H = mdp.utils.mult(H, mat)
     # Fix the last sign such that the determinant is 1
     D[-1] = -D.prod()
@@ -134,16 +133,16 @@ def ordered_uniq(alist):
     """Return the elements in alist without repetitions.
     The order in the list is preserved.
     Implementation by Raymond Hettinger, 2002/03/17"""
-    set = {}
-    return [set.setdefault(e,e) for e in alist if e not in set]
+    set_ = {}
+    return [set_.setdefault(e, e) for e in alist if e not in set_]
 
 def uniq(alist):
     """Return the elements in alist without repetitions.
     The order in the list is not preserved.
     Implementation by Raymond Hettinger, 2002/03/17"""
-    set = {}
-    map(set.__setitem__, alist, [])
-    return set.keys()
+    set_ = {}
+    map(set_.__setitem__, alist, [])
+    return set_.keys()
 
 def cov2(x, y):
     """Compute the covariance between 2D matrices x and y.
@@ -172,11 +171,13 @@ def mult_diag(d, mtx, left=True):
     else:
         return d*mtx
 
-def comb(N,k):
+def comb(N, k):
+    """Return number of combinations of k objects from a set of N objects
+    without repetitions, a.k.a. the binomial coefficient of N and k."""
     ret = 1
-    for mlt in xrange(N,N-k,-1):
+    for mlt in xrange(N, N-k, -1):
         ret *= mlt
-    for dv in xrange(1,k+1):
+    for dv in xrange(1, k+1):
         ret /= dv
     return ret
 
@@ -203,9 +204,11 @@ def _greatest_common_dtype(alist):
     """
     dtype = 'f'
     for array in alist:
-        if array is None: continue
+        if array is None:
+            continue
         tc = array.dtype.char
-        if tc not in _type_keys: tc = 'd'
+        if tc not in _type_keys:
+            tc = 'd'
         transition = (dtype, tc)
         if transition in _type_conv:
             dtype = _type_conv[transition]
@@ -214,12 +217,11 @@ def _greatest_common_dtype(alist):
 def _assert_eigenvalues_real_and_positive(w, dtype):
     tol = numx.finfo(dtype.type).eps * 100
     if abs(w.imag).max() > tol:
-        err_str="Some eigenvalues have significant imaginary part: "+str(w)
-        raise SymeigException, err_str
+        err = "Some eigenvalues have significant imaginary part: %s " % str(w)
+        raise SymeigException(err)
     if w.real.min() < 0:
-        err_str="Got negative eigenvalues: "\
-                 +str(w)
-        raise SymeigException, err_str
+        err = "Got negative eigenvalues: %s" % str(w)
+        raise SymeigException(err)
               
 
 def _symeig_fake(A, B = None, eigenvectors = 1, turbo = "on", range = None,
@@ -278,7 +280,7 @@ numarray.linear_algebra.eigenvectors with an interface compatible with symeig.
             w, ZA = numx_linalg.eigh(A)
             Z = mdp.utils.mult(ZB, ZA)
     except numx_linalg.LinAlgError, exception:
-        raise SymeigException, str(exception)
+        raise SymeigException(str(exception))
 
     _assert_eigenvalues_real_and_positive(w, dtype)
     w = w.real
@@ -321,7 +323,7 @@ def nongeneral_svd(A, range=None, **kwargs):
     w = w.take(idx)
     Z = Z.take(idx, axis=1)
     # sort eigenvectors
-    Z = (Z[-1::-1,-1::-1]).T
+    Z = (Z[-1::-1, -1::-1]).T
     if range is not None:
         lo, hi = range
         Z = Z[:, lo-1:hi]

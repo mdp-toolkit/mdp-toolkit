@@ -118,8 +118,9 @@ class Flow(object):
             return
         elif data_iterator is None and node.is_training():
             # A None iterator is passed to a training node
-            raise FlowException("\n! Node %d is training"
-                                " but received a 'None' iterator."%nodenr)
+            err = "\n! Node %d is training" % nodenr
+            " but received a 'None' iterator."
+            raise FlowException(err)
         elif data_iterator is None and not node.is_trainable():
             # skip training if node is not trainable
             return
@@ -153,8 +154,8 @@ class Flow(object):
         except mdp.TrainingFinishedException, e:
             # attempted to train a node although its training phase is already
             # finished. raise a warning and continue with the next node.
-            wrnstr = ("\n! Node %d training phase already finished"
-                      " Continuing anyway."%nodenr)
+            wrnstr = "\n! Node %d training phase already finished" % nodenr
+            " Continuing anyway."
             _warnings.warn(wrnstr, mdp.MDPWarning)
         except FlowExceptionCR, e:
             # this exception was already propagated,
@@ -179,31 +180,33 @@ class Flow(object):
             data_iterators = [[data_iterators]]*len(flow)
 
         if not isinstance(data_iterators, list):
-            errstr = "'data_iterators' is %s must be either a"
-            " list of iterators or an array" % str(type(data_iterators))
+            errstr = "'data_iterators' is %s" % str(type(data_iterators))
+            " must be either a list of iterators or an array" 
             raise FlowException(errstr)
 
         # check that all elements are iterable
         for i in range(len(data_iterators)):
             el = data_iterators[i]
             if el is not None and not hasattr(el, '__iter__'):
-                raise FlowException("Element number %d in the iterators"
-                                    " list is not a list or iterator." % i)
+                err = "Element number %d in the iterators" % i 
+                " list is not a list or iterator."
+                raise FlowException(err)
        
         # check that the number of data_iterators is correct
         if len(data_iterators)!=len(flow):
-            error_str = "%d data iterators specified, %d needed"
-            raise FlowException(error_str % (len(data_iterators), len(flow)))
+            err_str = "%d data iterators specified," % len(data_iterators)
+            " %d needed" % len(flow)
+            raise FlowException(err_str)
 
         # check that every node with multiple phases has an iterator
         # but NOT a generator (since you cannot "rewind" a generator)
         for i in range(len(flow)):
             node, iter_ = flow[i], data_iterators[i]
             if len(node._train_seq)>1 and type(iter_) is _types.GeneratorType:
-                errstr = ("Node number %d has multiple training phases "
-                          "but the corresponding iterator is a generator. "
-                          "This is not allowed since generators cannot be "
-                          "'rewinded' for further training." % i)
+                errstr = "Node number %d has multiple training phases " % i
+                "but the corresponding iterator is a generator. "
+                "This is not allowed since generators cannot be "
+                "'rewinded' for further training."
                 raise FlowException(errstr)
 
         return data_iterators
@@ -371,7 +374,7 @@ class Flow(object):
         pad = len(name)+2
         sep = ',\n'+' '*pad
         nodes = sep.join([repr(x) for x in self.flow])
-        return '%s(%s)' % (name, '['+nodes+']')
+        return '%s([%s])' % (name, nodes)
 
     ###### private container methods
 
@@ -488,8 +491,9 @@ class CheckpointFlow(Flow):
             checkpoints = [checkpoints]*len(self.flow)
         
         if len(checkpoints) != len(self.flow):
-            error_str = "%d checkpoints specified, %d needed"
-            raise FlowException(error_str % (len(checkpoints), len(self.flow)))
+            error_str = "%d checkpoints specified," % len(checkpoints)
+            " %d needed" % len(self.flow)
+            raise FlowException(error_str)
 
         return checkpoints
 

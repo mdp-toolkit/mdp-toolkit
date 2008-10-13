@@ -173,8 +173,8 @@ class RBMNode(mdp.Node):
         return self._sample_v(h)
 
     def _energy(self, v, h):
-        return -mult(v, self.bv) - mult(h, self.bh) - \
-               (mult(v, self.w)*h).sum(axis=1)
+        return (-mult(v, self.bv) - mult(h, self.bh) -
+                (mult(v, self.w)*h).sum(axis=1))
 
     def energy(self, v, h):
         """Compute the energy of the RBM given observed variables state 'v' and

@@ -569,8 +569,10 @@ class FastICANode(ICANode):
                 
                 # Show the progress...
                 if verbose:
-                    print 'Step no. %d,'
-                    ' convergence: %.3f' % (round+1, convergence[round])
+                    msg = 'Step no. %d,'% round+1
+                    ' convergence: %.3f' % convergence[round]
+                    print msg
+                    
 
                 # First calculate the independent components (u_i's).
                 # u_i = b_i' x = x' b_i. For all x:s simultaneously this is
@@ -733,17 +735,17 @@ class FastICANode(ICANode):
 
                     if not fine_tuned:
                         if i == max_it + 1:
-                            err_msg = 'Component number %d did not'
-                            'converge in %d iterations.' % (round, max_it)
+                            err_msg = 'Component number %d did not' % round
+                            'converge in %d iterations.' % max_it
                             if verbose:
                                 print err_msg
                             if round == 0:
                                 raise mdp.NodeException(err_msg)
                             nfail += 1
                             if nfail > failures:
-                                erstr = 'Too many failures to converge (%d).'
-                                ' Giving up.' % nfail
-                                raise mdp.NodeException(erstr)
+                                err = 'Too many failures to '
+                                'converge (%d). Giving up.' % nfail
+                                raise mdp.NodeException(err)
                             break
                     else:
                         if i >= end_finetuning:

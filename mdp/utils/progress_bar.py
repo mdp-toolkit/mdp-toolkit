@@ -3,93 +3,100 @@ import sys
 import time
 
 def get_termsize():
+    """Return terminal size as a tuple (height, width)."""
     try:
         # this works on unix machines
         import struct, fcntl, termios
-        height, width = struct.unpack("hhhh", \
-                 fcntl.ioctl(0,termios.TIOCGWINSZ, "\000"*8))[0:2]
-        if not (height and width): height, width = 24, 79
+        height, width = struct.unpack("hhhh",
+                                      fcntl.ioctl(0,termios.TIOCGWINSZ,
+                                                  "\000"*8))[0:2]
+        if not (height and width):
+            height, width = 24, 79
     except ImportError:
         # for windows machins, use default values
         # Does anyone know how to get the console size under windows?
+        # One approach is:
+        # http://code.activestate.com/recipes/440694/
         # and what about MacOsX?   
         height, width = 24, 79
     return height, width
 
 def fmt_time(t, delimiters):
+    """Return time formatted as a timedelta object."""
     meta_t = timedelta(seconds=round(t))
     return ''.join([delimiters[0], str(meta_t), delimiters[1]])
 
 def _progress(percent, last, style, layout):
-        # percentage string
-        percent_s = "%3d%%"%int(round(percent*100))
-        if style == 'bar':
-            # how many symbols for such percentage
-            symbols = int(round(percent * layout['width']))
-            # build percent done arrow
-            done = ''.join([layout['char1']*(symbols), layout['char2']])
-            # build remaining space
-            todo = ''.join([layout['char3']*(layout['width']-symbols)])
-            # build the progress bar
-            box =  ''.join([layout['delimiters'][0],
-                            done, todo,
-                            layout['delimiters'][1]])
-            if layout['position'] == 'left':
-                # put percent left
-                box = ''.join(['\r', layout['indent'], percent_s, box])
-            elif layout['position'] == 'right':
-                # put percent right
-                box = ''.join(['\r', layout['indent'], box, percent_s])
-            else:
-                # put it in the center
-                percent_s = percent_s.lstrip()
-                percent_idx = (len(box) // 2) - len(percent_s) + 2
-                box = ''.join(['\r', layout['indent'],
-                               box[0:percent_idx],
-                               percent_s,
-                               box[percent_idx+len(percent_s):]]) 
+    # percentage string
+    percent_s = "%3d%%" % int(round(percent*100))
+    if style == 'bar':
+        # how many symbols for such percentage
+        symbols = int(round(percent * layout['width']))
+        # build percent done arrow
+        done = ''.join([layout['char1']*(symbols), layout['char2']])
+        # build remaining space
+        todo = ''.join([layout['char3']*(layout['width']-symbols)])
+        # build the progress bar
+        box =  ''.join([layout['delimiters'][0],
+                        done, todo,
+                        layout['delimiters'][1]])
+        if layout['position'] == 'left':
+            # put percent left
+            box = ''.join(['\r', layout['indent'], percent_s, box])
+        elif layout['position'] == 'right':
+            # put percent right
+            box = ''.join(['\r', layout['indent'], box, percent_s])
         else:
-            now = time.time()
-            if percent == 0:
-                # write the time box directly
-                tbox = ''.join(['?', layout['separator'], '?'])
+            # put it in the center
+            percent_s = percent_s.lstrip()
+            percent_idx = (len(box) // 2) - len(percent_s) + 2
+            box = ''.join(['\r', layout['indent'],
+                           box[0:percent_idx],
+                           percent_s,
+                           box[percent_idx+len(percent_s):]]) 
+    else:
+        now = time.time()
+        if percent == 0:
+            # write the time box directly
+            tbox = ''.join(['?', layout['separator'], '?'])
+        else:
+            # Elapsed 
+            elapsed = now - layout['t_start']
+            # Estimated total time
+            if layout['speed'] == 'mean':
+                e_t_a = elapsed/percent - elapsed
             else:
-                # Elapsed 
-                elapsed = now - layout['t_start']
-                # Estimated total time
-                if layout['speed'] == 'mean':
-                    e_t_a = elapsed/percent - elapsed
-                else:
-                    # instantaneous speed
-                    progress = percent-_progress.last_percent
-                    e_t_a = (1 - percent)/progress*(now-_progress.last_time)
-                # build the time box
-                tbox = ''.join([fmt_time(elapsed, layout['delimiters']),
-                                layout['separator'],
-                                fmt_time(e_t_a, layout['delimiters'])])
-            # compose progress info box
-            if layout['position'] == 'left':
-                box = ''.join(['\r',
-                               layout['indent'],
-                               percent_s,
-                               ' ',
-                               tbox])
-            else:
-                box = ''.join(['\r',
-                               layout['indent'],
-                               tbox,
-                               ' ',
-                               percent_s])
-            _progress.last_percent = percent
-            _progress.last_time = now
+                # instantaneous speed
+                progress = percent-_progress.last_percent
+                e_t_a = (1 - percent)/progress*(now-_progress.last_time)
+            # build the time box
+            tbox = ''.join([fmt_time(elapsed, layout['delimiters']),
+                            layout['separator'],
+                            fmt_time(e_t_a, layout['delimiters'])])
+        # compose progress info box
+        if layout['position'] == 'left':
+            box = ''.join(['\r',
+                           layout['indent'],
+                           percent_s,
+                           ' ',
+                           tbox])
+        else:
+            box = ''.join(['\r',
+                           layout['indent'],
+                           tbox,
+                           ' ',
+                           percent_s])
 
-        # print it only if something changed from last time
-        if box != last:
-            sys.stdout.write(box)
-            sys.stdout.flush()
-        return box
+        _progress.last_percent = percent
+        _progress.last_time = now
+
+    # print it only if something changed from last time
+    if box != last:
+        sys.stdout.write(box)
+        sys.stdout.flush()
+    return box
     
-def progressinfo(sequence, length = None, style = 'bar', custom = {}):
+def progressinfo(sequence, length = None, style = 'bar', custom = None):
     """A fully configurable text-mode progress info box.
        To get a progress info box for your loops use it like this:
 
@@ -186,7 +193,7 @@ def progressinfo(sequence, length = None, style = 'bar', custom = {}):
     except TypeError:
         if length is None:
             err_str = "Must specify 'length' if sequence is unsized."
-            raise Exception, err_str
+            raise Exception(err_str)
         elif length < 0:
             iterate_on_items = True
             length = -length
@@ -200,7 +207,8 @@ def progressinfo(sequence, length = None, style = 'bar', custom = {}):
                    'char1' : '=',
                    'char2' : '>',
                    'char3' : '.' }
-        layout.update(custom)
+        if custom is not None:
+            layout.update(custom)
         fixed_lengths = len(layout['indent']) + 4
         if layout['position'] in ['left', 'right']:
             fixed_lengths += 4
@@ -214,11 +222,9 @@ def progressinfo(sequence, length = None, style = 'bar', custom = {}):
                    't_start' : time.time()
                    }
         layout.update(custom)
-        _progress.last_percent = 0
-        _progress.last_time = layout['t_start']
     else:
-        err_str = "Style `%s' not known." %(style)
-        raise ValueError, err_str
+        err_str = "Style `%s' not known." % style
+        raise ValueError(err_str)
 
     # start main loop
     last = None
@@ -258,7 +264,7 @@ if __name__ == '__main__':
             test += i
             time.sleep(0.001)
         if test != 174750:
-            raise Exception, 'Something wrong with progressinfo...'
+            raise Exception('Something wrong with progressinfo...')
     # generate random character sequence
     inp_list = []
     for j in range(500):
@@ -276,7 +282,7 @@ if __name__ == '__main__':
             time.sleep(0.02)
             out_list.append(i)
         if inp_list != out_list:
-            raise Exception, 'Something wrong with progressinfo...' 
+            raise Exception('Something wrong with progressinfo...' )
 
     # write random file
     fl = tempfile.TemporaryFile(mode='r+')
@@ -290,7 +296,7 @@ if __name__ == '__main__':
         lines.append(int(line))
         time.sleep(0.01)
     if lines != range(1000):
-        raise Exception, 'Something wrong with porgressinfo...' 
+        raise Exception('Something wrong with porgressinfo...' )
 
     # test iterate on items
     fl = tempfile.TemporaryFile(mode='r+')
@@ -300,9 +306,10 @@ if __name__ == '__main__':
     # rewind
     fl.seek(0)
     def gen():
-        for line in fl:
-            yield int(line)
-    for line in progressinfo(gen(), -10,style='timer',custom={'speed':'last'}):
+        for line_ in fl:
+            yield int(line_)
+    for line in progressinfo(gen(), -10, style='timer',
+                             custom={'speed':'last'}):
         time.sleep(1)
     print 'Done.'
         

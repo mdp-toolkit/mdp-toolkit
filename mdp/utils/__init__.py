@@ -1,11 +1,11 @@
-from routines import timediff, refcast, scast, rotate, random_rot, \
-     permute, symrand, norm2, uniq, ordered_uniq, cov2, mult_diag, \
-     comb, sqrtm, get_dtypes, nongeneral_svd, SymeigException, \
-     hermitian, _symeig_fake
+from routines import (timediff, refcast, scast, rotate, random_rot,
+                      permute, symrand, norm2, uniq, ordered_uniq, cov2,
+                      mult_diag, comb, sqrtm, get_dtypes, nongeneral_svd,
+                      SymeigException, hermitian, _symeig_fake)
 from introspection import dig_node, get_node_size
 from quad_forms import QuadraticForm
-from covariance import CovarianceMatrix, DelayCovarianceMatrix, \
-     MultipleCovarianceMatrices
+from covariance import (CovarianceMatrix, DelayCovarianceMatrix,
+                        MultipleCovarianceMatrices)
 from progress_bar import progressinfo
 import mdp as _mdp
 
@@ -28,14 +28,16 @@ inv = lambda x: refcast(_inv(x), x.dtype)
 _pinv = _mdp.numx_linalg.pinv
 pinv = lambda x: refcast(_pinv(x), x.dtype)
 _solve = _mdp.numx_linalg.solve
-solve = lambda x,y: refcast(_solve(x,y), x.dtype)
+solve = lambda x, y: refcast(_solve(x, y), x.dtype)
 
 def svd(x):
+    """Wrap the numx SVD routine, so that it returns arrays of the correct
+    dtype and a SymeigException in case of failures."""
     tc = x.dtype
     try:
-        u,s,v = _mdp.numx_linalg.svd(x)
+        u, s, v = _mdp.numx_linalg.svd(x)
     except _mdp.numx_linalg.LinAlgError, exc:
-        raise SymeigException, str(exc)        
+        raise SymeigException(str(exc))
     return refcast(u, tc), refcast(s, tc), refcast(v, tc)
 
 # clean up namespace
