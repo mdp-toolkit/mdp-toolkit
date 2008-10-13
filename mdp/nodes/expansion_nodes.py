@@ -31,7 +31,7 @@ class _ExpansionNode(mdp.Node):
 
     def _set_output_dim(self, n):
         msg = "Output dim cannot be set explicitly!"
-        raise mdp.NodeException, msg
+        raise mdp.NodeException(msg)
 
 class PolynomialExpansionNode(_ExpansionNode):
     """Perform expansion in a polynomial space."""
@@ -46,8 +46,8 @@ class PolynomialExpansionNode(_ExpansionNode):
 
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
-        return mdp.utils.get_dtypes('AllFloat') + \
-               mdp.utils.get_dtypes('AllInteger')
+        return (mdp.utils.get_dtypes('AllFloat') +
+                mdp.utils.get_dtypes('AllInteger'))
     
     def expanded_dim(self, dim):
         """Return the size of a vector of dimension 'dim' after
@@ -60,28 +60,27 @@ class PolynomialExpansionNode(_ExpansionNode):
         n = x.shape[1]
         
         # preallocate memory
-        dexp = numx.zeros((self.output_dim, x.shape[0]), \
-                           dtype=self.dtype)
+        dexp = numx.zeros((self.output_dim, x.shape[0]), dtype=self.dtype)
         # copy monomials of degree 1
-        dexp[0:n,:] = x.T
+        dexp[0:n, :] = x.T
 
         k = n
         prec_end = 0
-        next_lens = numx.ones((dim+1,))
+        next_lens = numx.ones((dim+1, ))
         next_lens[0] = 0
-        for i in range(2,degree+1):
+        for i in range(2, degree+1):
             prec_start = prec_end
             prec_end += nmonomials(i-1, dim)
-            prec = dexp[prec_start:prec_end,:]
+            prec = dexp[prec_start:prec_end, :]
 
             lens = next_lens[:-1].cumsum(axis=0)
-            next_lens = numx.zeros((dim+1,))
+            next_lens = numx.zeros((dim+1, ))
             for j in range(dim):
-                factor = prec[lens[j]:,:]
-                len = factor.shape[0]
-                dexp[k:k+len,:] = x[:,j] * factor
-                next_lens[j+1] = len
-                k = k+len
+                factor = prec[lens[j]:, :]
+                len_ = factor.shape[0]
+                dexp[k:k+len_, :] = x[:, j] * factor
+                next_lens[j+1] = len_
+                k = k+len_
 
         return dexp.T
         

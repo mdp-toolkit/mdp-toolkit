@@ -50,11 +50,11 @@ class FDANode(mdp.Node):
         return ['float32', 'float64']
 
     def _check_train_args(self, x, cl):
-        if isinstance(cl, (list, tuple, numx.ndarray)) \
-               and len(cl) != x.shape[0]:
-            msg = "The number of labels should be equal to the number of " +\
-                  "datapoints (%d != %d)" % (len(cl), x.shape[0])
-            raise mdp.TrainingException, msg
+        if isinstance(cl,
+                      (list, tuple, numx.ndarray)) and len(cl) != x.shape[0]:
+            msg = "The number of labels should be equal to the number of "
+            "datapoints (%d != %d)" % (len(cl), x.shape[0])
+            raise mdp.TrainingException(msg)
 
     # Training step 1: compute mean and number of element in each class
 
@@ -141,9 +141,9 @@ class FDANode(mdp.Node):
                    between i and j."""
         if range:
             if isinstance(range, (list, tuple)):
-                v = self.v[:,range[0]:range[1]]
+                v = self.v[:, range[0]:range[1]]
             else:
-                v = self.v[:,0:range]
+                v = self.v[:, 0:range]
         else:
             v = self.v
 
