@@ -150,8 +150,8 @@ class ISFANode(Node):
             else:
                 pass
         else:
-            err_str = "Lags must be int, list or array. Found "
-            "%s!" % (type(lags).__name__)
+            err_str = ("Lags must be int, list or array. Found "
+                       "%s!" % (type(lags).__name__))
             raise NodeException(err_str)
         self.lags = lags
 
@@ -160,8 +160,8 @@ class ISFANode(Node):
             self.icaweights = 1.
         else:
             if (len(icaweights) != len(lags)):
-                err = "icaweights vector length is %d" % str(len(icaweights))
-                ", should be %d" % str(len(lags))
+                err = ("icaweights vector length is %d, "
+                       "should be %d" % (str(len(icaweights)), str(len(lags))))
                 raise NodeException(err)
             self.icaweights = icaweights
             
@@ -170,8 +170,8 @@ class ISFANode(Node):
             self.sfaweights[0] = 1.
         else:
             if (len(sfaweights) != len(lags)):
-                err = "sfaweights vector length is %d" % str(len(sfaweights))
-                ", should be %d" % str(len(lags))
+                err = ("sfaweights vector length is %d, "
+                       "should be %d" % (str(len(sfaweights)), str(len(lags))))
                 raise NodeException(err)
             self.sfaweights = sfaweights        
 
@@ -631,8 +631,8 @@ class ISFANode(Node):
 
             # if we made too many sweeps exit with error!
             if sweep == self.max_iter:
-                err_str = "Failed to converge, maximum increase= "
-                "%.5e" % (max_increase)
+                err_str = ("Failed to converge, maximum increase= "
+                           "%.5e" % (max_increase))
                 raise NodeException(err_str)
 
         # if we land here, we have converged!

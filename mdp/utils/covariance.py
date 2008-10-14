@@ -9,11 +9,11 @@ def _check_roundoff(t, dtype):
     # limit precision
     limit = 10.**(numx.finfo(dtype).precision-2)
     if int(t) >= limit:
-        wr = 'You have summed %e entries in the covariance matrix.' % t
-        '\nAs you are using dtype \'%s\', you are ' % dtype.name
-        'probably getting severe round off'
-        '\nerrors. See CovarianceMatrix docstring for more'
-        ' information.'
+        wr = ('You have summed %e entries in the covariance matrix.'
+              '\nAs you are using dtype \'%s\', you are '
+              'probably getting severe round off'
+              '\nerrors. See CovarianceMatrix docstring for more'
+              ' information.' % (t, dtype.name))
         warnings.warn(wr, mdp.MDPWarning)
 
 class CovarianceMatrix(object):
@@ -279,8 +279,8 @@ class MultipleCovarianceMatrices(object):
         Argument can be a sequence or a single value. In the latter case
         the same weight is applied to all matrices."""
         # apply a weighting vector to cov matrices
-        err = "len(weights)=%d does not match number " % len(weights)
-        "of matrices (%d)" % self.ncovs 
+        err = ("len(weights)=%d does not match number "
+               "of matrices (%d)" % (len(weights), self.ncovs))
         assert len(weights) == self.ncovs, err
         self.covs *= mdp.utils.refcast(weights, self.dtype)
 

@@ -103,8 +103,8 @@ class NIPALSNode(PCANode, Cumulator):
                 diff = (tdiff*tdiff).sum()
                 t = t_new
                 if it > max_it:
-                    msg = 'PC#%d: no convergence after' % i
-                    ' %d iterations.'% max_it
+                    msg = ('PC#%d: no convergence after'
+                           ' %d iterations.'% (i, max_it))
                     raise NodeException(msg)
 
             # store ith eigenvector in result matrix

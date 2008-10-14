@@ -70,8 +70,9 @@ class LLENode(Cumulator):
         super(LLENode, self)._stop_training()
 
         if self.verbose:
-            msg = 'training LLE on %i points' % self.data.shape[0]
-            ' in %i dimensions...' % self.data.shape[1]
+            msg = ('training LLE on %i points' 
+                   ' in %i dimensions...' % (self.data.shape[0],
+                                             self.data.shape[1]))
             print msg
 
         # some useful quantities
@@ -85,8 +86,8 @@ class LLENode(Cumulator):
         Q_diag_idx = numx.arange(k)
 
         if k > N:
-            err = 'LLENode: k=%i must be less than or ' % k
-            'equal to number of training points N=%i' % N
+            err = ('LLENode: k=%i must be less than or ' 
+                   'equal to number of training points N=%i' % (k,N))
             raise TrainingException(err)
  
         # determines number of output dimensions: if desired_variance
@@ -160,8 +161,8 @@ class LLENode(Cumulator):
             W[nbrs, row] = w
 
         if self.verbose:
-            msg = ' - finding [%i x %i] null space' % (self.output_dim, N)
-            ' of weight matrix\n     (may take a while)...'
+            msg = (' - finding [%i x %i] null space of weight matrix\n'
+                   '     (may take a while)...' % (self.output_dim, N))
             print msg
 
         self.W = W.copy()
@@ -243,8 +244,9 @@ class LLENode(Cumulator):
         m_est_array = numx.asarray(m_est_array)
         self.output_dim = int( numx.ceil( numx.median(m_est_array) ) )
         if self.verbose:
-            msg = '      output_dim = %i' % self.output_dim
-            ' for variance of %.2f' % self.desired_variance
+            msg = ('      output_dim = %i'
+                   ' for variance of %.2f' % (self.output_dim,
+                                              self.desired_variance))
             print msg
 
         return Qs, sig2s, nbrss
@@ -351,8 +353,8 @@ class HLLENode(LLENode):
         N = M.shape[0]
         
         if k > N:
-            err = 'HLLENode: k=%i must be less than' % k
-            ' or equal to number of training points N=%i' % N
+            err = ('HLLENode: k=%i must be less than'
+                   ' or equal to number of training points N=%i' % (k, N))
             raise TrainingException(err)
 
         #dp = d_out + (d_out-1) + (d_out-2) + ...
@@ -420,8 +422,8 @@ class HLLENode(LLENode):
         #-----------------------------------------------
         
         if self.verbose:
-            msg = ' - finding [%i x %i] ' % (d_out, N)
-            'null space of weight matrix...'
+            msg = (' - finding [%i x %i] ' 
+                   'null space of weight matrix...' % (d_out, N))
             print msg
 
         #XXX future work:

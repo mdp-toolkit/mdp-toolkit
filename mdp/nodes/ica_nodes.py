@@ -7,6 +7,7 @@ utils = mdp.utils
 mult = utils.mult
 
 class ProjectMatrixMixin(object):
+    """Mixin class to be inherited by all ICA-like algorithms"""
     def get_projmatrix(self, transposed=1):
         """Return the projection matrix."""
         self._if_training_stop_training()
@@ -569,8 +570,8 @@ class FastICANode(ICANode):
                 
                 # Show the progress...
                 if verbose:
-                    msg = 'Step no. %d,'% round+1
-                    ' convergence: %.3f' % convergence[round]
+                    msg = ('Step no. %d,'
+                           ' convergence: %.3f' % (round+1,convergence[round]))
                     print msg
                     
 
@@ -735,16 +736,17 @@ class FastICANode(ICANode):
 
                     if not fine_tuned:
                         if i == max_it + 1:
-                            err_msg = 'Component number %d did not' % round
-                            'converge in %d iterations.' % max_it
+                            err_msg = ('Component number %d did not'
+                                       'converge in %d iterations.' % (round,
+                                                                       max_it))
                             if verbose:
                                 print err_msg
                             if round == 0:
                                 raise mdp.NodeException(err_msg)
                             nfail += 1
                             if nfail > failures:
-                                err = 'Too many failures to '
-                                'converge (%d). Giving up.' % nfail
+                                err = ('Too many failures to '
+                                       'converge (%d). Giving up.' % nfail)
                                 raise mdp.NodeException(err)
                             break
                     else:

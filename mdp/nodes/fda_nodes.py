@@ -52,8 +52,8 @@ class FDANode(mdp.Node):
     def _check_train_args(self, x, cl):
         if isinstance(cl,
                       (list, tuple, numx.ndarray)) and len(cl) != x.shape[0]:
-            msg = "The number of labels should be equal to the number of "
-            "datapoints (%d != %d)" % (len(cl), x.shape[0])
+            msg = ("The number of labels should be equal to the number of "
+                   "datapoints (%d != %d)" % (len(cl), x.shape[0]))
             raise mdp.TrainingException(msg)
 
     # Training step 1: compute mean and number of element in each class

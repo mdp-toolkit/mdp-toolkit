@@ -7,8 +7,8 @@ sqrt, inv, det = numx.sqrt, utils.inv, numx_linalg.det
 normal = mdp.numx_rand.normal
 
 # decreasing likelihood message
-_LHOOD_WARNING = 'Likelihood decreased in FANode. This is probably due '
-'to some numerical errors.'
+_LHOOD_WARNING = ('Likelihood decreased in FANode. This is probably due '
+                  'to some numerical errors.')
 warnings.filterwarnings('always', _LHOOD_WARNING, mdp.MDPWarning)
 
 
@@ -182,8 +182,8 @@ class FANode(mdp.Node):
         if self.output_dim is None:
             # if the input_dim is not defined, raise an exception
             if self.input_dim is None:
-                errstr = "Number of input dimensions undefined. Inversion"
-                "not possible."
+                errstr = ("Number of input dimensions undefined. Inversion"
+                          "not possible.")
                 raise NodeException(errstr)
             self.output_dim = self.input_dim
 

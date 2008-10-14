@@ -252,8 +252,8 @@ class TimeFramesNode(Node):
         if not self.output_dim:
             # if the input_dim is not defined, raise an exception
             if not self.input_dim:
-                errstr = "Number of input dimensions undefined. Inversion"
-                "not possible."
+                errstr = ("Number of input dimensions undefined. Inversion"
+                          "not possible.")
                 raise NodeException(errstr)
             self.outputdim = self.input_dim
         
@@ -488,8 +488,8 @@ class GaussianClassifierNode(Node):
     def _check_train_args(self, x, cl):
         if isinstance(cl, (list, tuple, numx.ndarray)) and (
             len(cl) != x.shape[0]):
-            msg = "The number of labels should be equal to the number of "
-            "datapoints (%d != %d)" % (len(cl), x.shape[0])
+            msg = ("The number of labels should be equal to the number of "
+                   "datapoints (%d != %d)" % (len(cl), x.shape[0]))
             raise mdp.TrainingException(msg)
 
     def _update_covs(self, x, lbl):

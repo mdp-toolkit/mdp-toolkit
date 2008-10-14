@@ -74,8 +74,8 @@ class PCANode(Node):
             raise NodeException(error_str)
 
         if y.shape[1] == 0 or y.shape[1] > self.output_dim:
-            error_str = "y has dimension %d" % y.shape[1]
-            ", should be 0<y<=%d" % self.output_dim
+            error_str = ("y has dimension %d" 
+                         ", should be 0<y<=%d" % (y.shape[1], self.output_dim))
             raise NodeException(error_str)
 
     def _get_supported_dtypes(self):
@@ -139,10 +139,10 @@ class PCANode(Node):
         # if we have more variables then observations we are bound to fail here
         # suggest to use the NIPALSNode instead.
         if debug and self.tlen < self.input_dim:
-            wrn = 'The number of observations (%d) ' % self.tlen
-            'is larger than the number of input variables '
-            '(%d). You may want to use ' % self.input_dim
-            'the NIPALSNode instead.'
+            wrn = ('The number of observations (%d) '
+                   'is larger than the number of input variables '
+                   '(%d). You may want to use ' 
+                   'the NIPALSNode instead.' % (self.tlen, self.input_dim))
             _warnings.warn(wrn, MDPWarning)
         
         ## compute and sort the eigenvalues
@@ -151,9 +151,9 @@ class PCANode(Node):
         try:
             d, v = self._symeig(self.cov_mtx, range=rng, overwrite=(not debug))
         except SymeigException, exception:
-            errstr = str(exception)+"\n Covariance matrix may be singular."
-            "Try instantiating the node with svd=True."
-            raise NodeException(errstr)
+            err = str(exception)+("\nCovariance matrix may be singular."
+                                  "Try instantiating the node with svd=True.")
+            raise NodeException(err)
                   
         # delete covariance matrix if no exception occurred
         del self.cov_mtx
@@ -237,8 +237,8 @@ class PCANode(Node):
         if n is None:
             n = y.shape[1]
         if n > self.output_dim:
-            error_str = "y has dimension %d," % n
-            " should be at most %d" % self.output_dim
+            error_str = ("y has dimension %d,"
+                         " should be at most %d" % (n, self.output_dim))
             raise NodeException(error_str)
         
         v = self.get_recmatrix()

@@ -201,8 +201,8 @@ class Node(object):
         if n is None:
             pass
         elif (self._input_dim is not None) and (self._input_dim !=  n):
-            msg = "Input dim are set already (%d) " % self.input_dim
-            "(%d given)!" % n
+            msg = ("Input dim are set already (%d) "
+                   "(%d given)!" % (self.input_dim, n))
             raise NodeException(msg)
         else:
             self._set_input_dim(n)
@@ -227,8 +227,8 @@ class Node(object):
         if n is None:
             pass
         elif (self._output_dim is not None) and (self._output_dim != n):
-            msg = "Output dim are set already (%d) " % self.output_dim
-            "(%d given)!" % n
+            msg = ("Output dim are set already (%d) "
+                   "(%d given)!" % (self.output_dim, n))
             raise NodeException(msg)
         else:
             self._set_output_dim(n)
@@ -254,13 +254,14 @@ class Node(object):
             return
         t = numx.dtype(t)
         if (self._dtype is not None) and (self._dtype != t):
-            errstr = "dtype is already set to '%s' " % self.dtype.name 
-            "('%s' given)!" % t 
+            errstr = ("dtype is already set to '%s' "
+                      "('%s' given)!" % (t, self.dtype.name)) 
             raise NodeException(errstr)
         elif t not in self.get_supported_dtypes():
-            errstr = "\ndtype '%s' is not supported.\n" % t.name
-            "Supported dtypes: %s" % ( [numx.dtype(t).name for t in
-                                        self.get_supported_dtypes()])
+            errstr = ("\ndtype '%s' is not supported.\n"
+                      "Supported dtypes: %s" % ( t.name,
+                                                 [numx.dtype(t).name for t in
+                                                  self.get_supported_dtypes()]))
             raise NodeException(errstr)
         else:
             self._set_dtype(t)
@@ -393,8 +394,8 @@ class Node(object):
         if self.output_dim is None:
             # if the input_dim is not defined, raise an exception
             if self.input_dim is None:
-                errstr = "Number of input dimensions undefined. Inversion"
-                "not possible."
+                errstr = ("Number of input dimensions undefined. Inversion"
+                          "not possible.")
                 raise NodeException(errstr)
             self.output_dim = self.input_dim
         
@@ -522,8 +523,8 @@ class Node(object):
             flow_copy.insert(0, self)
             return flow_copy.copy()
         else:
-            err_str = 'can only concatenate node'
-            ' (not \'%s\') to node' % (type(other).__name__) 
+            err_str = ('can only concatenate node'
+                       ' (not \'%s\') to node' % (type(other).__name__) )
             raise TypeError(err_str)
         
     ###### string representation
