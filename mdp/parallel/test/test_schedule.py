@@ -1,11 +1,6 @@
 
 import unittest
 
-import os
-import sys
-import inspect
-
-import mdp
 import mdp.parallel as parallel
 from mdp import numx as n
 
@@ -14,20 +9,12 @@ class TestProcessScheduler(unittest.TestCase):
 
     def test_scheduler(self):
         """Test process scheduler with 6 jobs and 3 processes."""
-        ## get MDP source path (if not in the pythonpath) 
-        # module_file = os.path.abspath(inspect.getfile(sys._getframe(0)))
-        # module_path = os.path.dirname(module_file)
-        # source_paths = [os.path.join(module_path.split("mdp")[0])[0:-1],]
-        scheduler = parallel.ProcessScheduler(verbose=False, 
-                                              n_processes=3,
-                                              source_paths=None)
+        scheduler = parallel.Scheduler()
         for i in range(6):
-            job = parallel.TestJob(x=i)
-            scheduler.add_job(job)
+            scheduler.add_task(i, lambda x: x**2)
         results = scheduler.get_results()
         scheduler.cleanup()
         # check result
-        results.sort()
         results = n.array(results)
         self.assertTrue(n.all(results == n.array([0,1,4,9,16,25])))
         

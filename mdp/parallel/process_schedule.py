@@ -15,16 +15,16 @@ import scheduling
 
 
 class ProcessScheduler(scheduling.Scheduler):
-    """Scheduler that distributes the job to multiple processes.
+    """Scheduler that distributes the task to multiple processes.
     
     The subprocess module is used to start the requested number of processes.
-    The execution of each job is internally managed by dedicated thread.
+    The execution of each task is internally managed by dedicated thread.
     
     This scheduler should work on all platforms (at least on Linux,
     Windows XP and Vista). 
     """
     
-    def __init__(self, result_container=scheduling.ListResultContainer(), 
+    def __init__(self, result_container=None, 
                  verbose=False, n_processes=1,
                  source_paths=None, python_executable=None):
         """Initialize the scheduler and start the slave processes.
@@ -35,9 +35,9 @@ class ProcessScheduler(scheduling.Scheduler):
             correspond to the number of processors / cores.
         source_paths -- List of paths to the source code of the project using 
             the scheduler. These paths will be appended to sys.path in the
-            processes to make the job unpickling work. 
+            processes to make the task unpickling work. 
             A single path instead of a list is also accepted.
-            Set to None if no sources are needed for unpickling the job (this is
+            Set to None if no sources are needed for unpickling the task (this is
             the default value).
         python_executable -- Python executable that is used for the processes.
             The default value is None, in which case sys.executable will be
@@ -69,7 +69,7 @@ class ProcessScheduler(scheduling.Scheduler):
     def cleanup(self):
         """Shut down the slave processes.
         
-        If a process is still running a job an exception is raised.
+        If a process is still running a task an exception is raised.
         """
         self.lock.acquire()
         if len(self._free_processes) < self.n_processes:
@@ -78,57 +78,57 @@ class ProcessScheduler(scheduling.Scheduler):
             pickle.dump("EXIT", process.stdin) 
         self.lock.release()
         
-    def add_job(self, job):
-        """Add a job, if possible without blocking.
+    def add_task(self, data, task_callable=None):
+        """Add a task, if possible without blocking.
         
         It blocks when the system is not able to start a new thread
         or when the processes are all in use.
         """
-        job_started = False
-        while not job_started:
+        task_started = False
+        while not task_started:
             self.lock.acquire()
             if not len(self._free_processes):
                 # release lock for other threads and wait
                 self.lock.release()
                 time.sleep(0.5)
             else:
-                self.n_jobs_running += 1
+                self.n_tasks_running += 1
                 try:
                     process = self._free_processes.pop()
                     self.lock.release()
-                    thread.start_new(self._job_thread, (job, process))
-                    job_started = True
+                    thread.start_new(self._task_thread, (task, process))
+                    task_started = True
                 except thread.error:
                     if self.verbose:
-                        print ("unable to create new job thread," 
+                        print ("unable to create new task thread," 
                                " waiting 2 seconds...")
                     time.sleep(2)
                     
-    def _job_thread(self, job, process): 
-        """Thread function which cares for a single job.
+    def _task_thread(self, task, process): 
+        """Thread function which cares for a single task.
         
         It picks a free process, pushes the to it via stdin, waits for the
         result on stdout, passes the result to the result container, frees
         the process and then exits. 
         """
         try:
-            # push the job to the process
-            pickle.dump(job, process.stdin)
+            # push the task to the process
+            pickle.dump(task, process.stdin)
             # wait for result to arrive
             result = pickle.load(process.stdout)
         except:
-            print "\nFAILED TO EXECUTE JOB IN PROCESS!\n"
+            print "\nFailed to execute task in process!\n"
             sys.exit()
         # store the result and clean up
         self._store_result(result)
         self._free_processes.append(process)
-        self.n_jobs_running -= 1
+        self.n_tasks_running -= 1
 
 
 def _process_run():
-    """Run this function in a worker process to receive and run jobs.
+    """Run this function in a worker process to receive and run tasks.
     
-    It waits for jobs on stdin, and sends the results back via stdout.
+    It waits for tasks on stdin, and sends the results back via stdout.
     """
     # use sys.stdout only for pickled objects, everything else goes to stderr
     pickle_out = sys.stdout
@@ -137,17 +137,17 @@ def _process_run():
     exit_loop = False
     while not exit_loop:
         try:
-            # wait for job to arrive
-            job = pickle.load(sys.stdin)
-            if job == "EXIT":
+            # wait for task to arrive
+            task = pickle.load(sys.stdin)
+            if task == "EXIT":
                 exit_loop = True
             else:
-                result = job()
+                result = task()
                 pickle.dump(result, pickle_out)
                 pickle_out.flush()
         except Exception, exception:
             # return the exception instead of the result
-            print "\nJOB CAUSED EXCEPTION IN PROCESS:\n"
+            print "\ntask caused exception in process:\n"
             print exception
             traceback.print_exc()
             sys.stdout.flush()

@@ -4,12 +4,14 @@ import unittest
 import mdp
 import mdp.parallel as parallel
 from mdp import numx as n
+# TODO: use proper import from MDP
+import numpy.testing as testing_tools
 
 
 class TestParallelFlows(unittest.TestCase):
 
-    def test_jobs(self):
-        """Test parallel training and execution by running the jobs."""
+    def test_tasks(self):
+        """Test parallel training and execution by running the tasks."""
         flow = parallel.ParallelFlow([
                             parallel.ParallelSFANode(output_dim=5),
                             mdp.nodes.PolynomialExpansionNode(degree=3),
@@ -20,9 +22,9 @@ class TestParallelFlows(unittest.TestCase):
         flow.parallel_train(data_generators)
         while flow.is_parallel_training():
             results = []
-            while flow.job_available():
-                job = flow.get_job()
-                results.append(job())
+            while flow.task_available():
+                task = flow.get_task()
+                results.append(task[1](task[0]))
             flow.use_results(results)
         # test execution
         x = n.random.random([100,10])
@@ -31,9 +33,9 @@ class TestParallelFlows(unittest.TestCase):
         data = [n.random.random((20,10)) for _ in range(6)]
         flow.parallel_execute(data)
         results = []
-        while flow.job_available():
-            job = flow.get_job()
-            results.append(job())
+        while flow.task_available():
+            task = flow.get_task()
+            results.append(task[1](task[0]))
         flow.use_results(results)
         
     def test_multiphase(self):
@@ -53,9 +55,9 @@ class TestParallelFlows(unittest.TestCase):
         flow.parallel_train(data_generators)
         while flow.is_parallel_training():
             results = []
-            while flow.job_available():
-                job = flow.get_job()
-                results.append(job())
+            while flow.task_available():
+                task = flow.get_task()
+                results.append(task[1](task[0]))
             flow.use_results(results)
         # test execution
         x = n.random.random([100,10])
@@ -64,11 +66,11 @@ class TestParallelFlows(unittest.TestCase):
         data = [n.random.random((20,10)) for _ in range(6)]
         flow.parallel_execute(data)
         results = []
-        while flow.job_available():
-            job = flow.get_job()
-            results.append(job())
+        while flow.task_available():
+            task = flow.get_task()
+            results.append(task[1](task[0]))
         flow.use_results(results)
-        
+    
     def test_firstnode(self):
         """Test special case in which the first node is untrainable.
         
@@ -82,9 +84,9 @@ class TestParallelFlows(unittest.TestCase):
         flow.parallel_train(data_generators)
         while flow.is_parallel_training():
             results = []
-            while flow.job_available():
-                job = flow.get_job()
-                results.append(job())
+            while flow.task_available():
+                task = flow.get_task()
+                results.append(task[1](task[0]))
             flow.use_results(results)
             
     def test_multiphase_checkpoints(self):
@@ -103,9 +105,9 @@ class TestParallelFlows(unittest.TestCase):
         flow.parallel_train(data_generators, checkpoints=checkpoint)
         while flow.is_parallel_training():
             results = []
-            while flow.job_available():
-                job = flow.get_job()
-                results.append(job())
+            while flow.task_available():
+                task = flow.get_task()
+                results.append(task[1](task[0]))
             flow.use_results(results)
             
     def test_nonparallel1(self):
@@ -123,9 +125,9 @@ class TestParallelFlows(unittest.TestCase):
         flow.parallel_train(data_generators)
         while flow.is_parallel_training():
             results = []
-            while flow.job_available():
-                job = flow.get_job()
-                results.append(job())
+            while flow.task_available():
+                task = flow.get_task()
+                results.append(task[1](task[0]))
             flow.use_results(results)
         # test execution
         x = n.random.random([100,10])
@@ -146,9 +148,9 @@ class TestParallelFlows(unittest.TestCase):
         flow.parallel_train(data_generators)
         while flow.is_parallel_training():
             results = []
-            while flow.job_available():
-                job = flow.get_job()
-                results.append(job())
+            while flow.task_available():
+                task = flow.get_task()
+                results.append(task[1](task[0]))
             flow.use_results(results)
         # test execution
         x = n.random.random([100,10])
@@ -164,9 +166,9 @@ class TestParallelFlows(unittest.TestCase):
         flow.parallel_train(data_generators)
         while flow.is_parallel_training():
             results = []
-            while flow.job_available():
-                job = flow.get_job()
-                results.append(job())
+            while flow.task_available():
+                task = flow.get_task()
+                results.append(task())
             flow.use_results(results)
         # test execution
         x = n.random.random([100,10])

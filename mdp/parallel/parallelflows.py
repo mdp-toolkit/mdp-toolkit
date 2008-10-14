@@ -1,41 +1,41 @@
 """
-Module for parallel MDP flows, which handle the jobs.
+Module for parallel MDP flows, which handle the tasks.
 
-Corresponding classes for Job and ResultContainer are derived. Node that
+Corresponding classes for task and ResultContainer are derived. Node that
 ParallelFlow training depends on these classes and their specific arguments and 
 output values.
 
 A ParallelFlowNode is used to simplify the forking process and to encapsulate 
-the flow in the job.
+the flow in the task.
 """
 
 import mdp
 from mdp import numx as n
 
 import parallelnodes
-import resultorder
 import scheduling
 import parallelhinet
 
 
-### Train Job Classes ###
+### Train task Classes ###
 
-class FlowTrainJob(scheduling.Job):
-    """Job implementing a single training phase in a flow for a data block."""
+class FlowTrainCallable(object):
+    """Implements a single training phase in a flow for a data block."""
 
-    def __init__(self, flownode, x):
+    def __init__(self, flownode):
         """Store everything for the training.
         
         keyword arguments:
         flownode -- FlowNode containing the flow to be trained.
-        x -- training data block
         """
         self._flownode = flownode
-        self._x = x
     
-    def __call__(self):
-        """Do the training and return only the trained node."""
-        self._flownode.train(self._x)
+    def __call__(self, x):
+        """Do the training and return only the trained node.
+        
+        x -- training data block
+        """
+        self._flownode.train(x)
         for node in self._flownode._flow:
             if node.is_training():
                 return node
@@ -52,7 +52,7 @@ class NodeResultContainer(scheduling.ResultContainer):
     def __init__(self):
         self._node = None
         
-    def add_result(self, result):
+    def add_result(self, result, task_index):
         if not self._node:
             self._node = result
         else:
@@ -64,108 +64,82 @@ class NodeResultContainer(scheduling.ResultContainer):
         return [node,]
     
 
-### Execute Job Classes ###
+### Execute task Classes ###
 
-class FlowExecuteJob(scheduling.Job):
-    """Job implementing data execution through the whole flow."""
+class FlowExecuteCallable(object):
+    """Implements data execution through the whole flow.
+    
+    Note that one could also pass the flow itself as the callable, so this 
+    class is not really needed. However, it serves as the base class for more
+    more complicated callables, e.g. which do some kind of preprocessing before
+    executing the data with the flow. 
+    """
 
-    def __init__(self, flow, x):
+    def __init__(self, flow):
         """Store everything for the execution.
         
         keyword arguments:
         flow -- _flow for the execution
-        x -- data chunk
         """
         self._flow = flow
-        self._x = x
     
-    def __call__(self):
-        """Return the execution result."""
-        return self._flow.execute(self._x)
-    
-    
-class OrderedFlowExecuteJob(resultorder.OrderedJob):
-    """Ordered version of FlowExecuteJob."""
-
-    def __init__(self, flow, marked_x):
-        self._marker = marked_x[0]
-        self._x = marked_x[1]
-        self._flow = flow
-    
-    def __call__(self):
-        """Return the execution result."""
-        result = self._flow.execute(self._x)
-        return self._apply_marker(result)
+    def __call__(self, x):
+        """Return the execution result.
+        
+        x -- data chunk
+        """
+        return self._flow.execute(x)
     
 
 ### Standard Helper Functions ###    
 
 def train_parallelflow(flow, data_iterators, scheduler=None, checkpoints=None,
-                       train_job_class=FlowTrainJob):
+                       train_callable_class=FlowTrainCallable):
     """Train a parallel flow via the provided scheduler.
     
     The scheduler can use the NodeResultContainer to save memory.
-    If no scheduler is provided the jobs will be run locally using the
+    If no scheduler is provided the tasks will be run locally using the
     simple default scheduler.
     
     Nodes which are not derived from ParallelNode are directly trained here.
     """
     if checkpoints:
         flow.parallel_train(data_iterators, checkpoints, 
-                            train_job_class=train_job_class)
+                            train_task_class=train_callable_class)
     else:    
-        flow.parallel_train(data_iterators, train_job_class=train_job_class)
+        flow.parallel_train(data_iterators, 
+                            train_callable_class=train_callable_class)
     while flow.is_parallel_training():
         if scheduler == None:
-            scheduler = scheduling.Scheduler(result_container=
-                                                         NodeResultContainer())
-        while flow.job_available():
-            job = flow.get_job()
-            scheduler.add_job(job)
+            scheduler = scheduling.Scheduler(
+                                        result_container=NodeResultContainer())
+        while flow.task_available():
+            task = flow.get_task()
+            scheduler.add_task(*task)
         results = scheduler.get_results()
         if results == []:
-            raise Exception("Could not get any training jobs or results " +
+            raise Exception("Could not get any training tasks or results " +
                             "for the current training phase.")
         else:
             flow.use_results(results)
 
 
 def execute_parallelflow(flow, data_iterator, scheduler=None, 
-                         execute_job_class=FlowExecuteJob):
+                         execute_callable_class=FlowExecuteCallable):
     """Execute a parallel flow via the provided scheduler.
     
-    The execution results are returned. 
-    If no scheduler is provided the jobs will be run locally.
+    The execution results are returned in the correct order.
+    If no scheduler is provided the tasks will be run locally.
     """
-    flow.parallel_execute(data_iterator, execute_job_class=execute_job_class)
+    flow.parallel_execute(data_iterator, 
+                          execute_task_class=execute_callable_class)
     if scheduler == None:
-        scheduler = scheduling.Scheduler(result_container=
-                                                scheduler.ListResultContainer())
-    while flow.job_available():
-        job = flow.get_job()
-        scheduler.add_job(job)
+        scheduler = scheduling.Scheduler()
+    while flow.task_available():
+        task = flow.get_task()
+        scheduler.add_task(*task)
     results = scheduler.get_results()
     return flow.use_results(results)
-
-
-def ordered_execute_parallelflow(flow, data_iterator, scheduler=None, 
-                                 execute_job_class=OrderedFlowExecuteJob):
-    """Execute a parallel flow via the provided scheduler.
-    
-    The results will be returned in the correct order. If an
-    execute_job_class is provided it should be derived from 
-    OrderedFlowExecuteJob.
-    """
-    if not isinstance(execute_job_class, resultorder.OrderedJob):
-        try:
-            # workaround to test if job class does support marked results
-            execute_job_class._apply_marker
-        except:
-            raise Exception("Provided execute_job_class does not seem to " +
-                            "support ordered results.")
-    data_iterator = resultorder.OrderedIterable(data_iterator)
-    return execute_parallelflow(flow, data_iterator, scheduler, 
-                                execute_job_class)
 
 
 ### ParallelFlow Class ###    
@@ -175,17 +149,17 @@ class ParallelFlowException(mdp.FlowException):
     pass
 
 
-class NoJobException(ParallelFlowException):
-    """Exception for problems with the job creation."""
+class NoTaskException(ParallelFlowException):
+    """Exception for problems with the task creation."""
     pass
 
 
 class ParallelFlow(mdp.Flow):
-    """A parallel flow provides the jobs for parallel training.
+    """A parallel flow provides the tasks for parallel training.
     
     After calling train or execute with data iterators one has to pick up the
-    jobs with get_job, run them and finally return the result list via
-    use_results. Jobs are available as long as job_available() returns true.
+    tasks with get_task, run them and finally return the result list via
+    use_results. tasks are available as long as task_available() returns true.
     Training may require multiple phases, which are each closed by calling
     use_results.
     
@@ -213,9 +187,9 @@ class ParallelFlow(mdp.Flow):
         # iterator for execution data 
         # also signals if parallel execution is underway
         self._exec_data_iter = None  
-        self._next_job = None  # buffer for next job
-        self._train_job_class = None
-        self._execute_job_class = None
+        self._next_task = None  # buffer for next task
+        self._train_task_class = None
+        self._execute_task_class = None
         
     def train(self, *args, **kwargs):
         """Non-parallel training as in standard flow.
@@ -226,26 +200,26 @@ class ParallelFlow(mdp.Flow):
             raise ParallelFlowException("Parallel training is underway.")
         super(ParallelFlow, self).train(*args, **kwargs)
     
-    def parallel_train(self, data_iterators, train_job_class=FlowTrainJob):
+    def parallel_train(self, data_iterators, 
+                       train_callable_class=FlowTrainCallable):
         """Parallel version of the standard train method.
         
         Instead of automatically training the _flow, it only initializes the 
-        training. The training still has to be done by generating jobs with
-        get_job, executing them in the scheduler and returning the results
+        training. The training still has to be done by generating tasks with
+        get_task, executing them in the scheduler and returning the results
         with return_results.
         
         iterator -- Iterator for data chunks. If an array is given instead,
             then the standard flow train is used.
-        train_job_class -- Class used to create training jobs. By using a
-            different class you can implement data transformations (e.g.
-            from 8 bit image to 64 bit double precision.
+        train_callable_class -- Class used to create training callables. 
+            By using a different class you can implement data transformations 
+            (e.g. from 8 bit image to 64 bit double precision.
         """
         if isinstance(data_iterators, n.ndarray):
             self.train(self, data_iterators)
         else:
-            self._train_job_class = train_job_class
-            self._train_data_iters = \
-                                self._train_check_iterators(data_iterators)
+            self._train_task_class = train_callable_class
+            self._train_data_iters = self._train_check_iterators(data_iterators)
             self._i_train_node = 0
             self._next_train_phase()
             
@@ -298,26 +272,26 @@ class ParallelFlow(mdp.Flow):
                            (self._i_train_node+1))
                 self._train_data_iter = iter(
                                     self._train_data_iters[self._i_train_node])
-                self._next_job = self._create_train_job()
+                self._next_task = self._create_train_task()
                 break
         else:
             # training is finished
             self._i_train_node = None
             self._train_data_iters = None
             
-    def _create_train_job(self):
-        """Create and return a single training job.
+    def _create_train_task(self):
+        """Create and return a single training task.
         
         Returns None if data iterator end is reached.
-        Raises NoJobException if none are available.
+        Raises NoTaskException if none are available.
         """
         try:
-            return self._train_job_class(self._flownode.fork(), 
-                                         self._train_data_iter.next())
+            return (self._train_data_iter.next(),
+                    self._train_task_class(self._flownode.fork()))
         except StopIteration:
             return None
         else:
-            raise NoJobException("Could not create training job.")
+            raise NoTaskException("Could not create training task.")
             
     def execute(self, *args, **kwargs):
         """Non-parallel execution as in standard flow.
@@ -328,58 +302,58 @@ class ParallelFlow(mdp.Flow):
             raise ParallelFlowException("Parallel training is underway.")
         return super(ParallelFlow, self).execute(*args, **kwargs)
        
-    def parallel_execute(self, iterator, execute_job_class=FlowExecuteJob):
+    def parallel_execute(self, iterator, 
+                         execute_callable_class=FlowExecuteCallable):
         """Parallel version of the standard execute method.
         
         Instead of automatically executing the _flow with the iterator, it only
-        prepares the jobs for the scheduler.
+        prepares the tasks for the scheduler.
         
         iterator -- Iterator for data chunks. If an array is given instead,
             then the standard flow execution is used.
-        execute_job_class -- Similar to train_job_class, but for execution.
         """
         if self.is_parallel_training():
             raise ParallelFlowException("Parallel training is underway.")
         if isinstance(iterator, n.ndarray):
             return self.execute(self, iterator)
         else:
-            self._execute_job_class = execute_job_class
+            self._execute_task_class = execute_callable_class
             self._exec_data_iter = iterator.__iter__()
-            self._next_job = self._create_execute_job()
+            self._next_task = self._create_execute_task()
         
-    def _create_execute_job(self):
-        """Create and return a single execution job.
+    def _create_execute_task(self):
+        """Create and return a single execution task.
         
         Returns None if data iterator end is reached.
-        Raises NoJobException if none is available.
+        Raises NoTaskException if none is available.
         """
         try:
-            return self._execute_job_class(mdp.Flow(self.flow), 
-                                           self._exec_data_iter.next())
+            return (self._exec_data_iter.next(),
+                    self._execute_task_class(mdp.Flow(self.flow)))
         except StopIteration:
             return None
         else:
-            raise NoJobException("Could not create execution job.")
+            raise NoTaskException("Could not create execution task.")
     
-    def get_job(self):
-        """Return a job either for either training or execution.
+    def get_task(self):
+        """Return a task either for either training or execution.
         
-        A a one job buffer is used to make job_available work.
-        Jobs are available as long as need_result returns False or all the 
-        training / execution is done. If no jobs are available a NoJobException 
+        A a one task buffer is used to make task_available work.
+        tasks are available as long as need_result returns False or all the 
+        training / execution is done. If no tasks are available a NoTaskException 
         is raised.
         """
-        if self._next_job != None:
-            job = self._next_job
+        if self._next_task != None:
+            task = self._next_task
             if self._i_train_node != None:
-                self._next_job = self._create_train_job()
+                self._next_task = self._create_train_task()
             elif self._exec_data_iter != None:
-                self._next_job = self._create_execute_job()
+                self._next_task = self._create_execute_task()
             else:
-                raise NoJobException("No data available for execution job.")
-            return job
+                raise NoTaskException("No data available for execution task.")
+            return task
         else:
-            raise NoJobException("No job available for execution.")
+            raise NoTaskException("No task available for execution.")
     
     def is_parallel_training(self):
         """Return True if parallel training is underway."""
@@ -395,13 +369,13 @@ class ParallelFlow(mdp.Flow):
         else:
             return True
     
-    def job_available(self):
-        """Return True if jobs are available, otherwise False.
+    def task_available(self):
+        """Return True if tasks are available, otherwise False.
         
         If false is returned this can indiciate that results are needed to
         continue training.   
         """
-        if self._next_job != None:
+        if self._next_task != None:
             return True
         else:
             return False
@@ -415,7 +389,7 @@ class ParallelFlow(mdp.Flow):
         
         results -- Iterable containing the results, normally the return value
             of scheduler.ResultContainer.get_results().  
-            The individual results can be the return values of the jobs. 
+            The individual results can be the return values of the tasks. 
         """
         if self.is_parallel_training():
             node = self.flow[self._i_train_node]
@@ -440,11 +414,12 @@ class ParallelCheckpointFlow(ParallelFlow, mdp.CheckpointFlow):
     """
     
     def parallel_train(self, data_iterators, checkpoints, 
-                       train_job_class=FlowTrainJob):
+                       train_callable_class=FlowTrainCallable):
         """Checkpoint version of parallel training."""
         self._checkpoints = self._train_check_checkpoints(checkpoints)
-        super(ParallelCheckpointFlow, self).parallel_train(data_iterators, 
-                                                train_job_class=train_job_class)
+        super(ParallelCheckpointFlow, self).parallel_train(
+                                    data_iterators, 
+                                    train_callable_class=train_callable_class)
     
     def use_results(self, results):
         """Checkpoint version of use_results.

@@ -2,17 +2,17 @@
 import unittest
 import sys
 
+import test_schedule
 import test_parallelnodes
 import test_parallelflows
 import test_parallelhinet
-import test_resultorder
 import test_process_schedule
 
-test_suites = {"parallelnodes": test_parallelnodes.get_suite(),
+test_suites = {"schedule": test_schedule.get_suite(),
+               "parallelnodes": test_parallelnodes.get_suite(),
                "parallelflows": test_parallelflows.get_suite(),
                "parallelhinet": test_parallelhinet.get_suite(),
-               "resultorder": test_resultorder.get_suite(),
-               "process_schedule": test_process_schedule.get_suite(),
+               #"process_schedule": test_process_schedule.get_suite(),
                }
 
 def get_suite():
