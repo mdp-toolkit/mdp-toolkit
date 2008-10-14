@@ -48,10 +48,12 @@ class Switchboard(mdp.Node):
         """
         # check connections for inconsistencies
         if len(connections) == 0:
-            raise SwitchboardException("Received empty connection list.")
+            err = "Received empty connection list."
+            raise SwitchboardException(err)
         if numx.nanmax(connections) >= input_dim:
-            raise SwitchboardException("One or more switchboard connection " +
-                                       "indices exceed the input dimension.")
+            err = "One or more switchboard connection "
+            "indices exceed the input dimension."
+            raise SwitchboardException(err)
         # checks passed
         self.connections = numx.array(connections)
         output_dim = len(connections)
@@ -65,7 +67,7 @@ class Switchboard(mdp.Node):
             self.inverse_connections = None
             
     def _execute(self, x):
-        return x[:,self.connections]
+        return x[:, self.connections]
         
     def is_trainable(self): 
         return False
@@ -80,7 +82,7 @@ class Switchboard(mdp.Node):
         if self.inverse_connections is None:
             raise SwitchboardException("Connections are not invertible.")
         else:
-            return x[:,self.inverse_connections]
+            return x[:, self.inverse_connections]
     
 
 class Rectangular2dSwitchboardException(SwitchboardException):
@@ -138,29 +140,33 @@ class Rectangular2dSwitchboard(Switchboard):
         self.y_field_spacing = y_field_spacing
         ## check parameters for inconsistencies ##
         if (x_field_channels > x_in_channels):
-            raise Rectangular2dSwitchboardException("Number of field channels" +
-                    "exceeds the number of input channels in x-direction. " +
-                    "This would lead to an empty connection list.")
+            err = "Number of field channels"
+            "exceeds the number of input channels in x-direction. "
+            "This would lead to an empty connection list."
+            raise Rectangular2dSwitchboardException(err)
         if (y_field_channels > y_in_channels):
-            raise Rectangular2dSwitchboardException("Number of field channels" +
-                    "exceeds the number of input channels in y-direction. " +
-                    "This would lead to an empty connection list.")
+            err = "Number of field channels"
+            "exceeds the number of input channels in y-direction. "
+            "This would lead to an empty connection list."
+            raise Rectangular2dSwitchboardException(err)
         # number of output channels in x-direction
-        self.x_out_channels = \
-            (x_in_channels - x_field_channels) // x_field_spacing + 1
+        self.x_out_channels = ((x_in_channels - x_field_channels) //
+                               x_field_spacing + 1)
         if (((x_in_channels - x_field_channels) < 0 or
              (x_in_channels - x_field_channels) % x_field_spacing)
              and not ignore_cover):
-            raise Rectangular2dSwitchboardException("Channel fields do not " + 
-                                    "cover all input channels in x-direction.")
+            err = "Channel fields do not "
+            "cover all input channels in x-direction."
+            raise Rectangular2dSwitchboardException(err)
         # number of output channels in y-direction                       
-        self.y_out_channels = \
-            (y_in_channels - y_field_channels) // y_field_spacing + 1
+        self.y_out_channels = ((y_in_channels - y_field_channels) //
+                               y_field_spacing + 1)
         if (((y_in_channels - y_field_channels) < 0 or
              (y_in_channels - y_field_channels) % y_field_spacing)
              and not ignore_cover):
-            raise Rectangular2dSwitchboardException("Channel fields do not " + 
-                                    "cover all input channels in y-direction.")
+            err = "Channel fields do not "
+            "cover all input channels in y-direction."
+            raise Rectangular2dSwitchboardException(err)
         ## end of parameters checks ##
         self.output_channels = self.x_out_channels * self.y_out_channels
         input_dim = self.in_channels * in_channel_dim
@@ -179,21 +185,21 @@ class Rectangular2dSwitchboard(Switchboard):
                 # inner loop over perceptive field
                 x_start_chan = x_out_chan * x_field_spacing
                 y_start_chan = y_out_chan * y_field_spacing
-                base_out_con = \
-                    self.out_trans.image_to_index(x_out_chan, y_out_chan) \
-                    * self.out_channel_dim
+                base_out_con = (self.out_trans.image_to_index(x_out_chan,
+                                                              y_out_chan)
+                                * self.out_channel_dim)
                 for ix, x_in_chan in enumerate(range(x_start_chan, 
                                                x_start_chan+x_field_channels)):
                     for iy, y_in_chan in enumerate(range(y_start_chan, 
                                                y_start_chan+y_field_channels)):
                         # array index of the first input connection 
                         # for this input channel
-                        first_in_con = \
-                            self.in_trans.image_to_index(x_in_chan, y_in_chan) \
-                            * self.in_channel_dim
-                        field_out_con = \
-                            self.field_trans.image_to_index(ix, iy) \
-                            * self.in_channel_dim
+                        first_in_con = (self.in_trans.image_to_index(x_in_chan,
+                                                                     y_in_chan)
+                                        * self.in_channel_dim)
+                        field_out_con = (self.field_trans.image_to_index(ix,
+                                                                         iy)
+                                         * self.in_channel_dim)
                         first_out_con = base_out_con + field_out_con
                         connections[first_out_con : first_out_con +
                                     in_channel_dim] \

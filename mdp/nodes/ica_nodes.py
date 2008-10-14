@@ -6,7 +6,7 @@ numx, numx_rand, numx_linalg = mdp.numx, mdp.numx_rand, mdp.numx_linalg
 utils = mdp.utils
 mult = utils.mult
 
-class ProjectMatrix(object):
+class ProjectMatrixMixin(object):
     def get_projmatrix(self, transposed=1):
         """Return the projection matrix."""
         self._if_training_stop_training()
@@ -36,7 +36,7 @@ class ProjectMatrix(object):
             return T
         return T.T
 
-class ICANode(mdp.Cumulator, mdp.Node, ProjectMatrix):
+class ICANode(mdp.Cumulator, mdp.Node, ProjectMatrixMixin):
     """
     ICANode is a general class to handle different batch-mode algorithm for
     Independent Component Analysis. More information about ICA can be found
@@ -915,7 +915,7 @@ class FastICANode(ICANode):
         return ret
 
 
-class TDSEPNode(ISFANode, ProjectMatrix):
+class TDSEPNode(ISFANode, ProjectMatrixMixin):
     """Perform Independent Component Analysis using the TDSEP algorithm.
     Note that TDSEP, as implemented in this Node, is an online algorithm,
     i.e. it is suited to be trained on huge data sets, provided that the

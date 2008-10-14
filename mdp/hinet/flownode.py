@@ -1,6 +1,4 @@
-
 import mdp
-from mdp import numx
 
 
 class FlowNode(mdp.Node):

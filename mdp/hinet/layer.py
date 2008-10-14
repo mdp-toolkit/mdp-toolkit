@@ -150,8 +150,8 @@ class Layer(mdp.Node):
             out_stop += node.output_dim
             in_start = in_stop
             in_stop += node.input_dim
-            result[:, out_start : out_stop] = \
-                 node.execute(x[:, in_start : in_stop])
+            result[:, out_start:out_stop] = node.execute(x[:,
+                                                           in_start:in_stop])
         return result
     
     def _inverse(self, x):
@@ -167,8 +167,8 @@ class Layer(mdp.Node):
             out_stop += node.input_dim
             in_start = in_stop
             in_stop += node.output_dim
-            result[:, out_start : out_stop] = \
-                 node.inverse(x[:, in_start : in_stop])
+            result[:, out_start:out_stop] = node.inverse(x[:,
+                                                           in_start:in_stop])
         return result
 
 
@@ -230,7 +230,7 @@ class SameInputLayer(Layer):
                 raise mdp.NodeException(msg)
         # TODO: use super, but somehow skip Layer
         mdp.Node.__init__(self, input_dim=input_dim, output_dim=output_dim,
-                       dtype=dtype)
+                          dtype=dtype)
                 
     def is_invertible(self):
         return False
