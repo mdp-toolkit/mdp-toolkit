@@ -55,6 +55,17 @@ class UnorderedResultContainer(ResultContainer):
         self._results = []
         return results
     
+    
+class SqrTestCallable(object):
+    """Test callable to be used where a function cannot be used.
+    
+    This is for example the case in schedulers which pickle the callable.
+    """
+    
+    def __call__(self, data):
+        """Return the squared data."""
+        return data**2
+    
 
 class Scheduler(object):
     """Base class and trivial implementation for schedulers.
@@ -83,7 +94,7 @@ class Scheduler(object):
         self.result_container = result_container
         self._copy_callable = copy_callable
         self.verbose = verbose
-        self.n_tasks_running = 0  # number of tasks that are currently running
+        self.n_open_tasks = 0  # number of tasks that are currently running
         # count the number of submitted tasks, 
         # this value is also used as task index
         self.task_counter = 0  
@@ -116,18 +127,22 @@ class Scheduler(object):
                 task_callable = self._last_callable
         else:
             self._last_callable = task_callable
-        self.n_tasks_running += 1
+        self.n_open_tasks += 1
         self.task_counter += 1
         task_index = self.task_counter
-        self.lock.release()
         self._process_task(data, task_callable, task_index)
         
     def _process_task(self, data, task_callable, task_index):
         """Process the task and store the result.
         
+        Warning: When this method is entered is has the lock, the lock must be
+        released here.
+        
         You can overwrite this method for custom schedulers.
         """ 
-        self._store_result(task_callable(data), task_index)
+        result = task_callable(data)
+        self.lock.release()
+        self._store_result(result, task_index)
         
     def set_task_callable(self, task_callable, copy_callable=None):
         """Set the callable that will be used if no task_callable is given.
@@ -152,7 +167,7 @@ class Scheduler(object):
         self.result_container.add_result(result, task_index)
         if self.verbose:
             print "    finished task no. %d" % task_index
-        self.n_tasks_running -= 1
+        self.n_open_tasks -= 1
         self.lock.release()
     
     def get_results(self):
@@ -162,7 +177,7 @@ class Scheduler(object):
         """
         while True:
             self.lock.acquire()
-            if self.n_tasks_running == 0:
+            if self.n_open_tasks == 0:
                 results = self.result_container.get_results()
                 self.lock.release()
                 return results

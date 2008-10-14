@@ -73,12 +73,12 @@ class ProcessScheduler(scheduling.Scheduler):
         """
         self.lock.acquire()
         if len(self._free_processes) < self.n_processes:
-            raise Exception("Some slave process is still working.")
+            raise Exception("some slave process is still working")
         for process in self._free_processes:
             pickle.dump("EXIT", process.stdin) 
         self.lock.release()
         
-    def add_task(self, data, task_callable=None):
+    def _process_task(self, data, task_callable, task_index):
         """Add a task, if possible without blocking.
         
         It blocks when the system is not able to start a new thread
@@ -86,17 +86,17 @@ class ProcessScheduler(scheduling.Scheduler):
         """
         task_started = False
         while not task_started:
-            self.lock.acquire()
             if not len(self._free_processes):
                 # release lock for other threads and wait
                 self.lock.release()
-                time.sleep(0.5)
+                time.sleep(1.5)
+                self.lock.acquire()
             else:
-                self.n_tasks_running += 1
                 try:
                     process = self._free_processes.pop()
                     self.lock.release()
-                    thread.start_new(self._task_thread, (task, process))
+                    thread.start_new(self._task_thread, 
+                                     (process, data, task_callable, task_index))
                     task_started = True
                 except thread.error:
                     if self.verbose:
@@ -104,25 +104,25 @@ class ProcessScheduler(scheduling.Scheduler):
                                " waiting 2 seconds...")
                     time.sleep(2)
                     
-    def _task_thread(self, task, process): 
+    def _task_thread(self, process, data, task_callable, task_index): 
         """Thread function which cares for a single task.
         
-        It picks a free process, pushes the to it via stdin, waits for the
-        result on stdout, passes the result to the result container, frees
-        the process and then exits. 
+        The task is pushed to the process via stdin, then we wait for the
+        result on stdout, pass the result to the result container, free
+        the process and exit. 
         """
         try:
             # push the task to the process
-            pickle.dump(task, process.stdin)
+            pickle.dump((data, task_callable, task_index), process.stdin)
             # wait for result to arrive
             result = pickle.load(process.stdout)
         except:
-            print "\nFailed to execute task in process!\n"
-            sys.exit()
+            traceback.print_exc()
+            self._free_processes.append(process)
+            sys.exit("failed to execute task %d in process:" % task_index)
         # store the result and clean up
-        self._store_result(result)
+        self._store_result(result, task_index)
         self._free_processes.append(process)
-        self.n_tasks_running -= 1
 
 
 def _process_run():
@@ -132,7 +132,6 @@ def _process_run():
     """
     # use sys.stdout only for pickled objects, everything else goes to stderr
     pickle_out = sys.stdout
-    # TODO: add process identifier prefix?
     sys.stdout = sys.stderr
     exit_loop = False
     while not exit_loop:
@@ -142,12 +141,12 @@ def _process_run():
             if task == "EXIT":
                 exit_loop = True
             else:
-                result = task()
+                result = task[1](task[0])
                 pickle.dump(result, pickle_out)
                 pickle_out.flush()
         except Exception, exception:
             # return the exception instead of the result
-            print "\ntask caused exception in process:\n"
+            print "task %d caused exception in process:" % task[2]
             print exception
             traceback.print_exc()
             sys.stdout.flush()

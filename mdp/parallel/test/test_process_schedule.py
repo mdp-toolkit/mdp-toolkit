@@ -1,11 +1,6 @@
 
 import unittest
 
-import os
-import sys
-import inspect
-
-import mdp
 import mdp.parallel as parallel
 from mdp import numx as n
 
@@ -22,12 +17,10 @@ class TestProcessScheduler(unittest.TestCase):
                                               n_processes=3,
                                               source_paths=None)
         for i in range(6):
-            job = parallel.TestJob(x=i)
-            scheduler.add_job(job)
+            scheduler.add_task(i, parallel.SqrTestCallable())
         results = scheduler.get_results()
         scheduler.cleanup()
         # check result
-        results.sort()
         results = n.array(results)
         self.assertTrue(n.all(results == n.array([0,1,4,9,16,25])))
         

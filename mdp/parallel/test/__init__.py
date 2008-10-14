@@ -12,7 +12,7 @@ test_suites = {"schedule": test_schedule.get_suite(),
                "parallelnodes": test_parallelnodes.get_suite(),
                "parallelflows": test_parallelflows.get_suite(),
                "parallelhinet": test_parallelhinet.get_suite(),
-               #"process_schedule": test_process_schedule.get_suite(),
+               "process_schedule": test_process_schedule.get_suite(),
                }
 
 def get_suite():
