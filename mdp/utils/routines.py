@@ -24,7 +24,7 @@ def scast(scalar, dtype):
     """Convert a scalar in a 0D array of the given dtype."""
     return numx.array(scalar, dtype=dtype)
 
-def rotate(mat, angle, columns = [0, 1], units = 'radians'):
+def rotate(mat, angle, columns = (0, 1), units = 'radians'):
     """
     Rotate in-place data matrix (NxM) in the plane defined by the columns=[i,j]
     when observation are stored on rows. Observations are rotated
@@ -46,7 +46,7 @@ def rotate(mat, angle, columns = [0, 1], units = 'radians'):
     mat[:, i] = cos_*col_i - sin_*col_j
     mat[:, j] = sin_*col_i + cos_*col_j
 
-def permute(x, indices=[0, 0], rows=0, cols=1):
+def permute(x, indices=(0, 0), rows=0, cols=1):
     """Swap two columns and (or) two rows of 'x', whose indices are specified
     in indices=[i,j].
     Note: permutations are done in-place. You'll lose your original matrix"""
