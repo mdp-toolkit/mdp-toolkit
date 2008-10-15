@@ -105,7 +105,7 @@ class PCANode(Node):
         ## define the range of eigenvalues to compute
         # if the number of principal components to keep has been
         # specified directly
-        if self.output_dim >= 1:
+        if self.output_dim is not None and self.output_dim >= 1:
             # (eigenvalues sorted in ascending order)
             rng = (self.input_dim-self.output_dim+1, self.input_dim)
         # otherwise, the number of principal components to keep has been
@@ -166,7 +166,7 @@ class PCANode(Node):
         ## compute the explained variance
         # if the number of principal components to keep has been
         # specified directly
-        if self.output_dim >= 1:
+        if self.output_dim is not None and self.output_dim >= 1:
             # there is no way to tell what the explained variance is, since we
             # didn't compute all eigenvalues
             self.explained_variance = None

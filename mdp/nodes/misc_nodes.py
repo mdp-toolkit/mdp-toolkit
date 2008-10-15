@@ -493,7 +493,7 @@ class GaussianClassifierNode(Node):
             raise mdp.TrainingException(msg)
 
     def _update_covs(self, x, lbl):
-        if not self.cov_objs.has_key(lbl):
+        if lbl not in self.cov_objs:
             self.cov_objs[lbl] = utils.CovarianceMatrix(dtype=self.dtype)
         self.cov_objs[lbl].update(x)
 

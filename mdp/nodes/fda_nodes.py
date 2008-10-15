@@ -59,7 +59,7 @@ class FDANode(mdp.Node):
     # Training step 1: compute mean and number of element in each class
 
     def _update_means(self, x, lbl):
-        if not self.means.has_key(lbl):
+        if lbl not in self.means:
             self.means[lbl] = numx.zeros((1, self.input_dim),
                                          dtype=self.dtype)
             self.tlens[lbl] = 0

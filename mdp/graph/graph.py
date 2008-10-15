@@ -60,7 +60,7 @@ class GraphNode(object):
     def get_edges_in(self, from_ = None):
         """Return a copy of the list of the entering edges. If from_
         is specified, return only the nodes coming from that node."""
-        inedges = map(None, self.ein)
+        inedges = self.ein[:]
         if from_:
             inedges = [edge for edge in inedges if edge.head == from_]
         return inedges
@@ -68,7 +68,7 @@ class GraphNode(object):
     def get_edges_out(self, to_ = None):
         """Return a copy of the list of the outgoing edges. If to_
         is specified, return only the nodes going to that node."""
-        outedges = map(None, self.eout)
+        outedges = self.eout[:]
         if to_:
             outedges = [edge for edge in outedges if edge.tail == to_]
         return outedges
@@ -294,7 +294,7 @@ class Graph(object):
                 visit_fct(node)
             # add all sons to the stack (if not already visited)
             for son in neighbors_fct(node):
-                if not visited_nodes.has_key(son):
+                if son not in visited_nodes:
                     visited_nodes[son] = None
                     dfs_stack.append(son)
         
@@ -332,7 +332,7 @@ class Graph(object):
         components = []
         nodes = self.nodes
         for node in nodes:
-            if visited.has_key(node):
+            if node in visited:
                 continue
             components.append(self.undirected_dfs(node, visit_fct))
         return components
@@ -369,7 +369,7 @@ class Graph(object):
                 visit_fct(node)
             # add all sons to the queue (if not already visited)
             for son in neighbors_fct(node):
-                if not visited_nodes.has_key(son):
+                if son not in visited_nodes:
                     visited_nodes[son] = None
                     bfs_queue.append(son)
         

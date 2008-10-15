@@ -271,7 +271,7 @@ class NodesTestSuite(unittest.TestSuite):
         node_args = []
         if args is not None:
             for item in args:
-                if callable(item):
+                if hasattr(item, '__call__'):
                     node_args.append(item())
                 else:
                     node_args.append(item)

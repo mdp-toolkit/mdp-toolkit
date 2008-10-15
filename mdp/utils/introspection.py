@@ -46,7 +46,7 @@ class _Walk(object):
                                                         types.MethodType):
                 # the present member is a private member or a known
                 # type that does not support arrays as attributes
-                # ??? Note: this is a bad hack to avoid infinite
+                # Note: this is to avoid infinite
                 # recursion in python2.6. Just remove the "or type in ..."
                 # condition to see the error. There must be a better way.
                 continue

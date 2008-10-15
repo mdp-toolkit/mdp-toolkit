@@ -227,13 +227,13 @@ class RBMWithLabelsNode(RBMNode):
     """
 
     def __init__(self, hidden_dim, labels_dim, visible_dim=None, dtype=None):
-        #??? should be super(RBMWithLabelsNode), but so it does not work?
-        super(RBMNode, self).__init__(None, hidden_dim, dtype)
-
+        super(RBMWithLabelsNode, self).__init__(None, None, dtype)
+        
         self._labels_dim = labels_dim
         if visible_dim is not None:
-            self.set_input_dim(visible_dim+labels_dim)
-        
+            self.input_dim = visible_dim+labels_dim
+
+        self.output_dim = hidden_dim
         self._initialized = False
 
     def _get_supported_dtypes(self):
@@ -334,11 +334,6 @@ class RBMWithLabelsNode(RBMNode):
     def is_invertible(self):
         return False
 
-    def _secret_train(self, v, l, *args, **kwargs):
-        x = numx.concatenate((v, l), axis=1)
-        self._check_input(x)
-        self._train(self._refcast(x), *args, **kwargs)
-   
     def train(self, v, l, n_updates=1, epsilon=0.1, decay=0., momentum=0.,
               verbose=False):
         """Update the internal structures according to the visible data 'v'

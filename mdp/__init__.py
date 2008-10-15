@@ -137,11 +137,8 @@ import hinet
 from test import test
 
 # clean up namespace
-# trick to enable ipython reload
-if 'signal_node' in locals():
-    del signal_node
-if 'linear_flows' in locals():
-    del linear_flows
+del signal_node
+del linear_flows
 
 # explicitly set __all__, mainly needed for epydoc
 __all__ = ['CheckpointFlow', 'CheckpointFunction', 'CheckpointSaveFunction',

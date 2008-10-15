@@ -50,7 +50,7 @@ class LLENode(Cumulator):
                        or a float between 0.0 and 1.0
         """
 
-        if output_dim <= 1 and isinstance(output_dim, float):
+        if isinstance(output_dim, float) and output_dim <= 1:
             self.desired_variance = output_dim
             output_dim = None
         else:
