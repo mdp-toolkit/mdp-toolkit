@@ -1402,18 +1402,16 @@ class NodesTestSuite(unittest.TestSuite):
         mat = numx_fft.irfft(fmat,axis=0)
         src = mdp.sfa(mat)
         # test with unmixed signals (i.e. the node should make nothing at all)
-        out = mdp.isfa(src,
-                       lags=1,
-                       whitened=True,
-                       sfa_ica_coeff=[1.,0.])
+        out = mdp.nodes.ISFANode(lags=1,
+                                 whitened=True,
+                                 sfa_ica_coeff=[1.,0.])(src)
         max_cv = numx.diag(abs(_cov(out,src)))
         assert_array_almost_equal(max_cv, numx.ones((3,)),6)
         # mix linearly the signals
         mix = mult(src,uniform((3,3))*2-1)
-        out = mdp.isfa(mix,
-                       lags=1,
-                       whitened=False,
-                       sfa_ica_coeff=[1.,0.])
+        out = mdp.nodes.ISFANode(lags=1,
+                                 whitened=False,
+                                 sfa_ica_coeff=[1.,0.])(mix)
         max_cv = numx.diag(abs(_cov(out,src)))
         assert_array_almost_equal(max_cv, numx.ones((3,)),6)
 
@@ -1426,19 +1424,17 @@ class NodesTestSuite(unittest.TestSuite):
             fsrc[(i+1)*5000:,i] = 0.
         src = numx_fft.irfft(fsrc,axis=0)
         # enforce time-lag-1-independence
-        src = mdp.isfa(src, lags=1, sfa_ica_coeff=[1.,0.])
-        out = mdp.isfa(src,
-                       lags=1,
-                       whitened=True,
-                       sfa_ica_coeff=[0.,1.])
+        src = mdp.nodes.ISFANode(lags=1, sfa_ica_coeff=[1.,0.])(src)
+        out = mdp.nodes.ISFANode(lags=1,
+                                 whitened=True,
+                                 sfa_ica_coeff=[0.,1.])(src)
         max_cv = numx.diag(abs(_cov(out,src)))
         assert_array_almost_equal(max_cv, numx.ones((3,)),5)
         # mix linearly the signals
         mix = mult(src,uniform((3,3))*2-1)
-        out = mdp.isfa(mix,
-                       lags=1,
-                       whitened=False,
-                       sfa_ica_coeff=[0.,1.])
+        out = mdp.nodes.ISFANode(lags=1,
+                                 whitened=False,
+                                 sfa_ica_coeff=[0.,1.])(mix)
         max_cv = numx.diag(abs(_cov(out,src)))
         assert_array_almost_equal(max_cv, numx.ones((3,)),5)
 
@@ -1456,26 +1452,24 @@ class NodesTestSuite(unittest.TestSuite):
             src[:,i] /= std(src[:,i])
         # test extreme cases
         # case 1: ICA
-        out = mdp.isfa(src,
-                       lags=[1,lag],
-                       icaweights=[1.,1.],
-                       sfaweights=[1.,0.],
-                       output_dim=2,
-                       whitened=True,
-                       sfa_ica_coeff=[1E-4,1.])
+        out = mdp.nodes.ISFANode(lags=[1,lag],
+                                 icaweights=[1.,1.],
+                                 sfaweights=[1.,0.],
+                                 output_dim=2,
+                                 whitened=True,
+                                 sfa_ica_coeff=[1E-4,1.])(src)
         cv = abs(_cov(src,out))
         idx_cv = numx.argmax(cv,axis=0)
         assert_array_equal(idx_cv,[2,1])
         max_cv = numx.amax(cv,axis=0)
         assert_array_almost_equal(max_cv, numx.ones((2,)),5)
         # case 2: SFA
-        out = mdp.isfa(src,
-                       lags=[1,lag],
-                       icaweights=[1.,1.],
-                       sfaweights=[1.,0.],
-                       output_dim=2,
-                       whitened=True,
-                       sfa_ica_coeff=[1.,0.])
+        out = mdp.nodes.ISFANode(lags=[1,lag],
+                                 icaweights=[1.,1.],
+                                 sfaweights=[1.,0.],
+                                 output_dim=2,
+                                 whitened=True,
+                                 sfa_ica_coeff=[1.,0.])(src)
         cv = abs(_cov(src,out))
         idx_cv = numx.argmax(cv,axis=0)
         assert_array_equal(idx_cv,[2,0])

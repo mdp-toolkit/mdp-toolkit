@@ -125,9 +125,7 @@ from linear_flows import (Flow, CheckpointFlow,
                           CheckpointFunction, CheckpointSaveFunction)
 
 # import helper functions:
-from helper_funcs import (pca, whitening, fastica, cubica, sfa, get_eta,
-                          sfa2, factor_analysis, isfa)
-
+from helper_funcs import pca, whitening, fastica, sfa, get_eta
 
 # import our modules
 import nodes
@@ -146,10 +144,8 @@ __all__ = ['CheckpointFlow', 'CheckpointFunction', 'CheckpointSaveFunction',
            'FlowExceptionCR', 'IsNotInvertibleException',
            'IsNotTrainableException', 'MDPException', 'MDPWarning', 'Node',
            'NodeException', 'TrainingException', 'TrainingFinishedException',
-           'contrib', 'cubica', 'factor_analysis', 'fastica', 'get_eta',
-           'graph', 'helper_funcs', 'hinet', 'isfa', 'nodes', 
-           'numx_description', 
-           'pca', 'sfa', 'sfa2', 'test', 'utils', 'whitening']
+           'contrib', 'get_eta', 'graph', 'helper_funcs', 'hinet', 'nodes', 
+           'numx_description', 'pca', 'sfa', 'test', 'utils', 'whitening']
 
 __version__ = '2.4'
 __authors__ = 'Pietro Berkes, Niko Wilbert, and Tiziano Zito'

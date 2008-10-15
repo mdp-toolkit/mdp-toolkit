@@ -1,6 +1,12 @@
 # inspired by some code by Nathan Denny (1999)
 # see http://www.ece.arizona.edu/~denny/python_nest/graph_lib_1.0.1.html
 
+try:
+    # use reduce against BDFL's will even on python > 2.6
+    from functools import reduce
+except ImportError:
+    pass
+    
 class GraphException(Exception):
     """Base class for exception in the graph package."""
     pass

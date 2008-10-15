@@ -86,7 +86,7 @@ def dig_node(x):
         if len(ar.shape) == 0:
             size = 1
         else:
-            size = reduce(lambda x, y: x*y, ar.shape)
+            size = mdp.numx.prod(ar.shape)
         bytes = ar.itemsize*size
         arrays[name] = (bytes, ar)
     return arrays, _format_dig(arrays)
