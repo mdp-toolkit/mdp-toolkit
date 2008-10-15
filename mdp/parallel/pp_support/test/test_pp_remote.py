@@ -24,7 +24,7 @@ class TestRemotePPScheduler(unittest.TestCase):
                                     timeout=60, 
                                     source_paths=sys_paths, 
                                     remote_python_executable=python_executable,
-                                    verbose=True)
+                                    verbose=False)
         # process jobs
         for i in range(30):
             scheduler.add_task(i, parallel.SqrTestCallable())

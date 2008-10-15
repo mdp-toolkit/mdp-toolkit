@@ -4,10 +4,10 @@ Adapter for the Parallel Python library (http://www.parallelpython.com).
 
 import sys
 import os
+import inspect
 import logging
 
 if __name__ == "__main__":
-    import inspect
     module_file = os.path.abspath(inspect.getfile(sys._getframe(0)))
     module_path = os.path.dirname(module_file)
     sys.path.append(module_path.split("mdp")[0])
@@ -145,14 +145,17 @@ class NetworkPPScheduler(PPScheduler):
         if temp_filename is not None:
             self.temp_filename = temp_filename
         else:
-            self.temp_filename = (source_paths[0] + "/parallel/pp_support/" + 
-                                  SLAVES_TEMPFILE)
+            # store the tmp file in this dir so that the kill script works
+            module_file = os.path.abspath(inspect.getfile(sys._getframe(0)))
+            module_path = os.path.dirname(module_file) 
+            self.temp_filename = os.path.join(module_path, SLAVES_TEMPFILE)
         self._secret = secret
         self._slave_nice = nice
         self._timeout = timeout
         self._source_paths = source_paths
         self._python_executable = remote_python_executable
-        self._script_path = source_paths[0] + "/parallel/pp_support/"
+        module_file = os.path.abspath(inspect.getfile(sys._getframe(0)))
+        self._script_path = os.path.dirname(module_file)
         # start ppserver
         self._start_slaves()
         ppslaves = tuple(["%s:%d" % (address, self._port) 
