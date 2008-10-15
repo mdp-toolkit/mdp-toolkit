@@ -40,7 +40,7 @@ class FlowTrainCallable(scheduling.TaskCallable):
                 return node
             
     def copy(self):
-        return FlowTrainCallable(self._flownode.copy())
+        return self.__class__(self._flownode.copy())
             
 
 class NodeResultContainer(scheduling.ResultContainer):
@@ -92,6 +92,9 @@ class FlowExecuteCallable(scheduling.TaskCallable):
         """
         return self._flow.execute(x)
     
+    def copy(self):
+        return self.__class__(self._flownode.copy())
+    
 
 ### Standard Helper Functions ###    
 
@@ -112,7 +115,7 @@ def train_parallelflow(flow, data_iterators, scheduler=None, checkpoints=None,
         flow.parallel_train(data_iterators, 
                             train_callable_class=train_callable_class)
     while flow.is_parallel_training():
-        if scheduler == None:
+        if scheduler is None:
             scheduler = scheduling.Scheduler(
                                         result_container=NodeResultContainer(),
                                         copy_callable=True)
@@ -221,10 +224,14 @@ class ParallelFlow(mdp.Flow):
             By using a different class you can implement data transformations 
             (e.g. from 8 bit image to 64 bit double precision.
         """
+        if self.is_parallel_training():
+            err = "Parallel training is already underway."
+            raise ParallelFlowException(err)
+        self._train_callable_class = train_callable_class
         if isinstance(data_iterators, n.ndarray):
-            self.train(self, data_iterators)
+            task_callable = self._train_callable_class(self._flownode)
+            task_callable(data_iterators)
         else:
-            self._train_callable_class = train_callable_class
             self._train_data_iters = self._train_check_iterators(data_iterators)
             self._i_train_node = 0
             self._next_train_phase()
@@ -257,13 +264,11 @@ class ParallelFlow(mdp.Flow):
                            "node no. %d in parallel flow" % 
                            (self._i_train_node+1))
                 data_iterator = self._train_data_iters[self._i_train_node]
+                task_callable = self._train_callable_class(self._flownode)   
                 for x in data_iterator:
-                    if (type(x) is tuple) or (type(x) is list):
-                        arg = x[1:]
-                        x = x[0]
-                    else:
-                        arg = ()
-                    self._flownode.train(x, *arg)
+                    # Note: if x contains additional args assume that the
+                    # callable can handle this  
+                    task_callable(x)
                 if self.verbose:
                     print ("finished local training phase of " + 
                            "node no. %d in parallel flow" % 
@@ -285,7 +290,7 @@ class ParallelFlow(mdp.Flow):
                     raise ParallelFlowException(err)
                 # first task contains the new callable
                 self._next_task = (task_data_chunk,
-                                self._train_callable_class(self._flownode.fork()))
+                            self._train_callable_class(self._flownode.fork()))
                 break
         else:
             # training is finished
@@ -326,10 +331,11 @@ class ParallelFlow(mdp.Flow):
         """
         if self.is_parallel_training():
             raise ParallelFlowException("Parallel training is underway.")
+        self._execute_callable_class = execute_callable_class
         if isinstance(iterator, n.ndarray):
-            return self.execute(self, iterator)
+            task_callable = self._execute_callable_class(self._flownode)   
+            return task_callable(iterator)
         else:
-            self._execute_callable_class = execute_callable_class
             self._exec_data_iter = iterator.__iter__()
             task_data_chunk = self._create_execute_task()[0]
             if task_data_chunk is None:

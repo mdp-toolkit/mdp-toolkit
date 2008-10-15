@@ -117,7 +117,9 @@ class Scheduler(object):
         self.task_counter = 0  
         self.lock = thread.allocate()  # general lock for this class
         self._last_callable = None  # last callable is stored
-    
+        # task index of the _last_callable, can be *.5 if updated between tasks
+        self._last_callable_index = -1.0
+           
     def add_task(self, data, task_callable=None):
         """Add a task to be executed.
         
@@ -138,15 +140,14 @@ class Scheduler(object):
             if self._last_callable is None:
                 raise Exception("No task_callable specified and " + 
                                 "no previous callable available.")
-            if self.copy_callable is True:
-                task_callable = self._last_callable.copy()
-            else:
-                task_callable = self._last_callable
-        else:
-            self._last_callable = task_callable
         self.n_open_tasks += 1
         self.task_counter += 1
         task_index = self.task_counter
+        if task_callable is None:
+            task_callable = self._last_callable
+        else: 
+            self._last_callable = task_callable
+            self._last_callable_index = self.task_counter
         self._process_task(data, task_callable, task_index)
         
     def _process_task(self, data, task_callable, task_index):
@@ -155,8 +156,13 @@ class Scheduler(object):
         Warning: When this method is entered is has the lock, the lock must be
         released here.
         
+        If task_callable is not none this signals that a new task_callable
+        was 
+        
         You can overwrite this method for custom schedulers.
-        """ 
+        """
+        if (self.copy_callable and task_index > self._last_callable_index):
+            task_callable = task_callable.copy()
         result = task_callable(data)
         self.lock.release()
         self._store_result(result, task_index)
@@ -169,9 +175,12 @@ class Scheduler(object):
         copy_callable -- New value for the copy switch, if None (default value)
             the value is not changed.
         """
+        self.lock.acquire()
         self._last_callable = task_callable
+        self._last_callable_index = self.task_counter + 0.5
         if copy_callable is not None:
             self.copy_callable = copy_callable
+        self.lock.release()
         
     def _store_result(self, result, task_index):
         """Store a result in the internal result container.
