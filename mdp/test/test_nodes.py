@@ -30,6 +30,46 @@ testtypes = [numx.dtype('d'), numx.dtype('f')]
 testtypeschar = [t.char for t in testtypes]
 testdecimals = {testtypes[0]: 12, testtypes[1]: 6}
 
+
+class _BogusNode(mdp.Node):
+    def is_trainable(self): return 0
+    def _execute(self,x): return 2*x
+    def _inverse(self,x): return 0.5*x
+
+class _BogusNodeTrainable(mdp.Node):
+    def _train(self, x):        
+        pass
+    def _stop_training(self):
+        self.bogus_attr = 1
+    
+class _BogusExceptNode(mdp.Node):
+    def _train(self,x):
+        self.bogus_attr = 1
+        raise Exception, "Bogus Exception"
+    
+    def _execute(self,x):
+        raise Exception, "Bogus Exception"
+
+class _BogusMultiNode(mdp.Node):
+
+    def __init__(self):
+        super(_BogusMultiNode, self).__init__()
+        self.visited = []
+    
+    def _get_train_seq(self):
+        return [(self.train1, self.stop1),
+                (self.train2, self.stop2)]
+
+    def train1(self, x):
+        self.visited.append(1)
+    def stop1(self):
+        self.visited.append(2)
+    def train2(self, x):
+        self.visited.append(3)
+    def stop2(self):
+        self.visited.append(4)
+
+
 def _rand_labels(x):
     return numx.around(uniform(x.shape[0]))
 
@@ -54,9 +94,9 @@ def _cov(x,y=None):
     #return mult(numx.transpose(x),y)/(x.shape[0]-1)
     return mult(numx.transpose(x),y)/(x.shape[0])
 
-_spinner = itertools.cycle((' /\b\b', ' -\b\b', ' \\\b\b', ' |\b\b'))
-#_spinner = itertools.cycle((' .\b\b', ' o\b\b', ' 0\b\b', ' O\b\b',
-#                            ' 0\b\b', ' o\b\b'))
+#_spinner = itertools.cycle((' /\b\b', ' -\b\b', ' \\\b\b', ' |\b\b'))
+_spinner = itertools.cycle((' .\b\b', ' o\b\b', ' 0\b\b', ' O\b\b',
+                            ' 0\b\b', ' o\b\b'))
 
 # create spinner
 def spinner():
@@ -376,6 +416,30 @@ class NodesTestSuite(unittest.TestSuite):
         copy_node.dummy_attr[0] = 10
         assert generic_node.dummy_attr != copy_node.dummy_attr,\
                'Node save (file) method did not work'
+
+    def testNode_multiple_training_phases(self):
+        x = uniform(size=self.mat_dim)
+        node = _BogusMultiNode()
+        phases = node.get_remaining_train_phase()
+        for i in range(phases):
+            assert node.get_current_train_phase() == i
+            assert not node._train_phase_started
+            node.train(x)
+            assert node._train_phase_started
+            node.stop_training()
+            
+        assert not node.is_training()
+        
+    def testNode_execution_without_training(self):
+        x = uniform(size=self.mat_dim)
+        # try execution without training: single train phase
+        node = _BogusNodeTrainable()
+        node.execute(x)
+        assert hasattr(node, 'bogus_attr')
+        # multiple train phases
+        node = _BogusMultiNode()
+        node.execute(x)
+        assert node.visited == [1, 2, 3, 4]
         
     def testCovarianceMatrix(self):
         mat,mix,inp = self._get_random_mix()

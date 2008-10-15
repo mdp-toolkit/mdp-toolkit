@@ -371,6 +371,16 @@ class Node(object):
     def _pre_execution_checks(self, x):
         """This method contains all pre-execution checks.
         It can be used when a subclass defines multiple execution methods."""
+
+        # if training has not started yet, assume we want to train the node
+        if (self.get_current_train_phase() == 0 and
+            not self._train_phase_started):
+            while True:
+                self.train(x)
+                if self.get_remaining_train_phase() > 1:
+                    self.stop_training()
+                else:
+                    break
         
         self._if_training_stop_training()
         
