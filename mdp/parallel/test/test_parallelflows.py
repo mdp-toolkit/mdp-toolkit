@@ -4,9 +4,9 @@ import unittest
 import mdp
 import mdp.parallel as parallel
 from mdp import numx as n
-# TODO: use proper import from MDP
-import numpy.testing as testing_tools
 
+
+# TODO: add test for proper copying
 
 class TestParallelFlows(unittest.TestCase):
 
@@ -16,27 +16,16 @@ class TestParallelFlows(unittest.TestCase):
                             parallel.ParallelSFANode(output_dim=5),
                             mdp.nodes.PolynomialExpansionNode(degree=3),
                             parallel.ParallelSFANode(output_dim=20)])
-        data_generators = [n.random.random((6,20,10)), 
-                           None, 
-                           n.random.random((6,20,10))]
-        flow.parallel_train(data_generators)
-        while flow.is_parallel_training():
-            results = []
-            while flow.task_available():
-                task = flow.get_task()
-                results.append(task[1](task[0]))
-            flow.use_results(results)
+        data_iterables = [n.random.random((6,20,10)), 
+                          None, 
+                          n.random.random((6,20,10))]
+        parallel.train_parallelflow(flow, data_iterables)
         # test execution
         x = n.random.random([100,10])
         flow.execute(x)
         # parallel execution
         data = [n.random.random((20,10)) for _ in range(6)]
-        flow.parallel_execute(data)
-        results = []
-        while flow.task_available():
-            task = flow.get_task()
-            results.append(task[1](task[0]))
-        flow.use_results(results)
+        parallel.execute_parallelflow(flow, data)
         
     def test_multiphase(self):
         """Test parallel training and execution for nodes with multiple
@@ -49,27 +38,16 @@ class TestParallelFlows(unittest.TestCase):
                             flownode,
                             mdp.nodes.PolynomialExpansionNode(degree=2),
                             parallel.ParallelSFANode(output_dim=5)])
-        data_generators = [n.random.random((6,30,10)), 
-                           None, 
-                           n.random.random((6,30,10))]
-        flow.parallel_train(data_generators)
-        while flow.is_parallel_training():
-            results = []
-            while flow.task_available():
-                task = flow.get_task()
-                results.append(task[1](task[0]))
-            flow.use_results(results)
+        data_iterables = [n.random.random((6,30,10)), 
+                          None, 
+                          n.random.random((6,30,10))]
+        parallel.train_parallelflow(flow, data_iterables)
         # test execution
         x = n.random.random([100,10])
         flow.execute(x)
         # parallel execution
         data = [n.random.random((20,10)) for _ in range(6)]
-        flow.parallel_execute(data)
-        results = []
-        while flow.task_available():
-            task = flow.get_task()
-            results.append(task[1](task[0]))
-        flow.use_results(results)
+        parallel.execute_parallelflow(flow, data)
     
     def test_firstnode(self):
         """Test special case in which the first node is untrainable.
@@ -79,15 +57,9 @@ class TestParallelFlows(unittest.TestCase):
         flow = parallel.ParallelFlow([
                             mdp.nodes.PolynomialExpansionNode(degree=2),
                             parallel.ParallelSFANode(output_dim=20)])
-        data_generators = [None, 
+        data_iterables = [None, 
                            n.random.random((6,20,10))]
-        flow.parallel_train(data_generators)
-        while flow.is_parallel_training():
-            results = []
-            while flow.task_available():
-                task = flow.get_task()
-                results.append(task[1](task[0]))
-            flow.use_results(results)
+        parallel.train_parallelflow(flow, data_iterables)
             
     def test_multiphase_checkpoints(self):
         """Test parallel checkpoint flow."""
@@ -98,17 +70,12 @@ class TestParallelFlows(unittest.TestCase):
                             flownode,
                             mdp.nodes.PolynomialExpansionNode(degree=2),
                             parallel.ParallelSFANode(output_dim=5)])
-        data_generators = [n.random.random((6,30,10)), 
+        data_iterables = [n.random.random((6,30,10)), 
                            None, 
                            n.random.random((6,30,10))]
         checkpoint = mdp.CheckpointFunction()
-        flow.parallel_train(data_generators, checkpoints=checkpoint)
-        while flow.is_parallel_training():
-            results = []
-            while flow.task_available():
-                task = flow.get_task()
-                results.append(task[1](task[0]))
-            flow.use_results(results)
+        parallel.train_parallelflow(flow, data_iterables, 
+                                    checkpoints=checkpoint)
             
     def test_nonparallel1(self):
         """Test training for mixture of parallel and non-parallel nodes."""
@@ -119,16 +86,10 @@ class TestParallelFlows(unittest.TestCase):
                             flownode,
                             mdp.nodes.PolynomialExpansionNode(degree=2),
                             parallel.ParallelSFANode(output_dim=5)])
-        data_generators = [n.random.random((6,30,10)), 
-                           None, 
-                           n.random.random((6,30,10))]
-        flow.parallel_train(data_generators)
-        while flow.is_parallel_training():
-            results = []
-            while flow.task_available():
-                task = flow.get_task()
-                results.append(task[1](task[0]))
-            flow.use_results(results)
+        data_iterables = [n.random.random((6,30,10)), 
+                          None, 
+                          n.random.random((6,30,10))]
+        parallel.train_parallelflow(flow, data_iterables)
         # test execution
         x = n.random.random([100,10])
         flow.execute(x)
@@ -142,16 +103,10 @@ class TestParallelFlows(unittest.TestCase):
                             flownode,
                             mdp.nodes.PolynomialExpansionNode(degree=2),
                             parallel.ParallelSFANode(output_dim=5)])
-        data_generators = [n.random.random((6,30,10)), 
-                           None, 
-                           n.random.random((6,30,10))]
-        flow.parallel_train(data_generators)
-        while flow.is_parallel_training():
-            results = []
-            while flow.task_available():
-                task = flow.get_task()
-                results.append(task[1](task[0]))
-            flow.use_results(results)
+        data_iterables = [n.random.random((6,30,10)), 
+                          None, 
+                          n.random.random((6,30,10))]
+        parallel.train_parallelflow(flow, data_iterables)
         # test execution
         x = n.random.random([100,10])
         flow.execute(x)

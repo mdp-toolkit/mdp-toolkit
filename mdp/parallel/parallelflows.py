@@ -1,12 +1,7 @@
 """
 Module for parallel MDP flows, which handle the tasks.
 
-Corresponding classes for task and ResultContainer are derived. Node that
-ParallelFlow training depends on these classes and their specific arguments and 
-output values.
-
-A ParallelFlowNode is used to simplify the forking process and to encapsulate 
-the flow in the task.
+Corresponding classes for task callables and ResultContainer are derived.
 """
 
 import mdp
@@ -17,10 +12,14 @@ import scheduling
 import parallelhinet
 
 
-### Train task Classes ###
+### Train task classes ###
 
-class FlowTrainCallable(object):
-    """Implements a single training phase in a flow for a data block."""
+class FlowTrainCallable(scheduling.TaskCallable):
+    """Implements a single training phase in a flow for a data block.
+    
+    A ParallelFlowNode is used to simplify the forking process and to 
+    encapsulate the flow.
+    """
 
     def __init__(self, flownode):
         """Store everything for the training.
@@ -39,6 +38,9 @@ class FlowTrainCallable(object):
         for node in self._flownode._flow:
             if node.is_training():
                 return node
+            
+    def copy(self):
+        return FlowTrainCallable(self._flownode.copy())
             
 
 class NodeResultContainer(scheduling.ResultContainer):
@@ -64,9 +66,9 @@ class NodeResultContainer(scheduling.ResultContainer):
         return [node,]
     
 
-### Execute task Classes ###
+### Execute task classes ###
 
-class FlowExecuteCallable(object):
+class FlowExecuteCallable(scheduling.TaskCallable):
     """Implements data execution through the whole flow.
     
     Note that one could also pass the flow itself as the callable, so this 
@@ -105,14 +107,18 @@ def train_parallelflow(flow, data_iterators, scheduler=None, checkpoints=None,
     """
     if checkpoints:
         flow.parallel_train(data_iterators, checkpoints, 
-                            train_task_class=train_callable_class)
+                            train_callable_class=train_callable_class)
     else:    
         flow.parallel_train(data_iterators, 
                             train_callable_class=train_callable_class)
     while flow.is_parallel_training():
         if scheduler == None:
             scheduler = scheduling.Scheduler(
-                                        result_container=NodeResultContainer())
+                                        result_container=NodeResultContainer(),
+                                        copy_callable=True)
+        if not scheduler.copy_callable:
+            err = "copy_callable should be True in scheduler during training"
+            raise Exception(err)
         while flow.task_available():
             task = flow.get_task()
             scheduler.add_task(*task)
@@ -132,7 +138,7 @@ def execute_parallelflow(flow, data_iterator, scheduler=None,
     If no scheduler is provided the tasks will be run locally.
     """
     flow.parallel_execute(data_iterator, 
-                          execute_task_class=execute_callable_class)
+                          execute_callable_class=execute_callable_class)
     if scheduler == None:
         scheduler = scheduling.Scheduler()
     while flow.task_available():
@@ -188,8 +194,8 @@ class ParallelFlow(mdp.Flow):
         # also signals if parallel execution is underway
         self._exec_data_iter = None  
         self._next_task = None  # buffer for next task
-        self._train_task_class = None
-        self._execute_task_class = None
+        self._train_callable_class = None
+        self._execute_callable_class = None
         
     def train(self, *args, **kwargs):
         """Non-parallel training as in standard flow.
@@ -218,7 +224,7 @@ class ParallelFlow(mdp.Flow):
         if isinstance(data_iterators, n.ndarray):
             self.train(self, data_iterators)
         else:
-            self._train_task_class = train_callable_class
+            self._train_callable_class = train_callable_class
             self._train_data_iters = self._train_check_iterators(data_iterators)
             self._i_train_node = 0
             self._next_train_phase()
@@ -239,6 +245,7 @@ class ParallelFlow(mdp.Flow):
                 self._i_train_node += 1
                 continue
             try:
+                # test if node can be forked
                 if isinstance(self.flow[self._i_train_node], 
                               parallelnodes.ParallelNode):
                     self._flownode.fork()
@@ -272,7 +279,13 @@ class ParallelFlow(mdp.Flow):
                            (self._i_train_node+1))
                 self._train_data_iter = iter(
                                     self._train_data_iters[self._i_train_node])
-                self._next_task = self._create_train_task()
+                task_data_chunk = self._create_train_task()[0]
+                if task_data_chunk is None:
+                    err = "Training data iterator is empty."
+                    raise ParallelFlowException(err)
+                # first task contains the new callable
+                self._next_task = (task_data_chunk,
+                                self._train_callable_class(self._flownode.fork()))
                 break
         else:
             # training is finished
@@ -280,14 +293,13 @@ class ParallelFlow(mdp.Flow):
             self._train_data_iters = None
             
     def _create_train_task(self):
-        """Create and return a single training task.
+        """Create and return a single training task without callable.
         
         Returns None if data iterator end is reached.
-        Raises NoTaskException if none are available.
+        Raises NoTaskException if any other problem arises.
         """
         try:
-            return (self._train_data_iter.next(),
-                    self._train_task_class(self._flownode.fork()))
+            return (self._train_data_iter.next(), None)
         except StopIteration:
             return None
         else:
@@ -317,9 +329,16 @@ class ParallelFlow(mdp.Flow):
         if isinstance(iterator, n.ndarray):
             return self.execute(self, iterator)
         else:
-            self._execute_task_class = execute_callable_class
+            self._execute_callable_class = execute_callable_class
             self._exec_data_iter = iterator.__iter__()
-            self._next_task = self._create_execute_task()
+            task_data_chunk = self._create_execute_task()[0]
+            if task_data_chunk is None:
+                err = "Execution data iterator is empty."
+                raise ParallelFlowException(err)
+            # first task contains the new callable
+            self._next_task = (task_data_chunk,
+                            self._execute_callable_class(mdp.Flow(self.flow)))
+            
         
     def _create_execute_task(self):
         """Create and return a single execution task.
@@ -328,8 +347,7 @@ class ParallelFlow(mdp.Flow):
         Raises NoTaskException if none is available.
         """
         try:
-            return (self._exec_data_iter.next(),
-                    self._execute_task_class(mdp.Flow(self.flow)))
+            return (self._exec_data_iter.next(), None)
         except StopIteration:
             return None
         else:
@@ -343,11 +361,11 @@ class ParallelFlow(mdp.Flow):
         training / execution is done. If no tasks are available a NoTaskException 
         is raised.
         """
-        if self._next_task != None:
+        if self._next_task is not None:
             task = self._next_task
-            if self._i_train_node != None:
+            if self._i_train_node is not None:
                 self._next_task = self._create_train_task()
-            elif self._exec_data_iter != None:
+            elif self._exec_data_iter is not None:
                 self._next_task = self._create_execute_task()
             else:
                 raise NoTaskException("No data available for execution task.")
@@ -372,10 +390,10 @@ class ParallelFlow(mdp.Flow):
     def task_available(self):
         """Return True if tasks are available, otherwise False.
         
-        If false is returned this can indiciate that results are needed to
+        If false is returned this can indicate that results are needed to
         continue training.   
         """
-        if self._next_task != None:
+        if self._next_task is not None:
             return True
         else:
             return False

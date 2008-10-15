@@ -4,6 +4,7 @@ This module contains the basic classes for task execution via a scheduler.
 
 import thread
 import time
+import copy
 
 
 class ResultContainer(object):
@@ -17,7 +18,23 @@ class ResultContainer(object):
         """Return results and reset container."""
         pass
     
-class OrderedResultContainer(ResultContainer):
+
+class ListResultContainer(ResultContainer):
+    
+    def __init__(self):
+        super(ListResultContainer, self).__init__()
+        self._results = []
+        
+    def add_result(self, result, task_index):
+        self._results.append(result)
+        
+    def get_results(self):
+        results = self._results
+        self._results = []
+        return results
+    
+    
+class OrderedResultContainer(ListResultContainer):
     """Default result container.
     
      list. Note that the order of the results may be different
@@ -27,7 +44,6 @@ class OrderedResultContainer(ResultContainer):
     
     def __init__(self):
         super(OrderedResultContainer, self).__init__()
-        self._results = []
         
     def add_result(self, result, task_index):
         self._results.append((result, task_index))
@@ -40,23 +56,23 @@ class OrderedResultContainer(ResultContainer):
         results.sort(compare_marker)
         return zip(*results)[0]
     
-
-class UnorderedResultContainer(ResultContainer):
     
-    def __init__(self):
-        super(UnorderedResultContainer, self).__init__()
-        self._results = []
+class TaskCallable(object):
+    """Abstract base class for callables."""
+    
+    def __call__(self, data):
+        return data
+    
+    def copy(self):
+        """Create a copy of this callable.
         
-    def add_result(self, result, task_index):
-        self._results.append(result)
-        
-    def get_results(self):
-        results = self._results
-        self._results = []
-        return results
+        This is required if copy_callable is set to True in the scheduler (e.g. 
+        if caching is used during training of a flow).
+        """
+        return copy.deepcopy(self)
     
     
-class SqrTestCallable(object):
+class SqrTestCallable(TaskCallable):
     """Test callable to be used where a function cannot be used.
     
     This is for example the case in schedulers which pickle the callable.
@@ -87,12 +103,13 @@ class Scheduler(object):
             is used).
         copy_callable -- If True and if a default callable is used then it will 
             be copied before beeing called (default value is False).
+            Note that the callable must have a copu
         verbose -- If True then status messages will be printed to sys.stdout.
         """
         if result_container is None:
             result_container = OrderedResultContainer()
         self.result_container = result_container
-        self._copy_callable = copy_callable
+        self.copy_callable = copy_callable
         self.verbose = verbose
         self.n_open_tasks = 0  # number of tasks that are currently running
         # count the number of submitted tasks, 
@@ -121,7 +138,7 @@ class Scheduler(object):
             if self._last_callable is None:
                 raise Exception("No task_callable specified and " + 
                                 "no previous callable available.")
-            if self._copy_callable is True:
+            if self.copy_callable is True:
                 task_callable = self._last_callable.copy()
             else:
                 task_callable = self._last_callable
@@ -154,7 +171,7 @@ class Scheduler(object):
         """
         self._last_callable = task_callable
         if copy_callable is not None:
-            self._copy_callable = copy_callable
+            self.copy_callable = copy_callable
         
     def _store_result(self, result, task_index):
         """Store a result in the internal result container.

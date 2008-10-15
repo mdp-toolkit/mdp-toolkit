@@ -27,8 +27,9 @@ have to know anything about flows or nodes.
 # TODO: hardwire order option in scheduler? use n_jobs as job index
 
 
-from scheduling import (ResultContainer, OrderedResultContainer, 
-                        UnorderedResultContainer, SqrTestCallable, Scheduler)
+from scheduling import (ResultContainer, ListResultContainer,
+                        OrderedResultContainer, TaskCallable, SqrTestCallable, 
+                        Scheduler)
 from process_schedule import ProcessScheduler
 from parallelnodes import (ParallelNode, TrainingPhaseNotParallelException,
                            ParallelPCANode, ParallelWhiteningNode,
