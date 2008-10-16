@@ -34,7 +34,7 @@ MDP 2.4 x.x.x:
 
 MDP 2.3 15.5.2008:
 
-- offer 'gemm' interface and use it in the nodes
+- DONE offer 'gemm' interface and use it in the nodes
 - fix 'fftpack' calls in benchmarks and tests
 - check weird Segmentation Fault in testRoundOffWarningCovMatrix with type='g'
   (it's probably a numpy.dot bug)
