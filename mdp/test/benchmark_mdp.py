@@ -7,10 +7,7 @@ from mdp.utils import matmult as mult
 
 numx = mdp.numx
 numx_rand = mdp.numx_rand
-# !!! scipy.fft seems to be extremely slow, this is a workaround until
-# !!! it's fixed
-import numpy.fft as numx_fft
-#numx_fft = mdp.numx_fft
+numx_fft = mdp.numx_fft
 
 ####### benchmark function
 
