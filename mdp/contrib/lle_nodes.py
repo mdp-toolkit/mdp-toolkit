@@ -1,5 +1,7 @@
-from mdp import numx, numx_linalg, Cumulator, TrainingException
+from mdp import numx, numx_linalg, numx_rand, utils, \
+    Node, Cumulator, TrainingException, MDPWarning
 from mdp.utils import mult, symeig, nongeneral_svd
+import warnings as _warnings
 
 # some useful functions
 sqrt = numx.sqrt
@@ -7,7 +9,7 @@ sqrt = numx.sqrt
 # search XXX for locations where future work is needed
 
 #########################################################
-#  Hessian LLE
+#  Locally Linear Embedding
 #########################################################
 
 class LLENode(Cumulator):
@@ -25,7 +27,7 @@ class LLENode(Cumulator):
     Linear Embedding' by L. Saul and S. Roewis, using improvements
     suggested in 'Locally Linear Embedding for Classification' by
     D. deRidder and R.P.W. Duin.
-
+    
     Python implementation by:
       Jake Vanderplas, University of Washington
       vanderplas@astro.washington.edu
@@ -67,7 +69,7 @@ class LLENode(Cumulator):
         return ['float32', 'float64']
 
     def _stop_training(self):
-        super(LLENode, self)._stop_training()
+        Cumulator._stop_training(self)
 
         if self.verbose:
             msg = ('training LLE on %i points' 
@@ -86,8 +88,8 @@ class LLENode(Cumulator):
         Q_diag_idx = numx.arange(k)
 
         if k > N:
-            err = ('LLENode: k=%i must be less than or ' 
-                   'equal to number of training points N=%i' % (k,N))
+            err = ('k=%i must be less than or ' 
+                   'equal to number of training points N=%i' % (k, N))
             raise TrainingException(err)
  
         # determines number of output dimensions: if desired_variance
@@ -124,7 +126,7 @@ class LLENode(Cumulator):
                 #  find k nearest neighbors
                 # -----------------------------------------------
                 M_Mi = M-M[row]
-                nbrs = numx.argsort( (M_Mi**2).sum(1) )[1:k+1]
+                nbrs = numx.argsort((M_Mi**2).sum(1))[1:k+1]
                 M_Mi = M_Mi[nbrs]
                 # compute covariance matrix of distances
                 Q = mult(M_Mi, M_Mi.T)
@@ -142,7 +144,7 @@ class LLENode(Cumulator):
                 if learn_outdim:
                     sig2 = sig2s[row, :]
                 else:
-                    sig2 = (numx_linalg.svd(M_Mi, compute_uv=0))**2
+                    sig2 = utils.svd(M_Mi, compute_uv=0)**2
                 r = numx.sum(sig2[self.output_dim:])
                 Q[Q_diag_idx, Q_diag_idx] += r
             else:
@@ -154,6 +156,7 @@ class LLENode(Cumulator):
                 
             #solve for weight
             # weight is w such that sum(Q_ij * w_j) = 1 for all i
+            # XXX refcast is due to numpy bug: floats become double
             w = self._refcast(numx_linalg.solve(Q, numx.ones(k)))
             w /= w.sum()
 
@@ -223,7 +226,7 @@ class LLENode(Cumulator):
             #   use this to compute intrinsic dimensionality
             #   at this point
             #-----------------------------------------------
-            sig2 = (numx_linalg.svd(M_Mi, compute_uv=0))**2
+            sig2 = (utils.svd(M_Mi, compute_uv=0))**2
             sig2s[row, :] = sig2
 
             #-----------------------------------------------
@@ -273,7 +276,7 @@ class LLENode(Cumulator):
             #find corrected covariance matrix Q
             Q = mult(M_xi, M_xi.T)
             if r is None and k > d_out:
-                sig2 = (numx_linalg.svd(M_xi, compute_uv=0))**2
+                sig2 = (utils.svd(M_xi, compute_uv=0))**2
                 r = numx.sum(sig2[d_out:])
                 Q[Q_diag_idx, Q_diag_idx] += r
             if r is not None:
@@ -299,6 +302,20 @@ class LLENode(Cumulator):
 #########################################################
 
 
+# Modified Gram-Schmidt
+def _mgs(a):
+    m, n = a.shape
+    v = a.copy()
+    r = numx.zeros((n, n))
+    for i in range(n):
+        r[i,i] = numx_linalg.norm(v[:,i])
+        v[:,i] = v[:,i]/r[i,i]
+        for j in range(i+1, n):
+            r[i,j] = mult(v[:,i], v[:,j])
+            v[:,j] = v[:,j] - r[i,j]*v[:,i]
+    # q is v
+    return v, r
+
 class HLLENode(LLENode):
     """Perform a Hessian Locally Linear Embedding analysis on the data
     
@@ -308,7 +325,9 @@ class HLLENode(LLENode):
       self.training_projection : the HLLE projection of the training data
                                  (defined when training finishes)
 
-      self.k : number of nearest neighbors to use
+      self.k : number of nearest neighbors to use; we recommend to
+               choose k>=1 + output_dim + output_dim*(output_dim+1)/2,
+               so that one can use a more efficient computing method
 
       self.desired_variance : variance limit used to compute
                              intrinsic dimensionality
@@ -335,85 +354,119 @@ class HLLENode(LLENode):
     #  projections for new points using the LLE framework.
     #----------------------------------------------------
     
-    def __init__(self, k=None, input_dim=None, output_dim=None,
-                 dtype=None, use_svd=True):
-        self.use_svd = use_svd
-        super(HLLENode, self).__init__(k, input_dim, output_dim, dtype)
+    def __init__(self, k, r=None, svd=False, verbose=False,
+                 input_dim=None, output_dim=None, dtype=None):
+        LLENode.__init__(self, k, r, svd, verbose,
+                         input_dim, output_dim, dtype)
 
     def _stop_training(self):
-        M = self.training_data
+        Cumulator._stop_training(self)
+        
+        k = self.k
+        M = self.data
+        N = M.shape[0]
+        
+        if k > N:
+            err = ('k=%i must be less than'
+                   ' or equal to number of training points N=%i' % (k, N))
+            raise TrainingException(err)
         
         if self.verbose:
             print 'performing HLLE on %i points in %i dimensions...' % M.shape
 
-        self._adjust_output_dim()
-        k = self.k
+        # determines number of output dimensions: if desired_variance
+        # is specified, we need to learn it from the data. Otherwise,
+        # it's easy
+        learn_outdim = False
+        if self.output_dim is None:
+            if self.desired_variance is None:
+                self.output_dim = self.input_dim
+            else:
+                learn_outdim = True
+
+        # determine number of output dims, precalculate useful stuff
+        if learn_outdim:
+            Qs, sig2s, nbrss = self._adjust_output_dim()
+
         d_out = self.output_dim
         d_in = self.input_dim
-        N = M.shape[0]
-        
-        if k > N:
-            err = ('HLLENode: k=%i must be less than'
-                   ' or equal to number of training points N=%i' % (k, N))
-            raise TrainingException(err)
 
         #dp = d_out + (d_out-1) + (d_out-2) + ...
         dp = d_out*(d_out+1)/2
 
+        if min(k,N) <= d_out:
+            err = ('k=%i and n=%i (number of input data points) must be'
+                   ' larger than output_dim=%i' % (k, N, d_out))
+            raise TrainingException(err)
+        
+        if k < 1+d_out+dp:
+            wrn = ('The number of neighbours, k=%i, is smaller than'
+                   ' 1 + output_dim + output_dim*(output_dim+1)/2 = %i,'
+                   ' which might result in unstable results.'
+                   % (k, 1+d_out+dp))
+            _warnings.warn(wrn, MDPWarning)
+
         #build the weight matrix
-        #XXX future work:
         #XXX   for faster implementation, W should be a sparse matrix
-        W = numx.asmatrix( numx.zeros((N, dp*N)) )
+        W = numx.zeros((N, dp*N), dtype=self.dtype)
 
         if self.verbose:
             print ' - constructing [%i x %i] weight matrix...' % W.shape
 
         for row in range(N):
-            #-----------------------------------------------
-            #  find k nearest neighbors
-            #-----------------------------------------------
-            M_Mi = M-M[row]
-            nbrs = numx.argsort( (M_Mi**2).sum(1) )[1:k+1]
+            if learn_outdim:
+                nbrs = nbrss[row,:]
+            else:
+                # -----------------------------------------------
+                #  find k nearest neighbors
+                # -----------------------------------------------
+                M_Mi = M-M[row]
+                nbrs = numx.argsort((M_Mi**2).sum(1))[1:k+1]
 
             #-----------------------------------------------
             #  center the neighborhood using the mean
             #-----------------------------------------------
-            nbrhd = M[nbrs]
+            nbrhd = M[nbrs] # this makes a copy
             nbrhd -= nbrhd.mean(0)
 
             #-----------------------------------------------
             #  compute local coordinates
             #   using a singular value decomposition
             #-----------------------------------------------
-            U, sig, VT = numx_linalg.svd(nbrhd, full_matrices=0)
-            nbrhd = numx.asmatrix( U.T[:d_out] )
+            U, sig, VT = utils.svd(nbrhd)
+            nbrhd = U.T[:d_out]
             del VT
-
+            
             #-----------------------------------------------
             #  build Hessian estimator
             #-----------------------------------------------
-            Yi = numx.asmatrix(numx.zeros([dp, k]))
+            Yi = numx.zeros((dp, k), dtype=self.dtype)
             ct = 0
-        
             for i in range(d_out):
-                for j in range(i, d_out):
-                    Yi[ct] = numx.multiply( nbrhd[i], nbrhd[j] )
-                    ct += 1
-            Yi = numx.concatenate( [numx.ones((1, k)), nbrhd, Yi], 0 )
-
+                Yi[ct:ct+d_out-i,:] = nbrhd[i] * nbrhd[i:,:]
+                ct += d_out-i
+            Yi = numx.concatenate([numx.ones((1, k), dtype=self.dtype),
+                                   nbrhd, Yi], 0)
+            
             #-----------------------------------------------
             #  orthogonalize linear and quadratic forms
             #   with QR factorization
             #  and make the weights sum to 1
             #-----------------------------------------------
-            Q, R = numx_linalg.qr(Yi.T)
-            w = numx.asarray(Q[:, d_out+1:])
+            if k >= 1+d_out+dp:
+                Q, R = numx_linalg.qr(Yi.T)
+                w = Q[:,d_out+1:d_out+1+dp]
+            else:
+                q, r = _mgs(Yi.T)
+                w = q[:,-dp:]
+            
             S = w.sum(0) #sum along columns
-
             #if S[i] is too small, set it equal to 1.0
             # this prevents weights from blowing up
             S[numx.where(numx.absolute(S)<1E-4)] = 1.0
-            W[ nbrs , row*dp:(row+1)*dp ] = w / S
+            #print w.shape, S.shape, (w/S).shape
+            #print W[nbrs, row*dp:(row+1)*dp].shape
+            W[nbrs, row*dp:(row+1)*dp] = w / S
 
         #-----------------------------------------------
         # To find the null space, we want the
@@ -431,50 +484,145 @@ class HLLENode(LLENode):
         #XXX   of a sparse matrix will significantly increase the speed
         #XXX   of the next step
         
-        #Fast, but memory intensive
-        if self.use_svd:
-            U, sig, VT = numx_linalg.svd(W, full_matrices=0)
-            del VT
-            del W
-            indices = numx.argsort(sig)[1:d_out+1]
-            Y = U[:, indices] * numx.sqrt(N)
-            
-        #Slower, but uses less memory
+        if self.svd:
+            sig, U = nongeneral_svd(W.T, range=(2, d_out+1))
+            Y = U*numx.sqrt(N)         
         else:
-            C = W*W.T
-            del W
-            sig2, V = numx_linalg.eigh(C)
-            del C
-            indices = numx.argsort(sig)[1:d_out+1]
-            Y = V[:, indices] * numx.sqrt(N)
+            WW = mult(W, W.T)
+            # regularizes the eigenvalues, does not change the eigenvectors:
+            W_diag_idx = numx.arange(N)
+            WW[W_diag_idx, W_diag_idx] += 0.01
+            sig, U = symeig(WW, range=(2, self.output_dim+1), overwrite=True)            
+            Y = U*numx.sqrt(N)
+            del WW
+        del W
 
         #-----------------------------------------------
         # Normalize Y
+        #
+        # Alternative way to do it:
         #  we need R = (Y.T*Y)^(-1/2)
-        #   do this with an SVD of Y
+        #   do this with an SVD of Y            del VT
+
         #      Y = U*sig*V.T
         #      Y.T*Y = (V*sig.T*U.T) * (U*sig*V.T)
         #            = V * (sig*sig.T) * V.T
         #            = V * sig^2 V.T
         #   so
         #      R = V * sig^-1 * V.T
+        # The code is:
+        #    U, sig, VT = utils.svd(Y)
+        #    del U
+        #    S = numx.diag(sig**-1)
+        #    self.training_projection = mult(Y, mult(VT.T, mult(S, VT)))
         #-----------------------------------------------
         if self.verbose:
-            print ' - normalizing null space via SVD...'
+            print ' - normalizing null space...'
 
-        #Fast, but memory intensive
-        if self.use_svd:
-            U, sig, VT = numx_linalg.svd(Y, full_matrices=0)
-            del VT
-            S = numx.asmatrix(numx.diag(sig**-1))
-            self.training_projection = numx.asarray(U * S * U.T * Y)
+        C = utils.sqrtm(mult(Y.T, Y))
+        self.training_projection = mult(Y, C)
 
-        #Slower, but uses less memory
-        else:
-            C = Y.T*Y
-            sig2, U = numx_linalg.eigh(C)
-            U = U[:, ::-1] #eigenvectors should be in descending order
-            sig2 = sig2[::-1]
-            S = numx.asmatrix(numx.diag( (1.0*sig2)**-1.5))
-            self.training_projection = numx.asarray(Y * U * S * U.T * C)
+from mdp import numx, numx_linalg, numx_rand
+from mdp.utils import mult, symeig, nongeneral_svd
+import pylab
+from matplotlib import ticker, axes3d
+
+
+
+#################################################
+# Testing Functions
+#################################################
+
+def S(theta):
+    """
+    returns x,y
+      a 2-dimensional S-shaped function
+      for theta ranging from 0 to 1
+    """
+    t = 3*numx.pi * (theta-0.5)
+    x = numx.sin(t)
+    y = numx.sign(t)*(numx.cos(t)-1)
+    return x,y
+
+def rand_on_S(N,sig=0,hole=False):
+    t = numx_rand.random(N)
+    x,z = S(t)
+    y = numx_rand.random(N)*5.0
+    if sig:
+        x += numx_rand.normal(scale=sig,size=N)
+        y += numx_rand.normal(scale=sig,size=N)
+        z += numx_rand.normal(scale=sig,size=N)
+    if hole:
+        indices = numx.where( ((0.3>t) | (0.7<t)) | ((1.0>y) | (4.0<y)) )
+        #indices = numx.where( (0.3>t) | ((1.0>y) | (4.0<y)) )
+        return x[indices],y[indices],z[indices],t[indices]
+    else:
+        return x,y,z,t
+
+def scatter_2D(x,y,t=None,cmap=pylab.cm.jet):
+    #fig = pylab.figure()
+    pylab.subplot(212)
+    if t==None:
+        pylab.scatter(x,y)
+    else:
+        pylab.scatter(x,y,c=t,cmap=cmap)
+
+    pylab.xlabel('x')
+    pylab.ylabel('y')
+
+
+def scatter_3D(x,y,z,t=None,cmap=pylab.cm.jet):
+    fig = pylab.figure
+
+    if t==None:
+        ax.scatter3D(x,y,z)
+    else:
+        ax.scatter3D(x,y,z,c=t,cmap=cmap)
+
+    if x.min()>-2 and x.max()<2:
+        ax.set_xlim(-2,2)
     
+    ax.set_xlabel('x')
+    ax.set_ylabel('y')
+    ax.set_zlabel('z')
+    
+    # elev, az
+    ax.view_init(10, -80)
+
+
+def runtest1(N=1000,k=15,r=None,sig=0,output_dim=0.9,hole=False,type='LLE',svd=False):
+    #generate data
+    x,y,z,t = rand_on_S(N,sig,hole=hole)
+    data = numx.asarray([x,y,z]).T
+
+    #train LLE and find projection
+    if type=='HLLE':
+        LN = HLLENode(k=k, output_dim=output_dim, verbose=True, svd=False)
+    else:
+        LN = LLENode(k=k, r=r, output_dim=output_dim, verbose=True, svd=True)
+    LN.train(data)
+    LN.stop_training()
+    projection = LN.training_projection
+    #projection = LN.execute(data)
+
+    #plot input in 3D
+    fig = pylab.figure(1, figsize=(6,8))
+    pylab.clf()
+    ax = axes3d.Axes3D(fig,rect=[0,0.5,1,0.5])
+    ax.scatter3D(x,y,z,c=t,cmap=pylab.cm.jet)
+    ax.set_xlim(-2,2)
+    ax.view_init(10, -80)
+
+    #plot projection in 2D
+    pylab.subplot(212)
+    pylab.scatter(projection[:,0],\
+                  projection[:,1],\
+                  c=t,cmap=pylab.cm.jet)
+
+#######################################
+#  Run Tests
+#######################################
+if __name__ == '__main__':
+    #runtest1(N=5000,k=12,sig=0,output_dim=2,hole=False,type='HLLE')
+    runtest1(N=500,k=7,sig=0,output_dim=2,hole=True,type='HLLE')
+    pylab.show()
