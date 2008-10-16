@@ -56,7 +56,7 @@ class TestParallelLayer(unittest.TestCase):
     """Tests for TestParallelLayer."""
 
     def test_layer(self):
-        """Simple random test with two nodes."""
+        """Test Simple random test with two nodes."""
         node1 = parallel.ParallelSFANode(input_dim=10, output_dim=5)
         node2 = parallel.ParallelSFANode(input_dim=17, output_dim=3)
         node3 = parallel.ParallelSFANode(input_dim=3, output_dim=1)

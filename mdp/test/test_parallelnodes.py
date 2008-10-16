@@ -11,6 +11,7 @@ import numpy.testing as testing_tools
 class TestParallelMDPNodes(unittest.TestCase):
     
     def test_PCANode(self):
+        """Test Parallel PCANode"""
         precision = 10
         x = n.random.random([100,10])
         x_test = n.random.random([20,10])
@@ -35,6 +36,7 @@ class TestParallelMDPNodes(unittest.TestCase):
         testing_tools.assert_array_almost_equal(y1, y2, precision)
         
     def test_WhiteningNode(self):
+        """Test Parallel WhiteningNode"""
         precision = 10
         x = n.random.random([100,10])
         x_test = n.random.random([20,10])
@@ -59,6 +61,7 @@ class TestParallelMDPNodes(unittest.TestCase):
         testing_tools.assert_array_almost_equal(y1, y2, precision)
 
     def test_SFANode(self):
+        """Test Parallel SFANode"""
         precision = 10
         x = n.random.random([100,10])
         x_test = n.random.random([20,10])
@@ -83,6 +86,7 @@ class TestParallelMDPNodes(unittest.TestCase):
         testing_tools.assert_array_almost_equal(y1, y2, precision)
         
     def test_SFA2Node(self):
+        """Test Parallel SFA2Node"""
         precision = 10
         x = n.random.random([100,10])
         x_test = n.random.random([20,10])
