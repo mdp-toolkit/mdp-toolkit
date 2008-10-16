@@ -2,7 +2,8 @@
 """
 
 import mdp
-from mdp.utils import symeig, mult
+from mdp.utils import symeig
+from mdp.utils import matmult as mult
 
 numx = mdp.numx
 numx_rand = mdp.numx_rand
@@ -19,7 +20,7 @@ def matmult_c_MDP_benchmark(dim):
     First argument matrix dimensionality"""
     a = numx_rand.random((dim,dim))
     b = numx_rand.random((dim,dim))
-    out = mdp.utils.mult(a,b)
+    out = mult(a,b)
 
 def matmult_c_scipy_benchmark(dim):
     """    This benchmark multiplies two contiguous matrices using the
@@ -35,7 +36,7 @@ def matmult_n_MDP_benchmark(dim):
     First argument matrix dimensionality"""
     a = numx_rand.random((dim,dim)).T
     b = numx_rand.random((dim,dim)).T
-    out = mdp.utils.mult(a,b)
+    out = mult(a,b)
 
 def matmult_n_scipy_benchmark(dim):
     """    This benchmark multiplies two non-contiguous matrices using the
@@ -52,7 +53,7 @@ def matmult_cn_MDP_benchmark(dim):
     First argument matrix dimensionality"""
     a = numx_rand.random((dim,dim)).T
     b = numx_rand.random((dim,dim))
-    out = mdp.utils.mult(a,b)
+    out = mult(a,b)
 
 def matmult_cn_scipy_benchmark(dim):
     """    This benchmark multiplies a contiguous matrix with a

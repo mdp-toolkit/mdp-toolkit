@@ -20,6 +20,24 @@ except ImportError:
 # we use an alias to be able to use the wrapper for the 'gemm' Lapack
 # function in the future
 mult = _mdp.numx.dot
+matmult = mult
+
+if _mdp.numx_description == 'scipy':
+    def matmult(a,b, alpha=1.0, beta=0.0, c=None, trans_a=0, trans_b=0):
+        """Return alpha*(a*b) + beta*c.
+        a,b,c : matrices
+        alpha, beta: scalars
+        trans_a : 0 (a not transposed), 1 (a transposed),
+                  2 (a conjugate transposed)
+        trans_b : 0 (b not transposed), 1 (b transposed),
+                  2 (b conjugate transposed)
+        """
+        if c:
+            gemm,=_mdp.numx_linalg.get_blas_funcs(('gemm',),(a,b,c))
+        else:
+            gemm,=_mdp.numx_linalg.get_blas_funcs(('gemm',),(a,b))
+            
+        return gemm(alpha, a, b, beta, c, trans_a, trans_b)
 
 # workaround to numpy issues with dtype behavior:
 # 'f' is upcasted at least in the following functions
@@ -53,4 +71,4 @@ __all__ = ['CovarianceMatrix', 'DelayCovarianceMatrix',
            'hermitian', 'inv', 'mult', 'mult_diag', 'nongeneral_svd',
            'norm2', 'ordered_uniq', 'permute', 'pinv', 'progressinfo',
            'random_rot', 'refcast', 'rotate', 'scast', 'solve', 'sqrtm',
-           'svd', 'symeig', 'symrand', 'timediff', 'uniq']
+           'svd', 'symeig', 'symrand', 'timediff', 'uniq', 'matmult']
