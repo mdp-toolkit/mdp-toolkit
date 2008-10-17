@@ -43,3 +43,13 @@ del parallelnodes
 del parallelflows
 del parallelhinet
 del makeparallel
+
+__all__ = ["ResultContainer", "ListResultContainer", "OrderedResultContainer",
+           "TaskCallable", "SqrTestCallable", "Scheduler", "ProcessScheduler",
+           "ParallelNode", "TrainingPhaseNotParallelException",
+           "ParallelPCANode", "ParallelWhiteningNode", "ParallelSFANode",
+           "ParallelSFA2Node", "FlowTrainCallable", "FlowExecuteCallable",
+           "NodeResultContainer", "ParallelFlowException", "NoTaskException",
+           "ParallelFlow", "ParallelCheckpointFlow", "ParallelFlowNode",
+           "ParallelLayer", "ParallelCloneLayer", "make_flow_parallel",
+           "unmake_flow_parallel"]
