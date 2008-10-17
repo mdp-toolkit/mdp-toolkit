@@ -69,25 +69,35 @@ class FlowExceptionCR(CrashRecoveryException, FlowException):
         Exception.__init__(self, errstr)
 
 class Flow(object):
-    """A Flow consists in a linear sequence of Nodes.
-
-    The data is sent to an input node and is successively processed
-    by the following nodes on the graph. The Flow class
-    automatizes training, execution and inverse execution
-    (if defined) of the whole nodes sequence.
-    Training can be supervised and can consist of multiple phases.
+    """A 'Flow' is a sequence of nodes that are trained and executed
+    together to form a more complex algorithm.  Input data is sent to the
+    first node and is successively processed by the subsequent nodes along
+    the sequence.
     
-    Crash recovery is optionally available: in case of failure the
-    current state of the flow is saved for later inspection.
-
-    This class is a Python container class. Most of the builtin 'list'
-    methods are available."""
+    Using a flow as opposed to handling manually a set of nodes has a
+    clear advantage: The general flow implementation automatizes the
+    training (including supervised training and multiple training phases),
+    execution, and inverse execution (if defined) of the whole sequence.
+    
+    Crash recovery is optionally available: in case of failure the current
+    state of the flow is saved for later inspection. A subclass of the
+    basic flow class ('CheckpointFlow') allows user-supplied checkpoint
+    functions to be executed at the end of each phase, for example to save
+    the internal structures of a node for later analysis.
+    Flow objects are Python containers. Most of the builtin 'list'
+    methods are available. A 'Flow' can be saved or copied using the
+    corresponding 'save' and 'copy' methods.
+    """
 
     def __init__(self, flow, crash_recovery=False, verbose=False):
         """
-        'flow' is a list of Nodes.
-        The value of 'crash_recovery' is sent to 'set_crash_recovery'.
-        If 'verbose' is set print some basic progress information."""
+        Keyword arguments:
+
+        flow -- a list of Nodes
+        crash_recovery -- set (or not) Crash Recovery Mode (save node
+                          in case a failure)
+        verbose -- if True, print some basic progress information
+        """
         self._check_nodes_consistency(flow)
         self.flow = flow
         self.verbose = verbose
@@ -247,13 +257,13 @@ class Flow(object):
         If instead one array is specified, it is used as input training
         sequence for all nodes.
         
-        Instead of a data array x the iterators can also return a list or
-        tuple, where the first entry is x and the following are args for the
+        Instead of a data array 'x' the iterators can also return a list or
+        tuple, where the first entry is 'x' and the following are args for the
         training of the node (e.g. for supervised training). 
 
         Generator-type iterators are supported only for nodes with
         a single training phase (this is because they cannot be
-        restarted after they expired).
+        reset after they expired).
         """
 
         data_iterators = self._train_check_iterators(data_iterators)
@@ -288,8 +298,8 @@ class Flow(object):
         Alternatively, one can specify one data array as input.
         
         If 'nodenr' is specified, the flow is executed only up to
-        node nr. 'nodenr'.
-        This is equivalent to 'flow[:nodenr+1](iterator)'."""
+        node nr. 'nodenr'. This is equivalent to 'flow[:nodenr+1](iterator)'.
+        """
         # if iterator is one single input sequence
         if isinstance(iterator, numx.ndarray):
             return self._execute_seq(iterator, nodenr)
@@ -501,13 +511,17 @@ class CheckpointFlow(Flow):
     def train(self, data_iterators, checkpoints):
         """Train all trainable nodes in the flow.
 
-        Additionally calls the checkpoint function 'checkpoint[i]'
-        when the training phase of node #i is over.
+        In addition to the basic behavior (see 'Node.train'), calls the
+        checkpoint function 'checkpoint[i]' when the training phase of node #i
+        is over.
+        
         A checkpoint function takes as its only argument the trained node.
         If the checkpoint function returns a dictionary, its content is
-        added to the instance's dictionary.
+        added to the instance dictionary.
+        
         The class CheckpointFunction can be used to define user-supplied
-        checkpoint functions"""
+        checkpoint functions.
+        """
 
         data_iterators = self._train_check_iterators(data_iterators)
         checkpoints = self._train_check_checkpoints(checkpoints)
@@ -528,7 +542,8 @@ class CheckpointFlow(Flow):
         self._close_last_node()
 
 class CheckpointFunction(object):
-    """Base class for checkpoint functions.    
+    """Base class for checkpoint functions.
+    
     This class can be subclassed to build objects to be used as a checkpoint
     function in a CheckpointFlow. Such objects would allow to define parameters
     for the function and save informations for later use."""

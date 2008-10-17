@@ -125,31 +125,37 @@ class NodeMetaclass(type):
         return type.__new__(mcs, classname, bases, members)
 
 class Node(object):
-    """
-    Node is the basic unit in MDP and it represents a data processing
-    element, like for example a learning algorithm, a filter, a
-    visualization step, etc. Each Node can have one or more training
-    phases, during which the internal structures are learned from training
-    data (e.g. the weights of a neural network are adapted or the
-    covariance matrix is estimated) and an execution phase, where new data
-    can be processed forwards (by processing the data through the node) or
-    backwards (by applying the inverse of the transformation computed by
-    the node if defined). The Node class is designed to make the
-    implementation of new algorithms easy and intuitive, for example by
-    setting automatically input and output dimension and by casting the
-    data to match the numerical type (e.g. float or double) of the
-    internal structures. Node was designed to be applied to arbitrarily
-    long sets of data: the internal structures can be updated
-    incrementally by sending chunks of the input data (this is equivalent
-    to online learning if the chunks consists of single observations, or
-    to batch learning if the whole data is sent in a single chunk).
+    """A 'Node' is the basic building block of an MDP application.
+
+    It represents a data processing element, like for example a learning
+    algorithm, a data filter, or a visualization step.
+    Each node can have one or more training phases, during which the
+    internal structures are learned from training data (e.g. the weights
+    of a neural network are adapted or the covariance matrix is estimated)
+    and an execution phase, where new data can be processed forwards (by
+    processing the data through the node) or backwards (by applying the
+    inverse of the transformation computed by the node if defined).
+
+    Nodes have been designed to be applied to arbitrarily long sets of data:
+    if the underlying algorithms supports it, the internal structures can
+    be updated incrementally by sending multiple batches of data (this is
+    equivalent to online learning if the chunks consists of single
+    observations, or to batch learning if the whole data is sent in a
+    single chunk). It is thus possible to perform computations on amounts
+    of data that would not fit into memory or to generate data on-the-fly.
+
+    A 'Node' also defines some utility methods, like for example
+    'copy' and 'save', that return an exact copy of a node and save it
+    in a file, respectively. Additional methods may be present, depending
+    on the algorithm.
 
     Node subclasses should take care of overwriting (if necessary)
     the functions is_trainable, _train, _stop_training, _execute,
     is_invertible, _inverse, _get_train_seq, and _get_supported_dtypes.
     If you need to overwrite the getters and setters of the
     node's properties refer to the docstring of get/set_input_dim,
-    get/set_output_dim, and get/set_dtype."""
+    get/set_output_dim, and get/set_dtype.
+    """
 
     __metaclass__ = NodeMetaclass
 
@@ -158,8 +164,9 @@ class Node(object):
         unspecified, they will be set when the 'train' or 'execute'
         method is called for the first time.
         If dtype is unspecified, it will be inherited from the data
-        it receives at the first call of 'train' or 'execute'. Every subclass
-        must take care of up- or down-casting the internal
+        it receives at the first call of 'train' or 'execute'.
+
+        Every subclass must take care of up- or down-casting the internal
         structures to match this argument (use _refcast private
         method when possible).
         """
@@ -194,6 +201,7 @@ class Node(object):
 
     def set_input_dim(self, n):
         """Set input dimensions.
+        
         Perform sanity checks and then calls self._set_input_dim(n), which
         is responsible for setting the internal attribute self._input_dim.
         Note that subclasses should overwrite self._set_input_dim
@@ -579,9 +587,13 @@ class Node(object):
             flh.close()
 
 class Cumulator(Node):
-    """A Cumulator is a Node whose training phase simply cumulates
-    all input data.
-    In this way it is possible to easily implement batch-mode learning.
+    """A Cumulator is a Node whose training phase simply collects
+    all input data. In this way it is possible to easily implement
+    batch-mode learning.
+
+    The data is accessible in the attribute 'self.data' after
+    the beginning of the '_stop_training' phase. 'self.tlen' contains
+    the number of data points collected.
     """
 
     def __init__(self, input_dim = None, output_dim = None, dtype = None):
