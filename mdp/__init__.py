@@ -135,12 +135,12 @@ import hinet
 from test import test
 
 # clean up namespace
-#del signal_node
-#del linear_flows
+del signal_node
+del linear_flows
 
 # explicitly set __all__, mainly needed for epydoc
 __all__ = ['CheckpointFlow', 'CheckpointFunction', 'CheckpointSaveFunction',
-#           'CrashRecoveryException', 'Cumulator', 'Flow', 'FlowException',
+           'CrashRecoveryException', 'Cumulator', 'Flow', 'FlowException',
            'FlowExceptionCR', 'IsNotInvertibleException',
            'IsNotTrainableException', 'MDPException', 'MDPWarning', 'Node',
            'NodeException', 'TrainingException', 'TrainingFinishedException',
