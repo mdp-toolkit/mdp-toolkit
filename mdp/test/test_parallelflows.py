@@ -19,13 +19,14 @@ class TestParallelFlows(unittest.TestCase):
         data_iterables = [n.random.random((6,20,10)), 
                           None, 
                           n.random.random((6,20,10))]
-        parallel.train_parallelflow(flow, data_iterables)
+        scheduler = parallel.Scheduler()
+        flow.train(data_iterables, scheduler=scheduler)
         # test execution
         x = n.random.random([100,10])
         flow.execute(x)
         # parallel execution
-        data = [n.random.random((20,10)) for _ in range(6)]
-        parallel.execute_parallelflow(flow, data)
+        iterable = [n.random.random((20,10)) for _ in range(6)]
+        flow.execute(iterable, scheduler=scheduler)
         
     def test_multiphase(self):
         """Test parallel training and execution for nodes with multiple
@@ -41,13 +42,14 @@ class TestParallelFlows(unittest.TestCase):
         data_iterables = [n.random.random((6,30,10)), 
                           None, 
                           n.random.random((6,30,10))]
-        parallel.train_parallelflow(flow, data_iterables)
-        # test execution
+        scheduler = parallel.Scheduler()
+        flow.train(data_iterables, scheduler=scheduler)
+        # test normal execution
         x = n.random.random([100,10])
         flow.execute(x)
         # parallel execution
-        data = [n.random.random((20,10)) for _ in range(6)]
-        parallel.execute_parallelflow(flow, data)
+        iterable = [n.random.random((20,10)) for _ in range(6)]
+        flow.execute(iterable, scheduler=scheduler)
     
     def test_firstnode(self):
         """Test special case in which the first node is untrainable.
@@ -59,7 +61,8 @@ class TestParallelFlows(unittest.TestCase):
                             parallel.ParallelSFANode(output_dim=20)])
         data_iterables = [None, 
                            n.random.random((6,20,10))]
-        parallel.train_parallelflow(flow, data_iterables)
+        scheduler = parallel.Scheduler()
+        flow.train(data_iterables, scheduler=scheduler)
             
     def test_multiphase_checkpoints(self):
         """Test parallel checkpoint flow."""
@@ -74,8 +77,8 @@ class TestParallelFlows(unittest.TestCase):
                            None, 
                            n.random.random((6,30,10))]
         checkpoint = mdp.CheckpointFunction()
-        parallel.train_parallelflow(flow, data_iterables, 
-                                    checkpoints=checkpoint)
+        scheduler = parallel.Scheduler()
+        flow.train(data_iterables, scheduler=scheduler, checkpoints=checkpoint) 
             
     def test_nonparallel1(self):
         """Test training for mixture of parallel and non-parallel nodes."""
@@ -89,7 +92,8 @@ class TestParallelFlows(unittest.TestCase):
         data_iterables = [n.random.random((6,30,10)), 
                           None, 
                           n.random.random((6,30,10))]
-        parallel.train_parallelflow(flow, data_iterables)
+        scheduler = parallel.Scheduler()
+        flow.train(data_iterables, scheduler=scheduler)
         # test execution
         x = n.random.random([100,10])
         flow.execute(x)
@@ -106,7 +110,8 @@ class TestParallelFlows(unittest.TestCase):
         data_iterables = [n.random.random((6,30,10)), 
                           None, 
                           n.random.random((6,30,10))]
-        parallel.train_parallelflow(flow, data_iterables)
+        scheduler = parallel.Scheduler()
+        flow.train(data_iterables, scheduler=scheduler)
         # test execution
         x = n.random.random([100,10])
         flow.execute(x)
@@ -116,9 +121,10 @@ class TestParallelFlows(unittest.TestCase):
         sfa_node = mdp.nodes.SFANode(input_dim=10, output_dim=8)
         sfa2_node = mdp.nodes.SFA2Node(input_dim=8, output_dim=6)
         flow = parallel.ParallelFlow([sfa_node, sfa2_node])
-        data_generators = [n.random.random((6,30,10)), 
+        data_iterables = [n.random.random((6,30,10)), 
                            n.random.random((6,30,10))]
-        flow.parallel_train(data_generators)
+        scheduler = parallel.Scheduler()
+        flow.train(data_iterables, scheduler=scheduler)
         while flow.is_parallel_training():
             results = []
             while flow.task_available():

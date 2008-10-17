@@ -48,8 +48,10 @@ class TestParallelFlowNode(unittest.TestCase):
         sfa_layer = parallel.ParallelCloneLayer(flownode, 
                                                 switchboard.output_channels)
         flow = parallel.ParallelFlow([switchboard, sfa_layer])
-        train_gen = n.random.random((3, 10, 100*100))
-        parallel.train_parallelflow(flow, [None, train_gen])
+        data_iterables = [None,
+                          n.random.random((3, 10, 100*100))]
+        scheduler = parallel.Scheduler()
+        flow.train(data_iterables, scheduler=scheduler)
         
         
 class TestParallelLayer(unittest.TestCase):
@@ -62,8 +64,9 @@ class TestParallelLayer(unittest.TestCase):
         node3 = parallel.ParallelSFANode(input_dim=3, output_dim=1)
         layer = parallel.ParallelLayer([node1, node2, node3])
         flow = parallel.ParallelFlow([layer])
-        train_gen = n.random.random((3, 10, 30))
-        parallel.train_parallelflow(flow, [train_gen])
+        data_iterables = [n.random.random((3, 10, 30))]
+        scheduler = parallel.Scheduler()
+        flow.train(data_iterables, scheduler=scheduler)
 
 
 def get_suite(testname=None):

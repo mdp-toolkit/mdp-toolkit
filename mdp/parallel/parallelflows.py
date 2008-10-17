@@ -1,5 +1,5 @@
 """
-Module for parallel MDP flows, which handle the tasks.
+Module for parallel MDP flows, which handles the tasks creation.
 
 Corresponding classes for task callables and ResultContainer are derived.
 """
@@ -19,6 +19,8 @@ class FlowTrainCallable(scheduling.TaskCallable):
     
     A ParallelFlowNode is used to simplify the forking process and to 
     encapsulate the flow.
+    
+    You can also derive from this class to define your own callable class. 
     """
 
     def __init__(self, flownode):
@@ -74,82 +76,29 @@ class FlowExecuteCallable(scheduling.TaskCallable):
     Note that one could also pass the flow itself as the callable, so this 
     class is not really needed. However, it serves as the base class for more
     more complicated callables, e.g. which do some kind of preprocessing before
-    executing the data with the flow. 
+    executing the data with the flow.
     """
 
-    def __init__(self, flow):
+    def __init__(self, flow, nodenr=None):
         """Store everything for the execution.
         
         keyword arguments:
         flow -- _flow for the execution
+        nodenr -- nodenr argument for the flow execute method
         """
         self._flow = flow
+        self._nodenr = nodenr
     
     def __call__(self, x):
         """Return the execution result.
         
         x -- data chunk
         """
-        return self._flow.execute(x)
+        return self._flow.execute(x, nodenr=self._nodenr)
     
     def copy(self):
-        return self.__class__(self._flownode.copy())
+        return self.__class__(self._flow.copy())
     
-
-### Standard Helper Functions ###    
-
-def train_parallelflow(flow, data_iterators, scheduler=None, checkpoints=None,
-                       train_callable_class=FlowTrainCallable):
-    """Train a parallel flow via the provided scheduler.
-    
-    The scheduler can use the NodeResultContainer to save memory.
-    If no scheduler is provided the tasks will be run locally using the
-    simple default scheduler.
-    
-    Nodes which are not derived from ParallelNode are directly trained here.
-    """
-    if checkpoints:
-        flow.parallel_train(data_iterators, checkpoints, 
-                            train_callable_class=train_callable_class)
-    else:    
-        flow.parallel_train(data_iterators, 
-                            train_callable_class=train_callable_class)
-    while flow.is_parallel_training():
-        if scheduler is None:
-            scheduler = scheduling.Scheduler(
-                                        result_container=NodeResultContainer(),
-                                        copy_callable=True)
-        if not scheduler.copy_callable:
-            err = "copy_callable should be True in scheduler during training"
-            raise Exception(err)
-        while flow.task_available():
-            task = flow.get_task()
-            scheduler.add_task(*task)
-        results = scheduler.get_results()
-        if results == []:
-            raise Exception("Could not get any training tasks or results " +
-                            "for the current training phase.")
-        else:
-            flow.use_results(results)
-
-
-def execute_parallelflow(flow, data_iterator, scheduler=None, 
-                         execute_callable_class=FlowExecuteCallable):
-    """Execute a parallel flow via the provided scheduler.
-    
-    The execution results are returned in the correct order.
-    If no scheduler is provided the tasks will be run locally.
-    """
-    flow.parallel_execute(data_iterator, 
-                          execute_callable_class=execute_callable_class)
-    if scheduler == None:
-        scheduler = scheduling.Scheduler()
-    while flow.task_available():
-        task = flow.get_task()
-        scheduler.add_task(*task)
-    results = scheduler.get_results()
-    return flow.use_results(results)
-
 
 ### ParallelFlow Class ###    
 
@@ -165,6 +114,11 @@ class NoTaskException(ParallelFlowException):
 
 class ParallelFlow(mdp.Flow):
     """A parallel flow provides the tasks for parallel training.
+    
+    
+    Nodes which are not derived from ParallelNode are directly trained
+    
+    
     
     After calling train or execute with data iterators one has to pick up the
     tasks with get_task, run them and finally return the result list via
@@ -199,18 +153,73 @@ class ParallelFlow(mdp.Flow):
         self._next_task = None  # buffer for next task
         self._train_callable_class = None
         self._execute_callable_class = None
+    
+    def train(self, data_iterators, scheduler=None, 
+              train_callable_class=FlowTrainCallable,
+              overwrite_result_container=True):
+        """Train all trainable nodes in the flow.
         
-    def train(self, *args, **kwargs):
-        """Non-parallel training as in standard flow.
+        If a scheduler is provided the training will be done in parallel on the
+        scheduler.
         
-        This method checks first if parallel training is underway.
+        data_iterators -- is a list of iterators (note that a list is also
+            an iterator), which return data arrays, one for each node in the 
+            flow. If instead one array is specified, it is used as input 
+            training sequence for all nodes.
+        scheduler -- Value can be either None for normal training (default 
+            value) or a Scheduler instance for parallel training with the 
+            scheduler.
+        train_callable_class -- Class used to create training callables for the
+            scheduler. By specifying your own class you can implement data 
+            transformations before the data is actually fed into the flow 
+            (e.g. from 8 bit image to 64 bit double precision). 
+            Note that the train_callable_class is only used if a scheduler was 
+            provided. If a scheduler is provided the default class used is
+            NodeResultContainer.
+        overwrite_result_container -- If set to True (default value) then
+            the result container in the scheduler will be overwritten with an
+            instance of NodeResultContainer, if it is not already an instance
+            of NodeResultContainer.
         """
+        # Warning: If this method is updated you also have to update train
+        #          in ParallelCheckpointFlow.
         if self.is_parallel_training():
             raise ParallelFlowException("Parallel training is underway.")
-        super(ParallelFlow, self).train(*args, **kwargs)
+        if scheduler is None:
+            if train_callable_class is not None:
+                err = ("A train_callable_class was specified but no scheduler "
+                       "was given, so the train_callable_class has no effect.")
+                raise ParallelFlowException(err)
+            super(ParallelFlow, self).train(data_iterators)
+        else:
+            if train_callable_class is None:
+                train_callable_class = FlowTrainCallable
+            # check that the scheduler is compatible
+            if overwrite_result_container:
+                if not isinstance(scheduler.result_container,
+                                  NodeResultContainer):
+                    scheduler.result_container = NodeResultContainer()
+            if not scheduler.copy_callable:
+                err = ("copy_callable in scheduler should be True during "
+                       "training")
+                raise Exception(err)
+            # do parallel training
+            self.setup_parallel_training(data_iterators, 
+                                    train_callable_class=train_callable_class)
+            while self.is_parallel_training():
+                while self.task_available():
+                    task = self.get_task()
+                    scheduler.add_task(*task)
+                results = scheduler.get_results()
+                if results == []:
+                    err = ("Could not get any training tasks or results "
+                           "for the current training phase.")
+                    raise Exception(err)
+                else:
+                    self.use_results(results)
     
-    def parallel_train(self, data_iterators, 
-                       train_callable_class=FlowTrainCallable):
+    def setup_parallel_training(self, data_iterators, 
+                                train_callable_class=FlowTrainCallable):
         """Parallel version of the standard train method.
         
         Instead of automatically training the _flow, it only initializes the 
@@ -218,8 +227,10 @@ class ParallelFlow(mdp.Flow):
         get_task, executing them in the scheduler and returning the results
         with return_results.
         
-        iterator -- Iterator for data chunks. If an array is given instead,
-            then the standard flow train is used.
+        data_iterators -- is a list of iterators (note that a list is also
+            an iterator), which return data arrays, one for each node in the 
+            flow. If instead one array is specified, it is used as input 
+            training sequence for all nodes.
         train_callable_class -- Class used to create training callables. 
             By using a different class you can implement data transformations 
             (e.g. from 8 bit image to 64 bit double precision.
@@ -310,17 +321,40 @@ class ParallelFlow(mdp.Flow):
         else:
             raise NoTaskException("Could not create training task.")
             
-    def execute(self, *args, **kwargs):
+    def execute(self, iterator, nodenr=None, scheduler=None, 
+                execute_callable_class=None,
+                overwrite_result_container=True):
         """Non-parallel execution as in standard flow.
         
         This method checks first if parallel training is underway.
         """
         if self.is_parallel_training():
             raise ParallelFlowException("Parallel training is underway.")
-        return super(ParallelFlow, self).execute(*args, **kwargs)
+        if scheduler is None:
+            if execute_callable_class is not None:
+                err = ("A execute_callable_class was specified but no "
+                       "scheduler was given, so the execute_callable_class "
+                       "has no effect.")
+                raise ParallelFlowException(err)
+            return super(ParallelFlow, self).execute(iterator, nodenr)
+        if execute_callable_class is None:
+            execute_callable_class = FlowExecuteCallable
+        # check that the scheduler is compatible
+        if overwrite_result_container:
+            if not isinstance(scheduler.result_container,
+                              scheduling.OrderedResultContainer):
+                scheduler.result_container = scheduling.OrderedResultContainer()
+        # do parallel training
+        self.setup_parallel_execution(iterator, nodenr=nodenr,
+                                execute_callable_class=execute_callable_class)
+        while self.task_available():
+            task = self.get_task()
+            scheduler.add_task(*task)
+        results = scheduler.get_results()
+        return self.use_results(results)
        
-    def parallel_execute(self, iterator, 
-                         execute_callable_class=FlowExecuteCallable):
+    def setup_parallel_execution(self, iterator, nodenr=None,
+                                 execute_callable_class=FlowExecuteCallable):
         """Parallel version of the standard execute method.
         
         Instead of automatically executing the _flow with the iterator, it only
@@ -333,7 +367,8 @@ class ParallelFlow(mdp.Flow):
             raise ParallelFlowException("Parallel training is underway.")
         self._execute_callable_class = execute_callable_class
         if isinstance(iterator, n.ndarray):
-            task_callable = self._execute_callable_class(self._flownode)   
+            task_callable = self._execute_callable_class(self._flownode,
+                                                         nodenr=nodenr)   
             return task_callable(iterator)
         else:
             self._exec_data_iter = iterator.__iter__()
@@ -345,7 +380,6 @@ class ParallelFlow(mdp.Flow):
             self._next_task = (task_data_chunk,
                             self._execute_callable_class(mdp.Flow(self.flow)))
             
-        
     def _create_execute_task(self):
         """Create and return a single execution task.
         
@@ -437,11 +471,56 @@ class ParallelCheckpointFlow(ParallelFlow, mdp.CheckpointFlow):
     Can be used for saving intermediate results.
     """
     
-    def parallel_train(self, data_iterators, checkpoints, 
-                       train_callable_class=FlowTrainCallable):
+    def train(self, data_iterators, checkpoints, scheduler=None, 
+              train_callable_class=FlowTrainCallable,
+              overwrite_result_container=True):
+        """Train all trainable nodes in the flow.
+        
+        Same as the train method in ParallelFlow, but with additional support
+        of checkoint functions as in CheckpointFlow.
+        """
+        if self.is_parallel_training():
+            raise ParallelFlowException("Parallel training is underway.")
+        if scheduler is None:
+            if train_callable_class is not None:
+                err = ("A train_callable_class was specified but no scheduler "
+                       "was given, so the train_callable_class has no effect.")
+                raise ParallelFlowException(err)
+            super(ParallelCheckpointFlow, self).train(data_iterators, 
+                                                      checkpoints)
+        else:
+            if train_callable_class is None:
+                train_callable_class = FlowTrainCallable
+            # check that the scheduler is compatible
+            if overwrite_result_container:
+                if not isinstance(scheduler.result_container,
+                                  NodeResultContainer):
+                    scheduler.result_container = NodeResultContainer()
+            if not scheduler.copy_callable:
+                err = ("copy_callable in scheduler should be True during "
+                       "training")
+                raise Exception(err)
+            # do parallel training
+            self.setup_parallel_training(data_iterators,
+                                    checkpoints=checkpoints,
+                                    train_callable_class=train_callable_class)
+            while self.is_parallel_training():
+                while self.task_available():
+                    task = self.get_task()
+                    scheduler.add_task(*task)
+                results = scheduler.get_results()
+                if results == []:
+                    err = ("Could not get any training tasks or results "
+                           "for the current training phase.")
+                    raise Exception(err)
+                else:
+                    self.use_results(results)
+    
+    def setup_parallel_training(self, data_iterators, checkpoints, 
+                                train_callable_class=FlowTrainCallable):
         """Checkpoint version of parallel training."""
         self._checkpoints = self._train_check_checkpoints(checkpoints)
-        super(ParallelCheckpointFlow, self).parallel_train(
+        super(ParallelCheckpointFlow, self).setup_parallel_training(
                                     data_iterators, 
                                     train_callable_class=train_callable_class)
     

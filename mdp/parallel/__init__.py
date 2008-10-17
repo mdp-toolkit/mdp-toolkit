@@ -7,9 +7,9 @@ supported, i.e., there are parallel versions of all hinet nodes.
 
 This package consists of two decoupled parts. The first part consists of
 parallel versions of the familiar MDP structures (nodes and flows). At the top
-there is the ParallelFlow, which generates jobs that can be executed in 
+there is the ParallelFlow, which generates tasks that can be processed in 
 parallel. 
-The second part consists of the schedulers. They take jobs and execute them in 
+The second part consists of the schedulers. They take tasks and process them in 
 a more or less parallel way (e.g. in multiple processes). So they are designed
 to deal with the more technical aspects of the parallelization, but do not
 have to know anything about flows or nodes.
@@ -36,8 +36,7 @@ from parallelnodes import (ParallelNode, TrainingPhaseNotParallelException,
                            ParallelSFANode, ParallelSFA2Node)
 from parallelflows import (FlowTrainCallable, FlowExecuteCallable,
                            NodeResultContainer,
-                           ParallelFlowException, NoTaskException, 
-                           train_parallelflow, execute_parallelflow,
+                           ParallelFlowException, NoTaskException,
                            ParallelFlow, ParallelCheckpointFlow)
 from parallelhinet import (ParallelFlowNode, ParallelLayer, ParallelCloneLayer)
 

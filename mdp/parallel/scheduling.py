@@ -94,16 +94,16 @@ class Scheduler(object):
     add_task method.
     """
 
-    def __init__(self, result_container=None, copy_callable=False,
+    def __init__(self, result_container=None, copy_callable=True,
                  verbose=False):
         """Initialize the scheduler.
         
         result_container -- Instance of ResultContainer that is used to store
             the results (default is None, in which case a ListResultContainer
             is used).
-        copy_callable -- If True and if a default callable is used then it will 
-            be copied before beeing called (default value is False).
-            Note that the callable must have a copu
+        copy_callable -- If True then the callable will be copied before being 
+            called (default value is True). Note that the callable must have a 
+            copy to use this feature.
         verbose -- If True then status messages will be printed to sys.stdout.
         """
         if result_container is None:
