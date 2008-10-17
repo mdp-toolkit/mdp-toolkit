@@ -134,6 +134,25 @@ class TestParallelFlows(unittest.TestCase):
         # test execution
         x = n.random.random([100,10])
         flow.execute(x)
+        
+    def test_makeparallel(self):
+        node1 = mdp.nodes.PCANode(output_dim=20)
+        node2 = mdp.nodes.PolynomialExpansionNode(degree=1)
+        node3 = mdp.nodes.SFA2Node(output_dim=10)
+        flow = mdp.Flow([node1, node2, node3])
+        parallel_flow = parallel.make_flow_parallel(flow)
+        flow = parallel_flow.copy()
+        scheduler = parallel.Scheduler()
+        train_iterables = [mdp.numx.random.random((3, 200, 50)) 
+                           for _ in range(3)]
+        parallel_flow.train(train_iterables, scheduler=scheduler)
+        flow.train(train_iterables)
+        reconstructed_flow = parallel.unmake_flow_parallel(parallel_flow)
+        x = mdp.numx.random.random((3, 50))
+        y1 = flow.execute(x)
+        y2 = reconstructed_flow.execute(x)
+        print y1,  "\n\n", y2
+        self.assertTrue(n.all(y1 == y2))
 
     
 def get_suite(testname=None):

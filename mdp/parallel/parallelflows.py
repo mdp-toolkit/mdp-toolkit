@@ -150,7 +150,7 @@ class ParallelFlow(mdp.Flow):
         self._execute_callable_class = None
     
     def train(self, data_iterators, scheduler=None, 
-              train_callable_class=FlowTrainCallable,
+              train_callable_class=None,
               overwrite_result_container=True):
         """Train all trainable nodes in the flow.
         

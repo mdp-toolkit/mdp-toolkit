@@ -39,9 +39,11 @@ from parallelflows import (FlowTrainCallable, FlowExecuteCallable,
                            ParallelFlowException, NoTaskException,
                            ParallelFlow, ParallelCheckpointFlow)
 from parallelhinet import (ParallelFlowNode, ParallelLayer, ParallelCloneLayer)
+from makeparallel import make_flow_parallel, unmake_flow_parallel
 
 del scheduling
 del process_schedule
 del parallelnodes
 del parallelflows
 del parallelhinet
+del makeparallel
