@@ -219,13 +219,3 @@ class Scheduler(object):
         error messages.
         """
         pass
-    
-    def __del__(self):
-        """Call the shutdown method.
-        
-        Note that it is much safer to call the shutdown method manually. 
-        """
-        self.shutdown()
-    
-                    
-    

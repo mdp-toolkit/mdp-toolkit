@@ -116,7 +116,8 @@ class ProcessScheduler(scheduling.Scheduler):
         """
         try:
             # push the task to the process
-            pickle.dump((data, task_callable, task_index), process.stdin)
+            pickle.dump((data, task_callable, task_index), process.stdin,
+                        protocol=-1)
             # wait for result to arrive
             result = pickle.load(process.stdout)
         except:
@@ -138,6 +139,7 @@ def _process_run():
     sys.stdout = sys.stderr
     exit_loop = False
     while not exit_loop:
+        task = None
         try:
             # wait for task to arrive
             task = pickle.load(sys.stdin)
@@ -145,11 +147,14 @@ def _process_run():
                 exit_loop = True
             else:
                 result = task[1](task[0])
-                pickle.dump(result, pickle_out)
+                pickle.dump(result, pickle_out, protocol=-1)
                 pickle_out.flush()
         except Exception, exception:
             # return the exception instead of the result
-            print "task %d caused exception in process:" % task[2]
+            if task is None:
+                print "unpickling a task caused an exception in a process:")
+            else:
+                print "task %d caused exception in process:" % task[2]
             print exception
             traceback.print_exc()
             sys.stdout.flush()
