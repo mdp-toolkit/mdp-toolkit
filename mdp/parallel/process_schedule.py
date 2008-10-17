@@ -8,10 +8,14 @@ import cPickle as pickle
 import thread
 import subprocess
 import time
-import inspect
 import traceback
 
 import scheduling
+
+if __name__ == "__main__":
+    mdp_path = __file__.split("mdp")[0]
+    sys.path.append(mdp_path)
+import mdp
 
 # TODO: implement caching of callable in process?
 
@@ -50,9 +54,13 @@ class ProcessScheduler(scheduling.Scheduler):
         if python_executable is None:
             python_executable = sys.executable
         # get the location of this module to start the processes
-        module_path = os.path.dirname(inspect.getfile(sys._getframe(0)))
-        module_path = os.path.abspath(module_path)
-        module_file = os.path.join(module_path, "process_schedule.py")
+        # old way of getting it:
+        # module_path = os.path.dirname(inspect.getfile(sys._getframe(0)))
+        # module_path = os.path.abspath(module_path)
+        # better new way (requires mdp import at the top):
+        module_path = os.path.dirname(mdp.__file__)
+        module_file = os.path.join(module_path, "parallel", 
+                                   "process_schedule.py")
         # Note: -u argument is important on Windows to set stdout to binary 
         #    mode. Otherwise you might get a strange error message for 
         #    copy_reg.
