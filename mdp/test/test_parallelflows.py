@@ -5,6 +5,8 @@ import mdp
 import mdp.parallel as parallel
 from mdp import numx as n
 
+import testing_tools
+
 
 # TODO: add test for proper copying
 
@@ -135,7 +137,7 @@ class TestParallelFlows(unittest.TestCase):
         x = n.random.random([100,10])
         flow.execute(x)
         
-    def test_makeparallel(self):
+    def test_makeparallel1(self):
         node1 = mdp.nodes.PCANode(output_dim=20)
         node2 = mdp.nodes.PolynomialExpansionNode(degree=1)
         node3 = mdp.nodes.SFANode(output_dim=10)
@@ -155,7 +157,20 @@ class TestParallelFlows(unittest.TestCase):
         x = mdp.numx.random.random((10, input_dim))
         y1 = flow.execute(x)
         y2 = reconstructed_flow.execute(x)
-        self.assertTrue(n.all(y1 == y2))
+        testing_tools.assert_array_almost_equal(y1, y2)
+        
+    def test_makeparallel2(self):
+        node1 = mdp.nodes.PCANode(input_dim=50, output_dim=20)
+        node2 = mdp.nodes.SFA2Node(input_dim=20, output_dim=10)
+        flow = node1 + node2
+        parallel_flow = mdp.parallel.make_flow_parallel(flow)
+        n_data_chunks = 2
+        data_iterables = [[mdp.numx_rand.random((200, 50))
+                           for _ in range(n_data_chunks)]
+                          for _ in range(2)]
+        scheduler = mdp.parallel.ProcessScheduler(n_processes=2)
+        parallel_flow.train(data_iterables, scheduler=scheduler)
+        scheduler.cleanup()
 
     
 def get_suite(testname=None):
