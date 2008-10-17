@@ -161,7 +161,7 @@ class Scheduler(object):
         
         You can overwrite this method for custom schedulers.
         """
-        if (self.copy_callable and task_index > self._last_callable_index):
+        if self.copy_callable:
             task_callable = task_callable.copy()
         result = task_callable(data)
         self.lock.release()

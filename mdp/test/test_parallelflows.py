@@ -138,20 +138,23 @@ class TestParallelFlows(unittest.TestCase):
     def test_makeparallel(self):
         node1 = mdp.nodes.PCANode(output_dim=20)
         node2 = mdp.nodes.PolynomialExpansionNode(degree=1)
-        node3 = mdp.nodes.SFA2Node(output_dim=10)
+        node3 = mdp.nodes.SFANode(output_dim=10)
         flow = mdp.Flow([node1, node2, node3])
         parallel_flow = parallel.make_flow_parallel(flow)
-        flow = parallel_flow.copy()
         scheduler = parallel.Scheduler()
-        train_iterables = [mdp.numx.random.random((3, 200, 50)) 
+        input_dim = 30
+        scales = n.linspace(0, 100, num=input_dim)
+        scale_matrix = mdp.numx.diag(scales)
+        train_iterables = [n.dot(mdp.numx_rand.random((5, 100, input_dim)),
+                                 scale_matrix) 
                            for _ in range(3)]
         parallel_flow.train(train_iterables, scheduler=scheduler)
         flow.train(train_iterables)
+        self.assertTrue(parallel_flow[0].tlen == flow[0].tlen)
         reconstructed_flow = parallel.unmake_flow_parallel(parallel_flow)
-        x = mdp.numx.random.random((3, 50))
+        x = mdp.numx.random.random((10, input_dim))
         y1 = flow.execute(x)
         y2 = reconstructed_flow.execute(x)
-        print y1,  "\n\n", y2
         self.assertTrue(n.all(y1 == y2))
 
     
