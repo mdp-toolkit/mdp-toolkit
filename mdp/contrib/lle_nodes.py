@@ -13,22 +13,20 @@ sqrt = numx.sqrt
 #########################################################
 
 class LLENode(Cumulator):
-    """Perform a Locally Linear Embedding analysis on the data
+    """Perform a Locally Linear Embedding analysis on the data.
 
-    Internal Variables:
-      self.data : the training data
-      self.training_projection : the LLE projection of the training data
+    Internal variables of interest:
+      self.training_projection -- the LLE projection of the training data
                                  (defined when training finishes)
-      self.k : number of nearest neighbors to use
-      self.desired_variance : variance limit used to compute
-                             intrinsic dimensionality
+      self.desired_variance -- variance limit used to compute
+                               intrinsic dimensionality
                              
     Based on the algorithm outlined in 'An Introduction to Locally
-    Linear Embedding' by L. Saul and S. Roewis, using improvements
+    Linear Embedding' by L. Saul and S. Roweis, using improvements
     suggested in 'Locally Linear Embedding for Classification' by
     D. deRidder and R.P.W. Duin.
     
-    Python implementation by:
+    Original code contributed by:
       Jake Vanderplas, University of Washington
       vanderplas@astro.washington.edu
     """
@@ -41,15 +39,23 @@ class LLENode(Cumulator):
          k -- number of nearest neighbors to use
          r -- regularization constant; if None, r is automatically
               computed using the method presented in deRidder and Duin;
-              this method involves solving one eigenvalue problem for
+              this method involves solving an eigenvalue problem for
               every data point, and can slow down the algorithm
               If specified, it multiplies the trace of the local covariance
               matrix of the distances, as in Saul & Roweis (faster)
          svd -- if True, use SVD to compute the projection matrix;
                 SVD is slower but more stable
+         verbose -- if True, displays information about the progress
+                    of the algorithm
 
          output_dim -- number of dimensions to output
-                       or a float between 0.0 and 1.0
+                       or a float between 0.0 and 1.0. In the latter case,
+                       output_dim specifies the desired fraction of variance
+                       to be exaplained, and the final number of output
+                       dimensions is known at the end of training
+                       (e.g., for 'output_dim=0.95' the algorithm will keep
+                       as many dimensions as necessary in order to explain
+                       95% of the input variance)                       
         """
 
         if isinstance(output_dim, float) and output_dim <= 1:
@@ -317,29 +323,20 @@ def _mgs(a):
     return v, r
 
 class HLLENode(LLENode):
-    """Perform a Hessian Locally Linear Embedding analysis on the data
+    """Perform a Hessian Locally Linear Embedding analysis on the data.
     
-    Internal Variables:
-      self.training_data : the training data
-
-      self.training_projection : the HLLE projection of the training data
+    Internal variables of interest:
+      self.training_projection -- the HLLE projection of the training data
                                  (defined when training finishes)
-
-      self.k : number of nearest neighbors to use; we recommend to
-               choose k>=1 + output_dim + output_dim*(output_dim+1)/2,
-               so that one can use a more efficient computing method
-
-      self.desired_variance : variance limit used to compute
-                             intrinsic dimensionality
-
-      self.use_svd : use svd rather than eigenvalues of the covariance matrix
+      self.desired_variance -- variance limit used to compute
+                               intrinsic dimensionality
                             
     Implementation based on algorithm outlined in
      'Hessian Eigenmaps: new locally linear embedding techniques
       for high-dimensional data'
-        by C. Grimes and D. Donoho, March 2003 
+        by C. Grimes and D. Donoho, 2003 
 
-    Python implementation by:
+    Original code contributed by:
       Jake Vanderplas, University of Washington
       vanderplas@astro.washington.edu
     """
@@ -356,6 +353,31 @@ class HLLENode(LLENode):
     
     def __init__(self, k, r=0.001, svd=False, verbose=False,
                  input_dim=None, output_dim=None, dtype=None):
+        """
+        Keyword Arguments:
+
+         k -- number of nearest neighbors to use; the node will raise
+              an MDPWarning if k is smaller than
+                k >= 1 + output_dim + output_dim*(output_dim+1)/2,
+              because in this case a less efficient computation must be
+              used, and the ablgorithm can become unstable
+         r -- regularization constant; as opposed to LLENode, it is
+              not possible to compute this constant automatically; it is
+              only used during execution
+         svd -- if True, use SVD to compute the projection matrix;
+                SVD is slower but more stable
+         verbose -- if True, displays information about the progress
+                    of the algorithm
+
+         output_dim -- number of dimensions to output
+                       or a float between 0.0 and 1.0. In the latter case,
+                       output_dim specifies the desired fraction of variance
+                       to be exaplained, and the final number of output
+                       dimensions is known at the end of training
+                       (e.g., for 'output_dim=0.95' the algorithm will keep
+                       as many dimensions as necessary in order to explain
+                       95% of the input variance)                       
+        """
         LLENode.__init__(self, k, r, svd, verbose,
                          input_dim, output_dim, dtype)
 
@@ -521,106 +543,3 @@ class HLLENode(LLENode):
 
         C = utils.sqrtm(mult(Y.T, Y))
         self.training_projection = mult(Y, C)
-
-# from mdp import numx, numx_linalg, numx_rand
-# from mdp.utils import mult, symeig, nongeneral_svd
-# import pylab
-# from matplotlib import ticker, axes3d
-
-# #################################################
-# # Testing Functions
-# #################################################
-
-# def S(theta):
-#     """
-#     returns x,y
-#       a 2-dimensional S-shaped function
-#       for theta ranging from 0 to 1
-#     """
-#     t = 3*numx.pi * (theta-0.5)
-#     x = numx.sin(t)
-#     y = numx.sign(t)*(numx.cos(t)-1)
-#     return x,y
-
-# def rand_on_S(N,sig=0,hole=False):
-#     t = numx_rand.random(N)
-#     x,z = S(t)
-#     y = numx_rand.random(N)*5.0
-#     if sig:
-#         x += numx_rand.normal(scale=sig,size=N)
-#         y += numx_rand.normal(scale=sig,size=N)
-#         z += numx_rand.normal(scale=sig,size=N)
-#     if hole:
-#         indices = numx.where( ((0.3>t) | (0.7<t)) | ((1.0>y) | (4.0<y)) )
-#         #indices = numx.where( (0.3>t) | ((1.0>y) | (4.0<y)) )
-#         return x[indices],y[indices],z[indices],t[indices]
-#     else:
-#         return x,y,z,t
-
-# def scatter_2D(x,y,t=None,cmap=pylab.cm.jet):
-#     #fig = pylab.figure()
-#     pylab.subplot(212)
-#     if t==None:
-#         pylab.scatter(x,y)
-#     else:
-#         pylab.scatter(x,y,c=t,cmap=cmap)
-
-#     pylab.xlabel('x')
-#     pylab.ylabel('y')
-
-
-# def scatter_3D(x,y,z,t=None,cmap=pylab.cm.jet):
-#     fig = pylab.figure
-
-#     if t==None:
-#         ax.scatter3D(x,y,z)
-#     else:
-#         ax.scatter3D(x,y,z,c=t,cmap=cmap)
-
-#     if x.min()>-2 and x.max()<2:
-#         ax.set_xlim(-2,2)
-    
-#     ax.set_xlabel('x')
-#     ax.set_ylabel('y')
-#     ax.set_zlabel('z')
-    
-#     # elev, az
-#     ax.view_init(10, -80)
-
-
-# def runtest1(N=1000,k=15,r=None,sig=0,output_dim=0.9,hole=False,type='LLE',svd=False):
-#     #generate data
-#     x,y,z,t = rand_on_S(N,sig,hole=hole)
-#     data = numx.asarray([x,y,z]).T
-
-#     #train LLE and find projection
-#     if type=='HLLE':
-#         LN = HLLENode(k=k, output_dim=output_dim, verbose=True, svd=False)
-#     else:
-#         LN = LLENode(k=k, r=r, output_dim=output_dim, verbose=True, svd=True)
-#     LN.train(data)
-#     LN.stop_training()
-#     projection = LN.training_projection
-#     #projection = LN.execute(data)
-
-#     #plot input in 3D
-#     fig = pylab.figure(1, figsize=(6,8))
-#     pylab.clf()
-#     ax = axes3d.Axes3D(fig,rect=[0,0.5,1,0.5])
-#     ax.scatter3D(x,y,z,c=t,cmap=pylab.cm.jet)
-#     ax.set_xlim(-2,2)
-#     ax.view_init(10, -80)
-
-#     #plot projection in 2D
-#     pylab.subplot(212)
-#     pylab.scatter(projection[:,0],\
-#                   projection[:,1],\
-#                   c=t,cmap=pylab.cm.jet)
-
-# #######################################
-# #  Run Tests
-# #######################################
-# if __name__ == '__main__':
-#     #runtest1(N=5000,k=12,sig=0,output_dim=2,hole=False,type='HLLE')
-#     runtest1(N=500,k=7,sig=0,output_dim=2,hole=True,type='HLLE')
-#     pylab.show()
