@@ -1,5 +1,5 @@
 """
-Module for MDP Nodes with enabled parallel training.
+Module for MDP Nodes that support parallel training.
 
 Note that such ParallelNodes are only needed for training, parallel execution
 works with any Node that can be pickled.

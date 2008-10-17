@@ -1,5 +1,5 @@
 """
-Module for parallel flows, that can handle the parallel training / execution.
+Module for parallel flows that can handle the parallel training / execution.
 
 Corresponding classes for task callables and ResultContainer are defined here 
 as well.

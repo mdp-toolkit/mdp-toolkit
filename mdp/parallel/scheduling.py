@@ -1,5 +1,5 @@
 """
-This module contains the basic classes for task execution via a scheduler.
+This module contains the basic classes for task processing via a scheduler.
 """
 
 import thread

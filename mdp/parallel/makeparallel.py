@@ -2,12 +2,12 @@
 Module for transforming ('monkey patching') a normal flow into a parallel flow.
 
 Note that this is not yet supported for hinet nodes, since these would require
-recursive introspection.
+recursive introspection (maybe in a later next release). Of course you can
+always build a parallel flow manually by using the parallel classes.
 """
 
 import parallelflows
 import parallelnodes
-
 
 def get_parallel_node_class(node_class):
     """Return the parallel version of a node class.
