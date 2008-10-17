@@ -50,7 +50,7 @@ class PPScheduler(parallel.Scheduler):
         Depending on the scheduler state this function is non-blocking or
         blocking. One reason for blocking can be a full task-queue.
         """
-        if (self.copy_callable and task_index > self._last_callable_index):
+        if self.copy_callable:
             task_callable = task_callable.copy()
         task = (data, task_callable, task_index)
         def execute_task(task):

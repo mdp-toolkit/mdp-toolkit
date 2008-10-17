@@ -85,7 +85,7 @@ class ProcessScheduler(scheduling.Scheduler):
         It blocks when the system is not able to start a new thread
         or when the processes are all in use.
         """
-        if (self.copy_callable and task_index > self._last_callable_index):
+        if self.copy_callable:
             task_callable = task_callable.copy()
         task_started = False
         while not task_started:

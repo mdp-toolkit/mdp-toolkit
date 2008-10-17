@@ -14,7 +14,6 @@ python_executable = "/home/wilbert/bin/python"
 sys_paths = ["/home/wilbert/develop/workspace/MDP"]
 
 
-
 class TestRemotePPScheduler(unittest.TestCase):
 
     def test_simple(self):

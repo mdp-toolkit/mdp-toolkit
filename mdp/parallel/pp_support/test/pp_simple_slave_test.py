@@ -1,5 +1,5 @@
 """
-Script for starting pp-slaves on remote machines.
+Script for starting a pp-slave on a remote machines.
 
 For each slave machine an ssh connection is kept open. Over this connection
 pp_slave_script.py is started in a new process. The pid is stored and can be
