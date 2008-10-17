@@ -1,24 +1,22 @@
 TODO:
 
-MDP 2.4 x.x.x:
+MDP 2.4 17.10.2008:
 
-- code restyling by PEP8
 - add benchmarks for parallel module
-- choose a new color for the website :-))
-- provide different versions of the MDP logo which includes the website address,
-  possibly one higher quality print version, available in "how to cite" section
-
-- POSTPONED short and long description in a single file, automatically 
-   updated everywhere (tutorial, sf.net, setup.py, webpage, 
-   MDP announcement, ...) 
-- POSTPONED wrappers for external libraries? (which ones?)
-- POSTPONED forward compatible with python 3?
+- provide different versions of the MDP logo which includes the
+  website address, possibly one higher quality print version,
+  available in "how to cite" section
+- short and long description in a single file, automatically 
+  updated everywhere (tutorial, sf.net, setup.py, webpage, 
+  MDP announcement, ...) 
+- wrappers for external libraries? (which ones?)
+- forward compatible with python 3?
 - POSTPONED TO PY2.6 should is_trainable, is_invertible be class 
   attributes or maybe a class decorator?
-- POSTPONED include the XSFA Node from Henning (maybe wait for later release)
-- POSTPONED think about a better structure for the unittests in the future,
-            the transition could happen package by package 
-            (starting with parallel)
+- include the XSFA Node from Henning (maybe wait for later release)
+- think about a better structure for the unittests in the future,
+  the transition could happen package by package 
+  (starting with parallel)
 
 MDP 2.3 15.5.2008:
 
