@@ -1,6 +1,5 @@
-from mdp import numx, numx_linalg, numx_rand, utils, \
-    Node, Cumulator, TrainingException, MDPWarning
-from mdp.utils import mult, symeig, nongeneral_svd
+from mdp import numx, numx_linalg, Cumulator, TrainingException, MDPWarning
+from mdp.utils import mult, symeig, nongeneral_svd, svd
 import warnings as _warnings
 
 # some useful functions
@@ -150,7 +149,7 @@ class LLENode(Cumulator):
                 if learn_outdim:
                     sig2 = sig2s[row, :]
                 else:
-                    sig2 = utils.svd(M_Mi, compute_uv=0)**2
+                    sig2 = svd(M_Mi, compute_uv=0)**2
                 r = numx.sum(sig2[self.output_dim:])
                 Q[Q_diag_idx, Q_diag_idx] += r
             else:
@@ -232,7 +231,7 @@ class LLENode(Cumulator):
             #   use this to compute intrinsic dimensionality
             #   at this point
             #-----------------------------------------------
-            sig2 = (utils.svd(M_Mi, compute_uv=0))**2
+            sig2 = (svd(M_Mi, compute_uv=0))**2
             sig2s[row, :] = sig2
 
             #-----------------------------------------------
@@ -282,7 +281,7 @@ class LLENode(Cumulator):
             #find corrected covariance matrix Q
             Q = mult(M_xi, M_xi.T)
             if r is None and k > d_out:
-                sig2 = (utils.svd(M_xi, compute_uv=0))**2
+                sig2 = (svd(M_xi, compute_uv=0))**2
                 r = numx.sum(sig2[d_out:])
                 Q[Q_diag_idx, Q_diag_idx] += r
             if r is not None:
@@ -314,11 +313,11 @@ def _mgs(a):
     v = a.copy()
     r = numx.zeros((n, n))
     for i in range(n):
-        r[i,i] = numx_linalg.norm(v[:,i])
-        v[:,i] = v[:,i]/r[i,i]
+        r[i, i] = numx_linalg.norm(v[:, i])
+        v[:, i] = v[:, i]/r[i, i]
         for j in range(i+1, n):
-            r[i,j] = mult(v[:,i], v[:,j])
-            v[:,j] = v[:,j] - r[i,j]*v[:,i]
+            r[i, j] = mult(v[:, i], v[:, j])
+            v[:, j] = v[:, j] - r[i, j]*v[:, i]
     # q is v
     return v, r
 
@@ -416,7 +415,7 @@ class HLLENode(LLENode):
         #dp = d_out + (d_out-1) + (d_out-2) + ...
         dp = d_out*(d_out+1)/2
 
-        if min(k,N) <= d_out:
+        if min(k, N) <= d_out:
             err = ('k=%i and n=%i (number of input data points) must be'
                    ' larger than output_dim=%i' % (k, N, d_out))
             raise TrainingException(err)
@@ -437,7 +436,7 @@ class HLLENode(LLENode):
 
         for row in range(N):
             if learn_outdim:
-                nbrs = nbrss[row,:]
+                nbrs = nbrss[row, :]
             else:
                 # -----------------------------------------------
                 #  find k nearest neighbors
@@ -455,7 +454,7 @@ class HLLENode(LLENode):
             #  compute local coordinates
             #   using a singular value decomposition
             #-----------------------------------------------
-            U, sig, VT = utils.svd(nbrhd)
+            U, sig, VT = svd(nbrhd)
             nbrhd = U.T[:d_out]
             del VT
             
@@ -465,7 +464,7 @@ class HLLENode(LLENode):
             Yi = numx.zeros((dp, k), dtype=self.dtype)
             ct = 0
             for i in range(d_out):
-                Yi[ct:ct+d_out-i,:] = nbrhd[i] * nbrhd[i:,:]
+                Yi[ct:ct+d_out-i, :] = nbrhd[i] * nbrhd[i:, :]
                 ct += d_out-i
             Yi = numx.concatenate([numx.ones((1, k), dtype=self.dtype),
                                    nbrhd, Yi], 0)
@@ -477,10 +476,10 @@ class HLLENode(LLENode):
             #-----------------------------------------------
             if k >= 1+d_out+dp:
                 Q, R = numx_linalg.qr(Yi.T)
-                w = Q[:,d_out+1:d_out+1+dp]
+                w = Q[:, d_out+1:d_out+1+dp]
             else:
                 q, r = _mgs(Yi.T)
-                w = q[:,-dp:]
+                w = q[:, -dp:]
             
             S = w.sum(0) #sum along columns
             #if S[i] is too small, set it equal to 1.0
@@ -514,7 +513,7 @@ class HLLENode(LLENode):
             # regularizes the eigenvalues, does not change the eigenvectors:
             W_diag_idx = numx.arange(N)
             WW[W_diag_idx, W_diag_idx] += 0.01
-            sig, U = symeig(WW, range=(2, self.output_dim+1), overwrite=True)            
+            sig, U = symeig(WW, range=(2, self.output_dim+1), overwrite=True)
             Y = U*numx.sqrt(N)
             del WW
         del W
@@ -533,7 +532,7 @@ class HLLENode(LLENode):
         #   so
         #      R = V * sig^-1 * V.T
         # The code is:
-        #    U, sig, VT = utils.svd(Y)
+        #    U, sig, VT = svd(Y)
         #    del U
         #    S = numx.diag(sig**-1)
         #    self.training_projection = mult(Y, mult(VT.T, mult(S, VT)))
