@@ -1,6 +1,4 @@
-from mdp import numx, numx_linalg, numx_rand
-from mdp.utils import mult, symeig, nongeneral_svd
-from mdp.nodes import LLENode
+import mdp
 import pylab
 from matplotlib import ticker, axes3d
 
@@ -10,31 +8,19 @@ from matplotlib import ticker, axes3d
 # Testing Functions
 #################################################
 
-def S(theta):
-    """
-    returns x,y
-      a 2-dimensional S-shaped function
-      for theta ranging from 0 to 1
-    """
-    t = 3*numx.pi * (theta-0.5)
-    x = numx.sin(t)
-    y = numx.sign(t)*(numx.cos(t)-1)
-    return x,y
-
-def rand_on_S(N,sig=0,hole=False):
-    t = numx_rand.random(N)
-    x,z = S(t)
-    y = numx_rand.random(N)*5.0
-    if sig:
-        x += numx_rand.normal(scale=sig,size=N)
-        y += numx_rand.normal(scale=sig,size=N)
-        z += numx_rand.normal(scale=sig,size=N)
+def s_distr(npoints, hole=False):
+    """Return a 3D S-shaped surface. If hole is True, the surface has
+    a hole in the middle."""
+    t = mdp.numx_rand.random(npoints)
+    y = mdp.numx_rand.random(npoints)*5.
+    theta = 3.*mdp.numx.pi*(t-0.5)
+    x = mdp.numx.sin(theta)
+    z = mdp.numx.sign(theta)*(mdp.numx.cos(theta) - 1.)
     if hole:
-        indices = numx.where( ((0.3>t) | (0.7<t)) | ((1.0>y) | (4.0<y)) )
-        #indices = numx.where( (0.3>t) | ((1.0>y) | (4.0<y)) )
-        return x[indices],y[indices],z[indices],t[indices]
+        indices = mdp.numx.where( ((0.3>t) | (0.7<t)) | ((1.0>y) | (4.0<y)) )
+        return x[indices], y[indices], z[indices], t[indices]
     else:
-        return x,y,z,t
+        return x, y, z, t
 
 def scatter_2D(x,y,t=None,cmap=pylab.cm.jet):
     #fig = pylab.figure()
@@ -46,7 +32,6 @@ def scatter_2D(x,y,t=None,cmap=pylab.cm.jet):
 
     pylab.xlabel('x')
     pylab.ylabel('y')
-
 
 def scatter_3D(x,y,z,t=None,cmap=pylab.cm.jet):
     fig = pylab.figure
@@ -66,6 +51,38 @@ def scatter_3D(x,y,z,t=None,cmap=pylab.cm.jet):
     # elev, az
     ax.view_init(10, -80)
 
+n, k = 1000, 15
+x, y, z, t = s_distr(n, hole=False)
+data = mdp.numx.array([x,y,z]).T
+lle_projected_data = mdp.nodes.LLENode(k, output_dim=2)(data)
+
+#plot input in 3D
+fig = pylab.figure(1, figsize=(6,4))
+pylab.clf()
+ax = axes3d.Axes3D(fig)
+ax.scatter3D(x, y, z, c=t, cmap=pylab.cm.jet)
+ax.set_xlim(-2, 2)
+ax.view_init(10, -80)
+pylab.draw()
+
+#plot projection in 2D
+projection = lle_projected_data
+pylab.scatter(projection[:,0],\
+              projection[:,1],\
+              c=t,cmap=pylab.cm.jet)
+
+
+raw_input('next')
+
+x, y, z, t = s_distr(n, hole=True)
+data = mdp.numx.array([x,y,z]).T
+lle_projected_data = mdp.nodes.LLENode(k, output_dim=2)(data)
+
+raw_input('next')
+
+hlle_projected_data = mdp.nodes.HLLENode(k, output_dim=2)(data)
+
+raw_input('next')
 
 def runtest1(N=1000,k=15,r=None,sig=0,output_dim=0.9,hole=False,type='LLE',svd=False):
     #generate data
@@ -132,6 +149,6 @@ def runtest2(N=1000,k=15,sig=0,output_dim=0.9,hole=False,type='LLE'):
 #######################################
 #  Run Tests
 #######################################
-if __name__ == '__main__':
-    runtest1(N=1000,k=15,sig=0,output_dim=0.9,hole=False,type='LLE')
-    pylab.show()
+#if __name__ == '__main__':
+#    runtest1(N=1000,k=15,sig=0,output_dim=0.9,hole=False,type='LLE')
+#    pylab.show()

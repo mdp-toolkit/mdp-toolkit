@@ -527,8 +527,6 @@ class HLLENode(LLENode):
 # import pylab
 # from matplotlib import ticker, axes3d
 
-
-
 # #################################################
 # # Testing Functions
 # #################################################
