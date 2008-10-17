@@ -170,7 +170,7 @@ class TestParallelFlows(unittest.TestCase):
                           for _ in range(2)]
         scheduler = mdp.parallel.ProcessScheduler(n_processes=2)
         parallel_flow.train(data_iterables, scheduler=scheduler)
-        scheduler.cleanup()
+        scheduler.shutdown()
 
     
 def get_suite(testname=None):

@@ -28,7 +28,7 @@ class TestRemotePPScheduler(unittest.TestCase):
         for i in range(30):
             scheduler.add_task(i, parallel.SqrTestCallable())
         results = scheduler.get_results()
-        scheduler.cleanup()
+        scheduler.shutdown()
         # check result
         results.sort()
         results = n.array(results)

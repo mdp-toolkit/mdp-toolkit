@@ -67,10 +67,10 @@ class ProcessScheduler(scheduling.Scheduler):
                                                 stdin=subprocess.PIPE)
                                 for _ in range(self.n_processes)]
         
-    def cleanup(self):
+    def shutdown(self):
         """Shut down the slave processes.
         
-        If a process is still running a task an exception is raised.
+        If a process is still running a task then an exception is raised.
         """
         self.lock.acquire()
         if len(self._free_processes) < self.n_processes:

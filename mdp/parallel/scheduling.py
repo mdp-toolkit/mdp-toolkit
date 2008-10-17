@@ -211,13 +211,21 @@ class Scheduler(object):
                 self.lock.release();
                 time.sleep(1); 
 
-    def cleanup(self):
-        """Controlled shutdown.
+    def shutdown(self):
+        """Controlled shutdown of the scheduler.
         
-        Should be called when the scheduler is no longer needed (e.g. to shut
-        down slave processes and such).
+        This method should always be called when the scheduler is no longer 
+        needed and before the program shuts down! Otherwise one might get
+        error messages.
         """
         pass
+    
+    def __del__(self):
+        """Call the shutdown method.
+        
+        Note that it is much safer to call the shutdown method manually. 
+        """
+        self.shutdown()
     
                     
     

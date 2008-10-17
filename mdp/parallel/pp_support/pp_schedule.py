@@ -79,7 +79,7 @@ class PPScheduler(parallel.Scheduler):
         """
         self._store_result(result[0], result[1])
         
-    def cleanup(self):
+    def shutdown(self):
         """Call destroy on the ppserver."""
         self.ppserver.destroy()
     
@@ -170,7 +170,7 @@ class NetworkPPScheduler(PPScheduler):
                                           result_container=result_container,
                                           verbose=verbose)
     
-    def cleanup(self):
+    def shutdown(self):
         """Shutdown all slaves."""
         
         for ssh_proc, pid, address in itertools.izip(self._ssh_procs, 

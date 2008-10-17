@@ -18,7 +18,7 @@ class TestProcessScheduler(unittest.TestCase):
         for i in range(6):
             scheduler.add_task(i, parallel.SqrTestCallable())
         results = scheduler.get_results()
-        scheduler.cleanup()
+        scheduler.shutdown()
         # check result
         results = n.array(results)
         self.assertTrue(n.all(results == n.array([0,1,4,9,16,25])))

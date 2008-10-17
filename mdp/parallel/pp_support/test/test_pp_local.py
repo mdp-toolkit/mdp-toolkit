@@ -18,7 +18,7 @@ class TestLocalPPScheduler(unittest.TestCase):
         for i in range(50):
             scheduler.add_task(i, parallel.SqrTestCallable())
         results = scheduler.get_results()
-        scheduler.cleanup()
+        scheduler.shutdown()
         # check result
         results.sort()
         results = n.array(results[:6])
