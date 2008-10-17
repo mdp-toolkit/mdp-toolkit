@@ -97,7 +97,9 @@ def _progress(percent, last, style, layout):
     return box
     
 def progressinfo(sequence, length = None, style = 'bar', custom = None):
-    """A fully configurable text-mode progress info box.
+    """A fully configurable text-mode progress info box tailored to the 
+       command-line die-hards.
+
        To get a progress info box for your loops use it like this:
 
           >>> for i in progressinfo(sequence):

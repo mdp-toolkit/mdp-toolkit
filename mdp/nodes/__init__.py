@@ -34,7 +34,7 @@ del rbm_nodes
 __all__ = ['CuBICANode', 'EtaComputerNode', 'FANode', 'FDANode', 'FastICANode',
            'GaussianClassifierNode', 'GrowingNeuralGasNode', 'HitParadeNode',
            'ICANode', 'ISFANode', 'JADENode', 'LLENode', 'NIPALSNode',
-           'NoiseNode',
+           'NoiseNode', 'HLLENode',
            'PCANode', 'PolynomialExpansionNode', 'QuadraticExpansionNode',
            'RBMNode', 'RBMWithLabelsNode', 'SFA2Node', 'SFANode',
            'TDSEPNode', 'TimeFramesNode','WhiteningNode',

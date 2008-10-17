@@ -3,40 +3,25 @@ TODO:
 MDP 2.4 x.x.x:
 
 - code restyling by PEP8
-- wrappers for external libraries? (which ones?)
-  forward compatible with python 3)
 - add benchmarks for parallel module
 - choose a new color for the website :-))
 - provide different versions of the MDP logo which includes the website address,
   possibly one higher quality print version, available in "how to cite" section
-- write a checklist of the release process:
-   - short and long description in a single file, automatically 
+
+- POSTPONED short and long description in a single file, automatically 
    updated everywhere (tutorial, sf.net, setup.py, webpage, 
-   MDP announcement, ...)
-   - 
+   MDP announcement, ...) 
+- POSTPONED wrappers for external libraries? (which ones?)
+- POSTPONED forward compatible with python 3?
 - POSTPONED TO PY2.6 should is_trainable, is_invertible be class 
   attributes or maybe a class decorator?
 - POSTPONED include the XSFA Node from Henning (maybe wait for later release)
 - POSTPONED think about a better structure for the unittests in the future,
             the transition could happen package by package 
             (starting with parallel)
-- DONE metaclass for Node to avoid overwriting methods for documentation
-       purposes
-- DONE full integration of the LLE nodes (how do we test them?)
-- DONE updating the tutorial using the text we wrote for the paper,
-- DONE adding an example similar to the LLE demo
-- DONE what about helper functions? should we add an intrface to new nodes?
-- DONE try to bring the parallel package into shape for a release
-- DONE why are in RBMWithLabelsNode the train and execute method overwritten 
-       (instead of _train and _execute)?
-- DONE make the 'mdp' module reloadable
-- DONE failure in introspection.py for python2.6 (maximum recursion depth exceeded)
-- DONE (try python 2.6 -3 and get rid of all warnings, to have code 
 
 MDP 2.3 15.5.2008:
 
-- DONE offer 'gemm' interface and use it in the nodes
-- DONE fix 'fftpack' calls in benchmarks and tests
 - check weird Segmentation Fault in testRoundOffWarningCovMatrix with type='g'
   (it's probably a numpy.dot bug)
 - better tests for 'QuadraticForms'

@@ -3,8 +3,12 @@
 Before release:
 - make sure new nodes have tests
 - add new nodes to tutorial list
+- new nodes must be in nodes/__init__.py __all__ list
 - change spinner design (tests)
 - make sure that __init__ has right version number
+- make sure tutorial has right version
+- make sure tutorial PDF has right version
+- make sure homepage links to tutorial have right version
 
 During release:
 - update CHANGES and TODO
@@ -12,7 +16,7 @@ During release:
 - generate API documentation
 - update on SF.net
 - short/long description should go: on SF.net description, tutorial,
-  home page, pypie, modules __init__
+  home page, pypi, modules __init__
 - change homepage color
 - update "how to cite MDP" with new version number
 

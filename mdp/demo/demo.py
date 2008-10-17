@@ -1,8 +1,4 @@
 import mdp
-dir(mdp.helper_funcs)
-# ['__builtins__', '__doc__', '__file__', '__name__',
-# 'cubica', 'factor_analysis', 'fastica', 'get_eta',
-# 'isfa', 'mdp', 'pca', 'sfa', 'sfa2', 'whitening']
 pcanode1 = mdp.nodes.PCANode()
 pcanode1
 # PCANode(input_dim=None, output_dim=None, dtype=None)
@@ -60,7 +56,8 @@ x = pcanode1.inverse(y_pca)
 expnode.is_invertible()
 # False
 class TimesTwoNode(mdp.Node):
-    def is_trainable(self): return False
+    def is_trainable(self):
+        return False
     def _execute(self, x):
         return 2*x
     def _inverse(self, y):
@@ -78,8 +75,10 @@ class PowerNode(mdp.Node):
     def __init__(self, power, input_dim=None, dtype=None):
         super(PowerNode, self).__init__(input_dim=input_dim, dtype=dtype)
         self.power = power
-    def is_trainable(self): return False
-    def is_invertible(self): return False
+    def is_trainable(self):
+        return False
+    def is_invertible(self):
+        return False
     def _get_supported_dtypes(self):
         return ['float32', 'float64']
     def _execute(self, x):
@@ -88,7 +87,7 @@ class PowerNode(mdp.Node):
 # >>>
 node = PowerNode(3)
 x = mdp.numx.array([[1.0, 2.0, 3.0]])
-y = node.execute(x)
+y = node(x)
 print x, '**', node.power, '=', node(x)
 # [ [ 1.  2.  3.]] ** 3 = [ [  1.   8.  27.]]
 class MeanFreeNode(mdp.Node):
@@ -118,7 +117,7 @@ class MeanFreeNode(mdp.Node):
 node = MeanFreeNode()
 x = mdp.numx_rand.random((10,4))
 node.train(x)
-y = node.execute(x)
+y = node(x)
 print 'Mean of y (should be zero): ', mdp.numx.mean(y, 0)
 # Mean of y (should be zero):  [  0.00000000e+00   2.22044605e-17
 # -2.22044605e-17   1.11022302e-17]
@@ -164,7 +163,7 @@ for phase in range(2):
 # ...
 # ...
 # execute
-y = node.execute(x)
+y = node(x)
 print 'Standard deviation of y (should be one): ', mdp.numx.std(y, axis=0)
 # Standard deviation of y (should be one):  [ 1.  1.  1.  1.]
 class TwiceNode(mdp.Node):
@@ -203,24 +202,27 @@ inp_test[:,5:] /= 10.0
 x_test = mdp.utils.mult(inp_test, mdp.numx_rand.random((20, 20)))
 pca = mdp.nodes.PCANode(output_dim=5)
 pca.train(x)
-out1 = pca.execute(x)
+out1 = pca(x)
 ica = mdp.nodes.CuBICANode()
 ica.train(out1)
-out2 = ica.execute(out1)
-out1_test = pca.execute(x_test)
-out2_test = ica.execute(out1_test)
+out2 = ica(out1)
+out1_test = pca(x_test)
+out2_test = ica(out1_test)
 hitnode = mdp.nodes.HitParadeNode(3)
 hitnode.train(out2_test)
 maxima, indices = hitnode.get_maxima()
 flow = mdp.Flow([mdp.nodes.PCANode(output_dim=5), mdp.nodes.CuBICANode()])
+flow = mdp.nodes.PCANode(output_dim=5) + mdp.nodes.CuBICANode()
 flow.train(x)
 flow.append(mdp.nodes.HitParadeNode(3))
+flow += mdp.nodes.HitParadeNode(3)
 flow.train(x_test)
 maxima, indices = flow[2].get_maxima()
 out = flow.execute(x)
 cov = mdp.numx.amax(abs(mdp.utils.cov2(inp[:,:5], out)))
 print cov
 # [ 0.98992083  0.99244511  0.99227319  0.99663185  0.9871812 ]
+out = flow(x)
 rec = flow.inverse(out)
 cov = mdp.numx.amax(abs(mdp.utils.cov2(x/mdp.numx.std(x,axis=0),
                                        rec/mdp.numx.std(rec,axis=0))))
@@ -235,20 +237,21 @@ for node in flow:
 # PCANode(input_dim=20, output_dim=5, dtype='float64')
 # CuBICANode(input_dim=5, output_dim=5, dtype='float64')
 # HitParadeNode(input_dim=5, output_dim=5, dtype='float64')
+# HitParadeNode(input_dim=5, output_dim=5, dtype='float64')
 # >>>
 len(flow)
-# 3
+# 4
 print flow[::2]
 # [PCANode, HitParadeNode]
 nodetoberemoved = flow.pop(-1)
 nodetoberemoved
 # HitParadeNode(input_dim=5, output_dim=5, dtype='float64')
 len(flow)
-# 2
+# 3
 dummyflow = flow[1:].copy()
 longflow = flow + dummyflow
 len(longflow)
-# 3
+# 4
 class BogusExceptNode(mdp.Node):
    def train(self,x):
        self.bogus_attr = 1
@@ -284,7 +287,7 @@ flow = mdp.Flow([BogusNode(),BogusNode()], verbose=1)
 flow.train([gen_data(5000),gen_data(3000)])
 # Training node #0 (BogusNode)
 # [===================================100%==================================>]
-flow = mdp.Flow([BogusNode(),BogusNode()])
+flow = BogusNode() + BogusNode()
 block_x = mdp.numx.atleast_2d(mdp.numx.arange(2,1001,2))
 block_y = mdp.numx.atleast_2d(mdp.numx.arange(1,1001,2))
 single_block = mdp.numx.transpose(mdp.numx.concatenate([block_x,block_y]))
@@ -304,11 +307,11 @@ flow.train(single_block)
 # Close the training phase of the last node
 flow = mdp.Flow([BogusNode(),BogusNode()], verbose=1)
 flow.train([gen_data(1), gen_data(1)])
-# Training node #0 (BogusNode2)
+# Training node #0 (BogusNode)
 # Training finished
-# Training node #1 (IdentityNode)
+# Training node #1 (BosgusNode)
 # [===================================100%==================================>]
-output = flow.execute(single_block)
+output = flow(single_block)
 output = flow.inverse(single_block)
 class SimpleIterator(object):
     def __init__(self, blocks):
@@ -329,11 +332,13 @@ class RandomIterator(object):
         for i in range(2):
             yield mdp.numx_rand.random((1,4))
 iterator = RandomIterator()
-for x in iterator: print x
+for x in iterator:
+    print x
 # ...
 # [[ 0.99586495  0.53463386  0.6306412   0.09679571]]
 # [[ 0.51117469  0.46647448  0.95089738  0.94837122]]
-for x in iterator: print x
+for x in iterator:
+    print x
 # ...
 # [[ 0.99586495  0.53463386  0.6306412   0.09679571]]
 # [[ 0.51117469  0.46647448  0.95089738  0.94837122]]
@@ -410,6 +415,19 @@ switchboard
 x = mdp.numx.array([[2,4,6,8,10,12]])
 switchboard.execute(x)
 # array([[ 2,  4,  6,  8, 10,  8, 10, 12]])
+node1 = mdp.nodes.PCANode(input_dim=100, output_dim=10)
+node2 = mdp.nodes.SFA2Node(input_dim=10, output_dim=10)
+flow = node1 + node2
+data_iterable = mdp.numx_rand.random((6, 200, 100))
+scheduler = mdp.parallel.ProcessScheduler(n_processes=2)
+parallel_flow = mdp.parallel.make_parallel(flow)
+parallel_flow.train(data_iterable, scheduler=scheduler)
+node1 = mdp.parallel.ParallelPCANode(input_dim=100, output_dim=10)
+node2 = mdp.parallel.ParallelSFA2Node(input_dim=10, output_dim=10)
+parallel_flow = mdp.parallel.ParallelFlow([node1, node2])
+data_iterable = mdp.numx_rand.random((6, 200, 100))
+scheduler = mdp.parallel.ProcessScheduler(n_processes=2)
+parallel_flow.train(data_iterable, scheduler=scheduler)
 p2 = mdp.numx.pi*2
 t = mdp.numx.linspace(0,1,10000,endpoint=0) # time axis 1s, samplerate 10KHz
 dforce = mdp.numx.sin(p2*5*t) + mdp.numx.sin(p2*11*t) + mdp.numx.sin(p2*13*t)
@@ -423,21 +441,20 @@ for i in range(1,10000):
     series[i] = logistic_map(series[i-1],3.6+0.13*dforce[i])
 # ...
 # >>>
-sequence = [mdp.nodes.EtaComputerNode(),
-            mdp.nodes.TimeFramesNode(10),
-            mdp.nodes.PolynomialExpansionNode(3),
-            mdp.nodes.SFANode(output_dim=1),
-            mdp.nodes.EtaComputerNode()]
+flow = (mdp.nodes.EtaComputerNode() +
+        mdp.nodes.TimeFramesNode(10) +
+        mdp.nodes.PolynomialExpansionNode(3) +
+        mdp.nodes.SFANode(output_dim=1) +
+        mdp.nodes.EtaComputerNode() )
 # ...
 # >>>
-flow = mdp.Flow(sequence, verbose=1)
 flow.train(series)
 slow = flow(series)
 resc_dforce = (dforce - mdp.numx.mean(dforce,0))/mdp.numx.std(dforce,0)
 mdp.utils.cov2(resc_dforce[:-9],slow)
 # 0.99992501533859179
-print 'Eta value (time-series): ', flow[0].get_eta(t=10000)
-# Eta value (time-series):  [ 3002.53380245]
+print 'Eta value (time series): ', flow[0].get_eta(t=10000)
+# Eta value (time series):  [ 3002.53380245]
 print 'Eta value (slow feature): ', flow[-1].get_eta(t=9996)
 # Eta value (slow feature):  [ 10.2185087]
 mdp.numx_rand.seed(1266090063)
@@ -487,3 +504,24 @@ gng.stop_training()
 n_obj = len(gng.graph.connected_components())
 print n_obj
 # 5
+def s_distr(npoints, hole=False):
+    """Return a 3D S-shaped surface. If hole is True, the surface has
+    a hole in the middle."""
+    t = mdp.numx_rand.random(npoints)
+    y = mdp.numx_rand.random(npoints)*5.
+    theta = 3.*mdp.numx.pi*(t-0.5)
+    x = mdp.numx.sin(theta)
+    z = mdp.numx.sign(theta)*(mdp.numx.cos(theta) - 1.)
+    if hole:
+        indices = mdp.numx.where(((0.3>t) | (0.7<t)) | ((1.>y) | (4.<y)))
+        return x[indices], y[indices], z[indices], t[indices]
+    else:
+        return x, y, z, t
+n, k = 1000, 15
+x, y, z, t = s_distr(n, hole=False)
+data = mdp.numx.array([x,y,z]).T
+lle_projected_data = mdp.nodes.LLENode(k, output_dim=2)(data)
+x, y, z, t = s_distr(n, hole=True)
+data = mdp.numx.array([x,y,z]).T
+lle_projected_data = mdp.nodes.LLENode(k, output_dim=2)(data)
+hlle_projected_data = mdp.nodes.HLLENode(k, output_dim=2)(data)

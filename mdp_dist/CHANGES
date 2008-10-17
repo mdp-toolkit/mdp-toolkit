@@ -61,6 +61,7 @@ MDP-2.4:
             http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=487939
             Applied patch from Michael Hanke. Thank you!
 
+-------------------------------------------------------------------------------
 MDP-2.3:
 2008-05-08: fixed bug in the raising of the switchboard exception.
 2008-05-02: added exception for hinet.Rectangular2dSwitchboard 
