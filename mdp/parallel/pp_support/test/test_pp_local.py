@@ -15,13 +15,13 @@ class TestLocalPPScheduler(unittest.TestCase):
                                                 max_queue_length=0, 
                                                 verbose=False)
         # process jobs
-        for i in range(6):
+        for i in range(50):
             scheduler.add_task(i, parallel.SqrTestCallable())
         results = scheduler.get_results()
         scheduler.cleanup()
         # check result
         results.sort()
-        results = n.array(results)
+        results = n.array(results[:6])
         self.assertTrue(n.all(results == n.array([0,1,4,9,16,25])))
         
 
