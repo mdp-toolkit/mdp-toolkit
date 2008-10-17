@@ -152,7 +152,7 @@ def _process_run():
         except Exception, exception:
             # return the exception instead of the result
             if task is None:
-                print "unpickling a task caused an exception in a process:")
+                print "unpickling a task caused an exception in a process:"
             else:
                 print "task %d caused exception in process:" % task[2]
             print exception
