@@ -1,5 +1,5 @@
 from mdp import numx, numx_linalg, Cumulator, TrainingException, MDPWarning
-from mdp.utils import mult, symeig, nongeneral_svd, svd
+from mdp.utils import mult, symeig, nongeneral_svd, svd, sqrtm
 import warnings as _warnings
 
 # some useful functions
@@ -540,5 +540,5 @@ class HLLENode(LLENode):
         if self.verbose:
             print ' - normalizing null space...'
 
-        C = utils.sqrtm(mult(Y.T, Y))
+        C = sqrtm(mult(Y.T, Y))
         self.training_projection = mult(Y, C)
