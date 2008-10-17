@@ -340,7 +340,7 @@ class NodesTestSuite(unittest.TestSuite):
     def _get_testoutputdim(self, node_class, args=[], sup_args_func=None):
         def _testoutputdim(node_class=node_class):
             mat,mix,inp = self._get_random_mix()
-            output_dim = self.mat_dim[1]/2
+            output_dim = self.mat_dim[1]//2
             # case 1: output dim set in the constructor
             node_args = self._set_node_args(args)
             node = node_class(*node_args, **{'output_dim':output_dim})

@@ -48,16 +48,20 @@ pinv = lambda x: refcast(_pinv(x), x.dtype)
 _solve = _mdp.numx_linalg.solve
 solve = lambda x, y: refcast(_solve(x, y), x.dtype)
 
-def svd(x):
+def svd(x, compute_uv = True):
     """Wrap the numx SVD routine, so that it returns arrays of the correct
     dtype and a SymeigException in case of failures."""
     tc = x.dtype
     try:
-        u, s, v = _mdp.numx_linalg.svd(x)
+        if compute_uv:
+            u, s, v = _mdp.numx_linalg.svd(x)
+            return refcast(u, tc), refcast(s, tc), refcast(v, tc)
+        else:
+            s = _mdp.numx_linalg.svd(x, compute_uv=False)
+            return refcast(s, tc)
     except _mdp.numx_linalg.LinAlgError, exc:
         raise SymeigException(str(exc))
-    return refcast(u, tc), refcast(s, tc), refcast(v, tc)
-
+    
 # clean up namespace
 del routines
 del introspection
