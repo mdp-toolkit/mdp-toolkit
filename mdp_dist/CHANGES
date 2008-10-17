@@ -2,7 +2,7 @@ MDP-2.4:
 
 2008-10-16: added interface to BLAS's "gemm" matrix multiplication
             function.
-2008-10-15: remoed obsolete helper functions.
+2008-10-15: removed obsolete helper functions.
 2008-10-15: added new feature. Now:
             output = XXXNode(output_dim=10)(x)
             trains and executes the node. This makes helper_functions obsolete!
