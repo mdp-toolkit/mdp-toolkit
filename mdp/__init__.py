@@ -132,6 +132,7 @@ from helper_funcs import pca, whitening, fastica, sfa, get_eta
 # import our modules
 import nodes
 import hinet
+import parallel
 
 # import test functions:
 from test import test
@@ -147,7 +148,8 @@ __all__ = ['CheckpointFlow', 'CheckpointFunction', 'CheckpointSaveFunction',
            'IsNotTrainableException', 'MDPException', 'MDPWarning', 'Node',
            'NodeException', 'TrainingException', 'TrainingFinishedException',
            'contrib', 'get_eta', 'graph', 'helper_funcs', 'hinet', 'nodes', 
-           'numx_description', 'pca', 'sfa', 'test', 'utils', 'whitening']
+           'numx_description', 'pca', 'sfa', 'test', 'utils', 'whitening',
+           'parallel']
 
 __version__ = '2.4'
 __authors__ = 'Pietro Berkes, Niko Wilbert, and Tiziano Zito'
