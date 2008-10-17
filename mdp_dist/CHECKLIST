@@ -5,7 +5,7 @@ Before release:
 - add new nodes to tutorial list
 - new nodes must be in nodes/__init__.py __all__ list
 - change spinner design (tests)
-- make sure that __init__ has right version number
+- make sure that __init__ and setup.py have right version number
 - make sure tutorial has right version
 - make sure tutorial PDF has right version
 - make sure homepage links to tutorial have right version
@@ -29,3 +29,15 @@ After release:
 	scipy-announcements (?)
 	mdp-users
 - celebrate!!
+
+
+-----
+Short description
+setup.py
+SF.net
+Homepage, beginning
+
+Long description:
+setup.py
+__init__.py
+Tutorial, introduction
