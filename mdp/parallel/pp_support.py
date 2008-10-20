@@ -1,5 +1,8 @@
 """
-Adapter for the Parallel Python library (http://www.parallelpython.com).
+Adapters for the Parallel Python library (http://www.parallelpython.com).
+
+This python file also serves as the emergency kill script for remote slaves.
+If it is run the kill_slaves function is called.
 """
 
 import sys
@@ -27,7 +30,11 @@ import pp
 # TODO: list of computers as dict with int for number of processes?
 
 class PPScheduler(scheduling.Scheduler):
-    """Adaptor scheduler for the parallel python scheduler."""
+    """Adaptor scheduler for the parallel python scheduler.
+    
+    This scheduler is a simple wrapper for a pp server. A pp server instance
+    has to be provided.
+    """
     
     def __init__(self, ppserver, max_queue_length=1,
                  result_container=scheduling.ListResultContainer(), 
@@ -85,7 +92,7 @@ class PPScheduler(scheduling.Scheduler):
     
     
 class LocalPPScheduler(PPScheduler):
-    """Use a local pp server to distribute the work across cpu cores.
+    """Usees a local pp server to distribute the work across cpu cores.
     
     The pp server is created automatically instead of beeing provided by the
     user (in contrast to PPScheduler).
@@ -111,9 +118,14 @@ class LocalPPScheduler(PPScheduler):
     
 # filename used to store the slave info needed for a complete kill
 SLAVES_TEMPFILE = "networkslaves.txt"
+# default secret
 SECRET = "rosebud"
     
 class NetworkPPScheduler(PPScheduler):
+    """Scheduler which can manage pp remote servers.
+    
+    The remote slave servers are automatically started and killed at the end.
+    """
     
     def __init__(self, max_queue_length=1,
                  result_container=scheduling.ListResultContainer(), 
@@ -135,6 +147,8 @@ class NetworkPPScheduler(PPScheduler):
             The second entry can be None to use 'autodetect'.
         n_local_workers -- Value of ncpus for this machine.
         secret -- Secret password to secure the remote slaves.
+        source_paths -- List of paths that will be appended to sys.path in the
+        slaves.
         """
         self._remote_slaves = remote_slaves
         self._running_remote_slaves = None  # list of strings 'address:port'
@@ -222,7 +236,9 @@ def start_slave(address, port, ncpus="autodetect", secret=SECRET, timeout=3600,
     
     The return value is a tuple of the ssh process handle and the remote pid.
     
-    script_path -- Path to pp slave scripts.
+    script_path -- Path to pp slave script file (pp_slave_script).
+    source_paths -- List of paths that will be appended to sys.path in the
+        slaves.
     """
     try:
         if python_executable is None:
@@ -253,7 +269,7 @@ def start_slave(address, port, ncpus="autodetect", secret=SECRET, timeout=3600,
         return None
     
 def kill_slaves(temp_filename=SLAVES_TEMPFILE):
-    """Kill all remote slaves which are stored in tempfile."""
+    """Kill all remote slaves which are stored in the tempfile."""
     tempfile = open(temp_filename)
     try:
         for line in tempfile:
