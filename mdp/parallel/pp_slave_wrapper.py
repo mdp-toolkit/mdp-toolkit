@@ -18,12 +18,12 @@ def main():
         sys_paths = sys.argv[5:]
         for sys_path in sys_paths:
             sys.path.append(sys_path)
-        import pp.ppserver
+        import ppserver
         ## initialization code as in ppserver.py
-        server = pp.ppserver._NetworkServer(ncpus=n_workers,
-                                            port=port,
-                                            secret=secret,
-                                            timeout=timeout)
+        server = ppserver._NetworkServer(ncpus=n_workers,
+                                         port=port,
+                                         secret=secret,
+                                         timeout=timeout)
         print "Server is ready."
         sys.stdout.flush()
     except:

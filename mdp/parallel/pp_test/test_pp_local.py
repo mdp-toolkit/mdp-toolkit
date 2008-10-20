@@ -4,7 +4,7 @@ import unittest
 import numpy as n
 
 import mdp.parallel as parallel
-import mdp.parallel.pp_support as pp_support
+from mdp.parallel import pp_support
 
 
 class TestLocalPPScheduler(unittest.TestCase):

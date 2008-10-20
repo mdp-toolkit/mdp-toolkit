@@ -18,19 +18,19 @@ import signal
 import traceback
 import itertools
 
-import mdp.parallel as parallel
-import pp.pp as pp
+import scheduling
+import pp
 
 # TODO: modify pythonpath when starting workers, then specify module mdp...
 #    write a python wrapper for starting the worker which modifies the sys.path
 
 # TODO: list of computers as dict with int for number of processes?
 
-class PPScheduler(parallel.Scheduler):
+class PPScheduler(scheduling.Scheduler):
     """Adaptor scheduler for the parallel python scheduler."""
     
     def __init__(self, ppserver, max_queue_length=1,
-                 result_container=parallel.ListResultContainer(), 
+                 result_container=scheduling.ListResultContainer(), 
                  copy_callable=False,
                  verbose=False):
         """Initialize the scheduler.
@@ -92,7 +92,7 @@ class LocalPPScheduler(PPScheduler):
     """
     
     def __init__(self, ncpus="autodetect", max_queue_length=1,
-                 result_container=parallel.ListResultContainer(), 
+                 result_container=scheduling.ListResultContainer(), 
                  verbose=False):
         """Create an internal pp server and initialize the scheduler.
         
@@ -116,7 +116,7 @@ SECRET = "rosebud"
 class NetworkPPScheduler(PPScheduler):
     
     def __init__(self, max_queue_length=1,
-                 result_container=parallel.ListResultContainer(), 
+                 result_container=scheduling.ListResultContainer(), 
                  verbose=False,
                  remote_slaves=None,
                  port=50017,
@@ -181,7 +181,7 @@ class NetworkPPScheduler(PPScheduler):
             # a SIGKILL might prevent the kill command transmission
             os.kill(ssh_proc.pid, signal.SIGQUIT)
         print "all slaves killed"
-        super(NetworkPPScheduler, self).cleanup()
+        super(NetworkPPScheduler, self).shutdown()
         
     def _start_slaves(self):
         """Start remote slaves.

@@ -10,11 +10,10 @@ import signal
 import os
 import time
 
-import mdp.parallel as parallel
-import mdp.parallel.pp_support as pp_support
+from mdp.parallel import pp_support
 
 slave_id = "sherrington"
-script_path = "/home/wilbert/develop/workspace/MDP/mdp/parallel/pp_support"
+script_path = "/home/wilbert/develop/workspace/MDP/mdp/parallel"
 nice = -19
 port = 30007
 timeout = 20
@@ -22,7 +21,8 @@ secret = "rosebud"
 n_workers = 1
 
 python_executable = "/home/wilbert/bin/python"
-sys_paths = ["/home/wilbert/develop/workspace/MDP"]
+sys_paths = ["/home/wilbert/develop/workspace/MDP",
+             "/home/wilbert/develop/workspace/parallelpython/src/pp"]
 
 ssh_proc, remote_pid = pp_support.start_slave(address=slave_id, port=port, 
                                             ncpus=n_workers, 

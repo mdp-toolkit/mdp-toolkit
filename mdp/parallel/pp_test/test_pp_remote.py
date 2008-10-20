@@ -4,14 +4,15 @@ import unittest
 import numpy as n
 
 import mdp.parallel as parallel
-import mdp.parallel.pp_support as pp_support
+from mdp.parallel import pp_support
 
 
 remote_slaves = [("sherrington", 1),
                  ("weismann", 2)]
                   
 python_executable = "/home/wilbert/bin/python"
-sys_paths = ["/home/wilbert/develop/workspace/MDP"]
+sys_paths = ["/home/wilbert/develop/workspace/MDP",
+             "/home/wilbert/develop/workspace/parallelpython/src/pp"]
 
 
 class TestRemotePPScheduler(unittest.TestCase):

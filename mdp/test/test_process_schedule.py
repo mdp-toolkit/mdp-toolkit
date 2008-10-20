@@ -7,7 +7,7 @@ from mdp import numx as n
 class TestProcessScheduler(unittest.TestCase):
 
     def test_scheduler(self):
-        """Test process scheduler with 6 jobs and 3 processes."""
+        """Test process scheduler with 6 tasks and 3 processes."""
         ## get MDP source path (if not in the pythonpath) 
         # module_file = os.path.abspath(inspect.getfile(sys._getframe(0)))
         # module_path = os.path.dirname(module_file)
