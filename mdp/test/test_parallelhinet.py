@@ -49,7 +49,7 @@ class TestParallelFlowNode(unittest.TestCase):
                                                 switchboard.output_channels)
         flow = parallel.ParallelFlow([switchboard, sfa_layer])
         data_iterables = [None,
-                          n.random.random((3, 10, 100*100))]
+                          [n.random.random((10, 100*100)) for _ in range(3)]]
         scheduler = parallel.Scheduler()
         flow.train(data_iterables, scheduler=scheduler)
         
@@ -58,13 +58,13 @@ class TestParallelLayer(unittest.TestCase):
     """Tests for TestParallelLayer."""
 
     def test_layer(self):
-        """Test Simple random test with two nodes."""
+        """Test Simple random test with three nodes."""
         node1 = parallel.ParallelSFANode(input_dim=10, output_dim=5)
         node2 = parallel.ParallelSFANode(input_dim=17, output_dim=3)
         node3 = parallel.ParallelSFANode(input_dim=3, output_dim=1)
         layer = parallel.ParallelLayer([node1, node2, node3])
         flow = parallel.ParallelFlow([layer])
-        data_iterables = [n.random.random((3, 10, 30))]
+        data_iterables = [[n.random.random((10, 30)) for _ in range(3)]]
         scheduler = parallel.Scheduler()
         flow.train(data_iterables, scheduler=scheduler)
 

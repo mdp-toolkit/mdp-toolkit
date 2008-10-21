@@ -240,13 +240,9 @@ class ParallelFlow(mdp.Flow):
             err = "Parallel training is already underway."
             raise ParallelFlowException(err)
         self._train_callable_class = train_callable_class
-        if isinstance(data_iterators, n.ndarray):
-            task_callable = self._train_callable_class(self._flownode)
-            task_callable(data_iterators)
-        else:
-            self._train_data_iters = self._train_check_iterators(data_iterators)
-            self._i_train_node = 0
-            self._next_train_phase()
+        self._train_data_iters = self._train_check_iterators(data_iterators)
+        self._i_train_node = 0
+        self._next_train_phase()
             
     def _next_train_phase(self):
         """Find the next phase or node for parallel training.
@@ -402,18 +398,15 @@ class ParallelFlow(mdp.Flow):
             raise ParallelFlowException("Parallel training is underway.")
         self._execute_callable_class = execute_callable_class
         if isinstance(iterator, n.ndarray):
-            task_callable = self._execute_callable_class(self._flownode,
-                                                         nodenr=nodenr)   
-            return task_callable(iterator)
-        else:
-            self._exec_data_iter = iterator.__iter__()
-            task_data_chunk = self._create_execute_task()[0]
-            if task_data_chunk is None:
-                err = "Execution data iterator is empty."
-                raise ParallelFlowException(err)
-            # first task contains the new callable
-            self._next_task = (task_data_chunk,
-                            self._execute_callable_class(mdp.Flow(self.flow)))
+            iterator = [iterator]
+        self._exec_data_iter = iterator.__iter__()
+        task_data_chunk = self._create_execute_task()[0]
+        if task_data_chunk is None:
+            err = "Execution data iterator is empty."
+            raise ParallelFlowException(err)
+        # first task contains the new callable
+        self._next_task = (task_data_chunk,
+                        self._execute_callable_class(mdp.Flow(self.flow)))
             
     def _create_execute_task(self):
         """Create and return a single execution task.
