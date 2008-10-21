@@ -25,11 +25,11 @@ During release:
 After release:
 - update version number in __init__
 - send announcement to:
-	connectionists
-	ML-news
-	numpy-announcements (?)
-	scipy-announcements (?)
-	mdp-users
+	connectionists: connectionists@cs.cmu.edu
+	ML-news: ML-news@googlegroups.com
+	numpy-discussion: numpy-discussion@scipy.org
+	Scipy users: scipy-user@scipy.org
+	mdp-users: mdp-toolkit-users@lists.sourceforge.net
 - celebrate!!
 
 
