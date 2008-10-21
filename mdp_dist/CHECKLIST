@@ -9,6 +9,8 @@ Before release:
 - make sure tutorial has right version
 - make sure tutorial PDF has right version
 - make sure homepage links to tutorial have right version
+- try mdp tests with MDPNUMX=scipy, MDNUMX=numpy, and with parallel
+  python
 
 During release:
 - update CHANGES and TODO
