@@ -68,8 +68,7 @@ classifiers = ["Development Status :: 5 - Production/Stable",
                "Operating System :: OS Independent",
                "Programming Language :: Python",
                "Topic :: Scientific/Engineering :: Information Analysis",
-               "Topic :: Scientific/Engineering :: Mathematics",
-               "Topic :: Software Development :: Algorithms"]
+               "Topic :: Scientific/Engineering :: Mathematics"]
 
 setup(name = 'MDP', version = '2.4',
       author = 'Pietro Berkes, Niko Wilbert, and Tiziano Zito',

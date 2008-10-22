@@ -30,6 +30,8 @@ After release:
 	numpy-discussion: numpy-discussion@scipy.org
 	Scipy users: scipy-user@scipy.org
 	mdp-users: mdp-toolkit-users@lists.sourceforge.net
+        Python-announce: python-announce-list@python.org
+- update package information on mloss.org and pypi
 - celebrate!!
 
 
