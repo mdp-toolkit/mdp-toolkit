@@ -104,7 +104,7 @@ class FlowExecuteCallable(scheduling.TaskCallable):
 ### ParallelFlow Class ###    
 
 class ParallelFlowException(mdp.FlowException):
-    """Exception for calling execute while _flow is in parallel training."""
+    """Standard exception for problems with ParallelFlow."""
     pass
 
 
@@ -259,6 +259,7 @@ class ParallelFlow(mdp.Flow):
             if not self.flow[self._i_train_node].is_training():
                 self._i_train_node += 1
                 continue
+            data_iterator = self._train_data_iters[self._i_train_node]
             try:
                 # test if node can be forked
                 if isinstance(self.flow[self._i_train_node], 
@@ -266,12 +267,26 @@ class ParallelFlow(mdp.Flow):
                     self._flownode.fork()
                 else:
                     raise parallelnodes.TrainingPhaseNotParallelException()
+                # fork successful, prepare parallel training
+                if self.verbose:
+                    print ("start parallel training phase of " +
+                           "node no. %d in parallel flow" % 
+                           (self._i_train_node+1))
+                # turn iterable into iterator
+                self._train_data_iter = iter(data_iterator)
+                task_data_chunk = self._create_train_task()[0]
+                if task_data_chunk is None:
+                    err = "Training data iterator is empty."
+                    raise ParallelFlowException(err)
+                # first task contains the new callable
+                self._next_task = (task_data_chunk,
+                            self._train_callable_class(self._flownode.fork()))
+                break
             except parallelnodes.TrainingPhaseNotParallelException:
                 if self.verbose:
                     print ("start local training phase of " + 
                            "node no. %d in parallel flow" % 
                            (self._i_train_node+1))
-                data_iterator = self._train_data_iters[self._i_train_node]
                 task_callable = self._train_callable_class(self._flownode)   
                 for x in data_iterator:
                     # Note: if x contains additional args assume that the
@@ -284,22 +299,6 @@ class ParallelFlow(mdp.Flow):
                 self._flownode.stop_training()
                 if not self.flow[self._i_train_node].is_training():
                     self._i_train_node += 1
-            else:
-                # fork successful, prepare parallel training
-                if self.verbose:
-                    print ("start parallel training phase of " +
-                           "node no. %d in parallel flow" % 
-                           (self._i_train_node+1))
-                self._train_data_iter = iter(
-                                    self._train_data_iters[self._i_train_node])
-                task_data_chunk = self._create_train_task()[0]
-                if task_data_chunk is None:
-                    err = "Training data iterator is empty."
-                    raise ParallelFlowException(err)
-                # first task contains the new callable
-                self._next_task = (task_data_chunk,
-                            self._train_callable_class(self._flownode.fork()))
-                break
         else:
             # training is finished
             self._i_train_node = None
@@ -399,14 +398,14 @@ class ParallelFlow(mdp.Flow):
         self._execute_callable_class = execute_callable_class
         if isinstance(iterator, n.ndarray):
             iterator = [iterator]
-        self._exec_data_iter = iterator.__iter__()
+        self._exec_data_iter = iter(iterator)
         task_data_chunk = self._create_execute_task()[0]
         if task_data_chunk is None:
             err = "Execution data iterator is empty."
             raise ParallelFlowException(err)
         # first task contains the new callable
         self._next_task = (task_data_chunk,
-                        self._execute_callable_class(mdp.Flow(self.flow)))
+                           self._execute_callable_class(mdp.Flow(self.flow)))
             
     def _create_execute_task(self):
         """Create and return a single execution task.
