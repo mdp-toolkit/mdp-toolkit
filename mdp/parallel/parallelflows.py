@@ -38,6 +38,8 @@ class FlowTrainCallable(scheduling.TaskCallable):
         x -- training data block
         """
         self._flownode.train(x)
+        # note the local training in ParallelFlow relies on the flownode
+        # being preserved, so derived classes should preserve it as well
         for node in self._flownode._flow:
             if node.is_training():
                 return node
@@ -287,6 +289,7 @@ class ParallelFlow(mdp.Flow):
                     print ("start local training phase of " + 
                            "node no. %d in parallel flow" % 
                            (self._i_train_node+1))
+                # the training is done directly on self._flownode
                 task_callable = self._train_callable_class(self._flownode)   
                 for x in data_iterator:
                     # Note: if x contains additional args assume that the

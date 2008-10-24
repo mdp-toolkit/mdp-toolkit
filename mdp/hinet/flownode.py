@@ -35,6 +35,17 @@ class FlowNode(mdp.Node):
         # store which nodes are pretrained up to what phase
         self._pretrained_phase = [node.get_current_train_phase()
                                   for node in flow]
+        # check if all the nodes are already fully trained
+        train_len = 0
+        for i_node, node in enumerate(self._flow):
+            if node.is_trainable():
+                train_len += (len(node._get_train_seq())
+                              - self._pretrained_phase[i_node])
+        if train_len:
+            self._is_trainable = True
+        else:
+            self._is_trainable = False
+        # remaining standard node initialisation 
         super(FlowNode, self).__init__(input_dim=input_dim,
                                        output_dim=output_dim, dtype=dtype)
         
@@ -70,10 +81,7 @@ class FlowNode(mdp.Node):
         return list(types)
     
     def is_trainable(self):
-        for node in self._flow:
-            if node.is_trainable():
-                return True
-        return False
+        return self._is_trainable
 
     def is_invertible(self):
         for node in self._flow:
@@ -101,8 +109,7 @@ class FlowNode(mdp.Node):
                 remaining_len = (len(node._get_train_seq())
                                  - self._pretrained_phase[i_node])
                 train_seq += ([(get_train_function(i_node, node), 
-                                node.stop_training)] 
-                              * remaining_len)
+                                node.stop_training)] * remaining_len)
         # If the last node is trainable,
         # then we have to set the output dimensions of the FlowNode.
         if self._flow[-1].is_trainable():

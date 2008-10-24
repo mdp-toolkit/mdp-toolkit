@@ -110,6 +110,21 @@ class HinetTestSuite(NodesTestSuite):
             flownode.train(x)
             flownode.stop_training()
         flownode.execute(x)
+        
+    def testFlowNode_pretrained_flow(self):
+        flow = mdp.Flow([mdp.nodes.PolynomialExpansionNode(degree=2), 
+                         mdp.nodes.PCANode(output_dim=15, reduce=True),
+                         mdp.nodes.PolynomialExpansionNode(degree=2),
+                         mdp.nodes.PCANode(output_dim=3, reduce=True)])
+        flownode = mh.FlowNode(flow)
+        x = numx_rand.random([300,20])
+        while flownode.get_remaining_train_phase() > 0:
+            flownode.train(x)
+            flownode.stop_training()
+        # build new flownode with the trained nodes    
+        flownode = mh.FlowNode(flow)
+        assert not flownode.is_training()
+        flownode.execute(x)
 
     def testLayer(self):
         node1 = mdp.nodes.PCANode(input_dim=10, output_dim=5)
