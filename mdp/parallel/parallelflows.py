@@ -139,8 +139,8 @@ class ParallelFlow(mdp.Flow):
         Note that the crash_recovery flag is is not supported, so it is
         disabled.
         """
-        super(ParallelFlow, self).__init__(flow, crash_recovery=False, 
-                                           verbose=verbose,
+        kwargs["crash_recovery"] = False
+        super(ParallelFlow, self).__init__(flow, verbose=verbose,
                                            **kwargs)
         self._train_data_iters = None  # all training data
         # Warning: This must be an iterator, not just an iterable!
