@@ -23,6 +23,9 @@ class FlowNode(mdp.Node):
         Pretrained nodes are allowed, but the internal _flow must not 
         be modified after the FlowNode was created. 
         The node dimensions do not have to be specified.
+        
+        flow can have crash recovery enabled, but there is no special support
+        for it.
         """
         self._flow = flow
         # set properties if needed:
@@ -97,9 +100,8 @@ class FlowNode(mdp.Node):
             # using nested scopes here instead of default args, see pep-0227
             def _train(x, *args, **kwargs):
                 if i_node > 0:
-                    # do not use _execute_seq, no crash recovery here
-                    prior_flow = self._flow[:_i_node]
-                    _node.train(prior_flow.execute(x), *args, **kwargs)
+                    _node.train(self._flow.execute(x, nodenr=_i_node-1), 
+                                *args, **kwargs)
                 else:
                     _node.train(x, *args, **kwargs)
             return _train
