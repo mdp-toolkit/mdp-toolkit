@@ -1,3 +1,67 @@
+MDP-2.4:
+
+2008-10-16: added interface to BLAS's "gemm" matrix multiplication
+            function.
+2008-10-15: removed obsolete helper functions.
+2008-10-15: added new feature. Now:
+            output = XXXNode(output_dim=10)(x)
+            trains and executes the node. This makes helper_functions obsolete!
+            It even works for multiple training phases (only if the training 
+            phase has not started yet).
+2008-10-15: removed use of deprecated features with python2.6 -3.
+2008-10-14: removed dangerous list default argument in rotate and permute 
+            functions. A tuple is now used.
+2008-10-13: PEP8 code restyling (pylint).
+2008-10-07: Removed workarounds for pickle bug in numpy < 1.1.x (see 
+            numpy ticket 551).
+2008-09-24: Implemeted metaclass trick for automatic inheritance of 
+            documentation for private methods. Node's subclass authors 
+            can now directly document "_execute", and let users see those 
+            docs as documenting "execute":
+             
+            class MyNode(Node):
+                 def _execute(self):
+                     """blah"""
+
+            >>> print MyNode.execute.__doc__
+            blah.
+            
+            Just defined set of methods allow overwriting of the docstring.
+            the current list is:
+            ['_train', '_stop_training', '_execute', '_inverse']
+2008-09-22: Added new functionality to nodes and flows.
+            Node1+Node2 now returns a flow and Flow1+Node1 appends 
+            Node1 to Flow1.
+2008-09-07: New node for Locally Linear Embedding
+2008-08-28: The docstring of Flow.train now mentions that instead of x the 
+            iterators can also return a tuple of x and additional args.
+2008-08-28: Fixed bug in PCANode:
+            when setting output_dim to a float number after instantiation 
+            but before stop_training, i.e:
+            pca = PCANode()
+            pca.train(x)
+            pca.output_dim = 0.9
+            pca.stop_training()
+            an exception was thrown: Output dim are set already (0) (1 given)
+2008-08-28: Fixed bug in PCANode:
+            when setting output_dim to float number, after stop_training
+            pca.output_dim was a float number instead of integer.
+2008-08-21: Added inverse for Switchboard, including unittests.
+2008-08-19: Added parallel package.
+2008-08-19: Added new NormalNoiseNode (with small unittest), 
+            which can be safely pickled.
+2008-08-07: fixed bug in rbm_nodes (TrainingFinishedException). 
+            Thanks to Mathias Franzius!
+2008-07-03: Node.__call__ method now takes *args and **kwargs to call
+            the execute method. Thanks to Jake VanderPlas!
+2008-06-30: Fix debian bug 487939:
+            Modifed the fix for the debian bug so that white_parm defaults to 
+            None instead of {}. With default {} a sublcass updating the 
+            dictionary would have updated it for all instances... 
+            http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=487939
+            Applied patch from Michael Hanke. Thank you!
+
+-------------------------------------------------------------------------------
 MDP-2.3:
 2008-05-08: fixed bug in the raising of the switchboard exception.
 2008-05-02: added exception for hinet.Rectangular2dSwitchboard 

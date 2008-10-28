@@ -12,8 +12,10 @@ import cPickle
 import os
 import inspect
 import mdp
-from testing_tools import assert_array_almost_equal, assert_almost_equal, \
-     assert_array_equal, assert_equal
+from testing_tools import (assert_array_almost_equal, assert_almost_equal,
+                           assert_array_equal, assert_equal)
+from test_nodes import (_BogusNode, _BogusNodeTrainable, _BogusExceptNode,
+                        _BogusMultiNode)
 
 mult = mdp.utils.mult
 numx = mdp.numx
@@ -28,43 +30,6 @@ class _CheckpointCollectFunction(mdp.CheckpointFunction):
     def __call__(self, node):
         self.classes.append(node.__class__)
 
-class _BogusNode(mdp.Node):
-    def is_trainable(self): return 0
-    def _execute(self,x): return 2*x
-    def _inverse(self,x): return 0.5*x
-
-class _BogusNodeTrainable(mdp.Node):
-    def _train(self, x):
-        pass
-    def _stop_training(self):
-        pass
-    
-class _BogusExceptNode(mdp.Node):
-    def _train(self,x):
-        self.bogus_attr = 1
-        raise Exception, "Bogus Exception"
-    
-    def _execute(self,x):
-        raise Exception, "Bogus Exception"
-
-class _BogusMultiNode(mdp.Node):
-
-    def __init__(self):
-        super(_BogusMultiNode, self).__init__()
-        self.visited = []
-    
-    def _get_train_seq(self):
-        return [(self.train1, self.stop1),
-                (self.train2, self.stop2)]
-
-    def train1(self, x):
-        self.visited.append(1)
-    def stop1(self):
-        self.visited.append(2)
-    def train2(self, x):
-        self.visited.append(3)
-    def stop2(self):
-        self.visited.append(4)
 
 class FlowsTestSuite(unittest.TestSuite):
 
@@ -275,7 +240,27 @@ class FlowsTestSuite(unittest.TestSuite):
             raise Exception, 'flow.pop left inconsistent flow'
         except ValueError:
             assert_equal(len(flow), length)
+
+    def testFlow_as_sum_of_nodes(self):
+        node1 = _BogusNode()
+        node2 = _BogusNode()
+        flow = node1+node2
+        assert type(flow) is mdp.Flow
+        assert len(flow) == 2
+        node3 = _BogusNode()
+        flow = node1+node2+node3
+        assert type(flow) is mdp.Flow
+        assert len(flow) == 3
+        node4 = _BogusNode()
+        flow = node4 + flow
+        assert type(flow) is mdp.Flow
+        assert len(flow) == 4
+
         
+        
+        
+        
+    
     def testCheckpointFlow(self):
         lst = []
         # checkpoint function, it collects a '1' for each call

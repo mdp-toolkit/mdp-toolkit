@@ -32,20 +32,20 @@ class OneDimensionalHitParade(object):
         """
         self.n = int(n)
         self.d = int(d)
-        self.iM = numx.zeros((n,),dtype=integer_dtype)
-        self.im = numx.zeros((n,),dtype=integer_dtype)
+        self.iM = numx.zeros((n, ), dtype=integer_dtype)
+        self.im = numx.zeros((n, ), dtype=integer_dtype)
         real_dtype = numx.dtype(real_dtype)
         self.M = numx.array([MIN_NUM[real_dtype]]*n, dtype=real_dtype)
         self.m = numx.array([MAX_NUM[real_dtype]]*n, dtype=real_dtype)
         self.lM = 0
         self.lm = 0
 
-    def update(self,inp):
+    def update(self, inp):
         """
         Input arguments:
         inp -- tuple (time-series, time-indices)
         """
-        (x,ix) = inp
+        (x, ix) = inp
         rows = len(x)
         d = self.d
         M = self.M
@@ -129,19 +129,19 @@ class HitParadeNode(Node):
 
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
-        return ['b','h','i','q','f','d']
+        return ['b', 'h', 'i', 'q', 'f', 'd']
 
     def _train(self, x):
         hit = self.hit
         old_tlen = self.tlen
         if hit is None:
-            hit = [OneDimensionalHitParade\
-                   (self.n,self.d,self.dtype,self.itype)\
+            hit = [OneDimensionalHitParade(self.n, self.d, self.dtype,
+                                           self.itype)
                    for c in range(self.input_dim)]
         tlen = old_tlen + x.shape[0]
-        indices = numx.arange(old_tlen,tlen)
+        indices = numx.arange(old_tlen, tlen)
         for c in range(self.input_dim):
-            hit[c].update((x[:,c],indices))
+            hit[c].update((x[:, c], indices))
         self.hit = hit
         self.tlen = tlen
     
@@ -157,11 +157,11 @@ class HitParadeNode(Node):
         cols = self.input_dim
         n = self.n
         hit = self.hit
-        iM = numx.zeros((n,cols),dtype=self.itype)
-        M = numx.ones((n,cols),dtype=self.dtype)
+        iM = numx.zeros((n, cols), dtype=self.itype)
+        M = numx.ones((n, cols), dtype=self.dtype)
         for c in range(cols):
-            M[:,c],iM[:,c] = hit[c].get_maxima()
-        return M,iM
+            M[:, c], iM[:, c] = hit[c].get_maxima()
+        return M, iM
     
     def get_minima(self):
         """
@@ -175,11 +175,11 @@ class HitParadeNode(Node):
         cols = self.input_dim
         n = self.n
         hit = self.hit
-        im = numx.zeros((n,cols), dtype=self.itype)
-        m = numx.ones((n,cols), dtype=self.dtype)
+        im = numx.zeros((n, cols), dtype=self.itype)
+        m = numx.ones((n, cols), dtype=self.dtype)
         for c in range(cols):
-            m[:,c],im[:,c] = hit[c].get_minima()
-        return m,im
+            m[:, c], im[:, c] = hit[c].get_minima()
+        return m, im
 
 class TimeFramesNode(Node):
     """Copy delayed version of the input signal on the space dimensions.
@@ -213,7 +213,7 @@ class TimeFramesNode(Node):
 
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
-        return ['int8','int16','int32','int64','float32','float64']
+        return ['int8', 'int16', 'int32', 'int64', 'float32', 'float64']
     
     def is_trainable(self):
         return False
@@ -227,16 +227,16 @@ class TimeFramesNode(Node):
         
     def _set_output_dim(self, n):
         msg = 'Output dim can not be explicitly set!'
-        raise NodeException, msg
+        raise NodeException(msg)
             
     def _execute(self, x):
         gap = self.gap
         tf = x.shape[0] - (self.time_frames-1)*gap
         rows = self.input_dim
         cols = self.output_dim
-        y = numx.zeros((tf,cols),dtype=self.dtype)
+        y = numx.zeros((tf, cols), dtype=self.dtype)
         for frame in range(self.time_frames):
-            y[:,frame*rows:(frame+1)*rows] = x[gap*frame:gap*frame+tf,:]
+            y[:, frame*rows:(frame+1)*rows] = x[gap*frame:gap*frame+tf, :]
         return y
 
     def pseudo_inverse(self, y):
@@ -252,9 +252,9 @@ class TimeFramesNode(Node):
         if not self.output_dim:
             # if the input_dim is not defined, raise an exception
             if not self.input_dim:
-                errstr = "Number of input dimensions undefined. Inversion"+\
-                         "not possible."
-                raise NodeException, errstr
+                errstr = ("Number of input dimensions undefined. Inversion"
+                          "not possible.")
+                raise NodeException(errstr)
             self.outputdim = self.input_dim
         
         # control the dimension of y
@@ -267,13 +267,13 @@ class TimeFramesNode(Node):
         cols = self.input_dim
         rest = (self.time_frames-1)*gap
         rows = exp_length + rest
-        x = numx.zeros((rows,cols),dtype=self.dtype)
-        x[:exp_length,:] = y[:,:cols]
+        x = numx.zeros((rows, cols), dtype=self.dtype)
+        x[:exp_length, :] = y[:, :cols]
         count = 1
         # Note that if gap > 1 some of the last rows will be filled with zeros!
         block_sz = min(gap, exp_length)
-        for row in range(max(exp_length,gap),rows,gap):
-            x[row:row+block_sz,:] = y[-block_sz:,count*cols:(count+1)*cols]
+        for row in range(max(exp_length, gap), rows, gap):
+            x[row:row+block_sz, :] = y[-block_sz:, count*cols:(count+1)*cols]
             count += 1
         return x
 
@@ -334,8 +334,9 @@ class EtaComputerNode(Node):
 
     def _train(self, data):
         # here SignalNode.train makes an automatic refcast
-        if not self._initialized: self._init_internals()
-        #
+        if not self._initialized:
+            self._init_internals()
+            
         rdata = data[:-1]
         self._mean += rdata.sum(axis=0)
         self._var += (rdata*rdata).sum(axis=0)
@@ -377,7 +378,7 @@ class NoiseNode(Node):
     Original code contributed by Mathias Franzius.
     """
     
-    def __init__(self, noise_func = mdp.numx_rand.normal, noise_args = (0,1),
+    def __init__(self, noise_func = mdp.numx_rand.normal, noise_args = (0, 1),
                  noise_type = 'additive', input_dim = None, dtype = None):
         """
         Add noise to input signals.
@@ -396,22 +397,22 @@ class NoiseNode(Node):
                          'multiplicative' returns x * (1 + noise)
                         Default is 'additive'.
         """
-        super(NoiseNode, self).__init__(input_dim = input_dim,
-                                        output_dim = input_dim,
-                                        dtype = dtype)
+        super(NoiseNode, self).__init__(input_dim=input_dim,
+                                        output_dim=input_dim,
+                                        dtype=dtype)
         self.noise_func = noise_func
         self.noise_args = noise_args
         valid_noise_types = ['additive', 'multiplicative']
         if noise_type not in valid_noise_types:
             err_str = '%s is not a valid noise type' % str(noise_type)
-            raise NodeException, err_str
+            raise NodeException(err_str)
         else:
             self.noise_type = noise_type
 
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
-        return mdp.utils.get_dtypes('AllFloat') + \
-               mdp.utils.get_dtypes('AllInteger')
+        return (mdp.utils.get_dtypes('AllFloat') +
+                mdp.utils.get_dtypes('AllInteger'))
             
     def is_trainable(self):
         return False
@@ -426,6 +427,37 @@ class NoiseNode(Node):
             return x+noise_mat
         elif self.noise_type == 'multiplicative':
             return x*(1.+noise_mat)
+        
+        
+class NormalNoiseNode(mdp.Node):
+    """Special version of NoiseNode for Gaussian additive noise.
+    
+    Unlike NoiseNode it does not store a noise function reference but simply
+    uses numx_rand.normal. This has the advantage that the node can be pickled 
+    (which does not work for a normal NoiseNode).
+    """
+
+    def __init__(self, noise_args=(0, 1), input_dim=None, dtype=None):
+        """Set the noise parameters.
+        
+        noise_args -- Tuple of (mean, standard deviation) for the normal 
+            distribution, default is (0,1).
+        """
+        super(NormalNoiseNode, self).__init__(input_dim=input_dim,
+                                              output_dim=input_dim,
+                                              dtype=dtype)
+        self.noise_args = noise_args
+
+    def is_trainable(self):
+        return False
+
+    def is_invertible(self):
+        return False
+            
+    def _execute(self, x):
+        noise = (mdp.numx_rand.normal(x.shape[-1]) * self.noise_args[1]
+                 + self.noise_args[0]) 
+        return x + noise
 
 
 class GaussianClassifierNode(Node):
@@ -454,16 +486,15 @@ class GaussianClassifierNode(Node):
         return False
 
     def _check_train_args(self, x, cl):
-        if isinstance(cl, (list, tuple, numx.ndarray)) \
-               and len(cl)!=x.shape[0]:
-            msg = "The number of labels should be equal to the number of " +\
-                  "datapoints (%d != %d)" % (len(cl), x.shape[0])
-            raise mdp.TrainingException, msg
+        if isinstance(cl, (list, tuple, numx.ndarray)) and (
+            len(cl) != x.shape[0]):
+            msg = ("The number of labels should be equal to the number of "
+                   "datapoints (%d != %d)" % (len(cl), x.shape[0]))
+            raise mdp.TrainingException(msg)
 
     def _update_covs(self, x, lbl):
-        if not self.cov_objs.has_key(lbl):
-            self.cov_objs[lbl] = \
-                utils.CovarianceMatrix(dtype = self.dtype)
+        if lbl not in self.cov_objs:
+            self.cov_objs[lbl] = utils.CovarianceMatrix(dtype=self.dtype)
         self.cov_objs[lbl].update(x)
 
     def _train(self, x, cl):
@@ -527,7 +558,7 @@ class GaussianClassifierNode(Node):
         sqrt_detS = self._sqrt_def_covs[lbl_idx]
         invS = self.inv_covs[lbl_idx]
         # subtract the mean
-        x_mn = x - self.means[lbl_idx][numx.newaxis,:]
+        x_mn = x - self.means[lbl_idx][numx.newaxis, :]
         # exponent
         exponent = -0.5 * (utils.mult(x_mn, invS)*x_mn).sum(axis=1)
         # constant
@@ -543,8 +574,8 @@ class GaussianClassifierNode(Node):
         tmp_prob = numx.zeros((x.shape[0], len(self.labels)),
                               dtype=self.dtype)
         for i in range(len(self.labels)):
-            tmp_prob[:,i] = self._gaussian_prob(x, i)
-            tmp_prob[:,i] *= self.p[i]
+            tmp_prob[:, i] = self._gaussian_prob(x, i)
+            tmp_prob[:, i] *= self.p[i]
             
         # normalize to probability 1
         # (not necessary, but sometimes useful)

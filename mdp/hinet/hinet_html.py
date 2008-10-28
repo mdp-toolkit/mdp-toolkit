@@ -5,7 +5,8 @@ This is done via the HiNetHTML class.
 """
 
 import mdp
-import hinet
+
+import switchboard
 
 ## CSS for hinet representation. ##
 
@@ -100,10 +101,15 @@ def _write_rect2dswitchboard(node, report):
 def _write_sfa2(node, report):
     report.write('expansion dim: ' + str(node._expnode.output_dim) + ' <br>')
     
+def _write_normalnoise(node, r):
+    r.write('noise level: ' + str(node.noise_args[1]) + ' <br>')
+    r.write('noise offset: ' + str(node.noise_args[0]))
+    
 # (node class type, write function)
 NODE_PARAM_WRITERS = [
-    (hinet.Rectangular2dSwitchboard, _write_rect2dswitchboard),
-    (mdp.nodes.SFA2Node, _write_sfa2)
+    (switchboard.Rectangular2dSwitchboard, _write_rect2dswitchboard),
+    (mdp.nodes.SFA2Node, _write_sfa2),
+    (mdp.nodes.NormalNoiseNode, _write_normalnoise),
 ]
 
 

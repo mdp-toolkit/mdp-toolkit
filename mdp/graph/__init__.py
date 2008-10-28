@@ -1,6 +1,6 @@
-from graph import Graph, GraphEdge, GraphException, GraphNode,\
-           GraphTopologicalException, is_sequence,\
-           recursive_map, recursive_reduce
+from graph import ( Graph, GraphEdge, GraphException, GraphNode,
+                    GraphTopologicalException, is_sequence,
+                    recursive_map, recursive_reduce)
 
 del graph
 

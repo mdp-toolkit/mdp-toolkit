@@ -1,5 +1,5 @@
 import mdp
-from mdp import numx, numx_linalg, utils
+from mdp import numx, numx_linalg, utils, NodeException
 from mdp.utils import mult, CovarianceMatrix
 import warnings
 
@@ -7,8 +7,8 @@ sqrt, inv, det = numx.sqrt, utils.inv, numx_linalg.det
 normal = mdp.numx_rand.normal
 
 # decreasing likelihood message
-_LHOOD_WARNING = 'Likelihood decreased in FANode. This is probably due '+\
-                 'to some numerical errors.'
+_LHOOD_WARNING = ('Likelihood decreased in FANode. This is probably due '
+                  'to some numerical errors.')
 warnings.filterwarnings('always', _LHOOD_WARNING, mdp.MDPWarning)
 
 
@@ -67,7 +67,8 @@ class FANode(mdp.Node):
         d = self.input_dim
         # if the number of latent variables is not specified,
         # set it equal to the number of input components
-        if not self.output_dim: self.output_dim = d
+        if not self.output_dim:
+            self.output_dim = d
         k = self.output_dim
         # indices of the diagonal elements of a dxd or kxk matrix
         idx_diag_d = [i*(d+1) for i in range(d)]
@@ -89,7 +90,7 @@ class FANode(mdp.Node):
         # approximation?
         #scale = det(cov_mtx)**(1./d)
         scale = numx.product(sigma)**(1./d)
-        A = normal(0., sqrt(scale/k), size=(d,k)).astype(typ)
+        A = normal(0., sqrt(scale/k), size=(d, k)).astype(typ)
 
         ##### EM-cycle
         lhood_curve = []
@@ -124,13 +125,16 @@ class FANode(mdp.Node):
             trace_B_cov = (B*cov_mtx.T).sum()
             # this is actually likelihood/tlen.
             lhood = const - 0.5*log_det_B - 0.5*trace_B_cov
-            if verbose: print 'cycle',t,'log-lhood:',lhood
+            if verbose:
+                print 'cycle', t, 'log-lhood:', lhood
 
             ##### convergence criterion
-            if base_lhood is None: base_lhood = lhood
+            if base_lhood is None:
+                base_lhood = lhood
             else:
                 # convergence criterion
-                if (lhood-base_lhood)<(1.+tol)*(old_lhood-base_lhood): break
+                if (lhood-base_lhood)<(1.+tol)*(old_lhood-base_lhood):
+                    break
                 if lhood < old_lhood:
                     # this should never happen
                     # it sometimes does, e.g. if the noise is extremely low,
@@ -156,7 +160,8 @@ class FANode(mdp.Node):
     def _execute(self, x):
         return mult(x-self.mu, self.E_y_mtx)
 
-    def is_invertible(self): return False
+    def is_invertible(self):
+        return False
 
     def generate_input(self, len_or_y=1, noise=False):
         """
@@ -177,9 +182,9 @@ class FANode(mdp.Node):
         if self.output_dim is None:
             # if the input_dim is not defined, raise an exception
             if self.input_dim is None:
-                errstr = "Number of input dimensions undefined. Inversion"+\
-                         "not possible."
-                raise NodeException, errstr
+                errstr = ("Number of input dimensions undefined. Inversion"
+                          "not possible.")
+                raise NodeException(errstr)
             self.output_dim = self.input_dim
 
         if isinstance(len_or_y, int):

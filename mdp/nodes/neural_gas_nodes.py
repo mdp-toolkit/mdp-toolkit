@@ -1,5 +1,4 @@
-import mdp
-from mdp import numx, numx_rand, utils, graph, Node, NodeException
+from mdp import numx, numx_rand, utils, graph, Node
 
 class _GNGNodeData(object):
     """Data associated to a node in a Growing Neural Gas graph."""
@@ -20,8 +19,8 @@ class _GNGEdgeData(object):
 
 
 class GrowingNeuralGasNode(Node):
-    """Learn the topological structure of the input data by building a corresponding
-    graph approximation.
+    """Learn the topological structure of the input data by building a
+    corresponding graph approximation.
     
     More information about the Growing Neural Gas algorithm can be found in
     B. Fritzke, A Growing Neural Gas Network Learns Topologies, in G. Tesauro,
@@ -79,9 +78,9 @@ class GrowingNeuralGasNode(Node):
         self.tlen = 0
 
         #copy parameters
-        self.eps_b, self.eps_n, self.max_age, self.lambda_, self.alpha, \
-                    self.d, self.max_nodes = \
-                    eps_b, eps_n, max_age, lambda_, alpha, d, max_nodes
+        (self.eps_b, self.eps_n, self.max_age, self.lambda_, self.alpha,
+         self.d, self.max_nodes) = (eps_b, eps_n, max_age, lambda_, alpha,
+                                    d, max_nodes)
 
         
         super(GrowingNeuralGasNode, self).__init__(input_dim, None, dtype)
@@ -133,10 +132,12 @@ class GrowingNeuralGasNode(Node):
         """Remove all edges older than the maximal age."""
         g, max_age = self.graph, self.max_age
         for edge in self.graph.edges:
-            if edge.data.age>max_age:
+            if edge.data.age > max_age:
                 g.remove_edge(edge)
-                if edge.head.degree()==0: g.remove_node(edge.head)
-                if edge.tail.degree()==0: g.remove_node(edge.tail)
+                if edge.head.degree() == 0:
+                    g.remove_node(edge.head)
+                if edge.tail.degree() == 0:
+                    g.remove_node(edge.tail)
 
     def _insert_new_node(self):
         """Insert a new node in the graph where it is more necessary (i.e.
@@ -161,7 +162,7 @@ class GrowingNeuralGasNode(Node):
         # update errors
         qnode.data.cum_error *= self.alpha
         fnode.data.cum_error *= self.alpha
-        new_node.data.cum_error = 0.5*(qnode.data.cum_error+\
+        new_node.data.cum_error = 0.5*(qnode.data.cum_error+
                                        fnode.data.cum_error)
 
     def get_nodes_position(self):
@@ -178,9 +179,9 @@ class GrowingNeuralGasNode(Node):
             # choose the random position according to a gaussian distribution
             # with zero mean and unit variance
             normal = numx_rand.normal
-            node1 = self._add_node(self._refcast(\
+            node1 = self._add_node(self._refcast(
                 normal(0.0, 1.0, self.input_dim)))
-            node2 = self._add_node(self._refcast(\
+            node2 = self._add_node(self._refcast(
                 normal(0.0, 1.0, self.input_dim)))
         
         # loop on single data points
@@ -216,15 +217,13 @@ class GrowingNeuralGasNode(Node):
             self._remove_old_edges(n0.get_edges())
 
             # step 8 - add a new node each lambda steps
-            if not self.tlen%self.lambda_ and len(g.nodes)<self.max_nodes:
+            if not self.tlen % self.lambda_ and len(g.nodes) < self.max_nodes:
                 self._insert_new_node()
 
             # step 9 - decrease errors
-            def _mult_err(node): node.data.cum_error *= d
+            def _mult_err(node):
+                node.data.cum_error *= d
             map(_mult_err, g.nodes)
-
-    def _stop_training(self):
-        pass
 
     def nearest_neighbor(self, input):
         """Assign each point in the input data to the nearest node in
@@ -234,7 +233,7 @@ class GrowingNeuralGasNode(Node):
         necessary."""
         super(GrowingNeuralGasNode, self).execute(input)
 
-        nodes =[]
+        nodes = []
         dists = []
         for x in input:
             (n0, n1), dist = self._get_nearest_nodes(x)

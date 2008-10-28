@@ -8,10 +8,10 @@ def pca(x, **kwargs):
 
     This is a shortcut function for the corresponding node PCANode. If any
     keyword arguments are specified, they are passed to its constructor.
+
+    This is equivalent to mdp.nodes.PCANode(**kwargs)(x)
     """
-    pca = mdp.nodes.PCANode(**kwargs)
-    pca.train(x)
-    return pca.execute(x)
+    return mdp.nodes.PCANode(**kwargs)(x)
                               
 def whitening(x, **kwargs):
     """Filters multidimensional input data through its principal components,
@@ -22,10 +22,10 @@ def whitening(x, **kwargs):
 
     This is a shortcut function for the corresponding node WhiteningNode.
     If any keyword arguments are specified, they are passed to its constructor.
+
+    This is equivalent to mdp.nodes.WhiteningNode(**kwargs)(x)
     """
-    white = mdp.nodes.WhiteningNode(**kwargs)
-    white.train(x)
-    return white.execute(x)
+    return mdp.nodes.WhiteningNode(**kwargs)(x)
 
 def fastica(x, **kwargs):
     """Perform Independent Component Analysis on input data using the FastICA
@@ -36,24 +36,10 @@ def fastica(x, **kwargs):
 
     This is a shortcut function for the corresponding node FastICANode.
     If any keyword arguments are specified, they are passed to its constructor.
+
+    This is equivalent to mdp.nodes.FastICANode(**kwargs)(x)
     """
-    ica = mdp.nodes.FastICANode(**kwargs)
-    ica.train(x)
-    return ica.execute(x)
-
-def cubica(x, **kwargs):
-    """Perform Independent Component Analysis on input data using the CuBICA
-    algorithm by Tobias Blaschke.
-
-    Observations of the same variable are stored on rows, different variables
-    are stored on columns.
-
-    This is a shortcut function for the corresponding node CuBICANode.
-    If any keyword arguments are specified, they are passed to its constructor.
-    """
-    ica = mdp.nodes.CuBICANode(**kwargs)
-    ica.train(x)
-    return ica.execute(x)
+    return mdp.nodes.FastICANode(**kwargs)(x)
 
 def sfa(x, **kwargs):
     """Perform Slow Feature Analysis on input data using the SFA
@@ -64,38 +50,10 @@ def sfa(x, **kwargs):
 
     This is a shortcut function for the corresponding node SFANode.
     If any keyword arguments are specified, they are passed to its constructor.
+
+    This is equivalent to mdp.nodes.SFANode(**kwargs)(x)
     """
-    sfa = mdp.nodes.SFANode(**kwargs)
-    sfa.train(x)
-    return sfa.execute(x)
-
-def sfa2(x, **kwargs):
-    """Perform quadratic Slow Feature Analysis on input data using the SFA
-    algorithm by Laurenz Wiskott.
-
-    Observations of the same variable are stored on rows, different variables
-    are stored on columns.
-
-    This is a shortcut function for the corresponding node SFA2Node.
-    If any keyword arguments are specified, they are passed to its constructor.
-    """
-    sfa = mdp.nodes.SFA2Node(**kwargs)
-    sfa.train(x)
-    return sfa.execute(x)
-
-def factor_analysis(x, **kwargs):
-    """Perform Factor Analysis on the input data and returns the
-    Mximum A Posteriori estimate of the latent variables.
-
-    Observations of the same variable are stored on rows, different variables
-    are stored on columns.
-
-    This is a shortcut function for the corresponding node FANode.
-    If any keyword arguments are specified, they are passed to its constructor.
-    """
-    fa = mdp.nodes.FANode(**kwargs)
-    fa.train(x)
-    return fa.execute(x)
+    return mdp.nodes.SFANode(**kwargs)(x)
 
 def get_eta(x, **kwargs):
     """Compute eta values (a slowness measure) of the input data.
@@ -125,10 +83,5 @@ def get_eta(x, **kwargs):
     eta = mdp.nodes.EtaComputerNode()
     eta.train(x)
     return eta.get_eta(**kwargs)
-
-def isfa(x, **kwargs):
-    isfa = mdp.nodes.ISFANode(**kwargs)
-    isfa.train(x)
-    return isfa.execute(x)
 
 

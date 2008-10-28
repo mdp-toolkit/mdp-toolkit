@@ -9,11 +9,11 @@ def _check_roundoff(t, dtype):
     # limit precision
     limit = 10.**(numx.finfo(dtype).precision-2)
     if int(t) >= limit:
-        wr = 'You have summed %e entries in the covariance matrix.'%t+\
-             '\nAs you are using dtype \'%s\', you are '%dtype.name+\
-             'probably getting severe round off'+\
-             '\nerrors. See CovarianceMatrix docstring for more'+\
-             ' information.'
+        wr = ('You have summed %e entries in the covariance matrix.'
+              '\nAs you are using dtype \'%s\', you are '
+              'probably getting severe round off'
+              '\nerrors. See CovarianceMatrix docstring for more'
+              ' information.' % (t, dtype.name))
         warnings.warn(wr, mdp.MDPWarning)
 
 class CovarianceMatrix(object):
@@ -66,13 +66,14 @@ class CovarianceMatrix(object):
             self._dtype = x.dtype
         dim = x.shape[1]
         self._input_dim = dim
-        type = self._dtype
+        type_ = self._dtype
         # init covariance matrix
-        self._cov_mtx = numx.zeros((dim,dim), type)
+        self._cov_mtx = numx.zeros((dim, dim), type_)
         # init average
-        self._avg = numx.zeros(dim, type)
+        self._avg = numx.zeros(dim, type_)
 
     def update(self, x):
+        """Update internal structures."""
         if self._cov_mtx is None:
             self._init_internals(x)
             
@@ -92,15 +93,15 @@ class CovarianceMatrix(object):
         the number of observations. The covariance matrix is then reset to
         a zero-state."""
         # local variables
-        type = self._dtype
+        type_ = self._dtype
         tlen = self._tlen
-        _check_roundoff(tlen, type)
+        _check_roundoff(tlen, type_)
         avg = self._avg
         cov_mtx = self._cov_mtx
 
         ##### fix the training variables
         # fix the covariance matrix (try to do everything inplace)
-        avg_mtx = numx.outer(avg,avg)
+        avg_mtx = numx.outer(avg, avg)
 
         if self.bias:
             avg_mtx /= tlen*(tlen)
@@ -175,12 +176,13 @@ class DelayCovarianceMatrix(object):
         dim = x.shape[1]
         self._input_dim = dim
         # init covariance matrix
-        self._cov_mtx = numx.zeros((dim,dim), self._dtype)
+        self._cov_mtx = numx.zeros((dim, dim), self._dtype)
         # init averages
         self._avg = numx.zeros(dim, self._dtype)
         self._avg_dt = numx.zeros(dim, self._dtype)
 
     def update(self, x):
+        """Update internal structures."""
         if self._cov_mtx is None:
             self._init_internals(x)
 
@@ -192,15 +194,15 @@ class DelayCovarianceMatrix(object):
         # the number of data points in each block should be at least dt+1
         tlen = x.shape[0]
         if tlen < (dt+1):
-            errstr = 'Block length is %d, should be at least %d.' % (tlen,dt+1)
-            raise mdp.MDPException, errstr
+            err = 'Block length is %d, should be at least %d.' % (tlen, dt+1)
+            raise mdp.MDPException(err)
         
         # update the covariance matrix, the average and the number of
         # observations (try to do everything inplace)
-        self._cov_mtx += mdp.utils.mult(x[:tlen-dt,:].T, x[dt:tlen,:])
+        self._cov_mtx += mdp.utils.mult(x[:tlen-dt, :].T, x[dt:tlen, :])
         totalsum = x.sum(axis=0)
-        self._avg += totalsum - x[tlen-dt:,:].sum(axis=0)
-        self._avg_dt += totalsum - x[:dt,:].sum(axis=0)
+        self._avg += totalsum - x[tlen-dt:, :].sum(axis=0)
+        self._avg_dt += totalsum - x[:dt, :].sum(axis=0)
         self._tlen += tlen-dt
 
     def fix(self, A=None):
@@ -217,9 +219,9 @@ class DelayCovarianceMatrix(object):
         """
         
         # local variables
-        type = self._dtype
+        type_ = self._dtype
         tlen = self._tlen
-        _check_roundoff(tlen, type)
+        _check_roundoff(tlen, type_)
         avg = self._avg
         avg_dt = self._avg_dt
         cov_mtx = self._cov_mtx
@@ -255,21 +257,21 @@ class MultipleCovarianceMatrices(object):
     """Container class for multiple covariance matrices to easily
     execute operations on all matrices at the same time.
     Note: all operations are done in place where possible."""
-    def __init__(self,covs):
+    def __init__(self, covs):
         """Insantiate with a sequence of covariance matrices."""
         # swap axes to get the different covmat on to the 3rd axis
         self.dtype = covs[0].dtype
-        self.covs = (numx.array(covs,dtype=self.dtype)).transpose([1,2,0])
+        self.covs = (numx.array(covs, dtype=self.dtype)).transpose([1, 2, 0])
         self.ncovs = len(covs)
 
     def __getitem__(self, item):
-        return self.covs[:,:,item]
+        return self.covs[:, :, item]
 
     def symmetrize(self):
         """Symmetrize matrices: C -> (C+C^T)/2 ."""
         # symmetrize cov matrices
         covs = self.covs
-        covs = 0.5*(covs+covs.transpose([1,0,2]))
+        covs = 0.5*(covs+covs.transpose([1, 0, 2]))
         self.covs = covs
 
     def weight(self, weights):
@@ -277,49 +279,50 @@ class MultipleCovarianceMatrices(object):
         Argument can be a sequence or a single value. In the latter case
         the same weight is applied to all matrices."""
         # apply a weighting vector to cov matrices
-        err = "len(weights)=%d does not match number of matrices (%d)"\
-              %(len(weights),self.ncovs) 
+        err = ("len(weights)=%d does not match number "
+               "of matrices (%d)" % (len(weights), self.ncovs))
         assert len(weights) == self.ncovs, err
-        self.covs *= mdp.utils.refcast(weights,self.dtype)
+        self.covs *= mdp.utils.refcast(weights, self.dtype)
 
     def rotate(self, angle, indices):
         """Rotate matrices by angle in the plane defined by indices [i,j]."""
         covs = self.covs
-        [i,j] = indices
+        [i, j] = indices
         cos_ = numx.cos(angle)
         sin_ = numx.sin(angle)
         # rotate columns
         # you need to copy the first column that is modified
-        covs_i = covs[:,i,:] + 0
-        covs_j = covs[:,j,:]
-        covs[:,i,:] =  cos_*covs_i - sin_*covs_j
-        covs[:,j,:] =  sin_*covs_i + cos_*covs_j
+        covs_i = covs[:, i, :] + 0
+        covs_j = covs[:, j, :]
+        covs[:, i, :] =  cos_*covs_i - sin_*covs_j
+        covs[:, j, :] =  sin_*covs_i + cos_*covs_j
         # rotate rows
         # you need to copy the first row that is modified
-        covs_i = covs[i,:,:] + 0
-        covs_j = covs[j,:,:]
-        covs[i,:,:] =  cos_*covs_i - sin_*covs_j
-        covs[j,:,:] =  sin_*covs_i + cos_*covs_j
+        covs_i = covs[i, :, :] + 0
+        covs_j = covs[j, :, :]
+        covs[i, :, :] =  cos_*covs_i - sin_*covs_j
+        covs[j, :, :] =  sin_*covs_i + cos_*covs_j
         self.covs = covs
 
-    def permute(self,indices):
+    def permute(self, indices):
         """Swap two columns and two rows of all matrices, whose indices are
         specified as [i,j]."""
         covs = self.covs
-        [i,j] = indices
-        covs[i,:,:],covs[j,:,:] = covs[j,:,:],covs[i,:,:] + 0
-        covs[:,i,:],covs[:,j,:] = covs[:,j,:],covs[:,i,:] + 0
+        [i, j] = indices
+        covs[i, :, :], covs[j, :, :] = covs[j, :, :], covs[i, :, :] + 0
+        covs[:, i, :], covs[:, j, :] = covs[:, j, :], covs[:, i, :] + 0
         self.covs = covs
         
-    def transform(self,trans_matrix):
+    def transform(self, trans_matrix):
         """Apply a linear transformation to all matrices, defined by the
         transformation matrix."""
-        trans_matrix = mdp.utils.refcast(trans_matrix,self.dtype)
+        trans_matrix = mdp.utils.refcast(trans_matrix, self.dtype)
         for cov in range(self.ncovs):
-            self.covs[:,:,cov] = mdp.utils.mult(mdp.utils.mult(trans_matrix.T,
-                                            self.covs[:,:,cov]), trans_matrix)
+            self.covs[:, :, cov] = mdp.utils.mult(
+                mdp.utils.mult(trans_matrix.T, self.covs[:, :, cov]),
+                trans_matrix)
     
     def copy(self):
         """Return a deep copy of the instance."""
-        return MultipleCovarianceMatrices(self.covs.transpose([2,0,1]))
+        return MultipleCovarianceMatrices(self.covs.transpose([2, 0, 1]))
 

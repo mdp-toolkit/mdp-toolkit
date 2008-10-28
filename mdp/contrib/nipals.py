@@ -1,4 +1,4 @@
-from mdp import numx, Node, NodeException, Cumulator
+from mdp import numx, NodeException, Cumulator
 from mdp.utils import mult
 from mdp.nodes import PCANode
 sqrt = numx.sqrt
@@ -80,12 +80,12 @@ class NIPALSNode(PCANode, Cumulator):
         var = X.var(axis=0).sum()
         exp_var = 0
 
-        eigenv = numx.zeros((self.input_dim,self.input_dim), dtype=dtype)
+        eigenv = numx.zeros((self.input_dim, self.input_dim), dtype=dtype)
         d = numx.zeros((self.input_dim,), dtype = dtype)
         for i in range(self.input_dim):
             it = 0
             # first score vector t is initialized to first column in X
-            t = X[:,0]
+            t = X[:, 0]
             # initialize difference
             diff = conv + 1
             while diff > conv:
@@ -93,8 +93,8 @@ class NIPALSNode(PCANode, Cumulator):
                 it += 1 
                 # Project X onto t to find corresponding loading p
                 # and normalize loading vector p to length 1
-                p = mult(X.T,t)/mult(t,t)
-                p /= sqrt(mult(p,p))
+                p = mult(X.T, t)/mult(t, t)
+                p /= sqrt(mult(p, p))
 
                 # project X onto p to find corresponding score vector t_new
                 t_new = mult(X, p)
@@ -103,13 +103,14 @@ class NIPALSNode(PCANode, Cumulator):
                 diff = (tdiff*tdiff).sum()
                 t = t_new
                 if it > max_it:
-                    msg='PC#%d: no convergence after %d iterations.'%(i,max_it)
+                    msg = ('PC#%d: no convergence after'
+                           ' %d iterations.'% (i, max_it))
                     raise NodeException(msg)
 
             # store ith eigenvector in result matrix
             eigenv[i, :] = p
             # remove the estimated principal component from X
-            D = numx.outer(t,p)
+            D = numx.outer(t, p)
             X -= D
             D = mult(D, p)
             d[i] = (D*D).sum()/(tlen-1)
@@ -119,5 +120,5 @@ class NIPALSNode(PCANode, Cumulator):
                 break
             
         self.d = d[:self.output_dim]
-        self.v = eigenv[:self.output_dim,:].T
+        self.v = eigenv[:self.output_dim, :].T
         self.explained_variance = exp_var

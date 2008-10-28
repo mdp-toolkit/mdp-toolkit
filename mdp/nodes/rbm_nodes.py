@@ -1,8 +1,10 @@
 import mdp
 from mdp import numx
+from mdp.utils import mult
 
 random = mdp.numx_rand.random
-exp, mult = numx.exp, mdp.utils.mult
+randn = mdp.numx_rand.randn
+exp = mdp.numx.exp
 
 # this and the other replication functions should go in mdp.utils
 def rrep(x, n):
@@ -58,11 +60,11 @@ class RBMNode(mdp.Node):
         self._initialized = True
         
         # weights
-        self.w = self._refcast(numx.random.randn(self.input_dim, self.output_dim)*0.1)
+        self.w = self._refcast(randn(self.input_dim, self.output_dim)*0.1)
         # bias on the visibile (input) units
-        self.bv = self._refcast(numx.random.randn(self.input_dim)*0.1)
+        self.bv = self._refcast(randn(self.input_dim)*0.1)
         # bias on the hidden (output) units
-        self.bh = self._refcast(numx.random.randn(self.output_dim)*0.1)
+        self.bh = self._refcast(randn(self.output_dim)*0.1)
 
         # delta w, bv, bh used for momentum term
         self._delta = (0., 0., 0.)
@@ -81,12 +83,21 @@ class RBMNode(mdp.Node):
 
     def _train(self, v, n_updates=1, epsilon=0.1, decay=0., momentum=0.,
                verbose=False):
-        
+        """Update the internal structures according to the input data 'v'.
+        The training is performed using Contrastive Divergence (CD).
+
+        v -- a binary matrix having different variables on different columns
+             and observations on the rows
+        n_updates -- number of CD iterations. Default value: 1
+        epsilon -- learning rate. Default value: 0.1
+        decay -- weight decay term. Default value: 0.
+        momentum -- momentum term. Default value: 0.
+        """        
         if not self._initialized:
             self._init_weights()
 
         # useful quantities
-        N = v.shape[0]
+        n = v.shape[0]
         w, bv, bh = self.w, self.bv, self.bh
 
         # old gradients for momentum term
@@ -103,22 +114,19 @@ class RBMNode(mdp.Node):
         # update w
         data_term = mult(v.T, ph_data)
         model_term = mult(v_model.T, ph_model)
-        dw = momentum*dw + \
-             epsilon*((data_term - model_term)/N - decay*w)
+        dw = momentum*dw + epsilon*((data_term - model_term)/n - decay*w)
         w += dw
         
         # update bv
         data_term = v.sum(axis=0)
         model_term = v_model.sum(axis=0)
-        dbv = momentum*dbv + \
-              epsilon*((data_term - model_term)/N)
+        dbv = momentum*dbv + epsilon*((data_term - model_term)/n)
         bv += dbv
 
         # update bh
         data_term = ph_data.sum(axis=0)
         model_term = ph_model.sum(axis=0)
-        dbh = momentum*dbh + \
-              epsilon*((data_term - model_term)/N)
+        dbh = momentum*dbh + epsilon*((data_term - model_term)/n)
         bh += dbh
 
         self._delta = (dw, dbv, dbh)
@@ -129,21 +137,6 @@ class RBMNode(mdp.Node):
             ph, h = self._sample_h(v)
             print 'energy', self._energy(v, ph).sum()
 
-    def train(self, v, n_updates=1, epsilon=0.1, decay=0., momentum=0.,
-               verbose=False):
-        """Update the internal structures according to the input data 'v'.
-        The training is performed using Contrastive Divergence (CD).
-
-        v -- a binary matrix having different variables on different columns
-             and observations on the rows
-        n_updates -- number of CD iterations. Default value: 1
-        epsilon -- learning rate. Default value: 0.1
-        decay -- weight decay term. Default value: 0.
-        momentum -- momentum term. Default value: 0.
-        """
-        super(RBMNode, self).train(v, n_updates=n_updates, epsilon=epsilon,
-                                   decay=decay, momentum=momentum, verbose=verbose)
-
     def _stop_training(self):
         #del self._delta
         #del self._train_err
@@ -151,7 +144,8 @@ class RBMNode(mdp.Node):
 
     # execution methods
         
-    def is_invertible(self): return False
+    def is_invertible(self):
+        return False
 
     def _pre_inversion_checks(self, y):
         self._if_training_stop_training()
@@ -179,8 +173,8 @@ class RBMNode(mdp.Node):
         return self._sample_v(h)
 
     def _energy(self, v, h):
-        return -mult(v, self.bv) - mult(h, self.bh) \
-               - (mult(v, self.w)*h).sum(axis=1)
+        return (-mult(v, self.bv) - mult(h, self.bh) -
+                (mult(v, self.w)*h).sum(axis=1))
 
     def energy(self, v, h):
         """Compute the energy of the RBM given observed variables state 'v' and
@@ -188,18 +182,15 @@ class RBMNode(mdp.Node):
         return self._energy(v, h)
 
     def _execute(self, v, return_probs=True):
+        """If 'return_probs' is True, returns the probability of the
+        hidden variables h[n,i] being 1 given the observations v[n,:].
+        If 'return_probs' is False, return a sample from that probability.
+        """
         probs, h = self._sample_h(v)
         if return_probs:
             return probs
         else:
             return h
-
-    def execute(self, v, return_probs=True):
-        """If 'return_probs' is True, returns the probability of the
-        hidden variables h[n,i] being 1 given the observations v[n,:].
-        If 'return_probs' is False, return a sample from that probability.
-        """
-        return super(RBMNode, self).execute(v, return_probs=return_probs)
 
 class RBMWithLabelsNode(RBMNode):
     """Restricted Boltzmann Machine with softmax labels. An RBM is an
@@ -235,13 +226,14 @@ class RBMWithLabelsNode(RBMNode):
     algorithm for deep belief nets. Neural Computation, 18:1527-1554. 
     """
 
-    def __init__(self, hidden_dim, labels_dim, visible_dim = None, dtype = None):
-        super(RBMNode, self).__init__(None, hidden_dim, dtype)
-
+    def __init__(self, hidden_dim, labels_dim, visible_dim=None, dtype=None):
+        super(RBMWithLabelsNode, self).__init__(None, None, dtype)
+        
         self._labels_dim = labels_dim
         if visible_dim is not None:
-            self.set_input_dim(visible_dim+labels_dim)
-        
+            self.input_dim = visible_dim+labels_dim
+
+        self.output_dim = hidden_dim
         self._initialized = False
 
     def _get_supported_dtypes(self):
@@ -252,13 +244,14 @@ class RBMWithLabelsNode(RBMNode):
         self._visible_dim = n - self._labels_dim
 
     def _sample_v(self, h, sample_l=False, concatenate=True):
-        # returns  P(v=1|h,W,b), a sample from it, P(l=1|h,W,b), and a sample from it
+        # returns  P(v=1|h,W,b), a sample from it, P(l=1|h,W,b),
+        # and a sample from it
 
         ldim, vdim = self._labels_dim, self._visible_dim
 
         # activation
         a = self.bv + mult(h, self.w.T)
-        av, al = a[:,:vdim], a[:,vdim:]
+        av, al = a[:, :vdim], a[:, vdim:]
         
         # ## visible units: logistic activation
         probs_v = 1./(1. + exp(-av))
@@ -274,7 +267,7 @@ class RBMWithLabelsNode(RBMNode):
             # ?? todo: I'm sure this can be optimized
             l = numx.zeros((h.shape[0], ldim))
             for t in range(h.shape[0]):
-                l[t,:] = mdp.numx_rand.multinomial(1, probs_l[t,:])
+                l[t, :] = mdp.numx_rand.multinomial(1, probs_l[t, :])
         else:
             l = probs_l.copy()
 
@@ -338,13 +331,9 @@ class RBMWithLabelsNode(RBMNode):
         else:
             return h
 
-    def is_invertible(self): return False
+    def is_invertible(self):
+        return False
 
-    def _secret_train(self, v, l, *args, **kwargs):
-        x = numx.concatenate((v, l), axis=1)
-        self._check_input(x)
-        self._train(self._refcast(x), *args, **kwargs)
-   
     def train(self, v, l, n_updates=1, epsilon=0.1, decay=0., momentum=0.,
               verbose=False):
         """Update the internal structures according to the visible data 'v'
@@ -360,11 +349,10 @@ class RBMWithLabelsNode(RBMNode):
         decay -- weight decay term. Default value: 0.
         momentum -- momentum term. Default value: 0.
         """
-        """?? Insert documentation."""
 
         if not self.is_training():
-            raise TrainingFinishedException, \
-                  "The training phase has already finished."
+            errstr = "The training phase has already finished."
+            raise mdp.TrainingFinishedException(errstr)
 
         x = numx.concatenate((v, l), axis=1)
         self._check_input(x)

@@ -33,7 +33,7 @@ class JADENode(ICANode):
     """
 
     def __init__(self, limit = 0.001, max_it=1000, verbose = False,
-                 whitened = False, white_comp = None, white_parm = {},
+                 whitened = False, white_comp = None, white_parm = None,
                  input_dim = None, dtype = None):
         """
         Input arguments:
@@ -82,17 +82,18 @@ class JADENode(ICANode):
         (T, m) = data.shape
         X = data
 
-        if verbose: print "jade -> Estimating cumulant matrices"
+        if verbose:
+            print "jade -> Estimating cumulant matrices"
 
         # Dim. of the space of real symm matrices
         dimsymm = (m*(m+1))/2
         # number of cumulant matrices
         nbcm = dimsymm
         # Storage for cumulant matrices
-        CM = numx.zeros((m,m*nbcm), dtype=dtype)
+        CM = numx.zeros((m, m*nbcm), dtype=dtype)
         R = numx.eye(m, dtype=dtype)
         # Temp for a cum. matrix
-        Qij = numx.zeros((m,m), dtype=dtype)
+        Qij = numx.zeros((m, m), dtype=dtype)
         # Temp
         Xim = numx.zeros(m, dtype=dtype)
         # Temp
@@ -104,19 +105,20 @@ class JADENode(ICANode):
         Range = arange(m) 
 
         for im in range(m):
-            Xim = X[:,im]
+            Xim = X[:, im]
             Xijm = Xim*Xim
             # Note to myself: the -R on next line can be removed: it does not 
             # affect the joint diagonalization criterion
-            Qij = mult(Xijm*X.T, X) / float(T) \
-                - R - 2 * numx.outer(R[:,im], R[:,im])
-            CM[:,Range] = Qij 
+            Qij = ( mult(Xijm*X.T, X) / float(T)
+                    - R - 2 * numx.outer(R[:,im], R[:,im]) )
+            CM[:, Range] = Qij 
             Range = Range  + m 
             for jm in range(im):
-                Xijm = Xim*X[:,jm]
-                Qij = sqrt(2) * mult(Xijm*X.T, X) / float(T) \
-                 - numx.outer(R[:,im], R[:,jm]) - numx.outer(R[:,jm], R[:,im])
-                CM[:,Range]	= Qij
+                Xijm = Xim*X[:, jm]
+                Qij = ( sqrt(2) * mult(Xijm*X.T, X) / float(T)
+                        - numx.outer(R[:,im], R[:,jm]) - numx.outer(R[:,jm],
+                                                                    R[:,im]) )
+                CM[:, Range]	= Qij
                 Range = Range + m
 
         # Now we have nbcm = m(m+1)/2 cumulants matrices stored in a big 
@@ -131,7 +133,7 @@ class JADENode(ICANode):
         On = 0.0
         Range = arange(m)
         for im in range(nbcm):
-            Diag = numx.diag(CM[:,Range])
+            Diag = numx.diag(CM[:, Range])
             On = On + (Diag*Diag).sum(axis=0)
             Range = Range + m
 
@@ -145,9 +147,9 @@ class JADENode(ICANode):
         updates = 0
         # Number of rotations in a given seep
         upds = 0
-        g = numx.zeros((2,nbcm), dtype=dtype)
-        gg = numx.zeros((2,2), dtype=dtype)
-        G = numx.zeros((2,2), dtype=dtype)
+        g = numx.zeros((2, nbcm), dtype=dtype)
+        gg = numx.zeros((2, 2), dtype=dtype)
+        G = numx.zeros((2, 2), dtype=dtype)
         c = 0
         s = 0
         ton	= 0
@@ -163,7 +165,8 @@ class JADENode(ICANode):
 
         while encore:
             encore = False
-            if verbose: print "jade -> Sweep #%3d" % sweep ,
+            if verbose:
+                print "jade -> Sweep #%3d" % sweep ,
             sweep = sweep + 1
             upds  = 0
             Vkeep = V
@@ -175,11 +178,11 @@ class JADENode(ICANode):
                     Iq = arange(q, m*nbcm, m)
 
                     # computation of Givens angle
-                    g = concatenate([numx.atleast_2d(CM[p,Ip] - CM[q,Iq]),
-                                     numx.atleast_2d(CM[p,Iq] + CM[q,Ip])])
+                    g = concatenate([numx.atleast_2d(CM[p, Ip] - CM[q, Iq]),
+                                     numx.atleast_2d(CM[p, Iq] + CM[q, Ip])])
                     gg = mult(g, g.T)
-                    ton = gg[0,0] - gg[1,1] 
-                    toff = gg[0,1] + gg[1,0]
+                    ton = gg[0, 0] - gg[1, 1] 
+                    toff = gg[0, 1] + gg[1, 0]
                     theta = 0.5 * arctan2(toff, ton + sqrt(ton*ton+toff*toff))
                     Gain = (sqrt(ton * ton + toff * toff) - ton) / 4.0
 
@@ -190,23 +193,26 @@ class JADENode(ICANode):
                         c = cos(theta) 
                         s = sin(theta)
                         G = array([[c, -s] , [s, c] ])
-                        pair = array([p,q])
-                        V[:,pair] = mult(V[:,pair], G)
-                        CM[pair,:] = mult(G.T, CM[pair,:])
-                        CM[:,concatenate([Ip,Iq])]= \
-                                                append(c*CM[:,Ip]+s*CM[:,Iq],
-                                                       -s*CM[:,Ip]+c*CM[:,Iq],\
-                                                       axis=1)
+                        pair = array([p, q])
+                        V[:, pair] = mult(V[:, pair], G)
+                        CM[pair, :] = mult(G.T, CM[pair, :])
+                        CM[:, concatenate([Ip, Iq])]= append(c*CM[:, Ip]+
+                                                             s*CM[:, Iq],
+                                                             -s*CM[:, Ip]+
+                                                             c*CM[:, Iq],
+                                                             axis=1)
                         On = On + Gain
                         Off = Off - Gain
 
-            if verbose: print "completed in %d rotations" % upds
+            if verbose:
+                print "completed in %d rotations" % upds
             updates = updates + upds
             if updates > max_it:
-                err_msg = 'No convergence after %d iterations.'%max_it
-                raise mdp.NodeException, err_msg
+                err_msg = 'No convergence after %d iterations.' % max_it
+                raise mdp.NodeException(err_msg)
 
-        if verbose: print "jade -> Total of %d Givens rotations" % updates
+        if verbose:
+            print "jade -> Total of %d Givens rotations" % updates
 
         # A separating matrix
         # ===================
@@ -219,13 +225,15 @@ class JADENode(ICANode):
         # variance. Therefore, the sort is according to the norm of the
         # columns of A = pinv(B)
 
-        if verbose: print "jade -> Sorting the components"
+        if verbose:
+            print "jade -> Sorting the components"
 
         A = numx_linalg.pinv(B)
         B =  B[numx.argsort((A*A).sum(axis=0))[::-1], :]
         
-        if verbose: print "jade -> Fixing the signs"
-        b = B[:,0]
+        if verbose:
+            print "jade -> Fixing the signs"
+        b = B[:, 0]
         # just a trick to deal with sign == 0
         signs = numx.sign(numx.sign(b)+0.1)
         B = mult(numx.diag(signs), B)
