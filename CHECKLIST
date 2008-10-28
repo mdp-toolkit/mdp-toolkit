@@ -1,0 +1,47 @@
+=== Checklist for MDP release ===
+
+Before release:
+- make sure new nodes have tests
+- add new nodes to tutorial list
+- new nodes must be in nodes/__init__.py __all__ list
+- change spinner design (tests)
+- make sure that __init__ and setup.py have right version number
+- make sure tutorial has right version
+- make sure tutorial PDF has right version
+- make sure homepage links to tutorial have right version
+- try mdp tests with MDPNUMX=scipy, MDNUMX=numpy, and with parallel
+  python
+
+During release:
+- update CHANGES and TODO
+- generate tutorial using mdp_html/tutorial_src/gentut
+- generate API documentation
+- update on SF.net
+- short/long description should go: on SF.net description, tutorial,
+  home page, pypi, modules __init__
+- change homepage color
+- update "how to cite MDP" with new version number
+
+After release:
+- update version number in __init__
+- send announcement to:
+	connectionists: connectionists@cs.cmu.edu
+	ML-news: ML-news@googlegroups.com
+	numpy-discussion: numpy-discussion@scipy.org
+	Scipy users: scipy-user@scipy.org
+	mdp-users: mdp-toolkit-users@lists.sourceforge.net
+        Python-announce: python-announce-list@python.org
+- update package information on mloss.org and pypi
+- celebrate!!
+
+
+-----
+Short description
+setup.py
+SF.net
+Homepage, beginning
+
+Long description:
+setup.py
+__init__.py
+Tutorial, introduction

@@ -9,7 +9,10 @@ Run all tests with:
 import unittest
 import sys
 from mdp import numx, numx_rand
-import test_nodes, test_flows, test_utils, test_graph, test_contrib, test_hinet
+import test_nodes, test_flows, test_utils, test_graph, test_contrib
+import test_hinet, test_schedule, test_parallelnodes, test_parallelflows
+import test_parallelhinet, test_process_schedule
+        
 
 _err_str = """\nIMPORTANT: some tests use random numbers. This could
 occasionally lead to failures due to numerical degeneracies.
@@ -17,12 +20,18 @@ To rule this out, please run the tests more than once.
 If you get reproducible failures please report a bug!
 """
 
-test_suites = {'nodes':   (test_nodes.get_suite,   3),
-               'hinet':   (test_hinet.get_suite,   4),
-               'contrib': (test_contrib.get_suite, 5),
-               'flows':   (test_flows.get_suite,   0),
+test_suites = {'flows':   (test_flows.get_suite,   0),
                'utils':   (test_utils.get_suite,   1),
-               'graph':   (test_graph.get_suite,   2)}
+               'graph':   (test_graph.get_suite,   2),
+               'nodes':   (test_nodes.get_suite,   3),
+               'hinet':   (test_hinet.get_suite,   4),
+               'schedule': (test_schedule.get_suite, 6),
+               'parallelnodes': (test_parallelnodes.get_suite, 7),
+               'parallelflows': (test_parallelflows.get_suite, 8),
+               'parallelhinet': (test_parallelhinet.get_suite, 9),
+               'process_schedule': (test_process_schedule.get_suite, 10),
+               'contrib': (test_contrib.get_suite, 11)}
+                           
 
 def test(suitename = 'all', verbosity = 2, seed = None, testname = None):
     if seed is None:

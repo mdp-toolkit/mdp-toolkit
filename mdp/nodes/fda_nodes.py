@@ -50,16 +50,16 @@ class FDANode(mdp.Node):
         return ['float32', 'float64']
 
     def _check_train_args(self, x, cl):
-        if isinstance(cl, (list, tuple, numx.ndarray)) \
-               and len(cl) != x.shape[0]:
-            msg = "The number of labels should be equal to the number of " +\
-                  "datapoints (%d != %d)" % (len(cl), x.shape[0])
-            raise mdp.TrainingException, msg
+        if isinstance(cl,
+                      (list, tuple, numx.ndarray)) and len(cl) != x.shape[0]:
+            msg = ("The number of labels should be equal to the number of "
+                   "datapoints (%d != %d)" % (len(cl), x.shape[0]))
+            raise mdp.TrainingException(msg)
 
     # Training step 1: compute mean and number of element in each class
 
     def _update_means(self, x, lbl):
-        if not self.means.has_key(lbl):
+        if lbl not in self.means:
             self.means[lbl] = numx.zeros((1, self.input_dim),
                                          dtype=self.dtype)
             self.tlens[lbl] = 0
@@ -123,7 +123,7 @@ class FDANode(mdp.Node):
             
         d, self.v = mdp.utils.symeig(S_W, S_T, range=rng, overwrite = 1)
 
-    def train(self, x, cl):
+    def _train(self, x, cl):
         """Update the internal structures according to the input data 'x'.
         
         x -- a matrix having different variables on different columns
@@ -135,22 +135,19 @@ class FDANode(mdp.Node):
         super(FDANode, self).train(x, cl)
 
     def _execute(self, x, range=None):
-        if range:
-            if isinstance(range, (list, tuple)):
-                v = self.v[:,range[0]:range[1]]
-            else:
-                v = self.v[:,0:range]
-        else:
-            v = self.v
-
-        return mdp.utils.mult(x-self.avg, v)
-
-    def execute(self, x, range=None):
         """Compute the output of the FDA projection.
         if 'range' is a number, then use the first 'range' functions.
         if 'range' is the interval=(i,j), then use all functions
                    between i and j."""
-        return super(FDANode, self).execute(x, range)
+        if range:
+            if isinstance(range, (list, tuple)):
+                v = self.v[:, range[0]:range[1]]
+            else:
+                v = self.v[:, 0:range]
+        else:
+            v = self.v
+
+        return mdp.utils.mult(x-self.avg, v)
 
     def _inverse(self, y):
         return mdp.utils.mult(y, mdp.utils.pinv(self.v))+self.avg

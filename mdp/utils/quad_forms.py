@@ -24,12 +24,14 @@ class QuadraticForm(object):
         """
         local_eps = 10*numx.finfo(numx.dtype(dtype)).eps
         # check that H is almost symmetric
-        if not numx.allclose(H,H.T,rtol=100*local_eps, atol=local_eps):
-            raise mdp.MDPException, 'H does not seem to be symmetric'
+        if not numx.allclose(H, H.T, rtol=100*local_eps, atol=local_eps):
+            raise mdp.MDPException('H does not seem to be symmetric')
         
         self.H = refcast(H, dtype)
-        if f is None: f = numx.zeros((H.shape[0],), dtype=dtype)
-        if c is None: c = 0
+        if f is None:
+            f = numx.zeros((H.shape[0],), dtype=dtype)
+        if c is None:
+            c = 0
         self.f = refcast(f, dtype)
         self.c = c
         self.dtype = dtype
@@ -38,8 +40,8 @@ class QuadraticForm(object):
         """Apply the quadratic form to the input vectors.
         Return 1/2 x'Hx + f'x + c ."""
         x = numx.atleast_2d(x)
-        return 0.5*(mdp.utils.mult(x, self.H.T)*x).sum(axis=1) + \
-               mdp.utils.mult(x, self.f) + self.c
+        return (0.5*(mdp.utils.mult(x, self.H.T)*x).sum(axis=1) +
+               mdp.utils.mult(x, self.f) + self.c)
 
     def _eig_sort(self, x):
         E, W = numx_linalg.eig(x)
@@ -59,8 +61,8 @@ class QuadraticForm(object):
         H, f, c = self.H, self.f, self.c
         if max(abs(f)) < numx.finfo(self.dtype).eps:
             E, W = self._eig_sort(H)
-            xmax = W[:,-1]*norm
-            xmin = W[:,0]*norm
+            xmax = W[:, -1]*norm
+            xmin = W[:, 0]*norm
         else:    
             H_definite_positive, H_definite_negative = False, False
             E, W = self._eig_sort(H)
@@ -78,7 +80,7 @@ class QuadraticForm(object):
             else:
                 xmin = self._maximize(norm, tol, factor=-1)
             if H_definite_negative and mdp.utils.norm2(x0) <= norm :
-                xmax= x0
+                xmax = x0
                 # x0 is a maximum
             else:
                 xmax = self._maximize(norm, tol, factor=None)
@@ -115,9 +117,9 @@ class QuadraticForm(object):
             norm_x_2 = (alpha**2*beta**2).sum()
             #%[ll,lr]
             if norm_x_2 > norm_2:
-                ll=lambd
+                ll = lambd
             else:
-                lr=lambd
+                lr = lambd
         x = (V*beta).sum(axis=1)
         if x0:
             x = x + x0
@@ -139,18 +141,19 @@ class QuadraticForm(object):
         # e(1) ... e(N) is the canonical basis for R^N
         r = mdp.utils.norm2(xstar)
         P = numx.eye(xstar.shape[0], dtype=xstar.dtype)
-        P[:,0] = xstar
+        P[:, 0] = xstar
         Q, R = numx.linalg.qr(P)
         # the orthogonal subspace
-        B = Q[:,1:]
+        B = Q[:, 1:]
         # restrict the matrix H to the tangential plane
-        Ht = mdp.utils.mult(B.T,mdp.utils.mult(self.H,B))
+        Ht = mdp.utils.mult(B.T, mdp.utils.mult(self.H, B))
         # compute the invariances
         nu, w = self._eig_sort(Ht)
-        nu -= ((mdp.utils.mult(self.H, xstar)*xstar).sum()-(self.f*xstar).sum())/(r*r)
+        nu -= ((mdp.utils.mult(self.H, xstar)*xstar).sum()
+               -(self.f*xstar).sum())/(r*r)
         idx = abs(nu).argsort()
         nu = nu[idx]
-        w = w[:,idx]
-        w = mdp.utils.mult(B,w)
+        w = w[:, idx]
+        w = mdp.utils.mult(B, w)
         return w, nu
         

@@ -110,6 +110,21 @@ class HinetTestSuite(NodesTestSuite):
             flownode.train(x)
             flownode.stop_training()
         flownode.execute(x)
+        
+    def testFlowNode_pretrained_flow(self):
+        flow = mdp.Flow([mdp.nodes.PolynomialExpansionNode(degree=2), 
+                         mdp.nodes.PCANode(output_dim=15, reduce=True),
+                         mdp.nodes.PolynomialExpansionNode(degree=2),
+                         mdp.nodes.PCANode(output_dim=3, reduce=True)])
+        flownode = mh.FlowNode(flow)
+        x = numx_rand.random([300,20])
+        while flownode.get_remaining_train_phase() > 0:
+            flownode.train(x)
+            flownode.stop_training()
+        # build new flownode with the trained nodes    
+        flownode = mh.FlowNode(flow)
+        assert not flownode.is_training()
+        flownode.execute(x)
 
     def testLayer(self):
         node1 = mdp.nodes.PCANode(input_dim=10, output_dim=5)
@@ -141,6 +156,19 @@ class HinetTestSuite(NodesTestSuite):
         y = layer.execute(x)
         assert layer.dtype == numx.dtype('f')
         assert y.dtype == layer.dtype
+        
+    def testSwitchboardInverse1(self):
+        sboard = mh.Switchboard(input_dim=3,
+                                connections=[2,0,1])
+        assert sboard.is_invertible()
+        y = numx.array([[2,3,4],[5,6,7]])
+        x = sboard.inverse(y)
+        assert numx.all(x == numx.array([[3,4,2],[6,7,5]]))
+    
+    def testSwitchboardInverse2(self):
+        sboard = mh.Switchboard(input_dim=3,
+                                connections=[2,1,1])
+        assert not sboard.is_invertible()
 
     def testSwitchboardRouting1(self):
         sboard = mh.Rectangular2dSwitchboard(x_in_channels=3, 
@@ -228,7 +256,8 @@ class HinetTestSuite(NodesTestSuite):
             assert False, 'Did not raise correct exception.'
             
     def testSwitchboardException3(self):
-        mh.Rectangular2dSwitchboard(x_in_channels=12, 
+        try:
+            mh.Rectangular2dSwitchboard(x_in_channels=12, 
                                         y_in_channels=8,
                                         x_field_channels=4,
                                         # this is the problematic value: 
@@ -237,6 +266,10 @@ class HinetTestSuite(NodesTestSuite):
                                         y_field_spacing=2,
                                         in_channel_dim=3,
                                         ignore_cover=True)
+        except mh.Rectangular2dSwitchboardException:
+            pass
+        else:
+            assert False, 'Did not raise correct exception.'
 
     def testHinetSimpleNet(self):
         switchboard = mh.Rectangular2dSwitchboard(x_in_channels=12, 

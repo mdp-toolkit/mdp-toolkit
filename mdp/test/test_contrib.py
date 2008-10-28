@@ -10,20 +10,68 @@ Run them with:
 # stuff we don't need. I know, this is a dirty trick.
 from test_nodes import *
 
-mc = mdp.contrib
+mc = mdp.nodes
 
 import itertools    
+
+
+def _s_shape(theta):
+    """
+    returns x,y
+      a 2-dimensional S-shaped function
+      for theta ranging from 0 to 1
+    """
+    t = 3*numx.pi * (theta-0.5)
+    x = numx.sin(t)
+    y = numx.sign(t)*(numx.cos(t)-1)
+    return x,y
+
+def _s_shape_1D(n):
+    t = numx.linspace(0., 1., n)
+    x, z = _s_shape(t)
+    y = numx.linspace(0., 5., n)
+    return x, y, z, t
+
+def _s_shape_2D(nt, ny):
+    t, y = numx.meshgrid(numx.linspace(0., 1., nt),
+                         numx.linspace(0., 2., ny))
+    t = t.flatten()
+    y = y.flatten()
+    x, z = _s_shape(t)
+    return x, y, z, t
+
+def _compare_neighbors(orig, proj, k):
+    n = orig.shape[0]
+    err = numx.zeros((n,))
+    # compare neighbors indices
+    for i in range(n):
+        # neighbors in original space
+        dist = orig - orig[i,:]
+        orig_nbrs = numx.argsort((dist**2).sum(1))[1:k+1]
+        orig_nbrs.sort()
+        # neighbors in projected space
+        dist = proj - proj[i,:]
+        proj_nbrs = numx.argsort((dist**2).sum(1))[1:k+1]
+        proj_nbrs.sort()
+        for idx in orig_nbrs:
+            if idx not in proj_nbrs:
+                err[i] += 1
+    return err
 
 
 class ContribTestSuite(NodesTestSuite):
     def __init__(self, testname=None):
         NodesTestSuite.__init__(self, testname=testname)
-        self.mat_dim = (500,4)
+        self.mat_dim = (100, 3)
         self._cleanup_tests()
 
     def _set_nodes(self):
         self._nodes = [mc.JADENode,
-                       mc.NIPALSNode]
+                       mc.NIPALSNode,
+                       (mc.LLENode, [3, 0.001, False], None),
+                       (mc.LLENode, [3, 0.001, True], None),
+                       (mc.HLLENode, [10, 0.001, False], None),
+                       (mc.HLLENode, [10, 0.001, True], None)]
 
     def _fastica_test_factory(self):
         # we don't want the fastica tests here
@@ -101,6 +149,80 @@ class ContribTestSuite(NodesTestSuite):
         # check that explained variance is > 0.8 and < 1
         assert (pca.explained_variance > 0.8 and pca.explained_variance < 1)
 
+    def testLLENode(self):
+        # 1D S-shape in 3D
+        n, k = 50, 2
+        x, y, z, t = _s_shape_1D(n)
+        data = numx.asarray([x,y,z]).T
+
+        res = mdp.nodes.LLENode(k, output_dim=1, svd=False)(data)
+        # check that the neighbors are the same
+        err = _compare_neighbors(data, res, k)
+        assert err.max() == 0
+
+        # with svd=True
+        res = mdp.nodes.LLENode(k, output_dim=1, svd=True)(data)
+        err = _compare_neighbors(data, res, k)
+        assert err.max() == 0
+        
+        # 2D S-shape in 3D
+        nt, ny = 40, 15
+        n, k = nt*ny, 8
+        x, y, z, t = _s_shape_2D(nt, ny)
+        data = numx.asarray([x,y,z]).T
+        res = mdp.nodes.LLENode(k, output_dim=2, svd=False)(data)
+        res[:,0] /= res[:,0].std()
+        res[:,1] /= res[:,1].std()
+
+        # test alignment
+        yval = y[::nt]
+        tval = t[:ny]
+        for yv in yval:
+            idx = numx.nonzero(y==yv)[0]
+            assert (res[idx,1]-res[idx[0],1]<1e-2,
+                    'Projection should be aligned as original space')
+        for tv in tval:
+            idx = numx.nonzero(t==tv)[0]
+            assert (res[idx,0]-res[idx[0],0]<1e-2,
+                    'Projection should be aligned as original space')
+
+    def testHLLENode(self):
+        # 1D S-shape in 3D
+        n, k = 250, 4
+        x, y, z, t = _s_shape_1D(n)
+        data = numx.asarray([x,y,z]).T
+
+        res = mdp.nodes.HLLENode(k, r=0.001, output_dim=1, svd=False)(data)
+        # check that the neighbors are the same
+        err = _compare_neighbors(data, res, k)
+        assert err.max() == 0
+
+        # with svd=True
+        res = mdp.nodes.HLLENode(k, r=0.001, output_dim=1, svd=True)(data)
+        err = _compare_neighbors(data, res, k)
+        assert err.max() == 0
+        
+        # 2D S-shape in 3D
+        nt, ny = 40, 15
+        n, k = nt*ny, 8
+        x, y, z, t = _s_shape_2D(nt, ny)
+        data = numx.asarray([x,y,z]).T
+        res = mdp.nodes.HLLENode(k, r=0.001, output_dim=2, svd=False)(data)
+        res[:,0] /= res[:,0].std()
+        res[:,1] /= res[:,1].std()
+
+        # test alignment
+        yval = y[::nt]
+        tval = t[:ny]
+        for yv in yval:
+            idx = numx.nonzero(y==yv)[0]
+            assert (res[idx,1]-res[idx[0],1]<1e-2,
+                    'Projection should be aligned as original space')
+        for tv in tval:
+            idx = numx.nonzero(t==tv)[0]
+            assert (res[idx,0]-res[idx[0],0]<1e-2,
+                    'Projection should be aligned as original space')
+    
         
 def get_suite(testname=None):
     return ContribTestSuite(testname=testname)
@@ -108,4 +230,6 @@ def get_suite(testname=None):
 if __name__ == '__main__':
     numx_rand.seed(1268049219)
     unittest.TextTestRunner(verbosity=2).run(get_suite())
+
+
 

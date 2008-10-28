@@ -1,6 +1,12 @@
 # inspired by some code by Nathan Denny (1999)
 # see http://www.ece.arizona.edu/~denny/python_nest/graph_lib_1.0.1.html
 
+try:
+    # use reduce against BDFL's will even on python > 2.6
+    from functools import reduce
+except ImportError:
+    pass
+    
 class GraphException(Exception):
     """Base class for exception in the graph package."""
     pass
@@ -60,24 +66,24 @@ class GraphNode(object):
     def get_edges_in(self, from_ = None):
         """Return a copy of the list of the entering edges. If from_
         is specified, return only the nodes coming from that node."""
-        inedges = map(None, self.ein)
+        inedges = self.ein[:]
         if from_:
-            inedges = [edge for edge in inedges if edge.head==from_]
+            inedges = [edge for edge in inedges if edge.head == from_]
         return inedges
 
     def get_edges_out(self, to_ = None):
         """Return a copy of the list of the outgoing edges. If to_
         is specified, return only the nodes going to that node."""
-        outedges = map(None, self.eout)
+        outedges = self.eout[:]
         if to_:
-            outedges = [edge for edge in outedges if edge.tail==to_]
+            outedges = [edge for edge in outedges if edge.tail == to_]
         return outedges
 
     def get_edges(self, neighbor = None):
         """Return a copy of all edges. If neighbor is specified, return
         only the edges connected to that node."""
-        return self.get_edges_in(from_=neighbor) + \
-               self.get_edges_out(to_=neighbor)
+        return ( self.get_edges_in(from_=neighbor) +
+                 self.get_edges_out(to_=neighbor) )
 
     def in_degree(self):
         """Return the number of entering edges."""
@@ -142,7 +148,7 @@ class Graph(object):
         # the node is not in this graph
         if node not in self.nodes:
             errstr = 'This node is not part of the graph (%s)' % str(node_id)
-            raise GraphException, errstr
+            raise GraphException(errstr)
 
         # remove all edges containing this node
         for edge in node.get_edges():
@@ -181,7 +187,8 @@ class Graph(object):
 
         data -- number of nodes to add or sequence of data values, one for
                 each new node"""
-        if not is_sequence(data): data = [None]*data
+        if not is_sequence(data):
+            data = [None]*data
         return map(self.add_node, data)
 
     def add_tree(self, tree):
@@ -244,7 +251,7 @@ class Graph(object):
         # init queues and lists
         for node in self.nodes:
             indegree = node.in_degree()
-            if indegree==0:
+            if indegree == 0:
                 topological_queue.append(node)
             else:
                 remaining_indegree[node] = indegree
@@ -257,13 +264,13 @@ class Graph(object):
             # decrease the in_degree of the sons
             for son in node.out_neighbors():
                 remaining_indegree[son] -= 1
-                if remaining_indegree[son]==0:
+                if remaining_indegree[son] == 0:
                     topological_queue.append(son)
 
         # if not all nodes were covered, the graph must have a cycle
         # raise a GraphTopographicalException
         if len(topological_list)!=len(self.nodes):
-            raise GraphTopologicalException, topological_list
+            raise GraphTopologicalException(topological_list)
         
         return topological_list
 
@@ -289,10 +296,11 @@ class Graph(object):
             node = dfs_stack.pop()
             dfs_list.append(node)
             # visit the node
-            if visit_fct!=None: visit_fct(node)
+            if visit_fct != None:
+                visit_fct(node)
             # add all sons to the stack (if not already visited)
             for son in neighbors_fct(node):
-                if not visited_nodes.has_key(son):
+                if son not in visited_nodes:
                     visited_nodes[son] = None
                     dfs_stack.append(son)
         
@@ -330,7 +338,8 @@ class Graph(object):
         components = []
         nodes = self.nodes
         for node in nodes:
-            if visited.has_key(node): continue
+            if node in visited:
+                continue
             components.append(self.undirected_dfs(node, visit_fct))
         return components
 
@@ -362,10 +371,11 @@ class Graph(object):
             node = bfs_queue.pop(0)
             bfs_list.append(node)
             # visit the node
-            if visit_fct!=None: visit_fct(node)
+            if visit_fct != None:
+                visit_fct(node)
             # add all sons to the queue (if not already visited)
             for son in neighbors_fct(node):
-                if not visited_nodes.has_key(son):
+                if son not in visited_nodes:
                     visited_nodes[son] = None
                     bfs_queue.append(son)
         

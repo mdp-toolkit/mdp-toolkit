@@ -13,10 +13,7 @@ import tempfile
 import os
 import itertools
 import sys
-from mdp import utils, numx, numx_rand, numx_linalg
-# !!! scipy.fft seems to be extremely slow, this is a workaround until
-# !!! it's fixed
-import numpy.fft as numx_fft
+from mdp import utils, numx, numx_rand, numx_linalg, numx_fft
 from testing_tools import assert_array_almost_equal, assert_array_equal, \
      assert_almost_equal, assert_equal, assert_array_almost_equal_diff, \
      assert_type_equal
@@ -29,6 +26,46 @@ uniform = numx_rand.random
 testtypes = [numx.dtype('d'), numx.dtype('f')]
 testtypeschar = [t.char for t in testtypes]
 testdecimals = {testtypes[0]: 12, testtypes[1]: 6}
+
+
+class _BogusNode(mdp.Node):
+    def is_trainable(self): return 0
+    def _execute(self,x): return 2*x
+    def _inverse(self,x): return 0.5*x
+
+class _BogusNodeTrainable(mdp.Node):
+    def _train(self, x):        
+        pass
+    def _stop_training(self):
+        self.bogus_attr = 1
+    
+class _BogusExceptNode(mdp.Node):
+    def _train(self,x):
+        self.bogus_attr = 1
+        raise Exception, "Bogus Exception"
+    
+    def _execute(self,x):
+        raise Exception, "Bogus Exception"
+
+class _BogusMultiNode(mdp.Node):
+
+    def __init__(self):
+        super(_BogusMultiNode, self).__init__()
+        self.visited = []
+    
+    def _get_train_seq(self):
+        return [(self.train1, self.stop1),
+                (self.train2, self.stop2)]
+
+    def train1(self, x):
+        self.visited.append(1)
+    def stop1(self):
+        self.visited.append(2)
+    def train2(self, x):
+        self.visited.append(3)
+    def stop2(self):
+        self.visited.append(4)
+
 
 def _rand_labels(x):
     return numx.around(uniform(x.shape[0]))
@@ -54,7 +91,10 @@ def _cov(x,y=None):
     #return mult(numx.transpose(x),y)/(x.shape[0]-1)
     return mult(numx.transpose(x),y)/(x.shape[0])
 
-_spinner = itertools.cycle((' /\b\b', ' -\b\b', ' \\\b\b', ' |\b\b'))
+#_spinner = itertools.cycle((' /\b\b', ' -\b\b', ' \\\b\b', ' |\b\b'))
+_spinner = itertools.cycle((' .\b\b', ' o\b\b', ' 0\b\b', ' O\b\b',
+                            ' 0\b\b', ' o\b\b'))
+
 # create spinner
 def spinner():
     sys.stderr.write(_spinner.next())
@@ -268,7 +308,7 @@ class NodesTestSuite(unittest.TestSuite):
         node_args = []
         if args is not None:
             for item in args:
-                if callable(item):
+                if hasattr(item, '__call__'):
                     node_args.append(item())
                 else:
                     node_args.append(item)
@@ -300,7 +340,7 @@ class NodesTestSuite(unittest.TestSuite):
     def _get_testoutputdim(self, node_class, args=[], sup_args_func=None):
         def _testoutputdim(node_class=node_class):
             mat,mix,inp = self._get_random_mix()
-            output_dim = self.mat_dim[1]/2
+            output_dim = self.mat_dim[1]//2
             # case 1: output dim set in the constructor
             node_args = self._set_node_args(args)
             node = node_class(*node_args, **{'output_dim':output_dim})
@@ -373,6 +413,30 @@ class NodesTestSuite(unittest.TestSuite):
         copy_node.dummy_attr[0] = 10
         assert generic_node.dummy_attr != copy_node.dummy_attr,\
                'Node save (file) method did not work'
+
+    def testNode_multiple_training_phases(self):
+        x = uniform(size=self.mat_dim)
+        node = _BogusMultiNode()
+        phases = node.get_remaining_train_phase()
+        for i in range(phases):
+            assert node.get_current_train_phase() == i
+            assert not node._train_phase_started
+            node.train(x)
+            assert node._train_phase_started
+            node.stop_training()
+            
+        assert not node.is_training()
+        
+    def testNode_execution_without_training(self):
+        x = uniform(size=self.mat_dim)
+        # try execution without training: single train phase
+        node = _BogusNodeTrainable()
+        node.execute(x)
+        assert hasattr(node, 'bogus_attr')
+        # multiple train phases
+        node = _BogusMultiNode()
+        node.execute(x)
+        assert node.visited == [1, 2, 3, 4]
         
     def testCovarianceMatrix(self):
         mat,mix,inp = self._get_random_mix()
@@ -624,7 +688,26 @@ class NodesTestSuite(unittest.TestSuite):
         assert out.shape[1] == 2
         # check that explained variance is > 0.8 and < 1
         assert (pca.explained_variance > 0.8 and pca.explained_variance < 1)
-        
+
+    def testPCANode_desired_variance_after_train(self):
+        mat, mix, inp = self._get_random_mix(mat_dim=(1000, 3))
+        # first make them white
+        pca = mdp.nodes.WhiteningNode()
+        pca.train(mat)
+        mat = pca.execute(mat)
+        # set the variances
+        mat *= [0.6,0.3,0.1]
+        #mat -= mat.mean(axis=0)
+        pca = mdp.nodes.PCANode()
+        pca.train(mat)
+        # this was not working before the bug fix
+        pca.output_dim = 0.8
+        out = pca.execute(mat)
+        # check that we got exactly two output_dim:
+        assert pca.output_dim == 2
+        assert out.shape[1] == 2
+        # check that explained variance is > 0.8 and < 1
+        assert (pca.explained_variance > 0.8 and pca.explained_variance < 1)    
     
     def testPCANode_SVD(self):
         # it should pass atleast the same test as PCANode
@@ -1091,6 +1174,11 @@ class NodesTestSuite(unittest.TestSuite):
         node = mdp.nodes.NoiseNode(bogus_noise, (1.,), 'multiplicative')
         out = node.execute(numx.zeros((100,10),'d'))
         assert_array_equal(out, numx.zeros((100,10),'d'))
+        
+    def testNormalNoiseNode(self):
+        node = mdp.nodes.NormalNoiseNode(noise_args=(2.1, 0.001))
+        x = numx.array([range(100), range(100)])
+        node.execute(x)
 
     def testFDANode(self):
         mean1 = [0., 2.]
@@ -1311,18 +1399,16 @@ class NodesTestSuite(unittest.TestSuite):
         mat = numx_fft.irfft(fmat,axis=0)
         src = mdp.sfa(mat)
         # test with unmixed signals (i.e. the node should make nothing at all)
-        out = mdp.isfa(src,
-                       lags=1,
-                       whitened=True,
-                       sfa_ica_coeff=[1.,0.])
+        out = mdp.nodes.ISFANode(lags=1,
+                                 whitened=True,
+                                 sfa_ica_coeff=[1.,0.])(src)
         max_cv = numx.diag(abs(_cov(out,src)))
         assert_array_almost_equal(max_cv, numx.ones((3,)),6)
         # mix linearly the signals
         mix = mult(src,uniform((3,3))*2-1)
-        out = mdp.isfa(mix,
-                       lags=1,
-                       whitened=False,
-                       sfa_ica_coeff=[1.,0.])
+        out = mdp.nodes.ISFANode(lags=1,
+                                 whitened=False,
+                                 sfa_ica_coeff=[1.,0.])(mix)
         max_cv = numx.diag(abs(_cov(out,src)))
         assert_array_almost_equal(max_cv, numx.ones((3,)),6)
 
@@ -1335,19 +1421,17 @@ class NodesTestSuite(unittest.TestSuite):
             fsrc[(i+1)*5000:,i] = 0.
         src = numx_fft.irfft(fsrc,axis=0)
         # enforce time-lag-1-independence
-        src = mdp.isfa(src, lags=1, sfa_ica_coeff=[1.,0.])
-        out = mdp.isfa(src,
-                       lags=1,
-                       whitened=True,
-                       sfa_ica_coeff=[0.,1.])
+        src = mdp.nodes.ISFANode(lags=1, sfa_ica_coeff=[1.,0.])(src)
+        out = mdp.nodes.ISFANode(lags=1,
+                                 whitened=True,
+                                 sfa_ica_coeff=[0.,1.])(src)
         max_cv = numx.diag(abs(_cov(out,src)))
         assert_array_almost_equal(max_cv, numx.ones((3,)),5)
         # mix linearly the signals
         mix = mult(src,uniform((3,3))*2-1)
-        out = mdp.isfa(mix,
-                       lags=1,
-                       whitened=False,
-                       sfa_ica_coeff=[0.,1.])
+        out = mdp.nodes.ISFANode(lags=1,
+                                 whitened=False,
+                                 sfa_ica_coeff=[0.,1.])(mix)
         max_cv = numx.diag(abs(_cov(out,src)))
         assert_array_almost_equal(max_cv, numx.ones((3,)),5)
 
@@ -1365,26 +1449,24 @@ class NodesTestSuite(unittest.TestSuite):
             src[:,i] /= std(src[:,i])
         # test extreme cases
         # case 1: ICA
-        out = mdp.isfa(src,
-                       lags=[1,lag],
-                       icaweights=[1.,1.],
-                       sfaweights=[1.,0.],
-                       output_dim=2,
-                       whitened=True,
-                       sfa_ica_coeff=[1E-4,1.])
+        out = mdp.nodes.ISFANode(lags=[1,lag],
+                                 icaweights=[1.,1.],
+                                 sfaweights=[1.,0.],
+                                 output_dim=2,
+                                 whitened=True,
+                                 sfa_ica_coeff=[1E-4,1.])(src)
         cv = abs(_cov(src,out))
         idx_cv = numx.argmax(cv,axis=0)
         assert_array_equal(idx_cv,[2,1])
         max_cv = numx.amax(cv,axis=0)
         assert_array_almost_equal(max_cv, numx.ones((2,)),5)
         # case 2: SFA
-        out = mdp.isfa(src,
-                       lags=[1,lag],
-                       icaweights=[1.,1.],
-                       sfaweights=[1.,0.],
-                       output_dim=2,
-                       whitened=True,
-                       sfa_ica_coeff=[1.,0.])
+        out = mdp.nodes.ISFANode(lags=[1,lag],
+                                 icaweights=[1.,1.],
+                                 sfaweights=[1.,0.],
+                                 output_dim=2,
+                                 whitened=True,
+                                 sfa_ica_coeff=[1.,0.])(src)
         cv = abs(_cov(src,out))
         idx_cv = numx.argmax(cv,axis=0)
         assert_array_equal(idx_cv,[2,0])
@@ -1518,7 +1600,7 @@ class NodesTestSuite(unittest.TestSuite):
             assert_array_almost_equal(distr, expected_probs[n,:], 1)
 
         # ### test 2, with bias
-        bm.bh -= 1e4
+        bm.bh -= 1e2
         h = []
         for n in range(100):
             prob, sample = bm.sample_h(v)
@@ -1573,7 +1655,7 @@ class NodesTestSuite(unittest.TestSuite):
             assert_array_almost_equal(distr, expected_probs[n,:], 1)
 
         # test 2, with bias
-        bm.bv -= 1e4
+        bm.bv -= 1e2
         v = []
         for n in range(1000):
             prob, sample = bm.sample_v(h)
