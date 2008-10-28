@@ -1,3 +1,9 @@
+mdp (2.4+svn20081028-1) unstable; urgency=low
+
+  * New Upstream Version (Closes: #487939)
+
+ -- Yaroslav Halchenko <debian@onerussian.com>  Tue, 28 Oct 2008 13:48:02 -0400
+
 mdp (2.3+svn20080720-1) unstable; urgency=low
 
   * New Upstream Version
