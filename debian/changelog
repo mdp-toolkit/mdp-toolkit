@@ -1,6 +1,8 @@
 mdp (2.4+svn20081028-1) unstable; urgency=low
 
   * New Upstream Version (Closes: #487939)
+  * Suggests python-pp (tandem with pp is still alpha/unstable, thus only
+    in suggests)
 
  -- Yaroslav Halchenko <debian@onerussian.com>  Tue, 28 Oct 2008 13:48:02 -0400
 

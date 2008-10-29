@@ -12,7 +12,7 @@ Package: python-mdp
 Architecture: all
 Depends: ${python:Depends}, python-numpy
 Recommends: python-symeig
-Suggests: python-scipy
+Suggests: python-scipy, python-pp
 Description: Modular toolkit for Data Processing
  Python data processing framework. Implemented algorithms include:
  Principal Component Analysis (PCA), Independent Component Analysis
