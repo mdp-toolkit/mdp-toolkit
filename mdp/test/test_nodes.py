@@ -671,6 +671,18 @@ class NodesTestSuite(unittest.TestSuite):
         # test a bug in v.1.1.1, should not crash
         pca.inverse(act_mat[:,:1])
 
+##     # test segmentation fault with symeig, see
+##     # http://projects.scipy.org/scipy/numpy/ticket/551
+##     def testPCANode_pickled(self):
+##         for i in range(2,100):
+##             mat, mix, inp = self._get_random_mix(mat_dim=(200, i))
+            
+##             pca = mdp.nodes.PCANode()
+##             pca.train(mat)
+##             s = cPickle.dumps(pca)
+##             pca = cPickle.loads(s)
+##             act_mat = pca.execute(mat)
+
     def testPCANode_desired_variance(self):
         mat, mix, inp = self._get_random_mix(mat_dim=(1000, 3))
         # first make them white

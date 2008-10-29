@@ -2,6 +2,8 @@
 Process based scheduler for distribution across multiple CPU cores.
 """
 
+
+
 import sys
 import os
 import cPickle as pickle
@@ -9,13 +11,18 @@ import thread
 import subprocess
 import time
 import traceback
-
-import scheduling
+import warnings
 
 if __name__ == "__main__":
+    # shut off warnings of any kinds
+    warnings.filterwarnings("ignore", ".*")
+    # trick to find mdp in a remote process
     mdp_path = __file__.split("mdp")[0]
     sys.path.append(mdp_path)
+
+
 import mdp
+import scheduling
 
 # TODO: implement caching of callable in process?
 

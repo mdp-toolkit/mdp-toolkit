@@ -12,7 +12,7 @@ class TestParallelMDPNodes(unittest.TestCase):
     
     def test_PCANode(self):
         """Test Parallel PCANode"""
-        precision = 10
+        precision = 6
         x = n.random.random([100,10])
         x_test = n.random.random([20,10])
         pca_node = mdp.nodes.PCANode()
@@ -37,7 +37,7 @@ class TestParallelMDPNodes(unittest.TestCase):
         
     def test_WhiteningNode(self):
         """Test Parallel WhiteningNode"""
-        precision = 10
+        precision = 6
         x = n.random.random([100,10])
         x_test = n.random.random([20,10])
         pca_node = mdp.nodes.WhiteningNode()
@@ -62,7 +62,7 @@ class TestParallelMDPNodes(unittest.TestCase):
 
     def test_SFANode(self):
         """Test Parallel SFANode"""
-        precision = 10
+        precision = 6
         x = n.random.random([100,10])
         x_test = n.random.random([20,10])
         sfa_node = mdp.nodes.SFANode()
@@ -87,7 +87,7 @@ class TestParallelMDPNodes(unittest.TestCase):
         
     def test_SFA2Node(self):
         """Test Parallel SFA2Node"""
-        precision = 10
+        precision = 6
         x = n.random.random([100,10])
         x_test = n.random.random([20,10])
         sfa2_node = mdp.nodes.SFA2Node()
