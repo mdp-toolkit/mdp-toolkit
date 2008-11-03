@@ -317,10 +317,10 @@ class HinetTestSuite(NodesTestSuite):
         flownode = mh.FlowNode(mdp.Flow([noisenode, sfa_node]))
         sfa_layer = mh.CloneLayer(flownode, switchboard.output_channels)
         flow = mdp.Flow([switchboard, sfa_layer])
-        # create dummy file like string to write the representation to
+        # create dummy file to write the HTML representation
         html_file = StringIO.StringIO()
-        hinet_html = mdp.hinet.HiNetHTML(html_file=html_file)
-        hinet_html.parse_flow(flow)
+        hinet_html = mdp.hinet.HiNetHTMLTranslator()
+        hinet_html.write_flow_to_file(flow, html_file)
         html_file.close()
     
 

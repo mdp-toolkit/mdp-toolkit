@@ -1,15 +1,83 @@
 """
-Module to represent a hinet node structure or an arbitrary flow in a HTML-file.
-
-This is done via the HiNetHTML class.
+Module to translate HiNet structures into other representations, like HTML.
 """
 
 import mdp
 
 import switchboard
 
-## CSS for hinet representation. ##
 
+class HiNetTranslator(object):
+    """Generic translation class for HiNet flow.
+    
+    The HiNet structure is translated into another representation (like HTML
+    or a modified flow.
+    """
+    
+    def __init__(self):
+        """Initialize the internal variables."""
+        pass
+
+    def _translate_flow(self, flow):
+        """Translate the flow and return the translation."""
+        flow_translation = []
+        for node in flow:
+            flow_translation.append(self._translate_node(node))
+        return flow_translation
+            
+    def _translate_node(self, node):
+        """Translate a node and return the translation.
+        
+        Depending on the type of the node this can be delegated to more
+        specific methods.
+        """
+        if isinstance(node, mdp.hinet.FlowNode):
+            return self._translate_flownode(node)
+        if isinstance(node, mdp.hinet.CloneLayer):
+            return self._translate_clonelayer(node)
+        elif isinstance(node, mdp.hinet.Layer):
+            return self._translate_layer(node)
+        else:
+            return self._translate_standard_node(node)
+        
+    def _translate_flownode(self, flownode):
+        """Translate a flow node and return the translation.
+        
+        The internal nodes are translated recursively.
+        """
+        flownode_translation = []
+        flow = flownode._flow
+        for node in flow.flow:
+            flownode_translation.append(self._translate_node(node))
+        return flownode_translation
+    
+    def _translate_layer(self, layer):
+        """Translate a layer and return the translation.
+        
+        All the nodes in the layer are translated.
+        """
+        layer_translation = []
+        for node in layer.nodes:
+            layer_translation.append(self._translate_node(node))
+        return layer_translation
+    
+    def _translate_clonelayer(self, clonelayer):
+        """Translate a CloneLayer and return the translation."""
+        return [str(clonelayer.node) * len(clonelayer.nodes)]
+
+    def _translate_standard_node(self, node):
+        """Translate a node and return the translation.
+        
+        This method is used when no specialized translation (like for FlowNodes
+        or Layers) is required.
+        """
+        return str(node)
+
+
+## Specialized HTML Translator ##
+
+# CSS for hinet representation.
+#
 # Warning: In nested tables the top table css overwrites the nested css if
 #    they are specified like 'table.flow td' (i.e. all td's below this table).
 #    So be careful about hiding/overriding nested td's.
@@ -17,9 +85,7 @@ import switchboard
 # The tables "nodestruct" are used to separate the dimension values from 
 # the actual node text.
 
-CSS_HINET = """
-<style type="text/css" media="screen">
-
+HINET_STYLE = """
 table.flow {
     border-collapse: separate;
     padding: 3 3 3 3;
@@ -74,46 +140,39 @@ td.dim {
     text-align: center;
     color: #008ADC;
 }
-
-</style>
 """
 
-
-## Node Parameter Writers ##
-
-# These functions are used to define how the internal node structure is 
-# represented in the HTML file (the report argument). 
-# Custom write functions can be appended to the list.
+# Functions to define how the node parameters are represented in the
+# HTML representation of a node.
+#
 # Note that the list is worked starting from the end (so subclasses can
 # be appended to the end of the list to override their parent class writer).
     
-def _write_rect2dswitchboard(node, report):
-    report.write('rec. field size (in channels): %d x %d = %d<br>' 
-                 % (node.x_field_channels, node.y_field_channels,
-                    node.x_field_channels * node.y_field_channels))
-    report.write('# of rec. fields (output channels): %d x %d = %d<br>'
-                 % (node.x_out_channels, node.y_out_channels,
-                    node.x_out_channels * node.y_out_channels))
-    report.write('rec. field distances (in channels): (%d, %d) <br>'
-                 % (node.x_field_spacing, node.y_field_spacing))
-    report.write('channel width: %d' % node.in_channel_dim)
+def _get_html_rect2dswitchboard(node):
+    return ['rec. field size (in channels): %d x %d = %d' % 
+                (node.x_field_channels, node.y_field_channels,
+                 node.x_field_channels * node.y_field_channels),
+            '# of rec. fields (output channels): %d x %d = %d' %
+                (node.x_out_channels, node.y_out_channels,
+                 node.x_out_channels * node.y_out_channels),
+            'rec. field distances (in channels): (%d, %d)' %
+                (node.x_field_spacing, node.y_field_spacing),
+            'channel width: %d' % node.in_channel_dim]
     
-def _write_sfa2(node, report):
-    report.write('expansion dim: ' + str(node._expnode.output_dim) + ' <br>')
+def _get_html_sfa2(node):
+    return ['expansion dim: ' + str(node._expnode.output_dim)]
     
-def _write_normalnoise(node, r):
-    r.write('noise level: ' + str(node.noise_args[1]) + ' <br>')
-    r.write('noise offset: ' + str(node.noise_args[0]))
+def _get_html_normalnoise(node):
+    return ['noise level: ' + str(node.noise_args[1]),
+            'noise offset: ' + str(node.noise_args[0])]
     
 # (node class type, write function)
-NODE_PARAM_WRITERS = [
-    (switchboard.Rectangular2dSwitchboard, _write_rect2dswitchboard),
-    (mdp.nodes.SFA2Node, _write_sfa2),
-    (mdp.nodes.NormalNoiseNode, _write_normalnoise),
+NODE_HTML_TRANSLATORS = [
+    (switchboard.Rectangular2dSwitchboard, _get_html_rect2dswitchboard),
+    (mdp.nodes.SFA2Node, _get_html_sfa2),
+    (mdp.nodes.NormalNoiseNode, _get_html_normalnoise),
 ]
 
-
-# helper class, spares us from adding newline characters to every line 
 
 class NewlineWriteFile(object):
     """Decorator for file-like object.
@@ -131,131 +190,126 @@ class NewlineWriteFile(object):
         
     def close(self):
         self.file_obj.close()
-        
-        
-class HiNetHTML(object):
-    """Create an HTML representation of a hierarchical network.
     
-    This works for any MDP flow, especially those which use the hinet package
-    to build arbitrary hierarchical networks of nodes. A HiNetHTML object
-    parses the internal structure of such a flow to create schematic view. 
+    
+class HiNetHTMLTranslator(HiNetTranslator):
+    """Specialized translator for HTML.
+    
+    Instead of relying on the return values the HTML lines are directly
+    written to a provided file.
     """
     
-    def __init__(self, html_file, node_param_writers=tuple(NODE_PARAM_WRITERS),
-                 css=CSS_HINET):
-        """Prepare everything for the parsing of an actual flow.
+    def __init__(self, node_param_translators=NODE_HTML_TRANSLATORS):
+        """Initialize the HMTL translator.
         
-        html_file -- File like object to which the HTML code is written.
-        node_param_writers -- This list specifies functions for special nodes
-            to integrate node properties into the HMTL view. The list consists
-            of tuples of length two, the first element is the node class name.
-            The second is a function which takes an instance of this class and
-            the file object to which the output is written (look at the examples
-            provided in this module file).
-        css -- A string containing the CSS code for the HMTL representation.
-            This is then written to the file. Take a look at the default CSS
-            before using a custom style
+        node_param_translators -- List of tuples, the first tuple entry beeing
+            the node type and the second a functions that translates the the
+            internal node parameters into HTML. The function returns a list
+            of HTML lines, which are then written into the HTML file.
+            Note that the list is worked starting from the end (so subclasses 
+            can be appended to the end of the list to override their parent 
+            class).
         """
-        self.report = NewlineWriteFile(html_file)
-        self.node_param_writers = node_param_writers
-        self.report.write(css)
+        self._node_param_translators = node_param_translators
+        self._html_file = None
+        
+    def write_flow_to_file(self, flow, html_file):
+        """Write the HTML translation of the flow into the provided file."""
+        self._html_file = NewlineWriteFile(html_file)
+        self._translate_flow(flow)
+        self._html_file = None
     
-    def parse_flow(self, flow):
-        """Parse the given flow and write the HTML code into the file."""
-        r = self.report
-        r.write('<table class="flow">')
-        r.write('<tr><td class="dim">in-dim: %d</td></tr>' % flow[0].input_dim)
-        r.write('<tr><td><table class="nodestruct">')
-        for node in flow.flow:
-            r.write('<tr><td>')
-            self._parse_node(node)
-            r.write('</td></tr>')
-        r.write('</td></tr></table>')
-        r.write('<tr><td class="dim">out-dim: %d</td></tr>' 
-                % flow[-1].output_dim)
-        r.write('</table>')
-
-    def _parse_node(self, node):
-        """Recursively parse the given nodes."""
-        r = self.report
-        if isinstance(node, mdp.hinet.FlowNode):
-            r.write('<table class="flownode">')
-            r.write('<tr><td>')
-            self._parse_flownode(node)
-            r.write('</td></tr>')
-        elif isinstance(node, mdp.hinet.Layer):
-            r.write('<table class="layer">')
-            r.write('<tr><td class="dim">in-dim: %d</td></tr>' % node.input_dim)
-            r.write('<tr><td>')
-            self._parse_layer(node)
-            r.write('</td></tr>')
-            r.write('<tr><td class="dim">out-dim: %d' % node.output_dim)
-        elif isinstance(node, mdp.Node):
-            r.write('<table class="node">')
-            r.write('<tr><td class="dim">in-dim: %d</td></tr>' % node.input_dim)
-            r.write('<tr><td>')
-            self._write_general_node(node)
-            r.write('</td></tr>')
-            r.write('<tr><td class="dim">out-dim: %d' % node.output_dim)
-        r.write('</td></tr>')
-        r.write('</table>')
-            
-    def _parse_flownode(self, flownode):
-        """Recursively parse a FlowNode."""
-        r = self.report
-        r.write('<table class="nodestruct">')
+    def add_node_param_translators(self, node_param_translators):
+        """Append more node_param_translators (see __init__)."""
+        self._node_param_translators += node_param_translators  
+        
+    # overwrite methods
+    
+    def _translate_flow(self, flow):
+        f = self._html_file
+        self._open_node_env(flow, "flow")
+        for node in flow:
+            f.write('<tr><td>')
+            self._translate_node(node)
+            f.write('</td></tr>')
+        f.write('</td></tr>')
+        self._close_node_env(flow, "flow")
+        
+    def _translate_flownode(self, flownode):
+        f = self._html_file
+        self._open_node_env(flownode, "flownode")
         flow = flownode._flow
         for node in flow.flow:
-            r.write('<tr><td>')
-            self._parse_node(node)
-            r.write('</td></tr>')
-        r.write('</table>')
-    
-    def _parse_layer(self, layer):
-        """Recursively parse a Layer."""
-        r = self.report
-        r.write('<table class="nodestruct">')
-        if isinstance(layer, mdp.hinet.CloneLayer):
-            r.write('<tr><td class="nodename">')
-            r.write(str(layer) + '<br><br>')
-            r.write('%d repetitions' % len(layer.nodes))
-            r.write('</td>')
-            r.write('<td>')
-            self._parse_node(layer.node)
-            r.write('</td></tr>')
-        else: 
-            r.write('<tr>')
-            for node in layer.nodes:
-                r.write('<td>')
-                self._parse_node(node)
-                r.write('</td>')
-            r.write('</tr>')
-        r.write('</table>')
-    
-    def _write_general_node(self, node):
-        """Do not recurse further and write the node."""
-        r = self.report
-        r.write('<table class="nodestruct">')
-        r.write('<tr><td class="nodename">')
-        r.write(str(node))
-        r.write('</td></tr>')
-        r.write('<tr><td class="nodeparams">')
-        for node_param_writer in self.node_param_writers[::-1]:
-            if isinstance(node, node_param_writer[0]):
-                node_param_writer[1](node, r)
-                break
-        r.write('</td></tr>')
-        r.write('</table>')
+            f.write('<tr><td>')
+            self._translate_node(node)
+            f.write('</td></tr>')
+        self._close_node_env(flownode, "flownode")
+     
+    def _translate_layer(self, layer):
+        f = self._html_file
+        self._open_node_env(layer, "layer")
+        f.write('<tr>')
+        for node in layer.nodes:
+            f.write('<td>')
+            self._translate_node(node)
+            f.write('</td>')
+        f.write('</tr>')
+        self._close_node_env(layer)
         
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
+    def _translate_clonelayer(self, clonelayer):
+        f = self._html_file
+        self._open_node_env(clonelayer, "layer")
+        f.write('<tr><td class="nodename">')
+        f.write(str(clonelayer) + '<br><br>')
+        f.write('%d repetitions' % len(clonelayer.nodes))
+        f.write('</td>')
+        f.write('<td>')
+        self._translate_node(clonelayer.node)
+        f.write('</td></tr>')
+        self._close_node_env(clonelayer)
+
+    def _translate_standard_node(self, node):
+        f = self._html_file
+        self._open_node_env(node)
+        f.write('<tr><td class="nodename">')
+        f.write(str(node))
+        f.write('</td></tr>')
+        f.write('<tr><td class="nodeparams">')
+        for node_param_trans in self._node_param_translators[::-1]:
+            if isinstance(node, node_param_trans[0]):
+                html_params = " <br>\n".join(node_param_trans[1](node))
+                f.write(html_params)
+                break
+        f.write('</td></tr>')
+        self._close_node_env(node)
+        
+    # helper methods for decoration
     
+    def _open_node_env(self, node, type_id="node"):
+        """Open the HTML environment for the node internals.
+        
+        node -- The node itself.
+        type_id -- The id string as used in the CSS.
+        """
+        f = self._html_file
+        f.write('<table class="%s">' % type_id)
+        if not (type_id=="flow" or type_id=="flownode"):
+            f.write('<tr><td class="dim">in-dim: %d</td></tr>' % node.input_dim)
+        f.write('<tr><td>')
+        f.write('<table class="nodestruct">')
+    
+    def _close_node_env(self, node, type_id="node"):
+        """Close the HTML environment for the node internals.
+        
+        node -- The node itself.
+        type_id -- The id string as used in the CSS.
+        """
+        f = self._html_file
+        f.write('</table>')
+        f.write('</td></tr>')
+        if not (type_id=="flow" or type_id=="flownode"):
+            f.write('<tr><td class="dim">out-dim: %d' % node.output_dim)
+            f.write('</td></tr>')
+        f.write('</table>')
+    
+        
