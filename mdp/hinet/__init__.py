@@ -31,7 +31,8 @@ from flownode import FlowNode
 from layer import Layer, SameInputLayer, CloneLayer
 from switchboard import (Switchboard, Rectangular2dSwitchboardException, 
                          Rectangular2dSwitchboard)
-from hinet_html import HiNetTranslator, HiNetHTMLTranslator, HINET_STYLE
+from hinet_html import (HiNetTranslator, HiNetHTMLTranslator, 
+                        NODE_HTML_TRANSLATORS, HINET_STYLE)
 
 del flownode
 del layer
