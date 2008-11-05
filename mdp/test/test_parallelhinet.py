@@ -2,9 +2,12 @@
 import unittest
 
 import mdp
+from mdp import numx as n
 import mdp.parallel as parallel
 import mdp.hinet as hinet
 from mdp import numx as n
+
+import testing_tools
 
 
 class TestParallelFlowNode(unittest.TestCase):
@@ -52,6 +55,30 @@ class TestParallelFlowNode(unittest.TestCase):
                           [n.random.random((10, 100*100)) for _ in range(3)]]
         scheduler = parallel.Scheduler()
         flow.train(data_iterables, scheduler=scheduler)
+        
+    def test_makeparallel(self):
+        """Test make_flow_parallel and unmake_flow_parallel for a hinet."""
+        sfa_node = mdp.nodes.SFANode(input_dim=20*20, output_dim=10)
+        switchboard = hinet.Rectangular2dSwitchboard(x_in_channels=100, 
+                                                     y_in_channels=100, 
+                                                     x_field_channels=20, 
+                                                     y_field_channels=20,
+                                                     x_field_spacing=10, 
+                                                     y_field_spacing=10)
+        flownode = hinet.FlowNode(mdp.Flow([sfa_node]))
+        sfa_layer = hinet.CloneLayer(flownode, switchboard.output_channels)
+        flow = mdp.Flow([switchboard, sfa_layer])
+        data_iterables = [None,
+                          [n.random.random((50, 100*100)) for _ in range(3)]]
+        parallel_flow = parallel.make_flow_parallel(flow)
+        scheduler = parallel.Scheduler()
+        parallel_flow.train(data_iterables, scheduler=scheduler)
+        flow.train(data_iterables)
+        reconstructed_flow = parallel.unmake_flow_parallel(parallel_flow)
+        x = mdp.numx.random.random((10, flow[0].input_dim))
+        y1 = abs(flow.execute(x))
+        y2 = abs(reconstructed_flow.execute(x))
+        testing_tools.assert_array_almost_equal(y1, y2)
         
         
 class TestParallelLayer(unittest.TestCase):

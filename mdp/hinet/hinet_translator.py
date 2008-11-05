@@ -10,15 +10,15 @@ import switchboard
 class HiNetTranslator(object):
     """Generic translation class for HiNet flow.
     
-    The HiNet structure is translated into another representation (like HTML
-    or a modified flow.
+    The dummy implementation in this base class turns the HiNet structure
+    into nested lists of the basic nodes.
     """
     
     def __init__(self):
         """Initialize the internal variables."""
         pass
 
-    def _translate_flow(self, flow):
+    def translate_flow(self, flow):
         """Translate the flow and return the translation."""
         flow_translation = []
         for node in flow:
@@ -63,7 +63,8 @@ class HiNetTranslator(object):
     
     def _translate_clonelayer(self, clonelayer):
         """Translate a CloneLayer and return the translation."""
-        return [str(clonelayer.node) * len(clonelayer.nodes)]
+        translated_node = self._translate_node(clonelayer.node)
+        return [translated_node] * len(clonelayer.nodes)
 
     def _translate_standard_node(self, node):
         """Translate a node and return the translation.
@@ -71,7 +72,7 @@ class HiNetTranslator(object):
         This method is used when no specialized translation (like for FlowNodes
         or Layers) is required.
         """
-        return str(node)
+        return node
 
 
 ## Specialized HTML Translator ##
@@ -216,7 +217,7 @@ class HiNetHTMLTranslator(HiNetTranslator):
     def write_flow_to_file(self, flow, html_file):
         """Write the HTML translation of the flow into the provided file."""
         self._html_file = NewlineWriteFile(html_file)
-        self._translate_flow(flow)
+        self.translate_flow(flow)
         self._html_file = None
     
     def add_node_param_translators(self, node_param_translators):
@@ -225,7 +226,7 @@ class HiNetHTMLTranslator(HiNetTranslator):
         
     # overwrite methods
     
-    def _translate_flow(self, flow):
+    def translate_flow(self, flow):
         f = self._html_file
         self._open_node_env(flow, "flow")
         for node in flow:

@@ -31,13 +31,13 @@ from flownode import FlowNode
 from layer import Layer, SameInputLayer, CloneLayer
 from switchboard import (Switchboard, Rectangular2dSwitchboardException, 
                          Rectangular2dSwitchboard)
-from hinet_html import (HiNetTranslator, HiNetHTMLTranslator, 
+from hinet_translator import (HiNetTranslator, HiNetHTMLTranslator, 
                         NODE_HTML_TRANSLATORS, HINET_STYLE)
 
 del flownode
 del layer
 del switchboard
-del hinet_html
+del hinet_translator
 
 __all__ = ['FlowNode', 'Layer', 'SameInputLayer', 'CloneLayer',
            'Rectangular2dSwitchboard', 'Rectangular2dSwitchboardException',
