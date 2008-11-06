@@ -14,19 +14,25 @@ import parallelhinet
 import parallelnodes
 
 
-def get_parallel_node_class(node_class):
+def get_parallel_member(nonparallel_class, parallel_module):
     """Return the parallel version of a node class.
     
     If no parallel version is found the return value is None.
+    
+    nonparallel_class -- Class of the non-parallel object.
+    parallel_module -- Module in which the parallel class might be found.
     """
-    for membername in dir(parallelnodes):
-        member = parallelnodes.__dict__[membername]
+    for membername in dir(parallel_module):
+        member = parallel_module.__dict__[membername]
         # check that the member is a class  and that it is derived
         # from ParallelNode
         if (isinstance(member, type) and 
-            parallelnodes.ParallelNode in member.mro()):
-            # check if one of the member basis is the node_class
-            if node_class in member.__bases__:
+            member.__name__.startswith("Parallel")):
+            # check if the parallel node is directly derived from the
+            # node_class, directly because otherwise we might accidently pick
+            # a specialized subclass (e.g. ParallelCheckpointFlow instead of 
+            # ParallelFlow, since both are derived from Flow)
+            if nonparallel_class in member.__bases__:
                 return member
     return None
 
@@ -48,8 +54,11 @@ class HiNetParallelTranslator(hinet.HiNetTranslator):
             return flow
         parallel_nodes = super(HiNetParallelTranslator, 
                                self).translate_flow(flow)
-        parallel_flow = parallelflows.ParallelFlow(parallel_nodes)
-        parallel_flow._serialclass_ = type(flow)
+        flow_class = type(flow)
+        flow_parallel_class = get_parallel_member(flow_class, parallelflows)
+        parallel_flow = flow_parallel_class(parallel_nodes,  
+                                            verbose=flow.verbose)
+        parallel_flow._serialclass_ = flow_class
         return parallel_flow
     
     def _translate_flownode(self, flownode):
@@ -76,7 +85,7 @@ class HiNetParallelTranslator(hinet.HiNetTranslator):
         node = node.copy()
         node_class = type(node)
         if not isinstance(node, parallelnodes.ParallelNode):
-            p_node_class = get_parallel_node_class(node_class)
+            p_node_class = get_parallel_member(node_class, parallelnodes)
             if p_node_class is not None:
                 node.__class__ = p_node_class
                 # store the old node class for a later back-translation 
@@ -104,7 +113,7 @@ class HiNetUnParallelTranslator(hinet.HiNetTranslator):
             raise Exception(err)
         normal_nodes = super(HiNetUnParallelTranslator, 
                              self).translate_flow(flow)
-        return flow_class(normal_nodes)
+        return flow_class(normal_nodes, verbose=flow.verbose)
     
     def _translate_flownode(self, flownode):
         """Replace a parallel FlowNode with its normal version."""

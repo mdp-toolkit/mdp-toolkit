@@ -561,6 +561,7 @@ class ParallelCheckpointFlow(ParallelFlow, mdp.CheckpointFlow):
                 if ((i_node <= len(self._checkpoints)) 
                     and self._checkpoints[i_node]):
                     dict = self._checkpoints[i_node](self.flow[i_node])
+                    # store result, just like in the original CheckpointFlow
                     if dict: 
                         self.__dict__.update(dict)
         elif self.is_parallel_executing():
