@@ -50,10 +50,18 @@ class HiNetParallelTranslator(hinet.HiNetTranslator):
         Note that the provided flow is not modified, its internal nodes
         will be copied or newly created nodes are used.
         """
+        return self._translate_flow(flow)
+    
+    def _translate_flow(self, flow):
+        """Return the new parallel flow.
+        
+        Note that the provided flow is not modified, its internal nodes
+        will be copied or newly created nodes are used.
+        """
         if isinstance(flow, parallelflows.ParallelFlow):
             return flow
         parallel_nodes = super(HiNetParallelTranslator, 
-                               self).translate_flow(flow)
+                               self)._translate_flow(flow)
         flow_class = type(flow)
         flow_parallel_class = get_parallel_member(flow_class, parallelflows)
         parallel_flow = flow_parallel_class(parallel_nodes,  
@@ -101,7 +109,15 @@ class HiNetUnParallelTranslator(hinet.HiNetTranslator):
     """
     
     def translate_flow(self, flow):
-        """Return the new parallel flow.
+        """Return the reconstructed original (non-parallel) flow.
+        
+        Note that the provided flow is not modified, its internal nodes
+        will be copied or newly created nodes are used.
+        """
+        return self._translate_flow(flow)
+    
+    def _translate_flow(self, flow):
+        """Return the reconstructed original (non-parallel) flow.
         
         Note that the provided flow is not modified, its internal nodes
         will be copied or newly created nodes are used.
@@ -112,7 +128,7 @@ class HiNetUnParallelTranslator(hinet.HiNetTranslator):
             err = "The provided flow was not created by make_flow_parallel." 
             raise Exception(err)
         normal_nodes = super(HiNetUnParallelTranslator, 
-                             self).translate_flow(flow)
+                             self)._translate_flow(flow)
         return flow_class(normal_nodes, verbose=flow.verbose)
     
     def _translate_flownode(self, flownode):

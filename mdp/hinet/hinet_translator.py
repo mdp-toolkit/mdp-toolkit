@@ -18,7 +18,7 @@ class HiNetTranslator(object):
         """Initialize the internal variables."""
         pass
 
-    def translate_flow(self, flow):
+    def _translate_flow(self, flow):
         """Translate the flow and return the translation."""
         flow_translation = []
         for node in flow:
@@ -217,7 +217,7 @@ class HiNetHTMLTranslator(HiNetTranslator):
     def write_flow_to_file(self, flow, html_file):
         """Write the HTML translation of the flow into the provided file."""
         self._html_file = NewlineWriteFile(html_file)
-        self.translate_flow(flow)
+        self._translate_flow(flow)
         self._html_file = None
     
     def add_node_param_translators(self, node_param_translators):
@@ -226,7 +226,11 @@ class HiNetHTMLTranslator(HiNetTranslator):
         
     # overwrite methods
     
-    def translate_flow(self, flow):
+    def _translate_flow(self, flow):
+        """Translate the flow into HTML and write it into the internal file.
+        
+        Use write_flow_to_file instead of calling this method.
+        """
         f = self._html_file
         self._open_node_env(flow, "flow")
         for node in flow:

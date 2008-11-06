@@ -32,7 +32,8 @@ from layer import Layer, SameInputLayer, CloneLayer
 from switchboard import (Switchboard, Rectangular2dSwitchboardException, 
                          Rectangular2dSwitchboard)
 from hinet_translator import (HiNetTranslator, HiNetHTMLTranslator, 
-                        NODE_HTML_TRANSLATORS, HINET_STYLE)
+                              NODE_HTML_TRANSLATORS, HINET_STYLE,
+                              NewlineWriteFile)
 
 del flownode
 del layer
