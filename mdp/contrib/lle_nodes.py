@@ -24,9 +24,13 @@ class LLENode(Cumulator):
     Linear Embedding' by L. Saul and S. Roweis, using improvements
     suggested in 'Locally Linear Embedding for Classification' by
     D. deRidder and R.P.W. Duin.
-    
+
+    References: Roweis, S. and Saul, L., Nonlinear dimensionality
+    reduction by locally linear embedding, Science 290 (5500), pp.
+    2323-2326, 2000.
+
     Original code contributed by:
-      Jake Vanderplas, University of Washington
+      Jake VanderPlas, University of Washington
       vanderplas@astro.washington.edu
     """
     
@@ -331,9 +335,9 @@ class HLLENode(LLENode):
                                intrinsic dimensionality
                             
     Implementation based on algorithm outlined in
-     'Hessian Eigenmaps: new locally linear embedding techniques
-      for high-dimensional data'
-        by C. Grimes and D. Donoho, 2003 
+    Donoho, D. L., and Grimes, C., Hessian Eigenmaps: new locally linear
+    embedding techniques for high-dimensional data, Proceedings of the
+    National Academy of Sciences 100(10): 5591-5596, 2003. 
 
     Original code contributed by:
       Jake Vanderplas, University of Washington
