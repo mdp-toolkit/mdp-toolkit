@@ -16,7 +16,7 @@ class HiNetTranslator(object):
     
     def __init__(self):
         """Initialize the internal variables."""
-        pass
+        super(HiNetTranslator, self).__init__()
 
     def _translate_flow(self, flow):
         """Translate the flow and return the translation."""
@@ -296,8 +296,12 @@ class HiNetHTMLTranslator(HiNetTranslator):
         node -- The node itself.
         type_id -- The id string as used in the CSS.
         """
+        self._html_file.write('<table class="%s">' % type_id)
+        self._write_node_header(node, type_id)
+        
+    def _write_node_header(self, node, type_id="node"):
+        """Write the header content for the node into the HTML file."""
         f = self._html_file
-        f.write('<table class="%s">' % type_id)
         if not (type_id=="flow" or type_id=="flownode"):
             f.write('<tr><td class="dim">in-dim: %d</td></tr>' % node.input_dim)
         f.write('<tr><td>')

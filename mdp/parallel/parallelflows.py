@@ -223,6 +223,8 @@ class ParallelFlow(mdp.Flow):
                     raise Exception(err)
                 else:
                     self.use_results(results)
+            # reset remaining iterator references, which cannot be pickled
+            self._train_data_iter = None
     
     def setup_parallel_training(self, data_iterators, 
                                 train_callable_class=FlowTrainCallable):
@@ -379,8 +381,10 @@ class ParallelFlow(mdp.Flow):
         while self.task_available():
             task = self.get_task()
             scheduler.add_task(*task)
-        results = scheduler.get_results()
-        return self.use_results(results)
+        result = self.use_results(scheduler.get_results())
+        # reset remaining iterator references, which cannot be pickled
+        self._exec_data_iter = None
+        return result
        
     def setup_parallel_execution(self, iterator, nodenr=None,
                                  execute_callable_class=FlowExecuteCallable):
