@@ -32,12 +32,16 @@ class FlowTrainCallable(scheduling.TaskCallable):
         """
         self._flownode = flownode
     
-    def __call__(self, x):
+    def __call__(self, data):
         """Do the training and return only the trained node.
         
-        x -- training data block
+        data -- training data block (array or list if additional arguments are
+            required)
         """
-        self._flownode.train(x)
+        if type(data) is n.ndarray:
+            self._flownode.train(data)
+        else:
+            self._flownode.train(*data)
         # note the local training in ParallelFlow relies on the flownode
         # being preserved, so derived classes should preserve it as well
         for node in self._flownode._flow:
