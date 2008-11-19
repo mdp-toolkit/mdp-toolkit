@@ -16,7 +16,7 @@ During release:
 - update CHANGES and TODO
 - generate tutorial using mdp_html/tutorial_src/gentut
 - generate API documentation
-- update on SF.net
+- update on SF.net (sftp username,mdp-toolkit@web.sourceforge.net)
 - short/long description should go: on SF.net description, tutorial,
   home page, pypi, modules __init__
 - change homepage color
