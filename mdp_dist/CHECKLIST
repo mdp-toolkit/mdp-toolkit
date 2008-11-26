@@ -19,6 +19,7 @@ During release:
 - update on SF.net:
   release files: sftp username@frs.sourceforge.net /uploads
   web: sftp username,mdp-toolkit@web.sourceforge.net
+  more info: http://alexandria.wiki.sourceforge.net/Project+Web,+Shell,+VHOST+and+Database+Services
 - short/long description should go: on SF.net description, tutorial,
   home page, pypi, modules __init__
 - change homepage color
@@ -33,7 +34,7 @@ After release:
 	Scipy users: scipy-user@scipy.org
 	mdp-users: mdp-toolkit-users@lists.sourceforge.net
         Python-announce: python-announce-list@python.org
-- update package information on mloss.org and pypi
+- update package information on mloss.org, pypi, and software.incf.net.
 - celebrate!!
 
 
