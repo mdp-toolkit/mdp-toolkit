@@ -219,9 +219,9 @@ def _assert_eigenvalues_real_and_positive(w, dtype):
     if abs(w.imag).max() > tol:
         err = "Some eigenvalues have significant imaginary part: %s " % str(w)
         raise SymeigException(err)
-    if w.real.min() < 0:
-        err = "Got negative eigenvalues: %s" % str(w)
-        raise SymeigException(err)
+    #if w.real.min() < 0:
+    #    err = "Got negative eigenvalues: %s" % str(w)
+    #    raise SymeigException(err)
               
 
 def _symeig_fake(A, B = None, eigenvectors = 1, turbo = "on", range = None,
