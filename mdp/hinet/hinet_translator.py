@@ -303,7 +303,8 @@ class HiNetHTMLTranslator(HiNetTranslator):
         """Write the header content for the node into the HTML file."""
         f = self._html_file
         if not (type_id=="flow" or type_id=="flownode"):
-            f.write('<tr><td class="dim">in-dim: %d</td></tr>' % node.input_dim)
+            f.write('<tr><td class="dim">in-dim: %s</td></tr>' % 
+                    str(node.input_dim))
         f.write('<tr><td>')
         f.write('<table class="nodestruct">')
     
@@ -317,8 +318,8 @@ class HiNetHTMLTranslator(HiNetTranslator):
         f.write('</table>')
         f.write('</td></tr>')
         if not (type_id=="flow" or type_id=="flownode"):
-            f.write('<tr><td class="dim">out-dim: %d' % node.output_dim)
-            f.write('</td></tr>')
+            f.write('<tr><td class="dim">out-dim: %s</td></tr>' % 
+                    str(node.output_dim))
         f.write('</table>')
     
         
