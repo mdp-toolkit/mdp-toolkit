@@ -150,6 +150,9 @@ class PCANode(Node):
         # (eigenvalues sorted in ascending order)
         try:
             d, v = self._symeig(self.cov_mtx, range=rng, overwrite=(not debug))
+            # check that we get only *positive* eigenvalues
+            if d.min() < 0:
+                raise SymeigException("Got negative eigenvalues: %s." % str(d))
         except SymeigException, exception:
             err = str(exception)+("\nCovariance matrix may be singular."
                                   "Try instantiating the node with svd=True.")

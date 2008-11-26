@@ -24,6 +24,10 @@ class TrainingPhaseNotParallelException(mdp.NodeException):
     """
     pass
 
+class JoinParallelNodeException(mdp.NodeException):
+    """Exception for errors when joining parallel nodes."""
+    pass
+
 
 class ParallelNode(mdp.Node):
     """Base class for parallel trainable MDP nodes."""
@@ -53,11 +57,11 @@ class ParallelNode(mdp.Node):
         if not self.is_training():
             raise mdp.TrainingFinishedException, \
                   "The training phase has already finished."
-        if self.dtype == None:
+        if self.dtype is None:
             self.dtype = forked_node.dtype
-        if self.input_dim == None:
+        if self.input_dim is None:
             self.input_dim = forked_node.input_dim
-        if self.output_dim == None:
+        if self.output_dim is None:
             self.output_dim = forked_node.output_dim
         if not self._train_phase_started:
             self._train_phase_started = True
@@ -107,7 +111,7 @@ class ParallelPCANode(mdp.nodes.PCANode, ParallelNode):
     
     def _join(self, forked_node):
         """Combine the covariance matrices."""
-        if self._cov_mtx._cov_mtx == None:
+        if self._cov_mtx._cov_mtx is None:
             self.set_dtype(self._cov_mtx._dtype)
             self._cov_mtx = forked_node._cov_mtx
         else:
@@ -151,8 +155,8 @@ class ParallelSFANode(mdp.nodes.SFANode, ParallelNode):
     
     def _join(self, forked_node):
         """Combine the covariance matrices."""
-        if self._cov_mtx._cov_mtx == None:
-            self.set_dtype(self._cov_mtx._dtype)
+        if self._cov_mtx._cov_mtx is None:
+            self.set_dtype(forked_node._cov_mtx._dtype)
             self._cov_mtx = forked_node._cov_mtx
             self._dcov_mtx = forked_node._dcov_mtx
         else:
@@ -173,5 +177,45 @@ class ParallelSFA2Node(mdp.nodes.SFA2Node, ParallelSFANode):
                                        output_dim=self.output_dim, 
                                        dtype=self.dtype)
         return forked_node
+    
+    
+class ParallelFDANode(mdp.nodes.FDANode, ParallelNode):
+    
+    def _fork(self):
+        if self.get_current_train_phase() == 1:
+            forked_node = self.copy()
+            # reset the variables with data from this train phase
+            self._S_W = None
+            self._allcov = mdp.utils.CovarianceMatrix(dtype=self.dtype)
+        else:
+            forked_node = ParallelFDANode(input_dim=self.input_dim, 
+                                          output_dim=self.output_dim, 
+                                          dtype=self.dtype)
+        return forked_node
+    
+    def _join(self, forked_node):
+        if self.get_current_train_phase() == 1:
+            if forked_node.get_current_train_phase() != 1:
+                msg = ("This node is in training phase 1, but the forked node "
+                       "is not.")
+                raise JoinParallelNodeException(msg)
+            if self._S_W is None:
+                self.set_dtype(forked_node._allcov._dtype)
+                self._allcov = forked_node._allcov
+                self._S_W = forked_node._S_W
+            else:
+                self._allcov._cov_mtx += forked_node._allcov._cov_mtx
+                self._allcov._avg += forked_node._allcov._avg
+                self._allcov._tlen += forked_node._allcov._tlen
+                self._S_W += forked_node._S_W
+        else:
+            for lbl in forked_node.means:
+                if lbl in self.means:
+                    self.means[lbl] += forked_node.means[lbl]
+                    self.tlens[lbl] += forked_node.tlens[lbl]
+                else:
+                    self.means[lbl] = forked_node.means[lbl]
+                    self.tlens[lbl] = forked_node.tlens[lbl]
+            
             
             

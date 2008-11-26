@@ -32,12 +32,16 @@ class FlowTrainCallable(scheduling.TaskCallable):
         """
         self._flownode = flownode
     
-    def __call__(self, x):
+    def __call__(self, data):
         """Do the training and return only the trained node.
         
-        x -- training data block
+        data -- training data block (array or list if additional arguments are
+            required)
         """
-        self._flownode.train(x)
+        if type(data) is n.ndarray:
+            self._flownode.train(data)
+        else:
+            self._flownode.train(*data)
         # note the local training in ParallelFlow relies on the flownode
         # being preserved, so derived classes should preserve it as well
         for node in self._flownode._flow:
@@ -223,6 +227,8 @@ class ParallelFlow(mdp.Flow):
                     raise Exception(err)
                 else:
                     self.use_results(results)
+            # reset remaining iterator references, which cannot be pickled
+            self._train_data_iter = None
     
     def setup_parallel_training(self, data_iterators, 
                                 train_callable_class=FlowTrainCallable):
@@ -379,8 +385,10 @@ class ParallelFlow(mdp.Flow):
         while self.task_available():
             task = self.get_task()
             scheduler.add_task(*task)
-        results = scheduler.get_results()
-        return self.use_results(results)
+        result = self.use_results(scheduler.get_results())
+        # reset remaining iterator references, which cannot be pickled
+        self._exec_data_iter = None
+        return result
        
     def setup_parallel_execution(self, iterator, nodenr=None,
                                  execute_callable_class=FlowExecuteCallable):
@@ -561,6 +569,7 @@ class ParallelCheckpointFlow(ParallelFlow, mdp.CheckpointFlow):
                 if ((i_node <= len(self._checkpoints)) 
                     and self._checkpoints[i_node]):
                     dict = self._checkpoints[i_node](self.flow[i_node])
+                    # store result, just like in the original CheckpointFlow
                     if dict: 
                         self.__dict__.update(dict)
         elif self.is_parallel_executing():

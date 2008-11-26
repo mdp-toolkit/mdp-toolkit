@@ -70,7 +70,7 @@ classifiers = ["Development Status :: 5 - Production/Stable",
                "Topic :: Scientific/Engineering :: Information Analysis",
                "Topic :: Scientific/Engineering :: Mathematics"]
 
-setup(name = 'MDP', version = '2.4',
+setup(name = 'MDP', version = '2.5',
       author = 'Pietro Berkes, Niko Wilbert, and Tiziano Zito',
       author_email = 'berkes@brandeis.edu, mail@nikowilbert.de, tiziano.zito@bccn-berlin.de',
       maintainer = 'Pietro Berkes, Niko Wilbert, and Tiziano Zito',

@@ -23,7 +23,7 @@ from scheduling import (ResultContainer, ListResultContainer,
 from process_schedule import ProcessScheduler
 from parallelnodes import (ParallelNode, TrainingPhaseNotParallelException,
                            ParallelPCANode, ParallelWhiteningNode,
-                           ParallelSFANode, ParallelSFA2Node)
+                           ParallelSFANode, ParallelSFA2Node, ParallelFDANode)
 from parallelflows import (FlowTrainCallable, FlowExecuteCallable,
                            NodeResultContainer,
                            ParallelFlowException, NoTaskException,

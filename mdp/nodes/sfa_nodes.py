@@ -69,6 +69,10 @@ class SFANode(Node):
         try:
             self.d, self.sf = self._symeig(self.dcov_mtx, self.cov_mtx,
                                      range=rng, overwrite=(not debug))
+            d = self.d
+            # check that we get only *positive* eigenvalues
+            if d.min() < 0:
+                raise SymeigException("Got negative eigenvalues: %s." % str(d))
         except SymeigException, exception:
             errstr = str(exception)+"\n Covariance matrices may be singular."
             raise NodeException(errstr)
