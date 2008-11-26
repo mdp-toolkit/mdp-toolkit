@@ -14,6 +14,9 @@ class TestParallelMDPNodes(unittest.TestCase):
         precision = 6
         x = numx_rand.random([100,10])
         x_test = numx_rand.random([20,10])
+        # set different variances (avoid numerical errors)
+        x *= numx.arange(1,11)
+        x_test *= numx.arange(1,11)
         pca_node = mdp.nodes.PCANode()
         parallel_pca_node = parallel.ParallelPCANode()
         chunksize = 25
@@ -31,13 +34,16 @@ class TestParallelMDPNodes(unittest.TestCase):
         y1 = pca_node.execute(x_test)
         parallel_pca_node.stop_training()
         y2 = parallel_pca_node.execute(x_test)
-        assert_array_almost_equal(y1, y2, precision)
+        assert_array_almost_equal(abs(y1), abs(y2), precision)
         
     def test_WhiteningNode(self):
         """Test Parallel WhiteningNode"""
         precision = 6
-        x =numx_rand.random([100,10])
+        x = numx_rand.random([100,10])
         x_test = numx_rand.random([20,10])
+        # set different variances (avoid numerical errors)
+        x *= numx.arange(1,11)
+        x_test *= numx.arange(1,11)
         pca_node = mdp.nodes.WhiteningNode()
         parallel_pca_node = parallel.ParallelWhiteningNode()
         chunksize = 25
@@ -55,13 +61,16 @@ class TestParallelMDPNodes(unittest.TestCase):
         y1 = pca_node.execute(x_test)
         parallel_pca_node.stop_training()
         y2 = parallel_pca_node.execute(x_test)
-        assert_array_almost_equal(y1, y2, precision)
+        assert_array_almost_equal(abs(y1), abs(y2), precision)
 
     def test_SFANode(self):
         """Test Parallel SFANode"""
         precision = 6
         x = numx_rand.random([100,10])
         x_test = numx_rand.random([20,10])
+        # set different variances (avoid numerical errors)
+        x *= numx.arange(1,11)
+        x_test *= numx.arange(1,11)
         sfa_node = mdp.nodes.SFANode()
         parallel_sfa_node = parallel.ParallelSFANode()
         chunksize = 25
@@ -79,13 +88,16 @@ class TestParallelMDPNodes(unittest.TestCase):
         y1 = sfa_node.execute(x_test)
         parallel_sfa_node.stop_training()
         y2 = parallel_sfa_node.execute(x_test)
-        assert_array_almost_equal(y1, y2, precision)
+        assert_array_almost_equal(abs(y1), abs(y2), precision)
         
     def test_SFA2Node(self):
         """Test Parallel SFA2Node"""
         precision = 6
         x = numx_rand.random([100,10])
         x_test = numx_rand.random([20,10])
+        # set different variances (avoid numerical errors)
+        x *= numx.arange(1,11)
+        x_test *= numx.arange(1,11)
         sfa2_node = mdp.nodes.SFA2Node()
         parallel_sfa2_node = parallel.ParallelSFA2Node()
         chunksize = 25
@@ -103,7 +115,7 @@ class TestParallelMDPNodes(unittest.TestCase):
         y1 = sfa2_node.execute(x_test)
         parallel_sfa2_node.stop_training()
         y2 = parallel_sfa2_node.execute(x_test)
-        assert_array_almost_equal(y1, y2, precision)
+        assert_array_almost_equal(abs(y1), abs(y2), precision)
         
     def test_FDANode(self):
         """Test Parallel FDANode."""

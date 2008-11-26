@@ -920,14 +920,15 @@ class NodesTestSuite(unittest.TestSuite):
         out = sfa.execute(mat)
         assert out.shape[1]==3, 'SFA2Node output has wrong output dimensions!'
         
-    def _testICANode(self,icanode, rand_func = uniform, vars = 3, N=8000):
+    def _testICANode(self,icanode, rand_func = uniform, vars = 3, N=8000,
+                     prec = 3):
         dim = (N,vars) 
         mat,mix,inp = self._get_random_mix(rand_func=rand_func,mat_dim=dim)
         icanode.train(inp)
         act_mat = icanode.execute(inp)
         cov = utils.cov2((mat-mean(mat,axis=0))/std(mat,axis=0), act_mat)
         maxima = numx.amax(abs(cov), axis=0)
-        assert_array_almost_equal(maxima,numx.ones(vars),3)        
+        assert_array_almost_equal(maxima,numx.ones(vars),prec)        
 
     def _testICANodeMatrices(self, icanode, rand_func = uniform, vars = 3, N=8000):
         dim = (N,vars) 
@@ -1036,7 +1037,7 @@ class NodesTestSuite(unittest.TestSuite):
     def testTDSEPNode(self):
         ica = mdp.nodes.TDSEPNode(lags=20,limit = 1E-10)
         ica2 = ica.copy()
-        self._testICANode(ica, rand_func=self._rand_with_timestruct,vars=2, N=2**14)
+        self._testICANode(ica, rand_func=self._rand_with_timestruct,vars=2, N=2**14, prec=2)
         self._testICANodeMatrices(ica2, rand_func=self._rand_with_timestruct,vars=2,N=2**14)
         
 
