@@ -97,16 +97,17 @@ class ParallelPCANode(mdp.nodes.PCANode, ParallelNode):
         The reduce argument is not supported, since the results may varry for
         different forks.
         """
-        mdp.nodes.PCANode.__init__(self, input_dim=input_dim, 
-                                   output_dim=output_dim, dtype=dtype,
-                                   svd=svd, reduce=False)
+        super(ParallelPCANode, self).__init__(input_dim=input_dim, 
+                                              output_dim=output_dim, 
+                                              dtype=dtype,
+                                              svd=svd, reduce=False)
     
     def _fork(self):
         """Fork the node and (if necessary) init the covariance matrices."""
-        forked_node = ParallelPCANode(input_dim=self.input_dim, 
-                                      output_dim=self.output_dim, 
-                                      dtype=self.dtype,
-                                      svd=self.svd)
+        forked_node = self.__class__(input_dim=self.input_dim, 
+                                     output_dim=self.output_dim, 
+                                     dtype=self.dtype,
+                                     svd=self.svd)
         return forked_node
     
     def _join(self, forked_node):
@@ -131,15 +132,16 @@ class ParallelWhiteningNode(mdp.nodes.WhiteningNode, ParallelPCANode):
         The reduce argument is not supported, since the results may varry for
         different forks.
         """
-        ParallelPCANode.__init__(self, input_dim=input_dim, 
-                                 output_dim=output_dim, dtype=dtype, svd=svd)
+        super(ParallelWhiteningNode, self).__init__(input_dim=input_dim, 
+                                                    output_dim=output_dim, 
+                                                    dtype=dtype, svd=svd)
     
     def _fork(self):
         """Fork the node and (if necessary) init the covariance matrices."""
-        forked_node = ParallelWhiteningNode(input_dim=self.input_dim, 
-                                            output_dim=self.output_dim, 
-                                            dtype=self.dtype,
-                                            svd=self.svd)
+        forked_node = self.__class__(input_dim=self.input_dim, 
+                                     output_dim=self.output_dim, 
+                                     dtype=self.dtype,
+                                     svd=self.svd)
         return forked_node
     
     
@@ -148,9 +150,9 @@ class ParallelSFANode(mdp.nodes.SFANode, ParallelNode):
     
     def _fork(self):
         """Fork the node and (if necessary) init the covariance matrices."""
-        forked_node = ParallelSFANode(input_dim=self.input_dim, 
-                                      output_dim=self.output_dim, 
-                                      dtype=self.dtype)
+        forked_node = self.__class__(input_dim=self.input_dim, 
+                                     output_dim=self.output_dim, 
+                                     dtype=self.dtype)
         return forked_node
     
     def _join(self, forked_node):
@@ -173,9 +175,9 @@ class ParallelSFA2Node(mdp.nodes.SFA2Node, ParallelSFANode):
     
     def _fork(self):
         """Fork the node and (if necessary) init the covariance matrices."""
-        forked_node = ParallelSFA2Node(input_dim=self.input_dim, 
-                                       output_dim=self.output_dim, 
-                                       dtype=self.dtype)
+        forked_node = self.__class__(input_dim=self.input_dim, 
+                                     output_dim=self.output_dim, 
+                                     dtype=self.dtype)
         return forked_node
     
     
@@ -184,13 +186,13 @@ class ParallelFDANode(mdp.nodes.FDANode, ParallelNode):
     def _fork(self):
         if self.get_current_train_phase() == 1:
             forked_node = self.copy()
-            # reset the variables with data from this train phase
+            # reset the variables that might contain data from this train phase
             self._S_W = None
             self._allcov = mdp.utils.CovarianceMatrix(dtype=self.dtype)
         else:
-            forked_node = ParallelFDANode(input_dim=self.input_dim, 
-                                          output_dim=self.output_dim, 
-                                          dtype=self.dtype)
+            forked_node = self.__class__(input_dim=self.input_dim, 
+                                         output_dim=self.output_dim, 
+                                         dtype=self.dtype)
         return forked_node
     
     def _join(self, forked_node):

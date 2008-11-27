@@ -28,7 +28,7 @@ class ParallelFlowNode(hinet.FlowNode, parallelnodes.ParallelNode):
             text = ("Non-parallel node no. %d in ParallelFlowNode." % 
                     (i_train_node+1))
             raise parallelnodes.TrainingPhaseNotParallelException(text)
-        return ParallelFlowNode(mdp.Flow(node_list))
+        return self.__class__(mdp.Flow(node_list))
     
     def _join(self, forked_node):
         """Join the last node from the given forked _flow into this FlowNode."""
@@ -47,7 +47,7 @@ class ParallelLayer(hinet.Layer, parallelnodes.ParallelNode):
                 forked_nodes.append(node.fork())
             else:
                 forked_nodes.append(node.copy())
-        return ParallelLayer(forked_nodes)
+        return self.__class__(forked_nodes)
         
     def _join(self, forked_node):
         """Join the trained nodes from the forked layer."""
@@ -61,7 +61,7 @@ class ParallelCloneLayer(hinet.CloneLayer, parallelnodes.ParallelNode):
     
     def _fork(self):
         """Fork the internal node in the clone layer."""
-        return ParallelCloneLayer(self.node.fork(), n_nodes=len(self.nodes))
+        return self.__class__(self.node.fork(), n_nodes=len(self.nodes))
     
     def _join(self, forked_node):
         """Join the internal node in the clone layer."""
