@@ -36,35 +36,35 @@ class ProcessScheduler(scheduling.Scheduler):
     Windows XP and Vista). 
     """
     
-    def __init__(self, result_container=None, 
+    def __init__(self, result_container=None, copy_callable=True,
                  verbose=False, n_processes=1,
                  source_paths=None, python_executable=None):
         """Initialize the scheduler and start the slave processes.
         
         result_container -- ResultContainer used to store the results.
-        verbose -- If  True to get progress reports from the scheduler.
+        copy_callable -- If True then the callable will be copied before being 
+            called (default value is True).
+        verbose -- Set to True to get progress reports from the scheduler
+            (default value is False).
         n_processes -- Number of processes used in parallel. This should
             correspond to the number of processors / cores.
         source_paths -- List of paths to the source code of the project using 
             the scheduler. These paths will be appended to sys.path in the
             processes to make the task unpickling work. 
             A single path instead of a list is also accepted.
-            Set to None if no sources are needed for unpickling the task (this is
-            the default value).
+            Set to None if no sources are needed for unpickling the task (this 
+            is the default value).
         python_executable -- Python executable that is used for the processes.
             The default value is None, in which case sys.executable will be
             used.
         """
         scheduling.Scheduler.__init__(self, result_container=result_container,
+                                      copy_callable=copy_callable,
                                       verbose=verbose)
         self.n_processes = n_processes
         if python_executable is None:
             python_executable = sys.executable
         # get the location of this module to start the processes
-        # old way of getting it:
-        # module_path = os.path.dirname(inspect.getfile(sys._getframe(0)))
-        # module_path = os.path.abspath(module_path)
-        # better new way (requires mdp import at the top):
         module_path = os.path.dirname(mdp.__file__)
         module_file = os.path.join(module_path, "parallel", 
                                    "process_schedule.py")

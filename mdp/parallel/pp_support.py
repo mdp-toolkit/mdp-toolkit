@@ -38,12 +38,16 @@ class PPScheduler(scheduling.Scheduler):
     
     def __init__(self, ppserver, max_queue_length=1,
                  result_container=scheduling.ListResultContainer(), 
-                 copy_callable=False,
+                 copy_callable=True,
                  verbose=False):
         """Initialize the scheduler.
         
         ppserver -- Parallel Python Server instance.
         max_queue_length -- How long the queue can get before add_task blocks.
+        result_container -- ResultContainer used to store the results.
+        copy_callable -- If True then the callable will be copied before being 
+            called (default value is True).
+        verbose -- If True to get progress reports from the scheduler.
         """
         super(PPScheduler, self).__init__(result_container=result_container,
                                           copy_callable=copy_callable,
@@ -72,7 +76,8 @@ class PPScheduler(scheduling.Scheduler):
                 time.sleep(0.5)
                 self.lock.acquire()
             else:
-                self.lock.release()  # release to enable result storage
+                # release lock to enable result storage
+                self.lock.release()
                 # the inner tuple is a trick to prevent introspection by pp
                 # this forces pp to simply pickle the object
                 self.ppserver.submit(execute_task, args=(task,),
@@ -99,13 +104,18 @@ class LocalPPScheduler(PPScheduler):
     """
     
     def __init__(self, ncpus="autodetect", max_queue_length=1,
-                 result_container=scheduling.ListResultContainer(), 
+                 result_container=scheduling.ListResultContainer(),
+                 copy_callable=True,
                  verbose=False):
         """Create an internal pp server and initialize the scheduler.
         
         ncpus -- Integer or 'autodetect', specifies the number of processes
             used.
         max_queue_length -- How long the queue can get before add_task blocks.
+        result_container -- ResultContainer used to store the results.
+        copy_callable -- If True then the callable will be copied before being 
+            called (default value is True).
+        verbose -- If True to get progress reports from the scheduler.
         """
         ppserver = pp.Server(ncpus=ncpus,
                              loglevel=logging.INFO,
@@ -113,6 +123,7 @@ class LocalPPScheduler(PPScheduler):
         super(LocalPPScheduler, self).__init__(ppserver=ppserver,
                                           max_queue_length=max_queue_length,
                                           result_container=result_container,
+                                          copy_callable=copy_callable,
                                           verbose=verbose)
         
     
@@ -128,7 +139,8 @@ class NetworkPPScheduler(PPScheduler):
     """
     
     def __init__(self, max_queue_length=1,
-                 result_container=scheduling.ListResultContainer(), 
+                 result_container=scheduling.ListResultContainer(),
+                 copy_callable=True,
                  verbose=False,
                  remote_slaves=None,
                  port=50017,
@@ -141,6 +153,10 @@ class NetworkPPScheduler(PPScheduler):
                  remote_python_executable=None):
         """Initialize the remote slaves and create the internal pp scheduler.
         
+        result_container -- ResultContainer used to store the results.
+        copy_callable -- If True then the callable will be copied before being 
+            called (default value is True).
+        verbose -- If True to get progress reports from the scheduler.
         remote_slaves -- List of tuples, the first tuple entry is a string
             containing the name or IP adress of the slave, the second entry
             contains the number of processes (i.e. the pp ncpus parameter).
@@ -182,6 +198,7 @@ class NetworkPPScheduler(PPScheduler):
         super(NetworkPPScheduler, self).__init__(ppserver=ppserver,
                                           max_queue_length=max_queue_length,
                                           result_container=result_container,
+                                          copy_callable=copy_callable,
                                           verbose=verbose)
     
     def shutdown(self):

@@ -102,8 +102,12 @@ class Scheduler(object):
             the results (default is None, in which case a ListResultContainer
             is used).
         copy_callable -- If True then the callable will be copied before being 
-            called (default value is True). Note that the callable must have a 
-            copy to use this feature.
+            called (default value is True). Setting this to False might be more
+            efficient cases were this is not needed. The callable must have a 
+            working copy method when copy_callable is True.
+            Note that derived scheduler classes might not support this 
+            feature (e.g. because they choose to always copy the callable). In
+            this case they should set the copy_callable flag to True.
         verbose -- If True then status messages will be printed to sys.stdout.
         """
         if result_container is None:
@@ -144,6 +148,8 @@ class Scheduler(object):
         self.task_counter += 1
         task_index = self.task_counter
         if task_callable is None:
+            # one could still use the _last_callable_index in _process_task to
+            # decide if a cached callable can be used 
             task_callable = self._last_callable
         else: 
             self._last_callable = task_callable
@@ -177,6 +183,8 @@ class Scheduler(object):
         """
         self.lock.acquire()
         self._last_callable = task_callable
+        # set _last_callable_index to half value since the callable is newer 
+        # than the last task, but not newer than the next incoming task
         self._last_callable_index = self.task_counter + 0.5
         if copy_callable is not None:
             self.copy_callable = copy_callable
