@@ -2,6 +2,10 @@ TODO:
 
 MDP 2.4 17.10.2008:
 
+- add version and symeig as an output for tests, provide svn revision
+  in the version string.
+- provide a Node pickler, for arrays use the binary numpy format (npy,
+  numpy.save, numpy.load) and not pickle: pickling arrays is unsupported
 - add benchmarks for parallel module
 - provide different versions of the MDP logo which includes the
   website address, possibly one higher quality print version,
