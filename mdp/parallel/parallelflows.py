@@ -289,10 +289,13 @@ class ParallelFlow(mdp.Flow):
                            (self._i_train_node+1))
                 # turn iterable into iterator
                 self._train_data_iter = iter(data_iterator)
-                task_data_chunk = self._create_train_task()[0]
-                if task_data_chunk is None:
-                    err = "Training data iterator is empty."
-                    raise ParallelFlowException(err)
+                first_task = self._create_train_task()
+                # make sure that iterator is not empty
+                if first_task is None:
+                    errstr = ("The training data iterator for node "
+                              "no. %d is empty." % (self._i_train_node+1))
+                    raise mdp.FlowException(errstr)
+                task_data_chunk = first_task[0]
                 # first task contains the new callable
                 self._next_task = (task_data_chunk,
                             self._train_callable_class(self._flownode.fork()))
@@ -324,14 +327,11 @@ class ParallelFlow(mdp.Flow):
         """Create and return a single training task without callable.
         
         Returns None if data iterator end is reached.
-        Raises NoTaskException if any other problem arises.
         """
         try:
             return (self._train_data_iter.next(), None)
         except StopIteration:
             return None
-        else:
-            raise NoTaskException("Could not create training task.")
             
     def execute(self, iterator, nodenr=None, scheduler=None, 
                 execute_callable_class=None,
@@ -417,10 +417,11 @@ class ParallelFlow(mdp.Flow):
         if isinstance(iterator, n.ndarray):
             iterator = [iterator]
         self._exec_data_iter = iter(iterator)
-        task_data_chunk = self._create_execute_task()[0]
-        if task_data_chunk is None:
-            err = "Execution data iterator is empty."
-            raise ParallelFlowException(err)
+        first_task = self._create_execute_task()
+        if first_task is None:
+            errstr = ("The execute data iterator is empty.")
+            raise mdp.FlowException(errstr)
+        task_data_chunk = first_task[0]
         # first task contains the new callable
         self._next_task = (task_data_chunk,
                            self._execute_callable_class(mdp.Flow(self.flow)))
@@ -429,22 +430,19 @@ class ParallelFlow(mdp.Flow):
         """Create and return a single execution task.
         
         Returns None if data iterator end is reached.
-        Raises NoTaskException if no task is available.
         """
         try:
             return (self._exec_data_iter.next(), None)
         except StopIteration:
             return None
-        else:
-            raise NoTaskException("Could not create execution task.")
     
     def get_task(self):
         """Return a task either for either training or execution.
         
         A a one task buffer is used to make task_available work.
         tasks are available as long as need_result returns False or all the 
-        training / execution is done. If no tasks are available a NoTaskException 
-        is raised.
+        training / execution is done. If no tasks are available a 
+        NoTaskException is raised.
         """
         if self._next_task is not None:
             task = self._next_task

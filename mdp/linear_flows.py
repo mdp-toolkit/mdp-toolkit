@@ -142,7 +142,9 @@ class Flow(object):
             # Note that the last training_phase is closed
             # automatically when the node is executed.
             while True:
+                empty_iterator = True
                 for x in data_iterator:
+                    empty_iterator = False
                     # the arguments following the first are passed only to the
                     # currently trained node, allowing the implementation of
                     # supervised nodes
@@ -156,6 +158,10 @@ class Flow(object):
                         x = self._execute_seq(x, nodenr-1)
                     # train current node
                     node.train(x, *arg)
+                if empty_iterator:
+                    errstr = ("The training data iterator for node "
+                              "no. %d is empty." % (nodenr+1))
+                    raise FlowException(errstr)
                 if node.get_remaining_train_phase() > 1:
                     # close the previous training phase
                     node.stop_training()
@@ -307,8 +313,13 @@ class Flow(object):
             return self._execute_seq(iterator, nodenr)
         # otherwise it is a iterator
         res = []
+        empty_iterator = True
         for x in iterator:
+            empty_iterator = False
             res.append(self._execute_seq(x, nodenr))
+        if empty_iterator:
+            errstr = ("The execute data iterator is empty.")
+            raise FlowException(errstr)
         return numx.concatenate(res)
 
     def _inverse_seq(self, x):
