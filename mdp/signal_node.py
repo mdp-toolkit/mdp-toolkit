@@ -602,14 +602,11 @@ class Cumulator(Node):
         self.tlen = 0
 
     def _train(self, x):
-        """Cumulate all input data in a one dimensional list.
-        """
+        """Cumulate all input data in a one dimensional list."""
         self.tlen += x.shape[0]
         self.data.extend(x.ravel().tolist())
 
     def _stop_training(self, *args, **kwargs):
-        """Transform the data list to an array object and reshape it.
-        """
-        self._training = False
+        """Transform the data list to an array object and reshape it."""
         self.data = numx.array(self.data, dtype = self.dtype)
         self.data.shape = (self.tlen, self.input_dim)

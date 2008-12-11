@@ -799,7 +799,7 @@ class NodesTestSuite(unittest.TestSuite):
         mat *= [1E+5,1E-3, 1E-18]
         mat -= mat.mean(axis=0)
         pca = mdp.nodes.PCANode(svd=True,reduce=True,
-                                   var_abs=1E-8, var_rel=1E-30)
+                                var_abs=1E-8, var_rel=1E-30)
         pca.train(mat)
         out = pca.execute(mat)
         # check that we got the only large dimension

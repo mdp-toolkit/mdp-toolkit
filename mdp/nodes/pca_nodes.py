@@ -4,7 +4,7 @@ from mdp.utils import (mult, symeig, nongeneral_svd, CovarianceMatrix,
 import warnings as _warnings
 
 class PCANode(Node):
-    """Filter the input data throug the most significatives of its
+    """Filter the input data through the most significatives of its
     principal components.
     
     Internal variables of interest:
@@ -19,10 +19,12 @@ class PCANode(Node):
     
     More information about Principal Component Analysis, a.k.a. discrete
     Karhunen-Loeve transform can be found among others in
-    I.T. Jolliffe, Principal Component Analysis, Springer-Verlag (1986)."""
+    I.T. Jolliffe, Principal Component Analysis, Springer-Verlag (1986).
+    """
     
-    def __init__(self, input_dim = None, output_dim = None, dtype = None,
-                 svd=False, reduce = False, var_rel = 1E-15, var_abs = 1E-15):
+    def __init__(self, input_dim=None, output_dim=None, dtype=None,
+                 svd=False, reduce=False, var_rel=1E-15, var_abs=1E-15, 
+                 var_part=None):
         """The number of principal components to be kept can be specified as
         'output_dim' directly (e.g. 'output_dim=10' means 10 components
         are kept) or by the fraction of variance to be explained
@@ -37,32 +39,39 @@ class PCANode(Node):
 
         reduce -- Keep only those principal components which have a variance
                   larger than 'var_abs' and a variance relative to the
-                  first principal component larger than 'var_rel'. Note:
-                  when the 'reduce' switch is enabled, the actual number of
-                  principal components (self.output_dim) may be different from
-                  that set when creating the instance.
+                  first principal component larger than 'var_rel' and a
+                  variance relative to total variance larger than 'var_part'
+                  (set var_part to None or 0 for no filtering).
+                  Note: when the 'reduce' switch is enabled, the actual number
+                  of principal components (self.output_dim) may be different
+                  from that set when creating the instance.
         """
         # this must occur *before* calling super!
         self.desired_variance = None
-        
         super(PCANode, self).__init__(input_dim, output_dim, dtype)
-
         self.svd = svd
         # set routine for eigenproblem
         if svd:
             self._symeig = nongeneral_svd
         else:
             self._symeig = symeig
-
         self.var_abs = var_abs
         self.var_rel = var_rel
+        self.var_part = var_part
         self.reduce = reduce
-
         # empirical covariance matrix, updated during the training phase
         self._cov_mtx = CovarianceMatrix(dtype)
+        # attributes that defined in stop_training
+        self.d = None
+        self.v = None
+        self.total_variance = None
+        self.tlen = None
+        self.avg = None
+        self.explained_variance = None
         
     def _set_output_dim(self, n):
         if n <= 1 and isinstance(n, float):
+            # set the output dim after training, when the variances are known 
             self.desired_variance = n
         else:
             self._output_dim = n
@@ -96,7 +105,11 @@ class PCANode(Node):
         self._cov_mtx.update(x)
 
     def _adjust_output_dim(self):
-        ##### compute the principal components
+        """Return the eigenvector range and set the output dim if required.
+        
+        This is used if the output dimensions is smaller than the input
+        dimension (so only the larger eigenvectors have to be kept). 
+        """
         # if the number of principal components to keep is not specified,
         # keep all components
         if self.desired_variance is None and self.output_dim is None:
@@ -107,7 +120,8 @@ class PCANode(Node):
         # specified directly
         if self.output_dim is not None and self.output_dim >= 1:
             # (eigenvalues sorted in ascending order)
-            rng = (self.input_dim-self.output_dim+1, self.input_dim)
+            rng = (self.input_dim - self.output_dim + 1,
+                   self.input_dim)
         # otherwise, the number of principal components to keep has been
         # specified by the fraction of variance to be explained
         else:
@@ -124,7 +138,7 @@ class PCANode(Node):
                        matrices, the singular matrices itselves are stored in
                        self.cov_mtx and self.dcov_mtx to be examined.
         """
-        ##### request the covariance matrix and clean up
+        # request the covariance matrix and clean up
         self.cov_mtx, avg, self.tlen = self._cov_mtx.fix()
         del self._cov_mtx
         
@@ -133,7 +147,7 @@ class PCANode(Node):
         # operation every time that 'execute' is called.
         self.avg = avg.reshape(1, avg.shape[0])
 
-
+        # range for the eigenvalues
         rng = self._adjust_output_dim()
         
         # if we have more variables then observations we are bound to fail here
@@ -175,15 +189,14 @@ class PCANode(Node):
             self.explained_variance = None
         elif self.output_dim == self.input_dim:
             # explained variance is 100%
-            self.explained_variance = 1.
+            self.explained_variance = 1.0
+            vartot = d.sum()
         else:
             # otherwise, the number of principal components to keep has
             # been specified by the fraction of variance to be explained
-            #
-            # total variance
+            # cumulative variance (relative to total variance)
             vartot = d.sum()
-            # cumulative variance (percent)
-            varcum = (d/vartot).cumsum(axis=0)
+            varcum = (d / vartot).cumsum(axis=0)
             # select only the relevant eigenvalues
             # number of relevant eigenvalues
             neigval = varcum.searchsorted(self.desired_variance) + 1.
@@ -199,18 +212,28 @@ class PCANode(Node):
             # remove entries that are smaller then var_abs and
             # smaller then var_rel relative to the maximum
             d = d[ d > self.var_abs ]
-            d = d[ d/d.max() > self.var_rel ]
+            d = d[ d / d.max() > self.var_rel ]
+            
+            # filter for variance relative to total variance
+            if (vartot is not None) and self.var_part:
+                d = d[ d / vartot > self.var_part ]
+            elif self.var_part:
+                err = ("var_par can only be used when the total variance is "
+                       "known (use output_dim=inputdim or float output_dim).")
+                raise NodeException(err)
+            
             v = v[:, 0:d.shape[0]]
             self._output_dim = d.shape[0]
             # set explained variance
             if vartot is not None:
-                self.explained_variance = d.sum()/vartot
+                self.explained_variance = d.sum() / vartot
         
-        ## store the eigenvalues
+        # store the eigenvalues
         self.d = d
-
-        ## store the eigenvectors
+        # store the eigenvectors
         self.v = v
+        # store the total variance
+        self.total_variance = vartot
 
     def get_projmatrix(self, transposed=1):
         """Return the projection matrix."""
