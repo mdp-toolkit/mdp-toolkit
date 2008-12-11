@@ -114,19 +114,19 @@ class PCANode(Node):
         # keep all components
         if self.desired_variance is None and self.output_dim is None:
             self.output_dim = self.input_dim
+            return None
 
         ## define the range of eigenvalues to compute
         # if the number of principal components to keep has been
         # specified directly
         if self.output_dim is not None and self.output_dim >= 1:
             # (eigenvalues sorted in ascending order)
-            rng = (self.input_dim - self.output_dim + 1,
+            return (self.input_dim - self.output_dim + 1,
                    self.input_dim)
         # otherwise, the number of principal components to keep has been
         # specified by the fraction of variance to be explained
         else:
-            rng = None
-        return rng
+            return None
         
 
     def _stop_training(self, debug=False):
@@ -179,18 +179,17 @@ class PCANode(Node):
         d = numx.take(d, range(d.shape[0]-1, -1, -1))
         v = v[:, ::-1]
 
-        vartot = None
         ## compute the explained variance
-        # if the number of principal components to keep has been
-        # specified directly
-        if self.output_dim is not None and self.output_dim >= 1:
-            # there is no way to tell what the explained variance is, since we
-            # didn't compute all eigenvalues
-            self.explained_variance = None
-        elif self.output_dim == self.input_dim:
+        if self.output_dim == self.input_dim:
             # explained variance is 100%
             self.explained_variance = 1.0
             vartot = d.sum()
+        elif (self.output_dim is not None) and (self.output_dim >= 1):
+            # if the number of principal components to keep has been
+            # specified directly there is no way to tell what the
+            # explained variance is, since we didn't compute all eigenvalues
+            self.explained_variance = None
+            vartot = None
         else:
             # otherwise, the number of principal components to keep has
             # been specified by the fraction of variance to be explained

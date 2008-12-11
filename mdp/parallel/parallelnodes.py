@@ -88,26 +88,18 @@ class ParallelNode(mdp.Node):
 class ParallelPCANode(mdp.nodes.PCANode, ParallelNode):
     """Parallel version of MDP PCA node."""
     
-    # Warning: __init__ and _fork must be updated when the arguments 
-    #    of the corresponding PCANode methods change.
-    
-    def __init__(self, input_dim=None, output_dim=None, dtype=None, svd=False):
+    def __init__(self, **kwargs):
         """Initialize the node.
         
         The reduce argument is not supported, since the results may varry for
         different forks.
         """
-        super(ParallelPCANode, self).__init__(input_dim=input_dim, 
-                                              output_dim=output_dim, 
-                                              dtype=dtype,
-                                              svd=svd, reduce=False)
+        super(ParallelPCANode, self).__init__(**kwargs)
+        self._fork_kwargs = kwargs
     
     def _fork(self):
         """Fork the node and (if necessary) init the covariance matrices."""
-        forked_node = self.__class__(input_dim=self.input_dim, 
-                                     output_dim=self.output_dim, 
-                                     dtype=self.dtype,
-                                     svd=self.svd)
+        forked_node = self.__class__(**self._fork_kwargs)
         return forked_node
     
     def _join(self, forked_node):
