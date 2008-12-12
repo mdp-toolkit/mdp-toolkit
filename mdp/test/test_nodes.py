@@ -1256,9 +1256,8 @@ class NodesTestSuite(unittest.TestSuite):
 
         node = mdp.nodes.GaussianClassifierNode()
         for i in range(nclasses):
-            cov = utils.symrand(dim)
+            cov = utils.symrand(uniform((dim,))*dim+1)
             mn = uniform((dim,))*10.
-
             x = normal(0., 1., size=(npoints, dim))
             x = mult(x, utils.sqrtm(cov)) + mn
             x = utils.refcast(x, 'd')

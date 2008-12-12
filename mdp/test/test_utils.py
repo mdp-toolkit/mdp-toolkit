@@ -70,7 +70,7 @@ class UtilsTestSuite(unittest.TestSuite):
             range = (2, dim -1)
         else:
             range = None
-        a = utils.symrand(dim, dtype)
+        a = utils.symrand(dim, dtype)+numx.diag([2.1]*dim).astype(dtype)
         w,z = func(a, range=range)
         # assertions
         assert_type_equal(z.dtype, dtype)
@@ -89,7 +89,7 @@ class UtilsTestSuite(unittest.TestSuite):
         else:
             range = None
         a = utils.symrand(dim, dtype)
-        b = utils.symrand(dim, dtype)
+        b = utils.symrand(dim, dtype)+numx.diag([2.1]*dim).astype(dtype)
         w,z = utils._symeig_fake(a,b,range=range)
         # assertions
         assert_type_equal(z.dtype, dtype)

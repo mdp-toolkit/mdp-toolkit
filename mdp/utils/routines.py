@@ -75,14 +75,14 @@ def symrand(dim_or_eigv, dtype="d"):
     """Return a random symmetric (Hermitian) matrix.
     
     If 'dim_or_eigv' is an integer N, return a NxN matrix, with eigenvalues
-        uniformly distributed on (0,1].
+        uniformly distributed on (-1,1).
         
     If 'dim_or_eigv' is  1-D real array 'a', return a matrix whose
-                      eigenvalues are sort(a).
+                      eigenvalues are 'a'.
     """
     if isinstance(dim_or_eigv, int):
         dim = dim_or_eigv
-        d = numx_rand.random(dim)
+        d = (numx_rand.random(dim)*2) - 1
     elif isinstance(dim_or_eigv,
                     numx.ndarray) and len(dim_or_eigv.shape) == 1:
         dim = dim_or_eigv.shape[0]
@@ -90,11 +90,15 @@ def symrand(dim_or_eigv, dtype="d"):
     else:
         raise mdp.MDPException("input type not supported.")
     
-    v = random_rot(dim, dtype=dtype)
+    v = random_rot(dim)
     #h = mdp.utils.mult(mdp.utils.mult(hermitian(v), mdp.numx.diag(d)), v)
     h = mdp.utils.mult(mult_diag(d, hermitian(v), left=False), v)
     # to avoid roundoff errors, symmetrize the matrix (again)
-    return refcast(0.5*(hermitian(h)+h), dtype)
+    h = 0.5*(h.T+h)
+    if dtype in ('D', 'F', 'G'):
+        h2 = symrand(dim_or_eigv)
+        h = h + 1j*(numx.triu(h2)-numx.tril(h2))
+    return refcast(h, dtype)
 
 def random_rot(dim, dtype='d'):
     """Return a random rotation matrix, drawn from the Haar distribution
