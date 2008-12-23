@@ -75,6 +75,7 @@ class NIPALSNode(Cumulator, PCANode):
         # remove mean
         X -= mean
         var = X.var(axis=0).sum()
+        self.total_variance = var
         exp_var = 0
 
         eigenv = numx.zeros((self.input_dim, self.input_dim), dtype=dtype)
