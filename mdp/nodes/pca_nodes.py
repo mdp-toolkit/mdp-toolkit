@@ -158,6 +158,10 @@ class PCANode(Node):
                    '(%d). You may want to use ' 
                    'the NIPALSNode instead.' % (self.tlen, self.input_dim))
             _warnings.warn(wrn, MDPWarning)
+
+        # total variance can be computed at this point:
+        # note that vartot == d.sum()
+        vartot = numx.diag(self.cov_mtx).sum()
         
         ## compute and sort the eigenvalues
         # compute the eigenvectors of the covariance matrix (inplace)
@@ -173,40 +177,28 @@ class PCANode(Node):
             raise NodeException(err)
                   
         # delete covariance matrix if no exception occurred
-        del self.cov_mtx
+        if not debug:
+            del self.cov_mtx
         
         # sort by descending order
         d = numx.take(d, range(d.shape[0]-1, -1, -1))
         v = v[:, ::-1]
 
-        ## compute the explained variance
-        if self.output_dim == self.input_dim:
-            # explained variance is 100%
-            self.explained_variance = 1.0
-            vartot = d.sum()
-        elif (self.output_dim is not None) and (self.output_dim >= 1):
-            # if the number of principal components to keep has been
-            # specified directly there is no way to tell what the
-            # explained variance is, since we didn't compute all eigenvalues
-            self.explained_variance = None
-            vartot = None
-        else:
-            # otherwise, the number of principal components to keep has
+        if self.desired_variance is not None:
+            # the number of principal components to keep has
             # been specified by the fraction of variance to be explained
-            # cumulative variance (relative to total variance)
-            vartot = d.sum()
             varcum = (d / vartot).cumsum(axis=0)
             # select only the relevant eigenvalues
             # number of relevant eigenvalues
             neigval = varcum.searchsorted(self.desired_variance) + 1.
-            self.explained_variance = varcum[neigval-1]
+            #self.explained_variance = varcum[neigval-1]
             # cut
             d = d[0:neigval]
             v = v[:, 0:neigval]
             # define the new output dimension
             self.output_dim = int(neigval)
 
-        # automatic dimension reduction
+        # automatic dimensionality reduction
         if self.reduce:
             # remove entries that are smaller then var_abs and
             # smaller then var_rel relative to the maximum
@@ -214,18 +206,14 @@ class PCANode(Node):
             d = d[ d / d.max() > self.var_rel ]
             
             # filter for variance relative to total variance
-            if (vartot is not None) and self.var_part:
+            if self.var_part:
                 d = d[ d / vartot > self.var_part ]
-            elif self.var_part:
-                err = ("var_par can only be used when the total variance is "
-                       "known (use output_dim=inputdim or float output_dim).")
-                raise NodeException(err)
             
             v = v[:, 0:d.shape[0]]
             self._output_dim = d.shape[0]
-            # set explained variance
-            if vartot is not None:
-                self.explained_variance = d.sum() / vartot
+            
+        # set explained variance
+        self.explained_variance = d.sum() / vartot
         
         # store the eigenvalues
         self.d = d

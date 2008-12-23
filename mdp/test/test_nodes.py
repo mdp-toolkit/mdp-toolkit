@@ -668,6 +668,10 @@ class NodesTestSuite(unittest.TestSuite):
                                   [0,0],self.decimal)
         assert_array_almost_equal(std(act_mat,axis=0),\
                                   des_var,self.decimal)
+        # test that the total_variance attribute makes sense
+        est_tot_var = ((des_var**2)*2000/1999.).sum()
+        assert_almost_equal(est_tot_var, pca.total_variance, self.decimal)
+        assert pca.explained_variance == 1, '%s'%pca.explained_variance
         # test a bug in v.1.1.1, should not crash
         pca.inverse(act_mat[:,:1])
 
@@ -683,6 +687,14 @@ class NodesTestSuite(unittest.TestSuite):
 ##             pca = cPickle.loads(s)
 ##             act_mat = pca.execute(mat)
 
+    def testPCANode_total_variance(self):
+        mat, mix, inp = self._get_random_mix(mat_dim=(1000, 3))
+        des_var = ((std(mat, axis=0)**2)*1000/999.).sum()
+        pca = mdp.nodes.PCANode(output_dim=2)
+        pca.train(mat)
+        out = pca.execute(mat)
+        assert_almost_equal(des_var, pca.total_variance, self.decimal)
+        
     def testPCANode_desired_variance(self):
         mat, mix, inp = self._get_random_mix(mat_dim=(1000, 3))
         # first make them white
@@ -696,10 +708,11 @@ class NodesTestSuite(unittest.TestSuite):
         pca.train(mat)
         out = pca.execute(mat)
         # check that we got exactly two output_dim:
-        assert pca.output_dim == 2
+        assert pca.output_dim == 2, '%s'%pca.output_dim
         assert out.shape[1] == 2
         # check that explained variance is > 0.8 and < 1
         assert (pca.explained_variance > 0.8 and pca.explained_variance < 1)
+
 
     def testPCANode_desired_variance_after_train(self):
         mat, mix, inp = self._get_random_mix(mat_dim=(1000, 3))
