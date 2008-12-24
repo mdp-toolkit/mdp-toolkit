@@ -37,6 +37,8 @@ def get_parallel_member(nonparallel_class, parallel_module):
     return None
 
 
+# TODO: add support for ParallelCheckpointFlow?
+
 class HiNetParallelTranslator(hinet.HiNetTranslator):
     """Translator to turn a normal flow into a parallel one.
     

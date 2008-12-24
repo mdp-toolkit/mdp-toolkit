@@ -84,22 +84,37 @@ class ParallelNode(mdp.Node):
 
 ## MDP parallel node implementations ##
 
+# TODO: find a better way to deal with the kwargs
+#    the previous solutions with self._fork_kwargs = kwargs broke the
+#    make_parallel stuff, so maybe add support for self._fork_kwargs in
+#    make_parallel or even the ParallelNode base class (via metaclass?).
     
 class ParallelPCANode(mdp.nodes.PCANode, ParallelNode):
     """Parallel version of MDP PCA node."""
     
-    def __init__(self, **kwargs):
+    def __init__(self, input_dim=None, output_dim=None, dtype=None,
+                 svd=False, reduce=False, var_rel=1E-15, var_abs=1E-15, 
+                 var_part=None):
         """Initialize the node.
         
         The reduce argument is not supported, since the results may varry for
         different forks.
         """
-        super(ParallelPCANode, self).__init__(**kwargs)
-        self._fork_kwargs = kwargs
+        super(ParallelPCANode, self).__init__(input_dim=input_dim, 
+                                              output_dim=output_dim, 
+                                              dtype=dtype,
+                                              svd=svd, reduce=reduce, 
+                                              var_rel=var_rel, var_abs=var_abs, 
+                                              var_part=var_part)
     
     def _fork(self):
         """Fork the node and (if necessary) init the covariance matrices."""
-        forked_node = self.__class__(**self._fork_kwargs)
+        forked_node = self.__class__(input_dim=self.input_dim, 
+                                     output_dim=self.output_dim, 
+                                     dtype=self.dtype,
+                                     svd=self.svd, reduce=self.reduce, 
+                                     var_rel=self.var_rel, var_abs=self.var_abs, 
+                                     var_part=self.var_part)
         return forked_node
     
     def _join(self, forked_node):
