@@ -36,9 +36,9 @@ class ParallelNode(mdp.Node):
     
     Since fork typically has to create a new class instance it must know all
     __init__ arguments. Therefore the __init__ method of a parallel node should
-    never accept **kwargs! Otherwise some newly added arguments might be
+    not accept **kwargs. Otherwise some newly added arguments might be
     ignored in forked nodes, resulting in errors that are very hard to track
-    down. 
+    down.
     """
     
     def fork(self):
@@ -82,7 +82,11 @@ class ParallelNode(mdp.Node):
     ## hook methods, overwrite these ##
     
     def _fork(self):
-        """Hook method for forking, to be overridden."""
+        """Hook method for forking, to be overridden.
+        
+        For better inheritance support you should use self.__class__ to create
+        new class instances (instead of explicitly referencing the filename).
+        """
         raise TrainingPhaseNotParallelException("fork is not implemented " +
                                                 "by this node.")
     
