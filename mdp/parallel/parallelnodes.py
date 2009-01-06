@@ -1,16 +1,14 @@
 """
 Module for MDP Nodes that support parallel training.
 
-Note that such ParallelNodes are only needed for training, parallel execution
-works with any Node that can be pickled.
-
 This module contains both the parallel base class and some parallel 
-implementations of MDP nodes. 
-
-WARNING: There is a problem with unpickled arrays in NumPy < 1.1.x, see
-http://projects.scipy.org/scipy/numpy/ticket/551
-To circumvent this, you can use a copy() of all unpickled arrays. 
+implementations of MDP nodes. Note that such ParallelNodes are only needed for 
+training, parallel execution works with any Node that can be pickled.
 """
+
+# WARNING: There is a problem with unpickled arrays in NumPy < 1.1.x, see
+# http://projects.scipy.org/scipy/numpy/ticket/551
+# To circumvent this, you can use a copy() of all unpickled arrays. 
 
 import mdp
 
@@ -30,14 +28,27 @@ class JoinParallelNodeException(mdp.NodeException):
 
 
 class ParallelNode(mdp.Node):
-    """Base class for parallel trainable MDP nodes."""
+    """Base class for parallel trainable MDP nodes.
+    
+    With the fork method new node instances are created which can then be
+    trained. With the join method the trained instances are then merged back
+    into a single node instance.
+    
+    Since fork typically has to create a new class instance it must know all
+    __init__ arguments. Therefore the __init__ method of a parallel node should
+    never accept **kwargs! Otherwise some newly added arguments might be
+    ignored in forked nodes, resulting in errors that are very hard to track
+    down. 
+    """
     
     def fork(self):
-        """Return a (modified) copy of this node for remote training.
+        """Return a new instance of this node class for remote training.
         
-        The forked node should be a ParallelNode as well, thus allowing
-        recursive forking and joining.
-        The actual forking is implemented in _fork.
+        This is a template method, the actual forking should be implemented in
+        _fork.
+        
+        The forked node should be a ParallelNode of the same class as well, 
+        thus allowing recursive forking and joining.
         """
         if not self.is_trainable():
             raise mdp.IsNotTrainableException, "This node is not trainable."
@@ -46,11 +57,12 @@ class ParallelNode(mdp.Node):
                   "The training phase has already finished."
         return self._fork()
     
-    # TODO: check that the dimensions match, allow late setting
+    # TODO: check that the dimensions match?
     def join(self, forked_node):
         """Absorb the trained node from a fork into this parent node.
         
-        The actual joining is implemented in _join.
+        This is a template method, the actual joining should be implemented in
+        _join.
         """
         if not self.is_trainable():
             raise mdp.IsNotTrainableException, "This node is not trainable."
@@ -76,19 +88,12 @@ class ParallelNode(mdp.Node):
     
     def _join(self, forked_node):
         """Hook method for joining, to be overridden."""
-        # be aware of http://projects.scipy.org/scipy/numpy/ticket/551
-        # copy arrays after unpickling for numpy version < 1.1.x
         raise TrainingPhaseNotParallelException("join is not implemented " +
                                                 "by this node.")
     
 
 ## MDP parallel node implementations ##
 
-# TODO: find a better way to deal with the kwargs
-#    the previous solutions with self._fork_kwargs = kwargs broke the
-#    make_parallel stuff, so maybe add support for self._fork_kwargs in
-#    make_parallel or even the ParallelNode base class (via metaclass?).
-    
 class ParallelPCANode(mdp.nodes.PCANode, ParallelNode):
     """Parallel version of MDP PCA node."""
     
