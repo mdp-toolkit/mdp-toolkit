@@ -21,6 +21,12 @@ MDP 2.4 17.10.2008:
 - think about a better structure for the unittests in the future,
   the transition could happen package by package 
   (starting with parallel)
+- Mark parallelizable nodes with a class decorator when they are defined.
+  The class decorator would be given the parallel class.
+  We could then store all the __init__ parameters, so that new instances
+  can be created more easily in fork.
+  If we add additional parallelisation techniques (e.g. OpenCL) one could
+  introduce more class decorators.
 
 MDP 2.3 15.5.2008:
 

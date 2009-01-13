@@ -128,11 +128,13 @@ class ParallelFlow(mdp.Flow):
     node to request local training without forking. 
     Parallel execution on the other hand should work for all nodes, since it 
     only relies on the copy method of nodes.
+    The stop_training method is always called locally, with no forking or
+    copying involved.
     
     Both parallel training and execution can be done conveniently by providing
     a scheduler instance to the train or execute method.
     It is also possible to manage the tasks manually. This is done via the
-    methods setup_parallel_training (or exection), get_task and use_results.
+    methods setup_parallel_training (or execution), get_task and use_results.
     The code of the train / execute method can serve as an example how to use
     these methods and process the tasks by a scheduler.
     """
