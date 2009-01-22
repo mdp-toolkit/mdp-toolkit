@@ -148,6 +148,17 @@ class HinetTestSuite(NodesTestSuite):
         x_inverse = layer.inverse(y)
         assert numx.all(numx.absolute(x - x_inverse) < 0.001)
         
+    def testSameInputLayer(self):
+        node1 = mdp.nodes.PCANode(input_dim=10, output_dim=5)
+        node2 = mdp.nodes.PCANode(input_dim=10, output_dim=3)
+        node3 = mdp.nodes.PCANode(input_dim=10, output_dim=1)
+        x = numx_rand.random([100,10]).astype('f')
+        layer = mh.SameInputLayer([node1, node2, node3])
+        layer.train(x)
+        y = layer.execute(x)
+        assert layer.dtype == numx.dtype('f')
+        assert y.dtype == layer.dtype
+        
     def testCloneLayer(self):
         node = mdp.nodes.PCANode(input_dim=10, output_dim=5)
         x = numx_rand.random([10,70]).astype('f')

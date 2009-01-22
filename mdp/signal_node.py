@@ -384,11 +384,10 @@ class Node(object):
     def _if_training_stop_training(self):
         if self.is_training():
             self.stop_training()
-            # if there is some training phases left
-            # we shouldn't be here!
+            # if there is some training phases left we shouldn't be here!
             if self.get_remaining_train_phase() > 0:
-                raise TrainingException("The training phases are not "
-                                        "completed yet.")
+                error_str = "The training phases are not completed yet."
+                raise TrainingException(error_str)
 
     def _pre_execution_checks(self, x):
         """This method contains all pre-execution checks.
