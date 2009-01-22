@@ -93,8 +93,11 @@ class Layer(mdp.Node):
         self._dtype = t
 
     def _set_output_dim(self, n):
-        msg = "Output dim cannot be set explicitly!"
-        raise mdp.NodeException(msg)        
+        if not self._output_dim == n:
+            msg = ("The output dim defined by the internal nodes is " +
+                   " currently " + str(self._output_dim) +
+                   " and cannot be set to the given value " + str(n) + ".")
+            raise mdp.NodeException(msg)        
 
     def _get_supported_dtypes(self):
         # we supported the minimal common dtype set
