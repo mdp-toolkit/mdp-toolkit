@@ -146,6 +146,18 @@ class Layer(mdp.Node):
                 node.stop_training()
         if self.output_dim is None:
             self.output_dim = self._get_output_dim_from_nodes()
+            
+    def _pre_execution_checks(self, x):
+        """Make sure that output_dim is set and then perform nromal checks."""
+        if self.output_dim is None:
+            for node in self.nodes:
+                # do this to make sure that the output_dim is set for nodes
+                node._pre_execution_checks(x)
+            self.output_dim = self._get_output_dim_from_nodes()
+            if self.output_dim is None:
+                err = "output_dim must be set at this point for all nodes"
+                raise mdp.NodeException(err)  
+        super(Layer, self)._pre_execution_checks(x)
 
     def _execute(self, x):
         """Process the data through the internal nodes."""
