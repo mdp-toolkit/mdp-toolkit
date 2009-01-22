@@ -39,10 +39,11 @@ class Layer(mdp.Node):
         # calculate the the dimensions
         self.node_input_dims = [0] * len(self.nodes)
         input_dim = 0
-        output_dim = 0
+        #output_dim = 0
+        output_dim = None
         for index, node in enumerate(nodes):
             input_dim += node.input_dim
-            output_dim += node.output_dim
+            #output_dim += node.output_dim
             self.node_input_dims[index] = node.input_dim
         super(Layer, self).__init__(input_dim=input_dim,
                                     output_dim=output_dim,
@@ -91,6 +92,10 @@ class Layer(mdp.Node):
             node.dtype = t
         self._dtype = t
 
+    def _set_output_dim(self, n):
+        msg = "Output dim cannot be set explicitly!"
+        raise mdp.NodeException(msg)        
+
     def _get_supported_dtypes(self):
         # we supported the minimal common dtype set
         types = set(mdp.utils.get_dtypes('All'))
@@ -132,12 +137,26 @@ class Layer(mdp.Node):
             if node.is_training():
                 node.train(x[:, start_index : stop_index])
 
+    def _set_output_dim_from_nodes(self):
+        if self.output_dim is None:
+            # set output dims  as soon as we can
+            output_dim = 0
+            for node in self.nodes:
+                output_dim += node.output_dim
+            self._output_dim = output_dim    
+
     def _stop_training(self):
         """Stop training of the internal nodes."""
         for node in self.nodes:
             if node.is_training():
                 node.stop_training()
-    
+        self._set_output_dim_from_nodes()
+
+    def _pre_execution_checks(self, x):
+        # set output dimensions
+        self._set_output_dim_from_nodes()
+        super(Layer, self)._pre_execution_checks(x)
+            
     def _execute(self, x):
         """Process the data through the internal nodes."""
         in_start = 0
@@ -199,8 +218,8 @@ class CloneLayer(Layer):
         """Stop training of the internal node."""
         if self.node.is_training():
             self.node.stop_training()
-            
-            
+        self._set_output_dim_from_nodes()
+        
 class SameInputLayer(Layer):
     """SameInputLayer is a layer were all nodes receive the full input.
     
@@ -222,9 +241,10 @@ class SameInputLayer(Layer):
         dtype = self._check_props(dtype)
         # check that the input dimensions are all the same
         input_dim = self.nodes[0].input_dim
-        output_dim = 0
+        #output_dim = 0
+        output_dim = None
         for node in self.nodes:
-            output_dim += node.output_dim
+            #output_dim += node.output_dim
             if not node.input_dim == input_dim:
                 msg = 'The nodes have different input dimensions.'
                 raise mdp.NodeException(msg)
