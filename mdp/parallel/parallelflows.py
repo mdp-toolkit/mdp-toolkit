@@ -340,8 +340,8 @@ class ParallelFlow(mdp.Flow):
                 overwrite_result_container=True):
         """Train all trainable nodes in the flow.
         
-        If a scheduler is provided the training will be done in parallel on the
-        scheduler.
+        If a scheduler is provided the execution will be done in parallel on
+        the scheduler.
         
         iterator -- An iterator which returns data arrays that are used as 
             input to the flow. Alternatively, one can specify one data array 

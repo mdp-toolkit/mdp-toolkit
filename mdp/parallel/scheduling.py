@@ -20,35 +20,48 @@ class ResultContainer(object):
     
 
 class ListResultContainer(ResultContainer):
+    """Basic result container using simply a list."""
     
     def __init__(self):
         super(ListResultContainer, self).__init__()
         self._results = []
         
     def add_result(self, result, task_index):
+        """Store a result in the container."""
         self._results.append(result)
         
     def get_results(self):
+        """Return the list of results and reset this container.
+        
+        Note that the results are stored in the order that they come in, which
+        can be different from the orginal task order.
+        """
         results = self._results
         self._results = []
         return results
     
     
 class OrderedResultContainer(ListResultContainer):
-    """Default result container.
+    """Default result container with automatic restoring of the result order.
     
-     list. Note that the order of the results may be different
-    from the order of the tasks, since tasks may finish sooner or later than
-    other tasks. If the order is important then use the order module.
+    In general the order of the incoming results in the scheduler can be
+    different from the order of the tasks, since some tasks may finish quicker
+    than other tasks. This result container restores the original order.
     """
     
     def __init__(self):
         super(OrderedResultContainer, self).__init__()
         
     def add_result(self, result, task_index):
+        """Store a result in the container.
+        
+        The task index is also stored and later used to reconstruct the
+        original task order.
+        """
         self._results.append((result, task_index))
         
     def get_results(self):
+        """Sort the results into the original order and return them in list."""
         results = self._results
         self._results = []
         def compare_marker(x, y):
