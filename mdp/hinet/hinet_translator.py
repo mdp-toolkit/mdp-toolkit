@@ -2,6 +2,8 @@
 Module to translate HiNet structures into other representations, like HTML.
 """
 
+import webbrowser
+
 import mdp
 
 import switchboard
@@ -86,7 +88,7 @@ class HiNetTranslator(object):
 # The tables "nodestruct" are used to separate the dimension values from 
 # the actual node text.
 
-HINET_STYLE = """
+HINET_STYLE = '''
 table.flow {
     border-collapse: separate;
     padding: 3 3 3 3;
@@ -141,7 +143,7 @@ td.dim {
     text-align: center;
     color: #008ADC;
 }
-"""
+'''
 
 # Functions to define how the node parameters are represented in the
 # HTML representation of a node.
@@ -321,5 +323,53 @@ class HiNetHTMLTranslator(HiNetTranslator):
             f.write('<tr><td class="dim">out-dim: %s</td></tr>' % 
                     str(node.output_dim))
         f.write('</table>')
+       
+
+## Helper functions ##
+ 
+SHOW_FLOW_STYLE = '''
+html, body {
+    font-family: sans-serif;
+    font-size: normal;
+    text-align: center;
+}
+
+h1, h2, h3, h4 {
+    color: #003399;
+}
+
+par.explanation {
+    color: #003399;
+    font-size: small;
+}
+
+table.flow {
+    margin-left:auto;
+    margin-right:auto;
+}
+'''
+
+def show_flow(flow, filename="mdp_flow_display.html",
+              title="MDP flow display"):
+    """Write a flow into a HTML file and open it in the browser.
+
+    flow -- The flow to be shown.
+    filename -- Filename for the HTML file to be created.
+    """
+    html_file = open(filename, 'w')
+    html_file.write('<html>\n<head>\n<title>%s</title>\n' % title)
+    html_file.write('<style type="text/css" media="screen">')
+    html_file.write(SHOW_FLOW_STYLE)
+    html_file.write(HINET_STYLE)
+    hinet_translator = mdp.hinet.HiNetHTMLTranslator()
+    html_file.write('</style>\n</head>\n<body>\n')
+    html_file.write('<h3>%s</h3>\n' % title)
+    explanation = '(data flows from top to bottom)'
+    html_file.write('<par class="explanation">%s</par>\n' % explanation)
+    html_file.write('</br></br></br>\n')
+    hinet_translator.write_flow_to_file(flow=flow, html_file=html_file)
+    html_file.write('</body>\n</html>')
+    html_file.close()
+    webbrowser.open(filename)
     
         

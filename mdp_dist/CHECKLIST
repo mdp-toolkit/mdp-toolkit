@@ -15,6 +15,7 @@ Before release:
 During release:
 - update CHANGES and TODO
 - generate tutorial using mdp_html/tutorial_src/gentut
+- copy tutorial pdf with version number to mdp_html
 - generate API documentation
 - update on SF.net:
   release files: sftp username@frs.sourceforge.net /uploads

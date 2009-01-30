@@ -1,4 +1,6 @@
-# This module creates the HTML rendering for the hinet tutorial example.
+"""
+This module creates the HTML rendering for the hinet tutorial example.
+"""
 
 import mdp
 
@@ -21,16 +23,6 @@ sfa_layer = mdp.hinet.CloneLayer(flownode,
                                  n_nodes=switchboard.output_channels)
 flow = mdp.Flow([switchboard, sfa_layer])
 
-# create HTML file
-html_file = open('hinet_test.html', 'w')
-html_file.write('<html>\n<head>\n<title>HiNet Test</title>\n')
-html_file.write('<style type="text/css" media="screen">')
-html_file.write(mdp.hinet.HINET_STYLE)
-html_file.write('</style>\n</head>\n<body>\n')
-hinet_translator = mdp.hinet.HiNetHTMLTranslator()
-hinet_translator.write_flow_to_file(flow, html_file)
-html_file.write('</body>\n</html>')
-html_file.close()
-
-print "done."
-
+# show the flow
+mdp.hinet.show_flow(flow)
+print "opening flow HTML file in browser..."
