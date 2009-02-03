@@ -500,7 +500,7 @@ class Node(object):
         
         if not self.is_training():
             raise TrainingFinishedException("The training phase has already"
-                                            "finished.")
+                                            " finished.")
 
         # close the current phase.
         self._train_seq[self._train_phase][1](*args, **kwargs)
