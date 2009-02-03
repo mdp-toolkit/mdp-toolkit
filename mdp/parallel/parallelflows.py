@@ -215,22 +215,26 @@ class ParallelFlow(mdp.Flow):
                        "training")
                 raise Exception(err)
             # do parallel training
-            self.setup_parallel_training(data_iterators, 
+            try:
+                self.setup_parallel_training(
+                                    data_iterators, 
                                     train_callable_class=train_callable_class,
                                     **kwargs)
-            while self.is_parallel_training():
-                while self.task_available():
-                    task = self.get_task()
-                    scheduler.add_task(*task)
-                results = scheduler.get_results()
-                if results == []:
-                    err = ("Could not get any training tasks or results "
-                           "for the current training phase.")
-                    raise Exception(err)
-                else:
-                    self.use_results(results)
-            # reset remaining iterator references, which cannot be pickled
-            self._train_data_iter = None
+                while self.is_parallel_training():
+                    while self.task_available():
+                        task = self.get_task()
+                        scheduler.add_task(*task)
+                    results = scheduler.get_results()
+                    if results == []:
+                        err = ("Could not get any training tasks or results "
+                               "for the current training phase.")
+                        raise Exception(err)
+                    else:
+                        self.use_results(results)
+            finally:
+                # reset iterator references, which cannot be pickled
+                self._train_data_iters = None
+                self._train_data_iter = None
     
     def setup_parallel_training(self, data_iterators, 
                                 train_callable_class=FlowTrainCallable):
@@ -323,7 +327,6 @@ class ParallelFlow(mdp.Flow):
         else:
             # training is finished
             self._i_train_node = None
-            self._train_data_iters = None
             
     def _create_train_task(self):
         """Create and return a single training task without callable.
@@ -382,14 +385,18 @@ class ParallelFlow(mdp.Flow):
                               scheduling.OrderedResultContainer):
                 scheduler.result_container = scheduling.OrderedResultContainer()
         # do parallel training
-        self.setup_parallel_execution(iterator, nodenr=nodenr,
+        try:
+            self.setup_parallel_execution(
+                                iterator, 
+                                nodenr=nodenr,
                                 execute_callable_class=execute_callable_class)
-        while self.task_available():
-            task = self.get_task()
-            scheduler.add_task(*task)
-        result = self.use_results(scheduler.get_results())
-        # reset remaining iterator references, which cannot be pickled
-        self._exec_data_iter = None
+            while self.task_available():
+                task = self.get_task()
+                scheduler.add_task(*task)
+            result = self.use_results(scheduler.get_results())
+        finally:
+            # reset remaining iterator references, which cannot be pickled
+            self._exec_data_iter = None
         return result
        
     def setup_parallel_execution(self, iterator, nodenr=None,
@@ -460,17 +467,11 @@ class ParallelFlow(mdp.Flow):
     
     def is_parallel_training(self):
         """Return True if parallel training is underway."""
-        if self._i_train_node != None:
-            return True
-        else:
-            return False
+        return self._i_train_node is not None
     
     def is_parallel_executing(self):
         """Return True if parallel execution is underway."""
-        if self._exec_data_iter == None:
-            return False
-        else:
-            return True
+        return self._exec_data_iter is not None
     
     def task_available(self):
         """Return True if tasks are available, otherwise False.
@@ -478,10 +479,7 @@ class ParallelFlow(mdp.Flow):
         If False is returned this can indicate that results are needed to
         continue training.   
         """
-        if self._next_task is not None:
-            return True
-        else:
-            return False
+        return self._next_task is not None
     
     def use_results(self, results):
         """Use the result from the scheduler.
@@ -575,8 +573,5 @@ class ParallelCheckpointFlow(ParallelFlow, mdp.CheckpointFlow):
         elif self.is_parallel_executing():
             return super(ParallelCheckpointFlow, self).use_results(
                                                             results=results)
-
-
-
 
 
