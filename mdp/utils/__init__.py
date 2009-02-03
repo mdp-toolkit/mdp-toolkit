@@ -5,7 +5,7 @@ from routines import (timediff, refcast, scast, rotate, random_rot,
 from introspection import dig_node, get_node_size
 from quad_forms import QuadraticForm
 from covariance import (CovarianceMatrix, DelayCovarianceMatrix,
-                        MultipleCovarianceMatrices)
+                        MultipleCovarianceMatrices,CrossCovarianceMatrix)
 from progress_bar import progressinfo
 import mdp as _mdp
 
@@ -69,7 +69,7 @@ del quad_forms
 del covariance
 del progress_bar
 
-__all__ = ['CovarianceMatrix', 'DelayCovarianceMatrix',
+__all__ = ['CovarianceMatrix', 'DelayCovarianceMatrix','CrossCovarianceMatrix',
            'MultipleCovarianceMatrices', 'QuadraticForm', 'SymeigException',
            'comb', 'cov2', 'dig_node', 'get_dtypes', 'get_node_size',
            'hermitian', 'inv', 'mult', 'mult_diag', 'nongeneral_svd',

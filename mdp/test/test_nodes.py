@@ -465,6 +465,21 @@ class NodesTestSuite(unittest.TestSuite):
         assert_array_almost_equal(act_avg_dt,des_avg_dt,self.decimal-1)
         assert_array_almost_equal(act_cov,des_cov,self.decimal-1)
 
+    def testCrossCovarianceMatrix(self):
+        mat,mix,inp1 = self._get_random_mix(mat_dim=(500,5))
+        mat,mix,inp2 = self._get_random_mix(mat_dim=(500,3))
+        des_tlen = inp1.shape[0]
+        des_avg1 = mean(inp1, axis=0)
+        des_avg2 = mean(inp2, axis=0)
+        des_cov = utils.cov2(inp1, inp2)
+        act_cov = utils.CrossCovarianceMatrix()
+        act_cov.update(inp1, inp2)
+        act_cov, act_avg1, act_avg2, act_tlen = act_cov.fix()
+        assert_almost_equal(act_tlen,des_tlen,self.decimal-1)
+        assert_array_almost_equal(act_avg1,des_avg1,self.decimal-1)
+        assert_array_almost_equal(act_avg2,des_avg2,self.decimal-1)
+        assert_array_almost_equal(act_cov,des_cov,self.decimal-1)     
+        
     def testdtypeCovarianceMatrix(self):
         for type in testtypes:
             mat,mix,inp = self._get_random_mix(type='d')
@@ -484,6 +499,17 @@ class NodesTestSuite(unittest.TestSuite):
             assert_type_equal(cov.dtype,type)
             assert_type_equal(avg.dtype,type)
             assert_type_equal(avg_dt.dtype,type)
+
+    def testdtypeCrossCovarianceMatrix(self):
+        for type in testtypes:
+            dt = 5
+            mat,mix,inp = self._get_random_mix(type='d')
+            cov = utils.CrossCovarianceMatrix(dtype=type)
+            cov.update(inp, inp)
+            cov,avg1,avg2,tlen = cov.fix()
+            assert_type_equal(cov.dtype,type)
+            assert_type_equal(avg1.dtype,type)
+            assert_type_equal(avg2.dtype,type)
 
     def testRoundOffWarningCovMatrix(self):
         import warnings
@@ -671,7 +697,7 @@ class NodesTestSuite(unittest.TestSuite):
         # test that the total_variance attribute makes sense
         est_tot_var = ((des_var**2)*2000/1999.).sum()
         assert_almost_equal(est_tot_var, pca.total_variance, self.decimal)
-        assert pca.explained_variance == 1, '%s'%pca.explained_variance
+        assert_almost_equal(1, pca.explained_variance, self.decimal)
         # test a bug in v.1.1.1, should not crash
         pca.inverse(act_mat[:,:1])
 

@@ -323,3 +323,74 @@ class MultipleCovarianceMatrices(object):
         """Return a deep copy of the instance."""
         return MultipleCovarianceMatrices(self.covs.transpose([2, 0, 1]))
 
+
+class CrossCovarianceMatrix(CovarianceMatrix):
+
+    def _init_internals(self, x, y):
+        if self._dtype is None:
+            self._dtype = x.dtype
+            if y.dtype != x.dtype:
+                err = 'dtype mismatch: x (%s) != y (%s)'%(x.dtype,
+                                                          y.dtype)
+                raise mdp.MDPException(err)
+        dim_x = x.shape[1]
+        dim_y = y.shape[1]
+        type_ = self._dtype
+        self._cov_mtx = numx.zeros((dim_x, dim_y), type_)
+        self._avgx = numx.zeros(dim_x, type_)
+        self._avgy = numx.zeros(dim_y, type_) 
+
+
+    def update(self, x, y):
+        # check internal dimensions consistency
+        if x.shape[0] != y.shape[0]:
+            err = '# samples mismatch: x (%d) != y (%d)'%(x.shape[0],
+                                                          y.shape[0])
+            raise mdp.MDPException(err)
+        
+        if self._cov_mtx is None:
+            self._init_internals(x, y)
+
+        # cast input
+        x = mdp.utils.refcast(x, self._dtype)
+        y = mdp.utils.refcast(y, self._dtype)
+
+        self._cov_mtx += mdp.utils.mult(x.T, y)
+        self._avgx += x.sum(axis=0)
+        self._avgy += y.sum(axis=0)
+        self._tlen += x.shape[0]
+
+    def fix(self):
+        type_ = self._dtype
+        tlen = self._tlen
+        _check_roundoff(tlen, type_)
+        avgx = self._avgx
+        avgy = self._avgy
+        cov_mtx = self._cov_mtx
+
+        ##### fix the training variables
+        # fix the covariance matrix (try to do everything inplace)
+        avg_mtx = numx.outer(avgx, avgy)
+
+        if self.bias:
+            avg_mtx /= tlen*(tlen)
+            cov_mtx /= tlen
+        else:
+            avg_mtx /= tlen*(tlen - 1)
+            cov_mtx /= tlen - 1
+        cov_mtx -= avg_mtx
+        # fix the average
+        avgx /= tlen
+        avgy /= tlen
+
+        ##### clean up
+        # covariance matrix, updated during the training phase
+        self._cov_mtx = None
+        # average, updated during the training phase
+        self._avgx = None
+        self._avgy = None
+        # number of observation so far during the training phase
+        self._tlen = 0
+
+        return cov_mtx, avgx, avgy, tlen
+        
