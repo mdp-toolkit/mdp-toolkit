@@ -2,6 +2,7 @@ TODO:
 
 MDP 2.4 17.10.2008:
 
+- check eta value calculations: shouldn't t-> T/t=tlen?
 - add version and symeig as an output for tests, provide svn revision
   in the version string.
 - provide a Node pickler, for arrays use the binary numpy format (npy,
