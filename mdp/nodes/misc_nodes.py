@@ -590,3 +590,7 @@ class GaussianClassifierNode(Node):
         class_prob = self.class_probabilities(x)
         winner = class_prob.argmax(axis=-1)
         return [self.labels[winner[i]] for i in range(len(winner))]
+
+class IdentityNode(Node):
+    def is_trainable(self):
+        False

@@ -6,7 +6,8 @@ from neural_gas_nodes import GrowingNeuralGasNode
 from fda_nodes import FDANode
 from em_nodes import FANode
 from misc_nodes import (HitParadeNode, TimeFramesNode, EtaComputerNode,
-                        NoiseNode, NormalNoiseNode, GaussianClassifierNode)
+                        NoiseNode, NormalNoiseNode, GaussianClassifierNode,
+                        IdentityNode)
 from isfa_nodes import ISFANode
 from rbm_nodes import RBMNode, RBMWithLabelsNode
 
@@ -34,7 +35,7 @@ del rbm_nodes
 __all__ = ['CuBICANode', 'EtaComputerNode', 'FANode', 'FDANode', 'FastICANode',
            'GaussianClassifierNode', 'GrowingNeuralGasNode', 'HitParadeNode',
            'ICANode', 'ISFANode', 'JADENode', 'LLENode', 'NIPALSNode',
-           'NoiseNode', 'HLLENode',
+           'NoiseNode', 'HLLENode', 'IdentityNode'
            'PCANode', 'PolynomialExpansionNode', 'QuadraticExpansionNode',
            'RBMNode', 'RBMWithLabelsNode', 'SFA2Node', 'SFANode',
            'TDSEPNode', 'TimeFramesNode','WhiteningNode',
