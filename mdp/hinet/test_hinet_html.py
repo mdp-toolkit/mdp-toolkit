@@ -24,5 +24,5 @@ sfa_layer = mdp.hinet.CloneLayer(flownode,
 flow = mdp.Flow([switchboard, sfa_layer])
 
 # show the flow
-mdp.hinet.show_flow(flow)
+mdp.hinet.show_flow(flow, show_size=True)
 print "opening flow HTML file in browser..."

@@ -143,6 +143,10 @@ td.dim {
     text-align: center;
     color: #008ADC;
 }
+
+span.memorycolor {
+    color: #CCBB77;
+}
 '''
 
 # Functions to define how the node parameters are represented in the
@@ -202,7 +206,8 @@ class HiNetHTMLTranslator(HiNetTranslator):
     written to a provided file.
     """
     
-    def __init__(self, node_param_translators=NODE_HTML_TRANSLATORS):
+    def __init__(self, node_param_translators=NODE_HTML_TRANSLATORS,
+                 show_size=False):
         """Initialize the HMTL translator.
         
         node_param_translators -- List of tuples, the first tuple entry beeing
@@ -212,8 +217,10 @@ class HiNetHTMLTranslator(HiNetTranslator):
             Note that the list is worked starting from the end (so subclasses 
             can be appended to the end of the list to override their parent 
             class).
+        show_size -- Show the approximate memory footprint of all nodes.
         """
         self._node_param_translators = node_param_translators
+        self.show_size = show_size
         self._html_file = None
         
     def write_flow_to_file(self, flow, html_file):
@@ -320,8 +327,11 @@ class HiNetHTMLTranslator(HiNetTranslator):
         f.write('</table>')
         f.write('</td></tr>')
         if not (type_id=="flow" or type_id=="flownode"):
-            f.write('<tr><td class="dim">out-dim: %s</td></tr>' % 
-                    str(node.output_dim))
+            f.write('<tr><td class="dim">out-dim: %s' % str(node.output_dim))
+            if self.show_size:
+                f.write('&nbsp;&nbsp;<span class="memorycolor">size: %s</span>' 
+                        % mdp.utils.get_node_size_str(node))
+            f.write('</td></tr>')
         f.write('</table>')
        
 
@@ -350,18 +360,21 @@ table.flow {
 '''
 
 def show_flow(flow, filename="mdp_flow_display.html",
-              title="MDP flow display"):
+              title="MDP flow display",
+              show_size=False):
     """Write a flow into a HTML file and open it in the browser.
 
     flow -- The flow to be shown.
     filename -- Filename for the HTML file to be created.
+    title -- Title for the HTML file.
+    show_size -- Show the approximate memory footprint of all nodes.
     """
     html_file = open(filename, 'w')
     html_file.write('<html>\n<head>\n<title>%s</title>\n' % title)
     html_file.write('<style type="text/css" media="screen">')
     html_file.write(SHOW_FLOW_STYLE)
     html_file.write(HINET_STYLE)
-    hinet_translator = mdp.hinet.HiNetHTMLTranslator()
+    hinet_translator = mdp.hinet.HiNetHTMLTranslator(show_size=show_size)
     html_file.write('</style>\n</head>\n<body>\n')
     html_file.write('<h3>%s</h3>\n' % title)
     explanation = '(data flows from top to bottom)'
