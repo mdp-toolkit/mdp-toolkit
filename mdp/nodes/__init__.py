@@ -17,7 +17,7 @@ from expansion_nodes import expanded_dim as _expanded_dim
 
 # import contributed nodes
 import mdp
-from mdp.contrib import JADENode, NIPALSNode, LLENode, HLLENode
+from mdp.contrib import JADENode, NIPALSNode, LLENode, HLLENode, XSFANode
 
 # clean up namespace
 del mdp
@@ -38,5 +38,5 @@ __all__ = ['CuBICANode', 'EtaComputerNode', 'FANode', 'FDANode', 'FastICANode',
            'NoiseNode', 'HLLENode', 'IdentityNode'
            'PCANode', 'PolynomialExpansionNode', 'QuadraticExpansionNode',
            'RBMNode', 'RBMWithLabelsNode', 'SFA2Node', 'SFANode',
-           'TDSEPNode', 'TimeFramesNode','WhiteningNode',
+           'TDSEPNode', 'TimeFramesNode','WhiteningNode', 'XSFANode',
            '_OneDimensionalHitParade', '_expanded_dim']

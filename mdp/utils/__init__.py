@@ -1,7 +1,7 @@
 from routines import (timediff, refcast, scast, rotate, random_rot,
                       permute, symrand, norm2, uniq, ordered_uniq, cov2,
                       mult_diag, comb, sqrtm, get_dtypes, nongeneral_svd,
-                      SymeigException, hermitian, _symeig_fake)
+                      SymeigException, hermitian, _symeig_fake, cov_maxima)
 from introspection import dig_node, get_node_size
 from quad_forms import QuadraticForm
 from covariance import (CovarianceMatrix, DelayCovarianceMatrix,

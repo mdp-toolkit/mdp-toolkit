@@ -158,6 +158,23 @@ def cov2(x, y):
     tlen = x.shape[0]
     return mdp.utils.mult(x.T, y)/(tlen-1) - numx.outer(mnx, mny)
 
+def cov_maxima(cov):
+    """Extract the maxima of a covariance matrix."""
+    dim = cov.shape[0]
+    maxs = []
+    if dim >= 1:
+        cov=abs(cov)
+        glob_max_idx = (cov.argmax()/dim, cov.argmax()%dim)
+        maxs.append(cov[glob_max_idx[0], glob_max_idx[1]])
+        cov_reduce = cov.copy()
+        cov_reduce = cov_reduce[numx.arange(dim) != glob_max_idx[0], :]
+        cov_reduce = cov_reduce[:, numx.arange(dim) != glob_max_idx[1]]
+        maxs.extend(cov_maxima(cov_reduce))
+        return maxs
+    else:
+        return []
+    
+
 def mult_diag(d, mtx, left=True):
     """Multiply a full matrix by a diagonal matrix.
     This function should always be faster than dot.

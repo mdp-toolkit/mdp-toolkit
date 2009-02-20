@@ -14,7 +14,6 @@ mc = mdp.nodes
 
 import itertools    
 
-
 def _s_shape(theta):
     """
     returns x,y
@@ -71,7 +70,8 @@ class ContribTestSuite(NodesTestSuite):
                        (mc.LLENode, [3, 0.001, False], None),
                        (mc.LLENode, [3, 0.001, True], None),
                        (mc.HLLENode, [10, 0.001, False], None),
-                       (mc.HLLENode, [10, 0.001, True], None)]
+                       (mc.HLLENode, [10, 0.001, True], None),
+                       (mc.XSFANode, [3], None)]
 
     def _fastica_test_factory(self):
         # we don't want the fastica tests here
@@ -222,7 +222,34 @@ class ContribTestSuite(NodesTestSuite):
             idx = numx.nonzero(t==tv)[0]
             assert (res[idx,0]-res[idx[0],0]<1e-2,
                     'Projection should be aligned as original space')
-    
+
+    def testXSFANode(self):
+        T = 5000
+        N = 3
+        src = numx_rand.random((T, N))*2-1
+        # create three souces with different speeds
+        fsrc = numx_fft.rfft(src, axis=0)
+
+        for i in range(N):
+            fsrc[(i+1)*(T/10):, i] = 0.
+
+        src = numx_fft.irfft(fsrc,axis=0)
+        src -= src.mean(axis=0)
+        src /= src.std(axis=0)
+
+        #mix = sigmoid(numx.dot(src, mdp.utils.random_rot(3)))
+        mix = src
+
+        flow = mdp.Flow([mc.XSFANode(3, verbose=False)])
+        # let's test also chunk-mode training
+        flow.train([[mix[:T/2, :], mix[T/2:, :]]])
+        
+        out = flow(mix)
+
+        corrs = mdp.utils.cov_maxima(mdp.utils.cov2(out, src))
+        assert min(corrs) > 0.8, ('source/estimate minimal'
+                                  ' covariance: %g' % min(corrs))
+
         
 def get_suite(testname=None):
     return ContribTestSuite(testname=testname)
