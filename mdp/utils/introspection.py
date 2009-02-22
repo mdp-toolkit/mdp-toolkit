@@ -98,6 +98,7 @@ def get_node_size(x):
     The byte-size is related to the memory needed by the node).
     """
     # TODO: add check for problematic node types, like NoiseNode?
+    # TODO: replace this with sys.getsizeof for Python > 2.6
     size = len(cPickle.dumps(x, protocol = 2))
     return size
 
