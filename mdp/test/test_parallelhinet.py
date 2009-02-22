@@ -70,7 +70,7 @@ class TestParallelFlowNode(unittest.TestCase):
         flow = mdp.Flow([switchboard, sfa_layer])
         data_iterables = [None,
                           [n.random.random((50, 100*100)) for _ in range(3)]]
-        parallel_flow = parallel.make_flow_parallel(flow)
+        parallel_flow = parallel.make_flow_parallel(flow.copy())
         scheduler = parallel.Scheduler()
         parallel_flow.train(data_iterables, scheduler=scheduler)
         flow.train(data_iterables)

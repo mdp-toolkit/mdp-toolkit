@@ -42,8 +42,9 @@ class ProcessScheduler(scheduling.Scheduler):
         """Initialize the scheduler and start the slave processes.
         
         result_container -- ResultContainer used to store the results.
-        copy_callable -- If True then the callable will be copied before being 
-            called (default value is True).
+        copy_callable -- In this scheduler the callable is always copied when
+            it is transfered to a process, so the given argument value is
+            overriden and set to true.
         verbose -- Set to True to get progress reports from the scheduler
             (default value is False).
         n_processes -- Number of processes used in parallel. This should
@@ -58,6 +59,9 @@ class ProcessScheduler(scheduling.Scheduler):
             The default value is None, in which case sys.executable will be
             used.
         """
+        # override this since the callable is always copied for the process,
+        # but if caching gets implemented this has to change
+        copy_callable = True
         scheduling.Scheduler.__init__(self, result_container=result_container,
                                       copy_callable=copy_callable,
                                       verbose=verbose)
@@ -100,8 +104,6 @@ class ProcessScheduler(scheduling.Scheduler):
         It blocks when the system is not able to start a new thread
         or when the processes are all in use.
         """
-        if self.copy_callable:
-            task_callable = task_callable.copy()
         task_started = False
         while not task_started:
             if not len(self._free_processes):
@@ -131,6 +133,7 @@ class ProcessScheduler(scheduling.Scheduler):
         """
         try:
             # push the task to the process
+            # task_callable is copied here, so ignore copy_callable
             pickle.dump((data, task_callable, task_index), process.stdin,
                         protocol=-1)
             # wait for result to arrive

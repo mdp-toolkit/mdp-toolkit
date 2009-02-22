@@ -163,7 +163,7 @@ class TestParallelFlows(unittest.TestCase):
         node2 = mdp.nodes.PolynomialExpansionNode(degree=1)
         node3 = mdp.nodes.SFANode(output_dim=10)
         flow = mdp.Flow([node1, node2, node3])
-        parallel_flow = parallel.make_flow_parallel(flow)
+        parallel_flow = parallel.make_flow_parallel(flow.copy())
         scheduler = parallel.Scheduler()
         input_dim = 30
         scales = n.linspace(1, 100, num=input_dim)

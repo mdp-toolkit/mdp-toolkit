@@ -224,7 +224,11 @@ class HiNetHTMLTranslator(HiNetTranslator):
         self._html_file = None
         
     def write_flow_to_file(self, flow, html_file):
-        """Write the HTML translation of the flow into the provided file."""
+        """Write the HTML translation of the flow into the provided file.
+        
+        Note that html_file file can be any file-like object with a write
+        method.
+        """
         self._html_file = NewlineWriteFile(html_file)
         self._translate_flow(flow)
         self._html_file = None
@@ -233,7 +237,7 @@ class HiNetHTMLTranslator(HiNetTranslator):
         """Append more node_param_translators (see __init__)."""
         self._node_param_translators += node_param_translators  
         
-    # overwrite methods
+    # overwrite private methods
     
     def _translate_flow(self, flow):
         """Translate the flow into HTML and write it into the internal file.
