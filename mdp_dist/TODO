@@ -32,6 +32,8 @@ MDP 2.4 17.10.2008:
   introduce more class decorators. The same would work for stuff like a
   gradient decent interface.
 - Implement Node.copy() via the copy module? Provide __deepcopy__ method?
+- Use the new property decorators when migrating to Python 2.6 (see
+  http://docs.python.org/library/functions.html#property).
 
 MDP 2.3 15.5.2008:
 
