@@ -8,9 +8,19 @@ supported.
 import mdp
 from mdp import numx
 
+# TODO: Find a better way to deal with additional args for train/execute?
+#    Maybe split them by default, but can be disabled via switch?
 
 class Layer(mdp.Node):
     """Layers are nodes which consist of multiple horizontally parallel nodes.
+    
+    The incoming data is split up according to the dimensions of the internal
+    nodes. For example if the first node has an input_dim of 50 and the second
+    node 100 then the layer will have an input_dim of 150. The first node gets
+    x[:,:50], the second one x[:,50:].
+    Any additional arguments are forwarded unaltered to each node.
+    Warning: This might change in the next release (2.5).
+      
 
     Since they are nodes layers may be stacked in a flow (e.g. to build a
     layered network).
@@ -129,7 +139,7 @@ class Layer(mdp.Node):
                 max_train_length = node_length
         return ([[self._train, self._stop_training]] * max_train_length)
     
-    def _train(self, x):
+    def _train(self, x, *args, **kwargs):
         """Perform single training step by training the internal nodes."""
         start_index = 0
         stop_index = 0
@@ -137,13 +147,13 @@ class Layer(mdp.Node):
             start_index = stop_index
             stop_index += node.input_dim
             if node.is_training():
-                node.train(x[:, start_index : stop_index])
+                node.train(x[:, start_index : stop_index], *args, **kwargs)
 
-    def _stop_training(self):
+    def _stop_training(self, *args, **kwargs):
         """Stop training of the internal nodes."""
         for node in self.nodes:
             if node.is_training():
-                node.stop_training()
+                node.stop_training(*args, **kwargs)
         if self.output_dim is None:
             self.output_dim = self._get_output_dim_from_nodes()
             
@@ -163,7 +173,7 @@ class Layer(mdp.Node):
                 raise mdp.NodeException(err)  
         super(Layer, self)._pre_execution_checks(x)
 
-    def _execute(self, x):
+    def _execute(self, x, *args, **kwargs):
         """Process the data through the internal nodes."""
         in_start = 0
         in_stop = 0
@@ -175,11 +185,11 @@ class Layer(mdp.Node):
             out_stop += node.output_dim
             in_start = in_stop
             in_stop += node.input_dim
-            result[:, out_start:out_stop] = node.execute(x[:,
-                                                           in_start:in_stop])
+            result[:, out_start:out_stop] = node.execute(x[:,in_start:in_stop],
+                                                         *args, **kwargs)
         return result
     
-    def _inverse(self, x):
+    def _inverse(self, x, *args, **kwargs):
         """Combine the inverse of all the internal nodes."""
         in_start = 0
         in_stop = 0
@@ -192,8 +202,8 @@ class Layer(mdp.Node):
             out_stop += node.input_dim
             in_start = in_stop
             in_stop += node.output_dim
-            result[:, out_start:out_stop] = node.inverse(x[:,
-                                                           in_start:in_stop])
+            result[:, out_start:out_stop] = node.inverse(x[:,in_start:in_stop],
+                                                         *args, **kwargs)
         return result
 
 
@@ -220,10 +230,10 @@ class CloneLayer(Layer):
         super(CloneLayer, self).__init__((node,) * n_nodes, dtype=dtype)
         self.node = node  # attribute for convenience
         
-    def _stop_training(self):
+    def _stop_training(self, *args, **kwargs):
         """Stop training of the internal node."""
         if self.node.is_training():
-            self.node.stop_training()
+            self.node.stop_training(*args, **kwargs)
         if self.output_dim is None:
             self.output_dim = self._get_output_dim_from_nodes()
         
@@ -260,11 +270,11 @@ class SameInputLayer(Layer):
     def is_invertible(self):
         return False
     
-    def _train(self, x):
+    def _train(self, x, *args, **kwargs):
         """Perform single training step by training the internal nodes."""
         for node in self.nodes:
             if node.is_training():
-                node.train(x)
+                node.train(x, *args, **kwargs)
                 
     def _pre_execution_checks(self, x):
         """Make sure that output_dim is set and then perform nromal checks."""
@@ -278,7 +288,7 @@ class SameInputLayer(Layer):
                 raise mdp.NodeException(err)  
         super(Layer, self)._pre_execution_checks(x)
                 
-    def _execute(self, x):
+    def _execute(self, x, *args, **kwargs):
         """Process the data through the internal nodes."""
         out_start = 0
         out_stop = 0
@@ -286,5 +296,5 @@ class SameInputLayer(Layer):
         for node in self.nodes:
             out_start = out_stop
             out_stop += node.output_dim
-            result[:, out_start : out_stop] = node.execute(x)
+            result[:, out_start : out_stop] = node.execute(x, *args, **kwargs)
         return result
