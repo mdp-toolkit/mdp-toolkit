@@ -18,15 +18,13 @@ class Layer(mdp.Node):
     nodes. For example if the first node has an input_dim of 50 and the second
     node 100 then the layer will have an input_dim of 150. The first node gets
     x[:,:50], the second one x[:,50:].
+    
     Any additional arguments are forwarded unaltered to each node.
     Warning: This might change in the next release (2.5).
-      
 
-    Since they are nodes layers may be stacked in a flow (e.g. to build a
-    layered network).
-    
-    If one would like to use flows instead of nodes inside of a layer one can
-    use a FlowNode.
+    Since they are nodes themselves layers can be stacked in a flow (e.g. to
+    build a layered network). If one would like to use flows instead of nodes
+    inside of a layer one can use a FlowNode.
     """
     
     def __init__(self, nodes, dtype=None):
@@ -179,15 +177,21 @@ class Layer(mdp.Node):
         in_stop = 0
         out_start = 0
         out_stop = 0
-        result = numx.zeros([x.shape[0], self.output_dim], dtype=x.dtype)
+        y = None
         for node in self.nodes:
             out_start = out_stop
             out_stop += node.output_dim
             in_start = in_stop
             in_stop += node.input_dim
-            result[:, out_start:out_stop] = node.execute(x[:,in_start:in_stop],
-                                                         *args, **kwargs)
-        return result
+            if y is None:
+                node_y = node.execute(x[:,in_start:in_stop], *args, **kwargs)
+                y = numx.zeros([node_y.shape[0], self.output_dim],
+                               dtype=node_y.dtype)
+                y[:,out_start:out_stop] = node_y
+            else:
+                y[:,out_start:out_stop] = node.execute(x[:,in_start:in_stop],
+                                                        *args, **kwargs)
+        return y
     
     def _inverse(self, x, *args, **kwargs):
         """Combine the inverse of all the internal nodes."""
@@ -195,16 +199,22 @@ class Layer(mdp.Node):
         in_stop = 0
         out_start = 0
         out_stop = 0
-        # compared with execute, input and output are switched
-        result = numx.zeros([x.shape[0], self.input_dim], dtype=x.dtype)
+        y = None
         for node in self.nodes:
+            # compared with execute, input and output are switched
             out_start = out_stop
             out_stop += node.input_dim
             in_start = in_stop
             in_stop += node.output_dim
-            result[:, out_start:out_stop] = node.inverse(x[:,in_start:in_stop],
-                                                         *args, **kwargs)
-        return result
+            if y is None:
+                node_y = node.inverse(x[:,in_start:in_stop], *args, **kwargs)
+                y = numx.zeros([node_y.shape[0], self.output_dim],
+                               dtype=node_y.dtype)
+                y[:,out_start:out_stop] = node_y
+            else:
+                y[:,out_start:out_stop] = node.inverse(x[:,in_start:in_stop],
+                                                        *args, **kwargs)
+        return y
 
 
 class CloneLayer(Layer):
@@ -263,6 +273,7 @@ class SameInputLayer(Layer):
                 err = "The nodes have different input dimensions."
                 raise mdp.NodeException(err)
         output_dim = self._get_output_dim_from_nodes()
+        # intentionally use MRO above Layer, not SameInputLayer
         super(Layer, self).__init__(input_dim=input_dim,
                                     output_dim=output_dim,
                                     dtype=dtype)
@@ -285,16 +296,23 @@ class SameInputLayer(Layer):
             self.output_dim = self._get_output_dim_from_nodes()
             if self.output_dim is None:
                 err = "output_dim must be set at this point for all nodes"
-                raise mdp.NodeException(err)  
+                raise mdp.NodeException(err)
+        # intentionally use MRO above Layer, not SameInputLayer
         super(Layer, self)._pre_execution_checks(x)
                 
     def _execute(self, x, *args, **kwargs):
         """Process the data through the internal nodes."""
         out_start = 0
         out_stop = 0
-        result = numx.zeros([x.shape[0], self.output_dim], dtype=x.dtype)
+        y = None
         for node in self.nodes:
             out_start = out_stop
             out_stop += node.output_dim
-            result[:, out_start : out_stop] = node.execute(x, *args, **kwargs)
-        return result
+            if y is None:
+                node_y = node.execute(x, *args, **kwargs)
+                y = numx.zeros([node_y.shape[0], self.output_dim],
+                               dtype=node_y.dtype)
+                y[:,out_start:out_stop] = node_y
+            else:
+                y[:,out_start:out_stop] = node.execute(x, *args, **kwargs)
+        return y
