@@ -111,12 +111,13 @@ def get_node_size_str(x, si_units=False):
     """
     return _memory_size_str(get_node_size(x), si_units=si_units)
 
-_MEMORY_SCALES = ("", "K", "M", "G", "T", "P")
+_SI_MEMORY_PREFIXES = ("", "k", "M", "G", "T", "P", "E")
+_IEC_MEMORY_PREFIXES = ("", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei")
 
 def _memory_size_str(size, si_units=False):
     """Convert the given memory size into a nicely formatted string.
     
-    si_units -- If True si-units like KB are used instead of KiB.
+    si_units -- If True si-units like kB are used instead of kiB.
     """
     if si_units:
         base = 10**3
@@ -127,8 +128,8 @@ def _memory_size_str(size, si_units=False):
         scale += 1
     unit = "B"
     if (not si_units) and scale:
-        unit = _MEMORY_SCALES[scale] + "i" + unit
-    else:
-        unit = _MEMORY_SCALES[scale] + unit
+        unit = _IEC_MEMORY_PREFIXES[scale] + unit
+    elif scale:
+        unit = _SI_MEMORY_PREFIXES[scale] + unit
     return "%.1f %s" % (1.0 * size / (base**scale), unit)
 

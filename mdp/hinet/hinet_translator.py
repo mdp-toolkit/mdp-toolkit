@@ -340,7 +340,8 @@ class HiNetHTMLTranslator(HiNetTranslator):
        
 
 ## Helper functions ##
- 
+
+# addtional styles for a nice looking presentation
 SHOW_FLOW_STYLE = '''
 html, body {
     font-family: sans-serif;
