@@ -15,6 +15,8 @@ import parallelhinet
 
 ### Train task classes ###
 
+# TODO: copy only nodes in the process for which is_training is True?
+
 class FlowTrainCallable(scheduling.TaskCallable):
     """Implements a single training phase in a flow for a data block.
     
@@ -44,12 +46,13 @@ class FlowTrainCallable(scheduling.TaskCallable):
             self._flownode.train(*data)
         # note the local training in ParallelFlow relies on the flownode
         # being preserved, so derived classes should preserve it as well
-        for node in self._flownode._flow:
+        for node in self._flownode:
             if node.is_training():
                 return node
             
     def copy(self):
-        return self.__class__(self._flownode.copy())
+        # only fork to store memory
+        return self.__class__(self._flownode.fork())
             
 
 class NodeResultContainer(scheduling.ResultContainer):

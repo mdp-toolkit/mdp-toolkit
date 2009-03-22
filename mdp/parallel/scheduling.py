@@ -6,6 +6,9 @@ import thread
 import time
 import copy
 
+# TODO: remove copy_callable flag, instead override copy() method in
+#    TaskCallable
+
 
 class ResultContainer(object):
     """Abstract base class for result containers."""
@@ -161,7 +164,7 @@ class Scheduler(object):
         self.task_counter += 1
         task_index = self.task_counter
         if task_callable is None:
-            # one could still use the _last_callable_index in _process_task to
+            # use the _last_callable_index in _process_task to
             # decide if a cached callable can be used 
             task_callable = self._last_callable
         else: 
@@ -175,10 +178,7 @@ class Scheduler(object):
         Warning: When this method is entered is has the lock, the lock must be
         released here.
         
-        If task_callable is not none this signals that a new task_callable
-        was 
-        
-        You can overwrite this method for custom schedulers.
+        You can override this method for custom schedulers.
         """
         if self.copy_callable:
             task_callable = task_callable.copy()
@@ -216,7 +216,7 @@ class Scheduler(object):
             print "    finished task no. %d" % task_index
         self.n_open_tasks -= 1
         self.lock.release()
-    
+        
     def get_results(self):
         """Get the accumulated results from the result container.
         

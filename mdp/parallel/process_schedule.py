@@ -2,8 +2,6 @@
 Process based scheduler for distribution across multiple CPU cores.
 """
 
-
-
 import sys
 import os
 import cPickle as pickle
@@ -20,11 +18,10 @@ if __name__ == "__main__":
     mdp_path = __file__.split("mdp")[0]
     sys.path.append(mdp_path)
 
-
 import mdp
 import scheduling
 
-# TODO: implement caching of callable in process?
+# TODO: make it possible to turn caching of
 
 class ProcessScheduler(scheduling.Scheduler):
     """Scheduler that distributes the task to multiple processes.
@@ -42,9 +39,8 @@ class ProcessScheduler(scheduling.Scheduler):
         """Initialize the scheduler and start the slave processes.
         
         result_container -- ResultContainer used to store the results.
-        copy_callable -- In this scheduler the callable is always copied when
-            it is transfered to a process, so the given argument value is
-            overriden and set to true.
+        copy_callable -- If the callable is cached in a process then this
+            determines if it is copied before each call.
         verbose -- Set to True to get progress reports from the scheduler
             (default value is False).
         n_processes -- Number of processes used in parallel. This should
@@ -59,9 +55,6 @@ class ProcessScheduler(scheduling.Scheduler):
             The default value is None, in which case sys.executable will be
             used.
         """
-        # override this since the callable is always copied for the process,
-        # but if caching gets implemented this has to change
-        copy_callable = True
         scheduling.Scheduler.__init__(self, result_container=result_container,
                                       copy_callable=copy_callable,
                                       verbose=verbose)
@@ -82,9 +75,12 @@ class ProcessScheduler(scheduling.Scheduler):
             process_args += source_paths
         # list of processes not in use, start the processes now
         self._free_processes = [subprocess.Popen(args=process_args,
-                                                stdout=subprocess.PIPE, 
-                                                stdin=subprocess.PIPE)
+                                                 stdout=subprocess.PIPE, 
+                                                 stdin=subprocess.PIPE)
                                 for _ in range(self.n_processes)]
+        # tag each process with its cached callable index
+        for process in self._free_processes:
+            process._callable_index = -1
         
     def shutdown(self):
         """Shut down the slave processes.
@@ -115,8 +111,9 @@ class ProcessScheduler(scheduling.Scheduler):
                 try:
                     process = self._free_processes.pop()
                     self.lock.release()
-                    thread.start_new(self._task_thread, 
-                                     (process, data, task_callable, task_index))
+                    thread.start_new(self._task_thread,
+                                     (process, data, task_callable,
+                                      task_index, self.copy_callable))
                     task_started = True
                 except thread.error:
                     if self.verbose:
@@ -124,7 +121,8 @@ class ProcessScheduler(scheduling.Scheduler):
                                " waiting 2 seconds...")
                     time.sleep(2)
                     
-    def _task_thread(self, process, data, task_callable, task_index): 
+    def _task_thread(self, process, data, task_callable, task_index,
+                     copy_callable): 
         """Thread function which cares for a single task.
         
         The task is pushed to the process via stdin, then we wait for the
@@ -132,10 +130,15 @@ class ProcessScheduler(scheduling.Scheduler):
         the process and exit. 
         """
         try:
+            # check if the cached callable is up to date
+            if process._callable_index < self._last_callable_index:
+                process._callable_index = self._last_callable_index
+            else:
+                task_callable = None
             # push the task to the process
-            # task_callable is copied here, so ignore copy_callable
-            pickle.dump((data, task_callable, task_index), process.stdin,
-                        protocol=-1)
+            # task_callable is copied by pickling, so ignore copy_callable here
+            pickle.dump((data, task_callable, task_index, copy_callable),
+                        process.stdin, protocol=-1)
             # wait for result to arrive
             result = pickle.load(process.stdout)
         except:
@@ -156,6 +159,7 @@ def _process_run():
     pickle_out = sys.stdout
     sys.stdout = sys.stderr
     exit_loop = False
+    last_callable = None  # cached callable
     while not exit_loop:
         task = None
         try:
@@ -164,7 +168,19 @@ def _process_run():
             if task == "EXIT":
                 exit_loop = True
             else:
-                result = task[1](task[0])
+                data, callable, task_index, copy_callable = task
+                if callable is None:
+                    if last_callable is None:
+                        err = ("No callable was provided and no cached "
+                               "callable is available.")
+                        raise Exception(err)
+                    callable = last_callable
+                else:
+                    # store callable in cache
+                    last_callable = callable
+                if copy_callable:
+                    callable = callable.copy()
+                result = callable(data)
                 pickle.dump(result, pickle_out, protocol=-1)
                 pickle_out.flush()
         except Exception, exception:
