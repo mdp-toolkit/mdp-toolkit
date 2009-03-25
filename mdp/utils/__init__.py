@@ -7,6 +7,7 @@ from quad_forms import QuadraticForm
 from covariance import (CovarianceMatrix, DelayCovarianceMatrix,
                         MultipleCovarianceMatrices,CrossCovarianceMatrix)
 from progress_bar import progressinfo
+from svn_revision import get_svn_revision
 import mdp as _mdp
 
 try:
@@ -75,4 +76,5 @@ __all__ = ['CovarianceMatrix', 'DelayCovarianceMatrix','CrossCovarianceMatrix',
            'hermitian', 'inv', 'mult', 'mult_diag', 'nongeneral_svd',
            'norm2', 'ordered_uniq', 'permute', 'pinv', 'progressinfo',
            'random_rot', 'refcast', 'rotate', 'scast', 'solve', 'sqrtm',
-           'svd', 'symeig', 'symrand', 'timediff', 'uniq', 'matmult']
+           'svd', 'symeig', 'symrand', 'timediff', 'uniq', 'matmult',
+           'get_svn_revision']
