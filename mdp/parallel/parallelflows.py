@@ -15,8 +15,6 @@ import parallelhinet
 
 ### Train task classes ###
 
-# TODO: copy only nodes in the process for which is_training is True?
-
 class FlowTrainCallable(scheduling.TaskCallable):
     """Implements a single training phase in a flow for a data block.
     
@@ -50,8 +48,7 @@ class FlowTrainCallable(scheduling.TaskCallable):
             if node.is_training():
                 return node
             
-    def copy(self):
-        # only fork to store memory
+    def fork(self):
         return self.__class__(self._flownode.fork())
             
 
@@ -106,8 +103,8 @@ class FlowExecuteCallable(scheduling.TaskCallable):
         """
         return self._flow.execute(x, nodenr=self._nodenr)
     
-    def copy(self):
-        return self.__class__(self._flow.copy())
+    def fork(self):
+        return self.__class__(self._flow, self._nodenr)
     
 
 ### ParallelFlow Class ###    
@@ -213,10 +210,6 @@ class ParallelFlow(mdp.Flow):
                 if not isinstance(scheduler.result_container,
                                   NodeResultContainer):
                     scheduler.result_container = NodeResultContainer()
-            if not scheduler.copy_callable:
-                err = ("copy_callable in scheduler should be True during "
-                       "training")
-                raise Exception(err)
             # do parallel training
             try:
                 self.setup_parallel_training(

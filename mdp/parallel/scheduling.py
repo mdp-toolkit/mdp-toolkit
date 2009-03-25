@@ -6,9 +6,8 @@ import thread
 import time
 import copy
 
-# TODO: remove copy_callable flag, instead override copy() method in
-#    TaskCallable
-
+# TODO: provide a TaskCallable wrapper for functions,
+#    update the unittest in test_schedule
 
 class ResultContainer(object):
     """Abstract base class for result containers."""
@@ -77,14 +76,20 @@ class TaskCallable(object):
     """Abstract base class for callables."""
     
     def __call__(self, data):
+        """Perform the computation and return the result.
+        
+        Override this method with a concrete implementation."""
         return data
     
-    def copy(self):
-        """Create a copy of this callable.
+    def fork(self):
+        """Return a fork of this callable, e.g. by making a copy.
         
-        This is required if copy_callable is set to True in the scheduler (e.g. 
-        if caching is used during training of a flow).
+        This method is always used before a callable is actually called, so
+        instead of the original callable the fork is called. The ensures that
+        the original callable is preserved when cachin is used. If the callable
+        is not modified by the call it can simply return itself.  
         """
+        # this is the most inefficient way, so override this, e.g. return self
         return copy.deepcopy(self)
     
     
@@ -110,26 +115,17 @@ class Scheduler(object):
     add_task method.
     """
 
-    def __init__(self, result_container=None, copy_callable=True,
-                 verbose=False):
+    def __init__(self, result_container=None, verbose=False):
         """Initialize the scheduler.
         
         result_container -- Instance of ResultContainer that is used to store
             the results (default is None, in which case a ListResultContainer
             is used).
-        copy_callable -- If True then the callable will be copied before being 
-            called (default value is True). Setting this to False might be more
-            efficient cases were this is not needed. The callable must have a 
-            working copy method when copy_callable is True.
-            Note that derived scheduler classes might not support this 
-            feature (e.g. because they choose to always copy the callable). In
-            this case they should set the copy_callable flag to True.
         verbose -- If True then status messages will be printed to sys.stdout.
         """
         if result_container is None:
             result_container = OrderedResultContainer()
         self.result_container = result_container
-        self.copy_callable = copy_callable
         self.verbose = verbose
         self.n_open_tasks = 0  # number of tasks that are currently running
         # count the number of submitted tasks, 
@@ -176,31 +172,28 @@ class Scheduler(object):
         """Process the task and store the result.
         
         Warning: When this method is entered is has the lock, the lock must be
-        released here.
+        released here. Also note that fork has not been called yet, so the
+        provided task_callable is the original and must not be modified
+        in any way.
         
         You can override this method for custom schedulers.
         """
-        if self.copy_callable:
-            task_callable = task_callable.copy()
+        task_callable = task_callable.fork()
         result = task_callable(data)
         self.lock.release()
         self._store_result(result, task_index)
         
-    def set_task_callable(self, task_callable, copy_callable=None):
+    def set_task_callable(self, task_callable):
         """Set the callable that will be used if no task_callable is given.
         
         task_callable -- Callable that will be used as default unless a new
             task_callable is given.
-        copy_callable -- New value for the copy switch, if None (default value)
-            the value is not changed.
         """
         self.lock.acquire()
         self._last_callable = task_callable
         # set _last_callable_index to half value since the callable is newer 
         # than the last task, but not newer than the next incoming task
         self._last_callable_index = self.task_counter + 0.5
-        if copy_callable is not None:
-            self.copy_callable = copy_callable
         self.lock.release()
         
     def _store_result(self, result, task_index):

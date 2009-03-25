@@ -23,6 +23,7 @@ import scheduling
 
 # TODO: make it possible to turn caching of
 
+
 class ProcessScheduler(scheduling.Scheduler):
     """Scheduler that distributes the task to multiple processes.
     
@@ -33,14 +34,11 @@ class ProcessScheduler(scheduling.Scheduler):
     Windows XP and Vista). 
     """
     
-    def __init__(self, result_container=None, copy_callable=True,
-                 verbose=False, n_processes=1,
+    def __init__(self, result_container=None, verbose=False, n_processes=1,
                  source_paths=None, python_executable=None):
         """Initialize the scheduler and start the slave processes.
         
         result_container -- ResultContainer used to store the results.
-        copy_callable -- If the callable is cached in a process then this
-            determines if it is copied before each call.
         verbose -- Set to True to get progress reports from the scheduler
             (default value is False).
         n_processes -- Number of processes used in parallel. This should
@@ -56,7 +54,6 @@ class ProcessScheduler(scheduling.Scheduler):
             used.
         """
         scheduling.Scheduler.__init__(self, result_container=result_container,
-                                      copy_callable=copy_callable,
                                       verbose=verbose)
         self.n_processes = n_processes
         if python_executable is None:
@@ -112,8 +109,7 @@ class ProcessScheduler(scheduling.Scheduler):
                     process = self._free_processes.pop()
                     self.lock.release()
                     thread.start_new(self._task_thread,
-                                     (process, data, task_callable,
-                                      task_index, self.copy_callable))
+                                  (process, data, task_callable, task_index))
                     task_started = True
                 except thread.error:
                     if self.verbose:
@@ -121,8 +117,7 @@ class ProcessScheduler(scheduling.Scheduler):
                                " waiting 2 seconds...")
                     time.sleep(2)
                     
-    def _task_thread(self, process, data, task_callable, task_index,
-                     copy_callable): 
+    def _task_thread(self, process, data, task_callable, task_index): 
         """Thread function which cares for a single task.
         
         The task is pushed to the process via stdin, then we wait for the
@@ -136,8 +131,7 @@ class ProcessScheduler(scheduling.Scheduler):
             else:
                 task_callable = None
             # push the task to the process
-            # task_callable is copied by pickling, so ignore copy_callable here
-            pickle.dump((data, task_callable, task_index, copy_callable),
+            pickle.dump((data, task_callable, task_index),
                         process.stdin, protocol=-1)
             # wait for result to arrive
             result = pickle.load(process.stdout)
@@ -168,7 +162,7 @@ def _process_run():
             if task == "EXIT":
                 exit_loop = True
             else:
-                data, callable, task_index, copy_callable = task
+                data, callable, task_index = task
                 if callable is None:
                     if last_callable is None:
                         err = ("No callable was provided and no cached "
@@ -178,8 +172,7 @@ def _process_run():
                 else:
                     # store callable in cache
                     last_callable = callable
-                if copy_callable:
-                    callable = callable.copy()
+                callable = callable.fork()
                 result = callable(data)
                 pickle.dump(result, pickle_out, protocol=-1)
                 pickle_out.flush()

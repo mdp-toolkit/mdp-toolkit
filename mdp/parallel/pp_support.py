@@ -38,19 +38,15 @@ class PPScheduler(scheduling.Scheduler):
     
     def __init__(self, ppserver, max_queue_length=1,
                  result_container=scheduling.ListResultContainer(), 
-                 copy_callable=True,
                  verbose=False):
         """Initialize the scheduler.
         
         ppserver -- Parallel Python Server instance.
         max_queue_length -- How long the queue can get before add_task blocks.
         result_container -- ResultContainer used to store the results.
-        copy_callable -- If True then the callable will be copied before being 
-            called (default value is True).
         verbose -- If True to get progress reports from the scheduler.
         """
         super(PPScheduler, self).__init__(result_container=result_container,
-                                          copy_callable=copy_callable,
                                           verbose=verbose)
         self.ppserver = ppserver
         self.max_queue_length = max_queue_length
@@ -61,8 +57,7 @@ class PPScheduler(scheduling.Scheduler):
         Depending on the scheduler state this function is non-blocking or
         blocking. One reason for blocking can be a full task-queue.
         """
-        if self.copy_callable:
-            task_callable = task_callable.copy()
+        # no explicit fork is necessary, since the task is always pickled
         task = (data, task_callable, task_index)
         def execute_task(task):
             """Call the first args entry and return the return value."""
@@ -97,15 +92,14 @@ class PPScheduler(scheduling.Scheduler):
     
     
 class LocalPPScheduler(PPScheduler):
-    """Usees a local pp server to distribute the work across cpu cores.
+    """Uses a local pp server to distribute the work across cpu cores.
     
-    The pp server is created automatically instead of beeing provided by the
+    The pp server is created automatically instead of being provided by the
     user (in contrast to PPScheduler).
     """
     
     def __init__(self, ncpus="autodetect", max_queue_length=1,
                  result_container=scheduling.ListResultContainer(),
-                 copy_callable=True,
                  verbose=False):
         """Create an internal pp server and initialize the scheduler.
         
@@ -113,8 +107,6 @@ class LocalPPScheduler(PPScheduler):
             used.
         max_queue_length -- How long the queue can get before add_task blocks.
         result_container -- ResultContainer used to store the results.
-        copy_callable -- If True then the callable will be copied before being 
-            called (default value is True).
         verbose -- If True to get progress reports from the scheduler.
         """
         ppserver = pp.Server(ncpus=ncpus,
@@ -123,7 +115,6 @@ class LocalPPScheduler(PPScheduler):
         super(LocalPPScheduler, self).__init__(ppserver=ppserver,
                                           max_queue_length=max_queue_length,
                                           result_container=result_container,
-                                          copy_callable=copy_callable,
                                           verbose=verbose)
         
     
@@ -140,7 +131,6 @@ class NetworkPPScheduler(PPScheduler):
     
     def __init__(self, max_queue_length=1,
                  result_container=scheduling.ListResultContainer(),
-                 copy_callable=True,
                  verbose=False,
                  remote_slaves=None,
                  port=50017,
@@ -154,8 +144,6 @@ class NetworkPPScheduler(PPScheduler):
         """Initialize the remote slaves and create the internal pp scheduler.
         
         result_container -- ResultContainer used to store the results.
-        copy_callable -- If True then the callable will be copied before being 
-            called (default value is True).
         verbose -- If True to get progress reports from the scheduler.
         remote_slaves -- List of tuples, the first tuple entry is a string
             containing the name or IP adress of the slave, the second entry
@@ -198,7 +186,6 @@ class NetworkPPScheduler(PPScheduler):
         super(NetworkPPScheduler, self).__init__(ppserver=ppserver,
                                           max_queue_length=max_queue_length,
                                           result_container=result_container,
-                                          copy_callable=copy_callable,
                                           verbose=verbose)
     
     def shutdown(self):
