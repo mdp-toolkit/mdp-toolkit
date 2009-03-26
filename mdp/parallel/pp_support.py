@@ -86,7 +86,7 @@ class PPScheduler(scheduling.Scheduler):
         """
         self._store_result(result[0], result[1])
         
-    def shutdown(self):
+    def _shutdown(self):
         """Call destroy on the ppserver."""
         self.ppserver.destroy()
     
