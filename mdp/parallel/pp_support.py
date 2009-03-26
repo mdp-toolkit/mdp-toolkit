@@ -67,12 +67,12 @@ class PPScheduler(scheduling.Scheduler):
         while not task_submitted:
             if len(self.ppserver._Server__queue) > self.max_queue_length:
                 # release lock for other threads and wait
-                self.lock.release()
+                self._lock.release()
                 time.sleep(0.5)
-                self.lock.acquire()
+                self._lock.acquire()
             else:
                 # release lock to enable result storage
-                self.lock.release()
+                self._lock.release()
                 # the inner tuple is a trick to prevent introspection by pp
                 # this forces pp to simply pickle the object
                 self.ppserver.submit(execute_task, args=(task,),
@@ -188,7 +188,7 @@ class NetworkPPScheduler(PPScheduler):
                                           result_container=result_container,
                                           verbose=verbose)
     
-    def shutdown(self):
+    def _shutdown(self):
         """Shutdown all slaves."""
         
         for ssh_proc, pid, address in itertools.izip(self._ssh_procs, 
