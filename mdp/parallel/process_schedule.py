@@ -5,7 +5,7 @@ Process based scheduler for distribution across multiple CPU cores.
 import sys
 import os
 import cPickle as pickle
-import thread
+import threading
 import subprocess
 import time
 import traceback
@@ -21,8 +21,6 @@ if __name__ == "__main__":
 import mdp
 import scheduling
 
-# TODO: make it possible to turn caching of
-
 
 class ProcessScheduler(scheduling.Scheduler):
     """Scheduler that distributes the task to multiple processes.
@@ -35,7 +33,8 @@ class ProcessScheduler(scheduling.Scheduler):
     """
     
     def __init__(self, result_container=None, verbose=False, n_processes=1,
-                 source_paths=None, python_executable=None):
+                 source_paths=None, python_executable=None,
+                 cache_callable=True):
         """Initialize the scheduler and start the slave processes.
         
         result_container -- ResultContainer used to store the results.
@@ -52,10 +51,15 @@ class ProcessScheduler(scheduling.Scheduler):
         python_executable -- Python executable that is used for the processes.
             The default value is None, in which case sys.executable will be
             used.
+        cache_callable -- Cache the task objects in the processes (default
+            is True). Disabling caching can reduce the memory usage, but will
+            generally be less efficient since the task_callable has to be
+            pickled each time.
         """
         scheduling.Scheduler.__init__(self, result_container=result_container,
                                       verbose=verbose)
-        self.n_processes = n_processes
+        self._n_processes = n_processes
+        self._cache_callable = cache_callable
         if python_executable is None:
             python_executable = sys.executable
         # get the location of this module to start the processes
@@ -66,6 +70,7 @@ class ProcessScheduler(scheduling.Scheduler):
         #    mode. Otherwise you might get a strange error message for 
         #    copy_reg.
         process_args = [python_executable, "-u", module_file]
+        process_args.append(str(self._cache_callable))
         if type(source_paths) is str:
             source_paths = [source_paths]
         if source_paths is not None:
@@ -74,22 +79,22 @@ class ProcessScheduler(scheduling.Scheduler):
         self._free_processes = [subprocess.Popen(args=process_args,
                                                  stdout=subprocess.PIPE, 
                                                  stdin=subprocess.PIPE)
-                                for _ in range(self.n_processes)]
+                                for _ in range(self._n_processes)]
         # tag each process with its cached callable index
         for process in self._free_processes:
             process._callable_index = -1
         
-    def shutdown(self):
+    def _shutdown(self):
         """Shut down the slave processes.
         
         If a process is still running a task then an exception is raised.
         """
-        self.lock.acquire()
-        if len(self._free_processes) < self.n_processes:
+        self._lock.acquire()
+        if len(self._free_processes) < self._n_processes:
             raise Exception("some slave process is still working")
         for process in self._free_processes:
             pickle.dump("EXIT", process.stdin) 
-        self.lock.release()
+        self._lock.release()
         
     def _process_task(self, data, task_callable, task_index):
         """Add a task, if possible without blocking.
@@ -101,15 +106,17 @@ class ProcessScheduler(scheduling.Scheduler):
         while not task_started:
             if not len(self._free_processes):
                 # release lock for other threads and wait
-                self.lock.release()
+                self._lock.release()
                 time.sleep(1.5)
-                self.lock.acquire()
+                self._lock.acquire()
             else:
                 try:
                     process = self._free_processes.pop()
-                    self.lock.release()
-                    thread.start_new(self._task_thread,
-                                  (process, data, task_callable, task_index))
+                    self._lock.release()
+                    thread = threading.Thread(target=self._task_thread,
+                                              args=(process, data,
+                                                    task_callable, task_index))
+                    thread.start()
                     task_started = True
                 except thread.error:
                     if self.verbose:
@@ -125,11 +132,12 @@ class ProcessScheduler(scheduling.Scheduler):
         the process and exit. 
         """
         try:
-            # check if the cached callable is up to date
-            if process._callable_index < self._last_callable_index:
-                process._callable_index = self._last_callable_index
-            else:
-                task_callable = None
+            if self._cache_callable:
+                # check if the cached callable is up to date
+                if process._callable_index < self._last_callable_index:
+                    process._callable_index = self._last_callable_index
+                else:
+                    task_callable = None
             # push the task to the process
             pickle.dump((data, task_callable, task_index),
                         process.stdin, protocol=-1)
@@ -144,7 +152,7 @@ class ProcessScheduler(scheduling.Scheduler):
         self._free_processes.append(process)
 
 
-def _process_run():
+def _process_run(cache_callable=True):
     """Run this function in a worker process to receive and run tasks.
     
     It waits for tasks on stdin, and sends the results back via stdout.
@@ -168,12 +176,13 @@ def _process_run():
                         err = ("No callable was provided and no cached "
                                "callable is available.")
                         raise Exception(err)
-                    callable = last_callable
-                else:
+                    callable = last_callable.fork()
+                elif cache_callable:
                     # store callable in cache
                     last_callable = callable
-                callable = callable.fork()
+                    callable = callable.fork()
                 result = callable(data)
+                del callable  # free memory
                 pickle.dump(result, pickle_out, protocol=-1)
                 pickle_out.flush()
         except Exception, exception:
@@ -189,11 +198,16 @@ def _process_run():
         
                     
 if __name__ == "__main__":
-    # all arguments are expected to be code paths to be appended to sys.path
-    if len(sys.argv) > 1:
-        for sys_arg in sys.argv[1:]:
+    # first argument is cache_callable flag
+    if sys.argv[1] == "True":
+        cache_callable = True
+    else:
+        cache_callable = False
+    # remaining arguments are code paths to be appended to sys.path
+    if len(sys.argv) > 2:
+        for sys_arg in sys.argv[2:]:
             sys.path.append(sys_arg)
-    _process_run()
+    _process_run(cache_callable=cache_callable)
     
     
     

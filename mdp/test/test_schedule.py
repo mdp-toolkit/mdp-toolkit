@@ -8,14 +8,14 @@ class TestScheduler(unittest.TestCase):
 
     def test_scheduler(self):
         """Test scheduler with 6 tasks."""
-#        scheduler = parallel.Scheduler()
-#        for i in range(6):
-#            scheduler.add_task(i, lambda x: x**2)
-#        results = scheduler.get_results()
-#        scheduler.shutdown()
-#        # check result
-#        results = n.array(results)
-#        self.assertTrue(n.all(results == n.array([0,1,4,9,16,25])))
+        scheduler = parallel.Scheduler()
+        for i in range(6):
+            scheduler.add_task(i, lambda x: x**2)
+        results = scheduler.get_results()
+        scheduler.shutdown()
+        # check result
+        results = n.array(results)
+        self.assertTrue(n.all(results == n.array([0,1,4,9,16,25])))
         
 
 def get_suite(testname=None):

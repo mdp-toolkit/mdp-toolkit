@@ -18,7 +18,7 @@ have to know anything about flows or nodes.
 
 
 from scheduling import (ResultContainer, ListResultContainer,
-                        OrderedResultContainer, TaskCallable, SqrTestCallable, 
+                        OrderedResultContainer, TaskCallable, SqrTestCallable,
                         Scheduler)
 from process_schedule import ProcessScheduler
 from parallelnodes import (ParallelNode, TrainingPhaseNotParallelException,
