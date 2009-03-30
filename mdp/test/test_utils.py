@@ -79,7 +79,7 @@ class UtilsTestSuite(unittest.TestSuite):
                                         utils.mult(a, z))).real
         assert_array_almost_equal(diag, w, testdecimals[dtype])
 
-    def geneigenproblem(self, dtype, range):
+    def geneigenproblem(self, dtype, range, func=utils._symeig_fake):
         """Solve a generalized eigenvalue problem."""
         """Solve a standard eigenvalue problem."""
         dtype = numx.dtype(dtype)
@@ -90,7 +90,7 @@ class UtilsTestSuite(unittest.TestSuite):
             range = None
         a = utils.symrand(dim, dtype)
         b = utils.symrand(dim, dtype)+numx.diag([2.1]*dim).astype(dtype)
-        w,z = utils._symeig_fake(a,b,range=range)
+        w,z = func(a,b,range=range)
         # assertions
         assert_type_equal(z.dtype, dtype)
         w = w.astype(dtype)
@@ -167,6 +167,13 @@ class UtilsTestSuite(unittest.TestSuite):
         self.eigenproblem('f',False)
         self.eigenproblem('d',True)
         self.eigenproblem('f',True)
+        # test wrap eigh if linked
+        if utils.symeig is utils.wrap_eigh: 
+            self.eigenproblem('d',False, func=utils.wrap_eigh)
+            self.eigenproblem('f',False, func=utils.wrap_eigh)
+            self.eigenproblem('d',True, func=utils.wrap_eigh)
+            self.eigenproblem('f',True, func=utils.wrap_eigh)
+           
 
     def testSVD_standard(self):
         func = utils.nongeneral_svd
@@ -180,6 +187,13 @@ class UtilsTestSuite(unittest.TestSuite):
         self.geneigenproblem('f',False)
         self.geneigenproblem('d',True)
         self.geneigenproblem('f',True)
+        # test wrap eigh if linked
+        if utils.symeig is utils.wrap_eigh: 
+            self.geneigenproblem('d',False, func=utils.wrap_eigh)
+            self.geneigenproblem('f',False, func=utils.wrap_eigh)
+            self.geneigenproblem('d',True, func=utils.wrap_eigh)
+            self.geneigenproblem('f',True, func=utils.wrap_eigh)
+
 
     def testSymeig_fake_integer(self):
         a = numx.array([[1,2],[2,7]])

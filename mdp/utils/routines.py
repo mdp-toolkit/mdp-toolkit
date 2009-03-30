@@ -244,9 +244,40 @@ def _assert_eigenvalues_real_and_positive(w, dtype):
     #    err = "Got negative eigenvalues: %s" % str(w)
     #    raise SymeigException(err)
               
+def wrap_eigh(A, B = None, eigenvectors = True, turbo = "on", range = None,
+              type = 1, overwrite = False):
+    """Wrapper for scipy.linalg.eigh for scipy version > 0.7"""
+    args = {}
+    args['a'] = A
+    args['b'] = B
+    args['eigvals_only'] = not eigenvectors
+    args['overwrite_a'] = overwrite
+    args['overwrite_b'] = overwrite
+    if turbo == "on":
+        args['turbo'] = True
+    else:
+        args['turbo'] = False
+    args['type'] = type
+    if range is not None:
+        n = A.shape[0]
+        lo, hi = range
+        if lo < 1:
+            lo = 1
+        if lo > n:
+            lo = n
+        if hi > n:
+            hi = n
+        if lo > hi:
+            lo, hi = hi, lo
+        # in scipy.linalg.eigh the range starts from 0
+        lo -= 1
+        hi -= 1
+        range = (lo, hi)
+    args['eigvals'] = range
+    return numx_linalg.eigh(**args)
 
-def _symeig_fake(A, B = None, eigenvectors = 1, turbo = "on", range = None,
-                 type = 1, overwrite = 0):
+def _symeig_fake(A, B = None, eigenvectors = True, turbo = "on", range = None,
+                 type = 1, overwrite = False):
     """Solve standard and generalized eigenvalue problem for symmetric
 (hermitian) definite positive matrices.
 This function is a wrapper of LinearAlgebra.eigenvectors or

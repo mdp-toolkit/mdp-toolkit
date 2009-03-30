@@ -1,4 +1,4 @@
-from routines import (timediff, refcast, scast, rotate, random_rot,
+from routines import (timediff, refcast, scast, rotate, random_rot, wrap_eigh,
                       permute, symrand, norm2, uniq, ordered_uniq, cov2,
                       mult_diag, comb, sqrtm, get_dtypes, nongeneral_svd,
                       SymeigException, hermitian, _symeig_fake, cov_maxima)
@@ -9,11 +9,19 @@ from covariance import (CovarianceMatrix, DelayCovarianceMatrix,
 from progress_bar import progressinfo
 from svn_revision import get_svn_revision
 import mdp as _mdp
+import inspect as _inspect
 
 try:
-    import symeig
-    SymeigException = symeig.SymeigException
-    symeig = symeig.symeig
+    # check if scipy.linalg.eigh is the new version
+    # if yes, just wrap it
+    if _mdp.numx_description == "scipy":
+       args = _inspect.getargspec(_mdp.numx_linalg.eigh)[0]
+       if len(args) > 4:
+           symeig = wrap_eigh
+       else:
+           import symeig
+           SymeigException = symeig.SymeigException
+           symeig = symeig.symeig
 except ImportError:
     symeig = routines._symeig_fake
 
