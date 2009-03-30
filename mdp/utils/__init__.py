@@ -14,14 +14,13 @@ import inspect as _inspect
 try:
     # check if scipy.linalg.eigh is the new version
     # if yes, just wrap it
-    if _mdp.numx_description == "scipy":
-       args = _inspect.getargspec(_mdp.numx_linalg.eigh)[0]
-       if len(args) > 4:
-           symeig = wrap_eigh
-       else:
-           import symeig
-           SymeigException = symeig.SymeigException
-           symeig = symeig.symeig
+    args = _inspect.getargspec(_mdp.numx_linalg.eigh)[0]
+    if len(args) > 4:
+        symeig = wrap_eigh
+    else:
+        import symeig
+        SymeigException = symeig.SymeigException
+        symeig = symeig.symeig
 except ImportError:
     symeig = routines._symeig_fake
 
