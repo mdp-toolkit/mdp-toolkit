@@ -846,6 +846,54 @@ class NodesTestSuite(unittest.TestSuite):
                                   self.decimal)
         assert_array_almost_equal(mat[:,:2].std(axis=0),out.std(axis=0),
                                   self.decimal)
+
+    def _mock_symeig(self, x, range=None, overwrite=False):
+        if range is None:
+            N = x.shape[0]
+        else:
+            N = range[1]-range[0] + 1
+        y = numx.zeros((N,))
+        z = numx.zeros((N,N))
+        y[0] = -1
+        y[-1] = 1
+        return y, z
+    
+    def testPCANode_negative_eigenvalues(self):
+        # should throw an Exception if reduce=False and
+        # svd = False and output_dim=None
+        pca = mdp.nodes.PCANode(output_dim=None, svd=False, reduce=False)
+        pca._symeig = self._mock_symeig 
+        pca.train(uniform((10,10)))
+        try:
+            pca.stop_training()
+            assert False, "PCA did not catch negative eigenvalues!"
+        except mdp.NodeException, e:
+            if "Got negative eigenvalues" in str(e):
+                pass
+            else:
+                raise Exception("PCA did not catch negative eigenvalues!\n"+
+                                str(e))
+        # if reduce=True, should not throw any Exception,
+        # and return output_dim = 1
+        pca = mdp.nodes.PCANode(output_dim=None, svd=False, reduce=True)
+        pca._symeig = self._mock_symeig 
+        pca.train(uniform((10,10)))
+        pca.stop_training()
+        assert pca.output_dim == 1, 'PCA did not remove non-positive eigenvalues!'
+        # if svd=True, should not throw any Exception,
+        # and return output_dim = 10
+        pca = mdp.nodes.PCANode(output_dim=None, svd=True, reduce=False)
+        pca._symeig = self._mock_symeig 
+        pca.train(uniform((10,10)))
+        pca.stop_training()
+        assert pca.output_dim == 10, 'PCA did not remove non-positive eigenvalues!'       
+        # if output_dim is set, should not throw any Exception,
+        # and return the right output_dim
+        pca = mdp.nodes.PCANode(output_dim=1, svd=False, reduce=False)
+        pca._symeig = self._mock_symeig 
+        pca.train(uniform((10,10)))
+        pca.stop_training()
+        assert pca.output_dim == 1, 'PCA did not remove non-positive eigenvalues!'
         
     def testWhiteningNode(self):
         vars = 5

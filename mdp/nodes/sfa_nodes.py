@@ -72,7 +72,11 @@ class SFANode(Node):
             d = self.d
             # check that we get only *positive* eigenvalues
             if d.min() < 0:
-                raise SymeigException("Got negative eigenvalues: %s." % str(d))
+                err_msg = ("Got negative eigenvalues: %s."
+                           " You may either set output_dim to be smaller,"
+                           " or prepend the SFANode with a PCANode(reduce=True)"
+                           " or PCANode(svd=True)"% str(d))
+                raise NodeException(err_msg)
         except SymeigException, exception:
             errstr = str(exception)+"\n Covariance matrices may be singular."
             raise NodeException(errstr)

@@ -23,7 +23,7 @@ class PCANode(Node):
     """
     
     def __init__(self, input_dim=None, output_dim=None, dtype=None,
-                 svd=False, reduce=False, var_rel=1E-15, var_abs=1E-15, 
+                 svd=False, reduce=False, var_rel=1E-12, var_abs=1E-15, 
                  var_part=None):
         """The number of principal components to be kept can be specified as
         'output_dim' directly (e.g. 'output_dim=10' means 10 components
@@ -168,12 +168,19 @@ class PCANode(Node):
         # (eigenvalues sorted in ascending order)
         try:
             d, v = self._symeig(self.cov_mtx, range=rng, overwrite=(not debug))
-            # check that we get only *positive* eigenvalues
-            if d.min() < 0:
-                raise SymeigException("Got negative eigenvalues: %s." % str(d))
+            # if reduce=False and svd=False. we should check for
+            # negative eigenvalues and fail
+            if not (self.reduce or self.svd or (self.desired_variance is
+                                                not None)):
+                if d.min() < 0:
+                    raise NodeException("Got negative eigenvalues: "
+                                        "%s.\n"
+                                        "You may either set output_dim to be"
+                                        " smaller, or set reduce=True and/or "
+                                        "svd=True" % str(d))
         except SymeigException, exception:
             err = str(exception)+("\nCovariance matrix may be singular."
-                                  "Try instantiating the node with svd=True.")
+                                  "Try setting svd=True.")
             raise NodeException(err)
                   
         # delete covariance matrix if no exception occurred
@@ -185,6 +192,8 @@ class PCANode(Node):
         v = v[:, ::-1]
 
         if self.desired_variance is not None:
+            # throw away immediately negative eigenvalues
+            d = d[ d > 0 ]
             # the number of principal components to keep has
             # been specified by the fraction of variance to be explained
             varcum = (d / vartot).cumsum(axis=0)
