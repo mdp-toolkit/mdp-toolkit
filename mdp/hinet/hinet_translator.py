@@ -1,7 +1,8 @@
 """
 Module to translate HiNet structures into other representations, like HTML.
 """
-
+import tempfile
+import os
 import webbrowser
 
 import mdp
@@ -364,17 +365,23 @@ table.flow {
 }
 '''
 
-def show_flow(flow, filename="mdp_flow_display.html",
+def show_flow(flow, filename=None,
               title="MDP flow display",
               show_size=False):
-    """Write a flow into a HTML file and open it in the browser.
+    """Write a flow into a HTML file, open it in the browser and
+    return the file name.
 
     flow -- The flow to be shown.
-    filename -- Filename for the HTML file to be created.
+    filename -- Filename for the HTML file to be created. If None
+                a temporary file is created.
     title -- Title for the HTML file.
     show_size -- Show the approximate memory footprint of all nodes.
     """
-    html_file = open(filename, 'w')
+    if filename is None:
+        (fd, filename) = tempfile.mkstemp(suffix=".html", prefix="MDP_")
+        html_file = os.fdopen(fd, 'w')
+    else:
+        html_file = open(filename, 'w')
     html_file.write('<html>\n<head>\n<title>%s</title>\n' % title)
     html_file.write('<style type="text/css" media="screen">')
     html_file.write(SHOW_FLOW_STYLE)
@@ -389,5 +396,6 @@ def show_flow(flow, filename="mdp_flow_display.html",
     html_file.write('</body>\n</html>')
     html_file.close()
     webbrowser.open(filename)
+    return filename
     
         
