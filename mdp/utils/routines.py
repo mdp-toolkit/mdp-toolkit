@@ -274,7 +274,10 @@ def wrap_eigh(A, B = None, eigenvectors = True, turbo = "on", range = None,
         hi -= 1
         range = (lo, hi)
     args['eigvals'] = range
-    return numx_linalg.eigh(**args)
+    try:
+        return numx_linalg.eigh(**args)
+    except numx_linalg.LinAlgError, exception:
+        raise SymeigException(str(exception))
 
 def _symeig_fake(A, B = None, eigenvectors = True, turbo = "on", range = None,
                  type = 1, overwrite = False):
