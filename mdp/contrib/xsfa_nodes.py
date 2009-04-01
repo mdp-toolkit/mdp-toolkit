@@ -11,7 +11,7 @@ class XSFANode(mdp.Node):
         self.exp_args = (10,) # def 10
         self.exp_kwargs = {}
         self.n_extracted_src = 0
-        self.flow = None
+        self._flow = None
         self.verbose = verbose
         super(XSFANode, self).__init__(input_dim=input_dim,
                                        output_dim=nsources, dtype=dtype)
@@ -37,22 +37,21 @@ class XSFANode(mdp.Node):
         return [(self._train, self._stop_training)]*sum(self._training_phases)
     
     def _train(self, x):
-        if self.flow is None:
+        if self._flow is None:
             if self.verbose:
                 print "Extracting source 1..."
             self.basic_exp_kwargs['input_dim']=self.input_dim
             self.basic_exp_instance = self.basic_exp(*self.basic_exp_args, **self.basic_exp_kwargs)
             input_dim_mod = self.basic_exp_instance.output_dim
-            self.flow = self.basic_exp_instance + self.get_source_extractor_module(input_dim_mod, 0)
-        self.flow[-1].train(self.flow[:-1](x))
-
+            self._flow = self.basic_exp_instance + self.get_source_extractor_module(input_dim_mod, 0)
+        self._flow[-1].train(self._flow[:-1](x))
 
     def _stop_training(self):
-        self.flow[-1].stop_training()
+        self._flow[-1].stop_training()
         cur_tr_ph = self.get_current_train_phase() + 1
         if cur_tr_ph in self._training_phases_mods and self.n_extracted_src != (self.output_dim - 1):
             self.n_extracted_src += 1
-            self.flow.append(self.get_source_extractor_module(self.flow[-1].output_dim, self.n_extracted_src))
+            self._flow.append(self.get_source_extractor_module(self._flow[-1].output_dim, self.n_extracted_src))
             if self.verbose:
                 print "Extracting source %d..."%(self.n_extracted_src+1)
 ##         html_file = open('hinet_test.html', 'w')
@@ -61,12 +60,12 @@ class XSFANode(mdp.Node):
 ##         html_file.write(mdp.hinet.HINET_STYLE)
 ##         html_file.write('</style>\n</head>\n<body>\n')
 ##         hinet_translator = mdp.hinet.HiNetHTMLTranslator()
-##         hinet_translator.write_flow_to_file(self.flow, html_file)
+##         hinet_translator.write_flow_to_file(self._flow, html_file)
 ##         html_file.write('</body>\n</html>')
 ##         html_file.close()
             
     def _execute(self, x):
-        return self.flow(x)[:,:self.output_dim]
+        return self._flow(x)[:,:self.output_dim]
 
     def get_source_extractor_module(self, dim, nsources):
         S = nsources
@@ -76,14 +75,14 @@ class XSFANode(mdp.Node):
         sfa = mdp.nodes.SFANode(input_dim=L, output_dim=L)
         
         # identity - copies the new sources
-        idn_new = mdp.nodes.IdentityNode(input_dim=S+1, output_dim=S+1)
+        idn_new_1 = mdp.nodes.IdentityNode(input_dim=S+1, output_dim=S+1)
         # source expansion
         self.exp_kwargs['input_dim'] = S + 1
         #N2
         src_exp = mdp.hinet.FlowNode(self.exp(*self.exp_args, **self.exp_kwargs) +
                            NormalizeNode() + 
                            mdp.nodes.WhiteningNode(svd=True, reduce=True))
-        N2Layer = mdp.hinet.SameInputLayer((src_exp, idn_new))
+        N2Layer = mdp.hinet.SameInputLayer((src_exp, idn_new_1))
         N2ContLayer = mdp.hinet.Layer((N2Layer, mdp.nodes.IdentityNode(input_dim=L-1, output_dim=L-1)))
 
         if S == 0:
@@ -107,9 +106,11 @@ class XSFANode(mdp.Node):
         # expanded sources projection
         proj = ProjectionNode(S, L-1)
         
+        # identity - copies the new sources
+        idn_new_2 = mdp.nodes.IdentityNode(input_dim=S+1, output_dim=S+1)
         # regularization after projection + new source copying
-        reg_and_copy = mdp.hinet.Layer((idn_new, mdp.nodes.WhiteningNode(input_dim=L-1, svd=True, reduce=True)))
-        # actual source removal flow 
+        reg_and_copy = mdp.hinet.Layer((idn_new_2, mdp.nodes.WhiteningNode(input_dim=L-1, svd=True, reduce=True)))
+        # actual source removal _flow 
         src_rem = mdp.hinet.FlowNode( proj + reg_and_copy )
 
         # actual source extraction module 
@@ -139,7 +140,7 @@ class ProjectionNode(mdp.Node):
         self._cov_mtx.update(x[:,:-self.output_dim], x[:,-self.L:])
 
     def _stop_training(self):
-         self.proj_mtx, avgx, avgy, self.tlen = self._cov_mtx.fix()
+        self.proj_mtx, avgx, avgy, self.tlen = self._cov_mtx.fix()
          
         
     def _execute(self, x):
