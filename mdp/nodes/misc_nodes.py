@@ -592,5 +592,11 @@ class GaussianClassifierNode(Node):
         return [self.labels[winner[i]] for i in range(len(winner))]
 
 class IdentityNode(Node):
+    """Return input data (useful in complex network layouts)"""
     def is_trainable(self):
         False
+
+    def _set_input_dim(self, n):
+        self._input_dim = n
+        self._output_dim = n
+    
