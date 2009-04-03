@@ -34,7 +34,7 @@ class HiNetTranslator(object):
         Depending on the type of the node this can be delegated to more
         specific methods.
         """
-        if isinstance(node, mdp.hinet.FlowNode):
+        if hasattr(node, "_flow"):
             return self._translate_flownode(node)
         if isinstance(node, mdp.hinet.CloneLayer):
             return self._translate_clonelayer(node)
@@ -44,7 +44,7 @@ class HiNetTranslator(object):
             return self._translate_standard_node(node)
         
     def _translate_flownode(self, flownode):
-        """Translate a flow node and return the translation.
+        """Translate a node containing a flow and return the translation.
         
         The internal nodes are translated recursively.
         """
