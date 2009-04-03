@@ -374,8 +374,10 @@ class EtaComputerNode(Node):
 
 class NoiseNode(Node):
     """Inject multiplicative or additive noise into the input data.
-
+    
     Original code contributed by Mathias Franzius.
+    
+    Note that due to the noise_func attribute this node cannot be pickled.
     """
     
     def __init__(self, noise_func = mdp.numx_rand.normal, noise_args = (0, 1),

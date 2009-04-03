@@ -332,8 +332,14 @@ class Node(object):
         return self._train_phase
 
     def get_remaining_train_phase(self):
-        """Return the number of training phases still to accomplish."""
-        return len(self._train_seq) - self._train_phase
+        """Return the number of training phases still to accomplish.
+        
+        If the node is not trainable then the return value is 0.
+        """
+        if self.is_trainable():
+            return len(self._train_seq) - self._train_phase
+        else:
+            return 0
 
     ### Node capabilities
     def is_trainable(self):
