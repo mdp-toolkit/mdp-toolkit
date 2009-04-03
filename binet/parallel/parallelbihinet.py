@@ -4,7 +4,7 @@ Parallel version of bihinet.
 
 import mdp
 
-from hiphi import parallel 
+import mdp.parallel as parallel
 
 from ..binode import BiNode, BiNodeException
 from ..biflow import BiFlow

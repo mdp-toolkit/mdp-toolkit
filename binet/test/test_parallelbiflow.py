@@ -4,7 +4,7 @@ import numpy as n
 
 import mdp
 
-import hiphi.binet as binet
+import binet
 
 
 class TestParallelBiFlow(unittest.TestCase):

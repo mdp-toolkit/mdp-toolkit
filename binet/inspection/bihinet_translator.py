@@ -8,7 +8,7 @@ HiNetHTML class.
 import mdp
 
 from ..binode import BiNode
-from ..binodes import SenderBiNode, CoPCABiNode, TriggerPCABiNode
+from ..binodes import SenderBiNode
 from ..bihinet import CloneBiLayer
 
 # TODO: use <pre>   </pre> for whitespaces?
@@ -25,19 +25,6 @@ span.bicolor {
 def _get_html_sender(node):
     return ['<span class="bicolor">target: %s </span><br>' % str(node._target)]
 
-def _get_html_cobipca(node):
-    return ['PCA class: %s' % str(node._pca_class),
-            'PCA kwargs: %s' % str(node._pca_kwargs),] 
-
-def _get_html_triggerpca(node):
-    kwarg_lines = ['&nbsp;-&nbsp;' + key + ': ' + 
-                   str(node._pca_kwargs[key])
-                   for key in node._pca_kwargs]
-    return (['PCA class: %s' % node._pca_class.__name__,
-             'PCA kwargs'] + kwarg_lines +
-            ['trigger threshold: %s' % str(node.trigger_threshold), 
-             'trigger exponent: %s' % str(node.trigger_exponent)]) 
-    
 def _get_html_binode(node):
     # or use node.__base__[1]?
     html_list = []
@@ -54,8 +41,6 @@ def _get_html_binode(node):
     
 BINODE_HTML_TRANSLATORS = [
     (SenderBiNode, _get_html_sender),
-    (CoPCABiNode, _get_html_cobipca),
-    (TriggerPCABiNode, _get_html_triggerpca),
 ]
 
 NODE_HTML_TRANSLATORS = (mdp.hinet.NODE_HTML_TRANSLATORS +

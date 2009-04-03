@@ -4,7 +4,7 @@ import numpy as n
 
 import mdp
 
-import hiphi.binet as binet
+import binet
 
 from tracernode import TraceJumpBiNode, IdNode
 

@@ -4,7 +4,7 @@ Classes for tracing BiNode behavior in flows.
 
 import mdp
 
-import hiphi.binet as binet
+import binet
 
 
 class TraceJumpBiNode(binet.JumpBiNode):

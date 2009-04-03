@@ -10,7 +10,7 @@ import itertools
 import mdp
 n = mdp.numx
 
-import hiphi.parallel as parallel
+import mdp.parallel as parallel
 
 from ..binode import BiNode
 from ..biflow import (BiFlow, BiFlowException, MessageResultContainer,
