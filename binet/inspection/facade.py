@@ -36,7 +36,7 @@ INSPECTION_STYLE = (hinet.HINET_STYLE + BINET_STYLE +
 # used to create the CSS file for all slides and the slideshow
 
 
-def inspect_training(snapshot_path, inspection_path,
+def inspect_training(snapshot_path, inspection_path=None,
                      x_samples, msg_samples=None, stop_messages=None,
                      trace_inspector=None, debug=False,
                      slide_style=SLIDE_STYLE, show_size=False):
@@ -50,7 +50,8 @@ def inspect_training(snapshot_path, inspection_path,
     be in the snapshot_path.
     
     snapshot_path -- Path were the flow training snapshots are stored.
-    inspection_path -- Path were the slides are stored.
+    inspection_path -- Path were the slides will be stored. If None (default
+        value) then the snapshot_path is used.
     css_filename -- Filename of the CSS file for the slides.
     x_samples, msg_samples -- Lists with the input data for the training trace.
     stop_messages -- The stop msg for the training trace.
@@ -63,6 +64,8 @@ def inspect_training(snapshot_path, inspection_path,
         viewed as single HTML files), has no effect on the slideshow appearance.
     show_size -- Show the approximate memory footprint of all nodes.
     """
+    if not inspection_path:
+        inspection_path = snapshot_path
     # create CSS file for the slides
     css_filename = SLIDE_CSS_FILENAME
     robust_write_file(path=inspection_path, filename=css_filename,
