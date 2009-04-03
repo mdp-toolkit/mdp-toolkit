@@ -67,11 +67,11 @@ class ContribTestSuite(NodesTestSuite):
     def _set_nodes(self):
         self._nodes = [mc.JADENode,
                        mc.NIPALSNode,
+                       mc.XSFANode,
                        (mc.LLENode, [3, 0.001, False], None),
                        (mc.LLENode, [3, 0.001, True], None),
                        (mc.HLLENode, [10, 0.001, False], None),
-                       (mc.HLLENode, [10, 0.001, True], None),
-                       (mc.XSFANode, [3], None)]
+                       (mc.HLLENode, [10, 0.001, True], None)]
 
     def _fastica_test_factory(self):
         # we don't want the fastica tests here
@@ -240,7 +240,7 @@ class ContribTestSuite(NodesTestSuite):
         #mix = sigmoid(numx.dot(src, mdp.utils.random_rot(3)))
         mix = src
 
-        flow = mdp.Flow([mc.XSFANode(3, verbose=False)])
+        flow = mdp.Flow([mc.XSFANode()])
         # let's test also chunk-mode training
         flow.train([[mix[:T/2, :], mix[T/2:, :]]])
         

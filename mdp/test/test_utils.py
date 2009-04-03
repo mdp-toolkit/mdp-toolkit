@@ -215,8 +215,6 @@ class UtilsTestSuite(unittest.TestSuite):
         val, vec = utils._symeig_fake(y)
         assert_almost_equal(abs(numx_linalg.det(vec)), 1., 12)
 
-
-
     def testQuadraticFormsExtrema(self):
         # !!!!! add some real test
         # check H with negligible linear term

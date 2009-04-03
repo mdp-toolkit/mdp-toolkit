@@ -353,8 +353,8 @@ class NodesTestSuite(unittest.TestSuite):
             # case 2: output_dim set explicitly
             node_args = self._set_node_args(args)
             node = node_class(*node_args)
-            self._train_if_necessary(inp, node, args, sup_args_func)
             node.output_dim = output_dim
+            self._train_if_necessary(inp, node, args, sup_args_func)
             # execute the node
             out = node(inp)
             assert out.shape[1]==output_dim, "%d!=%d"%(out.shape[1],output_dim)
@@ -1509,7 +1509,7 @@ class NodesTestSuite(unittest.TestSuite):
                                  whitened=False,
                                  sfa_ica_coeff=[1.,0.])(mix)
         max_cv = numx.diag(abs(_cov(out,src)))
-        assert_array_almost_equal(max_cv, numx.ones((3,)),6)
+        assert_array_almost_equal(max_cv, numx.ones((3,)),5)
 
     def testISFANode_ICAPart(self):
         # create independent sources
