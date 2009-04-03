@@ -138,7 +138,7 @@ def train_with_inspection(flow, path, data_iterators,
         flow.train(data_iterators, **train_kwargs)
     remove_inspection_residues(flow)
     # reload data samples
-    sample_file = open(os.path.join(path, "training_data_samples.pckl"))
+    sample_file = open(os.path.join(path, "training_data_samples.pckl"), "rb")
     x_samples, msg_samples, stop_messages = pickle.load(sample_file)
     sample_file.close()
     # create slideshow
