@@ -22,8 +22,6 @@ from trace_slideshow import (INSPECT_SLIDESHOW_STYLE,
                              SectExecuteHTMLSlideShow)
 from utils import robust_write_file, robust_pickle, first_iterable_elem
 
-# TODO: do not loop slideshow
-
 # style for slides, used when the slides are not viewed in a slideshow
 SLIDE_STYLE = (hinet.HINET_STYLE + BINET_STYLE +
                INSPECT_TRACE_STYLE)
@@ -111,16 +109,22 @@ def train_with_inspection(flow, path, data_iterators,
     # get first part of data iterators as sample data for inspection
     x_samples = []
     for i, data_iterator in enumerate(data_iterators):
-        x_sample, new_data_iterator = first_iterable_elem(data_iterator)
+        if data_iterator is None:
+            x_sample, new_data_iterator = None, None
+        else:
+            x_sample, new_data_iterator = first_iterable_elem(data_iterator)
         x_samples.append(x_sample)
         data_iterators[i] = new_data_iterator
     del x_sample
     if msg_iterators:
         msg_samples = []
         for i, msg_iterator in enumerate(msg_iterators):
-            msg_sample, msg_sample = first_iterable_elem(msg_iterator)
+            if msg_iterator is None:
+                msg_sample, new_msg_iterator = None, None
+            else:
+                msg_sample, new_msg_iterator = first_iterable_elem(msg_iterator)
             msg_samples.append(msg_sample)
-            msg_iterators[i] = msg_sample
+            msg_iterators[i] = new_msg_iterator
         del msg_sample
     else:
         msg_samples = None

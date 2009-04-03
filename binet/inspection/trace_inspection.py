@@ -21,7 +21,7 @@ import mdp.hinet as hinet
 
 from ..binode import BiNode
 from ..biflow import BiFlow
-from ..bihinet import BiFlowNode
+from ..bihinet import BiFlowNode, CloneBiLayer
 
 from bihinet_translator import BiNetHTMLTranslator, NODE_HTML_TRANSLATORS
 from utils import robust_pickle
@@ -336,61 +336,70 @@ class HTMLTraceInspector(hinet.HiNetTranslator):
         """Wrap the flow in place and return it."""
         super(HTMLTraceInspector, self)._translate_flow(flow)
         return flow
-        
+    
+    # TODO: enable the use of a shallow copy to save memory,
+    #    but this requires to implement __copy__ in Node etc. for recursive
+    #    shallow copying
+    
     def _translate_clonelayer(self, clonelayer):
         """Add a special wrapper for switch_to_copies."""
-        # TODO: enable the use of a shallow copy to save memory,
-        #    but this requires to implement __copy__ in Node etc. for recursive
-        #    shallow copying
         if self._undecorate_mode:
-            # check that clonelayer is actually decorated
-            if not hasattr(clonelayer, "_set_use_copies"):
-                return 
-            del clonelayer._set_use_copies
-            del clonelayer._original_set_use_copies
-            del clonelayer.__getstate__
-            self._translate_node(clonelayer.nodes[0])
-            if not clonelayer.use_copies:
-                clonelayer.nodes = (clonelayer.node,) * len(clonelayer.nodes) 
+            if isinstance(clonelayer, CloneBiLayer):
+                # check that clonelayer is actually decorated
+                if not hasattr(clonelayer, "_original_set_use_copies"):
+                    return
+                del clonelayer._set_use_copies
+                del clonelayer._original_set_use_copies
+                del clonelayer.__getstate__
+                self._translate_node(clonelayer.nodes[0])
+                if not clonelayer.use_copies:
+                    clonelayer.nodes = ((clonelayer.node,) *
+                                        len(clonelayer.nodes))
+            else:
+                self._translate_node(clonelayer.nodes[0])
+                clonelayer.nodes = (clonelayer.node,) * len(clonelayer.nodes)
+            # undecoration is complete
             return
         ## decorate clonelayer
-        if not clonelayer.use_copies:
-            # if not use_copies use a decorated deep copy for the first node
+        if ((not isinstance(clonelayer, CloneBiLayer)) or
+            (not clonelayer.use_copies)):
+            # use a decorated deep copy for the first node
             clonelayer.node = clonelayer.nodes[0].copy()
             clonelayer.nodes = (clonelayer.node,) + clonelayer.nodes[1:]
         # only decorate the first node
         self._translate_node(clonelayer.nodes[0])
-        # add a wrapper to _set_use_copies, 
-        # otherwise all nodes in layer would get decorated
-        clonelayer._original_set_use_copies = clonelayer._set_use_copies
-        trace_inspector = self
-        def wrapped_use_copies(self, use_copies):
-            # undecorate internal nodes to allow copy operation
-            trace_inspector._undecorate_mode = True
-            trace_inspector._translate_node(clonelayer.nodes[0])
-            trace_inspector._undecorate_mode = False
-            if use_copies and not self.use_copies:
-                # switch to node copies, no problem
-                clonelayer._original_set_use_copies(use_copies)
-            elif not use_copies and self._use_copies:
-                # switch to a single node instance
-                # but use a (decorated) deep copy for first node
-                clonelayer._original_set_use_copies(use_copies)
-                clonelayer.node = clonelayer.nodes[0].copy()
-                clonelayer.nodes = (clonelayer.node,) + clonelayer.nodes[1:]
-            trace_inspector._translate_node(clonelayer.nodes[0])
-        clonelayer._set_use_copies = new.instancemethod(wrapped_use_copies, 
-                                                        clonelayer)
-        # modify getstate to enable pickling (get rid of the instance methods)
-        def wrapped_getstate(self):
-            result = self.__dict__.copy()
-            # delete instance methods
-            del result["_original_set_use_copies"]
-            del result["_set_use_copies"]
-            del result["__getstate__"]
-            return result
-        clonelayer.__getstate__ = new.instancemethod(wrapped_getstate,
-                                                     clonelayer)
+        if isinstance(clonelayer, CloneBiLayer):
+            # add a wrapper to _set_use_copies, 
+            # otherwise all nodes in layer would get decorated
+            clonelayer._original_set_use_copies = clonelayer._set_use_copies
+            trace_inspector = self
+            def wrapped_use_copies(self, use_copies):
+                # undecorate internal nodes to allow copy operation
+                trace_inspector._undecorate_mode = True
+                trace_inspector._translate_node(clonelayer.nodes[0])
+                trace_inspector._undecorate_mode = False
+                if use_copies and not self.use_copies:
+                    # switch to node copies, no problem
+                    clonelayer._original_set_use_copies(use_copies)
+                elif not use_copies and self._use_copies:
+                    # switch to a single node instance
+                    # but use a (decorated) deep copy for first node
+                    clonelayer._original_set_use_copies(use_copies)
+                    clonelayer.node = clonelayer.nodes[0].copy()
+                    clonelayer.nodes = (clonelayer.node,) + clonelayer.nodes[1:]
+                trace_inspector._translate_node(clonelayer.nodes[0])
+            clonelayer._set_use_copies = new.instancemethod(wrapped_use_copies, 
+                                                            clonelayer)
+            # modify getstate to enable pickling (get rid of the instance methods)
+            def wrapped_getstate(self):
+                result = self.__dict__.copy()
+                # delete instance methods
+                del result["_original_set_use_copies"]
+                del result["_set_use_copies"]
+                del result["__getstate__"]
+                return result
+            clonelayer.__getstate__ = new.instancemethod(wrapped_getstate,
+                                                         clonelayer)
         
     def _translate_standard_node(self, node):
         """Wrap the node."""
