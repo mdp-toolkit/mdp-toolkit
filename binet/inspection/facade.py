@@ -36,8 +36,8 @@ INSPECTION_STYLE = (hinet.HINET_STYLE + BINET_STYLE +
 # used to create the CSS file for all slides and the slideshow
 
 
-def inspect_training(snapshot_path, inspection_path=None,
-                     x_samples, msg_samples=None, stop_messages=None,
+def inspect_training(snapshot_path, x_samples, msg_samples=None,
+                     stop_messages=None, inspection_path=None,
                      trace_inspector=None, debug=False,
                      slide_style=SLIDE_STYLE, show_size=False):
     """Return the HTML code for an inspection slideshow of the training.
@@ -50,11 +50,11 @@ def inspect_training(snapshot_path, inspection_path=None,
     be in the snapshot_path.
     
     snapshot_path -- Path were the flow training snapshots are stored.
-    inspection_path -- Path were the slides will be stored. If None (default
-        value) then the snapshot_path is used.
     css_filename -- Filename of the CSS file for the slides.
     x_samples, msg_samples -- Lists with the input data for the training trace.
     stop_messages -- The stop msg for the training trace.
+    inspection_path -- Path were the slides will be stored. If None (default
+        value) then the snapshot_path is used.
     trace_inspector -- Instance of HTMLTraceInspector, can be None for
         default class.
     debug -- If True (default is False) then any exception will be
@@ -84,15 +84,29 @@ def inspect_training(snapshot_path, inspection_path=None,
                                    delay=500, delay_delta=100, loop=False)
     return str(slideshow)
 
-def train_with_inspection(flow, snapshot_path, data_iterators,
+def train_with_inspection(flow, path, data_iterators,
                          msg_iterators=None, stop_messages=None,
                          debug=False, show_size=False,
                          **train_kwargs):
     """Perform both the flow training and the training inspection.
     
+    The return value is the filename of the slideshow HTML file.
+    
     This function is more convenient than inspect_training since it includes
     all required steps, but it is also less customizable. After everything
     is complete the inspection slideshow is opened in the browser.
+    
+    flow -- The untrained Flow or BiFlow. After this function has been called
+        the flow will be fully trained.
+    path -- Path were both the training snapshots and the inspection slides
+        will be stored.
+    data_iterators, msg_iterators, stop_messages -- Same as for calling train
+        on a flow.
+    debug -- Ignore exception during training and try to complete the slideshow
+        (default value is False).
+    show_size -- Show the approximate memory footprint of all nodes.
+    **train_kwargs -- Additional arguments for flow.train can be specified
+        as keyword arguments.
     """
     # get first part of data iterators as sample data for inspection
     x_samples = []
@@ -112,31 +126,29 @@ def train_with_inspection(flow, snapshot_path, data_iterators,
         msg_samples = None
     # store the data to disk to disk to save memory and safeguard against
     # any change made to the data during the training
-    robust_pickle(snapshot_path, "training_data_samples.pckl",
+    robust_pickle(path, "training_data_samples.pckl",
                   (x_samples, msg_samples, stop_messages))
     del x_samples
     del msg_samples
     # perform the training and gather snapshots 
-    prepare_training_inspection(flow=flow, path=snapshot_path)
+    prepare_training_inspection(flow=flow, path=path)
     if isinstance(flow, BiFlow):
         flow.train(data_iterators, msg_iterators, stop_messages, **train_kwargs)
     else:
         flow.train(data_iterators, **train_kwargs)
     remove_inspection_residues(flow)
     # reload data samples
-    sample_file = open(os.path.join(snapshot_path,
-                                    "training_data_samples.pckl"))
+    sample_file = open(os.path.join(path, "training_data_samples.pckl"))
     x_samples, msg_samples, stop_messages = pickle.load(sample_file)
     sample_file.close()
     # create slideshow
-    slideshow = inspect_training(snapshot_path=snapshot_path, 
-                                 inspection_path=snapshot_path,
+    slideshow = inspect_training(snapshot_path=path, 
+                                 inspection_path=path,
                                  x_samples=x_samples,
                                  msg_samples=msg_samples,
                                  stop_messages=stop_messages,
                                  debug=debug, show_size=show_size)
-    slideshow_filename = os.path.join(snapshot_path,
-                                      "training_inspection.html")
+    slideshow_filename = os.path.join(path, "training_inspection.html")
     title = "Training Inspection"
     html_file = open(slideshow_filename, 'w')
     html_file.write('<html>\n<head>\n<title>%s</title>\n' % title)
