@@ -272,10 +272,6 @@ class BiFlow(mdp.Flow):
                 raise BiFlowException(err)
         self._bi_reset()
         
-    def _stop_training_hook(self):
-        """Hook method that is called before stop_training is called."""
-        pass
-        
     def execute(self, iterator, msg_iterator=None):
         """Execute the flow and return y or (y, msg).
         

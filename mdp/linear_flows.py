@@ -162,6 +162,7 @@ class Flow(object):
                     errstr = ("The training data iterator for node "
                               "no. %d is empty." % (nodenr+1))
                     raise FlowException(errstr)
+                self._stop_training_hook()
                 if node.get_remaining_train_phase() > 1:
                     # close the previous training phase
                     node.stop_training()
@@ -186,6 +187,10 @@ class Flow(object):
         except Exception, e:
             # capture any other exception occured during training.
             self._propagate_exception(e, nodenr)
+            
+    def _stop_training_hook(self):
+        """Hook method that is called before stop_training is called."""
+        pass
             
     def _train_check_iterators(self, data_iterators):
         #verifies that the number of iterators matches that of
@@ -332,7 +337,6 @@ class Flow(object):
                 self._propagate_exception(e, i)
         return x
 
-
     def inverse(self, iterator):
         """Process the data through all nodes in the flow backwards        
         (starting from the last node up to the first node) by calling the
@@ -385,6 +389,7 @@ class Flow(object):
         return self.execute(iterator, nodenr=nodenr)
 
     ###### string representation
+    
     def __str__(self):
         nodes = ', '.join([str(x) for x in self.flow])
         return '['+nodes+']'

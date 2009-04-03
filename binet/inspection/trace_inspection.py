@@ -304,7 +304,7 @@ class HTMLTraceInspector(hinet.HiNetTranslator):
         self._slide_filenames.append(filename)
         html_file = open(os.path.join(path, filename), "w")
         html_file = hinet.NewlineWriteFile(html_file)
-        html_file.write('<html>\n<head>\n<title>HiNet Test</title>')
+        html_file.write('<html>\n<head>\n<title>Inspection Slide</title>')
         if self._css_filename:
             html_file.write('<style type="text/css" media="screen">')
             html_file.write('@import url("%s");' % self._css_filename)
@@ -500,7 +500,7 @@ class TraceBiNetHTMLTranslator(HTMLTraceTranslator, BiNetHTMLTranslator):
         ## create table, left side for the flow, right side for data
         f.write('<br><br>')
         f.write('<table><tr><td id="inspect_biflow_td">')
-        f.write("<h3>biflow state</h3>")
+        f.write("<h3>flow state</h3>")
         self._translate_flow(flow, node, branch_base_node)
         # now the argument / result part of the table
         f.write('</td><td id="inspect_result_td">')

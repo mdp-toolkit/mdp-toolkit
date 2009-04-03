@@ -317,6 +317,7 @@ class ParallelFlow(mdp.Flow):
                     print ("finished local training phase of " + 
                            "node no. %d in parallel flow" % 
                            (self._i_train_node+1))
+                self._stop_training_hook()
                 self._flownode.stop_training()
                 if not self.flow[self._i_train_node].is_training():
                     self._i_train_node += 1
@@ -495,6 +496,7 @@ class ParallelFlow(mdp.Flow):
             if self.verbose:
                 print ("finished parallel training phase of node no. " + 
                        "%d in parallel flow" % (self._i_train_node+1))
+            self._stop_training_hook()
             node.stop_training()
             if not node.is_training():
                 self._i_train_node += 1

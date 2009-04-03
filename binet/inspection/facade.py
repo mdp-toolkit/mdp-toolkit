@@ -8,6 +8,8 @@ import cPickle as pickle
 
 import mdp.hinet as hinet
 
+from ..biflow import BiFlow
+
 from bihinet_translator import BINET_STYLE
 from trace_inspection import (_trace_biflow_training,
                               BiNetTraceDebugException,
@@ -113,7 +115,10 @@ def train_with_inspection(flow, snapshot_path, data_iterators,
     del msg_samples
     # perform the training and gather snapshots 
     prepare_training_inspection(flow=flow, path=snapshot_path)
-    flow.train(data_iterators, msg_iterators, stop_messages, **train_kwargs)
+    if isinstance(flow, BiFlow):
+        flow.train(data_iterators, msg_iterators, stop_messages, **train_kwargs)
+    else:
+        flow.train(data_iterators, **train_kwargs)
     remove_inspection_residues(flow)
     # reload data samples
     sample_file = open(os.path.join(snapshot_path,
@@ -143,7 +148,7 @@ def train_with_inspection(flow, snapshot_path, data_iterators,
     webbrowser.open(slideshow_filename)
     return slideshow_filename
 
-def inspect_execution(biflow, inspection_path, x, msg=None, name=None,
+def inspect_execution(flow, inspection_path, x, msg=None, name=None,
                       trace_inspector=None, debug=False,
                       slide_style=SLIDE_STYLE, show_size=False):
     """Return the HTML code for an inspection slideshow of the execution
@@ -180,7 +185,7 @@ def inspect_execution(biflow, inspection_path, x, msg=None, name=None,
         slide_filenames, section_ids, y = trace_inspector.trace_execution(
                                                  path=inspection_path,
                                                  trace_name=name,
-                                                 flow=biflow,
+                                                 flow=flow,
                                                  x=x, msg=msg, debug=debug)
     except BiNetTraceDebugException, debug_exception:
         if not debug_exception.result:
@@ -199,7 +204,7 @@ def inspect_execution(biflow, inspection_path, x, msg=None, name=None,
                                              loop=False)
     return str(slideshow), y
 
-def show_execution(biflow, inspection_path, x, msg=None, name=None,
+def show_execution(flow, inspection_path, x, msg=None, name=None,
                    trace_inspector=None, debug=False, show_size=False):
     """Write the inspection slideshow into an HTML file and open it in the
     browser. The return value is the return value of the execution.
@@ -223,7 +228,7 @@ def show_execution(biflow, inspection_path, x, msg=None, name=None,
     html_file.write('</style>\n</head>\n<body>\n')
     html_file.write('<h3>%s</h3>\n' % title)
     slideshow, y = inspect_execution(
-                        biflow=biflow,
+                        flow=flow,
                         inspection_path=inspection_path,
                         x=x, msg=msg,
                         name=name,
