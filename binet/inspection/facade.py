@@ -163,7 +163,7 @@ def train_with_inspection(flow, path, data_iterators,
     webbrowser.open(slideshow_filename)
     return slideshow_filename
 
-def inspect_execution(flow, inspection_path, x, msg=None, name=None,
+def inspect_execution(flow, path, x, msg=None, name=None,
                       trace_inspector=None, debug=False,
                       slide_style=SLIDE_STYLE, show_size=False):
     """Return the HTML code for an inspection slideshow of the execution
@@ -172,10 +172,11 @@ def inspect_execution(flow, inspection_path, x, msg=None, name=None,
     Note that the file into which the slideshow HTML is inserted must be in the
     snapshot_path.
     
-    x, msg -- Data for the execution.
+    flow -- The flow for the execution.
+    path -- Path were the slideshow will be stored.
+    x, msg -- Data for the execution (msg can be None, which is the default).
     name -- Name string to be used for the slide files.
-    trace_inspector -- Instance of HTMLTraceInspector, can be None for
-        default class.
+    trace_inspector -- Optionally provide a custom HTMLTraceInspector instance.
     debug -- If True (default is False) then any exception will be
         caught and the gathered data up to that point is returned in the
         normal way. This is useful for binet debugging.
@@ -187,8 +188,8 @@ def inspect_execution(flow, inspection_path, x, msg=None, name=None,
         name = "execution_inspection"
     # create CSS file for the slides
     css_filename = SLIDE_CSS_FILENAME
-    robust_write_file(path=inspection_path, filename=css_filename,
-                       content=slide_style)
+    robust_write_file(path=path, filename=css_filename,
+                      content=slide_style)
     del slide_style
     if not trace_inspector:
         trace_translator = TraceBiNetHTMLTranslator(show_size=show_size)
@@ -198,7 +199,7 @@ def inspect_execution(flow, inspection_path, x, msg=None, name=None,
     # create slides
     try:
         slide_filenames, section_ids, y = trace_inspector.trace_execution(
-                                                 path=inspection_path,
+                                                 path=path,
                                                  trace_name=name,
                                                  flow=flow,
                                                  x=x, msg=msg, debug=debug)
@@ -219,14 +220,22 @@ def inspect_execution(flow, inspection_path, x, msg=None, name=None,
                                              loop=False)
     return str(slideshow), y
 
-def show_execution(flow, inspection_path, x, msg=None, name=None,
+def show_execution(flow, path, x, msg=None, name=None,
                    trace_inspector=None, debug=False, show_size=False):
     """Write the inspection slideshow into an HTML file and open it in the
-    browser. The return value is the return value of the execution.
+    browser.
+    
+    The return value is a tuple with the slideshow filename and the return
+    value of the execution.
 
-    flow -- The flow to be shown.
-    filename -- Filename for the HTML file to be created.
-    title -- Title for the HTML file.
+    flow -- The flow for the execution.
+    path -- Path were the slideshow will be stored.
+    x, msg -- Data for the execution (msg can be None, which is the default).
+    name -- A name for the slideshow.
+    trace_inspector -- Optionally provide a custom HTMLTraceInspector instance.
+    debug -- If True (default is False) then any exception will be
+        caught and the gathered data up to that point is returned in the
+        normal way. This is useful for binet debugging.
     show_size -- Show the approximate memory footprint of all nodes.
     """
     if not name:
@@ -234,7 +243,7 @@ def show_execution(flow, inspection_path, x, msg=None, name=None,
         title = "Execution Inspection"
     else:
         title = "Execution Inspection: " + name
-    filename = os.path.join(inspection_path, name + ".html")
+    filename = os.path.join(path, name + ".html")
     html_file = open(filename, 'w')
     html_file.write('<html>\n<head>\n<title>%s</title>\n' % title)
     html_file.write('<style type="text/css" media="screen">')
@@ -244,7 +253,7 @@ def show_execution(flow, inspection_path, x, msg=None, name=None,
     html_file.write('<h3>%s</h3>\n' % title)
     slideshow, y = inspect_execution(
                         flow=flow,
-                        inspection_path=inspection_path,
+                        path=path,
                         x=x, msg=msg,
                         name=name,
                         trace_inspector=trace_inspector,
@@ -254,4 +263,4 @@ def show_execution(flow, inspection_path, x, msg=None, name=None,
     html_file.write('</body>\n</html>')
     html_file.close()
     webbrowser.open(filename)
-    return y
+    return filename, y
