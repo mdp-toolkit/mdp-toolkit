@@ -468,9 +468,6 @@ class BiNode(mdp.Node):
                                 if ((key in arg_keys) and 
                                     self._request_node_id(node_id))]))
         # deal with special keywords
-        if "msg" in arg_keys:
-            msg_kwargs["msg"] = msg
-            msg = None
         # search for target value
         target = None
         if msg and (TARGET_KEY not in msg_kwargs):
@@ -480,6 +477,10 @@ class BiNode(mdp.Node):
                 if (key == TARGET_KEY) and self._request_node_id(node_id):
                     target = msg[fullkey]
                     break
+        # look for msg argument 
+        if "msg" in arg_keys:
+            msg_kwargs["msg"] = msg
+            msg = None
         return msg, msg_kwargs, target
     
     def _parse_global_message(self, msg, arg_keys):
