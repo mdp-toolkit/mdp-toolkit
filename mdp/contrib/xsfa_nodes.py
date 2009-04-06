@@ -17,14 +17,19 @@ class XSFANode(mdp.Node):
     'x' to the flow.train method can be an array or a list of iterables
     (see the section about Iterators in the MDP tutorial for more info).
 
-    [warn against memory explosion and need of using data chunks]
+    If the number of training samples is large, you may come into memory
+    problems: use data iterators and chunk training to reduce memory usage.
     
     If you need to debug training and/or execution of this node, the
-    suggested approach is to use the capabilities of mdp.binet:
+    suggested approach is to use the capabilities of mdp.binet. For example:
 
-    [give example]
+    >>> INSPECTION_PATH = '/tmp/mdpdebug/'
+    >>> flow = mdp.Flow([XSFANode()])
+    >>> tr_filename = binet.train_with_inspection(flow=flow,
+                                                  path=INSPECTION_PATH,
+                                                  data_iterators=x)
+    >>> ex_filename, out = binet.show_execution(flow, path=INSPECTION_PATH, x=x)
     
-
     References:
     Sprekeler, H., Zito, T., and Wiskott, L. (2009).
     An Extension of Slow Feature Analysis for Nonlinear Blind Source Separation
@@ -36,8 +41,8 @@ class XSFANode(mdp.Node):
         """
         Keyword arguments:
 
-          basic_exp -- is a tuple (node, args, kwargs) which defines the node
-                       used to perform the premilinary nonlinear expansion.
+          basic_exp -- a tuple (node, args, kwargs) defining the node
+                       used for the premilinary nonlinear expansion.
                        After this the nonlinearity is assumed to be linearly
                        invertible. The higher the degree of nonlinearity,
                        the higher are the chances of inverting an unknown
@@ -47,14 +52,14 @@ class XSFANode(mdp.Node):
                        Default:
                        (mdp.nodes.PolynomialExpansionNode, (2, ), {})
 
-          intern_exp -- is a tuple (node, args, kwargs) which defines the node
-                        used to perform the internal nonlinear expansion of
+          intern_exp -- a tuple (node, args, kwargs) defining the node
+                        used for the internal nonlinear expansion of
                         the estimated sources to be removed from the input space.
                         The same trade-off as for basic_exp is valid here.
                         Default:
                         (mdp.nodes.PolynomialExpansionNode, (10, ), {})
 
-          verbose -- show some progress during training. 
+          verbose -- show some progress during training.
         """
         
         # set up basic expansion
@@ -120,6 +125,8 @@ class XSFANode(mdp.Node):
         # it is the right moment to initialize the internal flow
         if self._flow is None:
             self._initialize_internal_flow()
+            if self.verbose:
+                print "Extracting source 1..."
 
     def _initialize_internal_flow(self):
         # create the initial flow if it's not there already
