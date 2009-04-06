@@ -79,12 +79,13 @@ class BiNetHTMLTranslator(mdp.hinet.HiNetHTMLTranslator):
     def _write_node_header(self, node, type_id="node"):
         """Write the header content for the node into the HTML file."""
         f = self._html_file
-        if type_id=="flow":
+        if type_id == "flow":
             pass
-        elif type_id=="flownode" and isinstance(node, BiNode):
-            f.write('<tr><td class="dim">')
-            f.write('<span class="bicolor">id: %s</span>' % node._node_id)
-            f.write('</td></tr>')
+        elif type_id == "flownode":
+            if isinstance(node, BiNode):
+                f.write('<tr><td class="dim">')
+                f.write('<span class="bicolor">id: %s</span>' % node._node_id)
+                f.write('</td></tr>')
         else:
             f.write('<tr><td class="dim">in-dim: %s' % str(node.input_dim))
             if isinstance(node, BiNode):
