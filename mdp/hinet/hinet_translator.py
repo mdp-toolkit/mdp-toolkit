@@ -365,9 +365,8 @@ table.flow {
 }
 '''
 
-def show_flow(flow, filename=None,
-              title="MDP flow display",
-              show_size=False):
+def show_flow(flow, filename=None, title="MDP flow display",
+              show_size=False, browser_open=True):
     """Write a flow into a HTML file, open it in the browser and
     return the file name.
 
@@ -376,6 +375,8 @@ def show_flow(flow, filename=None,
                 a temporary file is created.
     title -- Title for the HTML file.
     show_size -- Show the approximate memory footprint of all nodes.
+    browser_open -- If True (default value) then the slideshow file is
+        automatically opened in a webbrowser.
     """
     if filename is None:
         (fd, filename) = tempfile.mkstemp(suffix=".html", prefix="MDP_")
@@ -395,7 +396,8 @@ def show_flow(flow, filename=None,
     hinet_translator.write_flow_to_file(flow=flow, html_file=html_file)
     html_file.write('</body>\n</html>')
     html_file.close()
-    webbrowser.open(filename)
+    if browser_open:
+        webbrowser.open(filename)
     return filename
     
         

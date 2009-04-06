@@ -31,9 +31,6 @@ INSPECTION_STYLE = (hinet.HINET_STYLE + BINET_STYLE +
                     INSPECT_TRACE_STYLE + INSPECT_SLIDESHOW_STYLE)
 
 
-# used to create the CSS file for all slides and the slideshow
-
-
 def inspect_training(snapshot_path, x_samples, msg_samples=None,
                      stop_messages=None, inspection_path=None,
                      trace_inspector=None, debug=False,
@@ -83,11 +80,11 @@ def inspect_training(snapshot_path, x_samples, msg_samples=None,
     return str(slideshow)
 
 def show_training(flow, data_iterators, msg_iterators=None, stop_messages=None,
-                  path=None, trace_inspector=None, debug=False, show_size=False,
-                  **train_kwargs):
+                  path=None, trace_inspector=None, debug=False,
+                  show_size=False, browser_open=True, **train_kwargs):
     """Perform both the flow training and the training inspection.
     
-    The return value is the filename of the slideshow HTML file.
+    The return value is the filename of the slideshow HTML file. 
     
     This function is more convenient than inspect_training since it includes
     all required steps, but it is also less customizable. After everything
@@ -107,6 +104,8 @@ def show_training(flow, data_iterators, msg_iterators=None, stop_messages=None,
     show_size -- Show the approximate memory footprint of all nodes.
     **train_kwargs -- Additional arguments for flow.train can be specified
         as keyword arguments.
+    browser_open -- If True (default value) then the slideshow file is
+        automatically opened in a webbrowser.
     """
     if path is None:
         # TODO: temporary directory
@@ -169,7 +168,8 @@ def show_training(flow, data_iterators, msg_iterators=None, stop_messages=None,
     html_file.write(slideshow)
     html_file.write('</body>\n</html>')
     html_file.close()
-    webbrowser.open(slideshow_filename)
+    if browser_open:
+        webbrowser.open(slideshow_filename)
     return slideshow_filename
 
 def inspect_execution(flow, x, msg=None, path=None, name=None,
@@ -234,7 +234,8 @@ def inspect_execution(flow, x, msg=None, path=None, name=None,
     return str(slideshow), y
 
 def show_execution(flow, x, msg=None, path=None, name=None,
-                   trace_inspector=None, debug=False, show_size=False):
+                   trace_inspector=None, debug=False, show_size=False,
+                   browser_open=True):
     """Write the inspection slideshow into an HTML file and open it in the
     browser.
     
@@ -252,6 +253,8 @@ def show_execution(flow, x, msg=None, path=None, name=None,
         caught and the gathered data up to that point is returned in the
         normal way. This is useful for binet debugging.
     show_size -- Show the approximate memory footprint of all nodes.
+    browser_open -- If True (default value) then the slideshow file is
+        automatically opened in a webbrowser.
     """
     if not name:
         name = "execution_inspection"
@@ -277,5 +280,6 @@ def show_execution(flow, x, msg=None, path=None, name=None,
     html_file.write(slideshow)
     html_file.write('</body>\n</html>')
     html_file.close()
-    webbrowser.open(filename)
+    if browser_open:
+        webbrowser.open(filename)
     return filename, y
