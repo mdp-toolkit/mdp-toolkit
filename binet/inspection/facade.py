@@ -34,7 +34,8 @@ INSPECTION_STYLE = (hinet.HINET_STYLE + BINET_STYLE +
 def inspect_training(snapshot_path, x_samples, msg_samples=None,
                      stop_messages=None, inspection_path=None,
                      trace_inspector=None, debug=False,
-                     slide_style=SLIDE_STYLE, show_size=False):
+                     slide_style=SLIDE_STYLE, show_size=False,
+                     verbose=True):
     """Return the HTML code for an inspection slideshow of the training.
     
     This function must be used after the training was completed. Before the
@@ -58,6 +59,8 @@ def inspect_training(snapshot_path, x_samples, msg_samples=None,
     slide_style -- CSS code for the individual slides (when they are
         viewed as single HTML files), has no effect on the slideshow appearance.
     show_size -- Show the approximate memory footprint of all nodes.
+    verbose -- If True (default value) a status message is printed for each
+        loaded snapshot.
     """
     if not inspection_path:
         inspection_path = snapshot_path
@@ -150,12 +153,13 @@ def show_training(flow, data_iterators, msg_iterators=None, stop_messages=None,
     x_samples, msg_samples, stop_messages = pickle.load(sample_file)
     sample_file.close()
     # create slideshow
-    slideshow = inspect_training(snapshot_path=path, 
+    slideshow = inspect_training(snapshot_path=path,
                                  inspection_path=path,
                                  x_samples=x_samples,
                                  msg_samples=msg_samples,
                                  stop_messages=stop_messages,
-                                 debug=debug, show_size=show_size)
+                                 debug=debug, show_size=show_size,
+                                 verbose=False)
     slideshow_filename = os.path.join(path, "training_inspection.html")
     title = "Training Inspection"
     html_file = open(slideshow_filename, 'w')

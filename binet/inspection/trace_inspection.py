@@ -227,7 +227,8 @@ class HTMLTraceInspector(hinet.HiNetTranslator):
         self._trace_name = trace_name
         self._flow = flow
         self._translate_flow(flow)
-        if (not isinstance(flow, BiFlow)) and (msg is not None):
+        if (not (isinstance(flow, BiFlow) or isinstance(flow, BiNode)) and
+            (msg is not None)):
             # a msg would be interpreted as nodenr by a Flow, so check this
             err = "A msg was given for a normal Flow (need BiFlow)."
             raise Exception(err)
@@ -716,7 +717,7 @@ def remove_inspection_residues(flow):
 def _trace_biflow_training(snapshot_path, inspection_path, css_filename,
                            x_samples, msg_samples=None, stop_messages=None,
                            trace_inspector=None,
-                           debug=False, show_size=False):
+                           debug=False, show_size=False, verbose=True):
     """Load flow snapshots and perform the inspection with the given data.
     
     The return value consists of the slide filenames and an index table (index
@@ -734,6 +735,8 @@ def _trace_biflow_training(snapshot_path, inspection_path, css_filename,
         caught and the gathered data up to that point is returned in the
         normal way. This is useful for binet debugging.
     show_size -- Show the approximate memory footprint of all nodes.
+    verbose -- If True (default value) a status message is printed for each
+        loaded snapshot.
     """
     if not trace_inspector:
         trace_translator = TraceBiNetHTMLTranslator(show_size=show_size)
@@ -788,7 +791,8 @@ def _trace_biflow_training(snapshot_path, inspection_path, css_filename,
                 slide_filenames += stop_files
                 stop_index = len(slide_filenames) - 1
                 index_table[i_train_node].append((train_index, stop_index))
-                print "got traces for snapshot %d" % (i_snapshot + 1)
+                if verbose:
+                    print "got traces for snapshot %d" % (i_snapshot + 1)
                 i_snapshot += 1
     except BiNetTraceDebugException, debug_exception:
         train_files, stop_files = debug_exception.result
