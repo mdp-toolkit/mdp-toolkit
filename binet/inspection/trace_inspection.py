@@ -227,8 +227,15 @@ class HTMLTraceInspector(hinet.HiNetTranslator):
         self._trace_name = trace_name
         self._flow = flow
         self._translate_flow(flow)
+        if (not isinstance(flow, BiFlow)) and (msg is not None):
+            # a msg would be interpreted as nodenr by a Flow, so check this
+            err = "A msg was given for a normal Flow (need BiFlow)."
+            raise Exception(err)
         try:
-            y = self._flow.execute(x, msg)
+            if msg is None:
+                y = self._flow.execute(x)
+            else:
+                y = self._flow.execute(x, msg)
         except Exception, exception:
             if debug:
                 self._write_error_frame(exception)

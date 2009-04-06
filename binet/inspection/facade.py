@@ -82,10 +82,9 @@ def inspect_training(snapshot_path, x_samples, msg_samples=None,
                                    delay=500, delay_delta=100, loop=False)
     return str(slideshow)
 
-def train_with_inspection(flow, path, data_iterators,
-                         msg_iterators=None, stop_messages=None,
-                         debug=False, show_size=False,
-                         **train_kwargs):
+def show_training(flow, data_iterators, msg_iterators=None, stop_messages=None,
+                  path=None, trace_inspector=None, debug=False, show_size=False,
+                  **train_kwargs):
     """Perform both the flow training and the training inspection.
     
     The return value is the filename of the slideshow HTML file.
@@ -96,16 +95,22 @@ def train_with_inspection(flow, path, data_iterators,
     
     flow -- The untrained Flow or BiFlow. After this function has been called
         the flow will be fully trained.
-    path -- Path were both the training snapshots and the inspection slides
-        will be stored.
     data_iterators, msg_iterators, stop_messages -- Same as for calling train
         on a flow.
+    path -- Path were both the training snapshots and the inspection slides
+        will be stored. If None (default value) a temporary directory will be
+        used.
+    trace_inspector -- Instance of HTMLTraceInspector, can be None for
+        default class.
     debug -- Ignore exception during training and try to complete the slideshow
         (default value is False).
     show_size -- Show the approximate memory footprint of all nodes.
     **train_kwargs -- Additional arguments for flow.train can be specified
         as keyword arguments.
     """
+    if path is None:
+        # TODO: temporary directory
+        path = None
     # get first part of data iterators as sample data for inspection
     x_samples = []
     for i, data_iterator in enumerate(data_iterators):
@@ -167,7 +172,7 @@ def train_with_inspection(flow, path, data_iterators,
     webbrowser.open(slideshow_filename)
     return slideshow_filename
 
-def inspect_execution(flow, path, x, msg=None, name=None,
+def inspect_execution(flow, x, msg=None, path=None, name=None,
                       trace_inspector=None, debug=False,
                       slide_style=SLIDE_STYLE, show_size=False):
     """Return the HTML code for an inspection slideshow of the execution
@@ -177,8 +182,9 @@ def inspect_execution(flow, path, x, msg=None, name=None,
     snapshot_path.
     
     flow -- The flow for the execution.
-    path -- Path were the slideshow will be stored.
     x, msg -- Data for the execution (msg can be None, which is the default).
+    path -- Path were the slideshow will be stored, if None (default value)
+        a temporary directory will be used.
     name -- Name string to be used for the slide files.
     trace_inspector -- Optionally provide a custom HTMLTraceInspector instance.
     debug -- If True (default is False) then any exception will be
@@ -188,6 +194,9 @@ def inspect_execution(flow, path, x, msg=None, name=None,
         viewed as single HTML files), has no effect on the slideshow appearance.
     show_size -- Show the approximate memory footprint of all nodes.
     """
+    if path is None:
+        # TODO: temporary directory
+        path = None
     if not name:
         name = "execution_inspection"
     # create CSS file for the slides
@@ -224,7 +233,7 @@ def inspect_execution(flow, path, x, msg=None, name=None,
                                              loop=False)
     return str(slideshow), y
 
-def show_execution(flow, path, x, msg=None, name=None,
+def show_execution(flow, x, msg=None, path=None, name=None,
                    trace_inspector=None, debug=False, show_size=False):
     """Write the inspection slideshow into an HTML file and open it in the
     browser.
@@ -233,8 +242,10 @@ def show_execution(flow, path, x, msg=None, name=None,
     value of the execution.
 
     flow -- The flow for the execution.
-    path -- Path were the slideshow will be stored.
-    x, msg -- Data for the execution (msg can be None, which is the default).
+    x, msg -- Data for the execution, msg can only be used for a BiFlow
+        (default value is None).
+    path -- Path were the slideshow will be stored, if None (default value)
+        a temporary directory will be used.
     name -- A name for the slideshow.
     trace_inspector -- Optionally provide a custom HTMLTraceInspector instance.
     debug -- If True (default is False) then any exception will be

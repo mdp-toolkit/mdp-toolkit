@@ -25,7 +25,7 @@ from trace_inspection import (prepare_training_inspection,
 from trace_slideshow import (TrainHTMLSlideShow, SectExecuteHTMLSlideShow,
                              ExecuteHTMLSlideShow)
 from facade import (INSPECTION_STYLE, SLIDE_CSS_FILENAME, inspect_training,
-                    train_with_inspection, inspect_execution, show_execution)
+                    show_training, inspect_execution, show_execution)
 
 del bihinet_translator
 del trace_inspection
