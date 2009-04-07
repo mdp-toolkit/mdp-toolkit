@@ -5,6 +5,7 @@ Module with simple functions for the complete inspection procedure.
 import os
 import webbrowser
 import cPickle as pickle
+import tempfile
 
 import mdp.hinet as hinet
 
@@ -111,8 +112,7 @@ def show_training(flow, data_iterators, msg_iterators=None, stop_messages=None,
         automatically opened in a webbrowser.
     """
     if path is None:
-        # TODO: temporary directory
-        path = None
+        path = tempfile.mkdtemp(prefix='MDP_')
     # get first part of data iterators as sample data for inspection
     x_samples = []
     for i, data_iterator in enumerate(data_iterators):
@@ -199,8 +199,7 @@ def inspect_execution(flow, x, msg=None, path=None, name=None,
     show_size -- Show the approximate memory footprint of all nodes.
     """
     if path is None:
-        # TODO: temporary directory
-        path = None
+        path = tempfile.mkdtemp(prefix='MDP_')
     if not name:
         name = "execution_inspection"
     # create CSS file for the slides
@@ -260,6 +259,8 @@ def show_execution(flow, x, msg=None, path=None, name=None,
     browser_open -- If True (default value) then the slideshow file is
         automatically opened in a webbrowser.
     """
+    if path is None:
+        path = tempfile.mkdtemp(prefix='MDP_')
     if not name:
         name = "execution_inspection"
         title = "Execution Inspection"

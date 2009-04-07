@@ -245,12 +245,10 @@ class ContribTestSuite(NodesTestSuite):
         flow.train([[mix[:T/2, :], mix[T/2:, :]]])
         
         out = flow(mix)
-        #INSPECTION_PATH='/tmp/mdpdebug'
         #import binet
-        #tr_filename = binet.train_with_inspection(flow=flow,
-        #                                          path=INSPECTION_PATH,
-        #                                          data_iterators=[[mix[:T/2, :], mix[T/2:, :]]])
-        #ex_filename, out = binet.show_execution(flow, path=INSPECTION_PATH, x=mix)
+        #tr_filename = binet.show_training(flow=flow,
+        #                                  data_iterators=[[mix[:T/2, :], mix[T/2:, :]]])
+        #ex_filename, out = binet.show_execution(flow, x=mix)
 
         corrs = mdp.utils.cov_maxima(mdp.utils.cov2(out, src))
         assert min(corrs) > 0.8, ('source/estimate minimal'

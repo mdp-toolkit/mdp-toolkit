@@ -23,12 +23,13 @@ class XSFANode(mdp.Node):
     If you need to debug training and/or execution of this node, the
     suggested approach is to use the capabilities of mdp.binet. For example:
 
-    >>> INSPECTION_PATH = '/tmp/mdpdebug/'
     >>> flow = mdp.Flow([XSFANode()])
-    >>> tr_filename = binet.train_with_inspection(flow=flow,
-                                                  path=INSPECTION_PATH,
-                                                  data_iterators=x)
-    >>> ex_filename, out = binet.show_execution(flow, path=INSPECTION_PATH, x=x)
+    >>> tr_filename = binet.show_training(flow=flow, data_iterators=x)
+    >>> ex_filename, out = binet.show_execution(flow, x=x)
+
+    this will run training and execution with binet inspection. Snapshots
+    of the internal flow state for each training phase and execution step
+    will be opened in a web brower and presented as a slideshow.
     
     References:
     Sprekeler, H., Zito, T., and Wiskott, L. (2009).
