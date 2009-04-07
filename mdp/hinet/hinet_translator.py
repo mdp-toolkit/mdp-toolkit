@@ -36,8 +36,10 @@ class HiNetTranslator(object):
         """
         if hasattr(node, "_flow"):
             return self._translate_flownode(node)
-        if isinstance(node, mdp.hinet.CloneLayer):
+        elif isinstance(node, mdp.hinet.CloneLayer):
             return self._translate_clonelayer(node)
+        elif isinstance(node, mdp.hinet.SameInputLayer):
+            return self._translate_sameinputlayer(node)
         elif isinstance(node, mdp.hinet.Layer):
             return self._translate_layer(node)
         else:
@@ -64,10 +66,14 @@ class HiNetTranslator(object):
             layer_translation.append(self._translate_node(node))
         return layer_translation
     
-    def _translate_clonelayer(self, clonelayer):
+    def _translate_clonelayer(self, layer):
         """Translate a CloneLayer and return the translation."""
-        translated_node = self._translate_node(clonelayer.node)
-        return [translated_node] * len(clonelayer.nodes)
+        translated_node = self._translate_node(layer.node)
+        return [translated_node] * len(layer.nodes)
+    
+    def _translate_sameinputlayer(self, layer):
+        """Translate a SameInputLayer and return the translation."""
+        return self._translate_layer(layer)
 
     def _translate_standard_node(self, node):
         """Translate a node and return the translation.
@@ -275,17 +281,30 @@ class HiNetHTMLTranslator(HiNetTranslator):
         f.write('</tr>')
         self._close_node_env(layer)
         
-    def _translate_clonelayer(self, clonelayer):
+    def _translate_clonelayer(self, layer):
         f = self._html_file
-        self._open_node_env(clonelayer, "layer")
+        self._open_node_env(layer, "layer")
         f.write('<tr><td class="nodename">')
-        f.write(str(clonelayer) + '<br><br>')
-        f.write('%d repetitions' % len(clonelayer.nodes))
+        f.write(str(layer) + '<br><br>')
+        f.write('%d repetitions' % len(layer.nodes))
         f.write('</td>')
         f.write('<td>')
-        self._translate_node(clonelayer.node)
+        self._translate_node(layer.node)
         f.write('</td></tr>')
-        self._close_node_env(clonelayer)
+        self._close_node_env(layer)
+        
+    def _translate_sameinputlayer(self, layer):
+        f = self._html_file
+        self._open_node_env(layer, "layer")
+        f.write('<tr><td colspan="%d" class="nodename">%s</td></tr>' %
+                (len(layer.nodes), str(layer)))
+        f.write('<tr>')
+        for node in layer.nodes:
+            f.write('<td>')
+            self._translate_node(node)
+            f.write('</td>')
+        f.write('</tr>')
+        self._close_node_env(layer)
 
     def _translate_standard_node(self, node):
         f = self._html_file
