@@ -37,7 +37,7 @@ class XSFANode(mdp.Node):
     Journal of Machine Learning Research, submitted
     [pdf link follows]
     """
-    def __init__(self, basic_exp=None, intern_exp=None, verbose=False,
+    def __init__(self, basic_exp=None, intern_exp=None, svd=False, verbose=False,
                  input_dim=None, output_dim=None, dtype=None):
         """
         Keyword arguments:
@@ -60,7 +60,10 @@ class XSFANode(mdp.Node):
                         Default:
                         (mdp.nodes.PolynomialExpansionNode, (10, ), {})
 
-          verbose -- show some progress during training.
+                 svd -- enable Singular Value Decomposition for normalization
+                        and regularization. Use it if the node complains about
+                        singular covariance matrices.
+             verbose -- show some progress during training.
         """
         
         # set up basic expansion
@@ -88,6 +91,7 @@ class XSFANode(mdp.Node):
         # internal network
         self._flow = None
         self.verbose = verbose
+        self.svd = svd
         super(XSFANode, self).__init__(input_dim=input_dim,
                                        output_dim=output_dim, dtype=dtype)
 
@@ -204,7 +208,7 @@ class XSFANode(mdp.Node):
         src_exp = mdp.hinet.FlowNode(self.exp(*self.exp_args,
                                               **self.exp_kwargs) +
                                      NormalizeNode() + 
-                                     mdp.nodes.WhiteningNode(svd=False,
+                                     mdp.nodes.WhiteningNode(svd=self.svd,
                                                              reduce=True))
         N2Layer = mdp.hinet.SameInputLayer((src_exp, idn_new1))
         N2ContLayer = mdp.hinet.Layer((N2Layer,
@@ -235,7 +239,7 @@ class XSFANode(mdp.Node):
         # regularization after projection + new source copying
         reg_and_copy = mdp.hinet.Layer((idn_new2,
                                         mdp.nodes.WhiteningNode(input_dim=L-1,
-                                                                svd=False,
+                                                                svd=self.svd,
                                                                 reduce=True)))
         # actual source removal flow 
         src_rem = mdp.hinet.FlowNode( proj + reg_and_copy )
