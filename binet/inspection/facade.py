@@ -8,6 +8,7 @@ import cPickle as pickle
 import tempfile
 
 import mdp.hinet as hinet
+from mdp import numx
 
 from ..biflow import BiFlow
 
@@ -114,6 +115,9 @@ def show_training(flow, data_iterators, msg_iterators=None, stop_messages=None,
     if path is None:
         path = tempfile.mkdtemp(prefix='MDP_')
     # get first part of data iterators as sample data for inspection
+    # if data_iterators is an array, wrap it up in a list
+    if isinstance(data_iterators, numx.ndarray):
+        data_iterators = [[data_iterators]]*len(flow)
     x_samples = []
     for i, data_iterator in enumerate(data_iterators):
         if data_iterator is None:
