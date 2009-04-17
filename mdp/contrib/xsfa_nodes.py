@@ -3,22 +3,28 @@ import mdp
 class XSFANode(mdp.Node):
     """Perform Non-linear Blind Source Separation using Slow Feature Analysis.
 
-    [should we try here to explain the algorithm?]
+    This node is designed to iteratively extract statistically
+    independent sources from (in principle) arbitrary invertible
+    nonlinear mixtures. The method relies on temporal correlations in
+    the sources and consists of a combination of nonlinear SFA and a
+    projection algorithm. More details can be found in the reference
+    given below (once it's published).
 
-    This node has multiple training phases. The number of training
-    phases depends on the number of sources that must be extracted. The
-    recommended way of training this node is through a container flow:
+    The node has multiple training phases. The number of training
+    phases depends on the number of sources that must be
+    extracted. The recommended way of training this node is through a
+    container flow:
 
     >>> flow = mdp.Flow([XSFANode()])
     >>> flow.train(x)
-    >>> flow.stop_training()
 
     doing so will automatically train all training phases. The argument
     'x' to the flow.train method can be an array or a list of iterables
     (see the section about Iterators in the MDP tutorial for more info).
 
-    If the number of training samples is large, you may come into memory
-    problems: use data iterators and chunk training to reduce memory usage.
+    If the number of training samples is large, you may run into
+    memory problems: use data iterators and chunk training to reduce
+    memory usage.
     
     If you need to debug training and/or execution of this node, the
     suggested approach is to use the capabilities of mdp.binet. For example:
@@ -42,16 +48,19 @@ class XSFANode(mdp.Node):
         """
         Keyword arguments:
 
-          basic_exp -- a tuple (node, args, kwargs) defining the node
-                       used for the premilinary nonlinear expansion.
-                       After this the nonlinearity is assumed to be linearly
-                       invertible. The higher the degree of nonlinearity,
-                       the higher are the chances of inverting an unknown
-                       nonlinearity. On the other hand, the higher the
-                       nonlinearity, the higher are numeric instabilities and
-                       errors. The trade-off has to be evaluated carefully.
-                       Default:
-                       (mdp.nodes.PolynomialExpansionNode, (2, ), {})
+          basic_exp --  a tuple (node, args, kwargs) defining the node
+                        used for the basic nonlinear expansion.  It is
+                        assumed that the mixture is linearly invertible
+                        after this expansion. The higher the complexity
+                        of the nonlinearity, the higher are the chances
+                        of inverting the unknown mixture. On the other
+                        hand, high complexity of the nonlinear
+                        expansion increases the danger of numeric
+                        instabilities, which can cause singularities in
+                        the simulation or errors in the source
+                        estimation. The trade-off has to be evaluated
+                        carefully.  Default:
+                        (mdp.nodes.PolynomialExpansionNode, (2, ), {})
 
           intern_exp -- a tuple (node, args, kwargs) defining the node
                         used for the internal nonlinear expansion of
@@ -63,6 +72,7 @@ class XSFANode(mdp.Node):
                  svd -- enable Singular Value Decomposition for normalization
                         and regularization. Use it if the node complains about
                         singular covariance matrices.
+
              verbose -- show some progress during training.
         """
         
