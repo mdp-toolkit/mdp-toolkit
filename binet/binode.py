@@ -475,7 +475,7 @@ class BiNode(mdp.Node):
                 target = msg[TARGET_KEY]
             for (node_id, key), fullkey in id_key_pairs:
                 if (key == TARGET_KEY) and self._request_node_id(node_id):
-                    target = msg[fullkey]
+                    target = msg.pop(fullkey)
                     break
         # look for msg argument 
         if "msg" in arg_keys:

@@ -50,12 +50,40 @@ terminated the normal flow execution will be resumed.
 # TODO: add target BiNode unittest, also add unittests for message parsing?
 
 # TODO: fix unecessary bi_reset calls?
-#    Note that bi_reset in BiFlowNode did not work until recently.
+#    Note that bi_reset in BiFlowNode did not work properly until recently.
+#    However, it might be better to leave both pre- and post bi_reset in place
+#    so that no unecessary data stored (especially when the flow gets pickled).
 
-# TODO: How to differenciate inverse behaviour from usage for backpropagation
-#    or gradient descent?
-#    Some do this via mixin classes, which implement the behaviour? One
-#    could then use a translator to prepare a flow for gradient descent.
+# TODO: Node Extensions 
+#    implement gradient and parallel via Node Extensions, define
+#    node extension metaclass which registers the loaded extensions,
+#    one can then see which extensions are present for which nodes
+#    
+#    greadient extensions and such work via the magic 'method' argument in msg
+#    e.g. if "method"="gradient" is present then execute calls _gradient
+#    instead of _execute, so _execute is only the default (same for
+#    message and _message or stop_message)
+#    If x is None then it is not forwarded to the method.
+#    Not sure how to implement this yet...
+#
+#    If y is specified in msg and x=None then method is set to "execute_inverse",
+#    _execute_inverse adds automatic type checks for y like inverse and then
+#    calls _inverse.
+#    Depending on the return value of _inverse the inverse execution then
+#    continues or is switched to a normal execution:
+#    If the return type specifies no y but has an x in msg then the Node
+#    switches back to normal executions, otherwise the y is put into the msg
+#    and the target defaults to -1
+#
+#    update topdown node to deal with direction changes in inverse,
+#    maybe store an additional flag 'up' or 'down'
+
+# TODO: add read-only flow property to access _flow in FlowNode and such?
+
+# TODO: automatically create BiNode versions of all MDP nodes,
+#    use exec to define new classes and create fitting docstring,
+#    first check is a bi-version is already present
+
 
 # TODO: show more information in trace slides via mouse hover
 
@@ -65,21 +93,12 @@ terminated the normal flow execution will be resumed.
 
 # TODO: add msg key wildcard support later on
 
-# TODO: deal with inverse better, somehow hardwire it?
-#    e.g. if y argument is given then _inverse instead of execution is called?
-#    If no target is specified then target is set to -1?
-#    Use dimension checking for y?
-#    Can alternatively use inverse=True flag, when only message is supposed
-#    to be inverted?
-
-# TODO: for backpropagation put BackpropagationBiNode on top that compares the
+# TODO: use extension mechanism for backpropagation? 
+#    put BackpropagationBiNode on top that compares the
 #    incoming x to the reference value in msg, but this node needs no
 #    training phase at all, unless you want to control learning e.g. in terms
 #    of the reached error.
 #    But this cannot be done in a simple parallel fashion.
-
-# TODO: maybe add inverse path similar to execute path
-#    at least make sure that normal inverse path does work as normal 
 
 # TODO: implement switchlayer, a layer where each column represents a different
 #    target, so the target value determines which nodes are used
