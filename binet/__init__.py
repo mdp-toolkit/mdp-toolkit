@@ -56,10 +56,37 @@ terminated the normal flow execution will be resumed.
 
 # TODO: Node Extensions 
 #    implement gradient and parallel via Node Extensions, define
-#    node extension metaclass which registers the loaded extensions,
-#    one can then see which extensions are present for which nodes
+#    NodeExtension metaclass which registers all the available extensions.
+#    It is derived from ABCMeta.
 #    
-#    greadient extensions and such work via the magic 'method' argument in msg
+#    ParallelNode ABC then derives from Node and has NodeExtension as
+#    metaclass. Classes like ParallelSFANode are derived as before.
+#
+#    Activate all extensions by default??
+#
+#    All instances of NodeExtension are tracked in a tree structure in
+#    NodeExtension. When NodeExtension.activate(ParallelNode) then all
+#    tree nodes below ParallelNode are used for extension. If ParallelNode
+#    has no abstract methods then it is used as well (and thus provides a
+#    default implementation).
+#
+#    NodeExtension checks that __init__ is not overwritten when a Node is
+#    registered.
+#
+#    Custom Parallel classes can be registered. If a Node is already parallel
+#    (this is checked via isinstance) then the activation does not
+#    add ParallelNode to the MRO (and deactivate
+#    will not remove it, since it is not even present).
+#    Provide class decorator to register classes with an extension.
+#
+#    Flow's that rely on extensions can check that the extension is activated
+#    (or automatically activate them). Do the check in __init__. Do not
+#    deactivate afterwards, but this can be done manually.
+#    Provide a method decorator to check that all nodes have an extension
+#    available?
+
+# TODO: gradient extension:
+#    gradient extensions and such work via the magic 'method' argument in msg
 #    e.g. if "method"="gradient" is present then execute calls _gradient
 #    instead of _execute, so _execute is only the default (same for
 #    message and _message or stop_message)
