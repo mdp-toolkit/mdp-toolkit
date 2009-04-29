@@ -2,6 +2,8 @@ TODO:
 
 MDP 2.4 17.10.2008:
 
+- LinearRegressionNode: add optional 2nd phase that computes residuals
+  and significance of the slope
 - check eta value calculations: shouldn't t-> T/t=tlen?
 - add version and symeig as an output for tests, provide svn revision
   in the version string.

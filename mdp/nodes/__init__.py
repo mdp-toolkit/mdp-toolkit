@@ -10,6 +10,7 @@ from misc_nodes import (HitParadeNode, TimeFramesNode, EtaComputerNode,
                         IdentityNode)
 from isfa_nodes import ISFANode
 from rbm_nodes import RBMNode, RBMWithLabelsNode
+from regression_nodes import LinearRegressionNode
 
 # import internals for use in test_suites
 from misc_nodes import OneDimensionalHitParade as _OneDimensionalHitParade
@@ -35,8 +36,9 @@ del rbm_nodes
 __all__ = ['CuBICANode', 'EtaComputerNode', 'FANode', 'FDANode', 'FastICANode',
            'GaussianClassifierNode', 'GrowingNeuralGasNode', 'HitParadeNode',
            'ICANode', 'ISFANode', 'JADENode', 'LLENode', 'NIPALSNode',
-           'NoiseNode', 'HLLENode', 'IdentityNode'
+           'NoiseNode', 'HLLENode', 'IdentityNode',
            'PCANode', 'PolynomialExpansionNode', 'QuadraticExpansionNode',
            'RBMNode', 'RBMWithLabelsNode', 'SFA2Node', 'SFANode',
            'TDSEPNode', 'TimeFramesNode','WhiteningNode', 'XSFANode',
+           'LinearRegressionNode',
            '_OneDimensionalHitParade', '_expanded_dim']

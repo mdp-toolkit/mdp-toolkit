@@ -73,6 +73,9 @@ def _rand_labels(x):
 def _rand_labels_array(x):
     return numx.around(uniform(x.shape[0])).reshape((x.shape[0],1))
 
+def _rand_array_halfdim(x):
+    return uniform(size=(x.shape[0], x.shape[1]//2))
+
 def _std(x):
     return x.std(axis=0)
     # standard deviation without bias
@@ -94,6 +97,7 @@ def _cov(x,y=None):
 #_spinner = itertools.cycle((' /\b\b', ' -\b\b', ' \\\b\b', ' |\b\b'))
 _spinner = itertools.cycle((' .\b\b', ' o\b\b', ' 0\b\b', ' O\b\b',
                             ' 0\b\b', ' o\b\b'))
+_spinner = itertools.cycle((" '\b\b", ' !\b\b', ' .\b\b', ' !\b\b'))
 
 # create spinner
 def spinner():
@@ -142,8 +146,9 @@ class NodesTestSuite(unittest.TestSuite):
                        (mn.GaussianClassifierNode, [], _rand_labels),
                        mn.FANode,
                        mn.ISFANode,
-                       (mn.RBMNode, [5],None),
-                       (mn.RBMWithLabelsNode, [5, 1], _rand_labels_array)]
+                       (mn.RBMNode, [5], None),
+                       (mn.RBMWithLabelsNode, [5, 1], _rand_labels_array),
+                       (mn.LinearRegressionNode, [], _rand_array_halfdim)]
 
     def _nodes_test_factory(self, methods_list=None):
         if methods_list is None:
@@ -193,7 +198,7 @@ class NodesTestSuite(unittest.TestSuite):
             # generate testdimset_nodeclass test cases
             funcdesc='Test dimensions and dtype settings of '+node_class.__name__
             testfunc = self._get_testdimdtypeset(node_class, args,
-                                               sup_args_func)
+                                                 sup_args_func)
             # add to the suite
             self.addTest(unittest.FunctionTestCase(testfunc,
                                                    description=funcdesc))
@@ -326,6 +331,8 @@ class NodesTestSuite(unittest.TestSuite):
                     mat = numx.array([numx.sin(freqs[0]*t),
                                       numx.sin(freqs[1]*t)]).T
                     inp = mat.astype('d')
+                elif node_class == mdp.nodes.LinearRegressionNode:
+                    inp = uniform(size=(1000, 5))
                 else:
                     mat, mix, inp = self._get_random_mix(type="d")
                 node = node_class(*node_args, **{'dtype':dtype})
@@ -1885,8 +1892,78 @@ class NodesTestSuite(unittest.TestSuite):
         nzeros = idxzeros.sum()
         point5 = numx.zeros((nzeros, L)) + 0.5
         assert_array_almost_equal(pl[idxzeros], point5, 2)
+
+    def testLinearRegressionNode(self):
         
+        def train_LRNode(inp, out, with_bias):
+            lrnode = mdp.nodes.LinearRegressionNode(with_bias)
+            for i in range(len(inp)):
+                lrnode.train(inp[i], out[i])
+            lrnode.stop_training()
+            return lrnode
         
+        indim, outdim, tlen = 5, 3, 10000
+        
+        # 1. first, without noise
+        # 1a   without bias term
+        # regression coefficients
+        beta = numx_rand.uniform(-10., 10., size=(indim, outdim))
+        # input data
+        x = numx_rand.uniform(-20., 20., size=(tlen, indim))
+        # output of the linear model
+        y = mult(x, beta)
+        # train
+        lrnode = train_LRNode([x], [y], False)
+        # test results
+        assert_array_almost_equal(lrnode.beta, beta, self.decimal)
+        res = lrnode(x)
+        assert_array_almost_equal(res, y, self.decimal)
+
+        # 1b with bias
+        beta = numx_rand.uniform(-10., 10., size=(indim+1, outdim))
+        x = numx_rand.uniform(-20., 20., size=(tlen, indim))
+        y = mult(x, beta[1:,:]) + beta[0,:]
+        lrnode = train_LRNode([x], [y], True)
+        assert_array_almost_equal(lrnode.beta, beta, self.decimal)
+        res = lrnode(x)
+        assert_array_almost_equal(res, y, self.decimal)
+
+        # 2. with noise, multiple sets of input
+        beta = numx_rand.uniform(-10., 10., size=(indim+1, outdim))
+        inp = [numx_rand.uniform(-20., 20., size=(tlen, indim))
+               for i in range(5)]
+        out = [mult(x, beta[1:,:]) + beta[0,:] +
+               numx_rand.normal(size=y.shape)*0.1 for x in inp]
+        lrnode = train_LRNode(inp, out, True)
+        assert_array_almost_equal(lrnode.beta, beta, 2)
+        res = lrnode(inp[0])
+        assert_array_almost_equal_diff(res, out[0], 2)
+
+        # 3. test error for linearly dependent input
+        beta = numx_rand.uniform(-10., 10., size=(indim, outdim))
+        x = numx_rand.uniform(-20., 20., size=(tlen, indim))
+        x[:,-1] = 2.*x[:,0]
+        y = mult(x, beta)
+        try:
+            lrnode = train_LRNode([x], [y], False)
+            raise Exception, ("LinearRegressionNode didn't raise "+
+                              "error for linearly dependent input")
+        except mdp.NodeException:
+            pass
+
+        # 4. test wrong output size
+        beta = numx_rand.uniform(-10., 10., size=(indim, outdim))
+        x = numx_rand.uniform(-20., 20., size=(tlen, indim))
+        x[:,-1] = 2.*x[:,0]
+        y = mult(x, beta)
+        y = y[:10,:]
+        try:
+            lrnode = train_LRNode([x], [y], False)
+            raise Exception, ("LinearRegressionNode didn't raise "+
+                              "error for output of wrong size")
+        except mdp.TrainingException:
+            pass
+
 def get_suite(testname=None):
     return NodesTestSuite(testname=testname)
 

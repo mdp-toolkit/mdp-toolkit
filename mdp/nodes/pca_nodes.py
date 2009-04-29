@@ -128,7 +128,6 @@ class PCANode(Node):
         else:
             return None
         
-
     def _stop_training(self, debug=False):
         """Stop the training phase.
 
