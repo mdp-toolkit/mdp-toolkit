@@ -32,9 +32,9 @@ flow = mdp.Flow([switchboard, sfa_layer])
 train_gen = numpy.cast['f'](numpy.random.random((3, 10, 100*100)))
 
 # do the inspection, open in browser
-binet.train_with_inspection(flow=flow,
-                            path=INSPECTION_PATH,
-                            data_iterators=[None, train_gen])
+binet.show_training(flow=flow,
+                    path=INSPECTION_PATH,
+                    data_iterables=[None, train_gen])
 filename, out = binet.show_execution(flow, path=INSPECTION_PATH,
                                      x=train_gen[0])
 print "done."

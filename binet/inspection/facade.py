@@ -84,7 +84,7 @@ def inspect_training(snapshot_path, x_samples, msg_samples=None,
                                    delay=500, delay_delta=100, loop=False)
     return str(slideshow)
 
-def show_training(flow, data_iterators, msg_iterators=None, stop_messages=None,
+def show_training(flow, data_iterables, msg_iterables=None, stop_messages=None,
                   path=None, trace_inspector=None, debug=False,
                   show_size=False, browser_open=True, **train_kwargs):
     """Perform both the flow training and the training inspection.
@@ -97,7 +97,7 @@ def show_training(flow, data_iterators, msg_iterators=None, stop_messages=None,
     
     flow -- The untrained Flow or BiFlow. After this function has been called
         the flow will be fully trained.
-    data_iterators, msg_iterators, stop_messages -- Same as for calling train
+    data_iterables, msg_iterables, stop_messages -- Same as for calling train
         on a flow.
     path -- Path were both the training snapshots and the inspection slides
         will be stored. If None (default value) a temporary directory will be
@@ -115,27 +115,27 @@ def show_training(flow, data_iterators, msg_iterators=None, stop_messages=None,
     if path is None:
         path = tempfile.mkdtemp(prefix='MDP_')
     # get first part of data iterators as sample data for inspection
-    # if data_iterators is an array, wrap it up in a list
-    if isinstance(data_iterators, numx.ndarray):
-        data_iterators = [[data_iterators]]*len(flow)
+    # if data_iterables is an array, wrap it up in a list
+    if isinstance(data_iterables, numx.ndarray):
+        data_iterables = [[data_iterables]]*len(flow)
     x_samples = []
-    for i, data_iterator in enumerate(data_iterators):
+    for i, data_iterator in enumerate(data_iterables):
         if data_iterator is None:
             x_sample, new_data_iterator = None, None
         else:
             x_sample, new_data_iterator = first_iterable_elem(data_iterator)
         x_samples.append(x_sample)
-        data_iterators[i] = new_data_iterator
+        data_iterables[i] = new_data_iterator
     del x_sample
-    if msg_iterators:
+    if msg_iterables:
         msg_samples = []
-        for i, msg_iterator in enumerate(msg_iterators):
+        for i, msg_iterator in enumerate(msg_iterables):
             if msg_iterator is None:
                 msg_sample, new_msg_iterator = None, None
             else:
                 msg_sample, new_msg_iterator = first_iterable_elem(msg_iterator)
             msg_samples.append(msg_sample)
-            msg_iterators[i] = new_msg_iterator
+            msg_iterables[i] = new_msg_iterator
         del msg_sample
     else:
         msg_samples = None
@@ -148,9 +148,9 @@ def show_training(flow, data_iterators, msg_iterators=None, stop_messages=None,
     # perform the training and gather snapshots 
     prepare_training_inspection(flow=flow, path=path)
     if isinstance(flow, BiFlow):
-        flow.train(data_iterators, msg_iterators, stop_messages, **train_kwargs)
+        flow.train(data_iterables, msg_iterables, stop_messages, **train_kwargs)
     else:
-        flow.train(data_iterators, **train_kwargs)
+        flow.train(data_iterables, **train_kwargs)
     remove_inspection_residues(flow)
     # reload data samples
     sample_file = open(os.path.join(path, "training_data_samples.pckl"), "rb")
