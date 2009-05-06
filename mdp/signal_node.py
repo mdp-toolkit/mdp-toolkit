@@ -485,8 +485,8 @@ class Node(object):
             raise IsNotTrainableException("This node is not trainable.")
 
         if not self.is_training():
-            raise TrainingFinishedException("The training phase has already"
-            " finished.")
+            err_str = "The training phase has already finished."
+            raise TrainingFinishedException(err_str)
 
         self._check_input(x)
         self._check_train_args(x, *args, **kwargs)        
@@ -505,8 +505,8 @@ class Node(object):
             raise TrainingException("The node has not been trained.")
         
         if not self.is_training():
-            raise TrainingFinishedException("The training phase has already"
-                                            " finished.")
+            err_str = "The training phase has already finished."
+            raise TrainingFinishedException(err_str)
 
         # close the current phase.
         self._train_seq[self._train_phase][1](*args, **kwargs)
