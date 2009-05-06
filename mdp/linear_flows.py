@@ -115,35 +115,39 @@ class Flow(object):
         errstr = ''.join(('\n', 40*'-', act, 'Node Traceback:\n', prev, 40*'-'))
         raise FlowExceptionCR(errstr, self, except_)
 
-    def _train_node(self, data_iterator, nodenr):
-        #trains a single node in the flow
+    def _train_node(self, data_iterable, nodenr):
+        """Train a single node in the flow.
+        
+        nodenr -- index of the node in the flow
+        """
         node = self.flow[nodenr]
-        if data_iterator is not None and not node.is_trainable():
+        if (data_iterable is not None) and (not node.is_trainable()):
             # attempted to train a node although it is not trainable.
             # raise a warning and continue with the next node.
-            #wrnstr = "\n! Node %d is not trainable" % nodenr + \
-            #         "\nYou probably need a 'None' iterator for"+\
+            # wrnstr = "\n! Node %d is not trainable" % nodenr + \
+            #        "\nYou probably need a 'None' iterable for"+\
             #         " this node. Continuing anyway."
             #_warnings.warn(wrnstr, mdp.MDPWarning)
             return
-        elif data_iterator is None and node.is_training():
-            # A None iterator is passed to a training node
-            err = ("\n! Node %d is training"
-                   " but received a 'None' iterator." % nodenr)
-            raise FlowException(err)
-        elif data_iterator is None and not node.is_trainable():
+        elif (data_iterable is None) and node.is_training():
+            # None instead of iterable is passed to a training node
+            err_str = ("\n! Node %d is training"
+                       " but instead of iterable received 'None'." % nodenr)
+            raise FlowException(err_str)
+        elif (data_iterable is None) and (not node.is_trainable()):
             # skip training if node is not trainable
             return
             
         try:
-            # We leave the last training phase open for the
-            # CheckpointFlow class.
-            # Checkpoint functions must close it explicitly if needed!
-            # Note that the last training_phase is closed
-            # automatically when the node is executed.
+            ## We leave the last training phase open for the
+            ## CheckpointFlow class.
+            ## Checkpoint functions must close it explicitly if needed!
+            ## Note that the last training_phase is closed
+            ## automatically when the node is executed.
+            restarted_iteration = False  # set to True after first iteration
             while True:
                 empty_iterator = True
-                for x in data_iterator:
+                for x in data_iterable:
                     empty_iterator = False
                     # the arguments following the first are passed only to the
                     # currently trained node, allowing the implementation of
@@ -159,10 +163,19 @@ class Flow(object):
                     # train current node
                     node.train(x, *arg)
                 if empty_iterator:
-                    errstr = ("The training data iterator for node "
-                              "no. %d is empty." % (nodenr+1))
-                    raise FlowException(errstr)
+                    if not restarted_iteration:
+                        err_str = ("The training data iterator for node "
+                                   "no. %d is empty." % (nodenr+1))
+                        raise FlowException(err_str)
+                    else:
+                        err_str = ("The training data iteration for node "
+                                   "no. %d could not be repeated for the "
+                                   "second training phase, you probably "
+                                   "provided an iterator instead of an "
+                                   "iterable." % (nodenr+1))
+                        raise FlowException(err_str)
                 self._stop_training_hook()
+                restarted_iteration = True
                 if node.get_remaining_train_phase() > 1:
                     # close the previous training phase
                     node.stop_training()
@@ -182,8 +195,8 @@ class Flow(object):
             prev = prev[prev.find('\n')+1:]
             act = "\nWhile training node #%d (%s):\n" % (nodenr,
                                                          str(self.flow[nodenr]))
-            errstr = ''.join(('\n', 40*'=', act, prev, 40*'='))
-            raise FlowException(errstr)
+            err_str = ''.join(('\n', 40*'=', act, prev, 40*'='))
+            raise FlowException(err_str)
         except Exception, e:
             # capture any other exception occured during training.
             self._propagate_exception(e, nodenr)
@@ -192,47 +205,41 @@ class Flow(object):
         """Hook method that is called before stop_training is called."""
         pass
             
-    def _train_check_iterators(self, data_iterators):
-        #verifies that the number of iterators matches that of
-        #the signal nodes and multiplies them if needed.
+    def _train_check_iterables(self, data_iterables):
+        """Return the data iterables after some checks and sanitizing.
+        
+        Note that this method does not distinguish between iterables and
+        iterators, so this must be taken care of later.
+        """
+        # verifies that the number of iterables matches that of
+        # the signal nodes and multiplies them if needed.
         flow = self.flow
         
         # if a single array is given wrap it in a list of lists,
         # note that a list of 2d arrays is not valid
-        if isinstance(data_iterators, numx.ndarray):
-            data_iterators = [[data_iterators]]*len(flow)
+        if isinstance(data_iterables, numx.ndarray):
+            data_iterables = [[data_iterables]] * len(flow)
 
-        if not isinstance(data_iterators, list):
-            errstr = ("'data_iterators' is %s must be either a list of " 
-                      "iterators or an array" % str(type(data_iterators)))
-            raise FlowException(errstr)
-
-        # check that all elements are iterable
-        for i in range(len(data_iterators)):
-            el = data_iterators[i]
-            if el is not None and not hasattr(el, '__iter__'):
-                err = ("Element number %d in the iterators" 
-                       " list is not a list or iterator." % i)
-                raise FlowException(err)
-       
-        # check that the number of data_iterators is correct
-        if len(data_iterators)!=len(flow):
-            err_str = ("%d data iterators specified," 
-                       " %d needed" % (len(data_iterators), len(flow)))
+        if not isinstance(data_iterables, list):
+            err_str = ("'data_iterables' is %s must be either a list of " 
+                       "iterables or an array, but got " %
+                       str(type(data_iterables)))
             raise FlowException(err_str)
+        
+        # check that all elements are iterable
+        for i, iterable in enumerate(data_iterables):
+            if (iterable is not None) and (not hasattr(iterable, '__iter__')):
+                err = ("Element number %d in the data_iterables" 
+                       " list is not an iterable." % i)
+                raise FlowException(err)
 
-        # check that every node with multiple phases has an iterator
-        # but NOT a generator (since you cannot "rewind" a generator)
-        for i in range(len(flow)):
-            node, iter_ = flow[i], data_iterators[i]
-            if len(node._train_seq)>1 and type(iter_) is _types.GeneratorType:
-                errstr = ("Node number %d has multiple training phases " 
-                          "but the corresponding iterator is a generator. "
-                          "This is not allowed since generators cannot be "
-                          "'rewinded' for further training." % i)
-                raise FlowException(errstr)
-
-        return data_iterators
+        # check that the number of data_iterables is correct
+        if len(data_iterables) != len(flow):
+            err_str = ("%d data iterables specified," 
+                       " %d needed" % (len(data_iterables), len(flow)))
+            raise FlowException(err_str)
+        
+        return data_iterables
 
     def _close_last_node(self):
         if self.verbose:
@@ -262,30 +269,38 @@ class Flow(object):
         """
         self._crash_recovery = state
 
-    def train(self, data_iterators):
+    def train(self, data_iterables):
         """Train all trainable nodes in the flow.
         
-        'data_iterators' is a list of iterators (note that a list is also
-        an iterator), which return data arrays, one for each node in the flow.
-        If instead one array is specified, it is used as input training
-        sequence for all nodes.
+        'data_iterables' is a list of iterables, one for each node in the flow.
+        The iterators returned by the iterables must return data arrays that
+        are then used for the node training (so the data arrays are the 'x' for
+        the nodes). Note that the data arrays are processed by the nodes
+        which are in front of the node that gets trained, so the data dimension
+        must match the input dimension of the first node.
+        
+        If a node has only a single training phase then instead of an iterable
+        you can alternatively provide an iterator (including generator-type
+        iterators). For nodes with multiple training phases this is not
+        possible, since the iterator cannot be restarted after the first
+        iteration. For more information on iterators and iterables see
+        http://docs.python.org/library/stdtypes.html#iterator-types .
+        
+        In the special case that 'data_iterables' is one single array,
+        it is used as the data array 'x' for all nodes and training phases.
         
         Instead of a data array 'x' the iterators can also return a list or
         tuple, where the first entry is 'x' and the following are args for the
-        training of the node (e.g. for supervised training). 
-
-        Generator-type iterators are supported only for nodes with
-        a single training phase (this is because they cannot be
-        reset after they expired).
+        training of the node (e.g. for supervised training).
         """
 
-        data_iterators = self._train_check_iterators(data_iterators)
+        data_iterables = self._train_check_iterables(data_iterables)
         
         # train each Node successively
         for i in range(len(self.flow)):
             if self.verbose:
                 print "Training node #%d (%s)" % (i, str(self.flow[i]))
-            self._train_node(data_iterators[i], i)
+            self._train_node(data_iterables[i], i)
             if self.verbose:
                 print "Training finished"
 
@@ -303,23 +318,21 @@ class Flow(object):
                 self._propagate_exception(e, i)
         return x
 
-    def execute(self, iterator, nodenr = None):
+    def execute(self, iterable, nodenr = None):
         """Process the data through all nodes in the flow.
         
-        'iterator' is an iterator (note that a list is also an iterator),
-        which returns data arrays that are used as input to the flow.
+        'iterable' is an iterable or iterator (note that a list is also an
+        iterable), which returns data arrays that are used as input to the flow.
         Alternatively, one can specify one data array as input.
         
         If 'nodenr' is specified, the flow is executed only up to
-        node nr. 'nodenr'. This is equivalent to 'flow[:nodenr+1](iterator)'.
+        node nr. 'nodenr'. This is equivalent to 'flow[:nodenr+1](iterable)'.
         """
-        # if iterator is one single input sequence
-        if isinstance(iterator, numx.ndarray):
-            return self._execute_seq(iterator, nodenr)
-        # otherwise it is a iterator
+        if isinstance(iterable, numx.ndarray):
+            return self._execute_seq(iterable, nodenr)
         res = []
         empty_iterator = True
-        for x in iterator:
+        for x in iterable:
             empty_iterator = False
             res.append(self._execute_seq(x, nodenr))
         if empty_iterator:
@@ -337,27 +350,30 @@ class Flow(object):
                 self._propagate_exception(e, i)
         return x
 
-    def inverse(self, iterator):
+    def inverse(self, iterable):
         """Process the data through all nodes in the flow backwards        
         (starting from the last node up to the first node) by calling the
         inverse function of each node. Of course, all nodes in the
         flow must be invertible.
         
-        'iterator' is an iterator  (note that a list is also an iterator),
-        which returns data arrays that are used as input to the flow.
+        'iterable' is an iterable or iterator  (note that a list is also an
+        iterable), which returns data arrays that are used as input to the flow.
         Alternatively, one can specify one data array as input.
         
-        Note that this is _not_ equivalent to 'flow[::-1](iterator)',
+        Note that this is _not_ equivalent to 'flow[::-1](iterable)',
         which also executes the flow backwards but calls the 'execute'
         function of each node."""
         
-        # if iterator is one single input sequence
-        if isinstance(iterator, numx.ndarray):
-            return self._inverse_seq(iterator)
-        # otherwise it is a iterator
+        if isinstance(iterable, numx.ndarray):
+            return self._inverse_seq(iterable)
         res = []
-        for x in iterator:
+        empty_iterator = True
+        for x in iterable:
+            empty_iterator = False
             res.append(self._inverse_seq(x))
+        if empty_iterator:
+            errstr = ("The inverse data iterator is empty.")
+            raise FlowException(errstr)
         return numx.concatenate(res)
 
     def copy(self, protocol = -1):
@@ -384,9 +400,9 @@ class Flow(object):
             _cPickle.dump(self, flh, protocol)
             flh.close()
 
-    def __call__(self, iterator, nodenr = None):
+    def __call__(self, iterable, nodenr = None):
         """Calling an instance is equivalent to call its 'execute' method."""
-        return self.execute(iterator, nodenr=nodenr)
+        return self.execute(iterable, nodenr=nodenr)
 
     ###### string representation
     
@@ -526,7 +542,7 @@ class CheckpointFlow(Flow):
         return checkpoints
 
 
-    def train(self, data_iterators, checkpoints):
+    def train(self, data_iterables, checkpoints):
         """Train all trainable nodes in the flow.
 
         In addition to the basic behavior (see 'Node.train'), calls the
@@ -541,7 +557,7 @@ class CheckpointFlow(Flow):
         checkpoint functions.
         """
 
-        data_iterators = self._train_check_iterators(data_iterators)
+        data_iterables = self._train_check_iterables(data_iterables)
         checkpoints = self._train_check_checkpoints(checkpoints)
 
         # train each Node successively
@@ -549,7 +565,7 @@ class CheckpointFlow(Flow):
             node = self.flow[i]
             if self.verbose:
                 print "Training node #%d (%s)" % (i, type(node).__name__)
-            self._train_node(data_iterators[i], i)
+            self._train_node(data_iterables[i], i)
             if (i <= len(checkpoints)) and (checkpoints[i] is not None):
                 dic = checkpoints[i](node)
                 if dic:
@@ -581,7 +597,7 @@ class CheckpointSaveFunction(CheckpointFunction):
     and continue the training.
     """
 
-    def __init__(self, filename, stop_training = 0, binary = 1, protocol = 2):
+    def __init__(self, filename, stop_training=0, binary=1, protocol=2):
         """CheckpointSaveFunction constructor.
         
         'filename'      -- the name of the pickle dump file.

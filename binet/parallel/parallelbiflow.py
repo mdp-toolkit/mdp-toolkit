@@ -269,7 +269,7 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
                         self.use_results(results)
             finally:
                 # reset remaining iterator references, which cannot be pickled
-                self._train_data_iter = None    
+                self._train_data_iterator = None    
                 self._train_msg_iter = None
     
     def setup_parallel_training(self, data_iterators, msg_iterators=None, 
@@ -308,7 +308,7 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
         data_iterators, msg_iterators = self._sanitize_training_iterators(
                                             data_iterators=data_iterators, 
                                             msg_iterators=msg_iterators)
-        self._train_data_iters = data_iterators
+        self._train_data_iterables = data_iterators
         self._train_msg_iters = msg_iterators
         if stop_messages is None:
             stop_messages = [None] * len(data_iterators)
@@ -331,7 +331,7 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
             if not self.flow[self._i_train_node].is_training():
                 self._i_train_node += 1
                 continue
-            iterator =self._train_data_iters[self._i_train_node]
+            iterator =self._train_data_iterables[self._i_train_node]
             msg_iterator = self._train_msg_iters[self._i_train_node]
             iterator, msg_iterator = self._sanitize_iterator_pair(
                                                             iterator, 
@@ -349,7 +349,7 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
                            "node no. %d in parallel flow" % 
                            (self._i_train_node+1))
                 # turn iterables into iterators
-                self._train_data_iter = iter(iterator)
+                self._train_data_iterator = iter(iterator)
                 self._train_msg_iter = iter(msg_iterator)
                 first_task = self._create_train_task()
                 # make sure that iterator is not empty
@@ -415,7 +415,7 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
         Raises NoTaskException if any other problem arises.
         """
         try:
-            x = self._train_data_iter.next()
+            x = self._train_data_iterator.next()
             msg = self._train_msg_iter.next()
             return ((x, msg), None)
         except StopIteration:
@@ -480,7 +480,7 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
             result = self.use_results(scheduler.get_results())
         finally:
             # reset remaining iterator references, which cannot be pickled
-            self._exec_data_iter = None
+            self._exec_data_iterator = None
             self._exec_msg_iter = None
         return result
             
@@ -514,7 +514,7 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
         iterator, msg_iterator = self._sanitize_iterator_pair(
                                                            iterator, 
                                                            msg_iterator)
-        self._exec_data_iter = iter(iterator)
+        self._exec_data_iterator = iter(iterator)
         self._exec_msg_iter = iter(msg_iterator)
         first_task = self._create_execute_task()
         if first_task is None:
@@ -536,7 +536,7 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
         Raises NoTaskException if no task is available.
         """
         try:
-            x = self._exec_data_iter.next()
+            x = self._exec_data_iterator.next()
             msg = self._exec_msg_iter.next()
             return ((x, msg), None)
         except StopIteration:
@@ -575,7 +575,7 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
                 self._i_train_node += 1
             self._next_train_phase()
         elif self.is_parallel_executing():
-            self._exec_data_iter = None
+            self._exec_data_iterator = None
             self._exec_msg_iter = None
             y_results = []
             msg_results = MessageResultContainer()
