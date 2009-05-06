@@ -292,7 +292,7 @@ class ParallelFlow(mdp.Flow):
                 first_task = self._create_train_task()
                 # make sure that the iterator is not empty
                 if first_task is None:
-                    if (current_node.get_current_train_phase == 1):
+                    if current_node.get_current_train_phase() == 1:
                         err_str = ("The training data iteration for node "
                                    "no. %d could not be repeated for the "
                                    "second training phase, you probably "

@@ -162,19 +162,18 @@ class Flow(object):
                     # train current node
                     node.train(x, *arg)
                 if empty_iterator:
-                    if node._get:
-                        err_str = ("The training data iterator for node "
-                                   "no. %d is empty." % (nodenr+1))
-                        raise FlowException(err_str)
-                    else:
+                    if node.get_current_train_phase() == 1:
                         err_str = ("The training data iteration for node "
                                    "no. %d could not be repeated for the "
                                    "second training phase, you probably "
                                    "provided an iterator instead of an "
                                    "iterable." % (nodenr+1))
                         raise FlowException(err_str)
+                    else:
+                        err_str = ("The training data iterator for node "
+                                   "no. %d is empty." % (nodenr+1))
+                        raise FlowException(err_str)
                 self._stop_training_hook()
-                restarted_iteration = True
                 if node.get_remaining_train_phase() > 1:
                     # close the previous training phase
                     node.stop_training()
