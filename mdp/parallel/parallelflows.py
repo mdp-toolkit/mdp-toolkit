@@ -170,7 +170,7 @@ class ParallelFlow(mdp.Flow):
         If a scheduler is provided the training will be done in parallel on the
         scheduler.
         
-        data_iterables -- list of iterables, one for each node in the flow.
+        data_iterables -- A list of iterables, one for each node in the flow.
             The iterators returned by the iterables must
             return data arrays that are then used for the node training.
             See Flow.train for more details.
@@ -241,7 +241,7 @@ class ParallelFlow(mdp.Flow):
         True. Training may require multiple phases, which are each closed by 
         calling use_results.
         
-        data_iterables -- list of iterables, one for each node in the flow.
+        data_iterables -- A list of iterables, one for each node in the flow.
             The iterators returned by the iterables must
             return data arrays that are then used for the node training.
             See Flow.train for more details.
