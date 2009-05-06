@@ -144,7 +144,6 @@ class Flow(object):
             ## Checkpoint functions must close it explicitly if needed!
             ## Note that the last training_phase is closed
             ## automatically when the node is executed.
-            restarted_iteration = False  # set to True after first iteration
             while True:
                 empty_iterator = True
                 for x in data_iterable:
@@ -163,7 +162,7 @@ class Flow(object):
                     # train current node
                     node.train(x, *arg)
                 if empty_iterator:
-                    if not restarted_iteration:
+                    if node._get:
                         err_str = ("The training data iterator for node "
                                    "no. %d is empty." % (nodenr+1))
                         raise FlowException(err_str)
