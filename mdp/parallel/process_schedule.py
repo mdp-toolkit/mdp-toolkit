@@ -2,6 +2,9 @@
 Process based scheduler for distribution across multiple CPU cores.
 """
 
+# TODO: use a queue instead of sleep?
+#    http://docs.python.org/library/queue.html
+
 import sys
 import os
 import cPickle as pickle

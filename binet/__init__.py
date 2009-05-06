@@ -95,9 +95,11 @@ terminated the normal flow execution will be resumed.
 #
 #    If y is specified in msg and x=None then method is set to "execute_inverse",
 #    _execute_inverse adds automatic type checks for y like inverse and then
-#    calls _inverse.
-#    Depending on the return value of _inverse the inverse execution then
-#    continues or is switched to a normal execution:
+#    calls _inverse. Note that it is still possible to select _inverse with
+#    "inverse", then no check is performed.
+#
+#    Depending on the return value of _execute_inverse the inverse execution
+#    then continues or is switched to a normal execution:
 #    If the return type specifies no y but has an x in msg then the Node
 #    switches back to normal executions, otherwise the y is put into the msg
 #    and the target defaults to -1
