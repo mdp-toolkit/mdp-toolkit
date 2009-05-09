@@ -688,13 +688,13 @@ def prepare_training_inspection(flow, path):
         del result["_snapshot_instance_methods_"]
         # remove data attributes (generators cannot be pickled)
         # pop with default value also works when key is not present in dict
-        result.pop("_train_data_iters", None)
-        result.pop("_train_data_iter", None)
-        result.pop("_train_msg_iters", None)
-        result.pop("_train_msg_iter", None)
+        result.pop("_train_data_iterables", None)
+        result.pop("_train_data_iterator", None)
+        result.pop("_train_msg_iterables", None)
+        result.pop("_train_msg_iterator", None)
         result.pop("_stop_messages", None)
-        result.pop("_exec_data_iter", None)
-        result.pop("_exec_msg_iter", None)
+        result.pop("_exec_data_iterator", None)
+        result.pop("_exec_msg_iterator", None)
         return result
     flow.__getstate__ = new.instancemethod(wrapped_biflow_getstate, flow)
     flow._snapshot_instance_methods_.append("__getstate__")
