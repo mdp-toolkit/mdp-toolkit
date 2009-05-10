@@ -117,25 +117,25 @@ def show_training(flow, data_iterables, msg_iterables=None, stop_messages=None,
     # get first part of data iterators as sample data for inspection
     # if data_iterables is an array, wrap it up in a list
     if isinstance(data_iterables, numx.ndarray):
-        data_iterables = [[data_iterables]]*len(flow)
+        data_iterables = [[data_iterables]] * len(flow)
     x_samples = []
-    for i, data_iterator in enumerate(data_iterables):
-        if data_iterator is None:
-            x_sample, new_data_iterator = None, None
+    for i, data_iterable in enumerate(data_iterables):
+        if data_iterable is None:
+            x_sample, new_data_iterable = None, None
         else:
-            x_sample, new_data_iterator = first_iterable_elem(data_iterator)
+            x_sample, new_data_iterable = first_iterable_elem(data_iterable)
         x_samples.append(x_sample)
-        data_iterables[i] = new_data_iterator
+        data_iterables[i] = new_data_iterable
     del x_sample
     if msg_iterables:
         msg_samples = []
-        for i, msg_iterator in enumerate(msg_iterables):
-            if msg_iterator is None:
-                msg_sample, new_msg_iterator = None, None
+        for i, msg_iterable in enumerate(msg_iterables):
+            if msg_iterable is None:
+                msg_sample, new_msg_iterable = None, None
             else:
-                msg_sample, new_msg_iterator = first_iterable_elem(msg_iterator)
+                msg_sample, new_msg_iterable = first_iterable_elem(msg_iterable)
             msg_samples.append(msg_sample)
-            msg_iterables[i] = new_msg_iterator
+            msg_iterables[i] = new_msg_iterable
         del msg_sample
     else:
         msg_samples = None

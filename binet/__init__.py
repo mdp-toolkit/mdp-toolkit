@@ -47,12 +47,24 @@ terminated the normal flow execution will be resumed.
 
 ### N E X T ###
 
-# TODO: add target BiNode unittest, also add unittests for message parsing?
+# TODO: update TopDownNode, use slots for up and down targets,
+#    the direction is stored like the canned messages etc.
+
+# TODO: add target BiNode unittest
+# TODO: add unittests for message parsing, especially magic method key
+ 
+# TODO: add read-only flow property to access _flow in FlowNode and such?
 
 # TODO: fix unecessary bi_reset calls?
 #    Note that bi_reset in BiFlowNode did not work properly until recently.
 #    However, it might be better to leave both pre- and post bi_reset in place
 #    so that no unecessary data stored (especially when the flow gets pickled).
+
+# TODO: automatically create BiNode versions of all MDP nodes,
+#    use exec to define new classes and create fitting docstring,
+#    first check is a bi-version is already present
+
+# TODO: show more information in trace slides via mouse hover
 
 # TODO: Node Extensions 
 #    implement gradient and parallel via Node Extensions, define
@@ -92,29 +104,6 @@ terminated the normal flow execution will be resumed.
 #    message and _message or stop_message)
 #    If x is None then it is not forwarded to the method.
 #    Not sure how to implement this yet...
-#
-#    If y is specified in msg and x=None then method is set to "execute_inverse",
-#    _execute_inverse adds automatic type checks for y like inverse and then
-#    calls _inverse. Note that it is still possible to select _inverse with
-#    "inverse", then no check is performed.
-#
-#    Depending on the return value of _execute_inverse the inverse execution
-#    then continues or is switched to a normal execution:
-#    If the return type specifies no y but has an x in msg then the Node
-#    switches back to normal executions, otherwise the y is put into the msg
-#    and the target defaults to -1
-#
-#    update topdown node to deal with direction changes in inverse,
-#    maybe store an additional flag 'up' or 'down'
-
-# TODO: add read-only flow property to access _flow in FlowNode and such?
-
-# TODO: automatically create BiNode versions of all MDP nodes,
-#    use exec to define new classes and create fitting docstring,
-#    first check is a bi-version is already present
-
-
-# TODO: show more information in trace slides via mouse hover
 
 ### T O D O ###
 

@@ -96,9 +96,6 @@ keywords are treated in a special way:
      
 """
 
-# TODO: store inspect.getargspec(self._stop_message)[0] in self,
-#    that should be more efficient
-
 # TODO: use of namedtuple for the return value?
 #    see http://docs.python.org/library/collections.html#collections.namedtuple
 

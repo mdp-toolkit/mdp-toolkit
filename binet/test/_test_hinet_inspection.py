@@ -10,10 +10,6 @@ import numpy
 import mdp
 import binet
 
-# 
-INSPECTION_PATH = "D:\\test" 
-#INSPECTION_PATH = "/extra/wilbert/test"
-
 # create the flow
 noisenode = mdp.nodes.NormalNoiseNode(input_dim=20*20, 
                                       noise_args=(0, 0.0001))
@@ -29,13 +25,11 @@ flownode = mdp.hinet.FlowNode(mdp.Flow([noisenode, sfa_node]))
 sfa_layer = mdp.hinet.CloneLayer(flownode, switchboard.output_channels)
 flow = mdp.Flow([switchboard, sfa_layer])
 
-train_gen = numpy.cast['f'](numpy.random.random((3, 10, 100*100)))
+train_data = [numpy.cast['f'](numpy.random.random((10, 100*100)))
+              for _ in range(5)]
 
 # do the inspection, open in browser
-binet.show_training(flow=flow,
-                    path=INSPECTION_PATH,
-                    data_iterables=[None, train_gen])
-filename, out = binet.show_execution(flow, path=INSPECTION_PATH,
-                                     x=train_gen[0])
+binet.show_training(flow=flow, data_iterables=[None, train_data])
+filename, out = binet.show_execution(flow, x=train_data[0])
 print "done."
 
