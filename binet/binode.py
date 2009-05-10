@@ -200,12 +200,18 @@ class BiNode(mdp.Node):
         
         This template method calls the corresponding _execute method.
         """
+        
+        if msg is None:
+            return super(BiNode, self).execute(x)
+        
         self._cache_msg_id_keys(msg)
         target = self._extract_message_key(msg, "target")
         method_name = self._extract_message_key(msg, "method")
         
         if not method_name:
-            self._pre_execution_checks(x)
+            if x is not None:
+                self._pre_execution_checks(x)
+                x = self._refcast(x)
             method = self._execute
         elif method_name == "inverse":
             self._pre_inversion_checks(x)
@@ -216,14 +222,10 @@ class BiNode(mdp.Node):
             # TODO: put into try except to provide better error
             method = getattr(self, method_name)
         
-        arg_keys = inspect.getargspec(method)[0]      
-        arg_dict = self._extract_message_keys(msg, arg_keys)
-        if "msg" in arg_keys:
-            arg_dict["msg"] = msg
-            msg = None
-        
-        result = method(x, **arg_dict)
+        msg, arg_dict = self._extract_method_args(method, msg)
 
+        result = method(x, **arg_dict)
+        
         # overwrite result values if necessary and return
         if isinstance(result, tuple):
             if msg and result[1]:
@@ -263,24 +265,44 @@ class BiNode(mdp.Node):
         
         This template method calls a _train(x, msg) method from self._train_seq.
         """
+        if msg is None:
+            return super(BiNode, self).train(x)
+        
         # perform checks, adapted from Node.train
         if not self.is_trainable():
             raise mdp.IsNotTrainableException("This node is not trainable.")
         if not self.is_training():
             err = "The training phase has already finished."
             raise mdp.TrainingFinishedException(err)
-        if x is not None:
-            self._check_input(x)
-        self._check_train_args(x, msg)        
-        self._train_phase_started = True
-        if x is not None:
-            x = self._refcast(x)
-        train_method = self._train_seq[self._train_phase][0]
-        if msg is None:
-            return train_method(x)
-        arg_keys = inspect.getargspec(train_method)[0]
-        msg, msg_kwargs, target = self._parse_message(msg, arg_keys)
-        result = train_method(x, **msg_kwargs)
+
+        self._cache_msg_id_keys(msg)
+        target = self._extract_method_args(msg, "target")
+        method_name = self._extract_message_key(msg, "method")
+        
+        check_train_args = False
+        if not method_name:
+            if x is not None:
+                self._check_input(x)
+                x = self._refcast(x)
+            check_train_args = True
+            method = self._train_seq[self._train_phase][0]
+            self._train_phase_started = True
+        elif method_name == "inverse":
+            self._pre_inversion_checks(x)
+            method = self._inverse
+            if target is None:
+                target = -1
+        else:
+            # TODO: put into try except to provide better error
+            method = getattr(self, method_name)
+        
+        msg, arg_dict = self._extract_method_args(method, msg)
+
+        if check_train_args:
+            self._check_train_args(x, **arg_dict)        
+        
+        result = method(x, **arg_dict)
+        
         # overwrite result values if necessary and return
         if isinstance(result, tuple) and (len(result) >= 3):
             # continue with training execution
@@ -323,9 +345,9 @@ class BiNode(mdp.Node):
             msg = stored_stop_msg
             target = None
         else:
-            arg_keys = inspect.getargspec(stop_method)[0]
-            msg, msg_kwargs, target = self._parse_message(msg, arg_keys)
-            result = stop_method(**msg_kwargs)
+            self._cache_msg_id_keys(msg)
+            msg, arg_dict = self._extract_method_args(stop_method, msg)
+            result = stop_method(**arg_dict)
             if stored_stop_msg:
                 msg.update(stored_stop_msg)
         # overwrite result values if necessary
@@ -350,9 +372,25 @@ class BiNode(mdp.Node):
         """
         if not msg:
             return self._message()
-        arg_keys = inspect.getargspec(self._message)[0]
-        msg, msg_kwargs, target = self._parse_message(msg, arg_keys)
-        result = self._message(**msg_kwargs)
+        
+        self._cache_msg_id_keys(msg)
+        target = self._extract_message_key(msg, "target")
+        method_name = self._extract_message_key(msg, "method")
+        
+        if not method_name:
+            method = self._message
+        elif method_name == "inverse":
+            method = self._inverse
+            if target is None:
+                target = -1
+        else:
+            # TODO: put into try except to provide better error
+            method = getattr(self, method_name)
+        
+        msg, arg_dict = self._extract_method_args(method, msg)
+
+        result = method(**arg_dict)
+        
         return self._combine_message_result(result, msg, target)
 
     def _message(self):
@@ -373,11 +411,27 @@ class BiNode(mdp.Node):
         """
         if not msg:
             return self._stop_message()
-        arg_keys = inspect.getargspec(self._stop_message)[0]
-        msg, msg_kwargs, target = self._parse_message(msg, arg_keys)
-        result = self._stop_message(**msg_kwargs)
-        return self._combine_message_result(result, msg, target)
+        
+        self._cache_msg_id_keys(msg)
+        target = self._extract_message_key(msg, "target")
+        method_name = self._extract_message_key(msg, "method")
+        
+        if not method_name:
+            method = self._stop_message
+        elif method_name == "inverse":
+            method = self._inverse
+            if target is None:
+                target = -1
+        else:
+            # TODO: put into try except to provide better error
+            method = getattr(self, method_name)
+        
+        msg, arg_dict = self._extract_method_args(method, msg)
 
+        result = method(**arg_dict)
+        
+        return self._combine_message_result(result, msg, target)
+    
     def _stop_message(self):
         """Hook method, overwrite when needed. 
         
@@ -393,9 +447,18 @@ class BiNode(mdp.Node):
         
         This template method calls the _global_message method.
         """
-        arg_keys = inspect.getargspec(self._global_message)[0]
-        msg_kwargs = self._parse_global_message(msg, arg_keys)
-        self._global_message(**msg_kwargs)
+        self._cache_global_msg_id_keys(msg)
+        method_name = self._extract_message_key(msg, "method")
+        
+        if not method_name:
+            method = self._global_message
+        else:
+            # TODO: put into try except to provide better error
+            method = getattr(self, method_name)
+        
+        arg_dict = self._extract_global_method_args(method, msg)
+
+        method(**arg_dict)
     
     def _global_message(self):
         """Hook method, overwrite when needed."""
@@ -455,51 +518,6 @@ class BiNode(mdp.Node):
         
     ### Helper methods for msg handling. ###
     
-    def _parse_message(self, msg, arg_keys):
-        """Return the modified message, msg kwargs and target for this node.
-        
-        So the return value is the tuple (msg, msg_kwargs, target). 
-        The searching for a 'target' key happens after the arg_keys have been
-        extracted.
-        
-        msg -- The original msg dict (note that this is also modified
-            in-place).
-        arg_keys -- List of keyword argument strings of the function the
-            parsing is done for.
-        
-        Note that keys that come with a node_id are removed from msg (in place).
-        """
-        # note that arg_keys also contains 'self' (and for _execute 'x'),
-        # but this should not be a problem, so there is no need to remove them
-        msg_kwargs = {}
-        # collect general keys
-        msg_kwargs.update(dict([(key, msg[key])
-                                for key in msg if key in arg_keys]))
-        # collect node_id specific keys and remove them from the msg
-        id_key_pairs = [(key.split(NODE_ID_KEY), key)
-                        for key in msg if key.find(NODE_ID_KEY) > 0]
-        msg_kwargs.update(dict([(key, msg.pop(fullkey))  # notice remove by pop
-                                for (node_id, key), fullkey in id_key_pairs
-                                if ((key in arg_keys) and 
-                                    self._request_node_id(node_id))]))
-        # deal with special keywords
-        # search for target value
-        target = None
-        if msg and (TARGET_KEY not in msg_kwargs):
-            if TARGET_KEY in msg:
-                target = msg[TARGET_KEY]
-            for (node_id, key), fullkey in id_key_pairs:
-                if (key == TARGET_KEY) and self._request_node_id(node_id):
-                    target = msg.pop(fullkey)
-                    break
-        # look for msg argument 
-        if "msg" in arg_keys:
-            msg_kwargs["msg"] = msg
-            msg = None
-        return msg, msg_kwargs, target
-    
-    ##########
-    
     def _cache_msg_id_keys(self, msg):
         """Store the id specific message keys for this node.
         
@@ -507,11 +525,22 @@ class BiNode(mdp.Node):
         The format is [(key, fullkey),...].
         """
         self._msg_id_keys = []
-        if not msg:
-            return
         for fullkey in msg:
             if fullkey.find(NODE_ID_KEY) > 0:
                 node_id, key = fullkey.split(NODE_ID_KEY)
+                if self._request_node_id(node_id):
+                    self._msg_id_keys.append((key, fullkey))
+                    
+    def _cache_global_msg_id_keys(self, msg):
+        """Store the id specific message keys for this node.
+        
+        All the keys that match this node are stored in self._msg_id_keys.
+        The format is [(key, fullkey),...].
+        """
+        self._msg_id_keys = []
+        for fullkey in msg:
+            if fullkey.find(GLOBAL_ID_KEY) > 0:
+                node_id, key = fullkey.split(GLOBAL_ID_KEY)
                 if self._request_node_id(node_id):
                     self._msg_id_keys.append((key, fullkey))
         
@@ -530,48 +559,41 @@ class BiNode(mdp.Node):
                 break
         return value
     
-    def _extract_message_keys(self, msg, keys):
-        """Return a dict with the extracted values for the keys.
+    def _extract_method_args(self, method, msg):
+        """Extract the method arguments form the message.
         
-        Note that msg is modfied if found keys are node_id specific.
+        Return the new message and a dict with the keyword arguments.
+        It also deletes the _msg_id_keys cache.
         """
-        value_dict = dict([(key, msg[key]) for key in msg if key in keys])
-        value_dict.update(dict([(key, msg.pop(fullkey))  # notice remove by pop
+        arg_keys = inspect.getargspec(method)[0]      
+        arg_dict = dict([(key, msg[key]) for key in msg if key in arg_keys])
+        arg_dict.update(dict([(key, msg.pop(fullkey))  # notice remove by pop
                                 for key, fullkey in self._msg_id_keys
-                                if key in keys]))
-        return value_dict
+                                if key in arg_keys]))
+        if "msg" in arg_keys:
+            arg_dict["msg"] = msg
+            msg = None
+        self._msg_id_keys = None
+        return msg, arg_dict
         
-    ##########
+    def _extract_global_method_args(self, method, msg):
+        """Extract the method arguments form the message.
         
-    
-    
-    def _parse_global_message(self, msg, arg_keys):
-        """Return the global msg kwargs for this node and modify msg if needed.
+        Return the the keyword arguments.
         
-        msg -- The original msg dict (note that this might get modified
-            in-place).
-        arg_keys -- List of keyword argument strings of the function the
-            parsing is done for. Unlike in _parse_message the 'msg' key is not
-            supported. 
-        
+        The original msg dict might get modified in-place.
         Note that keys that come with a node_id are removed from msg.
         """
-        msg_kwargs = {}
-        # collect general global keys
-        msg_kwargs.update(dict([(key[1:], msg[key])
-                                for key in msg 
-                                if (key.startswith(GLOBAL_CHAR) and 
-                                    key[1:] in arg_keys)]))
-        # collect global node_id keys and remove them from the msg
-        id_key_pairs = [(key.split(GLOBAL_ID_KEY), key)
-                        for key in msg if key.find(GLOBAL_ID_KEY) > 0]
-        msg_kwargs.update(dict([(key, msg.pop(fullkey))  # notice remove by pop
-                                for (node_id, key), fullkey in id_key_pairs
-                                if ((key in arg_keys) and 
-                                    self._request_node_id(node_id))]))
+        arg_keys = inspect.getargspec(method)[0]      
+        arg_dict = dict([(key[1:], msg[key]) for key in msg 
+                         if (key.startswith(GLOBAL_CHAR) and
+                             key[1:] in arg_keys)])
+        arg_dict.update(dict([(key, msg.pop(fullkey))  # notice remove by pop
+                              for key, fullkey in self._msg_id_keys
+                              if key in arg_keys]))
         if "msg" in arg_keys:
-            msg_kwargs["msg"] = msg
-        return msg_kwargs
+            arg_dict["msg"] = msg
+        return arg_dict
     
     def _combine_message_result(self, result, msg, target):
         """Combine the result value with the msg and the target.
