@@ -87,7 +87,12 @@ keywords are treated in a special way:
      target value. In global_message calls 'target' has no special meaning and
      can be used like any other keyword.
      
-  'method' -- 
+  'method' -- Specify the name of the method that should be used instead of
+      the standard one (e.g. in execute the standard method is _execute).
+      An underscore is automatically added in front, so to select _execute
+      one would have to provide 'execute'.
+      If 'inverse' is given then the inverse dimension check will be performed
+      and if no target is provided it will be set to -1.
      
 """
 
@@ -199,14 +204,12 @@ class BiNode(mdp.Node):
         
         This template method calls the corresponding _execute method.
         """
-        
         if msg is None:
             return super(BiNode, self).execute(x)
-        
         self._cache_msg_id_keys(msg)
         target = self._extract_message_key(msg, "target")
         method_name = self._extract_message_key(msg, "method")
-        
+        # select method and perform specific checks
         if not method_name:
             if x is not None:
                 self._pre_execution_checks(x)
@@ -218,17 +221,15 @@ class BiNode(mdp.Node):
             if target is None:
                 target = -1
         else:
+            method_name = "_" + method_name
             try:
                 method = getattr(self, method_name)
             except AttributeError:
                 err = ("The message requested a method named '%s', but "
                        "there is no such method." % method_name)
                 raise BiNodeException(err)
-        
         msg, arg_dict = self._extract_method_args(method, msg)
-
         result = method(x, **arg_dict)
-        
         # overwrite result values if necessary and return
         if isinstance(result, tuple):
             if msg and result[1]:
@@ -299,6 +300,7 @@ class BiNode(mdp.Node):
             if target is None:
                 target = -1
         else:
+            method_name = "_" + method_name
             try:
                 method = getattr(self, method_name)
             except AttributeError:
@@ -331,6 +333,8 @@ class BiNode(mdp.Node):
         The outgoing msg carries forward the incoming message content.
         
         This template method calls a _stop_training method from self._train_seq.
+        Note that it is not possible to select other methods via the 'method'
+        message key.
         
         If a stop_msg was given in __init__ then it is incorporated into the
         outgoing msg (but can be overwritten by the _stop_training msg output).
@@ -346,6 +350,7 @@ class BiNode(mdp.Node):
             stored_stop_msg = self._stop_msg[self._train_phase]
         else:
             stored_stop_msg = self._stop_msg
+        # call stop_training
         stop_method = self._train_seq[self._train_phase][1]
         if not msg:
             result = stop_method()
@@ -380,11 +385,10 @@ class BiNode(mdp.Node):
         """
         if not msg:
             return self._message()
-        
         self._cache_msg_id_keys(msg)
         target = self._extract_message_key(msg, "target")
         method_name = self._extract_message_key(msg, "method")
-        
+        # select method and perform specific checks
         if not method_name:
             method = self._message
         elif method_name == "inverse":
@@ -392,17 +396,15 @@ class BiNode(mdp.Node):
             if target is None:
                 target = -1
         else:
+            method_name = "_" + method_name
             try:
                 method = getattr(self, method_name)
             except AttributeError:
                 err = ("The message requested a method named '%s', but "
                        "there is no such method." % method_name)
                 raise BiNodeException(err)
-        
         msg, arg_dict = self._extract_method_args(method, msg)
-
         result = method(**arg_dict)
-        
         return self._combine_message_result(result, msg, target)
 
     def _message(self):
@@ -423,11 +425,9 @@ class BiNode(mdp.Node):
         """
         if not msg:
             return self._stop_message()
-        
         self._cache_msg_id_keys(msg)
         target = self._extract_message_key(msg, "target")
         method_name = self._extract_message_key(msg, "method")
-        
         if not method_name:
             method = self._stop_message
         elif method_name == "inverse":
@@ -435,17 +435,15 @@ class BiNode(mdp.Node):
             if target is None:
                 target = -1
         else:
+            method_name = "_" + method_name
             try:
                 method = getattr(self, method_name)
             except AttributeError:
                 err = ("The message requested a method named '%s', but "
                        "there is no such method." % method_name)
                 raise BiNodeException(err)
-        
         msg, arg_dict = self._extract_method_args(method, msg)
-
         result = method(**arg_dict)
-        
         return self._combine_message_result(result, msg, target)
     
     def _stop_message(self):
@@ -465,19 +463,17 @@ class BiNode(mdp.Node):
         """
         self._cache_global_msg_id_keys(msg)
         method_name = self._extract_message_key(msg, "method")
-        
         if not method_name:
             method = self._global_message
         else:
+            method_name = "_" + method_name
             try:
                 method = getattr(self, method_name)
             except AttributeError:
                 err = ("The message requested a method named '%s', but "
                        "there is no such method." % method_name)
                 raise BiNodeException(err)
-        
         arg_dict = self._extract_global_method_args(method, msg)
-
         method(**arg_dict)
     
     def _global_message(self):
@@ -615,6 +611,7 @@ class BiNode(mdp.Node):
                               if key in arg_keys]))
         if "msg" in arg_keys:
             arg_dict["msg"] = msg
+        self._msg_id_keys = None
         return arg_dict
     
     def _combine_message_result(self, result, msg, target):
