@@ -109,7 +109,6 @@ import mdp
 NODE_ID_KEY = "=>"  
 GLOBAL_CHAR = "@"  # single char prefix for global keys
 GLOBAL_ID_KEY = "@"
-TARGET_KEY = "target"  # target keyword
 
 
 class BiNodeException(mdp.NodeException):
@@ -219,8 +218,12 @@ class BiNode(mdp.Node):
             if target is None:
                 target = -1
         else:
-            # TODO: put into try except to provide better error
-            method = getattr(self, method_name)
+            try:
+                method = getattr(self, method_name)
+            except AttributeError:
+                err = ("The message requested a method named '%s', but "
+                       "there is no such method." % method_name)
+                raise BiNodeException(err)
         
         msg, arg_dict = self._extract_method_args(method, msg)
 
@@ -265,20 +268,23 @@ class BiNode(mdp.Node):
         
         This template method calls a _train(x, msg) method from self._train_seq.
         """
-        if msg is None:
-            return super(BiNode, self).train(x)
-        
         # perform checks, adapted from Node.train
         if not self.is_trainable():
             raise mdp.IsNotTrainableException("This node is not trainable.")
         if not self.is_training():
             err = "The training phase has already finished."
             raise mdp.TrainingFinishedException(err)
-
+        if msg is None:
+            # no fall-back on Node.train because we might have a return value
+            self._check_input(x)
+            self._check_train_args(x)        
+            self._train_phase_started = True
+            x = self._refcast(x)
+            return self._train_seq[self._train_phase][0](x)
         self._cache_msg_id_keys(msg)
-        target = self._extract_method_args(msg, "target")
+        target = self._extract_message_key(msg, "target")
         method_name = self._extract_message_key(msg, "method")
-        
+        # select method and perform specific checks
         check_train_args = False
         if not method_name:
             if x is not None:
@@ -293,16 +299,16 @@ class BiNode(mdp.Node):
             if target is None:
                 target = -1
         else:
-            # TODO: put into try except to provide better error
-            method = getattr(self, method_name)
-        
+            try:
+                method = getattr(self, method_name)
+            except AttributeError:
+                err = ("The message requested a method named '%s', but "
+                       "there is no such method." % method_name)
+                raise BiNodeException(err)
         msg, arg_dict = self._extract_method_args(method, msg)
-
         if check_train_args:
             self._check_train_args(x, **arg_dict)        
-        
         result = method(x, **arg_dict)
-        
         # overwrite result values if necessary and return
         if isinstance(result, tuple) and (len(result) >= 3):
             # continue with training execution
@@ -329,6 +335,7 @@ class BiNode(mdp.Node):
         If a stop_msg was given in __init__ then it is incorporated into the
         outgoing msg (but can be overwritten by the _stop_training msg output).
         """
+        # basic checks
         if self.is_training() and self._train_phase_started == False:
             raise mdp.TrainingException("The node has not been trained.")
         if not self.is_training():
@@ -345,6 +352,7 @@ class BiNode(mdp.Node):
             msg = stored_stop_msg
             target = None
         else:
+            # extract relevant message parts
             self._cache_msg_id_keys(msg)
             msg, arg_dict = self._extract_method_args(stop_method, msg)
             result = stop_method(**arg_dict)
@@ -384,8 +392,12 @@ class BiNode(mdp.Node):
             if target is None:
                 target = -1
         else:
-            # TODO: put into try except to provide better error
-            method = getattr(self, method_name)
+            try:
+                method = getattr(self, method_name)
+            except AttributeError:
+                err = ("The message requested a method named '%s', but "
+                       "there is no such method." % method_name)
+                raise BiNodeException(err)
         
         msg, arg_dict = self._extract_method_args(method, msg)
 
@@ -423,8 +435,12 @@ class BiNode(mdp.Node):
             if target is None:
                 target = -1
         else:
-            # TODO: put into try except to provide better error
-            method = getattr(self, method_name)
+            try:
+                method = getattr(self, method_name)
+            except AttributeError:
+                err = ("The message requested a method named '%s', but "
+                       "there is no such method." % method_name)
+                raise BiNodeException(err)
         
         msg, arg_dict = self._extract_method_args(method, msg)
 
@@ -453,8 +469,12 @@ class BiNode(mdp.Node):
         if not method_name:
             method = self._global_message
         else:
-            # TODO: put into try except to provide better error
-            method = getattr(self, method_name)
+            try:
+                method = getattr(self, method_name)
+            except AttributeError:
+                err = ("The message requested a method named '%s', but "
+                       "there is no such method." % method_name)
+                raise BiNodeException(err)
         
         arg_dict = self._extract_global_method_args(method, msg)
 
@@ -562,8 +582,10 @@ class BiNode(mdp.Node):
     def _extract_method_args(self, method, msg):
         """Extract the method arguments form the message.
         
-        Return the new message and a dict with the keyword arguments.
-        It also deletes the _msg_id_keys cache.
+        Return the new message and a dict with the keyword arguments (the
+        return of the message is done because it can be set to None).
+        
+        This method also deletes the _msg_id_keys cache.
         """
         arg_keys = inspect.getargspec(method)[0]      
         arg_dict = dict([(key, msg[key]) for key in msg if key in arg_keys])

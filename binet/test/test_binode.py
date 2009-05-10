@@ -36,7 +36,7 @@ class TestStopTrainBiNode(unittest.TestCase):
             pass
         stop_msg = {"test": 0}
         bi_sfa_node = BiSFANode(stop_msg=stop_msg,
-                                  node_id="testing binode")
+                                node_id="testing binode")
         self.assertTrue(bi_sfa_node.is_trainable())
         x = n.random.random((100,10))
         train_result = bi_sfa_node.train(x)

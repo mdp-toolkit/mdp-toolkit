@@ -99,7 +99,7 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
         target = None
         branch_msgs = []
         branch_target = None
-        for (node, node_msg) in zip(self.nodes, self._get_split_msgs(msg)):
+        for (node, node_msg) in zip(self.nodes, self._get_split_messages(msg)):
             if x is not None:
                 x_start_index = x_stop_index
                 x_stop_index += node.input_dim
@@ -150,7 +150,7 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
         target = None
         branch_msgs = []
         branch_target = None
-        for (node, node_msg) in zip(self.nodes, self._get_split_msgs(msg)):
+        for (node, node_msg) in zip(self.nodes, self._get_split_messages(msg)):
             if x is not None:
                 x_start_index = x_stop_index
                 x_stop_index += node.input_dim
@@ -220,7 +220,7 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
             ## complex case, call stop_training on all node copies 
             msgs = []
             target = None
-            for (node, node_msg) in zip(self.nodes, self._get_split_msgs(msg)):
+            for (node, node_msg) in zip(self.nodes, self._get_split_messages(msg)):
                 if node_msg:
                     node_result = node.stop_training(node_msg)
                 else:
@@ -235,7 +235,7 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
             msg = self._get_combined_message(msgs)
         # check for outgoing message for use_copies key
         if msg is not None:
-            self._parse_msg_copy_flag(msg)
+            self._extract_message_copy_flag(msg)
         if target is None:
             return msg
         else:
@@ -247,7 +247,7 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
         """Call message on the internal nodes."""
         msgs = []
         target = None
-        for (node, node_msg) in zip(self.nodes, self._get_split_msgs(msg)):
+        for (node, node_msg) in zip(self.nodes, self._get_split_messages(msg)):
             node_result = node.message(node_msg)
             ## store result
             if isinstance(node_result, dict):
@@ -272,7 +272,7 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
             self.use_copies = use_copies
         msgs = []
         target = None
-        for (node, node_msg) in zip(self.nodes, self._get_split_msgs(msg)):
+        for (node, node_msg) in zip(self.nodes, self._get_split_messages(msg)):
             node_result = node.stop_message(node_msg)
             ## store result
             if isinstance(node_result, dict):
@@ -284,7 +284,7 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
         msg = self._get_combined_message(msgs)
         # check for outgoing message for use_copies key
         if msg is not None:
-            self._parse_msg_copy_flag(msg)
+            self._extract_message_copy_flag(msg)
         if target is None:
             return msg
         elif msg:
@@ -294,7 +294,7 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
         """Call stop_message on the internal nodes."""
         if use_copies is not None:
             self.use_copies = use_copies
-        for (node, node_msg) in zip(self.nodes, self._get_split_msgs(msg)):
+        for (node, node_msg) in zip(self.nodes, self._get_split_messages(msg)):
             node.global_message(node_msg)
      
     def bi_reset(self):
@@ -344,17 +344,18 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
     
     ## Helper methods for message handling ##
     
-    def _parse_msg_copy_flag(self, msg):
+    def _extract_message_copy_flag(self, msg):
         """Look for the the possible copy flag and modify the msg if needed.
         
         If the copy flag is found the Node is switched accordingly.
         """
-        msg, copy_kwarg, target = self._parse_message(msg, ["use_copies"])
-        if (("use_copies" in copy_kwarg) and
-            (copy_kwarg["use_copies"] is not None)):
-            self.use_copies = copy_kwarg["use_copies"]
+        self._cache_msg_id_keys(msg)
+        copy_flag = self._extract_message_key(msg, "use_copies")
+        self._msg_id_keys = None
+        if copy_flag is not None:
+            self.use_copies = copy_flag
     
-    def _get_split_msgs(self, msg):
+    def _get_split_messages(self, msg):
         """Return messages for the individual nodes."""
         if not msg:
             return [None] * len(self.nodes)
