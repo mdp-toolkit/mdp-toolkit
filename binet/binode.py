@@ -87,6 +87,8 @@ keywords are treated in a special way:
      target value. In global_message calls 'target' has no special meaning and
      can be used like any other keyword.
      
+  'method' -- 
+     
 """
 
 # TODO: store inspect.getargspec(self._stop_message)[0] in self,
@@ -178,9 +180,7 @@ class BiNode(mdp.Node):
         """
         self._node_id = node_id
         self._stop_msg = stop_msg
-        # this is used for the msg parsing by _matches_classname
-        self._mro_classnames = [class_obj.__name__ 
-                                for class_obj in self.__class__.mro()]
+        self._msg_id_keys = None  # caching variable for msg interpretaion
         super(BiNode, self).__init__(**kwargs)
         
     ### Modified template methods from mdp.Node. ###
@@ -200,15 +200,30 @@ class BiNode(mdp.Node):
         
         This template method calls the corresponding _execute method.
         """
-        if x is not None:
+        self._cache_msg_id_keys(msg)
+        target = self._extract_message_key(msg, "target")
+        method_name = self._extract_message_key(msg, "method")
+        
+        if not method_name:
             self._pre_execution_checks(x)
-            x = self._refcast(x)
-        # analyze msg
-        if msg is None:
-            return self._execute(x)
-        arg_keys = inspect.getargspec(self._execute)[0]
-        msg, msg_kwargs, target = self._parse_message(msg, arg_keys)
-        result = self._execute(x, **msg_kwargs)
+            method = self._execute
+        elif method_name == "inverse":
+            self._pre_inversion_checks(x)
+            method = self._inverse
+            if target is None:
+                target = -1
+        else:
+            # TODO: put into try except to provide better error
+            method = getattr(self, method_name)
+        
+        arg_keys = inspect.getargspec(method)[0]      
+        arg_dict = self._extract_message_keys(msg, arg_keys)
+        if "msg" in arg_keys:
+            arg_dict["msg"] = msg
+            msg = None
+        
+        result = method(x, **arg_dict)
+
         # overwrite result values if necessary and return
         if isinstance(result, tuple):
             if msg and result[1]:
@@ -482,6 +497,53 @@ class BiNode(mdp.Node):
             msg_kwargs["msg"] = msg
             msg = None
         return msg, msg_kwargs, target
+    
+    ##########
+    
+    def _cache_msg_id_keys(self, msg):
+        """Store the id specific message keys for this node.
+        
+        All the keys that match this node are stored in self._msg_id_keys.
+        The format is [(key, fullkey),...].
+        """
+        self._msg_id_keys = []
+        if not msg:
+            return
+        for fullkey in msg:
+            if fullkey.find(NODE_ID_KEY) > 0:
+                node_id, key = fullkey.split(NODE_ID_KEY)
+                if self._request_node_id(node_id):
+                    self._msg_id_keys.append((key, fullkey))
+        
+    def _extract_message_key(self, msg, key):
+        """Extract and return the requested key from the message.
+
+        Note that msg is modfied if the found key was node_id specific.
+        """
+        value = None
+        if key in msg:
+            value = msg[key]
+        # check for node_id specific key and remove it from the msg
+        for _key, _fullkey in self._msg_id_keys:
+            if key == _key:
+                value = msg.pop(_fullkey)
+                break
+        return value
+    
+    def _extract_message_keys(self, msg, keys):
+        """Return a dict with the extracted values for the keys.
+        
+        Note that msg is modfied if found keys are node_id specific.
+        """
+        value_dict = dict([(key, msg[key]) for key in msg if key in keys])
+        value_dict.update(dict([(key, msg.pop(fullkey))  # notice remove by pop
+                                for key, fullkey in self._msg_id_keys
+                                if key in keys]))
+        return value_dict
+        
+    ##########
+        
+    
     
     def _parse_global_message(self, msg, arg_keys):
         """Return the global msg kwargs for this node and modify msg if needed.
