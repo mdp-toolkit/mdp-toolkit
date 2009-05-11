@@ -132,32 +132,52 @@ class JumpBiNode(IdentityBiNode):
         return False
     
 
-class TopDownBiNode(JumpBiNode):
-    """Special version of JumpBiNode to deal with inverse handling."""
+class TopDownBiNode(BiNode):
+    """Class to switch between downward and upward execute phases.
     
-    def _execute(self, x, y=None, msg=None):
-        """Return the predefined values for the current loop count value."""
-        if x is None:
-            msg.pop("y")  # remove y from message
-            x = y
+    In the downward phase 'method' is set to 'inverse' in the message.
+    """
+    
+    def __init__(self, execute_directions=None, msg_supplement=None,
+                 up_target=None, down_target=None, *args, **kwargs):
+        """Initialize the top-down variables.
+        
+        execute_directions -- list with 'up', 'down' or None entries.
+        msg_supplement -- list if dicts to be added to the message (e.g. to
+            specify target for the next nodes)
+        up_target, down_target -- target values to be used for 'up' and 'down'
+        """
+        self.loop_counter = 0 # counter for execution phase
+        self.up_target = up_target
+        self.down_target = down_target
+        self.execute_directions = execute_directions
+        self.msg_supplement = msg_supplement
+        super(TopDownBiNode, self).__init__(*args, **kwargs)
+        
+    def _execute(self, x, msg=None):
+        """Modify the return values with the stored values."""
+        if msg is None:
+            msg = dict()
+        if (self.execute_directions and
+            (self.loop_counter < len(self.execute_directions))):
+            execute_direction = self.execute_directions[self.loop_counter]
+            if execute_direction == "up":
+                if ("method" in msg) and (msg["method"] == "inverse"):
+                    msg.pop("method")
+                target = self.up_target
+                msg.update()
+            elif execute_direction == "down":
+                target = self.down_target
+                msg["method"] = "inverse"
+        if (self.msg_supplement and
+            (self.loop_counter < len(self.msg_supplement))):
+            msg.update(self.msg_supplement[self.loop_counter])
         self.loop_counter += 1
-        if ((not self._execute_results) or 
-            (self.loop_counter-1 >= len(self._execute_results))):
-            if msg:
-                return x, msg
-            else:
-                return x
-        result = self._execute_results[self.loop_counter-1]
-        if result is None:
-            if msg:
-                return x, msg
-            else:
-                return x
+        if target is not None:
+            return x, msg, target
         else:
-            # do not pass x, pass it as y argument instead
-            result[0]["y"] = x
-            return (None,) + result 
-  
+            return x, msg
+            
   
 ### Some Standard BiNodes ###
 
