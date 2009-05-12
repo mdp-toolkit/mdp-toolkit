@@ -138,45 +138,40 @@ class TopDownBiNode(BiNode):
     In the downward phase 'method' is set to 'inverse' in the message.
     """
     
-    def __init__(self, execute_directions=None, msg_supplement=None,
-                 up_target=None, down_target=None, *args, **kwargs):
+    def __init__(self, result_supplements, *args, **kwargs):
         """Initialize the top-down variables.
         
-        execute_directions -- list with 'up', 'down' or None entries.
-        msg_supplement -- list if dicts to be added to the message (e.g. to
-            specify target for the next nodes)
-        up_target, down_target -- target values to be used for 'up' and 'down'
+        result_supplements -- (inverse_flag, msg_supplement, target)
         """
         self.loop_counter = 0 # counter for execution phase
-        self.up_target = up_target
-        self.down_target = down_target
-        self.execute_directions = execute_directions
-        self.msg_supplement = msg_supplement
+        self.result_supplements = result_supplements
         super(TopDownBiNode, self).__init__(*args, **kwargs)
         
     def _execute(self, x, msg=None):
         """Modify the return values with the stored values."""
         if msg is None:
             msg = dict()
-        if (self.execute_directions and
-            (self.loop_counter < len(self.execute_directions))):
-            execute_direction = self.execute_directions[self.loop_counter]
-            if execute_direction == "up":
-                if ("method" in msg) and (msg["method"] == "inverse"):
-                    msg.pop("method")
-                target = self.up_target
-                msg.update()
-            elif execute_direction == "down":
-                target = self.down_target
-                msg["method"] = "inverse"
-        if (self.msg_supplement and
-            (self.loop_counter < len(self.msg_supplement))):
-            msg.update(self.msg_supplement[self.loop_counter])
+        if self.loop_counter < len(self.result_supplements):
+            inverse_flag, msg_supplement, target = \
+                self.result_supplements[self.loop_counter]
+        if inverse_flag:
+            msg["method"] = "inverse"
+        else:
+            if ("method" in msg) and (msg["method"] == "inverse"):
+                msg.pop("method")
+        if msg_supplement:
+            msg.update(msg_supplement)
         self.loop_counter += 1
         if target is not None:
             return x, msg, target
         else:
             return x, msg
+        
+    def is_trainable(self):
+        return False
+    
+    def is_invertible(self):
+        return False
             
   
 ### Some Standard BiNodes ###
