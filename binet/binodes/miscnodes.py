@@ -132,18 +132,20 @@ class JumpBiNode(IdentityBiNode):
         return False
     
 
-class TopDownBiNode(BiNode):
+class TopDownBiNode(IdentityBiNode):
     """Class to switch between downward and upward execute phases.
     
     In the downward phase 'method' is set to 'inverse' in the message.
     """
     
-    def __init__(self, result_supplements, *args, **kwargs):
+    def __init__(self, result_supplements=None, *args, **kwargs):
         """Initialize the top-down variables.
         
         result_supplements -- (inverse_flag, msg_supplement, target)
         """
         self.loop_counter = 0 # counter for execution phase
+        if not result_supplements:
+            result_supplements = []
         self.result_supplements = result_supplements
         super(TopDownBiNode, self).__init__(*args, **kwargs)
         
@@ -154,6 +156,8 @@ class TopDownBiNode(BiNode):
         if self.loop_counter < len(self.result_supplements):
             inverse_flag, msg_supplement, target = \
                 self.result_supplements[self.loop_counter]
+        else:
+            return x, msg
         if inverse_flag:
             msg["method"] = "inverse"
         else:
@@ -167,13 +171,7 @@ class TopDownBiNode(BiNode):
         else:
             return x, msg
         
-    def is_trainable(self):
-        return False
-    
-    def is_invertible(self):
-        return False
-            
-  
+        
 ### Some Standard BiNodes ###
 
 class SenderBiNode(IdentityBiNode):
