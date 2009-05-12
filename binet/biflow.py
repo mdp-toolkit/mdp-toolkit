@@ -153,8 +153,8 @@ class BiFlow(mdp.Flow):
         """
         if not self.flow[nodenr].is_trainable():
             return
-        iterable, msg_iterable = self._sanitize_iterable_pair(iterable, 
-                                                              msg_iterable)
+        iterable, msg_iterable, _ = self._sanitize_iterables(iterable,
+                                                             msg_iterable)
         while True:
             if not self.flow[nodenr].get_remaining_train_phase():
                 break
@@ -278,14 +278,15 @@ class BiFlow(mdp.Flow):
                 raise BiFlowException(err)
         self._bi_reset()
         
-    def execute(self, iterable, msg_iterable=None):
+    def execute(self, iterable, msg_iterable=None, target_iterable=None):
         """Execute the flow and return y or (y, msg).
         
         iterable -- Can be an iterable or iterator for arrays, a single array 
             or None. In the last two cases it is assumed that msg is a single
             message as well.
-        msg -- Can be an iterable or iterator or a single message (but only if
-            iterable is a single array or None).
+        msg_iterable -- Can be an iterable or iterator or a single message
+            (but only if iterable is a single array or None).
+        target_iterable -- Like msg_iterable, but for target.
         
         Note that the type and iteration length of iterable is taken as 
         reference, so msg is assumed to have the same length.
@@ -294,15 +295,17 @@ class BiFlow(mdp.Flow):
         tries to join the msg results (and concatenate in the case of arrays).
         """
         self._bi_reset()  # normaly not required, just for safety
-        iterable, msg_iterable = self._sanitize_iterable_pair(iterable, 
-                                                              msg_iterable)
+        iterable, msg_iterable, target_iterable = \
+            self._sanitize_iterables(iterable, msg_iterable, target_iterable)
         y_results = None
         msg_results = MessageResultContainer()
         empty_iterator = True
-        for (x, msg) in itertools.izip(iterable, msg_iterable):
+        for (x, msg, target) in itertools.izip(iterable, msg_iterable,
+                                               target_iterable):
             empty_iterator = False
             ## execute the flow until the nodes return value is right
-            target = 0
+            if target is None:
+                target = 0
             # loop to deal with eventual intermediate global messages
             while True:
                 result = self._execute_seq(x=x, msg=msg, target=target)
@@ -446,12 +449,13 @@ class BiFlow(mdp.Flow):
                 msg_iterables = self._train_check_iterables(msg_iterables)
         return data_iterables, msg_iterables
     
-    def _sanitize_iterable_pair(self, iterable, msg_iterable):
-        """Check and adjust a data and message iterable."""
+    def _sanitize_iterables(self, iterable, msg_iterable, target_iterable=None):
+        """Check and adjust a data, message and target iterable."""
         # TODO: maybe add additional checks
         if isinstance(iterable, n.ndarray):
             iterable = [iterable]
             msg_iterable = [msg_iterable]
+            target_iterable = [target_iterable]
         elif iterable is None:
             if msg_iterable is None:
                 err = "Both the data and the message iterable is None."
@@ -460,10 +464,13 @@ class BiFlow(mdp.Flow):
                 iterable = NoneIterable()
                 if isinstance(msg_iterable, dict):
                     msg_iterable = [msg_iterable]
+                    target_iterable = [target_iterable]
         else:
             if msg_iterable is None:
                 msg_iterable = NoneIterable()
-        return iterable, msg_iterable
+            if target_iterable is None:
+                target_iterable = NoneIterable()
+        return iterable, msg_iterable, target_iterable
     
     def _target_to_index(self, target, current_node=0):
         """Return the target node index corresponding to the target code.

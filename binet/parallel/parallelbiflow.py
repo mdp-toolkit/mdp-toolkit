@@ -115,9 +115,9 @@ class BiFlowExecuteCallable(parallel.TaskCallable):
         instead of the BiFlowNode. If is_bi_training() is True then the 
         BiFlowNode is purged, so it has to be a ParallelBiFlowNode.
         """
-        x, msg = data
+        x, msg, target = data
         # by using _flow we do not have to reenter (like for train)
-        result = self._biflownode._flow.execute(x, msg)
+        result = self._biflownode._flow.execute(x, msg, target)
         self._biflownode.bi_reset()
         if self._biflownode.is_bi_training():
             if self._purge_nodes:
@@ -192,6 +192,7 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
         self._train_msg_iterator = None
         self._stop_messages = None
         self._exec_msg_iterator = None
+        self._exec_target_iterator = None
         super(ParallelBiFlow, self).__init__(flow, verbose=verbose, **kwargs)
         
     def train(self, data_iterables, msg_iterables=None, 
@@ -334,9 +335,8 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
                 continue
             iterable = self._train_data_iterables[self._i_train_node]
             msg_iterable = self._train_msg_iterables[self._i_train_node]
-            iterable, msg_iterable = self._sanitize_iterable_pair(
-                                                            iterable, 
-                                                            msg_iterable)
+            iterable, msg_iterable, _ = self._sanitize_iterables(iterable, 
+                                                                 msg_iterable)
             try:
                 # test if node can be forked
                 if isinstance(current_node, parallel.ParallelNode):
@@ -428,7 +428,7 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
         except StopIteration:
             return None
             
-    def execute(self, iterable=None, msg_iterable=None, 
+    def execute(self, iterable=None, msg_iterable=None, target_iterable=None,
                 scheduler=None, 
                 execute_callable_class=None,
                 overwrite_result_container=True):
@@ -439,6 +439,7 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
         
         iterable -- Single array or iterable.
         msg_iterable -- Single message or iterable.
+        target_iterable -- Single target or iterable.
         scheduler -- Value can be either None for normal execution (default 
             value) or a Scheduler instance for parallel execution with the 
             scheduler.
@@ -462,7 +463,8 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
                        "scheduler was given, so the execute_callable_class "
                        "has no effect.")
                 raise ParallelBiFlowException(err)
-            return super(ParallelBiFlow, self).execute(iterable, msg_iterable)
+            return super(ParallelBiFlow, self).execute(iterable, msg_iterable,
+                                                       target_iterable)
         if execute_callable_class is None:
             execute_callable_class = BiFlowExecuteCallable
         # check that the scheduler is compatible
@@ -475,6 +477,7 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
             self.setup_parallel_execution(
                                 iterable=iterable, 
                                 msg_iterable=msg_iterable,
+                                target_iterable=target_iterable,
                                 execute_callable_class=execute_callable_class)
             while self.task_available():
                 task = self.get_task()
@@ -484,9 +487,11 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
             # reset remaining iterator references, which cannot be pickled
             self._exec_data_iterator = None
             self._exec_msg_iterator = None
+            self._exec_target_iterator = None
         return result
             
-    def setup_parallel_execution(self, iterable, msg_iterable=None, 
+    def setup_parallel_execution(self, iterable, msg_iterable=None,
+                                 target_iterable=None,
                                  execute_callable_class=BiFlowExecuteCallable):
         """Parallel version of the standard execute method.
         
@@ -495,6 +500,7 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
         
         iterable -- Single array or iterable.
         msg_iterable -- Single message or iterable.
+        target_iterable -- Single target or iterable.
         execute_callable_class -- Class used to create execution callables for 
             the scheduler. By specifying your own class you can implement data 
             transformations before the data is actually fed into the flow 
@@ -513,11 +519,13 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
         else:
             task_flownode = self._flownode.copy()
         self._execute_callable_class = execute_callable_class
-        iterable, msg_iterable = self._sanitize_iterable_pair(
+        iterable, msg_iterable, target_iterable = self._sanitize_iterables(
                                                            iterable, 
-                                                           msg_iterable)
+                                                           msg_iterable,
+                                                           target_iterable)
         self._exec_data_iterator = iter(iterable)
         self._exec_msg_iterator = iter(msg_iterable)
+        self._exec_target_iterator = iter(target_iterable)
         first_task = self._create_execute_task()
         if first_task is None:
             err = ("The execute data iterable is empty.")
@@ -540,7 +548,8 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
         try:
             x = self._exec_data_iterator.next()
             msg = self._exec_msg_iterator.next()
-            return ((x, msg), None)
+            target = self._exec_target_iterator.next()
+            return ((x, msg, target), None)
         except StopIteration:
             return None
     
@@ -579,6 +588,7 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
         elif self.is_parallel_executing():
             self._exec_data_iterator = None
             self._exec_msg_iterator = None
+            self._exec_target_iterator = None
             y_results = []
             msg_results = MessageResultContainer()
             # use internal flownode to join all biflownodes

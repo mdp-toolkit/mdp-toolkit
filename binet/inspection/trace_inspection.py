@@ -695,6 +695,7 @@ def prepare_training_inspection(flow, path):
         result.pop("_stop_messages", None)
         result.pop("_exec_data_iterator", None)
         result.pop("_exec_msg_iterator", None)
+        result.pop("_exec_target_iterator", None)
         return result
     flow.__getstate__ = new.instancemethod(wrapped_biflow_getstate, flow)
     flow._snapshot_instance_methods_.append("__getstate__")
