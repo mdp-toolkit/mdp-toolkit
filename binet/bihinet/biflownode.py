@@ -9,6 +9,7 @@ from ..biflow import BiFlow
 # TODO: add derived BiFlowNode which allow specification message flag for
 #    BiFlowNode to specify the internal target? Or hardwired target?
 
+
 class BiFlowNode(BiNode, hinet.FlowNode):
     """BiFlowNode wraps a BiFlow of Nodes into a single BiNode.
     
@@ -65,13 +66,13 @@ class BiFlowNode(BiNode, hinet.FlowNode):
         # TODO: assign random target id to node if it has no node_id
         #    or do this even earlier? can turn it off via flag?
         if isinstance(target, int):
-            if isinstance(self.flow[target], BiNode):
-                str_target = self.flow[target].node_id
+            if isinstance(self._flow[target], BiNode):
+                str_target = self._flow[target].node_id
                 if str_target is not None:
                     return str_target
             err = ("Flow reentry after global message is not possible since "
                    "the target value " + target + " refering to a node of "
-                   "type " + self.flow[target] + " cannot be translated into "
+                   "type " + self._flow[target] + " cannot be translated into "
                    "a node id.")
             raise BiNodeException(err)
         else:    
