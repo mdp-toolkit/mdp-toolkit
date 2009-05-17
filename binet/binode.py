@@ -206,25 +206,7 @@ class BiNode(mdp.Node):
         self._cache_msg_id_keys(msg)
         target = self._extract_message_key(msg, "target")
         method_name = self._extract_message_key(msg, "method")
-        # select method and perform specific checks
-        if not method_name:
-            if x is not None:
-                self._pre_execution_checks(x)
-                x = self._refcast(x)
-            method = self._execute
-        elif method_name == "inverse":
-            self._pre_inversion_checks(x)
-            method = self._inverse
-            if target is None:
-                target = -1
-        else:
-            method_name = "_" + method_name
-            try:
-                method = getattr(self, method_name)
-            except AttributeError:
-                err = ("The message requested a method named '%s', but "
-                       "there is no such method." % method_name)
-                raise BiNodeException(err)
+        method, target = self._get_execute_method(x, method_name, target)
         msg, arg_dict = self._extract_method_args(method, msg)
         result = method(x, **arg_dict)
         # overwrite result values if necessary and return
@@ -247,6 +229,34 @@ class BiNode(mdp.Node):
                 return result, msg
             else:
                 return result, msg, target
+    
+    # TODO: update implementation, move x checks to original methods
+    #    then override this in BiFlowNode by always returning default
+    def _get_execute_method(self, method_name, default_method, target):
+        """Return the method to be called by execute and the target.
+        
+        Depending on the name special checks are applied to x and a default
+        target might be set.
+        """
+        if not method_name:
+            if x is not None:
+                self._pre_execution_checks(x)
+                x = self._refcast(x)
+            method = self._execute
+        elif method_name == "inverse":
+            self._pre_inversion_checks(x)
+            method = self._inverse
+            if target is None:
+                target = -1
+        else:
+            method_name = "_" + method_name
+            try:
+                method = getattr(self, method_name)
+            except AttributeError:
+                err = ("The message requested a method named '%s', but "
+                       "there is no such method." % method_name)
+                raise BiNodeException(err)
+        return method, target
             
     def is_trainable(self):
         """Return the return value from super."""

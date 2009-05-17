@@ -85,7 +85,14 @@ class BiFlowNode(BiNode, hinet.FlowNode):
             isinstance(result[2], int)):
             target = self._target_for_reentry(result[2])
             result = result[:2] + (target,) + result[3:]
-        return result 
+        return result
+    
+    def _get_execute_method(self, x, method_name, target):
+        """Return _execute and the provided target.
+        
+        The method selection is done in the contained nodes.
+        """
+        return self._execute, target
     
     def _get_train_seq(self):
         """Return a training sequence containing all training phases."""
