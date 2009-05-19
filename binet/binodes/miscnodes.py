@@ -171,6 +171,9 @@ class TopDownBiNode(IdentityBiNode):
         else:
             return x, msg
         
+    def _inverse(self, x, msg=None):
+        return self._execute(x, msg)
+
         
 ### Some Standard BiNodes ###
 

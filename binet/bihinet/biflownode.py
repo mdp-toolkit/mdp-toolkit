@@ -86,11 +86,12 @@ class BiFlowNode(BiNode, hinet.FlowNode):
         'inverse' then adjustments are made so that the last internal node is
         called.
         """
-        if method_name == "inverse": 
-            if target == -1:
-                target = None
-            if target is None:
-                self._last_id_request = len(self._flow) - 1
+        if method_name == "inverse":
+            if self._last_id_request is None:
+                if target == -1:
+                    target = None
+                if target is None:
+                    self._last_id_request = len(self._flow) - 1
         return default_method, target
        
     def _execute(self, x, msg=None):
