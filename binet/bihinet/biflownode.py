@@ -79,11 +79,18 @@ class BiFlowNode(BiNode, hinet.FlowNode):
             return target
         
     def _get_method(self, method_name, default_method, target):
-        """Return the default method and the unaltered target.
+        """Return the default method and the target.
         
         This method overrides the standard BiNode _get_method to delegate the
-        method selection to the internal nodes.
+        method selection to the internal nodes. If the method_name is
+        'inverse' then adjustments are made so that the last internal node is
+        called.
         """
+        if method_name == "inverse": 
+            if target == -1:
+                target = None
+            if target is None:
+                self._last_id_request = len(self._flow) - 1
         return default_method, target
        
     def _execute(self, x, msg=None):
