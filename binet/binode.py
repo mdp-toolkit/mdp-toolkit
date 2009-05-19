@@ -125,10 +125,10 @@ DOC_METHODS = ['_train', '_stop_training', '_execute', '_inverse',
 class BiNodeMetaClass(mdp.NodeMetaclass):
     """Custom BiNode metaclass to deal with the special signature handling."""
     
-    def __new__(mcl, classname, bases, members):
+    def __new__(cls, classname, bases, members):
         for privname in DOC_METHODS:
             if privname in members:
-                priv_info = mcl._get_infodict(members[privname])
+                priv_info = cls._get_infodict(members[privname])
                 if not priv_info['doc']:
                     continue
                 pubname = privname[1:]
@@ -138,15 +138,15 @@ class BiNodeMetaClass(mdp.NodeMetaclass):
                     ancestor = base.__dict__
                     if pubname in ancestor:
                         # preserve the signature (in addition to name)
-                        pub_info = mcl._get_infodict(ancestor[pubname])
+                        pub_info = cls._get_infodict(ancestor[pubname])
                         priv_info['name'] = pub_info['name']
                         priv_info['signature'] = pub_info['signature']
                         priv_info['argnames'] = pub_info['argnames']
                         priv_info['defaults'] = pub_info['defaults']
-                        members[pubname] = mcl._wrap_func(ancestor[pubname], 
+                        members[pubname] = cls._wrap_func(ancestor[pubname], 
                                                           priv_info)
                         break
-        return type.__new__(mcl, classname, bases, members)
+        return type.__new__(cls, classname, bases, members)
     
     
 class BiNode(mdp.Node):
@@ -181,7 +181,6 @@ class BiNode(mdp.Node):
         """
         self._node_id = node_id
         self._stop_msg = stop_msg
-        self._msg_id_keys = None  # caching variable for msg interpretaion
         super(BiNode, self).__init__(**kwargs)
         
     ### Modified template methods from mdp.Node. ###
@@ -203,11 +202,18 @@ class BiNode(mdp.Node):
         """
         if msg is None:
             return super(BiNode, self).execute(x)
-        self._cache_msg_id_keys(msg)
-        target = self._extract_message_key(msg, "target")
-        method_name = self._extract_message_key(msg, "method")
-        method, target = self._get_execute_method(x, method_name, target)
-        msg, arg_dict = self._extract_method_args(method, msg)
+        msg_id_keys = self._get_msg_id_keys(msg)
+        target = self._extract_message_key("target", msg, msg_id_keys)
+        method_name = self._extract_message_key("method", msg, msg_id_keys)
+        method, target = self._get_method(method_name, self._execute, target)
+        msg, arg_dict = self._extract_method_args(method, msg, msg_id_keys)
+        # perform specific checks
+        if x is not None:
+            if method is self._execute:
+                self._pre_execution_checks(x)
+                x = self._refcast(x)
+            elif method is self._inverse:
+                self._pre_inversion_checks(x)
         result = method(x, **arg_dict)
         # overwrite result values if necessary and return
         if isinstance(result, tuple):
@@ -230,34 +236,6 @@ class BiNode(mdp.Node):
             else:
                 return result, msg, target
     
-    # TODO: update implementation, move x checks to original methods
-    #    then override this in BiFlowNode by always returning default
-    def _get_execute_method(self, method_name, default_method, target):
-        """Return the method to be called by execute and the target.
-        
-        Depending on the name special checks are applied to x and a default
-        target might be set.
-        """
-        if not method_name:
-            if x is not None:
-                self._pre_execution_checks(x)
-                x = self._refcast(x)
-            method = self._execute
-        elif method_name == "inverse":
-            self._pre_inversion_checks(x)
-            method = self._inverse
-            if target is None:
-                target = -1
-        else:
-            method_name = "_" + method_name
-            try:
-                method = getattr(self, method_name)
-            except AttributeError:
-                err = ("The message requested a method named '%s', but "
-                       "there is no such method." % method_name)
-                raise BiNodeException(err)
-        return method, target
-            
     def is_trainable(self):
         """Return the return value from super."""
         return super(BiNode, self).is_trainable()
@@ -289,34 +267,21 @@ class BiNode(mdp.Node):
             self._train_phase_started = True
             x = self._refcast(x)
             return self._train_seq[self._train_phase][0](x)
-        self._cache_msg_id_keys(msg)
-        target = self._extract_message_key(msg, "target")
-        method_name = self._extract_message_key(msg, "method")
-        # select method and perform specific checks
-        check_train_args = False
-        if not method_name:
-            if x is not None:
+        msg_id_keys = self._get_msg_id_keys(msg)
+        target = self._extract_message_key("target", msg, msg_id_keys)
+        method_name = self._extract_message_key("method", msg, msg_id_keys)
+        default_method = self._train_seq[self._train_phase][0]
+        method, target = self._get_method(method_name, default_method, target)
+        msg, arg_dict = self._extract_method_args(method, msg, msg_id_keys)
+        # perform specific checks
+        if x is not None:
+            if method is default_method:
                 self._check_input(x)
+                self._check_train_args(x, **arg_dict)  
+                self._train_phase_started = True
                 x = self._refcast(x)
-            check_train_args = True
-            method = self._train_seq[self._train_phase][0]
-            self._train_phase_started = True
-        elif method_name == "inverse":
-            self._pre_inversion_checks(x)
-            method = self._inverse
-            if target is None:
-                target = -1
-        else:
-            method_name = "_" + method_name
-            try:
-                method = getattr(self, method_name)
-            except AttributeError:
-                err = ("The message requested a method named '%s', but "
-                       "there is no such method." % method_name)
-                raise BiNodeException(err)
-        msg, arg_dict = self._extract_method_args(method, msg)
-        if check_train_args:
-            self._check_train_args(x, **arg_dict)        
+            elif method is self._inverse:
+                self._pre_inversion_checks(x)
         result = method(x, **arg_dict)
         # overwrite result values if necessary and return
         if isinstance(result, tuple) and (len(result) >= 3):
@@ -365,8 +330,9 @@ class BiNode(mdp.Node):
             target = None
         else:
             # extract relevant message parts
-            self._cache_msg_id_keys(msg)
-            msg, arg_dict = self._extract_method_args(stop_method, msg)
+            msg_id_keys = self._get_msg_id_keys(msg)
+            msg, arg_dict = self._extract_method_args(stop_method,
+                                                      msg, msg_id_keys)
             result = stop_method(**arg_dict)
             if stored_stop_msg:
                 msg.update(stored_stop_msg)
@@ -392,25 +358,11 @@ class BiNode(mdp.Node):
         """
         if not msg:
             return self._message()
-        self._cache_msg_id_keys(msg)
-        target = self._extract_message_key(msg, "target")
-        method_name = self._extract_message_key(msg, "method")
-        # select method and perform specific checks
-        if not method_name:
-            method = self._message
-        elif method_name == "inverse":
-            method = self._inverse
-            if target is None:
-                target = -1
-        else:
-            method_name = "_" + method_name
-            try:
-                method = getattr(self, method_name)
-            except AttributeError:
-                err = ("The message requested a method named '%s', but "
-                       "there is no such method." % method_name)
-                raise BiNodeException(err)
-        msg, arg_dict = self._extract_method_args(method, msg)
+        msg_id_keys = self._get_msg_id_keys(msg)
+        target = self._extract_message_key("target", msg, msg_id_keys)
+        method_name = self._extract_message_key("method", msg, msg_id_keys)
+        method, target = self._get_method(method_name, self._message, target)
+        msg, arg_dict = self._extract_method_args(method, msg, msg_id_keys)
         result = method(**arg_dict)
         return self._combine_message_result(result, msg, target)
 
@@ -432,24 +384,12 @@ class BiNode(mdp.Node):
         """
         if not msg:
             return self._stop_message()
-        self._cache_msg_id_keys(msg)
-        target = self._extract_message_key(msg, "target")
-        method_name = self._extract_message_key(msg, "method")
-        if not method_name:
-            method = self._stop_message
-        elif method_name == "inverse":
-            method = self._inverse
-            if target is None:
-                target = -1
-        else:
-            method_name = "_" + method_name
-            try:
-                method = getattr(self, method_name)
-            except AttributeError:
-                err = ("The message requested a method named '%s', but "
-                       "there is no such method." % method_name)
-                raise BiNodeException(err)
-        msg, arg_dict = self._extract_method_args(method, msg)
+        msg_id_keys = self._get_msg_id_keys(msg)
+        target = self._extract_message_key("target", msg, msg_id_keys)
+        method_name = self._extract_message_key("method", msg, msg_id_keys)
+        method, target = self._get_method(method_name, self._stop_message,
+                                          target)
+        msg, arg_dict = self._extract_method_args(method, msg, msg_id_keys)
         result = method(**arg_dict)
         return self._combine_message_result(result, msg, target)
     
@@ -468,19 +408,10 @@ class BiNode(mdp.Node):
         
         This template method calls the _global_message method.
         """
-        self._cache_global_msg_id_keys(msg)
-        method_name = self._extract_message_key(msg, "method")
-        if not method_name:
-            method = self._global_message
-        else:
-            method_name = "_" + method_name
-            try:
-                method = getattr(self, method_name)
-            except AttributeError:
-                err = ("The message requested a method named '%s', but "
-                       "there is no such method." % method_name)
-                raise BiNodeException(err)
-        arg_dict = self._extract_global_method_args(method, msg)
+        msg_id_keys = self._get_global_msg_id_keys(msg)
+        method_name = self._extract_message_key("method", msg, msg_id_keys)
+        method, _ = self._get_method(method_name, self._global_message, None)
+        arg_dict = self._extract_global_method_args(method, msg, msg_id_keys)
         method(**arg_dict)
     
     def _global_message(self):
@@ -541,33 +472,34 @@ class BiNode(mdp.Node):
         
     ### Helper methods for msg handling. ###
     
-    def _cache_msg_id_keys(self, msg):
-        """Store the id specific message keys for this node.
+    def _get_msg_id_keys(self, msg):
+        """Return the id specific message keys for this node.
         
-        All the keys that match this node are stored in self._msg_id_keys.
         The format is [(key, fullkey),...].
         """
-        self._msg_id_keys = []
+        msg_id_keys = []
         for fullkey in msg:
             if fullkey.find(NODE_ID_KEY) > 0:
                 node_id, key = fullkey.split(NODE_ID_KEY)
                 if self._request_node_id(node_id):
-                    self._msg_id_keys.append((key, fullkey))
+                    msg_id_keys.append((key, fullkey))
+        return msg_id_keys
                     
-    def _cache_global_msg_id_keys(self, msg):
-        """Store the id specific message keys for this node.
+    def _get_global_msg_id_keys(self, msg):
+        """Return the id specific message keys for this node.
         
-        All the keys that match this node are stored in self._msg_id_keys.
         The format is [(key, fullkey),...].
         """
-        self._msg_id_keys = []
+        msg_id_keys = []
         for fullkey in msg:
             if fullkey.find(GLOBAL_ID_KEY) > 0:
                 node_id, key = fullkey.split(GLOBAL_ID_KEY)
                 if self._request_node_id(node_id):
-                    self._msg_id_keys.append((key, fullkey))
-        
-    def _extract_message_key(self, msg, key):
+                    msg_id_keys.append((key, fullkey))
+        return msg_id_keys
+    
+    @staticmethod
+    def _extract_message_key(key, msg, msg_id_keys):
         """Extract and return the requested key from the message.
 
         Note that msg is modfied if the found key was node_id specific.
@@ -576,32 +508,31 @@ class BiNode(mdp.Node):
         if key in msg:
             value = msg[key]
         # check for node_id specific key and remove it from the msg
-        for _key, _fullkey in self._msg_id_keys:
+        for _key, _fullkey in msg_id_keys:
             if key == _key:
                 value = msg.pop(_fullkey)
                 break
         return value
     
-    def _extract_method_args(self, method, msg):
+    @staticmethod
+    def _extract_method_args(method, msg, msg_id_keys):
         """Extract the method arguments form the message.
         
         Return the new message and a dict with the keyword arguments (the
         return of the message is done because it can be set to None).
-        
-        This method also deletes the _msg_id_keys cache.
         """
         arg_keys = inspect.getargspec(method)[0]      
         arg_dict = dict([(key, msg[key]) for key in msg if key in arg_keys])
         arg_dict.update(dict([(key, msg.pop(fullkey))  # notice remove by pop
-                                for key, fullkey in self._msg_id_keys
+                                for key, fullkey in msg_id_keys
                                 if key in arg_keys]))
         if "msg" in arg_keys:
             arg_dict["msg"] = msg
             msg = None
-        self._msg_id_keys = None
         return msg, arg_dict
-        
-    def _extract_global_method_args(self, method, msg):
+      
+    @staticmethod  
+    def _extract_global_method_args(method, msg, msg_id_keys):
         """Extract the method arguments form the message.
         
         Return the the keyword arguments.
@@ -614,12 +545,33 @@ class BiNode(mdp.Node):
                          if (key.startswith(GLOBAL_CHAR) and
                              key[1:] in arg_keys)])
         arg_dict.update(dict([(key, msg.pop(fullkey))  # notice remove by pop
-                              for key, fullkey in self._msg_id_keys
+                              for key, fullkey in msg_id_keys
                               if key in arg_keys]))
         if "msg" in arg_keys:
             arg_dict["msg"] = msg
-        self._msg_id_keys = None
         return arg_dict
+    
+    def _get_method(self, method_name, default_method, target):
+        """Return the method to be called and the target.
+        
+        Note that msg might be modified when the method name is extracted.
+        If the chosen method is _inverse then the default target is -1.
+        """
+        if not method_name:
+            method = default_method
+        elif method_name == "inverse":
+            method = self._inverse
+            if target is None:
+                target = -1
+        else:
+            method_name = "_" + method_name
+            try:
+                method = getattr(self, method_name)
+            except AttributeError:
+                err = ("The message requested a method named '%s', but "
+                       "there is no such method." % method_name)
+                raise BiNodeException(err)
+        return method, target
     
     def _combine_message_result(self, result, msg, target):
         """Combine the result value with the msg and the target.
@@ -651,4 +603,5 @@ class BiNode(mdp.Node):
             else:
                 result = (result, target)
         return result
+    
     

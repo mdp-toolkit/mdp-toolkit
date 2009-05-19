@@ -349,9 +349,8 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
         
         If the copy flag is found the Node is switched accordingly.
         """
-        self._cache_msg_id_keys(msg)
-        copy_flag = self._extract_message_key(msg, "use_copies")
-        self._msg_id_keys = None
+        msg_id_keys = self._get_msg_id_keys(msg)
+        copy_flag = self._extract_message_key("use_copies", msg, msg_id_keys)
         if copy_flag is not None:
             self.use_copies = copy_flag
     

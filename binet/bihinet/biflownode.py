@@ -77,6 +77,14 @@ class BiFlowNode(BiNode, hinet.FlowNode):
             raise BiNodeException(err)
         else:    
             return target
+        
+    def _get_method(self, method_name, default_method, target):
+        """Return the default method and the unaltered target.
+        
+        This method overrides the standard BiNode _get_method to delegate the
+        method selection to the internal nodes.
+        """
+        return default_method, target
        
     def _execute(self, x, msg=None):
         target = self._get_target()
