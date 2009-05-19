@@ -209,10 +209,12 @@ class BiNode(mdp.Node):
         msg, arg_dict = self._extract_method_args(method, msg, msg_id_keys)
         # perform specific checks
         if x is not None:
-            if method is self._execute:
+            if (not method_name) or (method_name == "execute"):
                 self._pre_execution_checks(x)
                 x = self._refcast(x)
-            elif method is self._inverse:
+            # testing for the actual method allows nodes to delegate method
+            # resolution to internal nodes by manipulating _get_method
+            elif method == self._inverse:
                 self._pre_inversion_checks(x)
         result = method(x, **arg_dict)
         # overwrite result values if necessary and return
@@ -275,12 +277,12 @@ class BiNode(mdp.Node):
         msg, arg_dict = self._extract_method_args(method, msg, msg_id_keys)
         # perform specific checks
         if x is not None:
-            if method is default_method:
+            if (not method_name) or (method_name == "train"):
                 self._check_input(x)
                 self._check_train_args(x, **arg_dict)  
                 self._train_phase_started = True
                 x = self._refcast(x)
-            elif method is self._inverse:
+            elif method == self._inverse:
                 self._pre_inversion_checks(x)
         result = method(x, **arg_dict)
         # overwrite result values if necessary and return
