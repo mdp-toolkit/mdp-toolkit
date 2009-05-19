@@ -12,6 +12,9 @@ n = mdp.numx
 
 from binode import BiNode
 
+# this target value tells the flow to abort and return the current values 
+EXIT_TARGET = "exit"
+
 
 class NoneIterable(object):
     """Iterable for an infinite sequence of Nones."""
@@ -318,6 +321,10 @@ class BiFlow(mdp.Flow):
                     # process global message before we leave the flow
                     self._global_message_seq(msg, ignore_node=len(self.flow)-1)
                     break
+                elif (len(result) == 3) and (result[2] == EXIT_TARGET):
+                    y, msg = result[:2]
+                    # TODO: process global message before we leave the flow ?
+                    break
                 elif (len(result) == 3) or (len(result) == 5):
                     err = ("Target node not found in flow during execute," + 
                            " last result: " + str(result))
@@ -487,6 +494,8 @@ class BiFlow(mdp.Flow):
             node index is used to translate the target to the absolute node 
             index (otherwise it has no effect).
         """
+        if target == EXIT_TARGET:
+            return EXIT_TARGET
         if target is None:
             target = 1
         if not isinstance(target, int):
@@ -593,8 +602,8 @@ class BiFlow(mdp.Flow):
                 x = self.flow[i_node].execute(x)
                 # note that the message is carried forward unchanged
                 target = 1
-            # check if we have reached the end of the flow
-            if (target==1) and (i_node + 1 == len(self.flow)):
+            # check if we should leave the flow
+            if (target == 1) and (i_node + 1 == len(self.flow)):
                 if not msg:
                     return x
                 else:

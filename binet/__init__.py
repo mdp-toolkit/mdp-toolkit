@@ -124,7 +124,7 @@ terminated the normal flow execution will be resumed.
 
 from binode import BiNodeException, BiNode 
 from biflow import (MessageResultContainer, BiFlowException, BiFlow,
-                    BiCheckpointFlow)
+                    BiCheckpointFlow, EXIT_TARGET)
 from binodes import *
 from bihinet import *
 from inspection import *
