@@ -80,6 +80,14 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
                 raise CloneBiLayerException(err)
             self.node = self.nodes[0]
             self.nodes = (self.node,) * len(self.nodes) 
+            
+    def _get_method(self, method_name, default_method, target):
+        """Return the default method and the unaltered target.
+        
+        This method overrides the standard BiNode _get_method to delegate the
+        method selection to the internal nodes.
+        """
+        return default_method, target
          
     ## standard node methods ##
     
@@ -92,20 +100,23 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
     
     def _execute(self, x, msg=None):
         """Process the data through the internal nodes."""
-        x_start_index = 0
-        x_stop_index = 0
         y_results = []
-        msgs = []
+        msg_results = []
         target = None
-        branch_msgs = []
+        branch_msg_results = []
         branch_target = None
-        for (node, node_msg) in zip(self.nodes, self._get_split_messages(msg)):
-            if x is not None:
-                x_start_index = x_stop_index
-                x_stop_index += node.input_dim
-                node_x = x[:, x_start_index : x_stop_index]
+        node_msgs = self._get_split_messages(msg)
+        if x is not None:
+            # use the dimension of x, because this also works for inverse
+            node_dim = x.shape[1] / len(self.nodes)
+        else:
+            node_dim = None
+        for i_node, node in enumerate(self.nodes):
+            if node_dim:
+                node_x = x[:, node_dim*i_node : node_dim*(i_node+1)]
             else:
                 node_x = None
+            node_msg = node_msgs[i_node]
             if node_msg:
                 node_result = node.execute(node_x, node_msg)
             else:
@@ -115,16 +126,16 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
                 y_results.append(node_result)
             else:
                 y_results.append(node_result[0])
-                msgs.append(node_result[1])
+                msg_results.append(node_result[1])
                 if len(node_result) >= 3:
                     target = node_result[2]
                 if len(node_result) >= 4:
-                    branch_msgs.append(node_result[3])
+                    branch_msg_results.append(node_result[3])
                 if len(node_result) == 5:
                     branch_target = node_result[4]
         ## combine message results
-        msg = self._get_combined_message(msgs)
-        branch_msg = self._get_combined_message(branch_msgs)
+        msg = self._get_combined_message(msg_results)
+        branch_msg = self._get_combined_message(branch_msg_results)
         if (not y_results) or (y_results[-1] is None):
             y = None
         else:

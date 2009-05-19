@@ -156,7 +156,7 @@ class Layer(mdp.Node):
             self.output_dim = self._get_output_dim_from_nodes()
             
     def _pre_execution_checks(self, x):
-        """Make sure that output_dim is set and then perform nromal checks."""
+        """Make sure that output_dim is set and then perform normal checks."""
         if self.output_dim is None:
             # first make sure that the output_dim is set for all nodes
             in_start = 0
