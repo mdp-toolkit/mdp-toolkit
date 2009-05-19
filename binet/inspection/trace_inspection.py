@@ -211,7 +211,7 @@ class HTMLTraceInspector(hinet.HiNetTranslator):
         self._translate_flow(flow)
         return train_filenames, stop_filenames
     
-    def trace_execution(self, path, trace_name, flow, x, msg=None,
+    def trace_execution(self, path, trace_name, flow, x, msg=None, target=None,
                         debug=False):
         """Trace a single execution.
         
@@ -236,7 +236,7 @@ class HTMLTraceInspector(hinet.HiNetTranslator):
             if msg is None:
                 y = self._flow.execute(x)
             else:
-                y = self._flow.execute(x, msg)
+                y = self._flow.execute(x, msg, target)
         except Exception, exception:
             if debug:
                 self._write_error_frame(exception)

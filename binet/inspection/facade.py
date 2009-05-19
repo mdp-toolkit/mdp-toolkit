@@ -180,7 +180,7 @@ def show_training(flow, data_iterables, msg_iterables=None, stop_messages=None,
         webbrowser.open(slideshow_filename)
     return slideshow_filename
 
-def inspect_execution(flow, x, msg=None, path=None, name=None,
+def inspect_execution(flow, x, msg=None, target=None, path=None, name=None,
                       trace_inspector=None, debug=False,
                       slide_style=SLIDE_STYLE, show_size=False):
     """Return the HTML code for an inspection slideshow of the execution
@@ -190,7 +190,8 @@ def inspect_execution(flow, x, msg=None, path=None, name=None,
     snapshot_path.
     
     flow -- The flow for the execution.
-    x, msg -- Data for the execution (msg can be None, which is the default).
+    x, msg, target -- Data for the execution, msg and target can only be used
+        for a BiFlow (default value is None).
     path -- Path were the slideshow will be stored, if None (default value)
         a temporary directory will be used.
     name -- Name string to be used for the slide files.
@@ -222,7 +223,8 @@ def inspect_execution(flow, x, msg=None, path=None, name=None,
                                                  path=path,
                                                  trace_name=name,
                                                  flow=flow,
-                                                 x=x, msg=msg, debug=debug)
+                                                 x=x, msg=msg, target=target,
+                                                 debug=debug)
     except BiNetTraceDebugException, debug_exception:
         if not debug_exception.result:
             return None
@@ -240,7 +242,7 @@ def inspect_execution(flow, x, msg=None, path=None, name=None,
                                              loop=False)
     return str(slideshow), y
 
-def show_execution(flow, x, msg=None, path=None, name=None,
+def show_execution(flow, x, msg=None, target=None, path=None, name=None,
                    trace_inspector=None, debug=False, show_size=False,
                    browser_open=True):
     """Write the inspection slideshow into an HTML file and open it in the
@@ -250,8 +252,8 @@ def show_execution(flow, x, msg=None, path=None, name=None,
     value of the execution.
 
     flow -- The flow for the execution.
-    x, msg -- Data for the execution, msg can only be used for a BiFlow
-        (default value is None).
+    x, msg, target -- Data for the execution, msg and target can only be used
+        for a BiFlow (default value is None).
     path -- Path were the slideshow will be stored, if None (default value)
         a temporary directory will be used.
     name -- A name for the slideshow.
@@ -281,7 +283,7 @@ def show_execution(flow, x, msg=None, path=None, name=None,
     slideshow, y = inspect_execution(
                         flow=flow,
                         path=path,
-                        x=x, msg=msg,
+                        x=x, msg=msg, target=target,
                         name=name,
                         trace_inspector=trace_inspector,
                         debug=debug,
