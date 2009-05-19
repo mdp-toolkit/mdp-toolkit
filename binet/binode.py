@@ -461,7 +461,7 @@ class BiNode(mdp.Node):
         Otherwise the return value is None. In this default implementation
         self is returned if node_id == self._node_id.
         
-        Always use this method instead of directly accessing self._node_id.
+        Use this method instead of directly accessing self._node_id.
         This allows a node to be associated with multiple node_ids. Otherwise
         node_ids would not work for container nodes like BiFlowNode.
         """
@@ -481,7 +481,7 @@ class BiNode(mdp.Node):
         for fullkey in msg:
             if fullkey.find(NODE_ID_KEY) > 0:
                 node_id, key = fullkey.split(NODE_ID_KEY)
-                if self._request_node_id(node_id):
+                if node_id == self._node_id:
                     msg_id_keys.append((key, fullkey))
         return msg_id_keys
                     
@@ -494,7 +494,7 @@ class BiNode(mdp.Node):
         for fullkey in msg:
             if fullkey.find(GLOBAL_ID_KEY) > 0:
                 node_id, key = fullkey.split(GLOBAL_ID_KEY)
-                if self._request_node_id(node_id):
+                if node_id == self._node_id:
                     msg_id_keys.append((key, fullkey))
         return msg_id_keys
     
