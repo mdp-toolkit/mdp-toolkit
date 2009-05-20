@@ -314,11 +314,25 @@ class ParallelFlow(mdp.Flow):
                            "node no. %d in parallel flow" % 
                            (self._i_train_node+1))
                 # the training is done directly on self._flownode
-                task_callable = self._train_callable_class(self._flownode)   
-                for x in data_iterable:
+                task_callable = self._train_callable_class(self._flownode)
+                empty_iterator = True   
+                for data in data_iterable:
+                    empty_iterator = False
                     # Note: if x contains additional args assume that the
                     # callable can handle this  
-                    task_callable(x)
+                    task_callable(data)
+                if empty_iterator:
+                    if current_node.get_current_train_phase() == 1:
+                        err_str = ("The training data iteration for node "
+                                   "no. %d could not be repeated for the "
+                                   "second training phase, you probably "
+                                   "provided an iterator instead of an "
+                                   "iterable." % (self._i_train_node+1))
+                        raise mdp.FlowException(err_str)
+                    else:
+                        err_str = ("The training data iterator for node "
+                                   "no. %d is empty." % (self._i_train_node+1))
+                        raise mdp.FlowException(err_str)
                 if self.verbose:
                     print ("finished local training phase of " + 
                            "node no. %d in parallel flow" % 
