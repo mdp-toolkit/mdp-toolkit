@@ -1,4 +1,4 @@
 
-from miscnodes import IdentityBiNode, JumpBiNode, TopDownBiNode, SenderBiNode
+from miscnodes import IdentityBiNode, JumpBiNode, SenderBiNode
 
 del miscnodes
