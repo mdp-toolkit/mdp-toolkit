@@ -83,9 +83,6 @@ class MessageResultContainer(object):
             return None
         
 
-# TODO: replace reached target flag True with something more clever
-#    do not rely on singleton property for false?
-
 # TODO: make sure that isinstance(str, target) is never used, so that in
 #    principle any object could be used (the might have to overwrite the
 #    _node_with_id method?
@@ -318,12 +315,11 @@ class BiFlow(mdp.Flow):
                     break
                 elif (len(result) == 2):
                     y, msg = result
-                    # process global message before we leave the flow
-                    self._global_message_seq(msg, ignore_node=len(self.flow)-1)
+                    self._global_message_seq(msg)
                     break
                 elif (len(result) == 3) and (result[2] == EXIT_TARGET):
                     y, msg = result[:2]
-                    # TODO: process global message before we leave the flow ?
+                    self._global_message_seq(msg)
                     break
                 elif (len(result) == 3) or (len(result) == 5):
                     err = ("Target node not found in flow during execute," + 
@@ -612,6 +608,7 @@ class BiFlow(mdp.Flow):
             i_node = self._target_to_index(target, i_node)
             if not isinstance(i_node, int):
                 # target not found in this flow
+                # this is also the exit point when EXIT_TARGET is given
                 return x, msg, target
         # reached stop_at_node, signal this by returning target value True
         return (x, msg, True)
