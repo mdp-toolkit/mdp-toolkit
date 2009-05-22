@@ -375,12 +375,12 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
                 break
             except parallel.TrainingPhaseNotParallelException:
                 if self.verbose:
-                    print ("start local training phase of " + 
+                    print ("start nonparallel training phase of " + 
                            "node no. %d in parallel flow" % 
                            (self._i_train_node+1))
                 self._local_train_phase(iterable, msg_iterable)
                 if self.verbose:
-                    print ("finished local training phase of " + 
+                    print ("finished nonparallel training phase of " + 
                            "node no. %d in parallel flow" % 
                            (self._i_train_node+1))
                 if not self.flow[self._i_train_node].is_training():
@@ -395,13 +395,18 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
         The internal _train_callable_class is used for the training.
         """
         task_callable = self._train_callable_class(self._flownode,
-                                                   purge_nodes=False)   
+                                                   purge_nodes=False)
+        i_task = 0 
         for (x, msg) in itertools.izip(iterable, msg_iterable):
+            i_task += 1
             # Note: if x contains additional args assume that the
             # callable can handle this  
             task_callable((x, msg))
+            if self.verbose:
+                print ("    finished nonparallel task "
+                       "no. %d (in this training phase)" % i_task)
         if self.verbose:
-            print ("finished local training phase of " + 
+            print ("finished nonparallel training phase of " + 
                    "node no. %d in parallel flow" % 
                    (self._i_train_node+1))
         # perform stop_training with result check
