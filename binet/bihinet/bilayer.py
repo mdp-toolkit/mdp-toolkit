@@ -395,6 +395,6 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
             if type(first_value) is n.ndarray:
                 msg[key] = n.hstack([node_msg[key] for node_msg in msgs])
             else:
-                # pick the msg value of the first node
+                # pick the msg value of the last node
                 msg[key] = msgs[-1][key]
         return msg

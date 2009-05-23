@@ -163,18 +163,18 @@ class SenderBiNode(IdentityBiNode):
         if msg_supplement is not False:
             self._msg_supplement = msg_supplement
                 
-    def _execute(self, x):
+    def _execute(self, x, msg=None):
         """Send the x value to the stored target via bi_message.
         
         The x in the message has the key bi_x. 
         """
         if self._target is not None:
             if isinstance(self._target, str):
-                msg = {self._target + NODE_ID_KEY + "x": x}
+                bi_msg = {self._target + NODE_ID_KEY + "x": x}
             else:
-                msg = {"x": x}
+                bi_msg = {"x": x}
             if self._msg_supplement is not None:
-                msg.update(self._msg_supplement)
-            return x, None, None, msg, self._target
+                bi_msg.update(self._msg_supplement)
+            return x, msg, None, bi_msg, self._target
         else:
-            return x
+            return x, msg
