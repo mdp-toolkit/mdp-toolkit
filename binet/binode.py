@@ -219,9 +219,10 @@ class BiNode(mdp.Node):
         result = method(x, **arg_dict)
         # overwrite result values if necessary and return
         if isinstance(result, tuple):
-            if msg and result[1]:
-                # combine outgoing msg and remaining msg values
-                msg.update(result[1])
+            if msg:
+                if result[1]:
+                    # combine outgoing msg and remaining msg values
+                    msg.update(result[1])
                 result = (result[0], msg) + result[2:]
             if target is not None:
                 if len(result) == 2:
@@ -288,8 +289,9 @@ class BiNode(mdp.Node):
         # overwrite result values if necessary and return
         if isinstance(result, tuple) and (len(result) >= 3):
             # continue with training execution
-            if msg and result[1]:
-                msg.update(result[1])
+            if msg: 
+                if result[1]:
+                    msg.update(result[1])
                 result = (result[0], msg) + result[2:]
             if target is not None:
                 if len(result) == 2:

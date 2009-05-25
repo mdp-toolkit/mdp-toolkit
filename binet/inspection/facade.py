@@ -219,7 +219,7 @@ def inspect_execution(flow, x, msg=None, target=None, path=None, name=None,
                                 css_filename=css_filename)
     # create slides
     try:
-        slide_filenames, section_ids, y = trace_inspector.trace_execution(
+        slide_filenames, section_ids, result = trace_inspector.trace_execution(
                                                  path=path,
                                                  trace_name=name,
                                                  flow=flow,
@@ -229,7 +229,7 @@ def inspect_execution(flow, x, msg=None, target=None, path=None, name=None,
         if not debug_exception.result:
             return None
         slide_filenames, section_ids = debug_exception.result
-        y = None
+        result = None
     # create slideshow file
     if not section_ids:
         slideshow = ExecuteHTMLSlideShow(filenames=slide_filenames,
@@ -240,7 +240,7 @@ def inspect_execution(flow, x, msg=None, target=None, path=None, name=None,
                                              section_ids=section_ids,
                                              delay=500, delay_delta=100,
                                              loop=False)
-    return str(slideshow), y
+    return str(slideshow), result
 
 def show_execution(flow, x, msg=None, target=None, path=None, name=None,
                    trace_inspector=None, debug=False, show_size=False,
@@ -273,14 +273,7 @@ def show_execution(flow, x, msg=None, target=None, path=None, name=None,
     else:
         title = "Execution Inspection: " + name
     filename = os.path.join(path, name + ".html")
-    html_file = open(filename, 'w')
-    html_file.write('<html>\n<head>\n<title>%s</title>\n' % title)
-    html_file.write('<style type="text/css" media="screen">')
-    html_file.write(INSPECTION_STYLE)
-    html_file.write(hinet.SHOW_FLOW_STYLE)
-    html_file.write('</style>\n</head>\n<body>\n')
-    html_file.write('<h3>%s</h3>\n' % title)
-    slideshow, y = inspect_execution(
+    slideshow, result = inspect_execution(
                         flow=flow,
                         path=path,
                         x=x, msg=msg, target=target,
@@ -288,9 +281,17 @@ def show_execution(flow, x, msg=None, target=None, path=None, name=None,
                         trace_inspector=trace_inspector,
                         debug=debug,
                         show_size=show_size)
+    # inspect execution created the path if required, so no need to check here
+    html_file = open(filename, 'w')
+    html_file.write('<html>\n<head>\n<title>%s</title>\n' % title)
+    html_file.write('<style type="text/css" media="screen">')
+    html_file.write(INSPECTION_STYLE)
+    html_file.write(hinet.SHOW_FLOW_STYLE)
+    html_file.write('</style>\n</head>\n<body>\n')
+    html_file.write('<h3>%s</h3>\n' % title)
     html_file.write(slideshow)
     html_file.write('</body>\n</html>')
     html_file.close()
     if browser_open:
         webbrowser.open(filename)
-    return filename, y
+    return filename, result
