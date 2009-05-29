@@ -8,6 +8,9 @@ from ..binode import BiNode, BiNodeException
 # TODO: not sure if always splitting up the msg parts is always such a great
 #    idea, maybe a switch should be introduced?
 
+# TODO: Maybe setting use_copies should be replaced with a method, since it
+#    can be quite costly.
+
 
 class CloneBiLayerException(BiNodeException):
     """CloneBiLayer specific exception."""

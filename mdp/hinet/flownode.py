@@ -22,7 +22,7 @@ class FlowNode(mdp.Node):
     def __init__(self, flow, input_dim=None, output_dim=None, dtype=None):
         """Wrap the given flow into this node.
         
-        Pretrained nodes are allowed, but the internal _flow should not 
+        Pretrained nodes are allowed, but the internal flow should not 
         be modified after the FlowNode was created (this will cause problems
         if the training phase structure of the internal nodes changes).
         
@@ -57,6 +57,15 @@ class FlowNode(mdp.Node):
         # remaining standard node initialisation 
         super(FlowNode, self).__init__(input_dim=input_dim,
                                        output_dim=output_dim, dtype=dtype)
+        
+    @property
+    def flow(self):
+        """Return the internal flow.
+        
+        In general this flow should not be modified (which is the reason why
+        the flow property is read-only). 
+        """
+        return self._flow
         
     def _set_input_dim(self, n):
         # try setting the input_dim of the first node

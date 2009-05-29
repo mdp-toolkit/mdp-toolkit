@@ -8,6 +8,8 @@ supported.
 import mdp
 from mdp import numx
 
+# TODO: maybe turn self.nodes into a read only property with self._nodes
+
 # TODO: Find a better way to deal with additional args for train/execute?
 #    Maybe split them by default, but can be disabled via switch?
 
@@ -215,6 +217,20 @@ class Layer(mdp.Node):
                 y[:,out_start:out_stop] = node.inverse(x[:,in_start:in_stop],
                                                         *args, **kwargs)
         return y
+    
+    ## container methods ##
+    
+    def __len__(self):
+        return len(self.nodes)
+    
+    def __getitem__(self, key):
+        return self.nodes.__getitem__(key)
+        
+    def __contains__(self, item):
+        return self.nodes.__contains__(item)
+    
+    def __iter__(self):
+        return self.nodes.__iter__()
 
 
 class CloneLayer(Layer):

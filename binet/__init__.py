@@ -47,29 +47,31 @@ terminated the normal flow execution will be resumed.
 
 ### N E X T ###
 
-# TODO: update TopDownNode, use slots for up and down targets,
-#    the direction is stored like the canned messages etc.
+# TODO: use special class for binet results instead of tuples?
+#    maybe using __slots__?
 
 # TODO: add target BiNode unittest
+
 # TODO: add unittests for message parsing, especially magic method key
  
-# TODO: add read-only flow property to access _flow in FlowNode and such?
-
 # TODO: fix unecessary bi_reset calls?
 #    Note that bi_reset in BiFlowNode did not work properly until recently.
 #    However, it might be better to leave both pre- and post bi_reset in place
 #    so that no unecessary data stored (especially when the flow gets pickled).
+#    This is also useful when a previous execution was aborted due to an
+#    exception.
 
 # TODO: automatically create BiNode versions of all MDP nodes,
 #    use exec to define new classes and create fitting docstring,
 #    first check is a bi-version is already present
 
-# TODO: show more information in trace slides via mouse hover
+# TODO: show more information in trace slides via mouse hover,
+#    or enable some kind of folding (might be possible via CSS like suckerfish)
 
 # TODO: Node Extensions 
 #    implement gradient and parallel via Node Extensions, define
-#    NodeExtension metaclass which registers all the available extensions.
-#    It is derived from ABCMeta.
+#    NodeExtension metaclass which registers all the available extensions,
+#    derived from ABCMeta.
 #    
 #    ParallelNode ABC then derives from Node and has NodeExtension as
 #    metaclass. Classes like ParallelSFANode are derived as before.
@@ -97,26 +99,11 @@ terminated the normal flow execution will be resumed.
 #    Provide a method decorator to check that all nodes have an extension
 #    available?
 
-# TODO: gradient extension:
-#    gradient extensions and such work via the magic 'method' argument in msg
-#    e.g. if "method"="gradient" is present then execute calls _gradient
-#    instead of _execute, so _execute is only the default (same for
-#    message and _message or stop_message)
-#    If x is None then it is not forwarded to the method.
-#    Not sure how to implement this yet...
-
 ### T O D O ###
 
 # TODO: make comments conform to RST format
 
 # TODO: add msg key wildcard support later on
-
-# TODO: use extension mechanism for backpropagation? 
-#    put BackpropagationBiNode on top that compares the
-#    incoming x to the reference value in msg, but this node needs no
-#    training phase at all, unless you want to control learning e.g. in terms
-#    of the reached error.
-#    But this cannot be done in a simple parallel fashion.
 
 # TODO: implement switchlayer, a layer where each column represents a different
 #    target, so the target value determines which nodes are used

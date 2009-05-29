@@ -104,7 +104,11 @@ class XSFANode(mdp.Node):
         self.svd = svd
         super(XSFANode, self).__init__(input_dim=input_dim,
                                        output_dim=output_dim, dtype=dtype)
-
+        
+    @property
+    def flow(self):
+        """Return the internal flow."""
+        return self._flow
         
     def _get_train_seq(self):
         #XXX: this is a  hack

@@ -12,7 +12,6 @@ n = mdp.numx
 
 import mdp.parallel as parallel
 
-from ..binode import BiNode
 from ..biflow import (BiFlow, BiFlowException, MessageResultContainer,
                       BiCheckpointFlow)
 

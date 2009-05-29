@@ -65,7 +65,7 @@ class BiNetHTMLTranslator(mdp.hinet.HiNetHTMLTranslator):
         self._open_node_env(clonelayer, "layer")
         f.write('<tr><td class="nodename">')
         f.write(str(clonelayer) + '<br><br>')
-        f.write('%d repetitions' % len(clonelayer.nodes))
+        f.write('%d repetitions' % len(clonelayer))
         if isinstance(clonelayer, CloneBiLayer):
             f.write('<br><br>')
             f.write('<span class="bicolor" style="font-size: x-small">')

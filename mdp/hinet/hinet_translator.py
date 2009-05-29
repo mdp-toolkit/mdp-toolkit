@@ -34,7 +34,7 @@ class HiNetTranslator(object):
         Depending on the type of the node this can be delegated to more
         specific methods.
         """
-        if hasattr(node, "_flow"):
+        if hasattr(node, "flow"):
             return self._translate_flownode(node)
         elif isinstance(node, mdp.hinet.CloneLayer):
             return self._translate_clonelayer(node)
@@ -49,10 +49,13 @@ class HiNetTranslator(object):
         """Translate a node containing a flow and return the translation.
         
         The internal nodes are translated recursively.
+        
+        Note that this method is used for translation whenever the node has
+        a flow attribute. This flow attribute is then used for the iteration,
+        so the node itself does not have to be an iterable.
         """
         flownode_translation = []
-        flow = flownode._flow
-        for node in flow.flow:
+        for node in flownode.flow:
             flownode_translation.append(self._translate_node(node))
         return flownode_translation
     
@@ -62,14 +65,14 @@ class HiNetTranslator(object):
         All the nodes in the layer are translated.
         """
         layer_translation = []
-        for node in layer.nodes:
+        for node in layer:
             layer_translation.append(self._translate_node(node))
         return layer_translation
     
     def _translate_clonelayer(self, layer):
         """Translate a CloneLayer and return the translation."""
         translated_node = self._translate_node(layer.node)
-        return [translated_node] * len(layer.nodes)
+        return [translated_node] * len(layer)
     
     def _translate_sameinputlayer(self, layer):
         """Translate a SameInputLayer and return the translation."""
@@ -263,8 +266,7 @@ class HiNetHTMLTranslator(HiNetTranslator):
     def _translate_flownode(self, flownode):
         f = self._html_file
         self._open_node_env(flownode, "flownode")
-        flow = flownode._flow
-        for node in flow.flow:
+        for node in flownode.flow:
             f.write('<tr><td>')
             self._translate_node(node)
             f.write('</td></tr>')
@@ -274,7 +276,7 @@ class HiNetHTMLTranslator(HiNetTranslator):
         f = self._html_file
         self._open_node_env(layer, "layer")
         f.write('<tr>')
-        for node in layer.nodes:
+        for node in layer:
             f.write('<td>')
             self._translate_node(node)
             f.write('</td>')
@@ -286,7 +288,7 @@ class HiNetHTMLTranslator(HiNetTranslator):
         self._open_node_env(layer, "layer")
         f.write('<tr><td class="nodename">')
         f.write(str(layer) + '<br><br>')
-        f.write('%d repetitions' % len(layer.nodes))
+        f.write('%d repetitions' % len(layer))
         f.write('</td>')
         f.write('<td>')
         self._translate_node(layer.node)
@@ -297,9 +299,9 @@ class HiNetHTMLTranslator(HiNetTranslator):
         f = self._html_file
         self._open_node_env(layer, "layer")
         f.write('<tr><td colspan="%d" class="nodename">%s</td></tr>' %
-                (len(layer.nodes), str(layer)))
+                (len(layer), str(layer)))
         f.write('<tr>')
-        for node in layer.nodes:
+        for node in layer:
             f.write('<td>')
             self._translate_node(node)
             f.write('</td>')
