@@ -98,7 +98,7 @@ def get_node_size(x):
     The byte-size is related to the memory needed by the node).
     """
     # TODO: add check for problematic node types, like NoiseNode?
-    # TODO: replace this with sys.getsizeof for Python > 2.6
+    # TODO: replace this with sys.getsizeof for Python >= 2.6
     size = len(cPickle.dumps(x, protocol = 2))
     return size
 
@@ -127,9 +127,13 @@ def _memory_size_str(size, si_units=False):
     while size > base**(scale+1):
         scale += 1
     unit = "B"
-    if (not si_units) and scale:
-        unit = _IEC_MEMORY_PREFIXES[scale] + unit
-    elif scale:
-        unit = _SI_MEMORY_PREFIXES[scale] + unit
-    return "%.1f %s" % (1.0 * size / (base**scale), unit)
+    if scale:
+        size_str = size = "%.1f" % (1.0 * size / (base**scale))
+        if si_units:
+            unit = _SI_MEMORY_PREFIXES[scale] + unit
+        else:
+            unit = _IEC_MEMORY_PREFIXES[scale] + unit
+    else:
+        size_str = "%d" % size
+    return size_str + " " + unit
 
