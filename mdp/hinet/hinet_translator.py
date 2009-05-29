@@ -205,8 +205,8 @@ class NewlineWriteFile(object):
         """Write a string to the file object and append a newline character."""
         self.file_obj.write(str_obj + "\n")
         
-    def close(self):
-        self.file_obj.close()
+    def __getattr__(self, attr):
+        return getattr(self.file_obj, attr)
     
     
 class HiNetHTMLTranslator(HiNetTranslator):

@@ -107,7 +107,7 @@ class XSFANode(mdp.Node):
         
     @property
     def flow(self):
-        """Return the internal flow."""
+        """Read-only internal flow property."""
         return self._flow
         
     def _get_train_seq(self):

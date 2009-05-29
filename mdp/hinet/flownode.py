@@ -60,10 +60,10 @@ class FlowNode(mdp.Node):
         
     @property
     def flow(self):
-        """Return the internal flow.
+        """Read-only internal flow property.
         
-        In general this flow should not be modified (which is the reason why
-        the flow property is read-only). 
+        In general the internal flow should not be modified (see __init__
+        for more details). 
         """
         return self._flow
         

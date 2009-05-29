@@ -203,8 +203,7 @@ class HTMLTraceInspector(hinet.HiNetTranslator):
                 raise BiNetTraceDebugException(result=result,
                                                exception=exception) 
             else:
-                traceback.print_exc()
-                raise exception
+                raise 
         stop_filenames = self._slide_filenames
         # restore undecoreted flow
         self._undecorate_mode = True
@@ -247,7 +246,7 @@ class HTMLTraceInspector(hinet.HiNetTranslator):
                                                exception=exception) 
             else:
                 traceback.print_exc()
-                raise exception
+                raise
         self._undecorate_mode = True
         self._translate_flow(flow)
         if not self._section_ids:
@@ -803,7 +802,7 @@ def _trace_biflow_training(snapshot_path, inspection_path, css_filename,
         stop_index = len(slide_filenames) - 1
         index_table[i_train_node].append((train_index, stop_index))
         debug_exception.result = index_table
-        raise debug_exception
+        raise
     if i_snapshot == 0:
         return None  # no snapshots were found
     return slide_filenames, index_table
