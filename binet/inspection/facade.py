@@ -236,6 +236,9 @@ def inspect_execution(flow, x, msg=None, target=None, path=None, name=None,
                                          delay=500, delay_delta=100,
                                          loop=False)
     else:
+        # after an exception the last section_id entry can be missing 
+        if len(section_ids) < len(slide_filenames):
+            section_ids.append(section_ids[-1])
         slideshow = SectExecuteHTMLSlideShow(filenames=slide_filenames,
                                              section_ids=section_ids,
                                              delay=500, delay_delta=100,
