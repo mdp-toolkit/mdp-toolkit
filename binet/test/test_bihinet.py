@@ -146,6 +146,17 @@ class TestBiMeanSwitchboard(unittest.TestCase):
                           (3.0 + 4.0) / 2,
                           2.0]])
         self.assertTrue(n.all(x == ref_x))
+        
+    def test_rec_down_execute2(self):
+        """Test correct downward execution for larger y."""
+        sboard = binet.MeanBiSwitchboard(input_dim=3,
+                                         connections=[0,2,1,1,0])
+        y = n.array([[1.0, 2.0, 3.0, 4.0, 5.0],
+                     [1.5, 5.0, 1.2, 3.7, 1.1]])
+        x = sboard._down_execute(y)
+        ref_x = n.array([[(1.0 + 5.0) / 2, (3.0 + 4.0) / 2, 2.0],
+                         [(1.5 + 1.1) / 2, (1.2 + 3.7) / 2, 5.0]])
+        self.assertTrue(n.all(x == ref_x))
     
 
 def get_suite():
@@ -153,6 +164,7 @@ def get_suite():
     suite.addTest(unittest.makeSuite(TestBiFlowNode))
     suite.addTest(unittest.makeSuite(TestCloneBiLayer))
     suite.addTest(unittest.makeSuite(TestBiSwitchboardNode))
+    suite.addTest(unittest.makeSuite(TestBiMeanSwitchboard))
     return suite
             
 if __name__ == '__main__':
