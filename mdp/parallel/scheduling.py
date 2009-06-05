@@ -96,6 +96,15 @@ class SqrTestCallable(TaskCallable):
         """Return the squared data."""
         return data**2
     
+    
+class SleepSqrTestCallable(TaskCallable):
+    """Callable for testing."""
+    
+    def __call__(self, data):
+        """Return the squared data[0] after sleeping for data[1] seconds."""
+        time.sleep(data[1])
+        return data[0]**2
+    
 
 class TaskCallableWrapper(TaskCallable):
     """Wrapper to provide a fork method for simple callables like a function.
