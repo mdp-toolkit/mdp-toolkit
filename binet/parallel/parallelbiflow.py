@@ -220,6 +220,7 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
             assumed that it contains a scheduler for each training phase.
             After a node has been trained the scheduler is shutdown. Note that
             you can e.g. use a generator to create the schedulers just in time.
+            For nodes which are not trained the scheduler can be None.
         train_callable_class -- Class used to create training callables for the
             scheduler. By specifying your own class you can implement data 
             transformations before the data is actually fed into the flow 
@@ -260,25 +261,27 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
                     schedulers = iter(scheduler)
                     scheduler = schedulers.next()
                     if self._i_train_node > 0:
-                        # get rid of schedulers for pretrained nodes
+                        # dispose schedulers for pretrained nodes
                         for _ in range(self._i_train_node):
-                            scheduler.shutdown()
+                            if scheduler is not None:
+                                scheduler.shutdown()
                             scheduler = schedulers.next()
                     elif self._i_train_node is None:
-                        # all nodes are already trained, get rid of schedulers
+                        # all nodes are already trained, dispose schedulers
                         for _ in range(len(self.flow) - 1):
-                            scheduler.shutdown()
+                            if scheduler is not None:
+                                scheduler.shutdown()
                             # the last scheduler will be shutdown in finally
                             scheduler = schedulers.next()
                     last_trained_node = self._i_train_node
                 else:
                     schedulers = None
                 # check that the scheduler is compatible
-                if overwrite_result_container:
-                    if not isinstance(scheduler.result_container,
-                                      BiFlowTrainResultContainer):
-                        scheduler.result_container = \
-                                        BiFlowTrainResultContainer()
+                if ((scheduler is not None) and
+                    overwrite_result_container and
+                    (not isinstance(scheduler.result_container,
+                                    BiFlowTrainResultContainer))):
+                    scheduler.result_container = BiFlowTrainResultContainer()
                 while self.is_parallel_training:
                     while self.task_available:
                         task = self.get_task()
@@ -293,11 +296,15 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
                     # check if we have to switch to next scheduler
                     if ((schedulers is not None) and
                         (self._i_train_node > last_trained_node)):
+                        # dispose unused schedulers
+                        for _ in range(self._i_train_node - last_trained_node):
+                            if scheduler is not None:
+                                scheduler.shutdown()
+                            scheduler = schedulers.next()
                         last_trained_node = self._i_train_node
-                        scheduler.shutdown()
-                        scheduler = schedulers.next()
                         # check that the scheduler is compatible
-                        if (overwrite_result_container and
+                        if ((scheduler is not None) and
+                            overwrite_result_container and
                             (not isinstance(scheduler.result_container,
                                             BiFlowTrainResultContainer))):
                             scheduler.result_container = \
@@ -306,7 +313,7 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
                 # reset remaining iterator references, which cannot be pickled
                 self._train_data_iterator = None    
                 self._train_msg_iterator = None
-                if (schedulers is not None):
+                if (schedulers is not None) and (scheduler is not None):
                     scheduler.shutdown()
     
     def setup_parallel_training(self, data_iterables, msg_iterables=None, 
