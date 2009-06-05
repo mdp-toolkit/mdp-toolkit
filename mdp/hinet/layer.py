@@ -210,7 +210,7 @@ class Layer(mdp.Node):
             in_stop += node.output_dim
             if y is None:
                 node_y = node.inverse(x[:,in_start:in_stop], *args, **kwargs)
-                y = numx.zeros([node_y.shape[0], self.output_dim],
+                y = numx.zeros([node_y.shape[0], self.input_dim],
                                dtype=node_y.dtype)
                 y[:,out_start:out_stop] = node_y
             else:
