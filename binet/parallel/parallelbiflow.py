@@ -216,6 +216,10 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
         scheduler -- Value can be either None for normal training (default 
             value) or a Scheduler instance for parallel training with the 
             scheduler.
+            If the scheduler value is an iterable or iterator then it is
+            assumed that it contains a scheduler for each training phase.
+            After a node has been trained the scheduler is shutdown. Note that
+            you can e.g. use a generator to create the schedulers just in time.
         train_callable_class -- Class used to create training callables for the
             scheduler. By specifying your own class you can implement data 
             transformations before the data is actually fed into the flow 
@@ -228,9 +232,7 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
             instance of NodeResultContainer, if it is not already an instance
             of NodeResultContainer.
         """
-        # Warning: If this method is updated you also have to update train
-        #          in ParallelCheckpointFlow.
-        if self.is_parallel_training():
+        if self.is_parallel_training:
             raise ParallelBiFlowException("Parallel training is underway.")
         if scheduler is None:
             if train_callable_class is not None:
@@ -243,11 +245,6 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
         else:
             if train_callable_class is None:
                 train_callable_class = BiFlowTrainCallable
-            # check that the scheduler is compatible
-            if overwrite_result_container:
-                if not isinstance(scheduler.result_container,
-                                  BiFlowTrainResultContainer):
-                    scheduler.result_container = BiFlowTrainResultContainer()
             # do parallel training
             try:
                 self.setup_parallel_training(
@@ -256,8 +253,34 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
                                         stop_messages=stop_messages,
                                         train_callable_class=train_callable_class,
                                         **kwargs)
-                while self.is_parallel_training():
-                    while self.task_available():
+                # prepare scheduler
+                if not isinstance(scheduler, parallel.Scheduler):
+                    # scheduler contains an iterable with the schedulers
+                    # self._i_train_node was set in setup_parallel_training
+                    schedulers = iter(scheduler)
+                    scheduler = schedulers.next()
+                    if self._i_train_node > 0:
+                        # get rid of schedulers for pretrained nodes
+                        for _ in range(self._i_train_node):
+                            scheduler.shutdown()
+                            scheduler = schedulers.next()
+                    elif self._i_train_node is None:
+                        # all nodes are already trained, get rid of schedulers
+                        for _ in range(len(self.flow) - 1):
+                            scheduler.shutdown()
+                            # the last scheduler will be shutdown in finally
+                            scheduler = schedulers.next()
+                    last_trained_node = self._i_train_node
+                else:
+                    schedulers = None
+                # check that the scheduler is compatible
+                if overwrite_result_container:
+                    if not isinstance(scheduler.result_container,
+                                      BiFlowTrainResultContainer):
+                        scheduler.result_container = \
+                                        BiFlowTrainResultContainer()
+                while self.is_parallel_training:
+                    while self.task_available:
                         task = self.get_task()
                         scheduler.add_task(*task)
                     results = scheduler.get_results()
@@ -267,10 +290,24 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
                         raise Exception(err)
                     else:
                         self.use_results(results)
+                    # check if we have to switch to next scheduler
+                    if ((schedulers is not None) and
+                        (self._i_train_node > last_trained_node)):
+                        last_trained_node = self._i_train_node
+                        scheduler.shutdown()
+                        scheduler = schedulers.next()
+                        # check that the scheduler is compatible
+                        if (overwrite_result_container and
+                            (not isinstance(scheduler.result_container,
+                                            BiFlowTrainResultContainer))):
+                            scheduler.result_container = \
+                                            BiFlowTrainResultContainer()
             finally:
                 # reset remaining iterator references, which cannot be pickled
                 self._train_data_iterator = None    
                 self._train_msg_iterator = None
+                if (schedulers is not None):
+                    scheduler.shutdown()
     
     def setup_parallel_training(self, data_iterables, msg_iterables=None, 
                                 stop_messages=None,
@@ -279,7 +316,7 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
         
         After calling setup_parallel_training one has to pick up the
         tasks with get_task, run them and finally return the results via
-        use_results. tasks are available as long as task_available() returns 
+        use_results. tasks are available as long as task_available is 
         True. Training may require multiple phases, which are each closed by 
         calling use_results.
         
@@ -301,7 +338,7 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
             NodeResultContainer.
         """
         self._bi_reset()  # normally not required, just for safety
-        if self.is_parallel_training():
+        if self.is_parallel_training:
             err = "Parallel training is already underway."
             raise ParallelBiFlowException(err)
         self._train_callable_class = train_callable_class
@@ -459,7 +496,7 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
             instance of OrderedResultContainer, if it is not already an 
             instance of OrderedResultContainer.
         """
-        if self.is_parallel_training():
+        if self.is_parallel_training:
             raise ParallelBiFlowException("Parallel training is underway.")
         if scheduler is None:
             if execute_callable_class is not None:
@@ -483,7 +520,7 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
                                 msg_iterable=msg_iterable,
                                 target_iterable=target_iterable,
                                 execute_callable_class=execute_callable_class)
-            while self.task_available():
+            while self.task_available:
                 task = self.get_task()
                 scheduler.add_task(*task)
             result = self.use_results(scheduler.get_results())
@@ -514,7 +551,7 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
             NodeResultContainer.
         """
         self._bi_reset()  # normally not required, just for safety
-        if self.is_parallel_training():
+        if self.is_parallel_training:
             raise ParallelBiFlowException("Parallel training is underway.")
         self._flownode = ParallelBiFlowNode(BiFlow(self.flow))
         if self._flownode.is_bi_training():
@@ -568,7 +605,7 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
             of scheduler.ResultContainer.get_results().  
             The individual results can be the return values of the tasks. 
         """
-        if self.is_parallel_training():
+        if self.is_parallel_training:
             for result in results:
                 self._flownode.join(result)
             # perform local stop_training with result check
@@ -589,7 +626,7 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
             if not self.flow[self._i_train_node].is_training():
                 self._i_train_node += 1
             self._next_train_phase()
-        elif self.is_parallel_executing():
+        elif self.is_parallel_executing:
             self._exec_data_iterator = None
             self._exec_msg_iterator = None
             self._exec_target_iterator = None
