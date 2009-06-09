@@ -186,6 +186,17 @@ class ContribTestSuite(NodesTestSuite):
             assert (res[idx,0]-res[idx[0],0]<1e-2,
                     'Projection should be aligned as original space')
 
+    def testLLENode_outputdim_float_bug(self):
+        # 1D S-shape in 3D, output_dim
+        n, k = 50, 2
+        x, y, z, t = _s_shape_1D(n)
+        data = numx.asarray([x,y,z]).T
+
+        res = mdp.nodes.LLENode(k, output_dim=0.9, svd=True)(data)
+        # check that the neighbors are the same
+        err = _compare_neighbors(data, res, k)
+        assert err.max() == 0
+
     def testHLLENode(self):
         # 1D S-shape in 3D
         n, k = 250, 4
