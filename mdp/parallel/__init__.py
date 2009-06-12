@@ -52,5 +52,6 @@ __all__ = ["ResultContainer", "ListResultContainer", "OrderedResultContainer",
            "ParallelSFA2Node", "FlowTrainCallable", "FlowExecuteCallable",
            "NodeResultContainer", "ParallelFlowException", "NoTaskException",
            "ParallelFlow", "ParallelCheckpointFlow", "ParallelFlowNode",
-           "ParallelLayer", "ParallelCloneLayer", "make_flow_parallel",
-           "unmake_flow_parallel"]
+           "ParallelLayer", "ParallelCloneLayer",
+           "ParallelHistogramNode", "ParallelAdaptiveCutoffNode",
+           "make_flow_parallel", "unmake_flow_parallel"]
