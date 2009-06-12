@@ -5,9 +5,10 @@ from ica_nodes import ICANode, CuBICANode, FastICANode, TDSEPNode
 from neural_gas_nodes import GrowingNeuralGasNode
 from fda_nodes import FDANode
 from em_nodes import FANode
-from misc_nodes import (HitParadeNode, TimeFramesNode, EtaComputerNode,
-                        NoiseNode, NormalNoiseNode, GaussianClassifierNode,
-                        IdentityNode)
+from misc_nodes import (IdentityNode, HitParadeNode, TimeFramesNode,
+                        EtaComputerNode, NoiseNode, NormalNoiseNode,
+                        GaussianClassifierNode,                    
+                        CutoffNode, HistogramNode, AdaptiveCutoffNode)
 from isfa_nodes import ISFANode
 from rbm_nodes import RBMNode, RBMWithLabelsNode
 from regression_nodes import LinearRegressionNode
@@ -41,4 +42,5 @@ __all__ = ['CuBICANode', 'EtaComputerNode', 'FANode', 'FDANode', 'FastICANode',
            'RBMNode', 'RBMWithLabelsNode', 'SFA2Node', 'SFANode',
            'TDSEPNode', 'TimeFramesNode','WhiteningNode', 'XSFANode',
            'LinearRegressionNode',
-           '_OneDimensionalHitParade', '_expanded_dim']
+           '_OneDimensionalHitParade', '_expanded_dim',
+           'CutoffNode', 'HistogramNode', 'AdaptiveCutoffNode']

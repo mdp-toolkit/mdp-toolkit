@@ -139,8 +139,8 @@ class TestParallelMDPNodes(unittest.TestCase):
         flow = parallel.ParallelFlow([parallel.ParallelFDANode()])
         flow.train([[(x1, cl1), (x2, cl2)]], scheduler=parallel.Scheduler())
         fda_node = flow[0]
-        assert fda_node.tlens[1] == npoints
-        assert fda_node.tlens[2] == npoints
+        self.assertTrue(fda_node.tlens[1] == npoints)
+        self.assertTrue(fda_node.tlens[2] == npoints)
         m1 = numx.array([mean1])
         m2 = numx.array([mean2])
         utils.rotate(m1, rot, units='degrees')
@@ -155,6 +155,32 @@ class TestParallelMDPNodes(unittest.TestCase):
         assert_array_almost_equal(v1, [1., -1.], 2)
         v1 = fda_node.v[:,1]/fda_node.v[0,1]
         assert_array_almost_equal(v1, [1., 1.], 2)
+        
+    def test_ParallelHistogramNode_nofraction(self):
+        """Test HistogramNode with fraction set to 1.0."""
+        node = parallel.ParallelHistogramNode()
+        x1 = numx.array([[0.1, 0.2], [0.3, 0.5]])
+        x2 = numx.array([[0.3, 0.6], [0.2, 0.1]])
+        x = numx.concatenate([x1, x2])
+        chunks = [x1, x2]
+        for chunk in chunks:
+            forked_node = node.fork()
+            forked_node.train(chunk)
+            node.join(forked_node)
+        self.assertTrue(numx.all(x == node.data_hist))
+        node.stop_training()
+        
+    def test_ParallelHistogramNode_fraction(self):
+        """Test HistogramNode with fraction set to 0.5."""
+        node = parallel.ParallelHistogramNode(hist_fraction=0.5)
+        x1 = numx.random.random((1000, 3))
+        x2 = numx.random.random((500, 3))
+        chunks = [x1, x2]
+        for chunk in chunks:
+            forked_node = node.fork()
+            forked_node.train(chunk)
+            node.join(forked_node)
+        self.assertTrue(len(node.data_hist) < 1000)
         
 
 def get_suite(testname=None):

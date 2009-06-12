@@ -15,6 +15,17 @@ MIN_NUM = {numx.dtype('b'): -128,
            numx.dtype('f'): numx.finfo(numx.float32).min,
            numx.dtype('d'): numx.finfo(numx.float64).min}
 
+
+class IdentityNode(Node):
+    """Return input data (useful in complex network layouts)"""
+    def is_trainable(self):
+        False
+
+    def _set_input_dim(self, n):
+        self._input_dim = n
+        self._output_dim = n
+
+
 class OneDimensionalHitParade(object):
     """
     Class to produce hit-parades (i.e., a list of the largest
@@ -592,13 +603,134 @@ class GaussianClassifierNode(Node):
         class_prob = self.class_probabilities(x)
         winner = class_prob.argmax(axis=-1)
         return [self.labels[winner[i]] for i in range(len(winner))]
-
-class IdentityNode(Node):
-    """Return input data (useful in complex network layouts)"""
-    def is_trainable(self):
-        False
-
-    def _set_input_dim(self, n):
-        self._input_dim = n
-        self._output_dim = n
     
+
+class CutoffNode(mdp.Node):
+    """Node to cut of values at specified bounds.
+    
+    Works similar to numpy.clip, but also works when only a lower or upper
+    bound is specified.
+    """
+
+    def __init__(self, lower_bound=None, upper_bound=None, 
+                 input_dim=None, dtype=None):
+        """Initialize node.
+        
+        lower_bound -- Data values below this are cut to the lower_bound value.
+            If lower_bound is None no cutoff is performed.
+        upper_bound -- Works like lower_bound.
+        """
+        super(CutoffNode, self).__init__(input_dim=input_dim, 
+                                         output_dim=input_dim, 
+                                         dtype=dtype)
+        self.lower_bound = lower_bound
+        self.upper_bound = upper_bound
+
+    def is_trainable(self):
+        return False
+
+    def is_invertible(self):
+        return False
+            
+    def _execute(self, x):
+        """Return the clipped data."""
+        # n.clip() does not work, since it does not accept None for one bound
+        if self.lower_bound is not None:
+            x = numx.where(x >= self.lower_bound, x, self.lower_bound)
+        if self.upper_bound is not None:
+            x = numx.where(x <= self.upper_bound, x, self.upper_bound)
+        return x
+
+
+class HistogramNode(mdp.Node):
+    """Node which stores a history of the data during its training phase.
+    
+    The data history is stored in self.data_hist and can also be deleted to
+    free memory.
+    
+    Note that data is only stored during training, since we want to derive other
+    versions of this node with additional functionality (including a parallel
+    version).
+    """
+    
+    def __init__(self, hist_fraction=1.0, input_dim=None, dtype=None):
+        """Initialize the node.
+        
+        hist_fraction -- Defines the fraction of the data that is stored
+            randomly.
+        """
+        super(HistogramNode, self).__init__(input_dim=input_dim, 
+                                            output_dim=input_dim, 
+                                            dtype=dtype)
+        self.hist_fraction = hist_fraction
+        self.data_hist = None  # stores the data history  
+        
+    def _train(self, x):
+        """Store the history data."""
+        if self.hist_fraction < 1.0:
+            x = x[numx.random.random(len(x)) < self.hist_fraction]
+        if self.data_hist is not None:
+            self.data_hist = numx.concatenate([self.data_hist, x])
+        else:
+            self.data_hist = x
+
+    def _stop_training(self):
+        """Does nothing.
+        
+        Overwrite this function if some cleanup is needed for the history data.
+        """
+        super(HistogramNode, self)._stop_training()
+    
+
+class AdaptiveCutoffNode(HistogramNode):
+    """Node which uses the data history during training to learn cutoff values.
+    
+    As opposed to the simple CutoffNode, a different cutoff value is learned
+    for each data coordinate.
+    
+    When stop_training is called the cutoff values for each coordinate are
+    calculated.
+    """
+    
+    def __init__(self, lower_cutoff_fraction=None, upper_cutoff_fraction=None, 
+                 hist_fraction=1.0,
+                 input_dim=None, dtype=None):
+        """Initialize the node.
+        
+        lower_cutoff_fraction -- Fraction of data that will be cut off after the
+            training phase (assuming the data distribution does not change).
+            If set to None (default value) no cutoff is performed.
+        upper_cutoff_fraction -- Works like lower_cutoff_fraction.
+        hist_fraction -- Defines the fraction of the data that is stored for the
+            histogram.
+        """
+        super(AdaptiveCutoffNode, self).__init__(hist_fraction=hist_fraction,
+                                                 input_dim=input_dim, 
+                                                 dtype=dtype)
+        self.lower_cutoff_fraction = lower_cutoff_fraction
+        self.upper_cutoff_fraction = upper_cutoff_fraction
+        self.lower_bounds = None
+        self.upper_bounds = None
+        
+    def _stop_training(self):
+        """Calculate the cutoff bounds based on collected histogram data."""
+        if self.lower_cutoff_fraction or self.upper_cutoff_fraction:
+            sorted_data = self.data_hist.copy()
+            sorted_data.sort(axis=0)
+            if self.lower_cutoff_fraction:
+                index = self.lower_cutoff_fraction * len(sorted_data)
+                self.lower_bounds = sorted_data[index]
+            if self.upper_cutoff_fraction:
+                index = (len(sorted_data) - 
+                         self.upper_cutoff_fraction * len(sorted_data))
+                self.upper_bounds = sorted_data[index]
+        # call this for any cleanup
+        super(AdaptiveCutoffNode, self)._stop_training()
+                
+    def _execute(self, x):
+        if self.lower_bounds is not None:
+            x = numx.where(x >= self.lower_bounds, x, self.lower_bounds)
+        if self.upper_bounds is not None:
+            x = numx.where(x <= self.upper_bounds, x, self.upper_bounds)
+        return x
+

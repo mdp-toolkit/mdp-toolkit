@@ -183,11 +183,26 @@ def _get_html_normalnoise(node):
     return ['noise level: ' + str(node.noise_args[1]),
             'noise offset: ' + str(node.noise_args[0])]
     
+def _get_html_cutoff(node):
+    return ['lower bound: ' + str(node.lower_bound),
+            'upper bound: ' + str(node.upper_bound)]
+    
+def _get_html_histogram(node):
+    return ['history data fraction: ' + str(node.hist_fraction)]
+    
+def _get_html_adaptivecutoff(node):
+    return ['lower cutoff fraction: ' + str(node.lower_cutoff_fraction), 
+            'upper cutoff fraction: ' + str(node.upper_cutoff_fraction), 
+            'history data fraction: ' + str(node.hist_fraction)]
+    
 # (node class type, write function)
 NODE_HTML_TRANSLATORS = [
     (switchboard.Rectangular2dSwitchboard, _get_html_rect2dswitchboard),
     (mdp.nodes.SFA2Node, _get_html_sfa2),
     (mdp.nodes.NormalNoiseNode, _get_html_normalnoise),
+    (mdp.nodes.CutoffNode, _get_html_cutoff),
+    (mdp.nodes.HistogramNode, _get_html_histogram),
+    (mdp.nodes.AdaptiveCutoffNode, _get_html_adaptivecutoff)
 ]
 
 
