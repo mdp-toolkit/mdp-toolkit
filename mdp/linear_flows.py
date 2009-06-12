@@ -5,7 +5,6 @@ import traceback as _traceback
 import cPickle as _cPickle
 import warnings as _warnings
 import tempfile as _tempfile
-import types as _types
 
 from mdp import numx
 
