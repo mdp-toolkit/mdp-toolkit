@@ -246,6 +246,7 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
         else:
             if train_callable_class is None:
                 train_callable_class = BiFlowTrainCallable
+            schedulers = None
             # do parallel training
             try:
                 self.setup_parallel_training(

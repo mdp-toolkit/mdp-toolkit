@@ -209,6 +209,7 @@ class ParallelFlow(mdp.Flow):
         else:
             if train_callable_class is None:
                 train_callable_class = FlowTrainCallable
+            schedulers = None
             # do parallel training
             try:
                 self.setup_parallel_training(
