@@ -86,6 +86,9 @@ class ProcessScheduler(scheduling.Scheduler):
         # tag each process with its cached callable index
         for process in self._free_processes:
             process._callable_index = -1
+        if self.verbose:
+            print ("scheduler initialized with %d processes" %
+                   self._n_processes)
         
     def _shutdown(self):
         """Shut down the slave processes.
@@ -98,6 +101,8 @@ class ProcessScheduler(scheduling.Scheduler):
         for process in self._free_processes:
             pickle.dump("EXIT", process.stdin) 
         self._lock.release()
+        if self.verbose:
+            print "scheduler shutdown"
         
     def _process_task(self, data, task_callable, task_index):
         """Add a task, if possible without blocking.

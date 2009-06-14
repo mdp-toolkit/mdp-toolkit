@@ -45,13 +45,9 @@ terminated the normal flow execution will be resumed.
 
 """
 
-### N E X T ###
-
-# TODO: use special class for binet results instead of tuples?
-#    maybe using __slots__?
+### T O D O ###
 
 # TODO: add target BiNode unittest
-
 # TODO: add unittests for message parsing, especially magic method key
  
 # TODO: fix unecessary bi_reset calls?
@@ -65,18 +61,35 @@ terminated the normal flow execution will be resumed.
 #    use exec to define new classes and create fitting docstring,
 #    first check is a bi-version is already present
 
-# TODO: show more information in trace slides via mouse hover,
-#    or enable some kind of folding (might be possible via CSS like suckerfish)
-
 # TODO: Node Extensions 
-#    implement gradient and parallel via Node Extensions, define
+#    implement HTMLrep, parallel and gradient via Node Extensions, define
 #    NodeExtension metaclass which registers all the available extensions,
 #    derived from ABCMeta.
+#    Each node has an extension dict, with pointers to the available extensions
+#    for this node
 #    
 #    ParallelNode ABC then derives from Node and has NodeExtension as
 #    metaclass. Classes like ParallelSFANode are derived as before.
+#    ABC has a class attribute with the name string of this extension.
 #
-#    Activate all extensions by default??
+#    The NodeExtension metaclass __new__ automatically registers any defined
+#    node extensions.
+#
+#    When two extensions should be active at the same time then one should
+#    manually combine them into a new extension. This ensures that there are
+#    no accidental conflicts.
+#    It also means that all the extended classes can be build at import time,
+#    since there is no combinatorical explosion. Also this solves the
+#    problem of unpickling.
+#
+#    The node subclasses are not created automatically, since this would
+#    confuse IDE's and codecheckers.
+#
+#    See the implementation mercurial uses for extensions:
+#    http://stackoverflow.com/questions/990758
+#
+#    Some extensions may override standard methods
+#    (e.g. a CUDA extension might override _train and execute).
 #
 #    All instances of NodeExtension are tracked in a tree structure in
 #    NodeExtension. When NodeExtension.activate(ParallelNode) then all
@@ -99,7 +112,11 @@ terminated the normal flow execution will be resumed.
 #    Provide a method decorator to check that all nodes have an extension
 #    available?
 
-### T O D O ###
+# TODO: show more information in trace slides via mouse hover,
+#    or enable some kind of folding (might be possible via CSS like suckerfish)
+
+# TODO: use special class for binet results instead of tuples???
+#    maybe using __slots__?
 
 # TODO: make comments conform to RST format
 
