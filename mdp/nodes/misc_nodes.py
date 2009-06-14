@@ -1,6 +1,8 @@
 import mdp
 from mdp import numx, numx_linalg, utils, Node, NodeException
 
+import cPickle as pickle
+
 MAX_NUM = {numx.dtype('b'): 127,
            numx.dtype('h'): 32767,
            numx.dtype('i'): 2147483647,
@@ -606,7 +608,7 @@ class GaussianClassifierNode(Node):
     
 
 class CutoffNode(mdp.Node):
-    """Node to cut of values at specified bounds.
+    """Node to cut off values at specified bounds.
     
     Works similar to numpy.clip, but also works when only a lower or upper
     bound is specified.
@@ -646,22 +648,27 @@ class HistogramNode(mdp.Node):
     """Node which stores a history of the data during its training phase.
     
     The data history is stored in self.data_hist and can also be deleted to
-    free memory.
+    free memory. Alternatively it can be automatically pickled to disk.
     
-    Note that data is only stored during training, since we want to derive other
-    versions of this node with additional functionality (including a parallel
-    version).
+    Note that data is only stored during training.
     """
     
-    def __init__(self, hist_fraction=1.0, input_dim=None, dtype=None):
+    def __init__(self, hist_fraction=1.0, hist_filename=None,
+                 input_dim=None, dtype=None):
         """Initialize the node.
         
         hist_fraction -- Defines the fraction of the data that is stored
             randomly.
+        hist_filename -- Filename for the file to which the data history will
+            be pickled after training. The data is pickled when stop_training
+            is called and data_hist is then cleared (to free memory).
+            If filename is None (default value) then data_hist is not cleared
+            and can be directly used after training.
         """
         super(HistogramNode, self).__init__(input_dim=input_dim, 
                                             output_dim=input_dim, 
                                             dtype=dtype)
+        self._hist_filename = hist_filename
         self.hist_fraction = hist_fraction
         self.data_hist = None  # stores the data history  
         
@@ -675,36 +682,50 @@ class HistogramNode(mdp.Node):
             self.data_hist = x
 
     def _stop_training(self):
-        """Does nothing.
-        
-        Overwrite this function if some cleanup is needed for the history data.
-        """
+        """Pickle the histogram data to file and clear it if required."""
         super(HistogramNode, self)._stop_training()
+        if self._hist_filename:
+            pickle_file = open(self._hist_filename, "wb")
+            try:
+                pickle.dump(self.data_hist, pickle_file, protocol=-1)
+            finally:
+                pickle_file.close( )
+            self.data_hist = None
     
 
 class AdaptiveCutoffNode(HistogramNode):
     """Node which uses the data history during training to learn cutoff values.
     
     As opposed to the simple CutoffNode, a different cutoff value is learned
-    for each data coordinate.
+    for each data coordinate. For example if an upper cutoff fraction of
+    0.05 is specified, then the upper cutoff bound is set so that the upper
+    5% of the training data would have been clipped (in each dimension).
+    The cutoff bounds are then applied during execution.
+    This Node also works as a HistogramNode, so the histogram data is stored. 
     
     When stop_training is called the cutoff values for each coordinate are
-    calculated.
+    calculated based on the collected histogram data.
     """
     
     def __init__(self, lower_cutoff_fraction=None, upper_cutoff_fraction=None, 
-                 hist_fraction=1.0,
+                 hist_fraction=1.0, hist_filename=None,
                  input_dim=None, dtype=None):
         """Initialize the node.
         
-        lower_cutoff_fraction -- Fraction of data that will be cut off after the
-            training phase (assuming the data distribution does not change).
-            If set to None (default value) no cutoff is performed.
+        lower_cutoff_fraction -- Fraction of data that will be cut off after
+            the training phase (assuming the data distribution does not
+            change). If set to None (default value) no cutoff is performed.
         upper_cutoff_fraction -- Works like lower_cutoff_fraction.
         hist_fraction -- Defines the fraction of the data that is stored for the
             histogram.
+        hist_filename -- Filename for the file to which the data history will
+            be pickled after training. The data is pickled when stop_training
+            is called and data_hist is then cleared (to free memory).
+            If filename is None (default value) then data_hist is not cleared
+            and can be directly used after training.
         """
         super(AdaptiveCutoffNode, self).__init__(hist_fraction=hist_fraction,
+                                                 hist_filename=hist_filename,
                                                  input_dim=input_dim, 
                                                  dtype=dtype)
         self.lower_cutoff_fraction = lower_cutoff_fraction
@@ -724,10 +745,10 @@ class AdaptiveCutoffNode(HistogramNode):
                 index = (len(sorted_data) - 
                          self.upper_cutoff_fraction * len(sorted_data))
                 self.upper_bounds = sorted_data[index]
-        # call this for any cleanup
         super(AdaptiveCutoffNode, self)._stop_training()
                 
     def _execute(self, x):
+        """Return the clipped data."""
         if self.lower_bounds is not None:
             x = numx.where(x >= self.lower_bounds, x, self.lower_bounds)
         if self.upper_bounds is not None:

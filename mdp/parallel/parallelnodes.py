@@ -13,8 +13,6 @@ training, parallel execution works with any Node that can be pickled.
 import mdp
 from mdp import numx
 
-import cPickle as pickle
-
 
 class TrainingPhaseNotParallelException(mdp.NodeException):
     """Exception for parallel nodes that do not support fork() in some phases.
@@ -240,27 +238,8 @@ class ParallelFDANode(mdp.nodes.FDANode, ParallelNode):
             
             
 class ParallelHistogramNode(mdp.nodes.HistogramNode, ParallelNode):
-    """Parallel version of the HistogramNode.
+    """Parallel version of the HistogramNode."""
     
-    Since this node may also be used for parallel execution, the history data
-    is dumped in _stop_training to prevent excessive data transfer.    
-    """
-    
-    def __init__(self, hist_fraction=1.0, hist_filename=None, 
-                 input_dim=None, dtype=None):
-        """Initialize Node.
-        
-        hist_fraction -- Defines the fraction of the data that is stored
-            randomly.
-        hist_filename -- Filename for the file to which the data history will
-            be pickled after training.
-        """
-        # TODO: move this to HistogramNode
-        self._hist_filename = hist_filename
-        super(ParallelHistogramNode, self).__init__(hist_fraction=hist_fraction,  
-                                                    input_dim=input_dim,
-                                                    dtype=dtype)
-
     def _fork(self):
         forked_node = self.__class__(hist_fraction=self.hist_fraction,
                                      hist_filename=self._hist_filename,
@@ -275,42 +254,18 @@ class ParallelHistogramNode(mdp.nodes.HistogramNode, ParallelNode):
         elif forked_node.data_hist != None:
             self.data_hist = forked_node.data_hist
     
-    def _stop_training(self):
-        """Pickle the data history to file and dump it then."""
-        if self._hist_filename:
-            pickle_file = open(self._hist_filename, "wb")
-            try:
-                pickle.dump(self.data_hist, pickle_file, protocol=-1)
-            finally:
-                pickle_file.close( )
-        self.data_hist = None
-        super(ParallelHistogramNode, self)._stop_training()
-
 
 class ParallelAdaptiveCutoffNode(mdp.nodes.AdaptiveCutoffNode,
                                  ParallelHistogramNode):
     """Parallel version of the AdaptiveCutoffNode."""
     
-    def __init__(self, lower_cutoff_fraction=None, upper_cutoff_fraction=None, 
-                 hist_fraction=1.0, hist_filename=None,
-                 input_dim=None, dtype=None):
-        """Initialize the node.
-        
-        lower_cutoff_fraction -- Fraction of data that will be cut off after the
-            training phase (assuming the data distribution does not change).
-            If set to None no cutoff is performed.
-        upper_cutoff_fraction -- Works like lower_cutoff_fraction.
-        hist_fraction -- Defines the fraction of the data that is stored for the
-            histogram.
-        hist_filename -- Filename for the file to which the data history will
-            be pickled after training.
-        """
-        super(ParallelAdaptiveCutoffNode, self).__init__( 
-                                lower_cutoff_fraction=lower_cutoff_fraction, 
-                                upper_cutoff_fraction=upper_cutoff_fraction, 
-                                hist_fraction=hist_fraction,
-                                input_dim=input_dim, dtype=dtype)
-        self._hist_filename = hist_filename
-        
-    def _stop_training(self):
-        super(ParallelAdaptiveCutoffNode, self)._stop_training()           
+    def _fork(self):
+        forked_node = self.__class__(
+                        lower_cutoff_fraction=self.lower_cutoff_fraction,
+                        upper_cutoff_fraction=self.upper_cutoff_fraction,             
+                        hist_fraction=self.hist_fraction,
+                        hist_filename=self._hist_filename,
+                        input_dim=self.input_dim,
+                        dtype=self.dtype)
+        return forked_node
+    
