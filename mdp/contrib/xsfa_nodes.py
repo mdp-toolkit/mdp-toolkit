@@ -42,6 +42,12 @@ class XSFANode(mdp.Node):
     An Extension of Slow Feature Analysis for Nonlinear Blind Source Separation
     Journal of Machine Learning Research, submitted
     [pdf link follows]
+
+    Original code contributed by:
+      Henning Sprekeler
+      Laboratory of Computational Neuroscience Ecole Polytechnique Federal de
+      Lausanne (EPFL), Switzerland
+      henning.sprekeler@epfl.ch
     """
     def __init__(self, basic_exp=None, intern_exp=None, svd=False, verbose=False,
                  input_dim=None, output_dim=None, dtype=None):
