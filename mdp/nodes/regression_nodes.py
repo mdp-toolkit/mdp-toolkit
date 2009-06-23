@@ -1,23 +1,45 @@
 from mdp import numx, numx_linalg, utils, Node, NodeException, TrainingException
 from mdp.utils import mult
 
+# ??? For the future: add an optional second phase to compute
+# residuals, significance of the slope.
 
 class LinearRegressionNode(Node):
-    """Least-square linear regression node.
+    """Compute least-square, multivariate linear regression on the input
+    data, i.e., learn coefficients b_j so that
 
-    ??? For the future: add an optional second phase to compute
-    residuals, significance of the slope.
+      y_i = b_0 + b_1 x_1 + ... b_N x_N ,
+
+    for i = 1 ... M, minimizes the square error given the training x's
+    and y's.
+
+    This is a supervised learning node, and requires input data x and
+    target data y to be supplied during training (see 'train'
+    docstring).
+
+    Internal variables of interest:
+    self.beta -- the coefficients of the linear regression
     """
 
-    def __init__(self, with_bias=True, input_dim=None, output_dim=None, dtype=None):
+    def __init__(self, with_bias=True, use_pinv=False,
+                 input_dim=None, output_dim=None, dtype=None):
         """
+        Input arguments:
+
         with_bias -- If True, the linear model includes a constant term
                          True:  y_i = b_0 + b_1 x_1 + ... b_N x_N
                          False: y_i =       b_1 x_1 + ... b_N x_N
+                     If present, the constant term is stored in the first
+                     column of self.beta
+
+        use_pinv -- If true, uses the pseudo-inverse function to compute
+                    the linear regression coefficients, which is more robust
+                    in some cases
         """
         super(LinearRegressionNode, self).__init__(input_dim, output_dim, dtype)
         
         self.with_bias = with_bias
+        self.use_pinv = use_pinv
 
         # for the linear regression estimator we need two terms
         # the first one is X^T X
@@ -50,6 +72,11 @@ class LinearRegressionNode(Node):
             raise TrainingException(msg)
 
     def _train(self, x, y):
+        """
+        Additional input arguments:
+        y -- array of size (x.shape[0], output_dim) that contains the observed
+             output to the input x's.
+        """
         # initialize internal vars if necessary
         if self._xTx is None:
             x_size = self._input_dim+1 if self.with_bias else self._input_dim
@@ -66,7 +93,8 @@ class LinearRegressionNode(Node):
 
     def _stop_training(self):
         try:
-            inv_xTx = utils.inv(self._xTx)
+            invfun = utils.pinv if self.use_pinv else utils.inv
+            inv_xTx = invfun(self._xTx)
         except numx_linalg.LinAlgError, exception:
             errstr = (str(exception) + 
                       "\n Input data may be redundant (i.e., some of the " +
@@ -74,6 +102,10 @@ class LinearRegressionNode(Node):
             raise NodeException(errstr)
 
         self.beta = mult(inv_xTx, self._xTy)
+
+        # remove junk
+        del self._xTx
+        del self._xTy
 
     def _execute(self, x):
         if self.with_bias:
