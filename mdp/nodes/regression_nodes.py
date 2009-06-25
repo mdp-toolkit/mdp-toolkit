@@ -79,7 +79,10 @@ class LinearRegressionNode(Node):
         """
         # initialize internal vars if necessary
         if self._xTx is None:
-            x_size = self._input_dim+1 if self.with_bias else self._input_dim
+            if self.with_bias:
+                x_size = self._input_dim + 1
+            else:
+                x_size = self._input_dim
             self._xTx = numx.zeros((x_size, x_size), self._dtype)
             self._xTy = numx.zeros((x_size, self._output_dim), self._dtype)
 
@@ -93,7 +96,10 @@ class LinearRegressionNode(Node):
 
     def _stop_training(self):
         try:
-            invfun = utils.pinv if self.use_pinv else utils.inv
+            if self.use_pinv:
+                invfun = utils.pinv
+            else:
+                invfun = utils.inv
             inv_xTx = invfun(self._xTx)
         except numx_linalg.LinAlgError, exception:
             errstr = (str(exception) + 
