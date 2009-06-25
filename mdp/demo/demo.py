@@ -219,7 +219,7 @@ flow += mdp.nodes.HitParadeNode(3)
 flow.train(x_test)
 maxima, indices = flow[2].get_maxima()
 out = flow.execute(x)
-cov = mdp.numx.amax(abs(mdp.utils.cov2(inp[:,:5], out)))
+cov = mdp.numx.amax(abs(mdp.utils.cov2(inp[:,:5], out)), axis=1)
 print cov
 # [ 0.98992083  0.99244511  0.99227319  0.99663185  0.9871812 ]
 out = flow(x)
@@ -313,7 +313,7 @@ flow.train([gen_data(1), gen_data(1)])
 # [===================================100%==================================>]
 output = flow(single_block)
 output = flow.inverse(single_block)
-class SimpleIterator(object):
+class SimpleIterable(object):
     def __init__(self, blocks):
         self.blocks = blocks
     def __iter__(self):
@@ -321,7 +321,7 @@ class SimpleIterator(object):
         for i in range(self.blocks):
             yield generate_some_data()
 # >>>
-class RandomIterator(object):
+class RandomIterable(object):
     def __init__(self):
         self.state = None
     def __iter__(self):
@@ -331,13 +331,13 @@ class RandomIterator(object):
             mdp.numx_rand.set_state(self.state)
         for i in range(2):
             yield mdp.numx_rand.random((1,4))
-iterator = RandomIterator()
-for x in iterator:
+iterable = RandomIterable()
+for x in iterable:
     print x
 # ...
 # [[ 0.99586495  0.53463386  0.6306412   0.09679571]]
 # [[ 0.51117469  0.46647448  0.95089738  0.94837122]]
-for x in iterator:
+for x in iterable:
     print x
 # ...
 # [[ 0.99586495  0.53463386  0.6306412   0.09679571]]
@@ -415,6 +415,7 @@ switchboard
 x = mdp.numx.array([[2,4,6,8,10,12]])
 switchboard.execute(x)
 # array([[ 2,  4,  6,  8, 10,  8, 10, 12]])
+mdp.hinet.show_flow(flow)
 node1 = mdp.nodes.PCANode(input_dim=100, output_dim=10)
 node2 = mdp.nodes.SFA2Node(input_dim=10, output_dim=10)
 flow = node1 + node2
