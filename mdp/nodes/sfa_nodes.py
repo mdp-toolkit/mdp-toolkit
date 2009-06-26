@@ -126,7 +126,11 @@ class SFANode(Node):
         that accomplishes exactly N oscillations, then eta(x)=N.
         
         Input arguments:
-        t -- Time units (e.g., t=0.01 if you sample at 100Hz)
+        t -- Sampling frequency in Hz
+             The original definition in (Wiskott and Sejnowski, 2002)
+             is obtained for t = number of training data points, while
+             for t=1 (default), this corresponds to the beta-value defined in
+             (Berkes and Wiskott, 2005).
         """
         if self.is_training():
             self.stop_training()
