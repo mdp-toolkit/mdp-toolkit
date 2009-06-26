@@ -67,7 +67,9 @@ class ContribTestSuite(NodesTestSuite):
     def _set_nodes(self):
         self._nodes = [mc.JADENode,
                        mc.NIPALSNode,
-                       (mc.XSFANode, [None, None, True], None),
+                       (mc.XSFANode, [(mc.PolynomialExpansionNode, (2,), {}),
+                                      (mc.PolynomialExpansionNode, (2,), {}),
+                                      True],None),
                        (mc.LLENode, [3, 0.001, False], None),
                        (mc.LLENode, [3, 0.001, True], None),
                        (mc.HLLENode, [10, 0.001, False], None),
