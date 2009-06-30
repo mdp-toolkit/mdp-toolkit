@@ -153,7 +153,7 @@ __all__ = ['CheckpointFlow', 'CheckpointFunction', 'CheckpointSaveFunction',
            'numx_description', 'pca', 'sfa', 'test', 'utils', 'whitening',
            'parallel', 'numx_version']
 
-__version__ = '2.5'
+__version__ = '2.6'
 __revision__ = utils.get_svn_revision()
 __authors__ = 'Pietro Berkes, Niko Wilbert, and Tiziano Zito'
 __copyright__ = '(c) 2003-2009 Pietro Berkes, Niko Wilbert, Tiziano Zito'
