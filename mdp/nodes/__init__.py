@@ -22,7 +22,6 @@ import mdp
 from mdp.contrib import JADENode, NIPALSNode, LLENode, HLLENode, XSFANode
 
 # clean up namespace
-del mdp
 del expansion_nodes
 del pca_nodes
 del sfa_nodes
@@ -33,6 +32,9 @@ del em_nodes
 del misc_nodes
 del isfa_nodes
 del rbm_nodes
+del regression_nodes
+del mdp.contrib
+del mdp
 
 __all__ = ['CuBICANode', 'EtaComputerNode', 'FANode', 'FDANode', 'FastICANode',
            'GaussianClassifierNode', 'GrowingNeuralGasNode', 'HitParadeNode',
