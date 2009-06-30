@@ -22,7 +22,7 @@ During release:
   web: sftp username,mdp-toolkit@web.sourceforge.net
   more info: http://alexandria.wiki.sourceforge.net/Project+Web,+Shell,+VHOST+and+Database+Services
 - short/long description should go: on SF.net description, tutorial,
-  home page, pypi, modules __init__
+  home page, modules __init__, software.incf.net.
 - change homepage color
 - post news to sourceforge.
 

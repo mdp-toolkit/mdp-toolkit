@@ -48,7 +48,7 @@ MDP-2.5:
 2008-12-04: Fixed the empty data iterator handling in ParallelFlow.
             Also added empty iterator checks in the normal Flow (raise an 
             exception if the iterator is empty).
-2008-11-19: Modified pca and sfa nodes to check for negaive eigenvalues
+2008-11-19: Modified pca and sfa nodes to check for negative eigenvalues
             in the cov matrices
 2008-11-19: symeig integrated in scipy, mdp can use it from there now.
 2008-11-18: Added ParallelFDANode.
