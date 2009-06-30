@@ -19,7 +19,7 @@ data processing steps in a natural way.
 The base of available algorithms is steadily increasing and includes,
 to name but the most common, Principal Component Analysis (PCA and
 NIPALS), several Independent Component Analysis algorithms (CuBICA,
-FastICA, TDSEP, and JADE), Slow Feature Analysis, Gaussian
+FastICA, TDSEP, JADE, and XSFA), Slow Feature Analysis, Gaussian
 Classifiers, Restricted Boltzmann Machine, and Locally Linear
 Embedding.
 

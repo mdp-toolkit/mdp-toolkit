@@ -1,12 +1,16 @@
 TODO:
 
+
+MDP 2.5 30.06.2009:
+
+- solve the svn revision tracking problem (see log comment on rev 468)
+- integrate binet
+
 MDP 2.4 17.10.2008:
 
 - LinearRegressionNode: add optional 2nd phase that computes residuals
   and significance of the slope
 - check eta value calculations: shouldn't t-> T/t=tlen?
-- add version and symeig as an output for tests, provide svn revision
-  in the version string.
 - provide a Node pickler, for arrays use the binary numpy format (npy,
   numpy.save, numpy.load) and not pickle: pickling arrays is unsupported
 - add benchmarks for parallel module
@@ -20,7 +24,6 @@ MDP 2.4 17.10.2008:
 - forward compatible with python 3?
 - POSTPONED TO PY2.6 should is_trainable, is_invertible be class 
   attributes or maybe a class decorator?
-- include the XSFA Node from Henning (maybe wait for later release)
 - think about a better structure for the unittests in the future,
   the transition could happen package by package 
   (starting with parallel)

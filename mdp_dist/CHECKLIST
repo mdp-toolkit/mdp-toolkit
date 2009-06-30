@@ -6,6 +6,7 @@ Before release:
 - new nodes must be in nodes/__init__.py __all__ list
 - change spinner design (tests)
 - make sure that __init__ and setup.py have right version number
+- update date in __copyright__ in __init__
 - make sure tutorial has right version
 - make sure tutorial PDF has right version
 - make sure homepage links to tutorial have right version
@@ -13,9 +14,8 @@ Before release:
   python
 
 During release:
-- update CHANGES and TODO
-- generate tutorial using mdp_html/tutorial_src/gentut
-- copy tutorial pdf with version number to mdp_html
+- update CHANGES and TODO and COPYRIGHT (date)
+- generate tutorial using mdp_html/tutorial_src/genhtml
 - generate API documentation
 - update on SF.net:
   release files: sftp username@frs.sourceforge.net /uploads
