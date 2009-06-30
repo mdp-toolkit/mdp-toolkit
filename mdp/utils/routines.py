@@ -75,14 +75,14 @@ def symrand(dim_or_eigv, dtype="d"):
     """Return a random symmetric (Hermitian) matrix.
     
     If 'dim_or_eigv' is an integer N, return a NxN matrix, with eigenvalues
-        uniformly distributed on (0,1].
+        uniformly distributed on (-1,1).
         
     If 'dim_or_eigv' is  1-D real array 'a', return a matrix whose
-                      eigenvalues are sort(a).
+                      eigenvalues are 'a'.
     """
     if isinstance(dim_or_eigv, int):
         dim = dim_or_eigv
-        d = numx_rand.random(dim)
+        d = (numx_rand.random(dim)*2) - 1
     elif isinstance(dim_or_eigv,
                     numx.ndarray) and len(dim_or_eigv.shape) == 1:
         dim = dim_or_eigv.shape[0]
@@ -90,11 +90,15 @@ def symrand(dim_or_eigv, dtype="d"):
     else:
         raise mdp.MDPException("input type not supported.")
     
-    v = random_rot(dim, dtype=dtype)
+    v = random_rot(dim)
     #h = mdp.utils.mult(mdp.utils.mult(hermitian(v), mdp.numx.diag(d)), v)
     h = mdp.utils.mult(mult_diag(d, hermitian(v), left=False), v)
     # to avoid roundoff errors, symmetrize the matrix (again)
-    return refcast(0.5*(hermitian(h)+h), dtype)
+    h = 0.5*(h.T+h)
+    if dtype in ('D', 'F', 'G'):
+        h2 = symrand(dim_or_eigv)
+        h = h + 1j*(numx.triu(h2)-numx.tril(h2))
+    return refcast(h, dtype)
 
 def random_rot(dim, dtype='d'):
     """Return a random rotation matrix, drawn from the Haar distribution
@@ -153,6 +157,23 @@ def cov2(x, y):
     mny = y.mean(axis=0)
     tlen = x.shape[0]
     return mdp.utils.mult(x.T, y)/(tlen-1) - numx.outer(mnx, mny)
+
+def cov_maxima(cov):
+    """Extract the maxima of a covariance matrix."""
+    dim = cov.shape[0]
+    maxs = []
+    if dim >= 1:
+        cov=abs(cov)
+        glob_max_idx = (cov.argmax()/dim, cov.argmax()%dim)
+        maxs.append(cov[glob_max_idx[0], glob_max_idx[1]])
+        cov_reduce = cov.copy()
+        cov_reduce = cov_reduce[numx.arange(dim) != glob_max_idx[0], :]
+        cov_reduce = cov_reduce[:, numx.arange(dim) != glob_max_idx[1]]
+        maxs.extend(cov_maxima(cov_reduce))
+        return maxs
+    else:
+        return []
+    
 
 def mult_diag(d, mtx, left=True):
     """Multiply a full matrix by a diagonal matrix.
@@ -223,9 +244,43 @@ def _assert_eigenvalues_real_and_positive(w, dtype):
     #    err = "Got negative eigenvalues: %s" % str(w)
     #    raise SymeigException(err)
               
+def wrap_eigh(A, B = None, eigenvectors = True, turbo = "on", range = None,
+              type = 1, overwrite = False):
+    """Wrapper for scipy.linalg.eigh for scipy version > 0.7"""
+    args = {}
+    args['a'] = A
+    args['b'] = B
+    args['eigvals_only'] = not eigenvectors
+    args['overwrite_a'] = overwrite
+    args['overwrite_b'] = overwrite
+    if turbo == "on":
+        args['turbo'] = True
+    else:
+        args['turbo'] = False
+    args['type'] = type
+    if range is not None:
+        n = A.shape[0]
+        lo, hi = range
+        if lo < 1:
+            lo = 1
+        if lo > n:
+            lo = n
+        if hi > n:
+            hi = n
+        if lo > hi:
+            lo, hi = hi, lo
+        # in scipy.linalg.eigh the range starts from 0
+        lo -= 1
+        hi -= 1
+        range = (lo, hi)
+    args['eigvals'] = range
+    try:
+        return numx_linalg.eigh(**args)
+    except numx_linalg.LinAlgError, exception:
+        raise SymeigException(str(exception))
 
-def _symeig_fake(A, B = None, eigenvectors = 1, turbo = "on", range = None,
-                 type = 1, overwrite = 0):
+def _symeig_fake(A, B = None, eigenvectors = True, turbo = "on", range = None,
+                 type = 1, overwrite = False):
     """Solve standard and generalized eigenvalue problem for symmetric
 (hermitian) definite positive matrices.
 This function is a wrapper of LinearAlgebra.eigenvectors or

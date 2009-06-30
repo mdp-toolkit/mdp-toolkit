@@ -74,6 +74,7 @@ def _format_dig(dict_):
     
 def dig_node(x):
     """Crawl recursively an MDP Node looking for arrays.
+    
     Return (dictionary, string), where the dictionary is:
     { attribute_name: (size_in_bytes, array_reference)}
     and string is a nice string representation of it.
@@ -92,8 +93,47 @@ def dig_node(x):
     return arrays, _format_dig(arrays)
 
 def get_node_size(x):
-    """Get node total byte-size using cPickle with protocol=2. (The byte-size
-    is related to the memory needed by the node)."""
+    """Return node total byte-size using cPickle with protocol=2.
+    
+    The byte-size is related to the memory needed by the node).
+    """
+    # TODO: add check for problematic node types, like NoiseNode?
+    # TODO: replace this with sys.getsizeof for Python >= 2.6
     size = len(cPickle.dumps(x, protocol = 2))
     return size
+
+def get_node_size_str(x, si_units=False):
+    """Return node total byte-size as a well readable string.
+    
+    si_units -- If True si-units like KB are used instead of KiB.
+    
+    The get_node_size function is used to get the size. 
+    """
+    return _memory_size_str(get_node_size(x), si_units=si_units)
+
+_SI_MEMORY_PREFIXES = ("", "k", "M", "G", "T", "P", "E")
+_IEC_MEMORY_PREFIXES = ("", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei")
+
+def _memory_size_str(size, si_units=False):
+    """Convert the given memory size into a nicely formatted string.
+    
+    si_units -- If True si-units like kB are used instead of kiB.
+    """
+    if si_units:
+        base = 10**3
+    else:
+        base = 2**10
+    scale = 0  # 1024**scale is the actual scale
+    while size > base**(scale+1):
+        scale += 1
+    unit = "B"
+    if scale:
+        size_str = size = "%.1f" % (1.0 * size / (base**scale))
+        if si_units:
+            unit = _SI_MEMORY_PREFIXES[scale] + unit
+        else:
+            unit = _IEC_MEMORY_PREFIXES[scale] + unit
+    else:
+        size_str = "%d" % size
+    return size_str + " " + unit
 

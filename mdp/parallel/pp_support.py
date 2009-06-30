@@ -38,15 +38,15 @@ class PPScheduler(scheduling.Scheduler):
     
     def __init__(self, ppserver, max_queue_length=1,
                  result_container=scheduling.ListResultContainer(), 
-                 copy_callable=False,
                  verbose=False):
         """Initialize the scheduler.
         
         ppserver -- Parallel Python Server instance.
         max_queue_length -- How long the queue can get before add_task blocks.
+        result_container -- ResultContainer used to store the results.
+        verbose -- If True to get progress reports from the scheduler.
         """
         super(PPScheduler, self).__init__(result_container=result_container,
-                                          copy_callable=copy_callable,
                                           verbose=verbose)
         self.ppserver = ppserver
         self.max_queue_length = max_queue_length
@@ -57,8 +57,7 @@ class PPScheduler(scheduling.Scheduler):
         Depending on the scheduler state this function is non-blocking or
         blocking. One reason for blocking can be a full task-queue.
         """
-        if self.copy_callable:
-            task_callable = task_callable.copy()
+        # no explicit fork is necessary, since the task is always pickled
         task = (data, task_callable, task_index)
         def execute_task(task):
             """Call the first args entry and return the return value."""
@@ -68,11 +67,12 @@ class PPScheduler(scheduling.Scheduler):
         while not task_submitted:
             if len(self.ppserver._Server__queue) > self.max_queue_length:
                 # release lock for other threads and wait
-                self.lock.release()
+                self._lock.release()
                 time.sleep(0.5)
-                self.lock.acquire()
+                self._lock.acquire()
             else:
-                self.lock.release()  # release to enable result storage
+                # release lock to enable result storage
+                self._lock.release()
                 # the inner tuple is a trick to prevent introspection by pp
                 # this forces pp to simply pickle the object
                 self.ppserver.submit(execute_task, args=(task,),
@@ -86,26 +86,28 @@ class PPScheduler(scheduling.Scheduler):
         """
         self._store_result(result[0], result[1])
         
-    def shutdown(self):
+    def _shutdown(self):
         """Call destroy on the ppserver."""
         self.ppserver.destroy()
     
     
 class LocalPPScheduler(PPScheduler):
-    """Usees a local pp server to distribute the work across cpu cores.
+    """Uses a local pp server to distribute the work across cpu cores.
     
-    The pp server is created automatically instead of beeing provided by the
+    The pp server is created automatically instead of being provided by the
     user (in contrast to PPScheduler).
     """
     
     def __init__(self, ncpus="autodetect", max_queue_length=1,
-                 result_container=scheduling.ListResultContainer(), 
+                 result_container=scheduling.ListResultContainer(),
                  verbose=False):
         """Create an internal pp server and initialize the scheduler.
         
         ncpus -- Integer or 'autodetect', specifies the number of processes
             used.
         max_queue_length -- How long the queue can get before add_task blocks.
+        result_container -- ResultContainer used to store the results.
+        verbose -- If True to get progress reports from the scheduler.
         """
         ppserver = pp.Server(ncpus=ncpus,
                              loglevel=logging.INFO,
@@ -128,7 +130,7 @@ class NetworkPPScheduler(PPScheduler):
     """
     
     def __init__(self, max_queue_length=1,
-                 result_container=scheduling.ListResultContainer(), 
+                 result_container=scheduling.ListResultContainer(),
                  verbose=False,
                  remote_slaves=None,
                  port=50017,
@@ -141,6 +143,8 @@ class NetworkPPScheduler(PPScheduler):
                  remote_python_executable=None):
         """Initialize the remote slaves and create the internal pp scheduler.
         
+        result_container -- ResultContainer used to store the results.
+        verbose -- If True to get progress reports from the scheduler.
         remote_slaves -- List of tuples, the first tuple entry is a string
             containing the name or IP adress of the slave, the second entry
             contains the number of processes (i.e. the pp ncpus parameter).
@@ -184,7 +188,7 @@ class NetworkPPScheduler(PPScheduler):
                                           result_container=result_container,
                                           verbose=verbose)
     
-    def shutdown(self):
+    def _shutdown(self):
         """Shutdown all slaves."""
         
         for ssh_proc, pid, address in itertools.izip(self._ssh_procs, 

@@ -223,7 +223,8 @@ def progressinfo(sequence, length = None, style = 'bar', custom = None):
                    'separator': ' - ',
                    't_start' : time.time()
                    }
-        layout.update(custom)
+        if custom is not None:
+            layout.update(custom)
     else:
         err_str = "Style `%s' not known." % style
         raise ValueError(err_str)

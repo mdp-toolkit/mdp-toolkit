@@ -142,7 +142,7 @@ class QuadraticForm(object):
         r = mdp.utils.norm2(xstar)
         P = numx.eye(xstar.shape[0], dtype=xstar.dtype)
         P[:, 0] = xstar
-        Q, R = numx.linalg.qr(P)
+        Q, R = numx_linalg.qr(P)
         # the orthogonal subspace
         B = Q[:, 1:]
         # restrict the matrix H to the tangential plane

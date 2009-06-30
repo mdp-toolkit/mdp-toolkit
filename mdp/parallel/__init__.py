@@ -18,12 +18,13 @@ have to know anything about flows or nodes.
 
 
 from scheduling import (ResultContainer, ListResultContainer,
-                        OrderedResultContainer, TaskCallable, SqrTestCallable, 
-                        Scheduler)
+                        OrderedResultContainer, TaskCallable, SqrTestCallable,
+                        SleepSqrTestCallable, Scheduler)
 from process_schedule import ProcessScheduler
 from parallelnodes import (ParallelNode, TrainingPhaseNotParallelException,
                            ParallelPCANode, ParallelWhiteningNode,
-                           ParallelSFANode, ParallelSFA2Node, ParallelFDANode)
+                           ParallelSFANode, ParallelSFA2Node, ParallelFDANode,
+                           ParallelHistogramNode, ParallelAdaptiveCutoffNode)
 from parallelflows import (FlowTrainCallable, FlowExecuteCallable,
                            NodeResultContainer,
                            ParallelFlowException, NoTaskException,
@@ -51,5 +52,6 @@ __all__ = ["ResultContainer", "ListResultContainer", "OrderedResultContainer",
            "ParallelSFA2Node", "FlowTrainCallable", "FlowExecuteCallable",
            "NodeResultContainer", "ParallelFlowException", "NoTaskException",
            "ParallelFlow", "ParallelCheckpointFlow", "ParallelFlowNode",
-           "ParallelLayer", "ParallelCloneLayer", "make_flow_parallel",
-           "unmake_flow_parallel"]
+           "ParallelLayer", "ParallelCloneLayer",
+           "ParallelHistogramNode", "ParallelAdaptiveCutoffNode",
+           "make_flow_parallel", "unmake_flow_parallel"]

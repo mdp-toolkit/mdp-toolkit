@@ -16,7 +16,7 @@ data processing steps in a natural way.
 The base of available algorithms is steadily increasing and includes,
 to name but the most common, Principal Component Analysis (PCA and
 NIPALS), several Independent Component Analysis algorithms (CuBICA,
-FastICA, TDSEP, and JADE), Slow Feature Analysis, Gaussian
+FastICA, TDSEP, JADE, and XSFA), Slow Feature Analysis, Gaussian
 Classifiers, Restricted Boltzmann Machine, and Locally Linear
 Embedding.
 
@@ -85,12 +85,13 @@ numx_description = None
 for _label in _NUMX_LABELS:
     try:
         if _label == 'scipy':
-            import scipy, scipy.linalg, scipy.fftpack
+            import scipy, scipy.linalg, scipy.fftpack, scipy.version
             numx = scipy
             numx_rand = scipy.random
             numx_linalg = scipy.linalg
             numx_fft = scipy.fftpack
             numx_description = 'scipy'
+            numx_version = scipy.version.version
             del scipy
             break
         else:
@@ -100,6 +101,7 @@ for _label in _NUMX_LABELS:
             import numpy.linalg as numx_linalg
             import numpy.fft as numx_fft
             numx_description = 'numpy'
+            numx_version = numpy.version.version
             del numpy
             break
     except ImportError:
@@ -149,10 +151,11 @@ __all__ = ['CheckpointFlow', 'CheckpointFunction', 'CheckpointSaveFunction',
            'NodeException', 'TrainingException', 'TrainingFinishedException',
            'contrib', 'get_eta', 'graph', 'helper_funcs', 'hinet', 'nodes', 
            'numx_description', 'pca', 'sfa', 'test', 'utils', 'whitening',
-           'parallel']
+           'parallel', 'numx_version']
 
 __version__ = '2.5'
+__revision__ = utils.get_svn_revision()
 __authors__ = 'Pietro Berkes, Niko Wilbert, and Tiziano Zito'
-__copyright__ = '(c) 2003-2008 Pietro Berkes, Niko Wilbert, Tiziano Zito'
+__copyright__ = '(c) 2003-2009 Pietro Berkes, Niko Wilbert, Tiziano Zito'
 __license__ = 'LGPL v3, http://www.gnu.org/licenses/lgpl.html'
 __contact__ = 'mdp-toolkit-users AT lists.sourceforge.net'

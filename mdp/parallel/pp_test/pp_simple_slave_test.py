@@ -12,7 +12,7 @@ import time
 
 from mdp.parallel import pp_support
 
-slave_id = "sherrington"
+slave_id = "huxley"
 script_path = "/home/wilbert/develop/workspace/MDP/mdp/parallel"
 nice = -19
 port = 30007
@@ -37,7 +37,7 @@ time.sleep(5)
 
 print "killing now..."
 
-# killing the ssh connection only will not kill the process!
+# killing only the ssh connection will not kill the process!
 ssh_proc.stdin.write("kill %d\n" % remote_pid)
 ssh_proc.stdin.flush()
 time.sleep(0.2)

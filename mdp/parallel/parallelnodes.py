@@ -1,18 +1,17 @@
 """
 Module for MDP Nodes that support parallel training.
 
-Note that such ParallelNodes are only needed for training, parallel execution
-works with any Node that can be pickled.
-
 This module contains both the parallel base class and some parallel 
-implementations of MDP nodes. 
-
-WARNING: There is a problem with unpickled arrays in NumPy < 1.1.x, see
-http://projects.scipy.org/scipy/numpy/ticket/551
-To circumvent this, you can use a copy() of all unpickled arrays. 
+implementations of MDP nodes. Note that such ParallelNodes are only needed for 
+training, parallel execution works with any Node that can be pickled.
 """
 
+# WARNING: There is a problem with unpickled arrays in NumPy < 1.1.x, see
+# http://projects.scipy.org/scipy/numpy/ticket/551
+# To circumvent this, you can use a copy() of all unpickled arrays. 
+
 import mdp
+from mdp import numx
 
 
 class TrainingPhaseNotParallelException(mdp.NodeException):
@@ -30,14 +29,27 @@ class JoinParallelNodeException(mdp.NodeException):
 
 
 class ParallelNode(mdp.Node):
-    """Base class for parallel trainable MDP nodes."""
+    """Base class for parallel trainable MDP nodes.
+    
+    With the fork method new node instances are created which can then be
+    trained. With the join method the trained instances are then merged back
+    into a single node instance.
+    
+    Since fork typically has to create a new class instance it must know all
+    __init__ arguments. Therefore the __init__ method of a parallel node should
+    not accept **kwargs. Otherwise some newly added arguments might be
+    ignored in forked nodes, resulting in errors that are very hard to track
+    down.
+    """
     
     def fork(self):
-        """Return a (modified) copy of this node for remote training.
+        """Return a new instance of this node class for remote training.
         
-        The forked node should be a ParallelNode as well, thus allowing
-        recursive forking and joining.
-        The actual forking is implemented in _fork.
+        This is a template method, the actual forking should be implemented in
+        _fork.
+        
+        The forked node should be a ParallelNode of the same class as well, 
+        thus allowing recursive forking and joining.
         """
         if not self.is_trainable():
             raise mdp.IsNotTrainableException, "This node is not trainable."
@@ -46,11 +58,12 @@ class ParallelNode(mdp.Node):
                   "The training phase has already finished."
         return self._fork()
     
-    # TODO: check that the dimensions match, allow late setting
+    # TODO: check that the dimensions match?
     def join(self, forked_node):
         """Absorb the trained node from a fork into this parent node.
         
-        The actual joining is implemented in _join.
+        This is a template method, the actual joining should be implemented in
+        _join.
         """
         if not self.is_trainable():
             raise mdp.IsNotTrainableException, "This node is not trainable."
@@ -70,43 +83,48 @@ class ParallelNode(mdp.Node):
     ## hook methods, overwrite these ##
     
     def _fork(self):
-        """Hook method for forking, to be overridden."""
+        """Hook method for forking, to be overridden.
+        
+        For better inheritance support you should use self.__class__ to create
+        new class instances (instead of explicitly referencing the filename).
+        """
         raise TrainingPhaseNotParallelException("fork is not implemented " +
                                                 "by this node.")
     
     def _join(self, forked_node):
         """Hook method for joining, to be overridden."""
-        # be aware of http://projects.scipy.org/scipy/numpy/ticket/551
-        # copy arrays after unpickling for numpy version < 1.1.x
         raise TrainingPhaseNotParallelException("join is not implemented " +
                                                 "by this node.")
     
 
 ## MDP parallel node implementations ##
 
-    
 class ParallelPCANode(mdp.nodes.PCANode, ParallelNode):
     """Parallel version of MDP PCA node."""
     
-    # Warning: __init__ and _fork must be updated when the arguments 
-    #    of the corresponding PCANode methods change.
-    
-    def __init__(self, input_dim=None, output_dim=None, dtype=None, svd=False):
+    def __init__(self, input_dim=None, output_dim=None, dtype=None,
+                 svd=False, reduce=False, var_rel=1E-15, var_abs=1E-15, 
+                 var_part=None):
         """Initialize the node.
         
         The reduce argument is not supported, since the results may varry for
         different forks.
         """
-        mdp.nodes.PCANode.__init__(self, input_dim=input_dim, 
-                                   output_dim=output_dim, dtype=dtype,
-                                   svd=svd, reduce=False)
+        super(ParallelPCANode, self).__init__(input_dim=input_dim, 
+                                              output_dim=output_dim, 
+                                              dtype=dtype,
+                                              svd=svd, reduce=reduce, 
+                                              var_rel=var_rel, var_abs=var_abs, 
+                                              var_part=var_part)
     
     def _fork(self):
         """Fork the node and (if necessary) init the covariance matrices."""
-        forked_node = ParallelPCANode(input_dim=self.input_dim, 
-                                      output_dim=self.output_dim, 
-                                      dtype=self.dtype,
-                                      svd=self.svd)
+        forked_node = self.__class__(input_dim=self.input_dim, 
+                                     output_dim=self.output_dim, 
+                                     dtype=self.dtype,
+                                     svd=self.svd, reduce=self.reduce, 
+                                     var_rel=self.var_rel, var_abs=self.var_abs, 
+                                     var_part=self.var_part)
         return forked_node
     
     def _join(self, forked_node):
@@ -131,15 +149,16 @@ class ParallelWhiteningNode(mdp.nodes.WhiteningNode, ParallelPCANode):
         The reduce argument is not supported, since the results may varry for
         different forks.
         """
-        ParallelPCANode.__init__(self, input_dim=input_dim, 
-                                 output_dim=output_dim, dtype=dtype, svd=svd)
+        super(ParallelWhiteningNode, self).__init__(input_dim=input_dim, 
+                                                    output_dim=output_dim, 
+                                                    dtype=dtype, svd=svd)
     
     def _fork(self):
         """Fork the node and (if necessary) init the covariance matrices."""
-        forked_node = ParallelWhiteningNode(input_dim=self.input_dim, 
-                                            output_dim=self.output_dim, 
-                                            dtype=self.dtype,
-                                            svd=self.svd)
+        forked_node = self.__class__(input_dim=self.input_dim, 
+                                     output_dim=self.output_dim, 
+                                     dtype=self.dtype,
+                                     svd=self.svd)
         return forked_node
     
     
@@ -148,9 +167,9 @@ class ParallelSFANode(mdp.nodes.SFANode, ParallelNode):
     
     def _fork(self):
         """Fork the node and (if necessary) init the covariance matrices."""
-        forked_node = ParallelSFANode(input_dim=self.input_dim, 
-                                      output_dim=self.output_dim, 
-                                      dtype=self.dtype)
+        forked_node = self.__class__(input_dim=self.input_dim, 
+                                     output_dim=self.output_dim, 
+                                     dtype=self.dtype)
         return forked_node
     
     def _join(self, forked_node):
@@ -173,9 +192,9 @@ class ParallelSFA2Node(mdp.nodes.SFA2Node, ParallelSFANode):
     
     def _fork(self):
         """Fork the node and (if necessary) init the covariance matrices."""
-        forked_node = ParallelSFA2Node(input_dim=self.input_dim, 
-                                       output_dim=self.output_dim, 
-                                       dtype=self.dtype)
+        forked_node = self.__class__(input_dim=self.input_dim, 
+                                     output_dim=self.output_dim, 
+                                     dtype=self.dtype)
         return forked_node
     
     
@@ -184,13 +203,13 @@ class ParallelFDANode(mdp.nodes.FDANode, ParallelNode):
     def _fork(self):
         if self.get_current_train_phase() == 1:
             forked_node = self.copy()
-            # reset the variables with data from this train phase
+            # reset the variables that might contain data from this train phase
             self._S_W = None
             self._allcov = mdp.utils.CovarianceMatrix(dtype=self.dtype)
         else:
-            forked_node = ParallelFDANode(input_dim=self.input_dim, 
-                                          output_dim=self.output_dim, 
-                                          dtype=self.dtype)
+            forked_node = self.__class__(input_dim=self.input_dim, 
+                                         output_dim=self.output_dim, 
+                                         dtype=self.dtype)
         return forked_node
     
     def _join(self, forked_node):
@@ -218,4 +237,35 @@ class ParallelFDANode(mdp.nodes.FDANode, ParallelNode):
                     self.tlens[lbl] = forked_node.tlens[lbl]
             
             
-            
+class ParallelHistogramNode(mdp.nodes.HistogramNode, ParallelNode):
+    """Parallel version of the HistogramNode."""
+    
+    def _fork(self):
+        forked_node = self.__class__(hist_fraction=self.hist_fraction,
+                                     hist_filename=self._hist_filename,
+                                     input_dim=self.input_dim, 
+                                     dtype=self.dtype)
+        return forked_node
+    
+    def _join(self, forked_node):
+        if (self.data_hist is not None) and (forked_node.data_hist is not None):
+            self.data_hist = numx.concatenate([self.data_hist, 
+                                            forked_node.data_hist])
+        elif forked_node.data_hist != None:
+            self.data_hist = forked_node.data_hist
+    
+
+class ParallelAdaptiveCutoffNode(mdp.nodes.AdaptiveCutoffNode,
+                                 ParallelHistogramNode):
+    """Parallel version of the AdaptiveCutoffNode."""
+    
+    def _fork(self):
+        forked_node = self.__class__(
+                        lower_cutoff_fraction=self.lower_cutoff_fraction,
+                        upper_cutoff_fraction=self.upper_cutoff_fraction,             
+                        hist_fraction=self.hist_fraction,
+                        hist_filename=self._hist_filename,
+                        input_dim=self.input_dim,
+                        dtype=self.dtype)
+        return forked_node
+    

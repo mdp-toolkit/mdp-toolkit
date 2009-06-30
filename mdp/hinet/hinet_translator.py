@@ -1,6 +1,9 @@
 """
 Module to translate HiNet structures into other representations, like HTML.
 """
+import tempfile
+import os
+import webbrowser
 
 import mdp
 
@@ -31,23 +34,28 @@ class HiNetTranslator(object):
         Depending on the type of the node this can be delegated to more
         specific methods.
         """
-        if isinstance(node, mdp.hinet.FlowNode):
+        if hasattr(node, "flow"):
             return self._translate_flownode(node)
-        if isinstance(node, mdp.hinet.CloneLayer):
+        elif isinstance(node, mdp.hinet.CloneLayer):
             return self._translate_clonelayer(node)
+        elif isinstance(node, mdp.hinet.SameInputLayer):
+            return self._translate_sameinputlayer(node)
         elif isinstance(node, mdp.hinet.Layer):
             return self._translate_layer(node)
         else:
             return self._translate_standard_node(node)
         
     def _translate_flownode(self, flownode):
-        """Translate a flow node and return the translation.
+        """Translate a node containing a flow and return the translation.
         
         The internal nodes are translated recursively.
+        
+        Note that this method is used for translation whenever the node has
+        a flow attribute. This flow attribute is then used for the iteration,
+        so the node itself does not have to be an iterable.
         """
         flownode_translation = []
-        flow = flownode._flow
-        for node in flow.flow:
+        for node in flownode.flow:
             flownode_translation.append(self._translate_node(node))
         return flownode_translation
     
@@ -57,14 +65,18 @@ class HiNetTranslator(object):
         All the nodes in the layer are translated.
         """
         layer_translation = []
-        for node in layer.nodes:
+        for node in layer:
             layer_translation.append(self._translate_node(node))
         return layer_translation
     
-    def _translate_clonelayer(self, clonelayer):
+    def _translate_clonelayer(self, layer):
         """Translate a CloneLayer and return the translation."""
-        translated_node = self._translate_node(clonelayer.node)
-        return [translated_node] * len(clonelayer.nodes)
+        translated_node = self._translate_node(layer.node)
+        return [translated_node] * len(layer)
+    
+    def _translate_sameinputlayer(self, layer):
+        """Translate a SameInputLayer and return the translation."""
+        return self._translate_layer(layer)
 
     def _translate_standard_node(self, node):
         """Translate a node and return the translation.
@@ -86,7 +98,7 @@ class HiNetTranslator(object):
 # The tables "nodestruct" are used to separate the dimension values from 
 # the actual node text.
 
-HINET_STYLE = """
+HINET_STYLE = '''
 table.flow {
     border-collapse: separate;
     padding: 3 3 3 3;
@@ -141,7 +153,11 @@ td.dim {
     text-align: center;
     color: #008ADC;
 }
-"""
+
+span.memorycolor {
+    color: #CCBB77;
+}
+'''
 
 # Functions to define how the node parameters are represented in the
 # HTML representation of a node.
@@ -167,11 +183,26 @@ def _get_html_normalnoise(node):
     return ['noise level: ' + str(node.noise_args[1]),
             'noise offset: ' + str(node.noise_args[0])]
     
+def _get_html_cutoff(node):
+    return ['lower bound: ' + str(node.lower_bound),
+            'upper bound: ' + str(node.upper_bound)]
+    
+def _get_html_histogram(node):
+    return ['history data fraction: ' + str(node.hist_fraction)]
+    
+def _get_html_adaptivecutoff(node):
+    return ['lower cutoff fraction: ' + str(node.lower_cutoff_fraction), 
+            'upper cutoff fraction: ' + str(node.upper_cutoff_fraction), 
+            'history data fraction: ' + str(node.hist_fraction)]
+    
 # (node class type, write function)
 NODE_HTML_TRANSLATORS = [
     (switchboard.Rectangular2dSwitchboard, _get_html_rect2dswitchboard),
     (mdp.nodes.SFA2Node, _get_html_sfa2),
     (mdp.nodes.NormalNoiseNode, _get_html_normalnoise),
+    (mdp.nodes.CutoffNode, _get_html_cutoff),
+    (mdp.nodes.HistogramNode, _get_html_histogram),
+    (mdp.nodes.AdaptiveCutoffNode, _get_html_adaptivecutoff)
 ]
 
 
@@ -189,8 +220,8 @@ class NewlineWriteFile(object):
         """Write a string to the file object and append a newline character."""
         self.file_obj.write(str_obj + "\n")
         
-    def close(self):
-        self.file_obj.close()
+    def __getattr__(self, attr):
+        return getattr(self.file_obj, attr)
     
     
 class HiNetHTMLTranslator(HiNetTranslator):
@@ -200,7 +231,8 @@ class HiNetHTMLTranslator(HiNetTranslator):
     written to a provided file.
     """
     
-    def __init__(self, node_param_translators=NODE_HTML_TRANSLATORS):
+    def __init__(self, node_param_translators=NODE_HTML_TRANSLATORS,
+                 show_size=False):
         """Initialize the HMTL translator.
         
         node_param_translators -- List of tuples, the first tuple entry beeing
@@ -210,12 +242,18 @@ class HiNetHTMLTranslator(HiNetTranslator):
             Note that the list is worked starting from the end (so subclasses 
             can be appended to the end of the list to override their parent 
             class).
+        show_size -- Show the approximate memory footprint of all nodes.
         """
         self._node_param_translators = node_param_translators
+        self.show_size = show_size
         self._html_file = None
         
     def write_flow_to_file(self, flow, html_file):
-        """Write the HTML translation of the flow into the provided file."""
+        """Write the HTML translation of the flow into the provided file.
+        
+        Note that html_file file can be any file-like object with a write
+        method.
+        """
         self._html_file = NewlineWriteFile(html_file)
         self._translate_flow(flow)
         self._html_file = None
@@ -224,7 +262,7 @@ class HiNetHTMLTranslator(HiNetTranslator):
         """Append more node_param_translators (see __init__)."""
         self._node_param_translators += node_param_translators  
         
-    # overwrite methods
+    # overwrite private methods
     
     def _translate_flow(self, flow):
         """Translate the flow into HTML and write it into the internal file.
@@ -243,8 +281,7 @@ class HiNetHTMLTranslator(HiNetTranslator):
     def _translate_flownode(self, flownode):
         f = self._html_file
         self._open_node_env(flownode, "flownode")
-        flow = flownode._flow
-        for node in flow.flow:
+        for node in flownode.flow:
             f.write('<tr><td>')
             self._translate_node(node)
             f.write('</td></tr>')
@@ -254,24 +291,37 @@ class HiNetHTMLTranslator(HiNetTranslator):
         f = self._html_file
         self._open_node_env(layer, "layer")
         f.write('<tr>')
-        for node in layer.nodes:
+        for node in layer:
             f.write('<td>')
             self._translate_node(node)
             f.write('</td>')
         f.write('</tr>')
         self._close_node_env(layer)
         
-    def _translate_clonelayer(self, clonelayer):
+    def _translate_clonelayer(self, layer):
         f = self._html_file
-        self._open_node_env(clonelayer, "layer")
+        self._open_node_env(layer, "layer")
         f.write('<tr><td class="nodename">')
-        f.write(str(clonelayer) + '<br><br>')
-        f.write('%d repetitions' % len(clonelayer.nodes))
+        f.write(str(layer) + '<br><br>')
+        f.write('%d repetitions' % len(layer))
         f.write('</td>')
         f.write('<td>')
-        self._translate_node(clonelayer.node)
+        self._translate_node(layer.node)
         f.write('</td></tr>')
-        self._close_node_env(clonelayer)
+        self._close_node_env(layer)
+        
+    def _translate_sameinputlayer(self, layer):
+        f = self._html_file
+        self._open_node_env(layer, "layer")
+        f.write('<tr><td colspan="%d" class="nodename">%s</td></tr>' %
+                (len(layer), str(layer)))
+        f.write('<tr>')
+        for node in layer:
+            f.write('<td>')
+            self._translate_node(node)
+            f.write('</td>')
+        f.write('</tr>')
+        self._close_node_env(layer)
 
     def _translate_standard_node(self, node):
         f = self._html_file
@@ -318,8 +368,72 @@ class HiNetHTMLTranslator(HiNetTranslator):
         f.write('</table>')
         f.write('</td></tr>')
         if not (type_id=="flow" or type_id=="flownode"):
-            f.write('<tr><td class="dim">out-dim: %s</td></tr>' % 
-                    str(node.output_dim))
+            f.write('<tr><td class="dim">out-dim: %s' % str(node.output_dim))
+            if self.show_size:
+                f.write('&nbsp;&nbsp;<span class="memorycolor">size: %s</span>' 
+                        % mdp.utils.get_node_size_str(node))
+            f.write('</td></tr>')
         f.write('</table>')
+       
+
+## Helper functions ##
+
+# addtional styles for a nice looking presentation
+SHOW_FLOW_STYLE = '''
+html, body {
+    font-family: sans-serif;
+    font-size: normal;
+    text-align: center;
+}
+
+h1, h2, h3, h4 {
+    color: #003399;
+}
+
+par.explanation {
+    color: #003399;
+    font-size: small;
+}
+
+table.flow {
+    margin-left:auto;
+    margin-right:auto;
+}
+'''
+
+def show_flow(flow, filename=None, title="MDP flow display",
+              show_size=False, browser_open=True):
+    """Write a flow into a HTML file, open it in the browser and
+    return the file name.
+
+    flow -- The flow to be shown.
+    filename -- Filename for the HTML file to be created. If None
+                a temporary file is created.
+    title -- Title for the HTML file.
+    show_size -- Show the approximate memory footprint of all nodes.
+    browser_open -- If True (default value) then the slideshow file is
+        automatically opened in a webbrowser.
+    """
+    if filename is None:
+        (fd, filename) = tempfile.mkstemp(suffix=".html", prefix="MDP_")
+        html_file = os.fdopen(fd, 'w')
+    else:
+        html_file = open(filename, 'w')
+    html_file.write('<html>\n<head>\n<title>%s</title>\n' % title)
+    html_file.write('<style type="text/css" media="screen">')
+    html_file.write(SHOW_FLOW_STYLE)
+    html_file.write(HINET_STYLE)
+    hinet_translator = mdp.hinet.HiNetHTMLTranslator(show_size=show_size)
+    html_file.write('</style>\n</head>\n<body>\n')
+    html_file.write('<h3>%s</h3>\n' % title)
+    explanation = '(data flows from top to bottom)'
+    html_file.write('<par class="explanation">%s</par>\n' % explanation)
+    html_file.write('</br></br></br>\n')
+    hinet_translator.write_flow_to_file(flow=flow, html_file=html_file)
+    html_file.write('</body>\n</html>')
+    html_file.close()
+    if browser_open:
+        webbrowser.open(filename)
+    return filename
     
         

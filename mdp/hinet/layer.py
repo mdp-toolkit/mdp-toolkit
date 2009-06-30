@@ -5,22 +5,28 @@ Note that additional args and kwargs for train or execute are currently not
 supported. 
 """
 
-
-# TODO: late initialization of dimensions for Layer and SameInputLayer?
-# TODO: Test if the nodes are compatible (somewhat done, could go further)
-
 import mdp
 from mdp import numx
 
+# TODO: maybe turn self.nodes into a read only property with self._nodes
+
+# TODO: Find a better way to deal with additional args for train/execute?
+#    Maybe split them by default, but can be disabled via switch?
 
 class Layer(mdp.Node):
     """Layers are nodes which consist of multiple horizontally parallel nodes.
-
-    Since they are nodes layers may be stacked in a flow (e.g. to build a
-    layered network).
     
-    If one would like to use flows instead of nodes inside of a layer one can
-    use a FlowNode.
+    The incoming data is split up according to the dimensions of the internal
+    nodes. For example if the first node has an input_dim of 50 and the second
+    node 100 then the layer will have an input_dim of 150. The first node gets
+    x[:,:50], the second one x[:,50:].
+    
+    Any additional arguments are forwarded unaltered to each node.
+    Warning: This might change in the next release (2.5).
+
+    Since they are nodes themselves layers can be stacked in a flow (e.g. to
+    build a layered network). If one would like to use flows instead of nodes
+    inside of a layer one can use a FlowNode.
     """
     
     def __init__(self, nodes, dtype=None):
@@ -37,16 +43,28 @@ class Layer(mdp.Node):
         # check nodes properties and get the dtype
         dtype = self._check_props(dtype)
         # calculate the the dimensions
-        self.node_input_dims = [0] * len(self.nodes)
+        self.node_input_dims = numx.zeros(len(self.nodes))
         input_dim = 0
-        output_dim = 0
         for index, node in enumerate(nodes):
             input_dim += node.input_dim
-            output_dim += node.output_dim
             self.node_input_dims[index] = node.input_dim
+        output_dim = self._get_output_dim_from_nodes()
         super(Layer, self).__init__(input_dim=input_dim,
                                     output_dim=output_dim,
                                     dtype=dtype)
+        
+    def _get_output_dim_from_nodes(self):
+        """Calculate the output_dim from the nodes and return it.
+        
+        If the output_dim of a node is not set the None is returned.
+        """
+        output_dim = 0
+        for node in self.nodes:
+            if node.output_dim is not None:
+                output_dim += node.output_dim
+            else:
+                return None
+        return output_dim
                 
     def _check_props(self, dtype):
         """Check the compatibility of the properties of the internal nodes.
@@ -57,12 +75,11 @@ class Layer(mdp.Node):
         """
         dtype_list = []  # the dtypes for all the nodes
         for i, node in enumerate(self.nodes):
-            # input_dim and output_dim for each node must be set
-            cond = node.input_dim and node.output_dim
-            if cond is None:
-                msg = ('input_dim and output_dim must be set for every node. ' +
-                       'Node #%d (%s) does not comply!' % (i, node))
-                raise mdp.NodeException(msg)
+            # input_dim for each node must be set
+            if node.input_dim is None:
+                err = ("input_dim must be set for every node. " +
+                       "Node #%d (%s) does not comply." % (i, node))
+                raise mdp.NodeException(err)
             if node.dtype is not None:
                 dtype_list.append(node.dtype)
         # check that the dtype is None or the same for every node
@@ -70,18 +87,18 @@ class Layer(mdp.Node):
         nodes_dtypes = set(dtype_list)
         nodes_dtypes.discard(None)
         if len(nodes_dtypes) > 1:
-            msg = ('All nodes must have the same dtype (found: %s).' % 
+            err = ("All nodes must have the same dtype (found: %s)." % 
                    nodes_dtypes)
-            raise mdp.NodeException(msg)
+            raise mdp.NodeException(err)
         elif len(nodes_dtypes) == 1:
             nodes_dtype = list(nodes_dtypes)[0]
         # check that the nodes dtype matches the specified dtype
         if nodes_dtype and dtype:
             if not numx.dtype(nodes_dtype) == numx.dtype(dtype):
-                msg = ('Cannot set dtype to %s: ' %
+                err = ("Cannot set dtype to %s: " %
                        numx.dtype(nodes_dtype).name +
-                       'an internal node requires %s' % numx.dtype(dtype).name)
-                raise mdp.NodeException(msg)
+                       "an internal node requires %s" % numx.dtype(dtype).name)
+                raise mdp.NodeException(err)
         elif nodes_dtype and not dtype:
             dtype = nodes_dtype
         return dtype
@@ -122,7 +139,7 @@ class Layer(mdp.Node):
                 max_train_length = node_length
         return ([[self._train, self._stop_training]] * max_train_length)
     
-    def _train(self, x):
+    def _train(self, x, *args, **kwargs):
         """Perform single training step by training the internal nodes."""
         start_index = 0
         stop_index = 0
@@ -130,46 +147,90 @@ class Layer(mdp.Node):
             start_index = stop_index
             stop_index += node.input_dim
             if node.is_training():
-                node.train(x[:, start_index : stop_index])
+                node.train(x[:, start_index : stop_index], *args, **kwargs)
 
-    def _stop_training(self):
+    def _stop_training(self, *args, **kwargs):
         """Stop training of the internal nodes."""
         for node in self.nodes:
             if node.is_training():
-                node.stop_training()
-    
-    def _execute(self, x):
+                node.stop_training(*args, **kwargs)
+        if self.output_dim is None:
+            self.output_dim = self._get_output_dim_from_nodes()
+            
+    def _pre_execution_checks(self, x):
+        """Make sure that output_dim is set and then perform normal checks."""
+        if self.output_dim is None:
+            # first make sure that the output_dim is set for all nodes
+            in_start = 0
+            in_stop = 0
+            for node in self.nodes:
+                in_start = in_stop
+                in_stop += node.input_dim
+                node._pre_execution_checks(x[:,in_start:in_stop])
+            self.output_dim = self._get_output_dim_from_nodes()
+            if self.output_dim is None:
+                err = "output_dim must be set at this point for all nodes"
+                raise mdp.NodeException(err)  
+        super(Layer, self)._pre_execution_checks(x)
+
+    def _execute(self, x, *args, **kwargs):
         """Process the data through the internal nodes."""
         in_start = 0
         in_stop = 0
         out_start = 0
         out_stop = 0
-        result = numx.zeros([x.shape[0], self.output_dim], dtype=x.dtype)
+        y = None
         for node in self.nodes:
             out_start = out_stop
             out_stop += node.output_dim
             in_start = in_stop
             in_stop += node.input_dim
-            result[:, out_start:out_stop] = node.execute(x[:,
-                                                           in_start:in_stop])
-        return result
+            if y is None:
+                node_y = node.execute(x[:,in_start:in_stop], *args, **kwargs)
+                y = numx.zeros([node_y.shape[0], self.output_dim],
+                               dtype=node_y.dtype)
+                y[:,out_start:out_stop] = node_y
+            else:
+                y[:,out_start:out_stop] = node.execute(x[:,in_start:in_stop],
+                                                        *args, **kwargs)
+        return y
     
-    def _inverse(self, x):
+    def _inverse(self, x, *args, **kwargs):
         """Combine the inverse of all the internal nodes."""
         in_start = 0
         in_stop = 0
         out_start = 0
         out_stop = 0
-        # compared with execute, input and output are switched
-        result = numx.zeros([x.shape[0], self.input_dim], dtype=x.dtype)
+        y = None
         for node in self.nodes:
+            # compared with execute, input and output are switched
             out_start = out_stop
             out_stop += node.input_dim
             in_start = in_stop
             in_stop += node.output_dim
-            result[:, out_start:out_stop] = node.inverse(x[:,
-                                                           in_start:in_stop])
-        return result
+            if y is None:
+                node_y = node.inverse(x[:,in_start:in_stop], *args, **kwargs)
+                y = numx.zeros([node_y.shape[0], self.input_dim],
+                               dtype=node_y.dtype)
+                y[:,out_start:out_stop] = node_y
+            else:
+                y[:,out_start:out_stop] = node.inverse(x[:,in_start:in_stop],
+                                                        *args, **kwargs)
+        return y
+    
+    ## container methods ##
+    
+    def __len__(self):
+        return len(self.nodes)
+    
+    def __getitem__(self, key):
+        return self.nodes.__getitem__(key)
+        
+    def __contains__(self, item):
+        return self.nodes.__contains__(item)
+    
+    def __iter__(self):
+        return self.nodes.__iter__()
 
 
 class CloneLayer(Layer):
@@ -195,12 +256,13 @@ class CloneLayer(Layer):
         super(CloneLayer, self).__init__((node,) * n_nodes, dtype=dtype)
         self.node = node  # attribute for convenience
         
-    def _stop_training(self):
+    def _stop_training(self, *args, **kwargs):
         """Stop training of the internal node."""
         if self.node.is_training():
-            self.node.stop_training()
-            
-            
+            self.node.stop_training(*args, **kwargs)
+        if self.output_dim is None:
+            self.output_dim = self._get_output_dim_from_nodes()
+        
 class SameInputLayer(Layer):
     """SameInputLayer is a layer were all nodes receive the full input.
     
@@ -222,32 +284,51 @@ class SameInputLayer(Layer):
         dtype = self._check_props(dtype)
         # check that the input dimensions are all the same
         input_dim = self.nodes[0].input_dim
-        output_dim = 0
         for node in self.nodes:
-            output_dim += node.output_dim
             if not node.input_dim == input_dim:
-                msg = 'The nodes have different input dimensions.'
-                raise mdp.NodeException(msg)
-        # TODO: use super, but somehow skip Layer
-        mdp.Node.__init__(self, input_dim=input_dim, output_dim=output_dim,
-                          dtype=dtype)
+                err = "The nodes have different input dimensions."
+                raise mdp.NodeException(err)
+        output_dim = self._get_output_dim_from_nodes()
+        # intentionally use MRO above Layer, not SameInputLayer
+        super(Layer, self).__init__(input_dim=input_dim,
+                                    output_dim=output_dim,
+                                    dtype=dtype)
                 
     def is_invertible(self):
         return False
     
-    def _train(self, x):
+    def _train(self, x, *args, **kwargs):
         """Perform single training step by training the internal nodes."""
         for node in self.nodes:
             if node.is_training():
-                node.train(x)
+                node.train(x, *args, **kwargs)
                 
-    def _execute(self, x):
+    def _pre_execution_checks(self, x):
+        """Make sure that output_dim is set and then perform nromal checks."""
+        if self.output_dim is None:
+            # first make sure that the output_dim is set for all nodes
+            for node in self.nodes:
+                node._pre_execution_checks(x)
+            self.output_dim = self._get_output_dim_from_nodes()
+            if self.output_dim is None:
+                err = "output_dim must be set at this point for all nodes"
+                raise mdp.NodeException(err)
+        # intentionally use MRO above Layer, not SameInputLayer
+        super(Layer, self)._pre_execution_checks(x)
+                
+    def _execute(self, x, *args, **kwargs):
         """Process the data through the internal nodes."""
         out_start = 0
         out_stop = 0
-        result = numx.zeros([x.shape[0], self.output_dim], dtype=x.dtype)
+        y = None
         for node in self.nodes:
             out_start = out_stop
             out_stop += node.output_dim
-            result[:, out_start : out_stop] = node.execute(x)
-        return result
+            if y is None:
+                node_y = node.execute(x, *args, **kwargs)
+                y = numx.zeros([node_y.shape[0], self.output_dim],
+                               dtype=node_y.dtype)
+                y[:,out_start:out_stop] = node_y
+            else:
+                y[:,out_start:out_stop] = node.execute(x, *args, **kwargs)
+        return y

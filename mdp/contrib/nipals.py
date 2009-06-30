@@ -3,7 +3,7 @@ from mdp.utils import mult
 from mdp.nodes import PCANode
 sqrt = numx.sqrt
 
-class NIPALSNode(PCANode, Cumulator):
+class NIPALSNode(Cumulator, PCANode):
     """
     Perform Principal Component Analysis using the NIPALS algorithm.
     This algorithm is particularyl useful if you have more variable than
@@ -51,21 +51,18 @@ class NIPALSNode(PCANode, Cumulator):
         super(NIPALSNode, self).__init__(input_dim, output_dim, dtype)
         self.conv = conv
         self.max_it = max_it
-        self.explained_variance = None
-        self.d = None
-
+        
     def _train(self, x):
-        Cumulator._train(self, x)
+        super(NIPALSNode, self)._train(x)
         
     def _stop_training(self, debug=False):
         # debug argument is ignored but needed by the base class
-        Cumulator._stop_training(self)
+        super(NIPALSNode, self)._stop_training()
         self._adjust_output_dim()
         if self.desired_variance is not None:
             des_var = True
         else:
             des_var = False
-            
         
         X = self.data
         conv = self.conv
@@ -78,6 +75,7 @@ class NIPALSNode(PCANode, Cumulator):
         # remove mean
         X -= mean
         var = X.var(axis=0).sum()
+        self.total_variance = var
         exp_var = 0
 
         eigenv = numx.zeros((self.input_dim, self.input_dim), dtype=dtype)

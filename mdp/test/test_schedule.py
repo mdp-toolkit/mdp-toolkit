@@ -8,7 +8,7 @@ class TestScheduler(unittest.TestCase):
 
     def test_scheduler(self):
         """Test scheduler with 6 tasks."""
-        scheduler = parallel.Scheduler(copy_callable=False)
+        scheduler = parallel.Scheduler()
         for i in range(6):
             scheduler.add_task(i, lambda x: x**2)
         results = scheduler.get_results()

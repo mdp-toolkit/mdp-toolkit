@@ -236,7 +236,7 @@ class LLENode(Cumulator):
             #   at this point
             #-----------------------------------------------
             sig2 = (svd(M_Mi, compute_uv=0))**2
-            sig2s[row, :] = sig2
+            sig2s[row, :sig2.shape[0]] = sig2
 
             #-----------------------------------------------
             # use sig2 to compute intrinsic dimensionality of the

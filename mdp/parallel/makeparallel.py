@@ -44,20 +44,20 @@ class HiNetParallelTranslator(hinet.HiNetTranslator):
     by simply replacing their __class__ with the parallel class version.
     """
     
-    def translate_flow(self, flow):
-        """Return the new parallel flow.
-        
-        Note that the provided flow is not modified, its internal nodes
-        will be copied or newly created nodes are used.
+    def make_flow_parallel(self, flow):
+        """Return a parallel version of the provided flow.
+    
+        If a parallel version of an internal node is found the node is
+        transformed into it. This happens in-place, so flow is modified (after
+        the translation it is the original Flow instance, but with parallel
+        nodes inside).
         """
         return self._translate_flow(flow)
     
+    # overwrite private methods
+    
     def _translate_flow(self, flow):
-        """Return the new parallel flow.
-        
-        Note that the provided flow is not modified, its internal nodes
-        will be copied or newly created nodes are used.
-        """
+        """Return a parallel version of the provided flow."""
         if isinstance(flow, parallelflows.ParallelFlow):
             return flow
         parallel_nodes = super(HiNetParallelTranslator, 
@@ -90,7 +90,6 @@ class HiNetParallelTranslator(hinet.HiNetTranslator):
 
     def _translate_standard_node(self, node):
         """Try to find a corresponding parallel node class and use that."""
-        node = node.copy()
         node_class = type(node)
         if not isinstance(node, parallelnodes.ParallelNode):
             p_node_class = get_parallel_member(node_class, parallelnodes)
@@ -108,20 +107,19 @@ class HiNetUnParallelTranslator(hinet.HiNetTranslator):
     by simply replacing their __class__ with the normal class version.
     """
     
-    def translate_flow(self, flow):
-        """Return the reconstructed original (non-parallel) flow.
-        
-        Note that the provided flow is not modified, its internal nodes
-        will be copied or newly created nodes are used.
+    def unmake_flow_parallel(self, flow):
+        """Return the original non-parallel version of parallel_flow.
+    
+        This can only work if the parallel flow was created with
+        make_flow_parallel, otherwise an exception is raised.
+        The node translation happens in-place, so parallel_flow is modified
         """
         return self._translate_flow(flow)
+        
+    # overwrite private methods
     
     def _translate_flow(self, flow):
-        """Return the reconstructed original (non-parallel) flow.
-        
-        Note that the provided flow is not modified, its internal nodes
-        will be copied or newly created nodes are used.
-        """
+        """Translate flow into the non-parallel original flow."""
         try:
             flow_class = flow._serialclass_
         except:
@@ -152,7 +150,6 @@ class HiNetUnParallelTranslator(hinet.HiNetTranslator):
 
     def _translate_standard_node(self, node):
         """Restore the original node class."""
-        node = node.copy()
         try:
             node.__class__ = node._serialclass_
         except:
@@ -163,19 +160,21 @@ class HiNetUnParallelTranslator(hinet.HiNetTranslator):
 # simple helper functions #
 
 def make_flow_parallel(flow):
-    """Return a parallel version of the flow.
+    """Return a parallel version of the provided flow.
     
-    If available nodes will be modified to their parallel version.
-    The original flow and its nodes will not be changed.
+    If a parallel version of an internal node is found the node is transformed
+    into it. This happens in-place, so flow is modified (after the translation
+    it is the original Flow instance, but with parallel nodes inside).
     """
     translator = HiNetParallelTranslator()
-    return translator.translate_flow(flow)
+    return translator.make_flow_parallel(flow)
                 
 def unmake_flow_parallel(parallel_flow):
-    """Return a non parallel version of a flow created with make_flow_parallel.
+    """Return the original non-parallel version of parallel_flow.
     
     This can only work if the parallel flow was created with make_flow_parallel,
     otherwise an exception is raised.
+    The node translation happens in-place, so parallel_flow is modified
     """
     translator = HiNetUnParallelTranslator()
-    return translator.translate_flow(parallel_flow)
+    return translator.unmake_flow_parallel(parallel_flow)

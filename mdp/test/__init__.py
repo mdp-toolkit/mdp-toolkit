@@ -8,11 +8,35 @@ Run all tests with:
 
 import unittest
 import sys
-from mdp import numx, numx_rand
+import mdp
+#from mdp import numx, numx_rand
 import test_nodes, test_flows, test_utils, test_graph, test_contrib
 import test_hinet, test_schedule, test_parallelnodes, test_parallelflows
 import test_parallelhinet, test_process_schedule
-        
+
+# check if we have parallel python
+HAVE_PP = hasattr(mdp.parallel, 'pp')
+
+# check what symeig are we using
+if mdp.utils.symeig is mdp.utils.wrap_eigh:
+    SYMEIG = 'scipy.linalg.eigh'
+else:
+    try:
+        import symeig
+        if mdp.utils.symeig is symeig.symeig:
+            SYMEIG = 'symeig'
+        elif mdp.utils.symeig is mdp.utils._symeig_fake:
+            SYMEIG = 'symeig_fake'
+        else:
+            SYMEIG = 'unknown'
+    except ImportError:
+        if mdp.utils.symeig is mdp.utils._symeig_fake:
+            SYMEIG = 'symeig_fake'
+        else:
+            SYMEIG = 'unknown'
+
+numx = mdp.numx
+numx_rand = mdp.numx_rand
 
 _err_str = """\nIMPORTANT: some tests use random numbers. This could
 occasionally lead to failures due to numerical degeneracies.
@@ -38,8 +62,14 @@ def test(suitename = 'all', verbosity = 2, seed = None, testname = None):
         seed = int(numx_rand.randint(2**31-1))
 
     numx_rand.seed(seed)
-        
-    sys.stderr.write("Random Seed: " + str(seed)+'\n')
+
+    sys.stderr.write("MDP Version: " + mdp.__version__)
+    sys.stderr.write("\nMDP Revision: " + mdp.__revision__)
+    sys.stderr.write("\nNumerical backend: " + mdp.numx_description +
+                     mdp.numx_version)
+    sys.stderr.write("\nParallel Python Support: " + str(HAVE_PP))
+    sys.stderr.write("\nSymeig backend: " + SYMEIG)
+    sys.stderr.write("\nRandom Seed: " + str(seed)+'\n')
     if suitename == 'all':
         sorted_suites = [x[0](testname=testname)
                          for x in sorted(test_suites.values(),
@@ -50,5 +80,11 @@ def test(suitename = 'all', verbosity = 2, seed = None, testname = None):
     res = unittest.TextTestRunner(verbosity=verbosity).run(suite)
     if len(res.errors+res.failures) > 0:
         sys.stderr.write(_err_str)
+    sys.stderr.write("MDP Version: " + mdp.__version__)
+    sys.stderr.write("\nMDP Revision: " + mdp.__revision__)
+    sys.stderr.write("\nNumerical backend: " + mdp.numx_description +
+                     mdp.numx_version)
+    sys.stderr.write("\nParallel Python Support: " + str(HAVE_PP))
+    sys.stderr.write("\nSymeig backend: " + SYMEIG)
     sys.stderr.write("\nRandom Seed was: " + str(seed)+'\n')
     
