@@ -24,7 +24,7 @@ During release:
 - short/long description should go: on SF.net description, tutorial,
   home page, pypi, modules __init__
 - change homepage color
-- update "how to cite MDP" with new version number
+- post news to sourceforge.
 
 After release:
 - update version number in __init__
