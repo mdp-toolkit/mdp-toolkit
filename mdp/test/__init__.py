@@ -14,6 +14,27 @@ import test_nodes, test_flows, test_utils, test_graph, test_contrib
 import test_hinet, test_schedule, test_parallelnodes, test_parallelflows
 import test_parallelhinet, test_process_schedule
 
+# check if we have parallel python
+HAVE_PP = hasattr(mdp.parallel, 'pp')
+
+# check what symeig are we using
+if mdp.utils.symeig is mdp.utils.wrap_eigh:
+    SYMEIG = 'scipy.linalg.eigh'
+else:
+    try:
+        import symeig
+        if mdp.utils.symeig is symeig.symeig:
+            SYMEIG = 'symeig'
+        elif mdp.utils.symeig is mdp.utils._symeig_fake:
+            SYMEIG = 'symeig_fake'
+        else:
+            SYMEIG = 'unknown'
+    except ImportError:
+        if mdp.utils.symeig is mdp.utils._symeig_fake:
+            SYMEIG = 'symeig_fake'
+        else:
+            SYMEIG = 'unknown'
+
 numx = mdp.numx
 numx_rand = mdp.numx_rand
 
@@ -44,6 +65,9 @@ def test(suitename = 'all', verbosity = 2, seed = None, testname = None):
 
     sys.stderr.write("MDP Version: " + mdp.__version__)
     sys.stderr.write("\nMDP Revision: " + mdp.__revision__)
+    sys.stderr.write("\nNumerical backend: " + mdp.numx_description)
+    sys.stderr.write("\nParallel Python Support: " + str(HAVE_PP))
+    sys.stderr.write("\nSymeig backend: " + SYMEIG)
     sys.stderr.write("\nRandom Seed: " + str(seed)+'\n')
     if suitename == 'all':
         sorted_suites = [x[0](testname=testname)
@@ -57,5 +81,8 @@ def test(suitename = 'all', verbosity = 2, seed = None, testname = None):
         sys.stderr.write(_err_str)
     sys.stderr.write("MDP Version: " + mdp.__version__)
     sys.stderr.write("\nMDP Revision: " + mdp.__revision__)
+    sys.stderr.write("\nNumerical backend: " + mdp.numx_description)
+    sys.stderr.write("\nParallel Python Support: " + str(HAVE_PP))
+    sys.stderr.write("\nSymeig backend: " + SYMEIG)
     sys.stderr.write("\nRandom Seed was: " + str(seed)+'\n')
     
