@@ -1947,8 +1947,8 @@ class NodesTestSuite(unittest.TestSuite):
         y = mult(x, beta)
         try:
             lrnode = train_LRNode([x], [y], False)
-            raise Exception, ("LinearRegressionNode didn't raise "+
-                              "error for linearly dependent input")
+            raise Exception("LinearRegressionNode didn't raise "
+                            "error for linearly dependent input")
         except mdp.NodeException:
             pass
 
