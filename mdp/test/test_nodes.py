@@ -97,8 +97,8 @@ def _cov(x,y=None):
 #_spinner = itertools.cycle((' /\b\b', ' -\b\b', ' \\\b\b', ' |\b\b'))
 #_spinner = itertools.cycle((' .\b\b', ' o\b\b', ' 0\b\b', ' O\b\b',
 #                            ' 0\b\b', ' o\b\b'))
-_spinner = itertools.cycle([" '\b\b"]*3 + [' !\b\b']*3 + [' .\b\b']*3 +
-                           [' !\b\b']*3)
+_spinner = itertools.cycle([" '\b\b"]*2 + [' !\b\b']*2 + [' .\b\b']*2 +
+                           [' !\b\b']*2)
 
 # create spinner
 def spinner():

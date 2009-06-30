@@ -65,7 +65,8 @@ def test(suitename = 'all', verbosity = 2, seed = None, testname = None):
 
     sys.stderr.write("MDP Version: " + mdp.__version__)
     sys.stderr.write("\nMDP Revision: " + mdp.__revision__)
-    sys.stderr.write("\nNumerical backend: " + mdp.numx_description)
+    sys.stderr.write("\nNumerical backend: " + mdp.numx_description +
+                     mdp.numx_version)
     sys.stderr.write("\nParallel Python Support: " + str(HAVE_PP))
     sys.stderr.write("\nSymeig backend: " + SYMEIG)
     sys.stderr.write("\nRandom Seed: " + str(seed)+'\n')
@@ -81,7 +82,8 @@ def test(suitename = 'all', verbosity = 2, seed = None, testname = None):
         sys.stderr.write(_err_str)
     sys.stderr.write("MDP Version: " + mdp.__version__)
     sys.stderr.write("\nMDP Revision: " + mdp.__revision__)
-    sys.stderr.write("\nNumerical backend: " + mdp.numx_description)
+    sys.stderr.write("\nNumerical backend: " + mdp.numx_description +
+                     mdp.numx_version)
     sys.stderr.write("\nParallel Python Support: " + str(HAVE_PP))
     sys.stderr.write("\nSymeig backend: " + SYMEIG)
     sys.stderr.write("\nRandom Seed was: " + str(seed)+'\n')

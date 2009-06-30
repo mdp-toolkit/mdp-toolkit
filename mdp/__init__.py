@@ -85,12 +85,13 @@ numx_description = None
 for _label in _NUMX_LABELS:
     try:
         if _label == 'scipy':
-            import scipy, scipy.linalg, scipy.fftpack
+            import scipy, scipy.linalg, scipy.fftpack, scipy.version
             numx = scipy
             numx_rand = scipy.random
             numx_linalg = scipy.linalg
             numx_fft = scipy.fftpack
             numx_description = 'scipy'
+            numx_version = scipy.version.version
             del scipy
             break
         else:
@@ -100,6 +101,7 @@ for _label in _NUMX_LABELS:
             import numpy.linalg as numx_linalg
             import numpy.fft as numx_fft
             numx_description = 'numpy'
+            numx_version = numpy.version.version
             del numpy
             break
     except ImportError:
@@ -149,7 +151,7 @@ __all__ = ['CheckpointFlow', 'CheckpointFunction', 'CheckpointSaveFunction',
            'NodeException', 'TrainingException', 'TrainingFinishedException',
            'contrib', 'get_eta', 'graph', 'helper_funcs', 'hinet', 'nodes', 
            'numx_description', 'pca', 'sfa', 'test', 'utils', 'whitening',
-           'parallel']
+           'parallel', 'numx_version']
 
 __version__ = '2.5'
 __revision__ = utils.get_svn_revision()
