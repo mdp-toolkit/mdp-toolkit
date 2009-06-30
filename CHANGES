@@ -1,3 +1,70 @@
+MDP-2.5:
+
+2009-06-30: Added online detection of numerical backend, parallel
+            python support, symeig backend and numerical backend to the output of
+            unit tests. Should help in debugging.
+2009-06-12: Integration of the cutoff and histogram nodes.
+2009-06-12: Fixed bug in parallel flow (exception handling).
+2009-06-09: Fixed bug in LLENode when output_dim is a float. Thanks to Konrad 
+            Hinsen.
+2009-06-05: Fixed bugs in parallel flow for multiple schedulers.
+2009-06-05: Fixed a bug in layer inverse, thanks to Alberto Escalante.
+2009-04-29: Added a LinearRegressionNode.
+2009-03-31: PCANode does not complain anymore when covariance matrix has negative
+            eigenvalues iff svd==True or reduce==True. If output_dim has been 
+            specified has a desired variance, negative eigenvalues are ignored.
+            Improved error message for SFANode in case of negative eigenvalues,
+            we now suggest to prepend the node with a PCANode(svd=True) or 
+            PCANode(reduce=True).
+2009-03-26: Migrated from old thread package to the new threading one. 
+            Added flag to disable caching in process scheduler. There are some
+            breaking changes for custom schedulers (parallel flow training or 
+            execution is not affected).
+2009-03-25: Added svn revision tracking support.
+2009-03-25: Removed the copy_callable flag for scheduler, this is now completely
+            replaced by forking the TaskCallable. This has no effect for the 
+            convenient ParallelFlow interface, but custom schedulers get broken.
+2009-03-22: Implemented caching in the ProcessScheduler.
+2009-02-22: make_parallel now works completely in-place to save memory.
+2009-02-12: Added container methods to FlowNode.
+2009-03-03: Added CrossCovarianceMatrix with tests.
+2009-02-03: Added IdentityNode.
+2009-01-30: Added a helper function in hinet to directly display a flow HTML 
+            representation.
+2009-01-22: Allow output_dim in Layer to be set lazily.
+2008-12-23: Added total_variance to the nipals node.
+2008-12-23: Always set explained_variance and total_variance after training in 
+            PCANode. 
+2008-12-12: Modified symrand to really return symmetric matrices (and not only
+            positive definite). Adapted GaussianClassifierNode to account for
+            that. Adapted symrand to return also complex hermitian matrices.
+2008-12-11: Fixed one problem in PCANode (when output_dim was set to input_dim 
+            the total variance was treated as unknown).
+            Fixed var_part parameter in ParallelPCANode.
+2008-12-11: Added var_part feature to PCANode (filter according to variance 
+            relative to absoute variance).
+2008-12-04: Fixed missing axis arg in amax call in tutorial. 
+            Thanks to Samuel John!
+2008-12-04: Fixed the empty data iterator handling in ParallelFlow.
+            Also added empty iterator checks in the normal Flow (raise an 
+            exception if the iterator is empty).
+2008-11-19: Modified pca and sfa nodes to check for negaive eigenvalues
+            in the cov matrices
+2008-11-19: symeig integrated in scipy, mdp can use it from there now.
+2008-11-18: Added ParallelFDANode.
+2008-11-18: Updated the train callable for ParallelFlow to support additional 
+            arguments.
+2008-11-05: Rewrite of the make parallel code, now supports hinet structures.
+2008-11-03: Rewrite of the hinet HTML repesentation creator. Unfortunately this 
+            also breaks the public interface, but the changes are pretty simple.
+2008-10-29: Shut off warnings coming from remote processes in ProcessScheduler
+2008-10-27: Fixed problem with overwriting kwargs in the init method 
+            of ParallelFlow.
+2008-10-24: Fixed pretrained nodes bug in hinet.FlowNode.
+2008-10-20: Fixed critical import bug in parallel package
+            when pp (parallel python library) is installed.
+
+-------------------------------------------------------------------------------
 MDP-2.4:
 
 2008-10-16: added interface to BLAS's "gemm" matrix multiplication

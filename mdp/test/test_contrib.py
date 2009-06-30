@@ -14,7 +14,6 @@ mc = mdp.nodes
 
 import itertools    
 
-
 def _s_shape(theta):
     """
     returns x,y
@@ -68,6 +67,9 @@ class ContribTestSuite(NodesTestSuite):
     def _set_nodes(self):
         self._nodes = [mc.JADENode,
                        mc.NIPALSNode,
+                       (mc.XSFANode, [(mc.PolynomialExpansionNode, (1,), {}),
+                                      (mc.PolynomialExpansionNode, (1,), {}),
+                                      True],None),
                        (mc.LLENode, [3, 0.001, False], None),
                        (mc.LLENode, [3, 0.001, True], None),
                        (mc.HLLENode, [10, 0.001, False], None),
@@ -186,6 +188,17 @@ class ContribTestSuite(NodesTestSuite):
             assert (res[idx,0]-res[idx[0],0]<1e-2,
                     'Projection should be aligned as original space')
 
+    def testLLENode_outputdim_float_bug(self):
+        # 1D S-shape in 3D, output_dim
+        n, k = 50, 2
+        x, y, z, t = _s_shape_1D(n)
+        data = numx.asarray([x,y,z]).T
+
+        res = mdp.nodes.LLENode(k, output_dim=0.9, svd=True)(data)
+        # check that the neighbors are the same
+        err = _compare_neighbors(data, res, k)
+        assert err.max() == 0
+
     def testHLLENode(self):
         # 1D S-shape in 3D
         n, k = 250, 4
@@ -222,7 +235,38 @@ class ContribTestSuite(NodesTestSuite):
             idx = numx.nonzero(t==tv)[0]
             assert (res[idx,0]-res[idx[0],0]<1e-2,
                     'Projection should be aligned as original space')
-    
+
+    def testXSFANode(self):
+        T = 5000
+        N = 3
+        src = numx_rand.random((T, N))*2-1
+        # create three souces with different speeds
+        fsrc = numx_fft.rfft(src, axis=0)
+
+        for i in range(N):
+            fsrc[(i+1)*(T/10):, i] = 0.
+
+        src = numx_fft.irfft(fsrc,axis=0)
+        src -= src.mean(axis=0)
+        src /= src.std(axis=0)
+
+        #mix = sigmoid(numx.dot(src, mdp.utils.random_rot(3)))
+        mix = src
+
+        flow = mdp.Flow([mc.XSFANode()])
+        # let's test also chunk-mode training
+        flow.train([[mix[:T/2, :], mix[T/2:, :]]])
+        
+        out = flow(mix)
+        #import binet
+        #tr_filename = binet.show_training(flow=flow,
+        #                                  data_iterators=[[mix[:T/2, :], mix[T/2:, :]]])
+        #ex_filename, out = binet.show_execution(flow, x=mix)
+
+        corrs = mdp.utils.cov_maxima(mdp.utils.cov2(out, src))
+        assert min(corrs) > 0.8, ('source/estimate minimal'
+                                  ' covariance: %g' % min(corrs))
+
         
 def get_suite(testname=None):
     return ContribTestSuite(testname=testname)

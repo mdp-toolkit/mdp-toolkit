@@ -33,7 +33,7 @@ from switchboard import (Switchboard, Rectangular2dSwitchboardException,
                          Rectangular2dSwitchboard)
 from hinet_translator import (HiNetTranslator, HiNetHTMLTranslator, 
                               NODE_HTML_TRANSLATORS, HINET_STYLE,
-                              NewlineWriteFile)
+                              NewlineWriteFile, SHOW_FLOW_STYLE, show_flow)
 
 del flownode
 del layer

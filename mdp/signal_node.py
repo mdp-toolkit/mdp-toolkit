@@ -27,63 +27,6 @@ class IsNotInvertibleException(NodeException):
     pass
 
 
-# The next two functions (getinfo, wrapper)
-# are adapted version of functions in the
-# decorator module by Michele Simionato
-# Version: 	2.3.1 (25 July 2008)
-# Download page:http://www.phyast.pitt.edu/~micheles/python/decorator-2.3.1.zip
-
-def getinfo(func):
-    """
-    Returns an info dictionary containing:
-    - name (the name of the function : str)
-    - argnames (the names of the arguments : list)
-    - defaults (the values of the default arguments : tuple)
-    - signature (the signature : str)
-    - doc (the docstring : str)
-    - module (the module name : str)
-    - dict (the function __dict__ : str)
-    
-    >>> def f(self, x=1, y=2, *args, **kw): pass
-
-    >>> info = getinfo(f)
-
-    >>> info["name"]
-    'f'
-    >>> info["argnames"]
-    ['self', 'x', 'y', 'args', 'kw']
-    
-    >>> info["defaults"]
-    (1, 2)
-
-    >>> info["signature"]
-    'self, x, y, *args, **kw'
-    """
-    regargs, varargs, varkwargs, defaults = _inspect.getargspec(func)
-    argnames = list(regargs)
-    if varargs:
-        argnames.append(varargs)
-    if varkwargs:
-        argnames.append(varkwargs)
-    signature = _inspect.formatargspec(regargs, varargs, varkwargs, defaults,
-                                      formatvalue=lambda value: "")[1:-1]
-    return dict(name=func.__name__, argnames=argnames, signature=signature,
-                defaults = func.func_defaults, doc=func.__doc__,
-                module=func.__module__, dict=func.__dict__,
-                globals=func.func_globals, closure=func.func_closure)
-
-
-def wrapper(wrapper, infodict):
-    src = "lambda %(signature)s: _wrapper_(%(signature)s)" % infodict
-    funcopy = eval(src, dict(_wrapper_=wrapper))
-    funcopy.__name__ = infodict['name']
-    funcopy.__doc__ = infodict['doc']
-    funcopy.__module__ = infodict['module']
-    funcopy.__dict__.update(infodict['dict'])
-    funcopy.func_defaults = infodict['defaults']
-    funcopy.undecorated = infodict
-    return funcopy
-
 # methods that can overwrite docs:
 DOC_METHODS = ['_train', '_stop_training', '_execute', '_inverse']
 
@@ -95,13 +38,14 @@ class NodeMetaclass(type):
     This makes it possible for subclasses of Node to document the usage
     of public methods, without the need to overwrite the ancestor's methods.
     """
-    def __new__(mcs, classname, bases, members):
+    
+    def __new__(mcl, classname, bases, members):
         # select private methods that can overwrite the docstring
         for privname in DOC_METHODS:
             if privname in members:
                 # the private method is present in the class
                 # inspect the private method
-                priv_info = getinfo(members[privname])
+                priv_info = mcl._get_infodict(members[privname])
                 # if the docstring is empty, don't overwrite it
                 if not priv_info['doc']:
                     continue
@@ -120,9 +64,79 @@ class NodeMetaclass(type):
                         # with docs, argument defaults, and signature of the
                         # private method and name of the public method.
                         priv_info['name'] = pubname
-                        members[pubname] = wrapper(ancestor[pubname], priv_info)
+                        members[pubname] = mcl._wrap_func(ancestor[pubname], 
+                                                          priv_info)
                         break
-        return type.__new__(mcs, classname, bases, members)
+        return type.__new__(mcl, classname, bases, members)
+    
+    # The next two functions (originally called get_info, wrapper)
+    # are adapted versions of functions in the
+    # decorator module by Michele Simionato
+    # Version: 2.3.1 (25 July 2008)
+    # Download page: http://pypi.python.org/pypi/decorator
+    
+    @staticmethod
+    def _get_infodict(func):
+        """
+        Returns an info dictionary containing:
+        - name (the name of the function : str)
+        - argnames (the names of the arguments : list)
+        - defaults (the values of the default arguments : tuple)
+        - signature (the signature : str)
+        - doc (the docstring : str)
+        - module (the module name : str)
+        - dict (the function __dict__ : str)
+        
+        >>> def f(self, x=1, y=2, *args, **kw): pass
+    
+        >>> info = getinfo(f)
+    
+        >>> info["name"]
+        'f'
+        >>> info["argnames"]
+        ['self', 'x', 'y', 'args', 'kw']
+        
+        >>> info["defaults"]
+        (1, 2)
+    
+        >>> info["signature"]
+        'self, x, y, *args, **kw'
+        """
+        regargs, varargs, varkwargs, defaults = _inspect.getargspec(func)
+        argnames = list(regargs)
+        if varargs:
+            argnames.append(varargs)
+        if varkwargs:
+            argnames.append(varkwargs)
+        signature = _inspect.formatargspec(regargs,
+                                           varargs,
+                                           varkwargs,
+                                           defaults,
+                                           formatvalue=lambda value: "")[1:-1]
+        return dict(name=func.__name__, argnames=argnames, signature=signature,
+                    defaults = func.func_defaults, doc=func.__doc__,
+                    module=func.__module__, dict=func.__dict__,
+                    globals=func.func_globals, closure=func.func_closure)
+    
+    @staticmethod
+    def _wrap_func(original_func, wrapper_infodict):
+        """Return a wrapped version of func.
+        
+        original_func -- The function to be wrapped.
+        wrapper_infodict -- The infodict to be used for constructing the
+            wrapper.
+        """
+        src = ("lambda %(signature)s: _original_func_(%(signature)s)" %
+               wrapper_infodict)
+        wrapped_func = eval(src, dict(_original_func_=original_func))
+        wrapped_func.__name__ = wrapper_infodict['name']
+        wrapped_func.__doc__ = wrapper_infodict['doc']
+        wrapped_func.__module__ = wrapper_infodict['module']
+        wrapped_func.__dict__.update(wrapper_infodict['dict'])
+        wrapped_func.func_defaults = wrapper_infodict['defaults']
+        wrapped_func.undecorated = wrapper_infodict
+        return wrapped_func
+
 
 class Node(object):
     """A 'Node' is the basic building block of an MDP application.
@@ -318,8 +332,14 @@ class Node(object):
         return self._train_phase
 
     def get_remaining_train_phase(self):
-        """Return the number of training phases still to accomplish."""
-        return len(self._train_seq) - self._train_phase
+        """Return the number of training phases still to accomplish.
+        
+        If the node is not trainable then the return value is 0.
+        """
+        if self.is_trainable():
+            return len(self._train_seq) - self._train_phase
+        else:
+            return 0
 
     ### Node capabilities
     def is_trainable(self):
@@ -370,11 +390,10 @@ class Node(object):
     def _if_training_stop_training(self):
         if self.is_training():
             self.stop_training()
-            # if there is some training phases left
-            # we shouldn't be here!
+            # if there is some training phases left we shouldn't be here!
             if self.get_remaining_train_phase() > 0:
-                raise TrainingException("The training phases are not "
-                                        "completed yet.")
+                error_str = "The training phases are not completed yet."
+                raise TrainingException(error_str)
 
     def _pre_execution_checks(self, x):
         """This method contains all pre-execution checks.
@@ -466,8 +485,8 @@ class Node(object):
             raise IsNotTrainableException("This node is not trainable.")
 
         if not self.is_training():
-            raise TrainingFinishedException("The training phase has already"
-            " finished.")
+            err_str = "The training phase has already finished."
+            raise TrainingFinishedException(err_str)
 
         self._check_input(x)
         self._check_train_args(x, *args, **kwargs)        
@@ -486,8 +505,8 @@ class Node(object):
             raise TrainingException("The node has not been trained.")
         
         if not self.is_training():
-            raise TrainingFinishedException("The training phase has already"
-                                            "finished.")
+            err_str = "The training phase has already finished."
+            raise TrainingFinishedException(err_str)
 
         # close the current phase.
         self._train_seq[self._train_phase][1](*args, **kwargs)
@@ -602,14 +621,11 @@ class Cumulator(Node):
         self.tlen = 0
 
     def _train(self, x):
-        """Cumulate all input data in a one dimensional list.
-        """
+        """Cumulate all input data in a one dimensional list."""
         self.tlen += x.shape[0]
         self.data.extend(x.ravel().tolist())
 
     def _stop_training(self, *args, **kwargs):
-        """Transform the data list to an array object and reshape it.
-        """
-        self._training = False
+        """Transform the data list to an array object and reshape it."""
         self.data = numx.array(self.data, dtype = self.dtype)
         self.data.shape = (self.tlen, self.input_dim)

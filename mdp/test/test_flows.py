@@ -325,17 +325,17 @@ class FlowsTestSuite(unittest.TestSuite):
         flow = mdp.Flow([_BogusMultiNode()])
         flow.train(mdp.numx.zeros((1,2), 'd'))
         assert flow[0].visited == [1,2,3,4]
-        # try to use an iterator to train it, check for rewinds
-        class TestIterator:
+        # try to use an iterable to train it, check for rewinds
+        class TestIterable:
             def __init__(self):
                 self.used = 0
             def __iter__(self):
                 self.used += 1
                 yield mdp.numx.zeros((1,2), 'd')
         flow = mdp.Flow([_BogusMultiNode()])
-        iter = TestIterator()
-        flow.train([iter])
-        assert iter.used == 2
+        iterable = TestIterable()
+        flow.train([iterable])
+        assert iterable.used == 2
         # should not work with an iterator
         def testgenerator():
             yield mdp.numx.zeros((1,2), 'd')

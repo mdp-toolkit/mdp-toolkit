@@ -1,6 +1,8 @@
 import mdp
 from mdp import numx, numx_linalg, utils, Node, NodeException
 
+import cPickle as pickle
+
 MAX_NUM = {numx.dtype('b'): 127,
            numx.dtype('h'): 32767,
            numx.dtype('i'): 2147483647,
@@ -14,6 +16,17 @@ MIN_NUM = {numx.dtype('b'): -128,
            numx.dtype('q'): -9223372036854775808L,
            numx.dtype('f'): numx.finfo(numx.float32).min,
            numx.dtype('d'): numx.finfo(numx.float64).min}
+
+
+class IdentityNode(Node):
+    """Return input data (useful in complex network layouts)"""
+    def is_trainable(self):
+        False
+
+    def _set_input_dim(self, n):
+        self._input_dim = n
+        self._output_dim = n
+
 
 class OneDimensionalHitParade(object):
     """
@@ -366,7 +379,11 @@ class EtaComputerNode(Node):
         stop_training.
 
         Input arguments:
-        t -- Time units (e.g., t=0.01 if you sample at 100Hz)
+        t -- Sampling frequency in Hz
+             The original definition in (Wiskott and Sejnowski, 2002)
+             is obtained for t=self._tlen, while for t=1 (default),
+             this corresponds to the beta-value defined in
+             (Berkes and Wiskott, 2005).
         """
         self._if_training_stop_training()
         return self._refcast(self._eta*t)
@@ -374,8 +391,10 @@ class EtaComputerNode(Node):
 
 class NoiseNode(Node):
     """Inject multiplicative or additive noise into the input data.
-
+    
     Original code contributed by Mathias Franzius.
+    
+    Note that due to the noise_func attribute this node cannot be pickled.
     """
     
     def __init__(self, noise_func = mdp.numx_rand.normal, noise_args = (0, 1),
@@ -590,3 +609,153 @@ class GaussianClassifierNode(Node):
         class_prob = self.class_probabilities(x)
         winner = class_prob.argmax(axis=-1)
         return [self.labels[winner[i]] for i in range(len(winner))]
+    
+
+class CutoffNode(mdp.Node):
+    """Node to cut off values at specified bounds.
+    
+    Works similar to numpy.clip, but also works when only a lower or upper
+    bound is specified.
+    """
+
+    def __init__(self, lower_bound=None, upper_bound=None, 
+                 input_dim=None, dtype=None):
+        """Initialize node.
+        
+        lower_bound -- Data values below this are cut to the lower_bound value.
+            If lower_bound is None no cutoff is performed.
+        upper_bound -- Works like lower_bound.
+        """
+        super(CutoffNode, self).__init__(input_dim=input_dim, 
+                                         output_dim=input_dim, 
+                                         dtype=dtype)
+        self.lower_bound = lower_bound
+        self.upper_bound = upper_bound
+
+    def is_trainable(self):
+        return False
+
+    def is_invertible(self):
+        return False
+            
+    def _execute(self, x):
+        """Return the clipped data."""
+        # n.clip() does not work, since it does not accept None for one bound
+        if self.lower_bound is not None:
+            x = numx.where(x >= self.lower_bound, x, self.lower_bound)
+        if self.upper_bound is not None:
+            x = numx.where(x <= self.upper_bound, x, self.upper_bound)
+        return x
+
+
+class HistogramNode(mdp.Node):
+    """Node which stores a history of the data during its training phase.
+    
+    The data history is stored in self.data_hist and can also be deleted to
+    free memory. Alternatively it can be automatically pickled to disk.
+    
+    Note that data is only stored during training.
+    """
+    
+    def __init__(self, hist_fraction=1.0, hist_filename=None,
+                 input_dim=None, dtype=None):
+        """Initialize the node.
+        
+        hist_fraction -- Defines the fraction of the data that is stored
+            randomly.
+        hist_filename -- Filename for the file to which the data history will
+            be pickled after training. The data is pickled when stop_training
+            is called and data_hist is then cleared (to free memory).
+            If filename is None (default value) then data_hist is not cleared
+            and can be directly used after training.
+        """
+        super(HistogramNode, self).__init__(input_dim=input_dim, 
+                                            output_dim=input_dim, 
+                                            dtype=dtype)
+        self._hist_filename = hist_filename
+        self.hist_fraction = hist_fraction
+        self.data_hist = None  # stores the data history  
+        
+    def _train(self, x):
+        """Store the history data."""
+        if self.hist_fraction < 1.0:
+            x = x[numx.random.random(len(x)) < self.hist_fraction]
+        if self.data_hist is not None:
+            self.data_hist = numx.concatenate([self.data_hist, x])
+        else:
+            self.data_hist = x
+
+    def _stop_training(self):
+        """Pickle the histogram data to file and clear it if required."""
+        super(HistogramNode, self)._stop_training()
+        if self._hist_filename:
+            pickle_file = open(self._hist_filename, "wb")
+            try:
+                pickle.dump(self.data_hist, pickle_file, protocol=-1)
+            finally:
+                pickle_file.close( )
+            self.data_hist = None
+    
+
+class AdaptiveCutoffNode(HistogramNode):
+    """Node which uses the data history during training to learn cutoff values.
+    
+    As opposed to the simple CutoffNode, a different cutoff value is learned
+    for each data coordinate. For example if an upper cutoff fraction of
+    0.05 is specified, then the upper cutoff bound is set so that the upper
+    5% of the training data would have been clipped (in each dimension).
+    The cutoff bounds are then applied during execution.
+    This Node also works as a HistogramNode, so the histogram data is stored. 
+    
+    When stop_training is called the cutoff values for each coordinate are
+    calculated based on the collected histogram data.
+    """
+    
+    def __init__(self, lower_cutoff_fraction=None, upper_cutoff_fraction=None, 
+                 hist_fraction=1.0, hist_filename=None,
+                 input_dim=None, dtype=None):
+        """Initialize the node.
+        
+        lower_cutoff_fraction -- Fraction of data that will be cut off after
+            the training phase (assuming the data distribution does not
+            change). If set to None (default value) no cutoff is performed.
+        upper_cutoff_fraction -- Works like lower_cutoff_fraction.
+        hist_fraction -- Defines the fraction of the data that is stored for the
+            histogram.
+        hist_filename -- Filename for the file to which the data history will
+            be pickled after training. The data is pickled when stop_training
+            is called and data_hist is then cleared (to free memory).
+            If filename is None (default value) then data_hist is not cleared
+            and can be directly used after training.
+        """
+        super(AdaptiveCutoffNode, self).__init__(hist_fraction=hist_fraction,
+                                                 hist_filename=hist_filename,
+                                                 input_dim=input_dim, 
+                                                 dtype=dtype)
+        self.lower_cutoff_fraction = lower_cutoff_fraction
+        self.upper_cutoff_fraction = upper_cutoff_fraction
+        self.lower_bounds = None
+        self.upper_bounds = None
+        
+    def _stop_training(self):
+        """Calculate the cutoff bounds based on collected histogram data."""
+        if self.lower_cutoff_fraction or self.upper_cutoff_fraction:
+            sorted_data = self.data_hist.copy()
+            sorted_data.sort(axis=0)
+            if self.lower_cutoff_fraction:
+                index = self.lower_cutoff_fraction * len(sorted_data)
+                self.lower_bounds = sorted_data[index]
+            if self.upper_cutoff_fraction:
+                index = (len(sorted_data) - 
+                         self.upper_cutoff_fraction * len(sorted_data))
+                self.upper_bounds = sorted_data[index]
+        super(AdaptiveCutoffNode, self)._stop_training()
+                
+    def _execute(self, x):
+        """Return the clipped data."""
+        if self.lower_bounds is not None:
+            x = numx.where(x >= self.lower_bounds, x, self.lower_bounds)
+        if self.upper_bounds is not None:
+            x = numx.where(x <= self.upper_bounds, x, self.upper_bounds)
+        return x
+

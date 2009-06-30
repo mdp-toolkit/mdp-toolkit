@@ -73,6 +73,9 @@ def _rand_labels(x):
 def _rand_labels_array(x):
     return numx.around(uniform(x.shape[0])).reshape((x.shape[0],1))
 
+def _rand_array_halfdim(x):
+    return uniform(size=(x.shape[0], x.shape[1]//2))
+
 def _std(x):
     return x.std(axis=0)
     # standard deviation without bias
@@ -92,8 +95,10 @@ def _cov(x,y=None):
     return mult(numx.transpose(x),y)/(x.shape[0])
 
 #_spinner = itertools.cycle((' /\b\b', ' -\b\b', ' \\\b\b', ' |\b\b'))
-_spinner = itertools.cycle((' .\b\b', ' o\b\b', ' 0\b\b', ' O\b\b',
-                            ' 0\b\b', ' o\b\b'))
+#_spinner = itertools.cycle((' .\b\b', ' o\b\b', ' 0\b\b', ' O\b\b',
+#                            ' 0\b\b', ' o\b\b'))
+_spinner = itertools.cycle([" '\b\b"]*2 + [' !\b\b']*2 + [' .\b\b']*2 +
+                           [' !\b\b']*2)
 
 # create spinner
 def spinner():
@@ -142,8 +147,9 @@ class NodesTestSuite(unittest.TestSuite):
                        (mn.GaussianClassifierNode, [], _rand_labels),
                        mn.FANode,
                        mn.ISFANode,
-                       (mn.RBMNode, [5],None),
-                       (mn.RBMWithLabelsNode, [5, 1], _rand_labels_array)]
+                       (mn.RBMNode, [5], None),
+                       (mn.RBMWithLabelsNode, [5, 1], _rand_labels_array),
+                       (mn.LinearRegressionNode, [], _rand_array_halfdim)]
 
     def _nodes_test_factory(self, methods_list=None):
         if methods_list is None:
@@ -193,7 +199,7 @@ class NodesTestSuite(unittest.TestSuite):
             # generate testdimset_nodeclass test cases
             funcdesc='Test dimensions and dtype settings of '+node_class.__name__
             testfunc = self._get_testdimdtypeset(node_class, args,
-                                               sup_args_func)
+                                                 sup_args_func)
             # add to the suite
             self.addTest(unittest.FunctionTestCase(testfunc,
                                                    description=funcdesc))
@@ -326,6 +332,8 @@ class NodesTestSuite(unittest.TestSuite):
                     mat = numx.array([numx.sin(freqs[0]*t),
                                       numx.sin(freqs[1]*t)]).T
                     inp = mat.astype('d')
+                elif node_class == mdp.nodes.LinearRegressionNode:
+                    inp = uniform(size=(1000, 5))
                 else:
                     mat, mix, inp = self._get_random_mix(type="d")
                 node = node_class(*node_args, **{'dtype':dtype})
@@ -353,8 +361,8 @@ class NodesTestSuite(unittest.TestSuite):
             # case 2: output_dim set explicitly
             node_args = self._set_node_args(args)
             node = node_class(*node_args)
-            self._train_if_necessary(inp, node, args, sup_args_func)
             node.output_dim = output_dim
+            self._train_if_necessary(inp, node, args, sup_args_func)
             # execute the node
             out = node(inp)
             assert out.shape[1]==output_dim, "%d!=%d"%(out.shape[1],output_dim)
@@ -465,6 +473,21 @@ class NodesTestSuite(unittest.TestSuite):
         assert_array_almost_equal(act_avg_dt,des_avg_dt,self.decimal-1)
         assert_array_almost_equal(act_cov,des_cov,self.decimal-1)
 
+    def testCrossCovarianceMatrix(self):
+        mat,mix,inp1 = self._get_random_mix(mat_dim=(500,5))
+        mat,mix,inp2 = self._get_random_mix(mat_dim=(500,3))
+        des_tlen = inp1.shape[0]
+        des_avg1 = mean(inp1, axis=0)
+        des_avg2 = mean(inp2, axis=0)
+        des_cov = utils.cov2(inp1, inp2)
+        act_cov = utils.CrossCovarianceMatrix()
+        act_cov.update(inp1, inp2)
+        act_cov, act_avg1, act_avg2, act_tlen = act_cov.fix()
+        assert_almost_equal(act_tlen,des_tlen,self.decimal-1)
+        assert_array_almost_equal(act_avg1,des_avg1,self.decimal-1)
+        assert_array_almost_equal(act_avg2,des_avg2,self.decimal-1)
+        assert_array_almost_equal(act_cov,des_cov,self.decimal-1)     
+        
     def testdtypeCovarianceMatrix(self):
         for type in testtypes:
             mat,mix,inp = self._get_random_mix(type='d')
@@ -484,6 +507,17 @@ class NodesTestSuite(unittest.TestSuite):
             assert_type_equal(cov.dtype,type)
             assert_type_equal(avg.dtype,type)
             assert_type_equal(avg_dt.dtype,type)
+
+    def testdtypeCrossCovarianceMatrix(self):
+        for type in testtypes:
+            dt = 5
+            mat,mix,inp = self._get_random_mix(type='d')
+            cov = utils.CrossCovarianceMatrix(dtype=type)
+            cov.update(inp, inp)
+            cov,avg1,avg2,tlen = cov.fix()
+            assert_type_equal(cov.dtype,type)
+            assert_type_equal(avg1.dtype,type)
+            assert_type_equal(avg2.dtype,type)
 
     def testRoundOffWarningCovMatrix(self):
         import warnings
@@ -668,6 +702,10 @@ class NodesTestSuite(unittest.TestSuite):
                                   [0,0],self.decimal)
         assert_array_almost_equal(std(act_mat,axis=0),\
                                   des_var,self.decimal)
+        # test that the total_variance attribute makes sense
+        est_tot_var = ((des_var**2)*2000/1999.).sum()
+        assert_almost_equal(est_tot_var, pca.total_variance, self.decimal)
+        assert_almost_equal(1, pca.explained_variance, self.decimal)
         # test a bug in v.1.1.1, should not crash
         pca.inverse(act_mat[:,:1])
 
@@ -683,6 +721,14 @@ class NodesTestSuite(unittest.TestSuite):
 ##             pca = cPickle.loads(s)
 ##             act_mat = pca.execute(mat)
 
+    def testPCANode_total_variance(self):
+        mat, mix, inp = self._get_random_mix(mat_dim=(1000, 3))
+        des_var = ((std(mat, axis=0)**2)*1000/999.).sum()
+        pca = mdp.nodes.PCANode(output_dim=2)
+        pca.train(mat)
+        out = pca.execute(mat)
+        assert_almost_equal(des_var, pca.total_variance, self.decimal)
+        
     def testPCANode_desired_variance(self):
         mat, mix, inp = self._get_random_mix(mat_dim=(1000, 3))
         # first make them white
@@ -696,10 +742,11 @@ class NodesTestSuite(unittest.TestSuite):
         pca.train(mat)
         out = pca.execute(mat)
         # check that we got exactly two output_dim:
-        assert pca.output_dim == 2
+        assert pca.output_dim == 2, '%s'%pca.output_dim
         assert out.shape[1] == 2
         # check that explained variance is > 0.8 and < 1
         assert (pca.explained_variance > 0.8 and pca.explained_variance < 1)
+
 
     def testPCANode_desired_variance_after_train(self):
         mat, mix, inp = self._get_random_mix(mat_dim=(1000, 3))
@@ -799,7 +846,7 @@ class NodesTestSuite(unittest.TestSuite):
         mat *= [1E+5,1E-3, 1E-18]
         mat -= mat.mean(axis=0)
         pca = mdp.nodes.PCANode(svd=True,reduce=True,
-                                   var_abs=1E-8, var_rel=1E-30)
+                                var_abs=1E-8, var_rel=1E-30)
         pca.train(mat)
         out = pca.execute(mat)
         # check that we got the only large dimension
@@ -807,6 +854,54 @@ class NodesTestSuite(unittest.TestSuite):
                                   self.decimal)
         assert_array_almost_equal(mat[:,:2].std(axis=0),out.std(axis=0),
                                   self.decimal)
+
+    def _mock_symeig(self, x, range=None, overwrite=False):
+        if range is None:
+            N = x.shape[0]
+        else:
+            N = range[1]-range[0] + 1
+        y = numx.zeros((N,))
+        z = numx.zeros((N,N))
+        y[0] = -1
+        y[-1] = 1
+        return y, z
+    
+    def testPCANode_negative_eigenvalues(self):
+        # should throw an Exception if reduce=False and
+        # svd = False and output_dim=None
+        pca = mdp.nodes.PCANode(output_dim=None, svd=False, reduce=False)
+        pca._symeig = self._mock_symeig 
+        pca.train(uniform((10,10)))
+        try:
+            pca.stop_training()
+            assert False, "PCA did not catch negative eigenvalues!"
+        except mdp.NodeException, e:
+            if "Got negative eigenvalues" in str(e):
+                pass
+            else:
+                raise Exception("PCA did not catch negative eigenvalues!\n"+
+                                str(e))
+        # if reduce=True, should not throw any Exception,
+        # and return output_dim = 1
+        pca = mdp.nodes.PCANode(output_dim=None, svd=False, reduce=True)
+        pca._symeig = self._mock_symeig 
+        pca.train(uniform((10,10)))
+        pca.stop_training()
+        assert pca.output_dim == 1, 'PCA did not remove non-positive eigenvalues!'
+        # if svd=True, should not throw any Exception,
+        # and return output_dim = 10
+        pca = mdp.nodes.PCANode(output_dim=None, svd=True, reduce=False)
+        pca._symeig = self._mock_symeig 
+        pca.train(uniform((10,10)))
+        pca.stop_training()
+        assert pca.output_dim == 10, 'PCA did not remove non-positive eigenvalues!'       
+        # if output_dim is set, should not throw any Exception,
+        # and return the right output_dim
+        pca = mdp.nodes.PCANode(output_dim=1, svd=False, reduce=False)
+        pca._symeig = self._mock_symeig 
+        pca.train(uniform((10,10)))
+        pca.stop_training()
+        assert pca.output_dim == 1, 'PCA did not remove non-positive eigenvalues!'
         
     def testWhiteningNode(self):
         vars = 5
@@ -1256,9 +1351,8 @@ class NodesTestSuite(unittest.TestSuite):
 
         node = mdp.nodes.GaussianClassifierNode()
         for i in range(nclasses):
-            cov = utils.symrand(dim)
+            cov = utils.symrand(uniform((dim,))*dim+1)
             mn = uniform((dim,))*10.
-
             x = normal(0., 1., size=(npoints, dim))
             x = mult(x, utils.sqrtm(cov)) + mn
             x = utils.refcast(x, 'd')
@@ -1423,7 +1517,7 @@ class NodesTestSuite(unittest.TestSuite):
                                  whitened=False,
                                  sfa_ica_coeff=[1.,0.])(mix)
         max_cv = numx.diag(abs(_cov(out,src)))
-        assert_array_almost_equal(max_cv, numx.ones((3,)),6)
+        assert_array_almost_equal(max_cv, numx.ones((3,)),5)
 
     def testISFANode_ICAPart(self):
         # create independent sources
@@ -1799,8 +1893,139 @@ class NodesTestSuite(unittest.TestSuite):
         nzeros = idxzeros.sum()
         point5 = numx.zeros((nzeros, L)) + 0.5
         assert_array_almost_equal(pl[idxzeros], point5, 2)
+
+    def testLinearRegressionNode(self):
         
+        def train_LRNode(inp, out, with_bias):
+            lrnode = mdp.nodes.LinearRegressionNode(with_bias)
+            for i in range(len(inp)):
+                lrnode.train(inp[i], out[i])
+            lrnode.stop_training()
+            return lrnode
         
+        indim, outdim, tlen = 5, 3, 10000
+        
+        # 1. first, without noise
+        # 1a   without bias term
+        # regression coefficients
+        beta = numx_rand.uniform(-10., 10., size=(indim, outdim))
+        # input data
+        x = numx_rand.uniform(-20., 20., size=(tlen, indim))
+        # output of the linear model
+        y = mult(x, beta)
+        # train
+        lrnode = train_LRNode([x], [y], False)
+        # test results
+        assert_array_almost_equal(lrnode.beta, beta, self.decimal)
+        res = lrnode(x)
+        assert_array_almost_equal(res, y, self.decimal)
+
+        # 1b with bias
+        beta = numx_rand.uniform(-10., 10., size=(indim+1, outdim))
+        x = numx_rand.uniform(-20., 20., size=(tlen, indim))
+        y = mult(x, beta[1:,:]) + beta[0,:]
+        lrnode = train_LRNode([x], [y], True)
+        assert_array_almost_equal(lrnode.beta, beta, self.decimal)
+        res = lrnode(x)
+        assert_array_almost_equal(res, y, self.decimal)
+
+        # 2. with noise, multiple sets of input
+        beta = numx_rand.uniform(-10., 10., size=(indim+1, outdim))
+        inp = [numx_rand.uniform(-20., 20., size=(tlen, indim))
+               for i in range(5)]
+        out = [mult(x, beta[1:,:]) + beta[0,:] +
+               numx_rand.normal(size=y.shape)*0.1 for x in inp]
+        lrnode = train_LRNode(inp, out, True)
+        assert_array_almost_equal(lrnode.beta, beta, 2)
+        res = lrnode(inp[0])
+        assert_array_almost_equal_diff(res, out[0], 2)
+
+        # 3. test error for linearly dependent input
+        beta = numx_rand.uniform(-10., 10., size=(indim, outdim))
+        x = numx_rand.uniform(-20., 20., size=(tlen, indim))
+        x[:,-1] = 2.*x[:,0]
+        y = mult(x, beta)
+        try:
+            lrnode = train_LRNode([x], [y], False)
+            raise Exception("LinearRegressionNode didn't raise "
+                            "error for linearly dependent input")
+        except mdp.NodeException:
+            pass
+
+        # 4. test wrong output size
+        beta = numx_rand.uniform(-10., 10., size=(indim, outdim))
+        x = numx_rand.uniform(-20., 20., size=(tlen, indim))
+        x[:,-1] = 2.*x[:,0]
+        y = mult(x, beta)
+        y = y[:10,:]
+        try:
+            lrnode = train_LRNode([x], [y], False)
+            raise Exception, ("LinearRegressionNode didn't raise "+
+                              "error for output of wrong size")
+        except mdp.TrainingException:
+            pass
+        
+    def testCutoffNode(self):
+        node = mdp.nodes.CutoffNode(-1.5, 1.2)
+        x = numx.array([[0.1, 0, -2, 3, 1.2, -1.5, -3.33]])
+        y_ref = numx.array([[0.1, 0, -1.5, 1.2, 1.2, -1.5, -1.5]])
+        y = node.execute(x)
+        assert numx.all(y==y_ref)
+        
+    def testHistogramNode_nofraction(self):
+        """Test HistogramNode with fraction set to 1.0."""
+        node = mdp.nodes.HistogramNode()
+        x1 = numx.array([[0.1, 0.2], [0.3, 0.5]])
+        x2 = numx.array([[0.3, 0.6], [0.2, 0.1]])
+        x = numx.concatenate([x1, x2])
+        node.train(x1)
+        node.train(x2)
+        assert numx.all(x == node.data_hist)
+        
+    def testHistogramNode_fraction(self):
+        """Test HistogramNode with fraction set to 0.5."""
+        node = mdp.nodes.HistogramNode(hist_fraction=0.5)
+        x1 = numx.random.random((1000, 3))
+        x2 = numx.random.random((500, 3))
+        node.train(x1)
+        node.train(x2)
+        assert len(node.data_hist) < 1000
+        
+    def testAdaptiveCutoffNode_smalldata(self):
+        """Test AdaptiveCutoffNode thoroughly on a small data set."""
+        # values from 0.1 to 0.6 and 0.2 to 0.7
+        x1 = numx.array([[0.1, 0.3], [0.3, 0.5], [0.5, 0.7]])
+        x2 = numx.array([[0.4, 0.6], [0.2, 0.4], [0.6, 0.2]])
+        x = numx.concatenate([x1, x2])
+        node = mdp.nodes.AdaptiveCutoffNode(lower_cutoff_fraction= 0.2, # clip first
+                                        upper_cutoff_fraction=0.4) # last two
+        node.train(x1)
+        node.train(x2)
+        node.stop_training()
+        assert numx.all(x == node.data_hist)
+        # test bound values
+        assert numx.all(node.lower_bounds == numx.array([0.2, 0.3]))
+        assert numx.all(node.upper_bounds == numx.array([0.4, 0.5]))
+        # test execute
+        x_test = (numx.array([[0.1, 0.2], [0.3, 0.4], [0.5, 0.6]]))
+        x_clip = node.execute(x_test)
+        x_goal = numx.array([[0.2, 0.3], [0.3, 0.4], [0.4, 0.5]])
+        assert numx.all(x_clip == x_goal)
+        
+    def testAdaptiveCutoffNode_randomdata(self):
+        """Test AdaptiveCutoffNode on a large random data."""
+        node = mdp.nodes.AdaptiveCutoffNode(lower_cutoff_fraction= 0.2,
+                                        upper_cutoff_fraction=0.4,
+                                        hist_fraction=0.5)
+        x1 = numx.random.random((1000, 3))
+        x2 = numx.random.random((500, 3))
+        x = numx.concatenate([x1, x2])
+        node.train(x1)
+        node.train(x2)
+        node.stop_training()
+        node.execute(x)
+        
+
 def get_suite(testname=None):
     return NodesTestSuite(testname=testname)
 

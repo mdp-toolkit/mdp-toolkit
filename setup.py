@@ -1,5 +1,3 @@
-import glob
-import os
 from distutils.core import setup
 
 short_description = "Modular toolkit for Data Processing (MDP) is a library of widely used data processing algorithms that can be combined according to a pipeline analogy to build more complex data processing software. Implemented algorithms include Principal Component Analysis (PCA), Independent Component Analysis (ICA), Slow Feature Analysis (SFA), and many more."
@@ -21,7 +19,7 @@ data processing steps in a natural way.
 The base of available algorithms is steadily increasing and includes,
 to name but the most common, Principal Component Analysis (PCA and
 NIPALS), several Independent Component Analysis algorithms (CuBICA,
-FastICA, TDSEP, and JADE), Slow Feature Analysis, Gaussian
+FastICA, TDSEP, JADE, and XSFA), Slow Feature Analysis, Gaussian
 Classifiers, Restricted Boltzmann Machine, and Locally Linear
 Embedding.
 
@@ -69,6 +67,7 @@ classifiers = ["Development Status :: 5 - Production/Stable",
                "Programming Language :: Python",
                "Topic :: Scientific/Engineering :: Information Analysis",
                "Topic :: Scientific/Engineering :: Mathematics"]
+
 
 setup(name = 'MDP', version = '2.5',
       author = 'Pietro Berkes, Niko Wilbert, and Tiziano Zito',
