@@ -10,7 +10,7 @@ Homepage: http://mdp-toolkit.sourceforge.net/
 
 Package: python-mdp
 Architecture: all
-Depends: ${python:Depends}, python-numpy
+Depends: ${misc:Depends}, ${python:Depends}, python-numpy
 Recommends: python-scipy
 Suggests: python-pp
 Description: Modular toolkit for Data Processing

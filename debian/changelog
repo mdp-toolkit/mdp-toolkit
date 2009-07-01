@@ -3,6 +3,7 @@ mdp (2.5-1) unstable; urgency=low
   * New Upstream Version: can use symeig accepted as a part of scipy package,
     python-symeig is obsolete now, so mdp recommends scipy now
   * Boosted policy complience to 3.8.1 (no changes needed)
+  * Added ${misc:Depends} to Depends (thanks lintian)
 
  -- Yaroslav Halchenko <debian@onerussian.com>  Tue, 30 Jun 2009 18:45:46 -0400
 
