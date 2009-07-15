@@ -138,6 +138,8 @@ class Rectangular2dSwitchboard(Switchboard):
                                 x_field_channels * y_field_channels)
         self.x_field_spacing = x_field_spacing
         self.y_field_spacing = y_field_spacing
+        self.x_unused_channels = 0  # number of channels which are not covered
+        self.y_unused_channels = 0
         ## check parameters for inconsistencies ##
         if (x_field_channels > x_in_channels):
             err = ("Number of field channels"
@@ -152,18 +154,26 @@ class Rectangular2dSwitchboard(Switchboard):
         # number of output channels in x-direction
         self.x_out_channels = ((x_in_channels - x_field_channels) //
                                x_field_spacing + 1)
-        if (((x_in_channels - x_field_channels) < 0 or
-             (x_in_channels - x_field_channels) % x_field_spacing)
-             and not ignore_cover):
+        
+        self.x_unused_channels = (x_in_channels - x_field_channels)
+        if self.x_unused_channels:
+            self.x_unused_channels %= x_field_spacing
+        else:
+            self.x_unused_channels = x_in_channels
+        if self.x_unused_channels and not ignore_cover:
             err = ("Channel fields do not "
                    "cover all input channels in x-direction.")
             raise Rectangular2dSwitchboardException(err)
         # number of output channels in y-direction                       
         self.y_out_channels = ((y_in_channels - y_field_channels) //
                                y_field_spacing + 1)
-        if (((y_in_channels - y_field_channels) < 0 or
-             (y_in_channels - y_field_channels) % y_field_spacing)
-             and not ignore_cover):
+        
+        self.y_unused_channels = (y_in_channels - y_field_channels)
+        if self.y_unused_channels:
+            self.y_unused_channels %= y_field_spacing
+        else:
+            self.y_unused_channels = y_in_channels
+        if self.y_unused_channels and not ignore_cover:
             err = ("Channel fields do not "
                    "cover all input channels in y-direction.")
             raise Rectangular2dSwitchboardException(err)

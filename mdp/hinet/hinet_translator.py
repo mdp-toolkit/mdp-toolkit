@@ -161,20 +161,27 @@ span.memorycolor {
 
 # Functions to define how the node parameters are represented in the
 # HTML representation of a node.
+# The return value is list of strings, each string representing a single line.
+# Of course you can also put everything in a single string (in a list) and
+# include all the required HTML formatting.
 #
 # Note that the list is worked starting from the end (so subclasses can
 # be appended to the end of the list to override their parent class writer).
     
 def _get_html_rect2dswitchboard(node):
-    return ['rec. field size (in channels): %d x %d = %d' % 
+    lines = ['rec. field size (in channels): %d x %d = %d' % 
                 (node.x_field_channels, node.y_field_channels,
                  node.x_field_channels * node.y_field_channels),
-            '# of rec. fields (output channels): %d x %d = %d' %
+             '# of rec. fields (output channels): %d x %d = %d' %
                 (node.x_out_channels, node.y_out_channels,
                  node.x_out_channels * node.y_out_channels),
-            'rec. field distances (in channels): (%d, %d)' %
+             'rec. field distances (in channels): (%d, %d)' %
                 (node.x_field_spacing, node.y_field_spacing),
-            'channel width: %d' % node.in_channel_dim]
+             'channel width: %d' % node.in_channel_dim]
+    if node.x_unused_channels or node.y_unused_channels:
+        lines.append('unused channels: (%d, %d)' %
+                     (node.x_unused_channels, node.y_unused_channels))
+    return lines
     
 def _get_html_sfa2(node):
     return ['expansion dim: ' + str(node._expnode.output_dim)]

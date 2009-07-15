@@ -258,7 +258,7 @@ class HTMLSlideShow(templet.Template):
     # define keyboard shortcuts
     js_keyboard_shortcuts_template = r'''
     document.onkeydown = function(e) {
-        if (!e.ctrlKey) {
+        if (!e.ctrlKey) {  // control key must be pressed
             return;
         }
         else if (e.which == 37) { // left key
@@ -421,7 +421,7 @@ class SectionHTMLSlideShow(HTMLSlideShow):
     # define keyboard shortcuts
     js_keyboard_shortcuts_template = r'''
     document.onkeydown = function(e) {
-        if (!e.ctrlKey) {
+        if (!e.ctrlKey) { // control key must be pressed
             return;
         }
         else if (e.which == 37) { // left key
