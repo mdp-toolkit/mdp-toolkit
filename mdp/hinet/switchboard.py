@@ -154,11 +154,10 @@ class Rectangular2dSwitchboard(Switchboard):
         # number of output channels in x-direction
         self.x_out_channels = ((x_in_channels - x_field_channels) //
                                x_field_spacing + 1)
-        
-        self.x_unused_channels = (x_in_channels - x_field_channels)
-        if self.x_unused_channels:
+        self.x_unused_channels = x_in_channels - x_field_channels
+        if self.x_unused_channels > 0:
             self.x_unused_channels %= x_field_spacing
-        else:
+        elif self.x_unused_channels < 0:
             self.x_unused_channels = x_in_channels
         if self.x_unused_channels and not ignore_cover:
             err = ("Channel fields do not "
@@ -167,11 +166,10 @@ class Rectangular2dSwitchboard(Switchboard):
         # number of output channels in y-direction                       
         self.y_out_channels = ((y_in_channels - y_field_channels) //
                                y_field_spacing + 1)
-        
-        self.y_unused_channels = (y_in_channels - y_field_channels)
-        if self.y_unused_channels:
+        self.y_unused_channels = y_in_channels - y_field_channels
+        if self.y_unused_channels > 0:
             self.y_unused_channels %= y_field_spacing
-        else:
+        elif self.y_unused_channels < 0:
             self.y_unused_channels = y_in_channels
         if self.y_unused_channels and not ignore_cover:
             err = ("Channel fields do not "
