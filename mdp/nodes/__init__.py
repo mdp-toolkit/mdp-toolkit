@@ -1,4 +1,5 @@
-from expansion_nodes import QuadraticExpansionNode, PolynomialExpansionNode
+from expansion_nodes import (QuadraticExpansionNode, PolynomialExpansionNode,
+                             RBFExpansionNode)
 from pca_nodes import WhiteningNode, PCANode
 from sfa_nodes import SFANode, SFA2Node
 from ica_nodes import ICANode, CuBICANode, FastICANode, TDSEPNode
@@ -41,6 +42,7 @@ __all__ = ['CuBICANode', 'EtaComputerNode', 'FANode', 'FDANode', 'FastICANode',
            'ICANode', 'ISFANode', 'JADENode', 'LLENode', 'NIPALSNode',
            'NoiseNode', 'NormalNoiseNode', 'HLLENode', 'IdentityNode',
            'PCANode', 'PolynomialExpansionNode', 'QuadraticExpansionNode',
+           'RBFExpansionNode',
            'RBMNode', 'RBMWithLabelsNode', 'SFA2Node', 'SFANode',
            'TDSEPNode', 'TimeFramesNode','WhiteningNode', 'XSFANode',
            'LinearRegressionNode',

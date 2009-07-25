@@ -389,3 +389,22 @@ def sqrtm(A):
     """This is a symmetric definite positive matrix sqrt function"""
     d, V = mdp.utils.symeig(A)
     return mdp.utils.mult(V, mult_diag(numx.sqrt(d), V.T))
+
+# replication functions
+def lrep(x, n):
+    """Replicate x n-times on a new first dimension"""
+    shp = [1]
+    shp.extend(x.shape)
+    return x.reshape(shp).repeat(n, axis=0)
+
+def rrep(x, n):
+    """Replicate x n-times on a new last dimension"""
+    shp = x.shape + (1,)
+    return x.reshape(shp).repeat(n, axis=-1)
+
+def irep(x, n, dim):
+    """Replicate x n-times on a new dimension dim-th dimension"""
+    x_shape = x.shape
+    shp = x_shape[:dim] + (1,) + x_shape[dim:]
+    return x.reshape(shp).repeat(n, axis=dim)
+# /replication functions

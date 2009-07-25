@@ -137,7 +137,6 @@ class NodeMetaclass(type):
         wrapped_func.undecorated = wrapper_infodict
         return wrapped_func
 
-
 class Node(object):
     """A 'Node' is the basic building block of an MDP application.
 
