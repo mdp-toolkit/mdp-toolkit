@@ -495,7 +495,11 @@ class GaussianClassifierNode(Node):
 
     def _set_input_dim(self, n):
         self._input_dim = n
-        self.output_dim = n
+        self._output_dim = n
+
+    def _set_output_dim(self, n):
+        msg = "Output dim cannot be set explicitly!"
+        raise mdp.NodeException(msg)
 
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
