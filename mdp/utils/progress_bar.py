@@ -17,7 +17,6 @@ def get_termsize():
         # Does anyone know how to get the console size under windows?
         # One approach is:
         # http://code.activestate.com/recipes/440694/
-        # and what about MacOsX?   
         height, width = 24, 79
     return height, width
 
@@ -299,7 +298,7 @@ if __name__ == '__main__':
         lines.append(int(line))
         time.sleep(0.01)
     if lines != range(1000):
-        raise Exception('Something wrong with porgressinfo...' )
+        raise Exception('Something wrong with progressinfo...' )
 
     # test iterate on items
     fl = tempfile.TemporaryFile(mode='r+')
@@ -315,4 +314,4 @@ if __name__ == '__main__':
                              custom={'speed':'last'}):
         time.sleep(1)
     print 'Done.'
-        
+
