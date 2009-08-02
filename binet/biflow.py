@@ -174,6 +174,7 @@ class BiFlow(mdp.Flow):
             ## execute the flow until the nodes return value is right
             target = 0
             while True:
+                # ?? this is really difficult to read
                 result = self._execute_seq(x, msg, target=target,
                                            stop_at_node=i_node)
                 ## check, process and sanitize the execution result
@@ -630,7 +631,7 @@ class BiFlow(mdp.Flow):
         while True:
             if not isinstance(self.flow[i_node], BiNode):
                 err = ("A message was sent to a non-BiNode (" + 
-                       "(" + str(self.flow(i_node)) + "), the message is: " +
+                       "(" + str(self.flow[i_node]) + "), the message is: " +
                        str(msg))
                 raise BiFlowException(err)
             result = self.flow[i_node].message(msg)

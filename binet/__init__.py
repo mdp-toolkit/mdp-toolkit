@@ -94,6 +94,7 @@ terminated the normal flow execution will be resumed.
 
 # TODO: use special class for binet results instead of tuples???
 #    maybe using __slots__?
+# PB: YES! this would get tid of all the if len(results)==5: ...
 
 # TODO: make comments conform to RST format
 
@@ -102,6 +103,7 @@ terminated the normal flow execution will be resumed.
 # TODO: implement switchlayer, a layer where each column represents a different
 #    target, so the target value determines which nodes are used
 
+# TODO: nodes should be in binet.nodes
 
 from binode import BiNodeException, BiNode 
 from biflow import (MessageResultContainer, BiFlowException, BiFlow,
@@ -110,6 +112,7 @@ from binodes import *
 from bihinet import *
 from inspection import *
 from parallel import *
+import test
 
 del binode
 del binodes

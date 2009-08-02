@@ -111,12 +111,52 @@ class TestJumpBiNode(unittest.TestCase):
         self.assertTrue(result == stop_message_results[0][0])
         jumpnode.bi_reset()
 
+class _DummyUDNode(binet.UpDownBiNode):
+    def __init__(self, **kwargs):
+        super(_DummyUDNode, self).__init__(**kwargs)
+        self._up, self._down = 0, 0
+        self._trained = False
+    def _up_pass(self):
+        #print 'up', self._node_id
+        self._up += 1
+    def _down_pass(self):
+        #print 'down', self._node_id
+        self._down += 1
+    def _train(self, x):
+        #print 'train'
+        self._trained = True
 
+class TestUpDownNode(unittest.TestCase):
+
+    def test_updown(self):
+        NUPDOWN = 3
+        flow = binet.BiFlow([_DummyUDNode(node_id='bottom'),
+                             _DummyUDNode(),
+                             binet.TopUpDownBiNode(bottom_id='bottom')])
+        x = mdp.numx_rand.random((10,2))
+        flow.train([x, x, [x]*NUPDOWN])
+        y = flow(x)
+        
+        assert mdp.numx.all(x==y)        
+        for i in range(len(flow)-1):
+            # check that the nodes are trained
+            assert not flow[i].is_training()
+            assert not flow[i].is_bi_training()
+            assert flow[i]._trained
+            # check the number of up-down phases
+            assert flow[i]._up == NUPDOWN
+            assert flow[i]._down == NUPDOWN
+            # check that the input-output is not saved at the end of
+            # the global training
+            assert not hasattr(flow[i], '_save_x')
+            assert not hasattr(flow[i], '_save_y')
+ 
 def get_suite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(TestBiNode))
     suite.addTest(unittest.makeSuite(TestStopTrainBiNode))
     suite.addTest(unittest.makeSuite(TestJumpBiNode))
+    suite.addTest(unittest.makeSuite(TestUpDownNode))
     return suite
             
 if __name__ == '__main__':

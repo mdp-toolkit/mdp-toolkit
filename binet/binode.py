@@ -31,7 +31,7 @@ global message phase:
     If _global_message of has a kwarg named msg, then the whole remaining
     message is passed (and can be modified _in place_ by the node).
         
-The global message phase phase is entered whenever there is no target
+The global message phase is entered whenever there is no target
 specified for the message in a branch or for the stop message. When training
 terminates in a node, then any remaining global messages are also processed.
 When the flow is exited during execution any remaining global messages are
@@ -51,9 +51,11 @@ BiNode Return Value Options:
      or shorter: x, (x, msg), (x, msg, target), (x, msg, target, branch_msg)
      
  result for train:
-     terminate training for return types:
-         None, msg, (msg, target)
-     or continue execution:
+     training phase is stopped if one of the following is returned:
+         None
+         msg
+         (msg, target)
+     exceution goes on if one of the following is returned:
          (x, msg, target, branch_msg, branch_target),
          (x, msg, target, branch_msg)
      
@@ -75,7 +77,7 @@ Magic keyword arguments:
 When the incoming message is parsed by the BiNode base class, some argument
 keywords are treated in a special way:
 
- 'msg' -- If any method like _execute accept a 'msg' keyword than the complete
+ 'msg' -- If any method like _execute accept a 'msg' keyword then the complete
      remaining message (after parsing the other keywords) is supplied. The
      message in the return value then completely replaces the original message
      (instead of only updating it). This way a node can completely control the
@@ -102,6 +104,12 @@ keywords are treated in a special way:
 # TODO: Implement internal checks for node output result?
 #    Check that last element is not None? Use assume?
 #    Should this match the level of output-checking of MDP?
+
+# TODO: If no node_id is specified, a random unique identifier should
+# be provided
+
+# TODO: Control that the message is either a dictionary or None and
+# raise a meaningful exception
 
 import inspect
 
@@ -169,7 +177,7 @@ class BiNode(mdp.Node):
     def __init__(self, node_id=None, stop_msg=None, **kwargs):
         """Initialize BiNode.
         
-        _node_id -- None or string which identifies the node.
+        node_id -- None or string which identifies the node.
         stop_msg -- A msg dict which is send by stop_training.
             If the node has multiple training phases then this
             can also be a list with one entry for each training phase.
