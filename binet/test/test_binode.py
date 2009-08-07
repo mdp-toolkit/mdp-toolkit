@@ -119,9 +119,12 @@ class _DummyUDNode(binet.UpDownBiNode):
     def _up_pass(self):
         #print 'up', self._node_id
         self._up += 1
-    def _down_pass(self):
-        #print 'down', self._node_id
+    def _down_pass(self, y, top=False):
+        #print '\ndown', self._node_id
         self._down += 1
+        self._down_y = y
+        self._is_top = top
+        return y
     def _train(self, x):
         #print 'train'
         self._trained = True
@@ -131,8 +134,9 @@ class TestUpDownNode(unittest.TestCase):
     def test_updown(self):
         NUPDOWN = 3
         flow = binet.BiFlow([_DummyUDNode(node_id='bottom'),
-                             _DummyUDNode(),
-                             binet.TopUpDownBiNode(bottom_id='bottom')])
+                             _DummyUDNode(node_id='top'),
+                             binet.TopUpDownBiNode(bottom_id='bottom',
+                                                   top_id='top')])
         x = mdp.numx_rand.random((10,2))
         flow.train([x, x, [x]*NUPDOWN])
         y = flow(x)
@@ -150,7 +154,13 @@ class TestUpDownNode(unittest.TestCase):
             # the global training
             assert not hasattr(flow[i], '_save_x')
             assert not hasattr(flow[i], '_save_y')
- 
+            # check that during the down phase one receives the
+            # output of the network
+            assert mdp.numx.all(flow[i]._down_y==y)
+        # check that the 'top' message arrives at destination
+        assert not flow[0]._is_top
+        assert flow[-2]._is_top
+
 def get_suite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(TestBiNode))
