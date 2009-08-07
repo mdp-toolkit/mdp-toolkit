@@ -4,7 +4,9 @@ import binet
 # top, and every intermediate node has to save its input and output
 # during the training
 
-# TODO: handle execution checks for up/down passes: is that possible?
+#TODO: handle execution checks for up/down passes: is that possible?
+#TODO: how to define global parameters?
+#TODO: how to define changing learning rates?
 
 class UpDownBiNode(binet.BiNode):
     """A BiNode that supports an up-pass and a down-pass during learning.
@@ -36,12 +38,12 @@ class UpDownBiNode(binet.BiNode):
 
     # #### methods to override to implement algorithm
     
-    def _up_pass(self):
+    def _up_pass(self, msg=None):
         """Implement up-pass here.
         Coupled to execute"""
         pass
 
-    def _down_pass(self, y, top):
+    def _down_pass(self, y, top, msg=None):
         """
         Implement down-pass here
         Returns the top-down signal for the node preceding it in the chain.
@@ -51,14 +53,17 @@ class UpDownBiNode(binet.BiNode):
     # #### /methods to override to implement algorithm
 
     def _down_pass_hook(self, msg=None, stop=False, top=False):
-        x = self._down_pass(msg['y'], top=top)
+        y = msg['y']
+        if y is not None:
+            self._check_output(y)
+        x = self._down_pass(msg['y'], top, msg=msg)
         # continue down-pass
         if not stop:
             msg['y'] = x
             return msg, -1
 
-    def _up_pass_hook(self):
-        self._up_pass()
+    def _up_pass_hook(self, msg=None):
+        self._up_pass(msg)
         return {'method': 'up_pass_hook'}, 1
        
     # override execute to perform up-pass during learning
@@ -87,12 +92,12 @@ class TopUpDownBiNode(UpDownBiNode):
         # start down-pass from the top
         msg = {'method': 'down_pass_hook',
                 'y': None,
-                self._bottom_id+'=>stop': True}
+                self._bottom_id + '=>stop': True}
         if self._top_id is not None:
-            msg.update({self._top_id+'=>top': True})
+            msg.update({self._top_id + '=>top': True})
         return msg, 0
     
-    def _down_pass(self, y, top):
+    def _down_pass(self, y, top, msg=None):
         """
         Generate top activity for down pass.
         Default behavior: return output of the network.

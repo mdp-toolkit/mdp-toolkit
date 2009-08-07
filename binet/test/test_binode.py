@@ -1,9 +1,8 @@
 
 import unittest
 
-import numpy as n
-
 import mdp
+n = mdp.numx
 
 import binet
 
@@ -13,7 +12,7 @@ class TestBiNode(unittest.TestCase):
     def test_idnode(self):
         """Perform a basic test on the IdentityBiNode.
         
-        Instanciation is tested and it should perform like an id node, but 
+        Instantiation is tested and it should perform like an id node, but 
         accept msg arguments.
         """
         binode = binet.IdentityBiNode(node_id="testing binode")
@@ -77,7 +76,7 @@ class TestJumpBiNode(unittest.TestCase):
             if type(result) == tuple:
                 # skip y value
                 result = result[1:]
-            elif type(result) == mdp.numx.ndarray:
+            elif type(result) == n.ndarray:
                 result = None
             rec_execute_results.append(result) 
         self.assertTrue((rec_execute_results == execute_results + [None, None]))
@@ -116,10 +115,10 @@ class _DummyUDNode(binet.UpDownBiNode):
         super(_DummyUDNode, self).__init__(**kwargs)
         self._up, self._down = 0, 0
         self._trained = False
-    def _up_pass(self):
+    def _up_pass(self, msg=None):
         #print 'up', self._node_id
         self._up += 1
-    def _down_pass(self, y, top=False):
+    def _down_pass(self, y, top=False, msg=None):
         #print '\ndown', self._node_id
         self._down += 1
         self._down_y = y
@@ -141,7 +140,7 @@ class TestUpDownNode(unittest.TestCase):
         flow.train([x, x, [x]*NUPDOWN])
         y = flow(x)
         
-        assert mdp.numx.all(x==y)        
+        assert n.all(x==y)        
         for i in range(len(flow)-1):
             # check that the nodes are trained
             assert not flow[i].is_training()
@@ -156,7 +155,7 @@ class TestUpDownNode(unittest.TestCase):
             assert not hasattr(flow[i], '_save_y')
             # check that during the down phase one receives the
             # output of the network
-            assert mdp.numx.all(flow[i]._down_y==y)
+            assert n.all(flow[i]._down_y==y)
         # check that the 'top' message arrives at destination
         assert not flow[0]._is_top
         assert flow[-2]._is_top
