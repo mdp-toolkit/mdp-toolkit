@@ -30,6 +30,10 @@ class SFANode(Node):
         # set routine for eigenproblem
         self._symeig = symeig
 
+        # the time difference (in samples) which is used for
+        # calculating the temporal derivative
+        self.dt = 3
+
     
     def _get_supported_dtypes(self):
         return ['float32', 'float64']
@@ -37,7 +41,8 @@ class SFANode(Node):
     def time_derivative(self, x):
         """Compute the linear approximation of the time derivative."""
         # this is faster than a linear_filter or a weave-inline solution
-        return x[1:, :]-x[:-1, :]
+        return x[self.dt:, :]-x[:-self.dt, :]
+        #return x[1:, :]-x[:-1, :]
 
     def _set_range(self):
         if self.output_dim is not None and self.output_dim <= self.input_dim:
@@ -52,7 +57,7 @@ class SFANode(Node):
     def _train(self, x):
         ## update the covariance matrices
         # cut the final point to avoid a trivial solution in special cases
-        self._cov_mtx.update(x[:-1, :])
+        self._cov_mtx.update(x[:-self.dt, :])
         self._dcov_mtx.update(self.time_derivative(x))
 
     def _stop_training(self, debug=False):

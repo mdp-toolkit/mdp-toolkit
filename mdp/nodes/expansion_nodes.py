@@ -253,7 +253,7 @@ class GrowingNeuralGasExpansionNode(GrowingNeuralGasNode):
 
             # calculate the size of the current RBF
             pos = node.data.pos
-            sizes.append(scipy.array([ ((pos-neighbor.data.pos)**2).sum() for neighbor in node.neighbors() ]).mean())
+            sizes.append(numx.array([ ((pos-neighbor.data.pos)**2).sum() for neighbor in node.neighbors() ]).mean())
 
         # initialize the radial basis function expansion with centers and sizes
         self.rbf_expansion = mdp.nodes.RBFExpansionNode(centers = centers, sizes = sizes)
