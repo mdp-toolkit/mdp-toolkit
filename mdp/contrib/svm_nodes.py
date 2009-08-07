@@ -1,6 +1,18 @@
 import mdp
 from mdp import numx
 
+try:
+    import shogun.Kernel as sgKernel
+    import shogun.Features as sgFeatures
+    import shogun.Classifier as sgClassifier
+except ImportError:
+    pass
+    
+try:
+    import svm
+except ImportError:
+    pass
+
 class _SVMNode(mdp.Node):
     def is_invertible(self):
         return False
@@ -13,53 +25,95 @@ class _SVMNode(mdp.Node):
         msg = "Output dim cannot be set explicitly!"
         raise mdp.NodeException(msg)
 
+class _OrderedDict:
+    """Very simple version of an ordered dict."""
+    def __init__(self, items):
+        self._keys = []
+        self._vals = []
+        self.update(items)
+    def update(self, other):
+        """Update an ordered dict with new values."""
+        for entry in other:
+            if isinstance(other, dict):
+                new_key = entry
+                new_val = other[entry]
+            else:
+                new_key = entry[0]
+                new_val = entry[1]
+            if new_key in self._keys:
+                i = self._keys.index(new_key)
+                self._vals[i] = new_val
+            else:
+                self._keys.append(new_key)
+                self._vals.append(new_val)
+
 class ShogunSVMNode(_SVMNode):
-    # must be included when I know what parameters are reasonable
+    """The ShogunSVMNode works as a wrapper class for accessing the shogun library
+    for support vector machines.
+    """
+    try:
+        sgKernel, sgFeatures, sgClassifier
+    except NameError:
+        msg = "Using ShogunSVMNode requires the python_modular version of shogun to be installed."
+        raise ImportError(msg)
+    
     default_parameters = {
         'C': 1,
         'epsilon': 1e-3,
     }
-    import shogun.Kernel as Kernel
-    import shogun.Features as Features
-    import shogun.Classifier as Classifier
-    def __init__(self, svm_library="libsvm", classifier="libsvmmulti", classifier_options=(),
-                 kernel="GaussianKernel", kernel_options=(),
-                 num_threads=1, input_dim=None, dtype=None):
+    
+    # Swig-code does not work with named parameters, so we have to define an order
+    kernel_parameters = {
+        'PolyKernel': [('size',10), ('degree',3), ('inhomogene',True)],
+        'GaussianKernel': [('size',10), ('width',1)],
+        'LinearKernel': [],
+        'SigmoidKernel': [('size',10), ('gamma',1), ('coef0', 0)]
+    }
+    
+    def __init__(self, svm_library="shogun", classifier="libsvmmulticlass", classifier_options=None,
+                 kernel="GaussianKernel", kernel_options=None,
+                 num_threads="autodetect", input_dim=None, dtype=None):
         """
         Keyword arguments:
             
             svm_library -- The type of the SVM library, "libsvm" or "shogun"
+            classifier  -- The classifier to use
+            classifier_options -- Options for the classifier
+            kernel      -- The kernel to use. Default parameters are specified for
+                             "PolyKernel"
+                             "GaussianKernel"
+                             "LinearKernel"
+                             "SigmoidKernel"
+                            Further kernels are possible if they are included in shogun
+                            and if kernel_options provides the correct init arguments.
+            kernel_options -- For known kernels, a dict specifying the options is possible,
+                           options not included take a default value.
+                           Unknown kernels need an ordered list of constructor arguments.
             num_threads -- The number of threads, shogun should use
-                           can be set to "auto", then shogun will use the number of cpu cores.
-                           Attention: this will crash on windows (but it does not say so in shogun's docs)
+                           can be set to "autodetect", then shogun will use the number of cpu cores.
+                           Attention: this could crash on windows
         
         """
-#        if svm_library == "libsvm":
-#            import svm
-#        elif svm_library == "shogun":
-#            from shogun.Classifier import SVM
-#        else:
-#            msg = "SVM library '%s' is not supported!" % svm_library
-#            raise mdp.NodeException(msg)
-
+        if classifier_options is None:
+            classifier_options = {}
+        
         self._svm_library = svm_library
         self._num_threads = num_threads
         self._x = numx.array([])
         self._cl = numx.array([])
         self._norm_labels = numx.array([])
-        self.label_map = {}
+        self._label_map = {}
+        self._classification_type = "multi"
         
         self.set_classifier(classifier)
         
-        C=0.017
-        epsilon=1e-5
-        self.set_classifier_param("C", C, C)
-        self.set_classifier_param("epsilon", epsilon)
-        # TODO: user input...
+        self.classifier_options = self.default_parameters
+        self.classifier_options.update(classifier_options)
         
-        kernel_cache = 10
-        width=2.1
-        self.set_kernel("GaussianKernel", kernel_cache, width)
+        for p in self.classifier_options.keys():
+            self.set_classifier_param(p, self.classifier_options[p])
+
+        self.set_kernel(kernel, kernel_options)
         
         super(ShogunSVMNode, self).__init__(input_dim=input_dim,
                                        output_dim=None, dtype=dtype)
@@ -67,44 +121,95 @@ class ShogunSVMNode(_SVMNode):
     def set_classifier(self, name="libsvm"):
         """Sets and initialises the classifier. If a classifier is reset by the user, 
         the parameters will have to be set again.
+        name can be a string, a subclass of shogun.Classifier or an instance of such
+        a class
         """
+        self._classifier = None
+        self.svm = None
+        
+        if isinstance(name, sgClassifier.Classifier):
+            self._classifier = name.__class__
+            self.svm = name
+        
         if isinstance(name, basestring):
-            if name == "libsvm":
-                self._classifier = self.Classifier.LibSVM
-            elif name == "libsvmmulti":
-                self._classifier = self.Classifier.LibSVMMultiClass
-            else:
-                msg = "Library '%s' not known" % name
+            possibleNames = [name if name in dir(sgClassifier) else None] + \
+                            [s for s in dir(sgClassifier) if s.lower()==name.lower()]
+            for s in possibleNames:
+                try:
+                    self._classifier = getattr(sgClassifier, s)
+                    break
+                except Exception:
+                    pass
+            try:
+                self.svm = self._classifier()
+            except TypeError:
+                msg = "Library '%s' is not known." % name
                 raise mdp.NodeException(msg)
-        elif isinstance(name, type):
-            self._classifier = classifier
-        else:
-            msg = "Type not supported"
+        
+        if self._classifier is not None and self.svm is None:
+            if issubclass(name, sgClassifier.Classifier):
+                self.svm = self._classifier()
+        
+        if self._classifier is None:
+            if issubclass(name, sgClassifier.Classifier):
+                self._classifier = name
+                self.svm = self._classifier()
+        
+        if self.svm is None:
+            msg = "The classifier '%s' is not supported." %name
             raise mdp.NodeException(msg)
-        self.svm=self._classifier()
+            
+        if not issubclass(self._classifier, sgClassifier.Classifier):
+            msg = "The classifier '%s' is no subclass of CClassifier." % self._classifier.__name__
+            raise mdp.NodeException(msg)
+
+        self._set_num_threads()
+        self._classification_type = self._get_classification_type()
+
+    def _get_classification_type(self):
+        duals = ["LibSVM", "SVMLin"]
+        if self._classifier.__name__ in duals:
+            return "dual"
+        else:
+            return "multi"
+
+    def _set_num_threads(self):
         # init number of threads
-        if self._num_threads == "auto":
+        if self._num_threads == "autodetect":
             try:
                 self._num_threads = self.svm.parallel.get_num_cpus()
-            except:
+            except SystemError:
                 # We're helping shogun here
                 self._num_threads = 1
         self.svm.parallel.set_num_threads(self._num_threads)
-    
+
     def set_classifier_param(self, param, *value):
         """Sets parameters for the classifier.
         """
+        # Non-standard cases
+        if param == "C" and len(value) == 1:
+            value += value
         getattr(self.svm, "set_"+param)(*value)
 
-    def set_kernel(self, name, *options):
+    def set_kernel(self, name, options=None):
         """Sets the Kernel along with options.
         """
-        self.kernel = getattr(self.Kernel, name)(*options)
+        if options is None:
+            options = {}
+        if name in ShogunSVMNode.kernel_parameters and not isinstance(options, list):
+            default_opts = _OrderedDict(ShogunSVMNode.kernel_parameters[name])
+            default_opts.update(options)
+            print default_opts._vals
+            self.kernel = getattr(sgKernel, name)(*(default_opts._vals))
+        else:
+            self.kernel = getattr(sgKernel, name)(*options)
 
-    def _normalize_labels(self, mode):
+    def _normalize_labels(self, mode=None):
         """To avoid problems with the algorithms, we normalise the labels to a standard layout
         and take care of the mapping
         """
+        if mode == None:
+            mode = self._classification_type
         labels = set(self._cl)
         if mode == "dual":
             if len(labels) > 2:
@@ -113,17 +218,17 @@ class ShogunSVMNode(_SVMNode):
             # pop first label and reduce
             if len(labels) > 0:
                 l = labels.pop()
-                self.label_map[-1] = l
+                self._label_map[-1] = l
             if len(labels) > 0:
                 l = labels.pop()
-                self.label_map[1] = l
+                self._label_map[1] = l
             else:
                 msg = "Training your SVM with only one label is not the most sensible thing to do."
                 raise mdp.MDPWarning(msg)
         elif mode == "multi":
             count = 0
             for l in labels:
-                self.label_map[count] = l
+                self._label_map[count] = l
                 count += 1
         else:
             msg = "Remapping mode not known"
@@ -131,7 +236,7 @@ class ShogunSVMNode(_SVMNode):
 
         # now execute the mapping
         try:
-            inverted = dict([(v, k) for k, v in self.label_map.iteritems()])
+            inverted = dict([(v, k) for k, v in self._label_map.iteritems()])
         except TypeError:
             # put more elaborated code here for circumventing this issue
             msg = "Problem inverting. Labels maybe not hashable."
@@ -157,16 +262,17 @@ class ShogunSVMNode(_SVMNode):
     
     def _stop_training(self):
         self._reshape_data()
-        if self._classifier == self.Classifier.LibSVM:
-            self._normalize_labels("dual")
+        self._normalize_labels()
+        
+        self.features = sgFeatures.RealFeatures(self._x.transpose())
+        
+        if issubclass(self._classifier, sgClassifier.LinearClassifier):
+            self.svm.set_features(self.features)
         else:
-            self._normalize_labels("multi")
-
-        self.features = self.Features.RealFeatures(self._x.transpose())
-        self.kernel.init(self.features, self.features)
-        self.svm.set_kernel(self.kernel)
+            self.kernel.init(self.features, self.features)
+            self.svm.set_kernel(self.kernel)
         # shogun expects floats
-        labels = self.Features.Labels(self._norm_labels.astype(float))
+        labels = sgFeatures.Labels(self._norm_labels.astype(float))
         self.svm.set_labels(labels)
         
         self.svm.train()
@@ -210,14 +316,23 @@ class ShogunSVMNode(_SVMNode):
         """
         self._pre_execution_checks(x)
         
-        test = self.Features.RealFeatures(x.transpose())
-        self.kernel.init(self.features, test)
+        test = sgFeatures.RealFeatures(x.transpose())
+        if issubclass(self._classifier, sgClassifier.LinearClassifier):
+            self.svm.set_features(self.features)
+        else:
+            self.kernel.init(self.features, test)
 
-#       still problems with the backmapping 
-#        labels = map(self.label_map.get, self.svm.classify().get_labels())
-
-        return self.svm.classify().get_labels()
+#       still some problems with the backmapping 
+        if self._classification_type == "dual":
+            return self.svm.classify().get_labels()
+        else:
+            labels = map(self._label_map.get, self.svm.classify().get_labels())
+            return labels
 
 
 class LibSVMNode(_SVMNode):
-    import svm
+    try:
+        svm
+    except NameError:
+        msg = "Using LibSVMNode requires the python binding of LibSVM to be installed."
+        raise ImportError(msg)
