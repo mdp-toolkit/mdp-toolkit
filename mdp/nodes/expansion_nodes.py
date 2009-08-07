@@ -1,6 +1,7 @@
 import mdp
 from mdp import numx, numx_linalg, utils
 from mdp.utils import mult, matmult
+from neural_gas_nodes import GrowingNeuralGasNode
 
 def nmonomials(degree, nvariables):
     """Return the number of monomials of a given degree in a given number
@@ -25,7 +26,7 @@ class _ExpansionNode(mdp.Node):
 
     def is_invertible(self):
         return False
-            
+
     def _set_input_dim(self, n):
         self._input_dim = n
         self._output_dim = self.expanded_dim(n)
@@ -187,6 +188,81 @@ class RBFExpansionNode(mdp.Node):
                 tmp = (dist*matmult(dist, s[i,:,:])).sum(axis=1)
             y[:,i] = numx.exp(-0.5*tmp)
         return y
+
+class GrowingNeuralGasExpansionNode(GrowingNeuralGasNode):
+
+    """
+    Perform a trainable radial basis expansion, where the centers and
+    sizes of the basis functions are learned through a growing neural
+    gas.
+    
+    positions of RBFs - position of the nodes of the neural gas
+    sizes of the RBFs - mean distance to the neighbouring nodes.
+
+    Important: Adjust the maximum number of nodes to control the
+    dimension of the expansion
+
+    More information on this expansion type can be found in
+
+    B. Fritzke:
+    Growing cell structures-a self-organizing network for unsupervised and supervised learning
+    Neural Networks 7, p. 1441--1460 (1994)
+    """
+
+    def __init__(self, start_poss=None, eps_b=0.2, eps_n=0.006, max_age=50,
+                 lambda_=100, alpha=0.5, d=0.995, max_nodes=100,
+                 input_dim=None, dtype=None):
+        """
+        For a list of input arguments please check the documentation
+        of GrowingNeuralGasNode.
+        """
+        # __init__ is overwritten only to reset the default for
+        # max_nodes. The default of the GrowingNeuralGasNode is
+        # practically unlimited, possibly leading to very
+        # high-dimensional expansions.
+        super(GrowingNeuralGasExpansionNode,self).__init__(start_poss=start_poss, eps_b=eps_b, eps_n=eps_n, max_age=max_age,
+                 lambda_=lambda_, alpha=alpha, d=d, max_nodes=max_nodes,
+                 input_dim=input_dim, dtype=dtype)
+
+    def _set_input_dim(self, n):
+
+        # Needs to be overwritten because GrowingNeuralGasNode would
+        # fix the output dim to n here.
+        self._input_dim = n
+
+    def is_trainable(self):
+        return True
+
+    def is_invertible(self):
+        return False
+
+    def _stop_training(self):
+        
+        super(GrowingNeuralGasExpansionNode, self)._stop_training()
+
+        # set the output dimension to the number of nodes of the neural gas
+        self.output_dim = self.get_nodes_position().shape[0]
+        
+        # use the nodes of the learned neural gas as centers for a radial basis function expansion.
+        centers = self.get_nodes_position()
+        
+        # use the mean distances to the neighbours as size of the RBF expansion
+        sizes = []
+
+        for i,node in enumerate(self.graph.nodes):
+
+            # calculate the size of the current RBF
+            pos = node.data.pos
+            sizes.append(scipy.array([ ((pos-neighbor.data.pos)**2).sum() for neighbor in node.neighbors() ]).mean())
+
+        # initialize the radial basis function expansion with centers and sizes
+        self.rbf_expansion = mdp.nodes.RBFExpansionNode(centers = centers, sizes = sizes)
+
+    def _execute(self,x):
+        
+        return self.rbf_expansion(x)
+
+
         
 ### old weave inline code to perform a quadratic expansion
 

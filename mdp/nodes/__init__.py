@@ -1,5 +1,5 @@
 from expansion_nodes import (QuadraticExpansionNode, PolynomialExpansionNode,
-                             RBFExpansionNode)
+                             RBFExpansionNode, GrowingNeuralGasExpansionNode)
 from pca_nodes import WhiteningNode, PCANode
 from sfa_nodes import SFANode, SFA2Node
 from ica_nodes import ICANode, CuBICANode, FastICANode, TDSEPNode
