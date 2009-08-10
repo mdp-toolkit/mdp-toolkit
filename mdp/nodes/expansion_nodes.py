@@ -213,8 +213,13 @@ class GrowingNeuralGasExpansionNode(GrowingNeuralGasNode):
                  lambda_=100, alpha=0.5, d=0.995, max_nodes=100,
                  input_dim=None, dtype=None):
         """
-        For a list of input arguments please check the documentation
+        For a full list of input arguments please check the documentation
         of GrowingNeuralGasNode.
+
+        max_nodes (default 100) : maximum number of nodes in the
+                                  neural gas, therefore an upper bound
+                                  to the output dimension of the
+                                  expansion.
         """
         # __init__ is overwritten only to reset the default for
         # max_nodes. The default of the GrowingNeuralGasNode is
