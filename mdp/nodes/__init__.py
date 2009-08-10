@@ -20,7 +20,7 @@ from expansion_nodes import expanded_dim as _expanded_dim
 
 # import contributed nodes
 import mdp
-from mdp.contrib import JADENode, NIPALSNode, LLENode, HLLENode, XSFANode
+from mdp.contrib import *
 
 # clean up namespace
 del expansion_nodes
@@ -34,7 +34,7 @@ del misc_nodes
 del isfa_nodes
 del rbm_nodes
 del regression_nodes
-del mdp.contrib
+#del mdp.contrib
 del mdp
 
 __all__ = ['CuBICANode', 'EtaComputerNode', 'FANode', 'FDANode', 'FastICANode',

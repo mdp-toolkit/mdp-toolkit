@@ -1,17 +1,10 @@
 import mdp
 from mdp import numx
 
-try:
-    import shogun.Kernel as sgKernel
-    import shogun.Features as sgFeatures
-    import shogun.Classifier as sgClassifier
-except ImportError:
-    pass
-    
-try:
-    import svm
-except ImportError:
-    pass
+import shogun.Kernel as sgKernel
+import shogun.Features as sgFeatures
+import shogun.Classifier as sgClassifier
+import svm
 
 class _SVMNode(mdp.Node):
     def is_invertible(self):
