@@ -62,6 +62,7 @@ class PPScheduler(scheduling.Scheduler):
         def execute_task(task):
             """Call the first args entry and return the return value."""
             data, task_callable, task_index = task
+            task_callable.setup_environment()
             return task_callable(data), task_index
         task_submitted = False
         while not task_submitted:

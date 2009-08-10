@@ -159,59 +159,67 @@ span.memorycolor {
 }
 '''
 
-# Functions to define how the node parameters are represented in the
-# HTML representation of a node.
-# The return value is list of strings, each string representing a single line.
-# Of course you can also put everything in a single string (in a list) and
-# include all the required HTML formatting.
-#
-# Note that the list is worked starting from the end (so subclasses can
-# be appended to the end of the list to override their parent class writer).
-    
-def _get_html_rect2dswitchboard(node):
-    lines = ['rec. field size (in channels): %d x %d = %d' % 
-                (node.x_field_channels, node.y_field_channels,
-                 node.x_field_channels * node.y_field_channels),
-             '# of rec. fields (output channels): %d x %d = %d' %
-                (node.x_out_channels, node.y_out_channels,
-                 node.x_out_channels * node.y_out_channels),
-             'rec. field distances (in channels): (%d, %d)' %
-                (node.x_field_spacing, node.y_field_spacing),
-             'channel width: %d' % node.in_channel_dim]
-    if node.x_unused_channels or node.y_unused_channels:
-        lines.append('unused channels: (%d, %d)' %
-                     (node.x_unused_channels, node.y_unused_channels))
-    return lines
-    
-def _get_html_sfa2(node):
-    return ['expansion dim: ' + str(node._expnode.output_dim)]
-    
-def _get_html_normalnoise(node):
-    return ['noise level: ' + str(node.noise_args[1]),
-            'noise offset: ' + str(node.noise_args[0])]
-    
-def _get_html_cutoff(node):
-    return ['lower bound: ' + str(node.lower_bound),
-            'upper bound: ' + str(node.upper_bound)]
-    
-def _get_html_histogram(node):
-    return ['history data fraction: ' + str(node.hist_fraction)]
-    
-def _get_html_adaptivecutoff(node):
-    return ['lower cutoff fraction: ' + str(node.lower_cutoff_fraction), 
-            'upper cutoff fraction: ' + str(node.upper_cutoff_fraction), 
-            'history data fraction: ' + str(node.hist_fraction)]
-    
-# (node class type, write function)
-NODE_HTML_TRANSLATORS = [
-    (switchboard.Rectangular2dSwitchboard, _get_html_rect2dswitchboard),
-    (mdp.nodes.SFA2Node, _get_html_sfa2),
-    (mdp.nodes.NormalNoiseNode, _get_html_normalnoise),
-    (mdp.nodes.CutoffNode, _get_html_cutoff),
-    (mdp.nodes.HistogramNode, _get_html_histogram),
-    (mdp.nodes.AdaptiveCutoffNode, _get_html_adaptivecutoff)
-]
 
+class  HTMLExtensionNode(mdp.ExtensionNode, mdp.Node):
+    """Extension node for HTML representations of individual nodes."""
+    
+    extension_name = "html_representation"
+    
+    def html_representation(self):
+        """Return an HTML representation of the node."""
+        html_repr = self._html_representation()
+        if type(html_repr) is str:
+            return html_repr
+        else:
+            return " <br>\n".join(html_repr)
+            
+    def _html_representation(self):
+        """Return either the final HTML code or a list of HTML lines."""
+        return ""
+    
+    
+@mdp.extension_method("html_representation",
+                      switchboard.Rectangular2dSwitchboard)
+def _html_representation(self):
+    lines = ['rec. field size (in channels): %d x %d = %d' % 
+                (self.x_field_channels, self.y_field_channels,
+                 self.x_field_channels * self.y_field_channels),
+             '# of rec. fields (output channels): %d x %d = %d' %
+                (self.x_out_channels, self.y_out_channels,
+                 self.x_out_channels * self.y_out_channels),
+             'rec. field distances (in channels): (%d, %d)' %
+                (self.x_field_spacing, self.y_field_spacing),
+             'channel width: %d' % self.in_channel_dim]
+    if self.x_unused_channels or self.y_unused_channels:
+        lines.append('unused channels: (%d, %d)' %
+                     (self.x_unused_channels, self.y_unused_channels))
+    return lines
+
+@mdp.extension_method("html_representation", mdp.nodes.SFA2Node)
+def _html_representation(self):
+    return 'expansion dim: ' + str(self._expnode.output_dim)
+
+@mdp.extension_method("html_representation",
+                      mdp.nodes.NormalNoiseNode)   
+def _html_representation(self):
+    return ['noise level: ' + str(self.noise_args[1]),
+            'noise offset: ' + str(self.noise_args[0])]
+
+@mdp.extension_method("html_representation", mdp.nodes.CutoffNode) 
+def _html_representation(self):
+    return ['lower bound: ' + str(self.lower_bound),
+            'upper bound: ' + str(self.upper_bound)]
+
+@mdp.extension_method("html_representation", mdp.nodes.HistogramNode)   
+def _html_representation(self):
+    return 'history data fraction: ' + str(self.hist_fraction)
+
+@mdp.extension_method("html_representation", mdp.nodes.AdaptiveCutoffNode)
+def _html_representation(self):
+    return ['lower cutoff fraction: ' + str(self.lower_cutoff_fraction), 
+            'upper cutoff fraction: ' + str(self.upper_cutoff_fraction), 
+            'history data fraction: ' + str(self.hist_fraction)]
+    
 
 class NewlineWriteFile(object):
     """Decorator for file-like object.
@@ -238,20 +246,11 @@ class HiNetHTMLTranslator(HiNetTranslator):
     written to a provided file.
     """
     
-    def __init__(self, node_param_translators=NODE_HTML_TRANSLATORS,
-                 show_size=False):
+    def __init__(self, show_size=False):
         """Initialize the HMTL translator.
         
-        node_param_translators -- List of tuples, the first tuple entry beeing
-            the node type and the second a functions that translates the the
-            internal node parameters into HTML. The function returns a list
-            of HTML lines, which are then written into the HTML file.
-            Note that the list is worked starting from the end (so subclasses 
-            can be appended to the end of the list to override their parent 
-            class).
         show_size -- Show the approximate memory footprint of all nodes.
         """
-        self._node_param_translators = node_param_translators
         self.show_size = show_size
         self._html_file = None
         
@@ -265,12 +264,9 @@ class HiNetHTMLTranslator(HiNetTranslator):
         self._translate_flow(flow)
         self._html_file = None
     
-    def add_node_param_translators(self, node_param_translators):
-        """Append more node_param_translators (see __init__)."""
-        self._node_param_translators += node_param_translators  
-        
     # overwrite private methods
     
+    @mdp.with_extension("html_representation")
     def _translate_flow(self, flow):
         """Translate the flow into HTML and write it into the internal file.
         
@@ -337,11 +333,7 @@ class HiNetHTMLTranslator(HiNetTranslator):
         f.write(str(node))
         f.write('</td></tr>')
         f.write('<tr><td class="nodeparams">')
-        for node_param_trans in self._node_param_translators[::-1]:
-            if isinstance(node, node_param_trans[0]):
-                html_params = " <br>\n".join(node_param_trans[1](node))
-                f.write(html_params)
-                break
+        f.write(node.html_representation())
         f.write('</td></tr>')
         self._close_node_env(node)
         

@@ -15,7 +15,25 @@ import parallelhinet
 
 ### Train task classes ###
 
-class FlowTrainCallable(scheduling.TaskCallable):
+class FlowTaskCallable(scheduling.TaskCallable):
+    """Base class for all flow callables.
+    
+    It deals activating the required extensions.
+    """
+    
+    def __init__(self):
+        """Store the currently active extensions."""
+        self._used_extensions = mdp.get_active_extension_names()
+        super(FlowTaskCallable, self).__init__()
+        
+    def setup_environment(self):
+        """Activate the used extensions."""
+        # deactivate all active extensions for safety
+        mdp.deactivate_extensions(mdp.get_active_extension_names())
+        mdp.activate_extensions(self._used_extensions)
+
+
+class FlowTrainCallable(FlowTaskCallable):
     """Implements a single training phase in a flow for a data block.
     
     A ParallelFlowNode is used to simplify the forking process and to 
@@ -31,7 +49,8 @@ class FlowTrainCallable(scheduling.TaskCallable):
         flownode -- FlowNode containing the flow to be trained.
         """
         self._flownode = flownode
-    
+        super(FlowTrainCallable, self).__init__()
+        
     def __call__(self, data):
         """Do the training and return only the trained node.
         
@@ -77,7 +96,7 @@ class NodeResultContainer(scheduling.ResultContainer):
 
 ### Execute task classes ###
 
-class FlowExecuteCallable(scheduling.TaskCallable):
+class FlowExecuteCallable(FlowTaskCallable):
     """Implements data execution through the whole flow.
     
     Note that one could also pass the flow itself as the callable, so this 
@@ -92,10 +111,13 @@ class FlowExecuteCallable(scheduling.TaskCallable):
         keyword arguments:
         flow -- flow instance for the execution
         nodenr -- optional nodenr argument for the flow execute method
+        extensions -- List of the names of the extensions required by the
+            callable. These are then activated by setup_environment.
         """
         self._flow = flow
         self._nodenr = nodenr
-    
+        super(FlowExecuteCallable, self).__init__()
+        
     def __call__(self, x):
         """Return the execution result.
         
@@ -161,6 +183,7 @@ class ParallelFlow(mdp.Flow):
         self._train_callable_class = None
         self._execute_callable_class = None
     
+    @mdp.with_extension("parallel")
     def train(self, data_iterables, scheduler=None, 
               train_callable_class=None,
               overwrite_result_container=True,
@@ -325,11 +348,7 @@ class ParallelFlow(mdp.Flow):
                 continue
             data_iterable = self._train_data_iterables[self._i_train_node]
             try:
-                # test if node can be forked
-                if isinstance(current_node, parallelnodes.ParallelNode):
-                    self._flownode.fork()
-                else:
-                    raise parallelnodes.TrainingPhaseNotParallelException()
+                self._flownode.fork()
                 # fork successful, prepare parallel training
                 if self.verbose:
                     print ("start parallel training phase of " +
@@ -355,8 +374,10 @@ class ParallelFlow(mdp.Flow):
                 self._next_task = (task_data_chunk,
                             self._train_callable_class(self._flownode.fork()))
                 break
-            except parallelnodes.TrainingPhaseNotParallelException:
+            except parallelnodes.TrainingPhaseNotParallelException, e:
                 if self.verbose:
+                    print ("could not fork node no. %d: %s" %
+                           (self._i_train_node+1, str(e)))
                     print ("start nonparallel training phase of " + 
                            "node no. %d in parallel flow" % 
                            (self._i_train_node+1))
@@ -405,6 +426,7 @@ class ParallelFlow(mdp.Flow):
         except StopIteration:
             return None
             
+    @mdp.with_extension("parallel")
     def execute(self, iterable, nodenr=None, scheduler=None, 
                 execute_callable_class=None,
                 overwrite_result_container=True):

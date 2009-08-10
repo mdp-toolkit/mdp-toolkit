@@ -25,7 +25,7 @@ class BiFlowTrainTaskException(Exception):
     pass
     
     
-class BiFlowTrainCallable(parallel.TaskCallable):
+class BiFlowTrainCallable(parallel.FlowTaskCallable):
     """Task implementing a single training phase in a flow for a data block."""
 
     def __init__(self, biflownode, purge_nodes=True):
@@ -37,7 +37,8 @@ class BiFlowTrainCallable(parallel.TaskCallable):
         """
         self._biflownode = biflownode
         self._purge_nodes = purge_nodes
-    
+        super(BiFlowTrainCallable, self).__init__()
+        
     def __call__(self, data):
         """Do the training and return the purged BiFlowNode.
         
@@ -94,7 +95,7 @@ class BiFlowExecuteTaskException(Exception):
     pass
     
     
-class BiFlowExecuteCallable(parallel.TaskCallable):
+class BiFlowExecuteCallable(parallel.FlowTaskCallable):
     """Task implementing data execution for a BiFlowNode."""
 
     def __init__(self, biflownode, purge_nodes=True):
@@ -106,6 +107,7 @@ class BiFlowExecuteCallable(parallel.TaskCallable):
         """
         self._biflownode = biflownode
         self._purge_nodes = purge_nodes
+        super(BiFlowExecuteCallable, self).__init__()
         
     def __call__(self, data):
         """Return the execution result and the BiFlowNode as a tuple.
@@ -193,7 +195,8 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
         self._exec_msg_iterator = None
         self._exec_target_iterator = None
         super(ParallelBiFlow, self).__init__(flow, verbose=verbose, **kwargs)
-        
+    
+    @mdp.with_extension("parallel")
     def train(self, data_iterables, msg_iterables=None, 
               stop_messages=None,
               scheduler=None,
@@ -382,11 +385,7 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
             iterable, msg_iterable, _ = self._sanitize_iterables(iterable, 
                                                                  msg_iterable)
             try:
-                # test if node can be forked
-                if isinstance(current_node, parallel.ParallelNode):
-                    self._flownode.fork()
-                else:
-                    raise parallel.TrainingPhaseNotParallelException()
+                self._flownode.fork()
                 # fork successful, prepare parallel training
                 if self.verbose:
                     print ("start parallel training phase of " +
@@ -417,8 +416,10 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
                             self._train_callable_class(self._flownode.fork(),
                                                        purge_nodes=True))
                 break
-            except parallel.TrainingPhaseNotParallelException:
+            except parallel.TrainingPhaseNotParallelException, e:
                 if self.verbose:
+                    print ("could not fork node no. %d: %s" %
+                           (self._i_train_node + 1, str(e)))
                     print ("start nonparallel training phase of " + 
                            "node no. %d in parallel flow" % 
                            (self._i_train_node+1))

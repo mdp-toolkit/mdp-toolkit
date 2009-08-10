@@ -11,9 +11,7 @@ inspect_execution or the simpler show_execution.
 """
 
 
-from bihinet_translator import (BINET_STYLE, BINODE_HTML_TRANSLATORS,
-                                NODE_HTML_TRANSLATORS,
-                                BiNetHTMLTranslator)
+from bihinet_translator import (BINET_STYLE, BiNetHTMLTranslator)
 from trace_inspection import (prepare_training_inspection,
                               remove_inspection_residues,
                               BiNetTraceDebugException,

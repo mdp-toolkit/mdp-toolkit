@@ -23,7 +23,7 @@ class DummyNode(mdp.Node):
         return False
 
 
-class ParallelBiFlowNode(BiFlowNode, parallel.ParallelNode):
+class ParallelBiFlowNode(BiFlowNode, parallel.ParallelExtensionNode):
     
     def fork(self):
         """Return a new instance of this node for remote training or execution.
@@ -48,20 +48,9 @@ class ParallelBiFlowNode(BiFlowNode, parallel.ParallelNode):
         node_list = []
         for i_node, node in enumerate(self._flow):
             if i_node == i_train_node:
-                if isinstance(node, parallel.ParallelNode):
-                    node_list.append(node.fork())
-                else:
-                    err = ("No fork possible for for node " +
-                           "no. %d in ParallelBiFlowNode."  % (i_train_node+1))
-                    raise parallel.TrainingPhaseNotParallelException(err)
+                node_list.append(node.fork())
             elif isinstance(node, BiNode) and node.is_bi_training():
-                if isinstance(node, parallel.ParallelNode):
-                    node_list.append(node.fork())
-                else:
-                    err = ("BiNode no. %d " % (i_node + 1) +
-                           "in ParallelBiFlowNode is bi-training but is not " +
-                           "derived from ParallelNode, no fork possible.")
-                    raise BiLearningPhaseNotParallelException(err)
+                node_list.append(node.fork())
             else:
                 node_list.append(node)
         return ParallelBiFlowNode(BiFlow(node_list))
@@ -94,7 +83,7 @@ class ParallelBiFlowNode(BiFlowNode, parallel.ParallelNode):
                 self._flow[i_node] = DummyNode()
                 
                 
-class ParallelCloneBiLayer(CloneBiLayer, parallel.ParallelNode):
+class ParallelCloneBiLayer(CloneBiLayer, parallel.ParallelExtensionNode):
     """Parallel version of CloneBiLayer.
     
     This class also adds support for calling switch_to_instance during training,

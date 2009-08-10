@@ -127,35 +127,9 @@ class BiNodeException(mdp.NodeException):
 
 
 # methods that can overwrite docs:
-DOC_METHODS = ['_train', '_stop_training', '_execute', '_inverse',
-               '_message', '_stop_message', '_global_message']
+mdp.NodeMetaclass.DOC_METHODS += ['_message', '_stop_message',
+                                  '_global_message']
 
-class BiNodeMetaClass(mdp.NodeMetaclass):
-    """Custom BiNode metaclass to deal with the special signature handling."""
-    
-    def __new__(cls, classname, bases, members):
-        for privname in DOC_METHODS:
-            if privname in members:
-                priv_info = cls._get_infodict(members[privname])
-                if not priv_info['doc']:
-                    continue
-                pubname = privname[1:]
-                if pubname in members:
-                    continue
-                for base in bases:
-                    ancestor = base.__dict__
-                    if pubname in ancestor:
-                        # preserve the signature (in addition to name)
-                        pub_info = cls._get_infodict(ancestor[pubname])
-                        priv_info['name'] = pub_info['name']
-                        priv_info['signature'] = pub_info['signature']
-                        priv_info['argnames'] = pub_info['argnames']
-                        priv_info['defaults'] = pub_info['defaults']
-                        members[pubname] = cls._wrap_func(ancestor[pubname], 
-                                                          priv_info)
-                        break
-        return type.__new__(cls, classname, bases, members)
-    
     
 class BiNode(mdp.Node):
     """Abstract base class for all bidirectional nodes.
@@ -171,8 +145,6 @@ class BiNode(mdp.Node):
     messsage. Note that BiNode has to come first in the MRO to make all this
     work.
     """
-    
-    __metaclass__ = BiNodeMetaClass
     
     def __init__(self, node_id=None, stop_msg=None, **kwargs):
         """Initialize BiNode.

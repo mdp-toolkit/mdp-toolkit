@@ -29,8 +29,8 @@ class TestParallelBiFlow(unittest.TestCase):
         
         The node with multiple training phases is a hinet.FlowNode. 
         """
-        sfa_node = mdp.parallel.ParallelSFANode(input_dim=10, output_dim=8)
-        sfa2_node = mdp.parallel.ParallelSFA2Node(input_dim=8, output_dim=6)
+        sfa_node = mdp.nodes.SFANode(input_dim=10, output_dim=8)
+        sfa2_node = mdp.nodes.SFA2Node(input_dim=8, output_dim=6)
         flownode = binet.ParallelBiFlowNode(binet.BiFlow([sfa_node, 
                                                           sfa2_node]))
         flow = binet.ParallelBiFlow([flownode,

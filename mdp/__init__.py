@@ -120,11 +120,16 @@ import utils
 # import exceptions from nodes and flows
 from signal_node import (NodeException, TrainingException,
                          TrainingFinishedException, IsNotTrainableException,
-                         IsNotInvertibleException)
+                         IsNotInvertibleException, ExtensionException)
 from linear_flows import CrashRecoveryException, FlowException, FlowExceptionCR
 
 # import base node and flow classes.
-from signal_node import NodeMetaclass, Node, Cumulator
+from signal_node import (NodeMetaclass, Node, Cumulator,
+                         extension_method, ExtensionNodeMetaclass,
+                         ExtensionNode, get_extensions,
+                         get_active_extension_names, with_extension,
+                         activate_extension, deactivate_extension,
+                         activate_extensions, deactivate_extensions)
 from linear_flows import (Flow, CheckpointFlow,
                           CheckpointFunction, CheckpointSaveFunction)
 
@@ -151,7 +156,11 @@ __all__ = ['CheckpointFlow', 'CheckpointFunction', 'CheckpointSaveFunction',
            'NodeException', 'TrainingException', 'TrainingFinishedException',
            'contrib', 'get_eta', 'graph', 'helper_funcs', 'hinet', 'nodes', 
            'numx_description', 'pca', 'sfa', 'test', 'utils', 'whitening',
-           'parallel', 'numx_version']
+           'parallel', 'numx_version',
+           'extension_method', 'ExtensionNodeMetaclass', 'ExtensionNode',
+           'get_extensions', 'get_active_extension_names', 'with_extension',
+           'activate_extension', 'deactivate_extension', 'activate_extensions',
+           'deactivate_extensions']
 
 __version__ = '2.6'
 __revision__ = utils.get_svn_revision()

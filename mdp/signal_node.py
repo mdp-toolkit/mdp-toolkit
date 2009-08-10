@@ -1,7 +1,10 @@
 import cPickle as _cPickle
 import inspect as _inspect
+import types
+
 import mdp
 from mdp import numx
+
 
 class NodeException(mdp.MDPException):
     """Base class for exceptions in Node subclasses."""
@@ -27,9 +30,6 @@ class IsNotInvertibleException(NodeException):
     pass
 
 
-# methods that can overwrite docs:
-DOC_METHODS = ['_train', '_stop_training', '_execute', '_inverse']
-
 class NodeMetaclass(type):
     """This Metaclass is meant to overwrite doc strings of methods like
     execute, stop_training, inverse with the ones defined in the corresponding
@@ -38,14 +38,17 @@ class NodeMetaclass(type):
     This makes it possible for subclasses of Node to document the usage
     of public methods, without the need to overwrite the ancestor's methods.
     """
+
+    # methods that can overwrite docs:
+    DOC_METHODS = ['_train', '_stop_training', '_execute', '_inverse']
     
-    def __new__(mcl, classname, bases, members):
+    def __new__(cls, classname, bases, members):
         # select private methods that can overwrite the docstring
-        for privname in DOC_METHODS:
+        for privname in cls.DOC_METHODS:
             if privname in members:
                 # the private method is present in the class
                 # inspect the private method
-                priv_info = mcl._get_infodict(members[privname])
+                priv_info = cls._get_infodict(members[privname])
                 # if the docstring is empty, don't overwrite it
                 if not priv_info['doc']:
                     continue
@@ -64,11 +67,17 @@ class NodeMetaclass(type):
                         # with docs, argument defaults, and signature of the
                         # private method and name of the public method.
                         priv_info['name'] = pubname
-                        members[pubname] = mcl._wrap_func(ancestor[pubname], 
+                        # preserve signature, this is used in binet
+                        pub_info = cls._get_infodict(ancestor[pubname])
+                        priv_info['signature'] = pub_info['signature']
+                        priv_info['argnames'] = pub_info['argnames']
+                        priv_info['defaults'] = pub_info['defaults']
+                        members[pubname] = cls._wrap_func(ancestor[pubname], 
                                                           priv_info)
                         break
-        return type.__new__(mcl, classname, bases, members)
-    
+        return super(NodeMetaclass, NodeMetaclass).__new__(cls, classname,
+                                                           bases, members)
+
     # The next two functions (originally called get_info, wrapper)
     # are adapted versions of functions in the
     # decorator module by Michele Simionato
@@ -205,7 +214,7 @@ class Node(object):
             self._train_phase_started = False
             # this var is False if the complete training is finished
             self._training = True
-
+            
     ### properties
 
     def get_input_dim(self):
@@ -604,6 +613,7 @@ class Node(object):
             _cPickle.dump(self, flh, protocol)
             flh.close()
 
+
 class Cumulator(Node):
     """A Cumulator is a Node whose training phase simply collects
     all input data. In this way it is possible to easily implement
@@ -628,3 +638,214 @@ class Cumulator(Node):
         """Transform the data list to an array object and reshape it."""
         self.data = numx.array(self.data, dtype = self.dtype)
         self.data.shape = (self.tlen, self.input_dim)
+        
+
+### Extension Mechanism ###
+
+# TODO: more unittests for the extension mechanism
+# TODO: in the future could use ABC's to register nodes with extension nodes
+# TODO: allow optional setup and restore methods that are called for a node
+#    when the extension is activated. This could for example add special
+#    attributes.
+
+
+# dict of dicts of dicts, contains a key for each extension,
+# the inner dict maps the node types to their extension node,
+# the innermost dict then maps method names to functions
+_extensions = dict()
+_active_extension_names = []
+
+
+class ExtensionException(mdp.MDPException):
+    """Base class for extension related exceptions."""
+    pass
+
+
+def _register_function(ext_name, node_cls, func):
+    """Register a function as an extension method.
+    
+    ext_name -- String with the name of the extension.
+    node_cls -- Node class for which the method should be registered.
+    func -- Function to be registered as an extension method.
+    """
+    global _extensions
+    method_name = func.__name__
+    # perform safety check
+    if method_name in node_cls.__dict__:
+        original_method = getattr(node_cls, method_name)
+        if not isinstance(original_method, types.MethodType):
+            err = ("Extension method " + method_name + " tries to "
+                   "override non-method attribute in class " +
+                   str(node_cls))
+            raise ExtensionException(err)
+    _extensions[ext_name][node_cls][method_name] = func
+    # do not set this now to be more flexibel
+    func.__ext_original_method = None
+    func.__ext_extension_name = ext_name
+
+def extension_method(ext_name, node_cls):
+    """Returns a function to register a function as extension method.
+    
+    This function is intendet to be used with the decorator syntax.
+    
+    ext_name -- String with the name of the extension.
+    node_cls -- Node class for which the method should be registered.
+    """
+    def register_function(func):
+        global _extensions
+        # TODO: enforce registration via ExtensionClass?
+        if not ext_name in _extensions:
+            err = ("No ExtensionNode base class has been defined for this "
+                   "extension.")
+            raise ExtensionException(err)
+#            # register new extension
+#            _extensions[ext_name] = dict()
+        if not node_cls in _extensions[ext_name]:
+            # register this node
+            _extensions[ext_name][node_cls] = dict()
+        _register_function(ext_name, node_cls, func)
+        return func
+    return register_function
+
+
+class ExtensionNodeMetaclass(NodeMetaclass):
+    """This is the metaclass for node extension superclasses.
+    
+    It takes care of registering extensions and the methods in the
+    extension.
+    """
+    
+    def __new__(cls, classname, bases, members):
+        """Create new node classes and register extensions.
+        
+        If a concrete extension node is created then a corresponding mixin
+        class is automatically created and registered.
+        """
+        global _extensions
+        if classname == "ExtensionNode":
+            # initial creation of ExtensionNode class
+            return super(ExtensionNodeMetaclass, ExtensionNodeMetaclass). \
+                        __new__(cls, classname, bases, members)
+        if ExtensionNode in bases:
+            ext_name = members["extension_name"]
+            if ext_name not in _extensions:
+                # creation of a new extension, add entry in dict
+                _extensions[ext_name] = dict()
+        # find node that this extension is for
+        base_node_cls = None
+        for base in bases:
+            if type(base) is not ExtensionNodeMetaclass:
+                if base_node_cls is None:
+                    base_node_cls = base
+                else:
+                    err = ("Extension node derived from multiple "
+                           "normal nodes.")
+                    raise ExtensionException(err)
+        if base_node_cls is None:
+            return super(ExtensionNodeMetaclass, ExtensionNodeMetaclass). \
+                        __new__(cls, classname, bases, members)
+        ext_node_cls = super(ExtensionNodeMetaclass, ExtensionNodeMetaclass). \
+                        __new__(cls, classname, bases, members)
+        ext_name = ext_node_cls.extension_name
+        if not ext_name:
+            err = "No extension name has been specified."
+            raise ExtensionException(err)
+        if not base_node_cls in _extensions[ext_name]:
+            # register the base node
+            _extensions[ext_name][base_node_cls] = dict()
+        # register methods
+        for member in members.values():
+            if isinstance(member, types.FunctionType):
+                _register_function(ext_name, base_node_cls, member)
+        return ext_node_cls
+                                                     
+
+class ExtensionNode(object):
+    """Base class for extensions nodes.
+    
+    A new extension node class should override the _extension_name.
+    The concrete node implementations are then derived from this extension
+    node class.
+    """
+    __metaclass__ = ExtensionNodeMetaclass
+    # override this name in a concrete extension node base class
+    extension_name = None
+
+
+def get_extensions():
+    """Return a dict with the currently registered extensions."""
+    return _extensions
+
+def get_active_extension_names():
+    """Return a list with the names of the activated extensions."""
+    return _active_extension_names
+    
+def activate_extension(extension_name):
+    """Activate the extension by injecting the extension methods."""
+    if extension_name in _active_extension_names:
+        return
+    for node_cls, methods in _extensions[extension_name].items():
+        for method_name, method in methods.items():
+            if method_name in node_cls.__dict__:
+                original_method = getattr(node_cls, method_name)
+                ## perform safety checks
+                # same check as in _register_function
+                if not isinstance(original_method, types.MethodType):
+                    err = ("Extension method " + method_name + " tries to "
+                           "override non-method attribute in class " +
+                           str(node_cls))
+                    raise ExtensionException(err)
+                if hasattr(original_method, "__ext_extension_name"):
+                    err = ("Method name overlap for method '" + method_name +
+                           "' between extension '" +
+                           getattr(original_method, "__ext_extension_name") +
+                           "' and newly activated extension '" +
+                           extension_name + "'.")
+                    raise ExtensionException(err)
+                method.__ext_original_method = original_method
+            setattr(node_cls, method_name, method)
+    _active_extension_names.append(extension_name) 
+
+def deactivate_extension(extension_name):
+    """Deacitvate the extension by removing the injected methods."""
+    if extension_name not in _active_extension_names:
+        return
+    for node_cls, methods in _extensions[extension_name].items():
+        for method_name, method in methods.items():
+            if method.__ext_original_method is not None:
+                original_method = getattr(method, "__ext_original_method")
+                setattr(node_cls, method_name, original_method)
+                method.__ext_original_method = None
+            else:
+                delattr(node_cls, method_name)
+    _active_extension_names.remove(extension_name)
+
+def activate_extensions(extension_names):
+    """Activate all the extensions for the given list of names."""
+    for extension_name in extension_names:
+        activate_extension(extension_name)
+
+def deactivate_extensions(extension_names):
+    """Dectivate all the extensions for the given list of names."""
+    for extension_name in extension_names:
+        deactivate_extension(extension_name)
+
+# TODO: use the signature preserving decorator technique
+def with_extension(extension_name):
+    """Return a wrapper function to activate and deactivate the extension.
+    
+    This function is intendet to be used with the decorator syntax.
+    """
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            # print "activating extension '" + extension_name + "'"
+            try:
+                activate_extension(extension_name)
+                result = func(*args, **kwargs)
+            finally:
+                # print "deactivating extension '" + extension_name + "'"
+                deactivate_extension(extension_name)
+            return result
+        return wrapper
+    return decorator
+        

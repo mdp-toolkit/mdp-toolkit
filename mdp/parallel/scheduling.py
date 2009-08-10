@@ -72,6 +72,14 @@ class OrderedResultContainer(ListResultContainer):
 class TaskCallable(object):
     """Abstract base class for callables."""
     
+    def setup_environment(self):
+        """This hook method is called when the callable is first loaded.
+        
+        It should be used to make any required modifications in the Python
+        environment that are required by this callable.
+        """
+        pass
+    
     def __call__(self, data):
         """Perform the computation and return the result.
         

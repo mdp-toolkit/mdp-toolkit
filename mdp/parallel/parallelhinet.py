@@ -10,9 +10,8 @@ import mdp.hinet as hinet
 
 import parallelnodes
 
-# TODO: Better checks or exception handling for non-parallel nodes in layers.
 
-class ParallelFlowNode(hinet.FlowNode, parallelnodes.ParallelNode):
+class ParallelFlowNode(hinet.FlowNode, parallelnodes.ParallelExtensionNode):
     """Parallel version of FlowNode."""
     
     def _fork(self):
@@ -24,13 +23,8 @@ class ParallelFlowNode(hinet.FlowNode, parallelnodes.ParallelNode):
         i_train_node = 0  # index of current training node
         while not self._flow[i_train_node].is_training():
             i_train_node += 1
-        if isinstance(self._flow[i_train_node], parallelnodes.ParallelNode):
-            node_list = self._flow[:i_train_node]
-            node_list.append(self._flow[i_train_node].fork())
-        else:
-            text = ("Non-parallel node no. %d in ParallelFlowNode." % 
-                    (i_train_node+1))
-            raise parallelnodes.TrainingPhaseNotParallelException(text)
+        node_list = self._flow[:i_train_node]
+        node_list.append(self._flow[i_train_node].fork())
         return self.__class__(mdp.Flow(node_list))
     
     def _join(self, forked_node):
@@ -39,7 +33,7 @@ class ParallelFlowNode(hinet.FlowNode, parallelnodes.ParallelNode):
         self._flow[i_node].join(forked_node._flow[i_node])
 
 
-class ParallelLayer(hinet.Layer, parallelnodes.ParallelNode):
+class ParallelLayer(hinet.Layer, parallelnodes.ParallelExtensionNode):
     """Parallel version of a Layer."""
     
     def _fork(self):
@@ -59,7 +53,7 @@ class ParallelLayer(hinet.Layer, parallelnodes.ParallelNode):
                 layer_node.join(forked_node.nodes[i_node])
 
 
-class ParallelCloneLayer(hinet.CloneLayer, parallelnodes.ParallelNode):
+class ParallelCloneLayer(hinet.CloneLayer, parallelnodes.ParallelExtensionNode):
     """Parallel version of CloneLayer class."""
     
     def _fork(self):

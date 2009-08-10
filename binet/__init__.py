@@ -49,6 +49,8 @@ terminated the normal flow execution will be resumed.
 
 # TODO: add target BiNode unittest
 # TODO: add unittests for message parsing, especially magic method key
+
+# TODO: binet likelihood should use extension as well
  
 # TODO: fix unecessary bi_reset calls?
 #    Note that bi_reset in BiFlowNode did not work properly until recently.
@@ -60,34 +62,6 @@ terminated the normal flow execution will be resumed.
 # TODO: automatically create BiNode versions of all MDP nodes,
 #    use exec to define new classes and create fitting docstring,
 #    first check is a bi-version is already present
-
-# TODO: Node Extensions 
-#    implement HTMLrep, parallel and gradient via Node Extensions
-#
-#    each Extension has a base class like ParallelNodeExt
-#    ParallelNodeExt overrides the __new__ method and registers all derived
-#    Nodes in ParallelNodeExt.
-#    
-#    All available extensions on the other hand
-#    are registered in NodeExt. Each extension has a name like "parallel".
-#
-#    Then define nodes like ParallelSFANode(ParallelNodeExt, SFANode)
-#    the __new__ method registers the defined classes with ParallelExtension.
-#    It automatically creates a mixin class SFAParallelNodeExt which contains
-#    all the new methods and other attributes.
-#    Check that __init__ is not overriden.
-#    Instead of modifying bases one could automatically create new classes,
-#    which would then be replaced in the node instances.
-#
-#    then use the decorator:
-#    @mdp.uses_extension("parallel") (or context in 2.6)
-#    to add the parallel mixins to the __bases__ of the normal MDP nodes 
-#    afterwards they are removed again.
-#    For example train in ParallelFlow would use the decorator and could then
-#    check if a node is an instance of ParallelNodeExt.
-#
-#    Could use ABC's in the future to make sure that abstract methods are
-#    overridden.
 
 # TODO: show more information in trace slides via mouse hover,
 #    or enable some kind of folding (might be possible via CSS like suckerfish)

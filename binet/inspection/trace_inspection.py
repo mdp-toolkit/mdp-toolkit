@@ -23,7 +23,7 @@ from ..binode import BiNode
 from ..biflow import BiFlow
 from ..bihinet import BiFlowNode, CloneBiLayer
 
-from bihinet_translator import BiNetHTMLTranslator, NODE_HTML_TRANSLATORS
+from bihinet_translator import BiNetHTMLTranslator
 from utils import robust_pickle
 
 # TODO: wrap inner methods (e.g. _train) to document effective arguments?
@@ -486,12 +486,9 @@ class TraceBiNetHTMLTranslator(HTMLTraceTranslator, BiNetHTMLTranslator):
     class.
     """
     
-    def __init__(self, node_param_translators=NODE_HTML_TRANSLATORS,
-                 show_size=False):
+    def __init__(self, show_size=False):
         """Initialize the internal variables."""
-        super(TraceBiNetHTMLTranslator, self).__init__(
-                                node_param_translators=node_param_translators,
-                                show_size=show_size)
+        super(TraceBiNetHTMLTranslator, self).__init__(show_size=show_size)
         self._current_node = None
         self._method_name = None
         self._result = None

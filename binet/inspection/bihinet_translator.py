@@ -19,33 +19,19 @@ span.bicolor {
 }
 """
 
-# Functions to define how the node parameters are represented in the
-# HTML representation of a node.
+@mdp.extension_method("html_representation", SenderBiNode)
+def _html_representation(self):
+    return '<span class="bicolor">target: %s </span><br>' % str(self._target)
 
-def _get_html_sender(node):
-    return ['<span class="bicolor">target: %s </span><br>' % str(node._target)]
-
-def _get_html_binode(node):
-    # or use node.__base__[1]?
-    html_list = []
-    for node_html_translator in NODE_HTML_TRANSLATORS[::-1]:
-        # make sure that no circular calling happens
-        if ((node_html_translator[0] is not BiNode) and
-            isinstance(node, node_html_translator[0])):
-            html_list += node_html_translator[1](node)
-            break
-    if node._stop_msg:
-        html_list += ['<span class="bicolor">stop_msg: %s </span><br>' 
-                      % str(node._stop_msg)]  
-    return html_list
+#@mdp.extension_method("html_representation", BiNode)
+#def _html_representation(self):
+#    html_repr = super(BiNode, self).html_representation()
+#    if self._stop_msg:
+#        html_repr = [html_repr,
+#                     '<span class="bicolor">stop_msg: %s </span><br>' 
+#                     % str(self._stop_msg)]  
+#    return html_repr
     
-BINODE_HTML_TRANSLATORS = [
-    (SenderBiNode, _get_html_sender),
-]
-
-NODE_HTML_TRANSLATORS = (mdp.hinet.NODE_HTML_TRANSLATORS +
-                         BINODE_HTML_TRANSLATORS)
-
 
 class BiNetHTMLTranslator(mdp.hinet.HiNetHTMLTranslator):
     """Special version of HiNetHTMLTranslator with BiNode support.
@@ -53,11 +39,8 @@ class BiNetHTMLTranslator(mdp.hinet.HiNetHTMLTranslator):
     All binet attributes are highligthed via the span.bicolor css tag.
     """
     
-    def __init__(self, node_param_translators=NODE_HTML_TRANSLATORS,
-                 show_size=False):
-        super(BiNetHTMLTranslator, self).__init__(
-                                node_param_translators=node_param_translators,
-                                show_size=show_size)
+    def __init__(self, show_size=False):
+        super(BiNetHTMLTranslator, self).__init__(show_size=show_size)
         
     def _translate_clonelayer(self, clonelayer):
         """This specialized version checks for CloneBiLayer."""

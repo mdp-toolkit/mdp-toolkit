@@ -188,7 +188,10 @@ def _process_run(cache_callable=True):
                 elif cache_callable:
                     # store callable in cache
                     last_callable = callable
+                    callable.setup_environment()
                     callable = callable.fork()
+                else:
+                    callable.setup_environment()    
                 result = callable(data)
                 del callable  # free memory
                 pickle.dump(result, pickle_out, protocol=-1)

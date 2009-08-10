@@ -7,8 +7,8 @@ import mdp
 import binet
 
 
-class BiParallelSFANode(binet.BiNode, mdp.parallel.ParallelSFANode):
-            pass
+class BiSFANode(binet.BiNode, mdp.nodes.SFANode):
+    pass
 
 
 class TestCloneBiLayer(unittest.TestCase):
@@ -17,8 +17,8 @@ class TestCloneBiLayer(unittest.TestCase):
     def test_use_copies_msg(self):
         """Test the correct reaction to an outgoing use_copies message."""
         stop_msg = {"clonelayer=>use_copies": True}
-        stop_sfa_node = BiParallelSFANode(stop_msg=stop_msg,
-                                          input_dim=10, output_dim=3)
+        stop_sfa_node = BiSFANode(stop_msg=stop_msg,
+                                  input_dim=10, output_dim=3)
         biflownode = binet.ParallelBiFlowNode(binet.BiFlow([stop_sfa_node]))
         clonelayer = binet.ParallelCloneBiLayer(node=biflownode, 
                                                 n_nodes=3, 

@@ -19,18 +19,16 @@ have to know anything about flows or nodes.
 
 from scheduling import (ResultContainer, ListResultContainer,
                         OrderedResultContainer, TaskCallable, SqrTestCallable,
-                        SleepSqrTestCallable, Scheduler)
+                        SleepSqrTestCallable, TaskCallableWrapper, Scheduler)
 from process_schedule import ProcessScheduler
-from parallelnodes import (ParallelNode, TrainingPhaseNotParallelException,
-                           ParallelPCANode, ParallelWhiteningNode,
-                           ParallelSFANode, ParallelSFA2Node, ParallelFDANode,
-                           ParallelHistogramNode, ParallelAdaptiveCutoffNode)
-from parallelflows import (FlowTrainCallable, FlowExecuteCallable,
-                           NodeResultContainer,
+import parallelnodes
+from parallelnodes import (ParallelExtensionNode,
+                           TrainingPhaseNotParallelException)
+from parallelflows import (FlowTaskCallable, FlowTrainCallable,
+                           FlowExecuteCallable, NodeResultContainer,
                            ParallelFlowException, NoTaskException,
                            ParallelFlow, ParallelCheckpointFlow)
-from parallelhinet import (ParallelFlowNode, ParallelLayer, ParallelCloneLayer)
-from makeparallel import make_flow_parallel, unmake_flow_parallel
+import parallelhinet
 
 try:
     import pp
@@ -40,18 +38,15 @@ except ImportError:
 
 del scheduling
 del process_schedule
-del parallelnodes
 del parallelflows
-del parallelhinet
-del makeparallel
+
+# Note: the modules with the actual extension node classes are still available 
 
 __all__ = ["ResultContainer", "ListResultContainer", "OrderedResultContainer",
-           "TaskCallable", "SqrTestCallable", "Scheduler", "ProcessScheduler",
-           "ParallelNode", "TrainingPhaseNotParallelException",
-           "ParallelPCANode", "ParallelWhiteningNode", "ParallelSFANode",
-           "ParallelSFA2Node", "FlowTrainCallable", "FlowExecuteCallable",
-           "NodeResultContainer", "ParallelFlowException", "NoTaskException",
-           "ParallelFlow", "ParallelCheckpointFlow", "ParallelFlowNode",
-           "ParallelLayer", "ParallelCloneLayer",
-           "ParallelHistogramNode", "ParallelAdaptiveCutoffNode",
-           "make_flow_parallel", "unmake_flow_parallel"]
+           "TaskCallable", "SqrTestCallable", "SleepSqrTestCallable",
+           "TaskCallableWrapper", "Scheduler",
+           "ProcessScheduler",
+           "ParallelExtensionNode", "TrainingPhaseNotParallelException",
+           "FlowTrainCallable", "NodeResultContainer", "FlowExecuteCallable",
+           "ParallelFlowException", "NoTaskException",
+           "ParallelFlow", "ParallelCheckpointFlow"]
