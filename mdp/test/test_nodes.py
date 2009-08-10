@@ -139,6 +139,7 @@ class NodesTestSuite(unittest.TestSuite):
                        mn.QuadraticExpansionNode,
                        (mn.PolynomialExpansionNode, [3], None),
                        (mn.RBFExpansionNode, [[[0.]*5, [0.]*5], [1., 1.]], None),
+                       mn.GrowingNeuralGasExpansionNode,
                        (mn.HitParadeNode, [2, 5], None),
                        (mn.TimeFramesNode, [3, 4], None),
                        mn.EtaComputerNode,

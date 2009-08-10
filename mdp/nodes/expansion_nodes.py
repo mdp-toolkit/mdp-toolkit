@@ -225,11 +225,14 @@ class GrowingNeuralGasExpansionNode(GrowingNeuralGasNode):
                  input_dim=input_dim, dtype=dtype)
 
     def _set_input_dim(self, n):
-
         # Needs to be overwritten because GrowingNeuralGasNode would
         # fix the output dim to n here.
         self._input_dim = n
 
+    def _set_output_dim(self, n):
+        msg = "Output dim cannot be set explicitly!"
+        raise mdp.NodeException(msg)
+        
     def is_trainable(self):
         return True
 
@@ -241,7 +244,7 @@ class GrowingNeuralGasExpansionNode(GrowingNeuralGasNode):
         super(GrowingNeuralGasExpansionNode, self)._stop_training()
 
         # set the output dimension to the number of nodes of the neural gas
-        self.output_dim = self.get_nodes_position().shape[0]
+        self._output_dim = self.get_nodes_position().shape[0]
         
         # use the nodes of the learned neural gas as centers for a radial basis function expansion.
         centers = self.get_nodes_position()
