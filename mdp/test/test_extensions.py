@@ -2,7 +2,6 @@
 import unittest
 
 import mdp
-from mdp import utils, numx, numx_rand
 
 
 class TestMDPExtensions(unittest.TestCase):
