@@ -7,24 +7,38 @@ from mdp import utils, numx, numx_rand
 
 class TestMDPExtensions(unittest.TestCase):
     
-    def test_Extension(self):
-        """Test a new extension."""
-        
+    def testSimpleExtension(self):
+        """Basic test with a single new extension."""
         class TestExtensionNode(mdp.ExtensionNode):
-            extension_name = "test"
-            def test(self):
+            extension_name = "__test"
+            def _testtest(self):
                 pass
-            
         class TestSFANode(TestExtensionNode, mdp.nodes.SFANode):
-            def test(self):
+            def _testtest(self):
                 return 42
-        
         sfa_node = mdp.nodes.SFANode()
-        mdp.activate_extension("test")
-        self.assert_(sfa_node.test() == 42) 
-        mdp.deactivate_extension("test")
-        self.assert_(not hasattr(mdp.nodes.SFANode, "test")) 
-        del mdp.get_extensions()["test"]
+        mdp.activate_extension("__test")
+        self.assert_(sfa_node._testtest() == 42) 
+        mdp.deactivate_extension("__test")
+        self.assert_(not hasattr(mdp.nodes.SFANode, "_testtest")) 
+        del mdp.get_extensions()["__test"]
+        
+    def testExtCollision(self):
+        """Test check for method name collision."""
+        class Test1ExtensionNode(mdp.ExtensionNode, mdp.Node):
+            extension_name = "__test1"
+            def _testtest(self):
+                pass
+        class Test2ExtensionNode(mdp.ExtensionNode, mdp.Node):
+            extension_name = "__test2"
+            def _testtest(self):
+                pass
+        self.assertRaises(mdp.ExtensionException,
+                    lambda: mdp.activate_extensions(["__test1", "__test2"]))
+        # none of the extension should be active after the exception
+        self.assert_(not hasattr(mdp.Node, "_testtest"))
+        del mdp.get_extensions()["__test1"]
+        del mdp.get_extensions()["__test2"]
         
         
 def get_suite(testname=None):

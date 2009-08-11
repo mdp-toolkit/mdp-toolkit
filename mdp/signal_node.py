@@ -642,6 +642,7 @@ class Cumulator(Node):
 
 ### Extension Mechanism ###
 
+# TODO: replace _active_extension_names with set
 # TODO: more unittests for the extension mechanism
 # TODO: in the future could use ABC's to register nodes with extension nodes
 # TODO: allow optional setup and restore methods that are called for a node
@@ -668,7 +669,6 @@ def _register_function(ext_name, node_cls, func):
     node_cls -- Node class for which the method should be registered.
     func -- Function to be registered as an extension method.
     """
-    global _extensions
     method_name = func.__name__
     # perform safety check
     if method_name in node_cls.__dict__:
@@ -692,14 +692,10 @@ def extension_method(ext_name, node_cls):
     node_cls -- Node class for which the method should be registered.
     """
     def register_function(func):
-        global _extensions
-        # TODO: enforce registration via ExtensionClass?
         if not ext_name in _extensions:
             err = ("No ExtensionNode base class has been defined for this "
                    "extension.")
             raise ExtensionException(err)
-#            # register new extension
-#            _extensions[ext_name] = dict()
         if not node_cls in _extensions[ext_name]:
             # register this node
             _extensions[ext_name][node_cls] = dict()
@@ -721,7 +717,6 @@ class ExtensionNodeMetaclass(NodeMetaclass):
         If a concrete extension node is created then a corresponding mixin
         class is automatically created and registered.
         """
-        global _extensions
         if classname == "ExtensionNode":
             # initial creation of ExtensionNode class
             return super(ExtensionNodeMetaclass, ExtensionNodeMetaclass). \
@@ -784,27 +779,32 @@ def activate_extension(extension_name):
     """Activate the extension by injecting the extension methods."""
     if extension_name in _active_extension_names:
         return
-    for node_cls, methods in _extensions[extension_name].items():
-        for method_name, method in methods.items():
-            if method_name in node_cls.__dict__:
-                original_method = getattr(node_cls, method_name)
-                ## perform safety checks
-                # same check as in _register_function
-                if not isinstance(original_method, types.MethodType):
-                    err = ("Extension method " + method_name + " tries to "
-                           "override non-method attribute in class " +
-                           str(node_cls))
-                    raise ExtensionException(err)
-                if hasattr(original_method, "__ext_extension_name"):
-                    err = ("Method name overlap for method '" + method_name +
-                           "' between extension '" +
-                           getattr(original_method, "__ext_extension_name") +
-                           "' and newly activated extension '" +
-                           extension_name + "'.")
-                    raise ExtensionException(err)
-                method.__ext_original_method = original_method
-            setattr(node_cls, method_name, method)
-    _active_extension_names.append(extension_name) 
+    _active_extension_names.append(extension_name)
+    try:
+        for node_cls, methods in _extensions[extension_name].items():
+            for method_name, method in methods.items():
+                if method_name in node_cls.__dict__:
+                    original_method = getattr(node_cls, method_name)
+                    ## perform safety checks
+                    # same check as in _register_function
+                    if not isinstance(original_method, types.MethodType):
+                        err = ("Extension method " + method_name + " tries to "
+                               "override non-method attribute in class " +
+                               str(node_cls))
+                        raise ExtensionException(err)
+                    if hasattr(original_method, "__ext_extension_name"):
+                        err = ("Method name overlap for method '" + method_name +
+                               "' between extension '" +
+                               getattr(original_method, "__ext_extension_name") +
+                               "' and newly activated extension '" +
+                               extension_name + "'.")
+                        raise ExtensionException(err)
+                    method.__ext_original_method = original_method
+                setattr(node_cls, method_name, method)
+    except:
+        # make sure that an incomplete activation is reverted
+        deactivate_extension(extension_name)
+        raise
 
 def deactivate_extension(extension_name):
     """Deacitvate the extension by removing the injected methods."""
@@ -817,13 +817,25 @@ def deactivate_extension(extension_name):
                 setattr(node_cls, method_name, original_method)
                 method.__ext_original_method = None
             else:
-                delattr(node_cls, method_name)
+                # if the activation process failed then the extension method
+                # might be mussing, so be tolerant
+                try:
+                    delattr(node_cls, method_name)
+                except AttributeError:
+                    pass
     _active_extension_names.remove(extension_name)
 
 def activate_extensions(extension_names):
     """Activate all the extensions for the given list of names."""
-    for extension_name in extension_names:
-        activate_extension(extension_name)
+    try:
+        for extension_name in extension_names:
+            activate_extension(extension_name)
+    except:
+        # if something goes wrong deactivate all, otherwise we might be
+        # in an inconsistent state (e.g. methods for active extensions might
+        # have been removed)
+        deactivate_extensions(get_active_extension_names())
+        raise
 
 def deactivate_extensions(extension_names):
     """Dectivate all the extensions for the given list of names."""
