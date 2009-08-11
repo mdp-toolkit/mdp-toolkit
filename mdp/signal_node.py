@@ -642,7 +642,8 @@ class Cumulator(Node):
 
 ### Extension Mechanism ###
 
-# TODO: more unittests for the extension mechanism
+# TODO: allow the functions that are registred to have an individual name,
+#    provide the name as an additional argument 
 # TODO: in the future could use ABC's to register nodes with extension nodes
 # TODO: allow optional setup and restore methods that are called for a node
 #    when the extension is activated. This could for example add special
@@ -762,6 +763,10 @@ class ExtensionNode(object):
     A new extension node class should override the _extension_name.
     The concrete node implementations are then derived from this extension
     node class.
+    
+    Important note:
+    To call a method from a parent class use:
+        parent_class.method.im_func(self)
     """
     __metaclass__ = ExtensionNodeMetaclass
     # override this name in a concrete extension node base class
@@ -773,7 +778,9 @@ def get_extensions():
     return _extensions
 
 def get_active_extensions():
-    """Returns the set with the names of the activated extensions."""
+    """Returns the set with the names of the currently activated extensions."""
+    # use copy to protect the original set, also important if the return
+    # value is used in a for-loop (see deactivate_extensions function)
     return _active_extensions.copy()
     
 def activate_extension(extension_name):
@@ -835,12 +842,15 @@ def activate_extensions(extension_names):
         # if something goes wrong deactivate all, otherwise we might be
         # in an inconsistent state (e.g. methods for active extensions might
         # have been removed)
-        deactivate_extensions(_active_extensions)
+        deactivate_extensions(get_active_extensions())
         raise
 
 def deactivate_extensions(extension_names):
-    """Deactivate all the extensions for the given list of names."""
-    for extension_name in extension_names.copy():
+    """Deactivate all the extensions for the given list of names.
+    
+    extension_names -- Sequence of 
+    """
+    for extension_name in extension_names:
         deactivate_extension(extension_name)
 
 # TODO: use the signature preserving decorator technique
