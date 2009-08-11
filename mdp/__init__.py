@@ -127,7 +127,7 @@ from linear_flows import CrashRecoveryException, FlowException, FlowExceptionCR
 from signal_node import (NodeMetaclass, Node, Cumulator,
                          extension_method, ExtensionNodeMetaclass,
                          ExtensionNode, get_extensions,
-                         get_active_extension_names, with_extension,
+                         get_active_extensions, with_extension,
                          activate_extension, deactivate_extension,
                          activate_extensions, deactivate_extensions)
 from linear_flows import (Flow, CheckpointFlow,
