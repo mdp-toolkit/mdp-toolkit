@@ -642,7 +642,6 @@ class Cumulator(Node):
 
 ### Extension Mechanism ###
 
-# TODO: replace _active_extension_names with set
 # TODO: more unittests for the extension mechanism
 # TODO: in the future could use ABC's to register nodes with extension nodes
 # TODO: allow optional setup and restore methods that are called for a node
@@ -654,7 +653,9 @@ class Cumulator(Node):
 # the inner dict maps the node types to their extension node,
 # the innermost dict then maps method names to functions
 _extensions = dict()
-_active_extension_names = []
+
+# set containing the names of the currently activated extensions
+_active_extensions = set()
 
 
 class ExtensionException(mdp.MDPException):
@@ -771,15 +772,15 @@ def get_extensions():
     """Return a dict with the currently registered extensions."""
     return _extensions
 
-def get_active_extension_names():
-    """Return a list with the names of the activated extensions."""
-    return _active_extension_names
+def get_active_extensions():
+    """Returns the set with the names of the activated extensions."""
+    return _active_extensions.copy()
     
 def activate_extension(extension_name):
     """Activate the extension by injecting the extension methods."""
-    if extension_name in _active_extension_names:
+    if extension_name in _active_extensions:
         return
-    _active_extension_names.append(extension_name)
+    _active_extensions.add(extension_name)
     try:
         for node_cls, methods in _extensions[extension_name].items():
             for method_name, method in methods.items():
@@ -807,8 +808,8 @@ def activate_extension(extension_name):
         raise
 
 def deactivate_extension(extension_name):
-    """Deacitvate the extension by removing the injected methods."""
-    if extension_name not in _active_extension_names:
+    """Deactivate the extension by removing the injected methods."""
+    if extension_name not in _active_extensions:
         return
     for node_cls, methods in _extensions[extension_name].items():
         for method_name, method in methods.items():
@@ -823,7 +824,7 @@ def deactivate_extension(extension_name):
                     delattr(node_cls, method_name)
                 except AttributeError:
                     pass
-    _active_extension_names.remove(extension_name)
+    _active_extensions.remove(extension_name)
 
 def activate_extensions(extension_names):
     """Activate all the extensions for the given list of names."""
@@ -834,28 +835,26 @@ def activate_extensions(extension_names):
         # if something goes wrong deactivate all, otherwise we might be
         # in an inconsistent state (e.g. methods for active extensions might
         # have been removed)
-        deactivate_extensions(get_active_extension_names())
+        deactivate_extensions(_active_extensions)
         raise
 
 def deactivate_extensions(extension_names):
-    """Dectivate all the extensions for the given list of names."""
-    for extension_name in extension_names:
+    """Deactivate all the extensions for the given list of names."""
+    for extension_name in extension_names.copy():
         deactivate_extension(extension_name)
 
 # TODO: use the signature preserving decorator technique
 def with_extension(extension_name):
     """Return a wrapper function to activate and deactivate the extension.
     
-    This function is intendet to be used with the decorator syntax.
+    This function is intended to be used with the decorator syntax.
     """
     def decorator(func):
         def wrapper(*args, **kwargs):
-            # print "activating extension '" + extension_name + "'"
             try:
                 activate_extension(extension_name)
                 result = func(*args, **kwargs)
             finally:
-                # print "deactivating extension '" + extension_name + "'"
                 deactivate_extension(extension_name)
             return result
         return wrapper
