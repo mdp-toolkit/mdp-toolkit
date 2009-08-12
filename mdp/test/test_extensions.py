@@ -43,9 +43,29 @@ class TestMDPExtensions(unittest.TestCase):
         self.assert_(not hasattr(mdp.nodes.SFANode, "_testtest")) 
         self.assert_(not hasattr(mdp.nodes.SFA2Node, "_testtest")) 
         del mdp.get_extensions()["__test"]
+        
+    def testDecoratorInheritance(self):
+        """Basic test with a single new extension."""
+        class TestExtensionNode(mdp.ExtensionNode):
+            extension_name = "__test"
+            def _testtest(self):
+                pass
+        @mdp.extension_method("__test", mdp.nodes.SFANode, "_testtest")
+        def _sfa_testtest(self):
+            return 42
+        @mdp.extension_method("__test", mdp.nodes.SFA2Node)
+        def _testtest(self):
+            return 42 + super(mdp.nodes.SFA2Node, self)._testtest()
+        sfa_node = mdp.nodes.SFANode()
+        sfa2_node = mdp.nodes.SFA2Node()
+        mdp.activate_extension("__test")
+        self.assert_(sfa_node._testtest() == 42) 
+        self.assert_(sfa2_node._testtest() == 84) 
+        mdp.deactivate_extension("__test")
+        del mdp.get_extensions()["__test"]
     
     def testExtensionInheritance(self):
-        """Basic test with a single new extension."""
+        """Testing inheritance of extension nodes."""
         class TestExtensionNode(mdp.ExtensionNode):
             extension_name = "__test"
             def _testtest(self):
@@ -61,6 +81,40 @@ class TestMDPExtensions(unittest.TestCase):
         self.assert_(sfa2_node._testtest() == 42) 
         mdp.deactivate_extension("__test")
         del mdp.get_extensions()["__test"]
+        
+    def testExtensionInheritance2(self):
+        """Testing inheritance of extension nodes, using super."""
+        class TestExtensionNode(mdp.ExtensionNode):
+            extension_name = "__test"
+            def _testtest(self):
+                pass
+        class TestSFANode(TestExtensionNode, mdp.nodes.SFANode):
+            def _testtest(self):
+                return 42
+        class TestSFA2Node(mdp.nodes.SFA2Node, TestSFANode):
+            def _testtest(self):
+                return super(mdp.nodes.SFA2Node, self)._testtest()
+        sfa2_node = mdp.nodes.SFA2Node()
+        mdp.activate_extension("__test")
+        self.assert_(sfa2_node._testtest() == 42) 
+        mdp.deactivate_extension("__test")
+        del mdp.get_extensions()["__test"]
+        
+    def testExtensionInheritance3(self):
+        """Testing explicit use of extension nodes and inheritance."""
+        class TestExtensionNode(mdp.ExtensionNode):
+            extension_name = "__test"
+            def _testtest(self):
+                pass
+        class TestSFANode(TestExtensionNode, mdp.nodes.SFANode):
+            def _testtest(self):
+                return 42
+        # Note the inheritance order, otherwise this would not work.
+        class TestSFA2Node(mdp.nodes.SFA2Node, TestSFANode):
+            def _testtest(self):
+                return super(mdp.nodes.SFA2Node, self)._testtest()
+        sfa2_node = TestSFA2Node()
+        self.assert_(sfa2_node._testtest() == 42) 
         
     def testMultipleExtensions(self):
         """Test the behavior of multiple extensions."""

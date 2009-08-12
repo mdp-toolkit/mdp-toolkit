@@ -693,6 +693,10 @@ def extension_method(ext_name, node_cls, method_name=None):
     node_cls -- Node class for which the method should be registered.
     method_name -- Name of the extension method (default value is None).
         If no value is provided then the name of the function is used.
+        
+    Note that it is possible to directly call other extension functions, call
+    extension methods in other node classes or to use super in the normal way
+    (the function will be called as a method of the node class).
     """
     def register_function(func):
         if not ext_name in _extensions:
@@ -766,7 +770,17 @@ class ExtensionNode(object):
     node class.
     
     Important note:
-    To call a method from a parent class use:
+    To call a method from a parent class you have two options.
+    
+    - use super, but with the normal node class, e.g.:
+        super(mdp.nodes.SFA2Node, self).method()
+      Here SFA2Node was given instead of the extension node class for the
+      SFA2Node.
+      If the extensions node class is used directly (without the extension
+      mechanism) this may lead to problems. In this case you have to be
+      careful about the inheritance order and the effect on the MRO.
+    
+    - call it explicitly using the im_func attribute:
         parent_class.method.im_func(self)
     """
     __metaclass__ = ExtensionNodeMetaclass
