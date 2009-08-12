@@ -23,13 +23,13 @@ class FlowTaskCallable(scheduling.TaskCallable):
     
     def __init__(self):
         """Store the currently active extensions."""
-        self._used_extensions = mdp.get_active_extension_names()
+        self._used_extensions = mdp.get_active_extensions()
         super(FlowTaskCallable, self).__init__()
         
     def setup_environment(self):
         """Activate the used extensions."""
         # deactivate all active extensions for safety
-        mdp.deactivate_extensions(mdp.get_active_extension_names())
+        mdp.deactivate_extensions(mdp.get_active_extensions())
         mdp.activate_extensions(self._used_extensions)
 
 

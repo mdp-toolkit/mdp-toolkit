@@ -135,7 +135,7 @@ class TestDerivedParallelMDPNodes(unittest.TestCase):
     """Test derived nodes that use the parallel node classes."""
     
     def setUp(self):
-        if "parallel" in mdp.get_active_extension_names():
+        if "parallel" in mdp.get_active_extensions():
             self.set_parallel = False
         else:
             mdp.activate_extension("parallel")
