@@ -195,27 +195,31 @@ def _html_representation(self):
                      (self.x_unused_channels, self.y_unused_channels))
     return lines
 
-@mdp.extension_method("html_representation", mdp.nodes.SFA2Node)
-def _html_representation(self):
+@mdp.extension_method("html_representation", mdp.nodes.SFA2Node,
+                      "_html_representation")
+def _sfa_html(self):
     return 'expansion dim: ' + str(self._expnode.output_dim)
 
-@mdp.extension_method("html_representation",
-                      mdp.nodes.NormalNoiseNode)   
-def _html_representation(self):
+@mdp.extension_method("html_representation", mdp.nodes.NormalNoiseNode,
+                      "_html_representation")   
+def _noise_html(self):
     return ['noise level: ' + str(self.noise_args[1]),
             'noise offset: ' + str(self.noise_args[0])]
 
-@mdp.extension_method("html_representation", mdp.nodes.CutoffNode) 
-def _html_representation(self):
+@mdp.extension_method("html_representation", mdp.nodes.CutoffNode,
+                      "_html_representation") 
+def _cutoff_html(self):
     return ['lower bound: ' + str(self.lower_bound),
             'upper bound: ' + str(self.upper_bound)]
 
-@mdp.extension_method("html_representation", mdp.nodes.HistogramNode)   
-def _html_representation(self):
+@mdp.extension_method("html_representation", mdp.nodes.HistogramNode,
+                      "_html_representation")   
+def _hist_html(self):
     return 'history data fraction: ' + str(self.hist_fraction)
 
-@mdp.extension_method("html_representation", mdp.nodes.AdaptiveCutoffNode)
-def _html_representation(self):
+@mdp.extension_method("html_representation", mdp.nodes.AdaptiveCutoffNode,
+                      "_html_representation")
+def _adap_html(self):
     return ['lower cutoff fraction: ' + str(self.lower_cutoff_fraction), 
             'upper cutoff fraction: ' + str(self.upper_cutoff_fraction), 
             'history data fraction: ' + str(self.hist_fraction)]

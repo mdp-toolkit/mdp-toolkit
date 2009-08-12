@@ -642,8 +642,6 @@ class Cumulator(Node):
 
 ### Extension Mechanism ###
 
-# TODO: allow the functions that are registred to have an individual name,
-#    provide the name as an additional argument 
 # TODO: in the future could use ABC's to register nodes with extension nodes
 # TODO: allow optional setup and restore methods that are called for a node
 #    when the extension is activated. This could for example add special
@@ -664,14 +662,15 @@ class ExtensionException(mdp.MDPException):
     pass
 
 
-def _register_function(ext_name, node_cls, func):
+def _register_function(ext_name, node_cls, func, method_name=None):
     """Register a function as an extension method.
     
     ext_name -- String with the name of the extension.
     node_cls -- Node class for which the method should be registered.
     func -- Function to be registered as an extension method.
     """
-    method_name = func.__name__
+    if not method_name:
+        method_name = func.__name__
     # perform safety check
     if method_name in node_cls.__dict__:
         original_method = getattr(node_cls, method_name)
@@ -685,13 +684,15 @@ def _register_function(ext_name, node_cls, func):
     func.__ext_original_method = None
     func.__ext_extension_name = ext_name
 
-def extension_method(ext_name, node_cls):
+def extension_method(ext_name, node_cls, method_name=None):
     """Returns a function to register a function as extension method.
     
-    This function is intendet to be used with the decorator syntax.
+    This function is intended to be used with the decorator syntax.
     
     ext_name -- String with the name of the extension.
     node_cls -- Node class for which the method should be registered.
+    method_name -- Name of the extension method (default value is None).
+        If no value is provided then the name of the function is used.
     """
     def register_function(func):
         if not ext_name in _extensions:
@@ -701,7 +702,7 @@ def extension_method(ext_name, node_cls):
         if not node_cls in _extensions[ext_name]:
             # register this node
             _extensions[ext_name][node_cls] = dict()
-        _register_function(ext_name, node_cls, func)
+        _register_function(ext_name, node_cls, func, method_name)
         return func
     return register_function
 

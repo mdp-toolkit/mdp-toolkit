@@ -21,6 +21,28 @@ class TestMDPExtensions(unittest.TestCase):
         mdp.deactivate_extension("__test")
         self.assert_(not hasattr(mdp.nodes.SFANode, "_testtest")) 
         del mdp.get_extensions()["__test"]
+        
+    def testDecoratorExtension(self):
+        """Basic test with a single new extension."""
+        class TestExtensionNode(mdp.ExtensionNode):
+            extension_name = "__test"
+            def _testtest(self):
+                pass
+        @mdp.extension_method("__test", mdp.nodes.SFANode, "_testtest")
+        def _sfa_testtest(self):
+            return 42
+        @mdp.extension_method("__test", mdp.nodes.SFA2Node)
+        def _testtest(self):
+            return 42 + _sfa_testtest(self)
+        sfa_node = mdp.nodes.SFANode()
+        sfa2_node = mdp.nodes.SFA2Node()
+        mdp.activate_extension("__test")
+        self.assert_(sfa_node._testtest() == 42) 
+        self.assert_(sfa2_node._testtest() == 84) 
+        mdp.deactivate_extension("__test")
+        self.assert_(not hasattr(mdp.nodes.SFANode, "_testtest")) 
+        self.assert_(not hasattr(mdp.nodes.SFA2Node, "_testtest")) 
+        del mdp.get_extensions()["__test"]
     
     def testExtensionInheritance(self):
         """Basic test with a single new extension."""
