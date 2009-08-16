@@ -648,8 +648,13 @@ class Cumulator(Node):
 #    attributes.
 #    e.g. call them _parallel_setup, _parallel_teardown
 # TODO: note the ParllelBiFlowNode purge_nodes method.
+# TODO: Add warning about the NodeMetaclass docstring method generation.
+#    This can lead to confusing results when one tries to specify a default
+#    override for public methods like execute (since the execite duplicates
+#    will not be affected).
 # TODO: somehow simplify access to overriden methods, like
-#    self._execute._ext_original_method ?
+#        self._execute._ext_original_method ?
+#    Maybe by removing the underscore?
 #    This eliminates some use cases where super would habe been needed.
 #    Need to make the trace inspection decorator compatible with this?
 #    Turning the tracing wrapper into an extension would be incompatible
