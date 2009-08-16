@@ -646,7 +646,14 @@ class Cumulator(Node):
 # TODO: allow optional setup and restore methods that are called for a node
 #    when the extension is activated. This could for example add special
 #    attributes.
-
+#    e.g. call them _parallel_setup, _parallel_teardown
+# TODO: note the ParllelBiFlowNode purge_nodes method.
+# TODO: somehow simplify access to overriden methods, like
+#    self._execute._ext_original_method ?
+#    This eliminates some use cases where super would habe been needed.
+#    Need to make the trace inspection decorator compatible with this?
+#    Turning the tracing wrapper into an extension would be incompatible
+#    with other extensions.
 
 # dict of dicts of dicts, contains a key for each extension,
 # the inner dict maps the node types to their extension node,
@@ -681,8 +688,8 @@ def _register_function(ext_name, node_cls, func, method_name=None):
             raise ExtensionException(err)
     _extensions[ext_name][node_cls][method_name] = func
     # do not set this now to be more flexibel
-    func.__ext_original_method = None
-    func.__ext_extension_name = ext_name
+    func._ext_original_method = None
+    func._ext_extension_name = ext_name
 
 def extension_method(ext_name, node_cls, method_name=None):
     """Returns a function to register a function as extension method.
@@ -779,9 +786,12 @@ class ExtensionNode(object):
       If the extensions node class is used directly (without the extension
       mechanism) this may lead to problems. In this case you have to be
       careful about the inheritance order and the effect on the MRO.
-    
+      
     - call it explicitly using the im_func attribute:
         parent_class.method.im_func(self)
+        
+    - To call the original method in the same class use the
+      '_ext_original_method' attribute of the injected method.
     """
     __metaclass__ = ExtensionNodeMetaclass
     # override this name in a concrete extension node base class
@@ -815,14 +825,14 @@ def activate_extension(extension_name):
                                "override non-method attribute in class " +
                                str(node_cls))
                         raise ExtensionException(err)
-                    if hasattr(original_method, "__ext_extension_name"):
-                        err = ("Method name overlap for method '" + method_name +
-                               "' between extension '" +
-                               getattr(original_method, "__ext_extension_name") +
-                               "' and newly activated extension '" +
+                    if hasattr(original_method, "_ext_extension_name"):
+                        err = ("Method name overlap for method '" + 
+                               method_name + "' between extension '" +
+                               getattr(original_method, "_ext_extension_name")
+                               + "' and newly activated extension '" +
                                extension_name + "'.")
                         raise ExtensionException(err)
-                    method.__ext_original_method = original_method
+                    method._ext_original_method = original_method
                 setattr(node_cls, method_name, method)
     except:
         # make sure that an incomplete activation is reverted
@@ -835,10 +845,10 @@ def deactivate_extension(extension_name):
         return
     for node_cls, methods in _extensions[extension_name].items():
         for method_name, method in methods.items():
-            if method.__ext_original_method is not None:
-                original_method = getattr(method, "__ext_original_method")
+            if method._ext_original_method is not None:
+                original_method = getattr(method, "_ext_original_method")
                 setattr(node_cls, method_name, original_method)
-                method.__ext_original_method = None
+                method._ext_original_method = None
             else:
                 # if the activation process failed then the extension method
                 # might be mussing, so be tolerant
@@ -863,7 +873,7 @@ def activate_extensions(extension_names):
 def deactivate_extensions(extension_names):
     """Deactivate all the extensions for the given list of names.
     
-    extension_names -- Sequence of 
+    extension_names -- Sequence of extension names.
     """
     for extension_name in extension_names:
         deactivate_extension(extension_name)

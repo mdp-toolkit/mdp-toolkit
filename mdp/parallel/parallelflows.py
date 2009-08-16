@@ -8,9 +8,9 @@ as well.
 import mdp
 from mdp import numx as n
 
-import parallelnodes
+from parallelnodes import TrainingPhaseNotParallelException
 import scheduling
-import parallelhinet
+from mdp.hinet import FlowNode
 
 
 ### Train task classes ###
@@ -339,7 +339,7 @@ class ParallelFlow(mdp.Flow):
         in a certain train phase, then the training is done locally as well
         (but fork() is tested again for the next phase).
         """
-        self._flownode = parallelhinet.ParallelFlowNode(mdp.Flow(self.flow))
+        self._flownode = FlowNode(mdp.Flow(self.flow))
         # find next node that can be forked, if required do local training
         while self._i_train_node < len(self.flow):
             current_node = self.flow[self._i_train_node]
@@ -374,7 +374,7 @@ class ParallelFlow(mdp.Flow):
                 self._next_task = (task_data_chunk,
                             self._train_callable_class(self._flownode.fork()))
                 break
-            except parallelnodes.TrainingPhaseNotParallelException, e:
+            except TrainingPhaseNotParallelException, e:
                 if self.verbose:
                     print ("could not fork node no. %d: %s" %
                            (self._i_train_node+1, str(e)))

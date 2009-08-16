@@ -15,7 +15,7 @@ import mdp.parallel as parallel
 from ..biflow import (BiFlow, BiFlowException, MessageResultContainer,
                       BiCheckpointFlow)
 
-from parallelbihinet import ParallelBiFlowNode
+from parallelbihinet import BiFlowNode
 
 
 ### Train Task Classes ###
@@ -67,7 +67,7 @@ class BiFlowTrainCallable(parallel.FlowTaskCallable):
     
     
 class BiFlowTrainResultContainer(parallel.ResultContainer):
-    """Container for a ParallelBiFlowNode.
+    """Container for a BiFlowNode.
 
     This class is required for parallel BiFlow training since there may be
     nodes for which is_bi_training is True during the normal training phase.
@@ -114,7 +114,7 @@ class BiFlowExecuteCallable(parallel.FlowTaskCallable):
         
         If is_bi_training() is False for the BiFlowNode then None is returned
         instead of the BiFlowNode. If is_bi_training() is True then the 
-        BiFlowNode is purged, so it has to be a ParallelBiFlowNode.
+        BiFlowNode is purged.
         """
         x, msg, target = data
         # by using _flow we do not have to reenter (like for train)
@@ -361,7 +361,7 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
         if stop_messages is None:
             stop_messages = [None] * len(data_iterables)
         self._stop_messages = stop_messages
-        self._flownode = ParallelBiFlowNode(BiFlow(self.flow))
+        self._flownode = BiFlowNode(BiFlow(self.flow))
         self._i_train_node = 0
         self._next_train_phase()
             
@@ -562,7 +562,7 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
         self._bi_reset()  # normally not required, just for safety
         if self.is_parallel_training:
             raise ParallelBiFlowException("Parallel training is underway.")
-        self._flownode = ParallelBiFlowNode(BiFlow(self.flow))
+        self._flownode = BiFlowNode(BiFlow(self.flow))
         if self._flownode.is_bi_training():
             # this will raise an exception if fork is not supported
             task_flownode = self._flownode.fork()
@@ -642,7 +642,7 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
             y_results = []
             msg_results = MessageResultContainer()
             # use internal flownode to join all biflownodes
-            self._flownode = ParallelBiFlowNode(BiFlow(self.flow))
+            self._flownode = BiFlowNode(BiFlow(self.flow))
             did_join_flownodes = False  # flag to show if a join took place
             for result_tuple in results:
                 result, forked_biflownode = result_tuple
