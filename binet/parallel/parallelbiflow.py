@@ -477,7 +477,8 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
             return ((x, msg), None)
         except StopIteration:
             return None
-            
+    
+    @mdp.with_extension("parallel")  # needed for fork in local scheduler 
     def execute(self, iterable=None, msg_iterable=None, target_iterable=None,
                 scheduler=None, 
                 execute_callable_class=None,

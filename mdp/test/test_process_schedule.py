@@ -58,10 +58,14 @@ class TestProcessScheduler(unittest.TestCase):
                                  scale_matrix) 
                            for _ in range(3)]
         parallel_flow.train(train_iterables, scheduler=scheduler)
+        x = mdp.numx.random.random((10, input_dim))
+        # test that parallel execution works as well
+        # note that we need more chungs then processes to test caching
+        parallel_flow.execute([x for _ in range(8)], scheduler=scheduler)
         scheduler.shutdown()
+        # compare to normal flow
         flow.train(train_iterables)
         self.assertTrue(parallel_flow[0].tlen == flow[0].tlen)
-        x = mdp.numx.random.random((10, input_dim))
         y1 = flow.execute(x)
         y2 = parallel_flow.execute(x)
         testing_tools.assert_array_almost_equal(abs(y1), abs(y2), precision)

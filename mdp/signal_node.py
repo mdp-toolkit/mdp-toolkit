@@ -642,16 +642,20 @@ class Cumulator(Node):
 
 ### Extension Mechanism ###
 
-# TODO: in the future could use ABC's to register nodes with extension nodes
+# TODO: use proper decorator fot with_extension, currently docstrings and
+#    signatures are broken for these public ParallelFlow methods
+
+# TODO: note the ParllelBiFlowNode purge_nodes method, which is not part
+#    of the ParallelNode interface. Allow this?
+# TODO: Add warning about the NodeMetaclass docstring method generation?
+#    This can lead to confusing results when one tries to specify a default
+#    override for public methods like execute (since the execite duplicates
+#    will not be affected).
+#    Maybe add check that forbidds overriding public methods?
 # TODO: allow optional setup and restore methods that are called for a node
 #    when the extension is activated. This could for example add special
 #    attributes.
 #    e.g. call them _parallel_setup, _parallel_teardown
-# TODO: note the ParllelBiFlowNode purge_nodes method.
-# TODO: Add warning about the NodeMetaclass docstring method generation.
-#    This can lead to confusing results when one tries to specify a default
-#    override for public methods like execute (since the execite duplicates
-#    will not be affected).
 # TODO: somehow simplify access to overriden methods, like
 #        self._execute._ext_original_method ?
 #    Maybe by removing the underscore?
@@ -659,6 +663,7 @@ class Cumulator(Node):
 #    Need to make the trace inspection decorator compatible with this?
 #    Turning the tracing wrapper into an extension would be incompatible
 #    with other extensions.
+# TODO: in the future could use ABC's to register nodes with extension nodes
 
 # dict of dicts of dicts, contains a key for each extension,
 # the inner dict maps the node types to their extension node,

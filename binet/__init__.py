@@ -67,8 +67,10 @@ terminated the normal flow execution will be resumed.
 #    or enable some kind of folding (might be possible via CSS like suckerfish)
 
 # TODO: use special class for binet results instead of tuples???
-#    maybe using __slots__?
 # PB: YES! this would get tid of all the if len(results)==5: ...
+#    maybe using __slots__?
+#    named tuple (2.6) is supposed to be very efficient, I think it uses
+#    __slots__
 
 # TODO: make comments conform to RST format
 

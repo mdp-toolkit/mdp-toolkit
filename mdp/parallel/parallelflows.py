@@ -36,7 +36,7 @@ class FlowTaskCallable(scheduling.TaskCallable):
 class FlowTrainCallable(FlowTaskCallable):
     """Implements a single training phase in a flow for a data block.
     
-    A ParallelFlowNode is used to simplify the forking process and to 
+    A FlowNode is used to simplify the forking process and to 
     encapsulate the flow.
     
     You can also derive from this class to define your own callable class. 
