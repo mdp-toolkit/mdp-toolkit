@@ -77,12 +77,13 @@ class NodeMetaclass(type):
                         break
         return super(NodeMetaclass, NodeMetaclass).__new__(cls, classname,
                                                            bases, members)
-
+        
     # The next two functions (originally called get_info, wrapper)
     # are adapted versions of functions in the
     # decorator module by Michele Simionato
     # Version: 2.3.1 (25 July 2008)
     # Download page: http://pypi.python.org/pypi/decorator
+    # Note: Moving these functions to utils would cause circular import.
     
     @staticmethod
     def _get_infodict(func):
@@ -145,6 +146,7 @@ class NodeMetaclass(type):
         wrapped_func.func_defaults = wrapper_infodict['defaults']
         wrapped_func.undecorated = wrapper_infodict
         return wrapped_func
+
 
 class Node(object):
     """A 'Node' is the basic building block of an MDP application.
@@ -642,14 +644,11 @@ class Cumulator(Node):
 
 ### Extension Mechanism ###
 
-# TODO: use proper decorator fot with_extension, currently docstrings and
-#    signatures are broken for these public ParallelFlow methods
-
 # TODO: note the ParllelBiFlowNode purge_nodes method, which is not part
 #    of the ParallelNode interface. Allow this?
 # TODO: Add warning about the NodeMetaclass docstring method generation?
 #    This can lead to confusing results when one tries to specify a default
-#    override for public methods like execute (since the execite duplicates
+#    override for public methods like execute (since the execute duplicates
 #    will not be affected).
 #    Maybe add check that forbidds overriding public methods?
 # TODO: allow optional setup and restore methods that are called for a node
@@ -888,7 +887,6 @@ def deactivate_extensions(extension_names):
     for extension_name in extension_names:
         deactivate_extension(extension_name)
 
-# TODO: use the signature preserving decorator technique
 def with_extension(extension_name):
     """Return a wrapper function to activate and deactivate the extension.
     
@@ -902,6 +900,8 @@ def with_extension(extension_name):
             finally:
                 deactivate_extension(extension_name)
             return result
-        return wrapper
+        # now make sure that docstring and signature match the original
+        func_info = NodeMetaclass._get_infodict(func)
+        return NodeMetaclass._wrap_func(wrapper, func_info)
     return decorator
         
