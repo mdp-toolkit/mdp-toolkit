@@ -665,10 +665,8 @@ class Cumulator(Node):
 
 ### Extension Mechanism ###
 
-# TODO: Make the trace inspection decorator compatible with
-#    overriding _execute?
-#    Turning the tracing wrapper into an extension would be incompatible
-#    with other extensions.
+# TODO: Check if there are problem when the trace inspection decorator
+#    overrides _execute?
 
 # TODO: somehow simplify access to overriden methods, like
 #        self._execute._ext_original_method ?

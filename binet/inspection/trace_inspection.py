@@ -37,7 +37,8 @@ SLIDE_CSS_FILENAME = "inspect.css"
 
 NODE_TRACE_METHOD_NAMES = ["execute", "train", "stop_training"]
 BINODE_TRACE_METHOD_NAMES = ["message", "stop_message", "global_message"]
-TRACING_WRAP_FLAG = "_is_wrapped_for_tracing"
+TRACING_WRAP_FLAG = "_insp_is_wrapped_for_tracing_"
+ORIGINAL_METHOD_PREFIX = "_insp_original_"
 
 # additions to the BINET_STYLE for marking the currently traced nodes
 INSPECT_TRACE_STYLE = """
@@ -425,12 +426,12 @@ class HTMLTraceInspector(hinet.HiNetTranslator):
         if isinstance(node, BiNode):
             trace_method_names += BINODE_TRACE_METHOD_NAMES
         for method_name in trace_method_names:
-            new_method_name = "_original_" + method_name
+            new_method_name = ORIGINAL_METHOD_PREFIX + method_name
             # create a reference to the original method
             setattr(node, new_method_name, getattr(node, method_name))
             # use nested scopes  lexical closure to get proper wrapper
             def get_wrapper(_method_name, _inspector):
-                _new_method_name = "_original_" + method_name
+                _new_method_name = ORIGINAL_METHOD_PREFIX + method_name
                 def wrapper(self, *args, **kwargs):
                     args_copy = copy.deepcopy(args)
                     kwargs_copy = copy.deepcopy(kwargs)
@@ -454,7 +455,7 @@ class HTMLTraceInspector(hinet.HiNetTranslator):
                 trace_method_names += BINODE_TRACE_METHOD_NAMES
             for method_name in trace_method_names:
                 del result[method_name]
-                old_method_name = "_original_" + method_name
+                old_method_name = ORIGINAL_METHOD_PREFIX + method_name
                 del result[old_method_name]
             del result["__getstate__"]
             return result
@@ -472,7 +473,7 @@ class HTMLTraceInspector(hinet.HiNetTranslator):
             # delete the wrapped method in the instance to unhide the original
             delattr(node, method_name)
             # delete the no longer used reference to the original method
-            old_method_name = "_original_" + method_name
+            old_method_name = ORIGINAL_METHOD_PREFIX + method_name
             delattr(node, old_method_name)
         # restore normal getstate
         delattr(node, "__getstate__")
@@ -653,7 +654,7 @@ def prepare_training_inspection(flow, path):
     flow._snapshot_instance_methods_ = []
     ### wrap _stop_training_hook to store biflow snapshots ###
     def pickle_wrap_method(_flow, _method_name):
-        new_method_name = "_original_" + _method_name
+        new_method_name = ORIGINAL_METHOD_PREFIX + _method_name
         def wrapper(self, *args, **kwargs):
             result = getattr(self, new_method_name)(*args, **kwargs)
             # pickle biflow
