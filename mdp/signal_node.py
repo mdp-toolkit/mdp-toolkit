@@ -44,40 +44,39 @@ class NodeMetaclass(type):
     
     def __new__(cls, classname, bases, members):
         # select private methods that can overwrite the docstring
+        wrapper_names = []
+        priv_infos = []
         for privname in cls.DOC_METHODS:
             if privname in members:
-                # the private method is present in the class
-                # inspect the private method
                 priv_info = cls._get_infodict(members[privname])
                 # if the docstring is empty, don't overwrite it
                 if not priv_info['doc']:
                     continue
                 # get the name of the corresponding public method
                 pubname = privname[1:]
-                # if public method has been overwritten in this
-                # subclass, keep it
-                if pubname in members:
-                    continue
-                # look for public method by same name in ancestors
-                for base in bases:
-                    ancestor = base.__dict__
-                    if pubname in ancestor:
-                        # we found a method by the same name in the ancestor
-                        # add the class a wrapper of the ancestor public method
-                        # with docs, argument defaults, and signature of the
-                        # private method and name of the public method.
-                        priv_info['name'] = pubname
-                        # preserve signature, this is used in binet
-                        pub_info = cls._get_infodict(ancestor[pubname])
-                        priv_info['signature'] = pub_info['signature']
-                        priv_info['argnames'] = pub_info['argnames']
-                        priv_info['defaults'] = pub_info['defaults']
-                        members[pubname] = cls._wrap_func(ancestor[pubname], 
-                                                          priv_info)
-                        break
-        return super(NodeMetaclass, NodeMetaclass).__new__(cls, classname,
-                                                           bases, members)
-        
+                # If the public method has been overwritten in this
+                # subclass, then keep it.
+                # This is also important because we use super in the wrapper
+                # (so the public method in this class would be missed).
+                if pubname not in members:
+                    wrapper_names.append(pubname)
+                    priv_infos.append(priv_info)
+        new_cls = super(NodeMetaclass, NodeMetaclass).__new__(cls, classname,
+                                                              bases, members)
+        # now add the wrappers
+        for wrapper_name, priv_info in zip(wrapper_names, priv_infos):
+            # Note: super works because we never wrap in the defining class
+            wrapped_method = getattr(super(new_cls, new_cls), wrapper_name)
+            wrapped_info = cls._get_infodict(wrapped_method)
+            priv_info['name'] = wrapper_name
+            # preserve signature, since it can be different for binodes
+            priv_info['signature'] = wrapped_info['signature']
+            priv_info['argnames'] = wrapped_info['argnames']
+            priv_info['defaults'] = wrapped_info['defaults']
+            setattr(new_cls, wrapper_name,
+                    cls._wrap_method(priv_info, new_cls))
+        return new_cls
+         
     # The next two functions (originally called get_info, wrapper)
     # are adapted versions of functions in the
     # decorator module by Michele Simionato
@@ -129,7 +128,7 @@ class NodeMetaclass(type):
                     globals=func.func_globals, closure=func.func_closure)
     
     @staticmethod
-    def _wrap_func(original_func, wrapper_infodict):
+    def _wrap_function(original_func, wrapper_infodict):
         """Return a wrapped version of func.
         
         original_func -- The function to be wrapped.
@@ -146,6 +145,28 @@ class NodeMetaclass(type):
         wrapped_func.func_defaults = wrapper_infodict['defaults']
         wrapped_func.undecorated = wrapper_infodict
         return wrapped_func
+    
+    @staticmethod
+    def _wrap_method(wrapper_infodict, cls):
+        """Return a wrapped version of func.
+        
+        wrapper_infodict -- The infodict to be used for constructing the
+            wrapper.
+        cls -- Class to which the wrapper method will be added, this is used
+            for the super call.
+        """
+        src = ("lambda %(signature)s: " % wrapper_infodict+
+               "super(_wrapper_class_, _wrapper_class_)." +
+               "%(name)s(%(signature)s)" % wrapper_infodict)
+        wrapped_func = eval(src, {"_wrapper_class_": cls})
+        wrapped_func.__name__ = wrapper_infodict['name']
+        wrapped_func.__doc__ = wrapper_infodict['doc']
+        wrapped_func.__module__ = wrapper_infodict['module']
+        wrapped_func.__dict__.update(wrapper_infodict['dict'])
+        wrapped_func.func_defaults = wrapper_infodict['defaults']
+        wrapped_func.undecorated = wrapper_infodict
+        return wrapped_func
+
 
 
 class Node(object):
@@ -644,24 +665,27 @@ class Cumulator(Node):
 
 ### Extension Mechanism ###
 
-# TODO: note the ParllelBiFlowNode purge_nodes method, which is not part
-#    of the ParallelNode interface. Allow this?
-# TODO: Add warning about the NodeMetaclass docstring method generation?
-#    This can lead to confusing results when one tries to specify a default
-#    override for public methods like execute (since the execute duplicates
-#    will not be affected).
-#    Maybe add check that forbidds overriding public methods?
-# TODO: allow optional setup and restore methods that are called for a node
-#    when the extension is activated. This could for example add special
-#    attributes.
-#    e.g. call them _parallel_setup, _parallel_teardown
+# TODO: Make the trace inspection decorator compatible with
+#    overriding _execute?
+#    Turning the tracing wrapper into an extension would be incompatible
+#    with other extensions.
+
 # TODO: somehow simplify access to overriden methods, like
 #        self._execute._ext_original_method ?
 #    Maybe by removing the underscore?
 #    This eliminates some use cases where super would habe been needed.
-#    Need to make the trace inspection decorator compatible with this?
-#    Turning the tracing wrapper into an extension would be incompatible
-#    with other extensions.
+
+# TODO: note the ParllelBiFlowNode purge_nodes method, which is not part
+#    of the ParallelNode interface. Allow this?
+
+# TODO: allow optional setup and restore methods that are called for a node
+#    when the extension is activated. This could for example add special
+#    attributes.
+#    e.g. call them _parallel_setup, _parallel_teardown
+#    Use this for the likelihood extension.
+
+# TODO: Add warning about overriding public methods with respect to
+#    the docstring wrappers?
 # TODO: in the future could use ABC's to register nodes with extension nodes
 
 # dict of dicts of dicts, contains a key for each extension,
@@ -902,6 +926,6 @@ def with_extension(extension_name):
             return result
         # now make sure that docstring and signature match the original
         func_info = NodeMetaclass._get_infodict(func)
-        return NodeMetaclass._wrap_func(wrapper, func_info)
+        return NodeMetaclass._wrap_function(wrapper, func_info)
     return decorator
         
