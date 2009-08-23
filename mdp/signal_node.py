@@ -665,14 +665,6 @@ class Cumulator(Node):
 
 ### Extension Mechanism ###
 
-# TODO: Check if there are problem when the trace inspection decorator
-#    overrides _execute?
-
-# TODO: somehow simplify access to overriden methods, like
-#        self._execute._ext_original_method ?
-#    Maybe by removing the underscore?
-#    This eliminates some use cases where super would habe been needed.
-
 # TODO: note the ParllelBiFlowNode purge_nodes method, which is not part
 #    of the ParallelNode interface. Allow this?
 
@@ -681,6 +673,8 @@ class Cumulator(Node):
 #    attributes.
 #    e.g. call them _parallel_setup, _parallel_teardown
 #    Use this for the likelihood extension.
+#    Problem: There is no way to get the affected node instances, these are
+#    not registered anywhere.
 
 # TODO: Add warning about overriding public methods with respect to
 #    the docstring wrappers?
@@ -719,8 +713,8 @@ def _register_function(ext_name, node_cls, func, method_name=None):
             raise ExtensionException(err)
     _extensions[ext_name][node_cls][method_name] = func
     # do not set this now to be more flexibel
-    func._ext_original_method = None
-    func._ext_extension_name = ext_name
+    func.ext_original_method = None
+    func.ext_extension_name = ext_name
 
 def extension_method(ext_name, node_cls, method_name=None):
     """Returns a function to register a function as extension method.
@@ -822,7 +816,7 @@ class ExtensionNode(object):
         parent_class.method.im_func(self)
         
     - To call the original method in the same class use the
-      '_ext_original_method' attribute of the injected method.
+      'ext_original_method' attribute of the injected method.
     """
     __metaclass__ = ExtensionNodeMetaclass
     # override this name in a concrete extension node base class
@@ -856,14 +850,14 @@ def activate_extension(extension_name):
                                "override non-method attribute in class " +
                                str(node_cls))
                         raise ExtensionException(err)
-                    if hasattr(original_method, "_ext_extension_name"):
+                    if hasattr(original_method, "ext_extension_name"):
                         err = ("Method name overlap for method '" + 
                                method_name + "' between extension '" +
-                               getattr(original_method, "_ext_extension_name")
+                               getattr(original_method, "ext_extension_name")
                                + "' and newly activated extension '" +
                                extension_name + "'.")
                         raise ExtensionException(err)
-                    method._ext_original_method = original_method
+                    method.ext_original_method = original_method
                 setattr(node_cls, method_name, method)
     except:
         # make sure that an incomplete activation is reverted
@@ -876,13 +870,13 @@ def deactivate_extension(extension_name):
         return
     for node_cls, methods in _extensions[extension_name].items():
         for method_name, method in methods.items():
-            if method._ext_original_method is not None:
-                original_method = getattr(method, "_ext_original_method")
+            if method.ext_original_method is not None:
+                original_method = method.ext_original_method
                 setattr(node_cls, method_name, original_method)
-                method._ext_original_method = None
+                method.ext_original_method = None
             else:
                 # if the activation process failed then the extension method
-                # might be mussing, so be tolerant
+                # might be missing, so be tolerant
                 try:
                     delattr(node_cls, method_name)
                 except AttributeError:
