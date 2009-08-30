@@ -1,7 +1,7 @@
 import mdp
 from mdp import numx, numx_linalg, utils
 from mdp.utils import mult, matmult
-from neural_gas_nodes import GrowingNeuralGasNode
+from mdp.nodes import GrowingNeuralGasNode
 
 def nmonomials(degree, nvariables):
     """Return the number of monomials of a given degree in a given number

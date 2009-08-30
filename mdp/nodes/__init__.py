@@ -1,9 +1,9 @@
-from expansion_nodes import (QuadraticExpansionNode, PolynomialExpansionNode,
-                             RBFExpansionNode, GrowingNeuralGasExpansionNode)
 from pca_nodes import WhiteningNode, PCANode
 from sfa_nodes import SFANode, SFA2Node
 from ica_nodes import ICANode, CuBICANode, FastICANode, TDSEPNode
 from neural_gas_nodes import GrowingNeuralGasNode
+from expansion_nodes import (QuadraticExpansionNode, PolynomialExpansionNode,
+                             RBFExpansionNode, GrowingNeuralGasExpansionNode)
 from fda_nodes import FDANode
 from em_nodes import FANode
 from misc_nodes import (IdentityNode, HitParadeNode, TimeFramesNode,
