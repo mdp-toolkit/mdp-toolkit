@@ -4,7 +4,6 @@ from mdp import numx
 import shogun.Kernel as sgKernel
 import shogun.Features as sgFeatures
 import shogun.Classifier as sgClassifier
-import svm
 
 class _SVMNode(mdp.Node):
     def is_invertible(self):
@@ -44,12 +43,6 @@ class ShogunSVMNode(_SVMNode):
     """The ShogunSVMNode works as a wrapper class for accessing the shogun library
     for support vector machines.
     """
-    try:
-        sgKernel, sgFeatures, sgClassifier
-    except NameError:
-        msg = "Using ShogunSVMNode requires the python_modular version of shogun to be installed."
-        raise ImportError(msg)
-    
     default_parameters = {
         'C': 1,
         'epsilon': 1e-3,
@@ -114,8 +107,9 @@ class ShogunSVMNode(_SVMNode):
     def set_classifier(self, name="libsvm"):
         """Sets and initialises the classifier. If a classifier is reset by the user, 
         the parameters will have to be set again.
-        name can be a string, a subclass of shogun.Classifier or an instance of such
-        a class
+
+        'name' can be a string, a subclass of shogun.Classifier or an instance of such
+        a class.
         """
         self._classifier = None
         self.svm = None
@@ -125,33 +119,42 @@ class ShogunSVMNode(_SVMNode):
             self.svm = name
         
         if isinstance(name, basestring):
+            #FIXME: this does not work in python2.4
+            #XXX why adding None to the list?
             possibleNames = [name if name in dir(sgClassifier) else None] + \
                             [s for s in dir(sgClassifier) if s.lower()==name.lower()]
             for s in possibleNames:
+                #XXX why do we need this try/except if we already found the name?
                 try:
                     self._classifier = getattr(sgClassifier, s)
                     break
                 except Exception:
                     pass
+            #XXX why another try/except?
+            #FIXME: couldn't we just check that len(possibleNames) > 0?
             try:
                 self.svm = self._classifier()
             except TypeError:
                 msg = "Library '%s' is not known." % name
                 raise mdp.NodeException(msg)
-        
+
+        #XXX: could you comment on that?
         if self._classifier is not None and self.svm is None:
             if issubclass(name, sgClassifier.Classifier):
                 self.svm = self._classifier()
-        
+
+        #XXX: could you comment on that?
         if self._classifier is None:
             if issubclass(name, sgClassifier.Classifier):
                 self._classifier = name
                 self.svm = self._classifier()
-        
+
+        #XXX: could you comment on that?
         if self.svm is None:
             msg = "The classifier '%s' is not supported." %name
             raise mdp.NodeException(msg)
-            
+
+        #XXX: could you comment on that?
         if not issubclass(self._classifier, sgClassifier.Classifier):
             msg = "The classifier '%s' is no subclass of CClassifier." % self._classifier.__name__
             raise mdp.NodeException(msg)
@@ -182,7 +185,10 @@ class ShogunSVMNode(_SVMNode):
         # Non-standard cases
         if param == "C" and len(value) == 1:
             value += value
-        getattr(self.svm, "set_"+param)(*value)
+        # get the parameter setting method
+        meth = getattr(self.svm, "set_"+param)
+        # call it
+        meth(*value)
 
     def set_kernel(self, name, options=None):
         """Sets the Kernel along with options.
@@ -192,6 +198,7 @@ class ShogunSVMNode(_SVMNode):
         if name in ShogunSVMNode.kernel_parameters and not isinstance(options, list):
             default_opts = _OrderedDict(ShogunSVMNode.kernel_parameters[name])
             default_opts.update(options)
+            #FIXME: do we need a print here?
             print default_opts._vals
             self.kernel = getattr(sgKernel, name)(*(default_opts._vals))
         else:
@@ -250,8 +257,10 @@ class ShogunSVMNode(_SVMNode):
             raise mdp.TrainingException(msg)
     
     def _reshape_data(self):
-        l = self._x.size
-        self._x = self._x.reshape( (l/2,2) )
+        x_size = self._x.size
+        #FIXME: what if size is odd?
+        #XXX: why this reshape? 
+        self._x = self._x.reshape((x_size//2, 2))
     
     def _stop_training(self):
         self._reshape_data()
@@ -293,9 +302,7 @@ class ShogunSVMNode(_SVMNode):
         if ordered:
             z = zip(self._cl, self._x)
             data = {}
-            for val in z:
-                k = val[0]
-                v = val[1]
+            for k, v in z:
                 if data.has_key(k):
                     data[k] = data[k] + (v,)
                 else:
@@ -323,9 +330,3 @@ class ShogunSVMNode(_SVMNode):
             return labels
 
 
-class LibSVMNode(_SVMNode):
-    try:
-        svm
-    except NameError:
-        msg = "Using LibSVMNode requires the python binding of LibSVM to be installed."
-        raise ImportError(msg)
