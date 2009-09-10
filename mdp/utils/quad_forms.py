@@ -150,7 +150,7 @@ class QuadraticForm(object):
         # compute the invariances
         nu, w = self._eig_sort(Ht)
         nu -= ((mdp.utils.mult(self.H, xstar)*xstar).sum()
-               -(self.f*xstar).sum())/(r*r)
+               +(self.f*xstar).sum())/(r*r)
         idx = abs(nu).argsort()
         nu = nu[idx]
         w = w[:, idx]

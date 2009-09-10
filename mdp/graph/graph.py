@@ -354,10 +354,10 @@ class Graph(object):
     def _bfs(self, neighbors_fct, root, visit_fct=None):
         # core breadth-first sort function
         # changing the neighbors function to return the sons of a node,
-        # its parents, or both one gets normal dfs, reverse dfs, or
-        # dfs on the equivalent undirected graph, respectively
+        # its parents, or both one gets normal bfs, reverse bfs, or
+        # bfs on the equivalent undirected graph, respectively
         
-        # result list containing the nodes in Bepth-First order
+        # result list containing the nodes in Breadth-First order
         bfs_list = []
         # keep track of all already visited nodes
         visited_nodes = { root: None }
