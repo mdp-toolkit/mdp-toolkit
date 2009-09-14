@@ -234,10 +234,6 @@ class UtilsTestSuite(unittest.TestSuite):
         assert_array_almost_equal(f, xmax, 5)
 
     def testQuadraticFormsInvariances(self):
-        # don't run test on 64bit platform because
-        # of bug in linalg.qr (already fixed in numpy svn)
-        if platform.architecture()[0] != '32bit':
-            return
         #nu = numx.linspace(2.,-3,10)
         nu = numx.linspace(6., 1, 10)
         H = utils.symrand(nu)
