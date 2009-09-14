@@ -39,11 +39,11 @@ del mdp
 
 __all__ = ['CuBICANode', 'EtaComputerNode', 'FANode', 'FDANode', 'FastICANode',
            'GaussianClassifierNode', 'GrowingNeuralGasNode', 'HitParadeNode',
-           'ICANode', 'ISFANode', 'JADENode', 'LLENode', 'NIPALSNode',
+           'ICANode', 'ISFANode', 'JADENode', 'LLENode', 'LibSVMNode', 'NIPALSNode',
            'NoiseNode', 'NormalNoiseNode', 'HLLENode', 'IdentityNode',
            'PCANode', 'PolynomialExpansionNode', 'QuadraticExpansionNode',
            'RBFExpansionNode',
-           'RBMNode', 'RBMWithLabelsNode', 'SFA2Node', 'SFANode',
+           'RBMNode', 'RBMWithLabelsNode', 'SFA2Node', 'SFANode', 'ShogunSVMNode'
            'TDSEPNode', 'TimeFramesNode','WhiteningNode', 'XSFANode',
            'LinearRegressionNode',
            '_OneDimensionalHitParade', '_expanded_dim',

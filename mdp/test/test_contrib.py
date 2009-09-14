@@ -57,6 +57,55 @@ def _compare_neighbors(orig, proj, k):
                 err[i] += 1
     return err
 
+def _randomly_filled_hypercube(widths, num_elem=1000):
+    """Fills a hypercube with given widths, centred at the origin.
+    """
+    p = []
+    for i in xrange(num_elem):
+        rand_data = numx.random.random(len(widths))
+        rand_data = [w*(d - 0.5) for d, w in zip(rand_data, widths)]
+        p.append(tuple(rand_data))
+    return p
+
+def _randomly_filled_hyperball(dim, radius, num_elem=1000):
+    """Fills a hyperball with a number of random elements.
+    
+    Note: the algorithm is of a very bad order for large dimensions.
+    """
+    p = []
+    widths = [radius*2 for _ in range(dim)]
+    for i in xrange(num_elem):
+        while True:
+            cube_point = _randomly_filled_hypercube(widths, 1)[0]
+            norm = numx.math.sqrt(numx.dot(cube_point, cube_point))
+            if norm < radius:
+                p.append(cube_point)
+                break
+    return p
+
+def _random_clusters(positions, radius=1, num_elem=1000):
+    """Puts random clusters with num_elem elements at the given positions.
+    positions - a list of tuples
+    """
+    data = []
+    for p in positions:
+        dim = len(p)
+        ball = _randomly_filled_hyperball(dim, radius, num_elem)
+        ball = [numx.array(b) + numx.array(p) for b in ball]
+        data.append(ball)
+    return data
+
+def _dual_linear_separable_data(pos_1, pos_2, radius=1, num_elem=1000):
+    """Tries to make up some linear separable data.
+    num_elem - the number of elements in each
+    """
+    
+    data = numx.vstack( _random_clusters([pos_1, pos_2], radius, num_elem) )
+    #data = numx.vstack( (numx.random.random( (num_elem,2) ) - dist,
+    #                     numx.random.random( (num_elem,2) ) + dist) )
+    labels = numx.vstack((-numx.ones((num_elem, 1)), numx.ones((num_elem, 1))))
+    return data, labels
+
 
 class ContribTestSuite(NodesTestSuite):
     def __init__(self, testname=None):
@@ -267,7 +316,68 @@ class ContribTestSuite(NodesTestSuite):
         assert min(corrs) > 0.8, ('source/estimate minimal'
                                   ' covariance: %g' % min(corrs))
 
+    def testShogunSVMNode(self):
+        # TODO: Implement parameter ranges
+        num_train = 1000
+        num_test = 1000
+        dist = 1
+        width = 2.1
+        C = 1
+        epsilon = 1e-5
+        for pos_1, pos_2 in [((1,), (-1,)),
+                             ((1,1), (-1,-1)),
+                             ((1,1,1), (-1,-1,1)),
+                             ((1,1,1,1), (-1,1,1,1)),
+                             ((1,1,1,1), (-1,-1,-1,-1))]:
+
+            radius = 1
+
+            traindata_real, trainlab = _dual_linear_separable_data(pos_1, pos_2, radius, num_train)
+            testdata_real, testlab = _dual_linear_separable_data(pos_1, pos_2, radius, num_test)
         
+            sg_node = mdp.nodes.ShogunSVMNode(classifier="libsvm")
+
+            sg_node.train( traindata_real, trainlab )
+
+            sg_node.stop_training()
+            out = sg_node.classify(testdata_real)
+            testerr = numx.where(numx.sign(out) * testlab.transpose() < 0)
+            assert(testerr == 0, 'classification result')
+
+    def testLibSVMNode(self):
+        num_train = 1000
+        num_test = 1000
+        dist = 0.4
+        width = 2.1
+        C = 1
+        epsilon = 1e-5
+        for pos_1, pos_2 in [((1,), (-1,)),
+                             ((1,1), (-1,-1)),
+                             ((1,1,1), (-1,-1,1)),
+                             ((1,1,1,1), (-1,1,1,1)),
+                             ((1,1,1,1), (-1,-1,-1,-1))]:
+            radius = 1
+
+            traindata_real, trainlab = _dual_linear_separable_data(pos_1, pos_2, radius, num_train)
+            testdata_real, testlab = _dual_linear_separable_data(pos_1, pos_2, radius, num_test)
+        
+            # TODO: Get some more orthogonal style here to avoid nesting
+            for k in mdp.nodes.LibSVMNode.kernels:
+                svm_node = mdp.nodes.LibSVMNode()
+                svm_node.setKernel(k)
+                svm_node.train(traindata_real, trainlab)
+                svm_node.stop_training()
+                out = svm_node.classify(testdata_real)
+
+                testerr = numx.where(numx.sign(out) * testlab.transpose() < 0)
+            
+                # TODO: Cross-validation testing
+                #svm_node._cross_validation(3, svm_node.parameter)
+                #print r.probability(testdata_real)
+        
+                assert(testerr == 0, 'classification result')
+
+
 def get_suite(testname=None):
     return ContribTestSuite(testname=testname)
 

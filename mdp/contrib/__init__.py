@@ -6,11 +6,19 @@ from xsfa_nodes import XSFANode
 __all__ = ['JADENode', 'NIPALSNode', 'LLENode', 'HLLENode', 'XSFANode']
 
 try:
-    from svm_nodes import ShogunSVMNode
+    from shogun_svm_node import ShogunSVMNode
     __all__ += ['ShogunSVMNode']
-    del svm_nodes
+    del shogun_svm_node
 except ImportError:
     pass
+
+try:
+    from libsvm_node import LibSVMNode
+    __all__ += ['LibSVMNode']
+    del libsvm_node
+except ImportError:
+    pass
+
 
 del jade
 del nipals
