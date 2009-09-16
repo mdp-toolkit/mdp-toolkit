@@ -19,9 +19,7 @@ try:
 except ImportError:
     pass
 
-
 del jade
 del nipals
 del lle_nodes
 del xsfa_nodes
-

@@ -1,15 +1,26 @@
 import mdp
 from mdp import numx
 
+import warnings
+
 from svm_nodes import _SVMNode
 
-try:
-    pass
-    import shogun.Kernel as sgKernel
-    import shogun.Features as sgFeatures
-    import shogun.Classifier as sgClassifier
-except ImportError:
-    pass
+import shogun.Kernel as sgKernel
+import shogun.Features as sgFeatures
+import shogun.Classifier as sgClassifier
+
+#Warn wrong version.
+#try:
+#    version = sgKernel._Kernel.Version_get_version_release()
+#except AttributeError:
+#    version = ""
+
+# Must check for version 0.8
+#
+#if not (version.startswith('v0.7') or version.startswith('v0.8')):
+#    msg = "Unsupported API version of shogun. Some things may break."
+#    warnings.warn(msg, UserWarning)
+
 
 class _OrderedDict:
     """Very simple version of an ordered dict."""
@@ -45,10 +56,10 @@ class ShogunSVMNode(_SVMNode):
 
     # Swig-code does not work with named parameters, so we have to define an order
     kernel_parameters = {
-        'PolyKernel': [('size',10), ('degree',3), ('inhomogene',True)],
-        'GaussianKernel': [('size',10), ('width',1)],
+        'PolyKernel': [('size', 10), ('degree', 3), ('inhomogene', True)],
+        'GaussianKernel': [('size', 10), ('width', 1)],
         'LinearKernel': [],
-        'SigmoidKernel': [('size',10), ('gamma',1), ('coef0', 0)]
+        'SigmoidKernel': [('size', 10), ('gamma',1), ('coef0', 0)]
     }
 
     def __init__(self, classifier="libsvmmulticlass", classifier_options=None,
@@ -74,13 +85,6 @@ class ShogunSVMNode(_SVMNode):
                            Attention: this could crash on windows
         
         """
-
-        try:
-            sgKernel, sgFeatures, sgClassifier
-        except NameError:
-            msg = "Using ShogunSVMNode requires the python_modular version of shogun to be installed."
-            raise ImportError(msg)
-
         if classifier_options is None:
             classifier_options = {}
 
@@ -179,18 +183,19 @@ class ShogunSVMNode(_SVMNode):
 
     def set_kernel(self, name, options=None):
         """Sets the Kernel along with options.
+        'options' must be a tuple with the arguments of the kernel constructor in shogun.
+        Therefore, in case of error, you will have to consult the shogun documentation.
         """
         if options is None:
             options = {}
         if name in ShogunSVMNode.kernel_parameters and not isinstance(options, list):
             default_opts = _OrderedDict(ShogunSVMNode.kernel_parameters[name])
             default_opts.update(options)
-            kernel_meth = getattr(sgKernel, name)
-            self.kernel = kernel_meth(*(default_opts._vals))
-        else:
-            kernel_meth = getattr(sgKernel, name)
-            self.kernel = kernel_meth(*options)
-
+            options = default_opts._vals
+        
+        kernel_meth = getattr(sgKernel, name)
+        self.kernel = kernel_meth(*options)
+        
     def _stop_training(self):
         self._normalize_labels()
 
@@ -205,6 +210,9 @@ class ShogunSVMNode(_SVMNode):
         labels = sgFeatures.Labels(self._norm_labels.astype(float))
         self.svm.set_labels(labels)
         
+        #print "Training:"
+        #print "Classifier: %s", self._classifier
+        #print "Kernel: %s", self.kernel
         self.svm.train()
 
     def training_set(self, ordered=False):

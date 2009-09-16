@@ -101,7 +101,6 @@ def _dual_linear_separable_data(pos_1, pos_2, radius=1, num_elem=1000):
     labels = numx.vstack((-numx.ones((num_elem, 1)), numx.ones((num_elem, 1))))
     return data, labels
 
-
 class ContribTestSuite(NodesTestSuite):
     def __init__(self, testname=None):
         NodesTestSuite.__init__(self, testname=testname)
@@ -313,8 +312,8 @@ class ContribTestSuite(NodesTestSuite):
 
     def testShogunSVMNode(self):
         # TODO: Implement parameter ranges
-        num_train = 1000
-        num_test = 1000
+        num_train = 100
+        num_test = 100
         dist = 1
         width = 2.1
         C = 1
@@ -330,18 +329,23 @@ class ContribTestSuite(NodesTestSuite):
             traindata_real, trainlab = _dual_linear_separable_data(pos_1, pos_2, radius, num_train)
             testdata_real, testlab = _dual_linear_separable_data(pos_1, pos_2, radius, num_test)
         
-            sg_node = mdp.nodes.ShogunSVMNode(classifier="libsvm")
+            kernels = list(mdp.nodes.ShogunSVMNode.kernel_parameters.keys())
+            combinations = {'classifier': ["libsvm", "SVMLin"],
+                            'kernel': kernels}
+            for comb in utils.orthogonal_permutations(combinations):
+                
+                sg_node = mdp.nodes.ShogunSVMNode(classifier=comb['classifier'], kernel=comb['kernel'])
+                
+                sg_node.train( traindata_real, trainlab )
 
-            sg_node.train( traindata_real, trainlab )
-
-            sg_node.stop_training()
-            out = sg_node.classify(testdata_real)
-            testerr = numx.where(numx.sign(out) * testlab.transpose() < 0)
-            assert testerr == 0, 'classification result'
+                sg_node.stop_training()
+                out = sg_node.classify(testdata_real)
+                testerr = numx.where(numx.sign(out) * testlab.transpose() < 0)
+                assert testerr == 0, 'classification result'
 
     def testLibSVMNode(self):
-        num_train = 1000
-        num_test = 1000
+        num_train = 100
+        num_test = 100
         dist = 0.4
         width = 2.1
         C = 1
@@ -355,23 +359,27 @@ class ContribTestSuite(NodesTestSuite):
 
             traindata_real, trainlab = _dual_linear_separable_data(pos_1, pos_2, radius, num_train)
             testdata_real, testlab = _dual_linear_separable_data(pos_1, pos_2, radius, num_test)
+            testlab[0] = -1
         
-            # TODO: Get some more orthogonal style here to avoid nesting
-            for k in mdp.nodes.LibSVMNode.kernels:
+            combinations = {'kernel': mdp.nodes.LibSVMNode.kernels,
+                            'classifier': mdp.nodes.LibSVMNode.classifiers}
+        
+            for comb in utils.orthogonal_permutations(combinations):
                 svm_node = mdp.nodes.LibSVMNode()
-                svm_node.setKernel(k)
+                svm_node.set_kernel(comb['kernel'])
+                svm_node.set_classifier(comb['classifier'])
                 svm_node.train(traindata_real, trainlab)
                 svm_node.stop_training()
-                out = svm_node.classify(testdata_real)
 
+                out = svm_node.classify(testdata_real)
+                print out, testlab
                 testerr = numx.where(numx.sign(out) * testlab.transpose() < 0)
-            
+
                 # TODO: Cross-validation testing
                 #svm_node._cross_validation(3, svm_node.parameter)
                 #print r.probability(testdata_real)
         
                 assert testerr == 0, 'classification result'
-
 
 def get_suite(testname=None):
     return ContribTestSuite(testname=testname)
