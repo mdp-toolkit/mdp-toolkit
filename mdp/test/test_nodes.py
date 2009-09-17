@@ -209,31 +209,24 @@ class NodesTestSuite(unittest.TestSuite):
 
     def _fastica_test_factory(self):
         # generate FastICANode testcases
-        fica_parm = []
-        for approach in ['symm', 'defl']:
-            for g in ['pow3', 'tanh', 'gaus', 'skew']:
-                for fine_g in [ None, 'pow3', 'tanh', 'gaus', 'skew']:
-                    for sample_size in [ 1, 0.99999 ]:
-                        for mu in [1, 0.999999 ]:
-                            for stab in [False, True]:
-                                if mu != 1 and stab is False:
-                                    # mu != 1 implies setting stabilization
-                                    continue
-                                # skew nonlinearity only wroks with skewed
-                                # input data
-                                if g != 'skew' and fine_g == 'skew':
-                                    continue
-                                if g == 'skew' and fine_g != 'skew':
-                                    continue
-                                fica_parm.append({
-                                    'approach': approach,
-                                    'g': g,
-                                    'fine_g': fine_g,
-                                    'sample_size' : sample_size,
-                                    'mu' : mu,
-                                    'stabilization' : stab
-                                    })
-        for parms in fica_parm:
+        fica_parm = {'approach': ['symm', 'defl'],
+                     'g': ['pow3', 'tanh', 'gaus', 'skew'],
+                     'fine_g': [ None, 'pow3', 'tanh', 'gaus', 'skew'],
+                     'sample_size': [ 1, 0.99999 ],
+                     'mu': [1, 0.999999 ],
+                     'stabilization': [False, True]}
+
+        for parms in utils.orthogonal_permutations(fica_parm):
+            if parms['mu'] != 1 and parms['stabilization'] is False:
+                # mu != 1 implies setting stabilization
+                continue
+            # skew nonlinearity only wroks with skewed
+            # input data
+            if parms['g'] != 'skew' and parms['fine_g'] == 'skew':
+                continue
+            if parms['g'] == 'skew' and parms['fine_g'] != 'skew':
+                continue
+
             testfunc, funcdesc = self._get_testFastICA(parms)
             self.addTest(unittest.FunctionTestCase(testfunc,
                                                    description=funcdesc))

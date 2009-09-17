@@ -408,3 +408,43 @@ def irep(x, n, dim):
     shp = x_shape[:dim] + (1,) + x_shape[dim:]
     return x.reshape(shp).repeat(n, axis=dim)
 # /replication functions
+
+
+def orthogonal_permutations(a_dict):
+    """
+    Takes a dictionary with lists as keys and returns all permutations
+    of these list elements in new dicts.
+    
+    This function is useful, when a method with several arguments
+    shall be tested and all of the arguments can take several values.
+    
+    The order is not defined, therefore the elements should be
+    orthogonal to each other.
+    
+    >>> for i in orthogonal_permutations({'a': [1,2,3], 'b': [4,5]}):
+            print i
+    {'a': 1, 'b': 4}
+    {'a': 1, 'b': 5}
+    {'a': 2, 'b': 4}
+    {'a': 2, 'b': 5}
+    {'a': 3, 'b': 4}
+    {'a': 3, 'b': 5}
+    """
+    pool = dict(a_dict)
+    args = []
+    for func, all_args in pool.items():
+        # check the size of the list in the second item of the tuple
+        args_with_fun = [(func, arg) for arg in all_args]
+        args.append(args_with_fun)
+    for i in _product(args):
+        yield dict(i)
+
+def _product(iterable):
+    # taken and adapted from itertools 2.6
+    pools = tuple(iterable)
+    result = [[]]
+    for pool in pools:
+        result = [x+[y] for x in result for y in pool]
+    for prod in result:
+        yield tuple(prod)
+
