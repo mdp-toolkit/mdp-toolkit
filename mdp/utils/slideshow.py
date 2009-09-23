@@ -12,9 +12,6 @@ http://javascript.internet.com/miscellaneous/image-slideshow.html
 (which in turn seems to be based on something from http://www.ricocheting.com)
 """
 
-# TODO: fix the JS indentation, currently wrong in the final file and some
-#    parts here have not been updated yet
-
 import random
 import tempfile
 import os
