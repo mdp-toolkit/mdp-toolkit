@@ -7,7 +7,8 @@ import webbrowser
 import cPickle as pickle
 import tempfile
 
-import mdp.hinet as hinet
+import mdp
+from mdp import hinet
 from mdp import numx
 
 from ..biflow import BiFlow
@@ -170,7 +171,7 @@ def show_training(flow, data_iterables, msg_iterables=None, stop_messages=None,
     html_file.write('<html>\n<head>\n<title>%s</title>\n' % title)
     html_file.write('<style type="text/css" media="screen">')
     html_file.write(INSPECTION_STYLE)
-    html_file.write(hinet.SHOW_FLOW_STYLE)
+    html_file.write(mdp.utils.BASIC_STYLE)
     html_file.write('</style>\n</head>\n<body>\n')
     html_file.write('<h3>%s</h3>\n' % title)
     html_file.write(slideshow)
@@ -289,7 +290,7 @@ def show_execution(flow, x, msg=None, target=None, path=None, name=None,
     html_file.write('<html>\n<head>\n<title>%s</title>\n' % title)
     html_file.write('<style type="text/css" media="screen">')
     html_file.write(INSPECTION_STYLE)
-    html_file.write(hinet.SHOW_FLOW_STYLE)
+    html_file.write(mdp.utils.BASIC_STYLE)
     html_file.write('</style>\n</head>\n<body>\n')
     html_file.write('<h3>%s</h3>\n' % title)
     html_file.write(slideshow)
