@@ -12,6 +12,9 @@ http://javascript.internet.com/miscellaneous/image-slideshow.html
 (which in turn seems to be based on something from http://www.ricocheting.com)
 """
 
+# TODO: fix the JS indentation, currently wrong in the final file and some
+#    parts here have not been updated yet
+
 import random
 import tempfile
 import os
@@ -578,60 +581,60 @@ class ImageHTMLSlideShow(HTMLSlideShow):
         super(ImageHTMLSlideShow, self).__init__(**kwargs)
         
     js_controls_template = r'''
-    ${{super(ImageHTMLSlideShow, self).js_controls_template(vars())}}
-    
-    var magnification = $magnification; // image magnification
-    var original_width = $width; // original image width
-    var original_height = $height; // original image height
-    
-    that.smaller = function () {
-        magnification = magnification / 2;
-        slideform.${id}_magtext.value = magnification.toString();
-        that.resizeImage();
-    }
-    
-    that.larger = function (text) {
-        magnification = magnification * 2;
-        slideform.${id}_magtext.value = magnification.toString();
-        that.resizeImage();
-    }
-    
-    that.changeMag = function () {
-        magnification = parseFloat(slideform.${id}_magtext.value);
-        that.resizeImage();
-    }
-    
-    that.resizeImage = function () {
-        document.images.image_display.width =
-            parseInt(magnification * original_width, 10);
-        document.images.image_display.height =
-            parseInt(magnification * original_height, 10);
-    }
-    '''
-    
+        ${{super(ImageHTMLSlideShow, self).js_controls_template(vars())}}
+        
+        var magnification = $magnification; // image magnification
+        var original_width = $width; // original image width
+        var original_height = $height; // original image height
+        
+        that.smaller = function () {
+            magnification = magnification / 2;
+            slideform.${id}_magtext.value = magnification.toString();
+            that.resizeImage();
+        }
+        
+        that.larger = function (text) {
+            magnification = magnification * 2;
+            slideform.${id}_magtext.value = magnification.toString();
+            that.resizeImage();
+        }
+        
+        that.changeMag = function () {
+            magnification = parseFloat(slideform.${id}_magtext.value);
+            that.resizeImage();
+        }
+        
+        that.resizeImage = function () {
+            document.images.image_display.width =
+                parseInt(magnification * original_width, 10);
+            document.images.image_display.height =
+                parseInt(magnification * original_height, 10);
+        }
+        '''
+        
     js_loadslide_template = r'''
-    that.loadSlide = function () {
-        document.images.image_display.src =
-            slideselect[current_slide].value;
-    }
+        that.loadSlide = function () {
+            document.images.image_display.src =
+                slideselect[current_slide].value;
+        }
     '''
     
     js_onload_template = r'''
-    that.onLoad = function () {
-        slideform = document.${id}_slideform;
-        slideselect = slideform.${id}_slideselect;
-        current_slide = slideselect.selectedIndex;
-        that.updateSlide();
-        ${{
-        if delay is not None:
-            self.write('slideform.%s_delaytext.value = ' % id +
-                       'show_delay.toString();\n')
-        if mag_control:
-            self.write('slideform.%s_magtext.value = ' % id +
-                       'magnification.toString();\n')
-        }}
-        that.resizeImage();
-    }
+        that.onLoad = function () {
+            slideform = document.${id}_slideform;
+            slideselect = slideform.${id}_slideselect;
+            current_slide = slideselect.selectedIndex;
+            that.updateSlide();
+            ${{
+            if delay is not None:
+                self.write('slideform.%s_delaytext.value = ' % id +
+                           'show_delay.toString();\n')
+            if mag_control:
+                self.write('slideform.%s_magtext.value = ' % id +
+                           'magnification.toString();\n')
+            }}
+            that.resizeImage();
+        }
     '''
     
     html_box_template = r'''
@@ -685,7 +688,8 @@ class SectionImageHTMLSlideShow(SectionHTMLSlideShow, ImageHTMLSlideShow):
 
 ### helper functions ###
 
-# TODO: extract image size automatically
+# TODO: extract image size automatically,
+#    but this introduces an optional dependency on PIL
 
 def image_slideshow(filenames, image_size, title=None,
                     section_ids=None,
