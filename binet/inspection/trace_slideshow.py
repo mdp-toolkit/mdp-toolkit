@@ -52,10 +52,10 @@ class ExecuteHTMLSlideShow(HTMLSlideShow):
     
     $<js_ajax_template>
     
-    function loadSlide() {
-        loadWholePage(document.slideform.slide[current_slide].value);
+    that.loadSlide = function () {
+        loadWholePage(slideselect[current_slide].value);
     }
-    '''
+'''
     
     js_ajax_template = r'''
     /**
@@ -168,12 +168,13 @@ class ExecuteHTMLSlideShow(HTMLSlideShow):
     }
     '''
     
+    # Note: We do not use an id prefix, since there is only one slideshow.
     html_bottom_template = r'''
-    <div id="storage" style="display:none;">
-    </div>
-    <div id="displayed">
-    </div>
-    '''
+<div id="storage" style="display:none;">
+</div>
+<div id="displayed">
+</div>
+'''
 
 
 class SectExecuteHTMLSlideShow(SectionHTMLSlideShow, ExecuteHTMLSlideShow):
@@ -197,6 +198,7 @@ class TrainHTMLSlideShow(SectionHTMLSlideShow, ExecuteHTMLSlideShow):
         loop -- If True continue with first slide when the last slide is
             reached during the automatic slideshow (default is False).
         """
+        slideshow_id = self._get_random_id()
         n_nodes = len(index_table)
         n_phases = max([len(phase_indices) 
                         for phase_indices in index_table])
@@ -217,8 +219,9 @@ class TrainHTMLSlideShow(SectionHTMLSlideShow, ExecuteHTMLSlideShow):
                 end_index = index_table[i_node][i_phase][0]
                 # train link stuff
                 html_string = ('<span class="inactive_section" ' +
-                        'id="section_id_%d" ' % train_id +
-                        'onClick="setSlide(%d);">train</span>' % start_index +
+                        'id="%s_section_id_%d" ' % (slideshow_id, train_id) +
+                        'onClick="%s.setSlide(%d);">train</span>' %
+                            (slideshow_id, start_index) +
                         '&nbsp;')
                 section_ids += [train_id,] * (end_index - start_index + 1) 
                 train_id += 1
@@ -226,8 +229,9 @@ class TrainHTMLSlideShow(SectionHTMLSlideShow, ExecuteHTMLSlideShow):
                 start_index = end_index + 1
                 end_index = index_table[i_node][i_phase][1]
                 html_string += ('<span class="inactive_section" ' +
-                        'id="section_id_%d" ' % train_id +
-                        'onClick="setSlide(%d);">stop</span>' % start_index)
+                        'id="%s_section_id_%d" ' % (slideshow_id, train_id) +
+                        'onClick="%s.setSlide(%d);">stop</span>' %
+                            (slideshow_id, start_index))
                 train_table[i_phase+1][i_node+1] = html_string
                 section_ids += [train_id,] * (end_index - start_index + 1)
                 train_id += 1
@@ -241,18 +245,18 @@ class TrainHTMLSlideShow(SectionHTMLSlideShow, ExecuteHTMLSlideShow):
         super(TrainHTMLSlideShow, self).__init__(**kwargs)
         
     html_top_template = r'''
-    <table class="slideshow">
-    ${{
-    for row in control_table:
-        self.write('<tr>\n')
-        for cell in row:
-            self.write('<td> %s </td>\n' % cell)
-        self.write('</tr>\n')
-    }}
-    </table>
-    <br>
-    '''
+<table class="slideshow">
+${{
+for row in control_table:
+    self.write('<tr>\n')
+    for cell in row:
+        self.write('<td> %s </td>\n' % cell)
+    self.write('</tr>\n')
+}}
+</table>
+<br>
+'''
     
     html_controls_template = r'''
-    ${{super(SectionHTMLSlideShow, self).html_controls_template(vars())}} 
-    '''
+${{super(SectionHTMLSlideShow, self).html_controls_template(vars())}} 
+'''

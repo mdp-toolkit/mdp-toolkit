@@ -1,6 +1,6 @@
 """A lightweight python templating engine.    Templet version 2 beta.
 
-Slighlty modifed version for MDP.
+Slighlty modifed version for MDP (different indentation handling).
 
 
 Supports two templating idioms:
@@ -140,7 +140,11 @@ class _TemplateBuilder(object):
         self.constpat, self.emitpat, self.callpat = constpat, emitpat, callpat
 
     def __realign(self, str, spaces=''):
-        """Removes any leading empty columns of spaces and an initial empty line"""
+        """Removes any leading empty columns of spaces and an initial
+        empty line.
+        
+        This is important for embedded Python code.
+        """
         lines = str.splitlines()
         if lines and not lines[0].strip(): del lines[0]
         lspace = [len(l) - len(l.lstrip()) for l in lines if l.lstrip()]
@@ -149,18 +153,25 @@ class _TemplateBuilder(object):
 
     def build(self, template, filename, s=''):
         code = []
-        for i, part in enumerate(self.__pattern.split(self.__realign(template))):
+        for i, part in enumerate(self.__pattern.split(template)):
             if i % 2 == 0:
-                if part: code.append(s + self.constpat % repr(part))
+                if part:
+                    code.append(s + self.constpat % repr(part))
             else:
                 if not part or (part.startswith('<') and self.callpat is None):
                     raise SyntaxError('Unescaped $ in ' + filename)
-                elif part.endswith('\n'): continue
-                elif part == '$': code.append(s + self.emitpat % '"$"')
-                elif part.startswith('{{'): code.append(self.__realign(part[2:-2], s))
-                elif part.startswith('{'): code.append(s + self.emitpat % part[1:-1])
-                elif part.startswith('<'): code.append(s + self.callpat % part[1:-1])
-                else: code.append(s + self.emitpat % part)
+                elif part.endswith('\n'):
+                    continue
+                elif part == '$':
+                    code.append(s + self.emitpat % '"$"')
+                elif part.startswith('{{'):
+                    code.append(self.__realign(part[2:-2], s))
+                elif part.startswith('{'):
+                    code.append(s + self.emitpat % part[1:-1])
+                elif part.startswith('<'):
+                    code.append(s + self.callpat % part[1:-1])
+                else:
+                    code.append(s + self.emitpat % part)
         return '\n'.join(code)
 
 
