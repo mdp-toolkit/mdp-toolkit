@@ -9,9 +9,10 @@ from covariance import (CovarianceMatrix, DelayCovarianceMatrix,
                         MultipleCovarianceMatrices,CrossCovarianceMatrix)
 from progress_bar import progressinfo
 from svn_revision import get_svn_revision
-from slideshow import (SLIDESHOW_STYLE, HTMLSlideShow, ImageHTMLSlideShow,
+from slideshow import (BASIC_STYLE, SLIDESHOW_STYLE, HTMLSlideShow,
+                       ImageHTMLSlideShow,
                        SectionHTMLSlideShow, SectionImageHTMLSlideShow,
-                       image_slideshow)
+                       image_slideshow, show_image_slideshow)
 
 
 import mdp as _mdp

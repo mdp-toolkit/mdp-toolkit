@@ -381,29 +381,6 @@ class HiNetHTMLTranslator(HiNetTranslator):
 
 ## Helper functions ##
 
-# addtional styles for a nice looking presentation
-SHOW_FLOW_STYLE = '''
-html, body {
-    font-family: sans-serif;
-    font-size: normal;
-    text-align: center;
-}
-
-h1, h2, h3, h4 {
-    color: #003399;
-}
-
-par.explanation {
-    color: #003399;
-    font-size: small;
-}
-
-table.flow {
-    margin-left:auto;
-    margin-right:auto;
-}
-'''
-
 def show_flow(flow, filename=None, title="MDP flow display",
               show_size=False, browser_open=True):
     """Write a flow into a HTML file, open it in the browser and
@@ -424,7 +401,7 @@ def show_flow(flow, filename=None, title="MDP flow display",
         html_file = open(filename, 'w')
     html_file.write('<html>\n<head>\n<title>%s</title>\n' % title)
     html_file.write('<style type="text/css" media="screen">')
-    html_file.write(SHOW_FLOW_STYLE)
+    html_file.write(mdp.utils.BASIC_STYLE)
     html_file.write(HINET_STYLE)
     hinet_translator = mdp.hinet.HiNetHTMLTranslator(show_size=show_size)
     html_file.write('</style>\n</head>\n<body>\n')
