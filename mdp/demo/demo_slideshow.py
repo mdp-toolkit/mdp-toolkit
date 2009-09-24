@@ -1,3 +1,6 @@
+"""
+Test demonstration for creating a single slideshow.
+"""
 
 import os
 import math
@@ -8,7 +11,7 @@ n_frames = 25
 path = "animation"
 try:
     os.makedirs(path)
-except:
+except Exception:
     pass
 
 # create the animation images

@@ -93,7 +93,7 @@ class HTMLSlideShow(templet.Template):
     """
     
     def __init__(self, title=None, delay=100, delay_delta=None,
-                 loop=True, slideshow_id=None, **kwargs):
+                 loop=True, slideshow_id=None, shortcuts=True, **kwargs):
         """Return the complete HTML code for the slideshow.
         
         title -- Optional slideshow title (for defualt None not title is shown).
@@ -106,6 +106,9 @@ class HTMLSlideShow(templet.Template):
             is also the id of the div with the slideshow (so it can be used
             by CSS) and it is used as a prefix for the HTML elements.
             If the value is None (default) then a random id is used.
+        shortcuts -- Bind keyboard shortcuts to this slideshow (default is
+            True). Note that keyboard shortcuts only work for a single
+            slideshow per page.
         """
         # translate boolean variable into JS format
         if loop:
@@ -217,7 +220,10 @@ var $slideshow_id = function () {
     return that;
 }();
 
-$<js_keyboard_shortcuts_template>
+${{
+if shortcuts:
+    self.js_keyboard_shortcuts_template(vars())
+}}
 
 //  End -->
 </script>
@@ -316,10 +322,7 @@ $slideshow_id.onLoad();
         slideform.${slideshow_id}_delaytext.value = show_delay.toString();
     }
 '''
-    
-    # TODO: how to deal with shortcuts for multiple slideshows?
-    #    simply repeat, so that the last slideshow is accessible
-    
+
     # define keyboard shortcuts
     js_keyboard_shortcuts_template = r'''
 document.onkeydown = function(e) {
@@ -327,19 +330,19 @@ document.onkeydown = function(e) {
         return;
     }
     else if (e.which == 37) { // left key
-        document.getElementById("prevButton").click();
+        document.getElementById("${slideshow_id}_prevButton").click();
     }
     else if(e.which == 39) { // right key
-        document.getElementById("nextButton").click();
+        document.getElementById("${slideshow_id}_nextButton").click();
     }
     else if(e.which == 38) { // up key
-        document.getElementById("firstButton").click();
+        document.getElementById("${slideshow_id}_firstButton").click();
     }
     else if(e.which == 40) { // down key
-        document.getElementById("lastButton").click();
+        document.getElementById("${slideshow_id}_lastButton").click();
     }
     else if(e.which == 45) { // insert key
-        document.getElementById("startButton").click();
+        document.getElementById("${slideshow_id}_startButton").click();
     }
 }
 '''
@@ -387,8 +390,7 @@ delay: <input type="text" name="${slideshow_id}_delaytext"
 class SectionHTMLSlideShow(HTMLSlideShow):
     """Astract slideshow with additional support for section markers."""
     
-    def __init__(self, section_ids, title=None, delay=100, delay_delta=None,
-                 loop=True, slideshow_id=None, **kwargs):
+    def __init__(self, section_ids, slideshow_id=None, **kwargs):
         """Return the complete HTML code for the slideshow.
         
         section_ids -- List with the section id for each slide index. The id
@@ -491,19 +493,19 @@ document.onkeydown = function(e) {
         return;
     }
     else if (e.which === 37) { // left key
-        document.getElementById("prevButton").click();
+        document.getElementById("${slideshow_id}_prevButton").click();
     }
     else if(e.which === 39) { // right key
-        document.getElementById("nextButton").click();
+        document.getElementById("${slideshow_id}_nextButton").click();
     }
     else if(e.which === 38) { // up key
-        document.getElementById("prevSectionButton").click();
+        document.getElementById("${slideshow_id}_prevSectionButton").click();
     }
     else if(e.which === 40) { // down key
-        document.getElementById("nextSectionButton").click();
+        document.getElementById("${slideshow_id}_nextSectionButton").click();
     }
     else if(e.which === 45) { // insert key
-        document.getElementById("startButton").click();
+        document.getElementById("${slideshow_id}_startButton").click();
     }
 }
     '''
@@ -513,8 +515,8 @@ document.onkeydown = function(e) {
     value="|<<" title="beginning" id="${slideshow_id}_firstButton">
 <input type=button onClick="$slideshow_id.previousSection();" value="|<"
     title="previous section" id="${slideshow_id}_prevSectionButton">
-<input type=button onClick="$slideshow_id.previous();" value="<" title="previous"
-    id="${slideshow_id}_prevButton">
+<input type=button onClick="$slideshow_id.previous();" value="<"
+    title="previous" id="${slideshow_id}_prevButton">
 <input type=button name="startbutton"
     onClick="$slideshow_id.startstop(this.value);"
     value="Start" title="autoplay" id="${slideshow_id}_startButton">
@@ -555,10 +557,8 @@ class ImageHTMLSlideShow(HTMLSlideShow):
     HTMLSlideShow.
     """
     
-    def __init__(self, filenames, image_size, title=None, delay=100,
-                 delay_delta=20, loop=True, slideshow_id=None,
-                 magnification=1, mag_control=True,
-                 **kwargs):
+    def __init__(self, filenames, image_size,
+                 magnification=1, mag_control=True, **kwargs):
         """Return the complete HTML code for a slideshow of the given images.
         
         filenames -- sequence of strings, containing the path for each image
@@ -606,16 +606,16 @@ class ImageHTMLSlideShow(HTMLSlideShow):
     }
     
     that.resizeImage = function () {
-        document.images.image_display.width =
+        document.images.${slideshow_id}_image_display.width =
             parseInt(magnification * original_width, 10);
-        document.images.image_display.height =
+        document.images.${slideshow_id}_image_display.height =
             parseInt(magnification * original_height, 10);
     }
 '''
         
     js_loadslide_template = r'''
     that.loadSlide = function () {
-        document.images.image_display.src =
+        document.images.${slideshow_id}_image_display.src =
             slideselect[current_slide].value;
     }
 '''
@@ -643,7 +643,8 @@ class ImageHTMLSlideShow(HTMLSlideShow):
     html_box_template = r'''
 <tr>
 <td style="padding: 20 20 20 20">
-<img src="" name="image_display" width="$width" height="$height">
+<img src="" name="${slideshow_id}_image_display"
+    width="$width" height="$height">
 </td>
 </tr>
 '''
@@ -673,9 +674,7 @@ magnification: <input type="text" name="${slideshow_id}_magtext"
 class SectionImageHTMLSlideShow(SectionHTMLSlideShow, ImageHTMLSlideShow):
     """Image slideshow with section markers."""
     
-    def __init__(self, filenames, section_ids, image_size, title=None,
-                 delay=100, delay_delta=20, loop=True, slideshow_id=None,
-                 magnification=1, mag_control=True, **kwargs):
+    def __init__(self, filenames, section_ids, image_size, **kwargs):
         """Return the HTML code for a sectioned slideshow of the given images.
         
         For keyword arguments see the super classes.
@@ -694,10 +693,9 @@ class SectionImageHTMLSlideShow(SectionHTMLSlideShow, ImageHTMLSlideShow):
 # TODO: extract image size automatically,
 #    but this introduces an optional dependency on PIL
 
-def image_slideshow(filenames, image_size, title=None,
-                    section_ids=None,
+def image_slideshow(filenames, image_size, title=None, section_ids=None,
                     delay=100, delay_delta=20, loop=True, slideshow_id=None,
-                    magnification=1, mag_control=True):
+                    magnification=1, mag_control=True, shortcuts=True):
     """Return a string with the JS and HTML code for an image slideshow.
     
     Note that the CSS code for the slideshow is not included, so you should
@@ -707,9 +705,9 @@ def image_slideshow(filenames, image_size, title=None,
     image_size -- Tuple (x,y) with the original image size, or enter
         a different size to force scaling.
     title -- Optional slideshow title (for default None not title is shown).
-    section_ids -- List with the section slideshow_id for each slide index. The slideshow_id
-            can a string or a number. Default value None disables the
-            section feature.
+    section_ids -- List with the section slideshow_id for each slide index.
+        The slideshow_id can a string or a number. Default value None disables
+        the section feature.
    
     For additional keyword arguments see the ImageHTMLSlideShow class.
     """
@@ -719,11 +717,10 @@ def image_slideshow(filenames, image_size, title=None,
         slideshow = ImageHTMLSlideShow(**vars())
     return str(slideshow)
 
-def show_image_slideshow(filename,
-                         filenames, image_size, title=None, section_ids=None,
-                         delay=100, delay_delta=20, loop=True, slideshow_id=None,
-                         magnification=1, mag_control=True,
-                         browser_open=True):
+def show_image_slideshow(filename, filenames, image_size, title=None,
+                         section_ids=None, delay=100, delay_delta=20,
+                         loop=True, slideshow_id=None,
+                         magnification=1, mag_control=True, browser_open=True):
     """Write the slideshow into a HTML file, open it in the browser and
     return the file name.
     
