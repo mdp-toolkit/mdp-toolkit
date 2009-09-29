@@ -340,6 +340,17 @@ class HinetTestSuite(NodesTestSuite):
         x = numx.array([range(0, sboard.input_dim), 
                         range(101, 101+sboard.input_dim)])
         sboard.execute(x)
+        
+    def testDoubleRhombRouting1(self):
+        sboard = mh.DoubleRhomb2dSwitchboard(x_even_in_channels=4, 
+                                             y_even_in_channels=2, 
+                                             diag_field_channels=2,
+                                             in_channel_dim=1)
+        assert numx.all(sboard.connections == 
+                        numx.array([1,8,9,5, 2,9,10,6]))
+        x = numx.array([range(0, sboard.input_dim), 
+                        range(101, 101+sboard.input_dim)])
+        sboard.execute(x)
 
     def testHinetSimpleNet(self):
         switchboard = mh.Rectangular2dSwitchboard(x_in_channels=12, 

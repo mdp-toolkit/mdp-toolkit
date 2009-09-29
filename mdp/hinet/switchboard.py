@@ -236,7 +236,9 @@ class DoubleRect2dSwitchboard(Switchboard):
     
     Note that the output of this switchboard cannot be interpreted as
     a rectangular grid, because the uneven fields are shifted. Instead it is
-    a hexagonal grid.
+    a rhombic grid (it is not a hexagonal grid because the distances of the
+    field centers do not satisfy the necessary relation).
+    See http://en.wikipedia.org/wiki/Lattice_(group)
     
     Example for a 6x4 input and a field size of 2 in both directions:
     
@@ -376,6 +378,109 @@ class DoubleRect2dSwitchboard(Switchboard):
                         first_out_con += self.in_channel_dim
         Switchboard.__init__(self, input_dim=self.in_channels * in_channel_dim,
                              connections=connections)
+        
+
+class DoubleRhomb2dSwitchboardException(SwitchboardException):
+    """Exception for routing problems in the DoubleRhomb2dSwitchboard class."""
+    pass
+
+
+class DoubleRhomb2dSwitchboard(Switchboard):
+    """Rectangular lattice switchboard covering a rhombic lattice.
+    
+    All inner points of the rhombic lattice are covered twice. The rectangular
+    fields are rotated by 45 degree.
+    """
+    
+    def __init__(self, x_even_in_channels, y_even_in_channels,
+                 diag_field_channels, in_channel_dim=1):
+        """Calculate the connections.
+        
+        Note that the incoming data will be interpreted as a rhombic grid,
+        as it is produced by DoubleRect2dSwitchboard.
+        
+        Keyword arguments:
+        x_even_in_channels -- Number of even input channels in the x-direction.
+        y_even_in_channels -- Number of even input channels in the y-direction
+        diag_field_channels -- Field edge size (before the rotation).
+        in_channel_dim -- Number of connections per input channel
+        """
+        ## check parameters for inconsistencies ##
+        if diag_field_channels % 2:
+            err = ("diag_field_channels must be even (for double cover)")
+            raise DoubleRhomb2dSwitchboardException(err)
+        if (x_even_in_channels - 1) % (diag_field_channels // 2):
+            err = ("diag_field_channels value is not compatible with "
+                   "x_even_in_channels")
+            raise DoubleRhomb2dSwitchboardException(err)
+        if (y_even_in_channels - 1) % (diag_field_channels // 2):
+            err = ("diag_field_channels value is not compatible with "
+                   "y_even_in_channels")
+            raise DoubleRhomb2dSwitchboardException(err)
+        ## count channels and stuff
+        self.in_channel_dim = in_channel_dim
+        input_dim = ((2 * x_even_in_channels * y_even_in_channels
+                     - x_even_in_channels - y_even_in_channels + 1) *
+                     in_channel_dim)
+        self.out_channel_dim = in_channel_dim * diag_field_channels**2
+        self.x_out_channels = x_even_in_channels // diag_field_channels
+        self.y_out_channels = y_even_in_channels // diag_field_channels
+        self.output_channels = self.x_out_channels * self.y_out_channels
+        output_dim = self.output_channels * self.out_channel_dim
+        ## prepare iteration over fields
+        even_in_trans = CoordinateTranslator(x_even_in_channels,
+                                             y_even_in_channels)
+        uneven_in_trans = CoordinateTranslator(x_even_in_channels - 1,
+                                               y_even_in_channels - 1)
+        uneven_in_offset = x_even_in_channels * y_even_in_channels
+        # input-output mapping of connections
+        # connections has an entry for each output connection, 
+        # containing the index of the input connection.
+        connections = numx.zeros([output_dim], dtype=numx.int32)
+        first_out_con = 0
+        for x_out_chan in range(self.x_out_channels):
+            for y_out_chan in range(self.y_out_channels):
+                # inner loop over perceptive field
+                # TODO: Fix ambivalent offset issue
+                x_start_chan = x_out_chan * (diag_field_channels // 2) + 1
+                y_start_chan = y_out_chan * (diag_field_channels // 2)
+                # pick the inital offset to
+                # iterate over both even and uneven lines
+                for iy, y_in_chan in enumerate(range(y_start_chan,
+                                y_start_chan + (2 * diag_field_channels - 1))):
+                    # half width of the field in the given row
+                    if iy <= (diag_field_channels - 1):
+                        field_width = iy + 1
+                    else:
+                        field_width = (diag_field_channels - 1 -
+                                       (iy % diag_field_channels))
+                        
+                    #print "w: %d" % field_width
+                        
+                    for x_in_chan in range(x_start_chan - field_width // 2,
+                                           x_start_chan + field_width // 2
+                                                + field_width % 2):
+                        # array index of the first input connection
+                        # for this input channel
+                        if not y_in_chan % 2:
+                            first_in_con = (
+                                even_in_trans.image_to_index(
+                                                x_in_chan, y_in_chan // 2) *
+                                                        self.in_channel_dim)
+                        else:
+                            first_in_con = (
+                                (uneven_in_trans.image_to_index(
+                                                x_in_chan, y_in_chan // 2)
+                                 + uneven_in_offset) * self.in_channel_dim)
+                        connections[first_out_con:
+                                    first_out_con + self.in_channel_dim] = \
+                            range(first_in_con,
+                                  first_in_con + self.in_channel_dim)
+                        first_out_con += self.in_channel_dim
+                        
+        #print connections
+                        
+        Switchboard.__init__(self, input_dim=input_dim, connections=connections)
         
 
 # utility class for Rectangular2dSwitchboard

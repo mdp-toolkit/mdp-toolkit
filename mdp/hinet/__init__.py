@@ -30,7 +30,9 @@ then feed the output into a Layer and each Node will get the correct input.
 from flownode import FlowNode
 from layer import Layer, SameInputLayer, CloneLayer
 from switchboard import (Switchboard, Rectangular2dSwitchboardException, 
-                         Rectangular2dSwitchboard, DoubleRect2dSwitchboard)
+                         Rectangular2dSwitchboard, DoubleRect2dSwitchboard,
+                         DoubleRhomb2dSwitchboardException,
+                         DoubleRhomb2dSwitchboard)
 from hinet_translator import (HiNetTranslator, HiNetHTMLTranslator, 
                               HINET_STYLE, NewlineWriteFile, show_flow)
 
