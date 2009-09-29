@@ -140,6 +140,170 @@ class Rectangular2dSwitchboard(Switchboard):
         self.y_field_spacing = y_field_spacing
         self.x_unused_channels = 0  # number of channels which are not covered
         self.y_unused_channels = 0
+        ## check parameters for inconsistencies
+        if (x_field_channels > x_in_channels):
+            err = ("Number of field channels"
+                   "exceeds the number of input channels in x-direction. "
+                   "This would lead to an empty connection list.")
+            raise Rectangular2dSwitchboardException(err)
+        if (y_field_channels > y_in_channels):
+            err = ("Number of field channels"
+                   "exceeds the number of input channels in y-direction. "
+                   "This would lead to an empty connection list.")
+            raise Rectangular2dSwitchboardException(err)
+        # number of output channels in x-direction
+        self.x_out_channels = ((x_in_channels - x_field_channels) //
+                               x_field_spacing + 1)
+        self.x_unused_channels = x_in_channels - x_field_channels
+        if self.x_unused_channels > 0:
+            self.x_unused_channels %= x_field_spacing
+        elif self.x_unused_channels < 0:
+            self.x_unused_channels = x_in_channels
+        if self.x_unused_channels and not ignore_cover:
+            err = ("Channel fields do not "
+                   "cover all input channels in x-direction.")
+            raise Rectangular2dSwitchboardException(err)
+        # number of output channels in y-direction                       
+        self.y_out_channels = ((y_in_channels - y_field_channels) //
+                               y_field_spacing + 1)
+        self.y_unused_channels = y_in_channels - y_field_channels
+        if self.y_unused_channels > 0:
+            self.y_unused_channels %= y_field_spacing
+        elif self.y_unused_channels < 0:
+            self.y_unused_channels = y_in_channels
+        if self.y_unused_channels and not ignore_cover:
+            err = ("Channel fields do not "
+                   "cover all input channels in y-direction.")
+            raise Rectangular2dSwitchboardException(err)
+        ## end of parameters checks
+        self.output_channels = self.x_out_channels * self.y_out_channels
+        input_dim = self.in_channels * in_channel_dim
+        output_dim = self.output_channels * self.out_channel_dim
+        self.in_trans = CoordinateTranslator(x_in_channels, y_in_channels)
+        self.out_trans = CoordinateTranslator(self.x_out_channels, 
+                                              self.y_out_channels)
+        self.field_trans = CoordinateTranslator(self.x_field_channels, 
+                                                self.y_field_channels)
+        # input-output mapping of connections
+        # connections has an entry for each output connection, 
+        # containing the index of the input connection.
+        connections = numx.zeros([output_dim], dtype=numx.int32)
+        for x_out_chan in range(self.x_out_channels):
+            for y_out_chan in range(self.y_out_channels):
+                # inner loop over perceptive field
+                x_start_chan = x_out_chan * x_field_spacing
+                y_start_chan = y_out_chan * y_field_spacing
+                base_out_con = (self.out_trans.image_to_index(x_out_chan,
+                                                              y_out_chan)
+                                * self.out_channel_dim)
+                self._add_single_field(connections, x_start_chan, y_start_chan,
+                                       base_out_con)
+        Switchboard.__init__(self, input_dim=input_dim, connections=connections)
+
+    def _add_single_field(self, connections, x_start_chan, y_start_chan,
+                          base_out_con):
+        """Add the connections for a single receptive field.
+        
+        The connections are written into the provided connections list.
+        """
+        for ix, x_in_chan in enumerate(range(x_start_chan,
+                                        x_start_chan + self.x_field_channels)):
+            for iy, y_in_chan in enumerate(range(y_start_chan,
+                                        y_start_chan + self.y_field_channels)):
+            # array index of the first input connection
+            # for this input channel
+                first_in_con = (self.in_trans.image_to_index(
+                                                    x_in_chan, y_in_chan) *
+                                    self.in_channel_dim)
+                field_out_con = (self.field_trans.image_to_index(ix, iy) *
+                                    self.in_channel_dim)
+                first_out_con = base_out_con + field_out_con
+                connections[first_out_con:
+                            first_out_con + self.in_channel_dim] = \
+                    range(first_in_con, first_in_con + self.in_channel_dim)
+
+    def get_out_channel_node(self, channel):
+        """Return a Switchboard that does the routing to a specific 
+        output channel.
+        
+        One can use the resulting nodes in a SameInputLayer for cases where the 
+        memory footprint of the output is a problem.
+        
+        channel -- The index of the required channel. Can be also a tuple with
+            the image coordinates of the channel.
+        """
+        if isSequenceType(channel):
+            index = self.out_trans.image_to_index(channel[0], channel[1])
+        else:
+            index = channel
+        # construct connection table for the channel
+        index *= self.out_channel_dim
+        return Switchboard(self.input_dim, 
+                    self.connections[index : index+self.out_channel_dim])
+        
+
+class DoubleRect2dSwitchboard(Rectangular2dSwitchboard):
+    """Special 2d Switchboard where each inner point is covered twice.
+    
+    First the input is covered with non-overlapping rectangular fields.
+    Then the input is covered with fields of the same size that are shifted
+    in the x and y direction by half the field size (we call this the
+    uneven fields).
+    
+    Note that the output of this switchboard cannot be interpreted as
+    a rectangular grid, because the uneven fields are shifted.
+    
+    Example for a 6x4 input and a field size of 2 in both directions:
+    
+    even fields:
+    
+    1 1 2 2 3 3
+    1 1 2 2 3 3
+    4 4 5 5 6 6
+    4 4 5 5 6 6
+    
+    uneven fields:
+    
+    * * * * * *
+    * 7 7 8 8 *
+    * 7 7 8 8 *
+    * * * * * *
+    
+    Note that the uneven connections come after all the even connections in
+    the connections sequence.
+    """
+    
+    def __init__(self, x_in_channels, y_in_channels, 
+                 x_field_channels, y_field_channels,
+                 in_channel_dim=1, ignore_cover=False):
+        """Calculate the connections.
+        
+        Keyword arguments:
+        x_in_channels -- Number of input channels in the x-direction.
+            This has to be specified, since the actual input is only one
+            1d array.
+        y_in_channels -- Number of input channels in the y-direction
+        in_channel_dim -- Number of connections per input channel
+        x_field_channels -- Number of channels in each field in the x-direction
+        y_field_channels -- Number of channels in each field in the y-direction
+        ignore_cover -- Boolean value defines if an 
+            Rectangular2dSwitchboardException is raised when the fields do not
+            cover all input channels. Set this to True if you are willing to
+            risk loosing input channels at the border.
+        """
+        ## count channels and stuff
+        self.in_channel_dim = in_channel_dim
+        self.x_in_channels = x_in_channels
+        self.y_in_channels = y_in_channels
+        self.in_channels = x_in_channels * y_in_channels
+        self.x_field_channels = x_field_channels
+        self.y_field_channels = y_field_channels
+        self.out_channel_dim = (in_channel_dim * 
+                                x_field_channels * y_field_channels)
+        x_field_spacing = x_field_channels / 2
+        y_field_spacing = y_field_channels / 2
+        self.x_unused_channels = 0  # number of channels which are not covered
+        self.y_unused_channels = 0
         ## check parameters for inconsistencies ##
         if (x_field_channels > x_in_channels):
             err = ("Number of field channels"
@@ -175,65 +339,52 @@ class Rectangular2dSwitchboard(Switchboard):
             err = ("Channel fields do not "
                    "cover all input channels in y-direction.")
             raise Rectangular2dSwitchboardException(err)
-        ## end of parameters checks ##
-        self.output_channels = self.x_out_channels * self.y_out_channels
+        ## end of parameters checks
+        self.output_channels = ((self.x_out_channels * self.y_out_channels -
+                                 1) / 2 + 1)
         input_dim = self.in_channels * in_channel_dim
         output_dim = self.output_channels * self.out_channel_dim
         self.in_trans = CoordinateTranslator(x_in_channels, y_in_channels)
-        self.out_trans = CoordinateTranslator(self.x_out_channels, 
-                                              self.y_out_channels)
         self.field_trans = CoordinateTranslator(self.x_field_channels, 
                                                 self.y_field_channels)
         # input-output mapping of connections
         # connections has an entry for each output connection, 
         # containing the index of the input connection.
         connections = numx.zeros([output_dim], dtype=numx.int32)
-        for x_out_chan in range(self.x_out_channels):
-            for y_out_chan in range(self.y_out_channels):
+        ## first create the even connections
+        even_x_out_channels = x_in_channels / (2 * x_field_spacing)
+        even_y_out_channels = y_in_channels / (2 * y_field_spacing)
+        self.out_trans = CoordinateTranslator(even_x_out_channels, 
+                                              even_y_out_channels)
+        for x_out_chan in range(even_x_out_channels):
+            for y_out_chan in range(even_y_out_channels):
                 # inner loop over perceptive field
-                x_start_chan = x_out_chan * x_field_spacing
-                y_start_chan = y_out_chan * y_field_spacing
+                x_start_chan = x_out_chan * (2 * x_field_spacing)
+                y_start_chan = y_out_chan * (2 * y_field_spacing)
                 base_out_con = (self.out_trans.image_to_index(x_out_chan,
                                                               y_out_chan)
                                 * self.out_channel_dim)
-                for ix, x_in_chan in enumerate(range(x_start_chan, 
-                                               x_start_chan+x_field_channels)):
-                    for iy, y_in_chan in enumerate(range(y_start_chan, 
-                                               y_start_chan+y_field_channels)):
-                        # array index of the first input connection 
-                        # for this input channel
-                        first_in_con = (self.in_trans.image_to_index(x_in_chan,
-                                                                     y_in_chan)
-                                        * self.in_channel_dim)
-                        field_out_con = (self.field_trans.image_to_index(ix,
-                                                                         iy)
-                                         * self.in_channel_dim)
-                        first_out_con = base_out_con + field_out_con
-                        connections[first_out_con : first_out_con +
-                                    in_channel_dim] \
-                            = range(first_in_con, first_in_con +in_channel_dim)
-        Switchboard.__init__(self, input_dim=input_dim, connections=connections)
-    
-    def get_out_channel_node(self, channel):
-        """Return a Switchboard that does the routing to a specific 
-        output channel.
+                self._add_single_field(connections, x_start_chan, y_start_chan,
+                                       base_out_con)
+        ## create the uneven connections
+        self.out_trans = CoordinateTranslator(even_x_out_channels - 1, 
+                                              even_y_out_channels - 1)
+        for x_out_chan in range(even_x_out_channels - 1):
+            for y_out_chan in range(even_y_out_channels - 1):
+                # inner loop over perceptive field
+                x_start_chan = (x_out_chan * (2 * x_field_spacing) +
+                                x_field_spacing)
+                y_start_chan = (y_out_chan * (2 * y_field_spacing) +
+                                y_field_spacing)
+                base_out_con = ((self.out_trans.image_to_index(x_out_chan,
+                                                               y_out_chan)
+                                 + even_x_out_channels * even_y_out_channels) *                               
+                                self.out_channel_dim)
+                self._add_single_field(connections, x_start_chan, y_start_chan,
+                                       base_out_con)
+        Switchboard.__init__(self, input_dim=input_dim, connections=connections)   
         
-        One can use the resulting nodes in a SameInputLayer for cases where the 
-        memory footprint of the output is a problem.
-        
-        channel -- The index of the required channel. Can be also a tuple with
-            the image coordinates of the channel.
-        """
-        if isSequenceType(channel):
-            index = self.out_trans.image_to_index(channel[0], channel[1])
-        else:
-            index = channel
-        # construct connection table for the channel
-        index *= self.out_channel_dim
-        return Switchboard(self.input_dim, 
-                    self.connections[index : index+self.out_channel_dim])
-        
-        
+
 # utility class for Rectangular2dSwitchboard
 
 class CoordinateTranslator(object):
@@ -242,7 +393,7 @@ class CoordinateTranslator(object):
     PIL image coordinates go from 0..width-1 . The first coordinate is x.
     Array coordinates also start from 0, but the first coordinate is the row.
     As depicted below we have x = column, y = row. The entry index numbers are
-    also shown ( 
+    also shown.
     
       +------> x
       | 1 2
