@@ -390,9 +390,22 @@ class DoubleRhomb2dSwitchboard(Switchboard):
     
     All inner points of the rhombic lattice are covered twice. The rectangular
     fields are rotated by 45 degree.
+
+    We assume that both the first and last line is a long line, e.g.
+    
+    *   *   *   *
+      *   *   *
+    *   *   *   *
+      *   *   *
+    *   *   *   *
+    
+    The incoming data is expected to contain the long rows first, then
+    the short rows.
+    
+    The alignment of the first field is chosen to minimize cutaway.
     """
     
-    def __init__(self, x_even_in_channels, y_even_in_channels,
+    def __init__(self, x_long_in_channels, y_long_in_channels,
                  diag_field_channels, in_channel_dim=1):
         """Calculate the connections.
         
@@ -400,39 +413,51 @@ class DoubleRhomb2dSwitchboard(Switchboard):
         as it is produced by DoubleRect2dSwitchboard.
         
         Keyword arguments:
-        x_even_in_channels -- Number of even input channels in the x-direction.
-        y_even_in_channels -- Number of even input channels in the y-direction
+        x_long_in_channels -- Number of long input channels in the x-direction.
+        y_long_in_channels -- Number of long input channels in the y-direction
         diag_field_channels -- Field edge size (before the rotation).
         in_channel_dim -- Number of connections per input channel
         """
+        if x_long_in_channels < y_long_in_channels:
+            started_in_long = 0
+            started_in_short = 1
+        else:
+            started_in_long = 1
+            started_in_short = 0
         ## check parameters for inconsistencies ##
         if diag_field_channels % 2:
             err = ("diag_field_channels must be even (for double cover)")
             raise DoubleRhomb2dSwitchboardException(err)
-        if (x_even_in_channels - 1) % (diag_field_channels // 2):
+        
+        x_chan_helper = (x_long_in_channels - started_in_long -
+                         diag_field_channels)
+        y_chan_helper = (y_long_in_channels - started_in_short -
+                         diag_field_channels)
+        
+        if x_chan_helper % (diag_field_channels // 2) or x_chan_helper < 0:
             err = ("diag_field_channels value is not compatible with "
-                   "x_even_in_channels")
+                   "x_long_in_channels")
             raise DoubleRhomb2dSwitchboardException(err)
-        if (y_even_in_channels - 1) % (diag_field_channels // 2):
+        if y_chan_helper % (diag_field_channels // 2) or y_chan_helper < 0:
             err = ("diag_field_channels value is not compatible with "
-                   "y_even_in_channels")
+                   "y_long_in_channels")
             raise DoubleRhomb2dSwitchboardException(err)
         ## count channels and stuff
         self.in_channel_dim = in_channel_dim
-        input_dim = ((2 * x_even_in_channels * y_even_in_channels
-                     - x_even_in_channels - y_even_in_channels + 1) *
+        input_dim = ((2 * x_long_in_channels * y_long_in_channels
+                     - x_long_in_channels - y_long_in_channels + 1) *
                      in_channel_dim)
         self.out_channel_dim = in_channel_dim * diag_field_channels**2
-        self.x_out_channels = x_even_in_channels // diag_field_channels
-        self.y_out_channels = y_even_in_channels // diag_field_channels
+        self.x_out_channels = 2 * x_chan_helper // diag_field_channels + 1
+        self.y_out_channels = 2 * y_chan_helper // diag_field_channels + 1
         self.output_channels = self.x_out_channels * self.y_out_channels
         output_dim = self.output_channels * self.out_channel_dim
         ## prepare iteration over fields
-        even_in_trans = CoordinateTranslator(x_even_in_channels,
-                                             y_even_in_channels)
-        uneven_in_trans = CoordinateTranslator(x_even_in_channels - 1,
-                                               y_even_in_channels - 1)
-        uneven_in_offset = x_even_in_channels * y_even_in_channels
+        long_in_trans = CoordinateTranslator(x_long_in_channels,
+                                             y_long_in_channels)
+        short_in_trans = CoordinateTranslator(x_long_in_channels - 1,
+                                               y_long_in_channels - 1)
+        short_in_offset = x_long_in_channels * y_long_in_channels
         # input-output mapping of connections
         # connections has an entry for each output connection, 
         # containing the index of the input connection.
@@ -441,11 +466,12 @@ class DoubleRhomb2dSwitchboard(Switchboard):
         for x_out_chan in range(self.x_out_channels):
             for y_out_chan in range(self.y_out_channels):
                 # inner loop over perceptive field
-                # TODO: Fix ambivalent offset issue
-                x_start_chan = x_out_chan * (diag_field_channels // 2) + 1
-                y_start_chan = y_out_chan * (diag_field_channels // 2)
-                # pick the inital offset to
-                # iterate over both even and uneven lines
+                x_start_chan = (1 + x_out_chan) * diag_field_channels // 2
+                y_start_chan = y_out_chan * diag_field_channels
+                # set the initial field offset to minimize edge loss
+                x_start_chan -= started_in_short
+                y_start_chan += started_in_short
+                # iterate over both long and short lines
                 for iy, y_in_chan in enumerate(range(y_start_chan,
                                 y_start_chan + (2 * diag_field_channels - 1))):
                     # half width of the field in the given row
@@ -454,32 +480,29 @@ class DoubleRhomb2dSwitchboard(Switchboard):
                     else:
                         field_width = (diag_field_channels - 1 -
                                        (iy % diag_field_channels))
-                        
-                    #print "w: %d" % field_width
-                        
-                    for x_in_chan in range(x_start_chan - field_width // 2,
-                                           x_start_chan + field_width // 2
-                                                + field_width % 2):
+                    for x_in_chan in range(
+                                    x_start_chan - field_width // 2,
+                                    x_start_chan + field_width // 2
+                                                    + field_width % 2):
                         # array index of the first input connection
                         # for this input channel
                         if not y_in_chan % 2:
+                            if started_in_short:
+                                x_in_chan += 1
                             first_in_con = (
-                                even_in_trans.image_to_index(
+                                long_in_trans.image_to_index(
                                                 x_in_chan, y_in_chan // 2) *
                                                         self.in_channel_dim)
                         else:
                             first_in_con = (
-                                (uneven_in_trans.image_to_index(
+                                (short_in_trans.image_to_index(
                                                 x_in_chan, y_in_chan // 2)
-                                 + uneven_in_offset) * self.in_channel_dim)
+                                 + short_in_offset) * self.in_channel_dim)
                         connections[first_out_con:
                                     first_out_con + self.in_channel_dim] = \
                             range(first_in_con,
                                   first_in_con + self.in_channel_dim)
                         first_out_con += self.in_channel_dim
-                        
-        #print connections
-                        
         Switchboard.__init__(self, input_dim=input_dim, connections=connections)
         
 
@@ -504,21 +527,37 @@ class CoordinateTranslator(object):
     def __init__(self, x_image_dim, y_image_dim):
         self.x_image_dim = x_image_dim
         self.y_image_dim = y_image_dim
+        self._max_index = x_image_dim * y_image_dim - 1
 
     def image_to_array(self, x, y):
         return y, x
     
     def image_to_index(self, x, y):
+        if not 0 <= x < self.x_image_dim:
+            raise Exception("x coordinate %d is outside the valid range." % x)
+        if not 0 <= y < self.y_image_dim:
+            raise Exception("y coordinate %d is outside the valid range." % y)
         return y * self.x_image_dim + x
     
     def array_to_image(self, row, col):
         return col, row
         
     def array_to_index(self, row, col):
+        if not 0 <= row < self.y_image_dim:
+            raise Exception("row index %d is outside the valid range." % row)
+        if not 0 <= col < self.x_image_dim:
+            raise Exception("column index %d is outside the valid range." %
+                            col)
         return row * self.x_image_dim + col
     
     def index_to_array(self, index):
+        if not 0 <= index <= self._max_index:
+            raise Exception("index %d is outside the valid range." %
+                            index)
         return index // self.x_image_dim, index % self.x_image_dim
     
     def index_to_image(self, index):
+        if not 0 <= index <= self._max_index:
+            raise Exception("index %d is outside the valid range." %
+                            index)
         return index % self.x_image_dim, index // self.x_image_dim
