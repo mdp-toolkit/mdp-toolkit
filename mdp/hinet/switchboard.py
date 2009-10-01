@@ -330,9 +330,6 @@ class DoubleRect2dSwitchboard(Switchboard):
         self.output_channels = ((self.x_out_channels * self.y_out_channels -
                                  1) / 2 + 1)
         self.in_trans = CoordinateTranslator(x_in_channels, y_in_channels)
-        # input-output mapping of connections
-        # connections has an entry for each output connection, 
-        # containing the index of the input connection.
         connections = numx.zeros([self.output_channels * self.out_channel_dim],
                                  dtype=numx.int32)
         first_out_con = 0
@@ -419,26 +416,26 @@ class DoubleRhomb2dSwitchboard(Switchboard):
         in_channel_dim -- Number of connections per input channel
         """
         if x_long_in_channels < y_long_in_channels:
-            started_in_long = 0
             started_in_short = 1
         else:
-            started_in_long = 1
             started_in_short = 0
         ## check parameters for inconsistencies ##
         if diag_field_channels % 2:
             err = ("diag_field_channels must be even (for double cover)")
             raise DoubleRhomb2dSwitchboardException(err)
-        
-        x_chan_helper = (x_long_in_channels - started_in_long -
+        # helper variables for the field range
+        _x_chan_field_range = (x_long_in_channels - (1 - started_in_short) -
                          diag_field_channels)
-        y_chan_helper = (y_long_in_channels - started_in_short -
+        _y_chan_field_range = (y_long_in_channels - started_in_short -
                          diag_field_channels)
         
-        if x_chan_helper % (diag_field_channels // 2) or x_chan_helper < 0:
+        if (_x_chan_field_range % (diag_field_channels // 2) or
+            _x_chan_field_range < 0):
             err = ("diag_field_channels value is not compatible with "
                    "x_long_in_channels")
             raise DoubleRhomb2dSwitchboardException(err)
-        if y_chan_helper % (diag_field_channels // 2) or y_chan_helper < 0:
+        if (_y_chan_field_range % (diag_field_channels // 2) or
+            _y_chan_field_range < 0):
             err = ("diag_field_channels value is not compatible with "
                    "y_long_in_channels")
             raise DoubleRhomb2dSwitchboardException(err)
@@ -448,8 +445,10 @@ class DoubleRhomb2dSwitchboard(Switchboard):
                      - x_long_in_channels - y_long_in_channels + 1) *
                      in_channel_dim)
         self.out_channel_dim = in_channel_dim * diag_field_channels**2
-        self.x_out_channels = 2 * x_chan_helper // diag_field_channels + 1
-        self.y_out_channels = 2 * y_chan_helper // diag_field_channels + 1
+        self.x_out_channels = (2 * _x_chan_field_range // diag_field_channels
+                               + 1)
+        self.y_out_channels = (2 * _y_chan_field_range // diag_field_channels
+                               + 1)
         self.output_channels = self.x_out_channels * self.y_out_channels
         output_dim = self.output_channels * self.out_channel_dim
         ## prepare iteration over fields
@@ -458,9 +457,6 @@ class DoubleRhomb2dSwitchboard(Switchboard):
         short_in_trans = CoordinateTranslator(x_long_in_channels - 1,
                                                y_long_in_channels - 1)
         short_in_offset = x_long_in_channels * y_long_in_channels
-        # input-output mapping of connections
-        # connections has an entry for each output connection, 
-        # containing the index of the input connection.
         connections = numx.zeros([output_dim], dtype=numx.int32)
         first_out_con = 0
         for x_out_chan in range(self.x_out_channels):
@@ -480,10 +476,9 @@ class DoubleRhomb2dSwitchboard(Switchboard):
                     else:
                         field_width = (diag_field_channels - 1 -
                                        (iy % diag_field_channels))
-                    for x_in_chan in range(
-                                    x_start_chan - field_width // 2,
-                                    x_start_chan + field_width // 2
-                                                    + field_width % 2):
+                    for x_in_chan in range(x_start_chan - field_width // 2,
+                                           x_start_chan + field_width // 2
+                                                        + field_width % 2):
                         # array index of the first input connection
                         # for this input channel
                         if not y_in_chan % 2:
