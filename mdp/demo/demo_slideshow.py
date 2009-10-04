@@ -33,7 +33,7 @@ for i in range(n_frames):
     filenames.append(filename)
 
 # cretate the slideshow
-mdp.utils.show_image_slideshow(os.path.join(path, "animation.html"),
+mdp.utils.show_image_slideshow(filenames=filenames, title="Test Animation",
                                image_size=(400,300),
-                               filenames=filenames, title="Test Animation",
+                               filename=os.path.join(path, "animation.html"),
                                section_ids=section_ids)

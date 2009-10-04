@@ -717,18 +717,18 @@ def image_slideshow(filenames, image_size, title=None, section_ids=None,
         slideshow = ImageHTMLSlideShow(**vars())
     return str(slideshow)
 
-def show_image_slideshow(filename, filenames, image_size, title=None,
+def show_image_slideshow(filenames, image_size, filename=None, title=None,
                          section_ids=None, delay=100, delay_delta=20,
                          loop=True, slideshow_id=None,
                          magnification=1, mag_control=True, browser_open=True):
     """Write the slideshow into a HTML file, open it in the browser and
     return the file name.
     
-    filename -- Filename for the HTML file to be created. If None
-            a temporary file is created.
     filenames -- Sequence of the image filenames.
     image_size -- Tuple (x,y) with the original image size, or enter
         a different size to force scaling.
+    filename -- Filename for the HTML file to be created. If None
+            a temporary file is created.
     title -- Optional slideshow title (for default None not title is shown).
     section_ids -- List with the section id for each slide index. The id
             can be a string or a number. Default value None disables the
