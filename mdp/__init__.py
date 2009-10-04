@@ -120,21 +120,24 @@ import utils
 # import exceptions from nodes and flows
 from signal_node import (NodeException, TrainingException,
                          TrainingFinishedException, IsNotTrainableException,
-                         IsNotInvertibleException, ExtensionException)
+                         IsNotInvertibleException)
 from linear_flows import CrashRecoveryException, FlowException, FlowExceptionCR
 
-# import base node and flow classes.
-from signal_node import (NodeMetaclass, Node, Cumulator,
-                         extension_method, ExtensionNodeMetaclass,
-                         ExtensionNode, get_extensions,
-                         get_active_extensions, with_extension,
-                         activate_extension, deactivate_extension,
-                         activate_extensions, deactivate_extensions)
+# import base node and flow classes
+from signal_node import NodeMetaclass, Node, Cumulator
 from linear_flows import (Flow, CheckpointFlow,
                           CheckpointFunction, CheckpointSaveFunction)
 
 # import helper functions:
 from helper_funcs import pca, whitening, fastica, sfa, get_eta
+
+# import extension mechanism
+from extension import (ExtensionException, extension_method,
+                       ExtensionNodeMetaclass,
+                       ExtensionNode, get_extensions,
+                       get_active_extensions, with_extension,
+                       activate_extension, deactivate_extension,
+                       activate_extensions, deactivate_extensions)
 
 # import our modules
 import nodes
@@ -147,6 +150,7 @@ from test import test
 # clean up namespace
 del signal_node
 del linear_flows
+del extension
 
 # explicitly set __all__, mainly needed for epydoc
 __all__ = ['CheckpointFlow', 'CheckpointFunction', 'CheckpointSaveFunction',

@@ -15,7 +15,7 @@ import test_flows
 import test_utils
 import test_graph
 import test_contrib
-import test_extensions
+import test_extension
 import test_hinet
 import test_schedule
 import test_parallelnodes
@@ -57,7 +57,7 @@ test_suites = {'flows': (test_flows.get_suite, 0),
                'utils': (test_utils.get_suite, 1),
                'graph': (test_graph.get_suite, 2),
                'nodes': (test_nodes.get_suite, 3),
-               'extensions': (test_extensions.get_suite, 4),
+               'extension': (test_extension.get_suite, 4),
                'hinet':   (test_hinet.get_suite, 5),
                'schedule': (test_schedule.get_suite, 6),
                'parallelnodes': (test_parallelnodes.get_suite, 7),
