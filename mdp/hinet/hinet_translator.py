@@ -187,7 +187,7 @@ def _rect2d_switchoard_html(self):
                  self.x_field_channels * self.y_field_channels),
              '# of rec. fields (out channels): %d x %d = %d' %
                 (self.x_out_channels, self.y_out_channels,
-                 self.out_channels),
+                 self.output_channels),
              'rec. field distances (in channels): (%d x %d)' %
                 (self.x_field_spacing, self.y_field_spacing),
              'channel width: %d' % self.in_channel_dim]
@@ -206,7 +206,7 @@ def _double_rect2d_switchoard_html(self):
              '# of long row rec. fields (out channels): %d, %d' %
                 (self.x_long_out_channels, self.y_long_out_channels),
              'total number of receptive fields: %d' % 
-                self.out_channels,
+                self.output_channels,
              'channel width: %d' % self.in_channel_dim]
     if self.x_unused_channels or self.y_unused_channels:
         lines.append('unused channels: (%d, %d)' %
@@ -220,7 +220,7 @@ def _double_rhomb2d_switchoard_html(self):
     lines = ['rec. field size: %d' % self.diag_field_channels,
              '# of rec. fields (out channels): %d x %d = %d' %
                 (self.x_out_channels, self.y_out_channels,
-                 self.out_channels),
+                 self.output_channels),
              'channel width: %d' % self.in_channel_dim]
     return lines
 

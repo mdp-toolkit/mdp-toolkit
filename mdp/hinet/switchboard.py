@@ -88,6 +88,10 @@ class Rectangular2dSwitchboardException(SwitchboardException):
 class ChannelSwitchboard(Switchboard):
     """Base class for Siwtchboards in which the output is bundled
     into channels, which have a fixed dimension.
+    
+    public attributes (in addition to inherited attributes):
+        out_channel_dim
+        output_channels
     """
     
     def __init__(self, input_dim, connections, out_channel_dim):
@@ -96,8 +100,8 @@ class ChannelSwitchboard(Switchboard):
         out_channel_dim -- Number of connections per output channel.
         """
         super(ChannelSwitchboard, self).__init__(input_dim, connections)
-        self._out_channel_dim = out_channel_dim
-        self._out_channels = self.output_dim // out_channel_dim
+        self.out_channel_dim = out_channel_dim
+        self.output_channels = self.output_dim // out_channel_dim
         
     def get_out_channel_node(self, channel):
         """Return a Switchboard that does the routing to just a single
@@ -108,18 +112,6 @@ class ChannelSwitchboard(Switchboard):
         index = channel * self._out_channel_dim
         return Switchboard(self.input_dim, 
                     self.connections[index : index+self._out_channel_dim])
-        
-    ## properties
-    
-    out_channel_dim = property(lambda self: self._out_channel_dim)
-   
-    @property
-    def out_channels(self):
-        try: 
-            return self._out_channels
-        except:
-            # backwards compatibility for unpickling, deprecated
-            return self.output_channels
         
 
 class Rectangular2dSwitchboard(ChannelSwitchboard):
@@ -169,7 +161,6 @@ class Rectangular2dSwitchboard(ChannelSwitchboard):
         self.in_channel_dim = in_channel_dim
         self.x_in_channels = x_in_channels
         self.y_in_channels = y_in_channels
-        self.in_channels = x_in_channels * y_in_channels
         self.x_field_channels = x_field_channels
         self.y_field_channels = y_field_channels
         out_channel_dim = (in_channel_dim * 
@@ -240,7 +231,8 @@ class Rectangular2dSwitchboard(ChannelSwitchboard):
                                   first_in_con + self.in_channel_dim)
                         first_out_con += self.in_channel_dim
         super(Rectangular2dSwitchboard, self).__init__(
-                                input_dim= self.in_channels * in_channel_dim,
+                                input_dim= (x_in_channels * y_in_channels *
+                                            in_channel_dim),
                                 connections=connections,
                                 out_channel_dim=out_channel_dim)
 

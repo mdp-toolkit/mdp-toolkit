@@ -242,7 +242,7 @@ class HinetTestSuite(NodesTestSuite):
         y = sboard.execute(x)
         # routing layer
         nodes = [sboard.get_out_channel_node(index) 
-                 for index in range(sboard.out_channels)]
+                 for index in range(sboard.output_channels)]
         layer = mh.SameInputLayer(nodes)
         layer_y = layer.execute(x)
         assert numx.all(y==layer_y)
@@ -423,7 +423,7 @@ class HinetTestSuite(NodesTestSuite):
         
         node = mdp.nodes.PCANode(input_dim=4*4*3, output_dim=5)
         flownode = mh.FlowNode(mdp.Flow([node,]))
-        layer = mh.CloneLayer(flownode, switchboard.out_channels)
+        layer = mh.CloneLayer(flownode, switchboard.output_channels)
         flow = mdp.Flow([switchboard, layer])
         x = numx_rand.random([5, switchboard.input_dim])
         flow.train(x)
@@ -439,7 +439,7 @@ class HinetTestSuite(NodesTestSuite):
                                                   x_field_spacing=10, 
                                                   y_field_spacing=10)
         flownode = mh.FlowNode(mdp.Flow([noisenode, sfa_node]))
-        sfa_layer = mh.CloneLayer(flownode, switchboard.out_channels)
+        sfa_layer = mh.CloneLayer(flownode, switchboard.output_channels)
         flow = mdp.Flow([switchboard, sfa_layer])
         train_gen = numx.cast['f'](numx_rand.random((3, 10, 100*100)))
         flow.train([None, train_gen])
@@ -456,7 +456,7 @@ class HinetTestSuite(NodesTestSuite):
                                                   x_field_spacing=10, 
                                                   y_field_spacing=10)
         flownode = mh.FlowNode(mdp.Flow([noisenode, sfa_node]))
-        sfa_layer = mh.CloneLayer(flownode, switchboard.out_channels)
+        sfa_layer = mh.CloneLayer(flownode, switchboard.output_channels)
         flow = mdp.Flow([switchboard, sfa_layer])
         # create dummy file to write the HTML representation
         html_file = StringIO.StringIO()

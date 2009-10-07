@@ -57,7 +57,7 @@ class TestParallelHinetNodes(unittest.TestCase):
                                                      y_field_spacing=10)
         flownode = mdp.hinet.FlowNode(mdp.Flow([noisenode, sfa_node]))
         sfa_layer = mdp.hinet.CloneLayer(flownode, 
-                                                switchboard.out_channels)
+                                                switchboard.output_channels)
         flow = parallel.ParallelFlow([switchboard, sfa_layer])
         data_iterables = [None,
                           [n.random.random((10, 100*100)) for _ in range(3)]]
