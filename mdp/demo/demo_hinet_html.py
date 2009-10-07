@@ -20,7 +20,7 @@ sfa2_node = mdp.nodes.SFA2Node(input_dim=sfa_dim,
                                output_dim=sfa2_dim)
 flownode = mdp.hinet.FlowNode(mdp.Flow([sfa_node, sfa2_node]))
 sfa_layer = mdp.hinet.CloneLayer(flownode, 
-                                 n_nodes=switchboard.output_channels)
+                                 n_nodes=switchboard.out_channels)
 flow = mdp.Flow([switchboard, sfa_layer])
 
 # show the flow

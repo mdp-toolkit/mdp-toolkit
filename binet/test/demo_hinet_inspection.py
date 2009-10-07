@@ -22,7 +22,7 @@ switchboard = mdp.hinet.Rectangular2dSwitchboard(
                                           x_field_spacing=10, 
                                           y_field_spacing=10)
 flownode = mdp.hinet.FlowNode(mdp.Flow([noisenode, sfa_node]))
-sfa_layer = mdp.hinet.CloneLayer(flownode, switchboard.output_channels)
+sfa_layer = mdp.hinet.CloneLayer(flownode, switchboard.out_channels)
 flow = mdp.Flow([switchboard, sfa_layer])
 
 train_data = [numpy.cast['f'](numpy.random.random((10, 100*100)))
