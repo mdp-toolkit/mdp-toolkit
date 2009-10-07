@@ -10,8 +10,6 @@ Run them with:
 # stuff we don't need. I know, this is a dirty trick.
 from test_nodes import *
 
-import itertools    
-
 import StringIO
 
 mh = mdp.hinet

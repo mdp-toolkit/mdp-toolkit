@@ -80,11 +80,6 @@ class Switchboard(mdp.Node):
             return x[:, self.inverse_connections]
     
 
-class Rectangular2dSwitchboardException(SwitchboardException):
-    """Exception for routing problems in the Rectangular2dSwitchboard class."""
-    pass
-
-
 class ChannelSwitchboard(Switchboard):
     """Base class for Siwtchboards in which the output is bundled
     into channels, which have a fixed dimension.
@@ -109,10 +104,15 @@ class ChannelSwitchboard(Switchboard):
         
         channel -- The index of the required channel.
         """
-        index = channel * self._out_channel_dim
+        index = channel * self.out_channel_dim
         return Switchboard(self.input_dim, 
-                    self.connections[index : index+self._out_channel_dim])
+                    self.connections[index : index+self.out_channel_dim])
         
+
+class Rectangular2dSwitchboardException(SwitchboardException):
+    """Exception for routing problems in the Rectangular2dSwitchboard class."""
+    pass
+
 
 class Rectangular2dSwitchboard(ChannelSwitchboard):
     """Switchboard for a 2-dimensional topology.
@@ -236,7 +236,12 @@ class Rectangular2dSwitchboard(ChannelSwitchboard):
                                 connections=connections,
                                 out_channel_dim=out_channel_dim)
 
-        
+
+class DoubleRect2dSwitchboardException(SwitchboardException):
+    """Exception for routing problems in the DoubleRect2dSwitchboard class."""
+    pass
+
+     
 class DoubleRect2dSwitchboard(ChannelSwitchboard):
     """Special 2d Switchboard where each inner point is covered twice.
     
@@ -331,6 +336,7 @@ class DoubleRect2dSwitchboard(ChannelSwitchboard):
             raise Rectangular2dSwitchboardException(err)
         # number of output channels in x-direction
         self.x_long_out_channels = x_in_channels // x_field_channels
+        xl = self.x_long_out_channels
         self.x_unused_channels = x_in_channels - x_field_channels
         if self.x_unused_channels > 0:
             self.x_unused_channels %= x_field_spacing
@@ -340,8 +346,12 @@ class DoubleRect2dSwitchboard(ChannelSwitchboard):
             err = ("Channel fields do not "
                    "cover all input channels in x-direction.")
             raise Rectangular2dSwitchboardException(err)
+        if (x_in_channels - xl * x_field_channels) >= (x_field_channels / 2):
+            err = ("x short rows have same length as long rows.")
+            raise Rectangular2dSwitchboardException(err)
         # number of output channels in y-direction                       
         self.y_long_out_channels = y_in_channels // y_field_channels
+        yl = self.y_long_out_channels
         self.y_unused_channels = y_in_channels - y_field_channels
         if self.y_unused_channels > 0:
             self.y_unused_channels %= y_field_spacing
@@ -351,9 +361,10 @@ class DoubleRect2dSwitchboard(ChannelSwitchboard):
             err = ("Channel fields do not "
                    "cover all input channels in y-direction.")
             raise Rectangular2dSwitchboardException(err)
+        if (y_in_channels - yl * y_field_channels) >= (y_field_channels / 2):
+            err = ("y short rows have same length as long rows.")
+            raise Rectangular2dSwitchboardException(err)
         ## end of parameters checks
-        xl = self.x_long_out_channels
-        yl = self.y_long_out_channels
         
         # TODO: add check against n+1/2 size, long line length equals short one
         
