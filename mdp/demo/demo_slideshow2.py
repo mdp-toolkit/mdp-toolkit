@@ -19,6 +19,7 @@ except Exception:
 filenames1 = []
 filenames2 = []
 section_ids1 = []
+section_ids2 = []
 points1 = [] 
 points2 = [] 
 for i in range(n_frames):
@@ -37,6 +38,7 @@ for i in range(n_frames):
     filenames1.append(filename)
     # second animation
     points2.append((i, math.cos(1.0*i/n_frames * 2*math.pi)))
+    section_ids2.append("%d" % i)
     plt.figure()
     plt.plot(*zip(*points2))
     plt.ylim(-1.2, 1.2)
@@ -45,7 +47,7 @@ for i in range(n_frames):
     plt.savefig(filename = os.path.join(path, filename))
     filenames2.append(filename)
 
-# cretate the slideshow
+# create the slideshow
 filename = os.path.join(path, "animation.html")
 html_file = open(filename, 'w')
 html_file.write('<html>\n<head>\n<title>%s</title>\n' % "Two Animation Test")
@@ -60,7 +62,8 @@ html_file.write(mdp.utils.image_slideshow(
 html_file.write(mdp.utils.image_slideshow(
                                 image_size=(400,300),
                                 filenames=filenames2, title="Animation 2",
-                                shortcuts=False))
+                                shortcuts=False, section_ids=section_ids2))
 html_file.write('</body>\n</html>')
 html_file.close()
 webbrowser.open(filename)
+print "done."

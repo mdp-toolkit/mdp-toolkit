@@ -532,13 +532,15 @@ document.onkeydown = function(e) {
 ${{super(SectionHTMLSlideShow, self).html_controls_template(vars())}}
 
 <tr><td>
+<div id="${slideshow_id}_sections_panel"
+    style="margin-left:auto; margin-right: auto;">
 ${{
 last_section_id = None
 link = ''
 for index, section_id in enumerate(section_ids):
     if section_id != last_section_id:
         if index > 0:
-            self.write(link + '&nbsp;|&nbsp;')
+            self.write(link + '&nbsp;| ')
         last_section_id = section_id
         link = ('<span class="inactive_section" ' +
                 'id="%s_section_id_%s" ' % (slideshow_id, section_id) +
@@ -546,6 +548,7 @@ for index, section_id in enumerate(section_ids):
                     (slideshow_id, index, section_id))
 self.write(link + '\n')
 }}
+</div>
 </td></tr>
     '''
     
@@ -605,6 +608,10 @@ class ImageHTMLSlideShow(HTMLSlideShow):
         that.resizeImage();
     }
     
+    $<js_controls_resize_template>
+'''
+    
+    js_controls_resize_template = r'''
     that.resizeImage = function () {
         document.images.${slideshow_id}_image_display.width =
             parseInt(magnification * original_width, 10);
@@ -686,6 +693,22 @@ class SectionImageHTMLSlideShow(SectionHTMLSlideShow, ImageHTMLSlideShow):
         kwargs.update(vars())
         del kwargs["self"]
         super(SectionImageHTMLSlideShow, self).__init__(**kwargs)
+        
+    js_controls_resize_template = r'''
+    that.resizeImage = function () {
+        document.images.${slideshow_id}_image_display.width =
+            parseInt(magnification * original_width, 10);
+        document.images.${slideshow_id}_image_display.height =
+            parseInt(magnification * original_height, 10);
+        // make sure that section ids are nicely line wrapped
+        var section_panel_width = 250;
+        if (magnification * original_height > section_panel_width) {
+            section_panel_width = magnification * original_width;
+        }
+        document.getElementById("${slideshow_id}_sections_panel").style.width =
+            parseInt(section_panel_width, 10) + "px";
+    }
+'''
     
 
 ### helper functions ###
