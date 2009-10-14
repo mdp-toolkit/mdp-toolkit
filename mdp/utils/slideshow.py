@@ -550,8 +550,15 @@ self.write(link + '\n')
 }}
 </div>
 </td></tr>
-    '''
-    
+'''
+
+# use nearest neighbour resampling in Firefox 3.6+
+# TODO: change this to standard CSS value when possible
+IMAGE_SLIDESHOW_STYLE = SLIDESHOW_STYLE + '''
+div.slideshow {
+    image-rendering: -moz-crisp-edges;
+}
+'''  
 
 class ImageHTMLSlideShow(HTMLSlideShow):
     """Slideshow for images.
@@ -769,7 +776,7 @@ def show_image_slideshow(filenames, image_size, filename=None, title=None,
     html_file.write('<html>\n<head>\n<title>%s</title>\n' % title)
     html_file.write('<style type="text/css" media="screen">')
     html_file.write(BASIC_STYLE)
-    html_file.write(SLIDESHOW_STYLE)
+    html_file.write(IMAGE_SLIDESHOW_STYLE)
     html_file.write('</style>\n</head>\n<body>\n')
     kwargs = vars()
     del kwargs['filename']

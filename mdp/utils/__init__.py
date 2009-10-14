@@ -10,7 +10,7 @@ from covariance import (CovarianceMatrix, DelayCovarianceMatrix,
 from progress_bar import progressinfo
 from svn_revision import get_svn_revision
 from slideshow import (BASIC_STYLE, SLIDESHOW_STYLE, HTMLSlideShow,
-                       ImageHTMLSlideShow,
+                       IMAGE_SLIDESHOW_STYLE, ImageHTMLSlideShow,
                        SectionHTMLSlideShow, SectionImageHTMLSlideShow,
                        image_slideshow, show_image_slideshow)
 
@@ -93,6 +93,7 @@ __all__ = ['CovarianceMatrix', 'DelayCovarianceMatrix','CrossCovarianceMatrix',
            'random_rot', 'refcast', 'rotate', 'scast', 'solve', 'sqrtm',
            'svd', 'symeig', 'symrand', 'timediff', 'uniq', 'matmult',
            'get_svn_revision', 'SLIDESHOW_STYLE', 'HTMLSlideShow',
-           'ImageHTMLSlideShow', 'SectionHTMLSlideShow',
+           'ImageHTMLSlideShow', 'IMAGE_SLIDESHOW_STYLE',
+           'SectionHTMLSlideShow',
            'SectionImageHTMLSlideShow', 'image_slideshow',
            'lrep', 'rrep', 'irep']
