@@ -23,7 +23,6 @@ import templet
 BASIC_STYLE = '''
 html, body {
     font-family: sans-serif;
-    font-size: normal;
     text-align: center;
 }
 
@@ -50,7 +49,7 @@ div.slideshow {
 
 table.slideshow, table.slideshow td, table.slideshow th {
     border-collapse: collapse;
-    padding: 1 2 1 2;
+    padding: 1px 2px 1px 2px;
     font-size: small;
     border: 1px solid;
 }
