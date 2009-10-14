@@ -220,8 +220,8 @@ class TimeFramesNode(Node):
         time_frames -- Number of delayed copies
         gap -- Time delay between the copies
         """
-        super(TimeFramesNode, self).__init__(input_dim, None, dtype)
         self.time_frames = time_frames
+        super(TimeFramesNode, self).__init__(input_dim, None, dtype)
         self.gap = gap
 
     def _get_supported_dtypes(self):

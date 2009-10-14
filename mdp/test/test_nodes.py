@@ -1206,6 +1206,9 @@ class NodesTestSuite(unittest.TestSuite):
         for i in range(0,length,gap):
             assert_array_equal(rec[i:i+block_size], inp[i:i+block_size])
 
+    def testTimeFramesNodeBugInputDim(self):
+        mdp.nodes.TimeFramesNode(time_frames=10, gap=1, input_dim=1)
+        
     def testEtaComputerNode(self):
         tlen = 1e5
         t = numx.linspace(0,2*numx.pi,tlen)
