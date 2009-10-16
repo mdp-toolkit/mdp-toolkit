@@ -311,7 +311,6 @@ class HiNetHTMLTranslator(HiNetTranslator):
             f.write('<tr><td>')
             self._translate_node(node)
             f.write('</td></tr>')
-        f.write('</td></tr>')
         self._close_node_env(flow, "flow")
         
     def _translate_flownode(self, flownode):
@@ -437,7 +436,7 @@ def show_flow(flow, filename=None, title="MDP flow display",
     html_file.write('<h3>%s</h3>\n' % title)
     explanation = '(data flows from top to bottom)'
     html_file.write('<par class="explanation">%s</par>\n' % explanation)
-    html_file.write('</br></br></br>\n')
+    html_file.write('<br><br><br>\n')
     hinet_translator.write_flow_to_file(flow=flow, html_file=html_file)
     html_file.write('</body>\n</html>')
     html_file.close()
