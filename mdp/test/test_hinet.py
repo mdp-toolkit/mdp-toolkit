@@ -461,6 +461,16 @@ class HinetTestSuite(NodesTestSuite):
         hinet_html = mdp.hinet.HiNetHTMLTranslator()
         hinet_html.write_flow_to_file(flow, html_file)
         html_file.close()
+        
+    def testHiNetXHTML(self):
+        # create some flow for testing
+        sfa_node = mdp.nodes.SFANode(input_dim=20*20, output_dim=10)
+        flow = mdp.Flow([sfa_node])
+        # create dummy file to write the HTML representation
+        html_file = StringIO.StringIO()
+        hinet_html = mdp.hinet.HiNetXHTMLTranslator()
+        hinet_html.write_flow_to_file(flow, html_file)
+        html_file.close()
     
 
 def get_suite(testname=None):

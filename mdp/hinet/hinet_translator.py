@@ -4,6 +4,7 @@ Module to translate HiNet structures into other representations, like HTML.
 import tempfile
 import os
 import webbrowser
+import cStringIO as StringIO
 
 import mdp
 
@@ -405,6 +406,27 @@ class HiNetHTMLTranslator(HiNetTranslator):
                         % mdp.utils.get_node_size_str(node))
             f.write('</td></tr>')
         f.write('</table>')
+        
+
+class HiNetXHTMLTranslator(HiNetHTMLTranslator):
+    """Modified translator to create valid XHTML."""
+    
+    def write_flow_to_file(self, flow, xhtml_file):
+        """Write the HTML translation of the flow into the provided file.
+        
+        Note that html_file file can be any file-like object with a write
+        method.
+        """
+        # first write the normal HTML into a buffer
+        html_file = StringIO.StringIO()
+        self._html_file = NewlineWriteFile(html_file)
+        self._translate_flow(flow)
+        self._html_file = None
+        # now translate it to XHTML and then write it to the file
+        html_code = html_file.getvalue()
+        html_code = html_code.replace('<br>', '<br/>')
+        html_code = html_code.replace('&nbsp;', '&#160;')
+        xhtml_file.write(html_code)
        
 
 ## Helper functions ##

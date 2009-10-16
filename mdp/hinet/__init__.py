@@ -35,7 +35,8 @@ from switchboard import (Switchboard, ChannelSwitchboard,
                          DoubleRect2dSwitchboardException,
                          DoubleRhomb2dSwitchboardException,
                          DoubleRhomb2dSwitchboard)
-from hinet_translator import (HiNetTranslator, HiNetHTMLTranslator, 
+from hinet_translator import (HiNetTranslator, HiNetHTMLTranslator,
+                              HiNetXHTMLTranslator,
                               HINET_STYLE, NewlineWriteFile, show_flow)
 
 del flownode
@@ -48,6 +49,6 @@ __all__ = ['FlowNode', 'Layer', 'SameInputLayer', 'CloneLayer',
            'Rectangular2dSwitchboard', 'Rectangular2dSwitchboardException',
            'DoubleRect2dSwitchboard', 'DoubleRect2dSwitchboardException',
            'DoubleRhomb2dSwitchboard', 'DoubleRhomb2dSwitchboardException',
-           'HiNetTranslator', 'HiNetHTMLTranslator', 
+           'HiNetTranslator', 'HiNetHTMLTranslator', 'HiNetXHTMLTranslator',
            'HINET_STYLE', 'NewlineWriteFile', 'show_flow'
            ]
