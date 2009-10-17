@@ -190,6 +190,33 @@ class HinetTestSuite(NodesTestSuite):
                                 connections=[2,1,1])
         assert not sboard.is_invertible()
         
+    ## Tests for ChannelSwitchboard ##
+    
+    def testOutChannelInput(self):
+        sboard = mh.ChannelSwitchboard(input_dim=6,
+                                       connections=[5,5,
+                                                    0,1],
+                                       out_channel_dim=2,
+                                       in_channel_dim=2)
+        assert numx.all(sboard.get_out_channel_input(0) ==
+                        numx.array([5,5]))
+        assert numx.all(sboard.get_out_channel_input(1) ==
+                        numx.array([0,1]))
+        
+    def testOutChannelsInputChannels(self):
+        sboard = mh.ChannelSwitchboard(input_dim=6,
+                                       connections=[5,5, # out chan 1
+                                                    0,1], # out chan 2
+                                       out_channel_dim=2,
+                                       in_channel_dim=2)
+        # note that there are 3 input channels
+        assert numx.all(sboard.get_out_channels_input_channels(0) ==
+                        numx.array([2]))
+        assert numx.all(sboard.get_out_channels_input_channels(1) ==
+                        numx.array([0]))
+        assert numx.all(sboard.get_out_channels_input_channels([0,1]) ==
+                        numx.array([0,2]))
+        
     ## Tests for Rectangular2dSwitchboard ##
 
     def testRect2dRouting1(self):
@@ -338,6 +365,8 @@ class HinetTestSuite(NodesTestSuite):
         x = numx.array([range(0, sboard.input_dim), 
                         range(101, 101+sboard.input_dim)])
         sboard.execute(x)
+        
+    ## Tests for DoubleRhomb2dSwitchboard ##
         
     def testDoubleRhombRouting1(self):
         sboard = mh.DoubleRhomb2dSwitchboard(x_long_in_channels=3, 

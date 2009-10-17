@@ -414,7 +414,7 @@ class HiNetXHTMLTranslator(HiNetHTMLTranslator):
     def write_flow_to_file(self, flow, xhtml_file):
         """Write the XHTML translation of the flow into the provided file.
         
-        This method will produce valid XML.
+        This method will produce valid XHTML.
         
         Note that xhtml_file file can be any file-like object with a write
         method.
@@ -426,7 +426,7 @@ class HiNetXHTMLTranslator(HiNetHTMLTranslator):
         self._html_file = None
         # now translate it to XHTML and then write it to the file
         html_code = html_file.getvalue()
-        html_code = html_code.replace('<br>', '<br/>')
+        html_code = html_code.replace('<br>', '<br />')
         html_code = html_code.replace('&nbsp;', '&#160;')
         xhtml_file.write(html_code)
        

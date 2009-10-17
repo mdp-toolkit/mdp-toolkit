@@ -81,33 +81,68 @@ class Switchboard(mdp.Node):
     
 
 class ChannelSwitchboard(Switchboard):
-    """Base class for Siwtchboards in which the output is bundled
-    into channels, which have a fixed dimension.
+    """Base class for Switchboards in which the data is bundled into channels.
+    
+    The dimensions of the input / output channels are constant.
     
     public attributes (in addition to inherited attributes):
         out_channel_dim
+        in_channel_dim
         output_channels
     """
     
-    def __init__(self, input_dim, connections, out_channel_dim):
+    def __init__(self, input_dim, connections, out_channel_dim,
+                 in_channel_dim=1):
         """Initialize the switchboard.
         
         out_channel_dim -- Number of connections per output channel.
+        in_channel_dim -- Number of connections per input channel (default 1).
+            All the components of an input channel are treated equally
+            by the switchboard (i.e., they are routed to the same output
+            channel).
         """
         super(ChannelSwitchboard, self).__init__(input_dim, connections)
         self.out_channel_dim = out_channel_dim
+        self.in_channel_dim = in_channel_dim
         self.output_channels = self.output_dim // out_channel_dim
         
-    def get_out_channel_node(self, channel):
-        """Return a Switchboard that does the routing to just a single
-        output channel.
+    def get_out_channel_input(self, channel):
+        """Return the input connections for the given channel index.
         
-        channel -- The index of the required channel.
+        channel -- index of the requested channel (starting at 0)
         """
         index = channel * self.out_channel_dim
-        return Switchboard(self.input_dim, 
-                    self.connections[index : index+self.out_channel_dim])
+        return self.connections[index : index+self.out_channel_dim]
+    
+    def get_out_channel_node(self, channel):
+        """Return a Switchboard that does the routing for a single
+        output channel.
         
+        channel -- index of the requested channel (starting at 0)
+        """
+        return Switchboard(self.input_dim, self.get_out_channel_input(channel))
+        
+    def get_out_channels_input_channels(self, channels):
+        """Return array of input channel indices for the given output channels.
+        
+        channels -- Sequence of the requested output channels or a single
+            channel index (i.e. a number).
+        
+        The retured array contains the indices of all input channels which
+        are connected to at least one of the given output channels.
+        """
+        if isinstance(channels, int):
+            channels = [channels]
+        # create boolean arry to determine with active inputs
+        channels_input = self.connections.reshape((-1, self.out_channel_dim))
+        channels_input = channels_input[channels].reshape(-1)
+        covered = numx.zeros(self.input_dim, dtype="bool")
+        covered[channels_input] = True
+        # reshape to perform logical OR over the input channels
+        covered = covered.reshape((-1, self.in_channel_dim))
+        covered = covered.sum(axis=1, dtype=bool)
+        return covered.nonzero()[0]
+    
 
 class Rectangular2dSwitchboardException(SwitchboardException):
     """Exception for routing problems in the Rectangular2dSwitchboard class."""
@@ -158,7 +193,6 @@ class Rectangular2dSwitchboard(ChannelSwitchboard):
             risk loosing input channels at the border.
         """
         ## count channels and stuff
-        self.in_channel_dim = in_channel_dim
         self.x_in_channels = x_in_channels
         self.y_in_channels = y_in_channels
         self.x_field_channels = x_field_channels
@@ -224,17 +258,17 @@ class Rectangular2dSwitchboard(ChannelSwitchboard):
                                         y_start_chan + self.y_field_channels):
                         first_in_con = (in_trans.image_to_index(
                                                     x_in_chan, y_in_chan) *
-                                        self.in_channel_dim)
+                                        in_channel_dim)
                         connections[first_out_con:
-                                    first_out_con + self.in_channel_dim] = \
-                            range(first_in_con,
-                                  first_in_con + self.in_channel_dim)
-                        first_out_con += self.in_channel_dim
+                                    first_out_con + in_channel_dim] = \
+                            range(first_in_con, first_in_con + in_channel_dim)
+                        first_out_con += in_channel_dim
         super(Rectangular2dSwitchboard, self).__init__(
                                 input_dim= (x_in_channels * y_in_channels *
                                             in_channel_dim),
                                 connections=connections,
-                                out_channel_dim=out_channel_dim)
+                                out_channel_dim=out_channel_dim,
+                                in_channel_dim=in_channel_dim)
 
 
 class DoubleRect2dSwitchboardException(SwitchboardException):
@@ -303,7 +337,6 @@ class DoubleRect2dSwitchboard(ChannelSwitchboard):
             risk loosing input channels at the border.
         """
         ## count channels and stuff
-        self.in_channel_dim = in_channel_dim
         self.x_in_channels = x_in_channels
         self.y_in_channels = y_in_channels
         self.in_channels = x_in_channels * y_in_channels
@@ -387,12 +420,12 @@ class DoubleRect2dSwitchboard(ChannelSwitchboard):
                                        x_start_chan + self.x_field_channels):
                         first_in_con = (in_trans.image_to_index(
                                                     x_in_chan, y_in_chan) *
-                                        self.in_channel_dim)
+                                        in_channel_dim)
                         connections[first_out_con:
-                                    first_out_con + self.in_channel_dim] = \
+                                    first_out_con + in_channel_dim] = \
                             range(first_in_con,
-                                  first_in_con + self.in_channel_dim)
-                        first_out_con += self.in_channel_dim
+                                  first_in_con + in_channel_dim)
+                        first_out_con += in_channel_dim
         ## create the uneven connections
         for y_out_chan in range(even_y_out_channels - 1):
             for x_out_chan in range(even_x_out_channels - 1):
@@ -407,16 +440,17 @@ class DoubleRect2dSwitchboard(ChannelSwitchboard):
                                        x_start_chan + self.x_field_channels):
                         first_in_con = (in_trans.image_to_index(
                                                     x_in_chan, y_in_chan) *
-                                        self.in_channel_dim)
+                                        in_channel_dim)
                         connections[first_out_con:
-                                    first_out_con + self.in_channel_dim] = \
+                                    first_out_con + in_channel_dim] = \
                             range(first_in_con,
-                                  first_in_con + self.in_channel_dim)
-                        first_out_con += self.in_channel_dim
+                                  first_in_con + in_channel_dim)
+                        first_out_con += in_channel_dim
         super(DoubleRect2dSwitchboard, self).__init__(
                                 input_dim=self.in_channels * in_channel_dim,
                                 connections=connections,
-                                out_channel_dim=out_channel_dim)
+                                out_channel_dim=out_channel_dim,
+                                in_channel_dim=in_channel_dim)
         
 
 class DoubleRhomb2dSwitchboardException(SwitchboardException):
@@ -543,7 +577,8 @@ class DoubleRhomb2dSwitchboard(ChannelSwitchboard):
         super(DoubleRhomb2dSwitchboard, self).__init__(
                                         input_dim=input_dim,
                                         connections=connections,
-                                        out_channel_dim=out_channel_dim)
+                                        out_channel_dim=out_channel_dim,
+                                        in_channel_dim=in_channel_dim)
         
 
 # utility class for Rectangular2dSwitchboard
