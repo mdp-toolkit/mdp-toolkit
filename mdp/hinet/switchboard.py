@@ -316,6 +316,8 @@ class DoubleRect2dSwitchboard(ChannelSwitchboard):
         y_long_out_channels
     """
     
+    # TODO: settle on 'long' or 'even' term?
+    
     def __init__(self, x_in_channels, y_in_channels, 
                  x_field_channels, y_field_channels,
                  in_channel_dim=1, ignore_cover=False):
@@ -476,6 +478,10 @@ class DoubleRhomb2dSwitchboard(ChannelSwitchboard):
     the short rows.
     
     The alignment of the first field is chosen to minimize cutaway.
+    
+    public attributes (in addition to init arguments and inherited attributes):
+        x_out_channels
+        y_out_channels
     """
     
     def __init__(self, x_long_in_channels, y_long_in_channels,
@@ -535,8 +541,8 @@ class DoubleRhomb2dSwitchboard(ChannelSwitchboard):
         connections = numx.zeros([self.x_out_channels * self.y_out_channels *
                                   out_channel_dim], dtype=numx.int32)
         first_out_con = 0
-        for x_out_chan in range(self.x_out_channels):
-            for y_out_chan in range(self.y_out_channels):
+        for y_out_chan in range(self.y_out_channels):
+            for x_out_chan in range(self.x_out_channels):
                 # inner loop over perceptive field
                 x_start_chan = (1 + x_out_chan) * diag_field_channels // 2
                 y_start_chan = y_out_chan * diag_field_channels

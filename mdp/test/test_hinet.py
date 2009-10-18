@@ -413,6 +413,22 @@ class HinetTestSuite(NodesTestSuite):
         sboard.execute(x)
         
     def testDoubleRhombRouting5(self):
+        sboard = mh.DoubleRhomb2dSwitchboard(x_long_in_channels=4, 
+                                             y_long_in_channels=4, 
+                                             diag_field_channels=2,
+                                             in_channel_dim=1)
+        assert numx.all(sboard.connections == 
+                        numx.array([1,16,17,5,
+                                    2,17,18,6,
+                                    5,19,20,9,
+                                    6,20,21,10,
+                                    9,22,23,13,
+                                    10,23,24,14]))
+        x = numx.array([range(0, sboard.input_dim), 
+                        range(101, 101+sboard.input_dim)])
+        sboard.execute(x)
+        
+    def testDoubleRhombRouting6(self):
         sboard = mh.DoubleRhomb2dSwitchboard(x_long_in_channels=7, 
                                              y_long_in_channels=4, 
                                              diag_field_channels=4,
@@ -421,7 +437,7 @@ class HinetTestSuite(NodesTestSuite):
                         range(101, 101+sboard.input_dim)])
         sboard.execute(x)
 
-    def testDoubleRhombRouting6(self):
+    def testDoubleRhombRouting7(self):
         sboard = mh.DoubleRhomb2dSwitchboard(x_long_in_channels=4, 
                                              y_long_in_channels=7, 
                                              diag_field_channels=4,
@@ -430,7 +446,7 @@ class HinetTestSuite(NodesTestSuite):
                         range(101, 101+sboard.input_dim)])
         sboard.execute(x)
 
-    def testDoubleRhombRouting7(self):
+    def testDoubleRhombRouting8(self):
         sboard = mh.DoubleRhomb2dSwitchboard(x_long_in_channels=6, 
                                              y_long_in_channels=7, 
                                              diag_field_channels=4,
