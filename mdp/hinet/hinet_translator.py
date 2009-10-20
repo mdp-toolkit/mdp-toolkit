@@ -95,8 +95,6 @@ _css_filename = os.path.join(os.path.split(__file__)[0], "hinet.css")
 _css_file = open(_css_filename, 'r')
 HINET_STYLE = _css_file.read()
 _css_file.close()
-del _css_filename
-del _css_file
 
 
 class  HTMLExtensionNode(mdp.ExtensionNode, mdp.Node):

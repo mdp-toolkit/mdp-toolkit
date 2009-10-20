@@ -41,47 +41,11 @@ table.flow {
 }
 '''
 
-# style for slideshow control table
-SLIDESHOW_STYLE = '''
-div.slideshow {
-    text-align: center;
-}
-
-table.slideshow, table.slideshow td, table.slideshow th {
-    border-collapse: collapse;
-    padding: 1px 2px 1px 2px;
-    font-size: small;
-    border: 1px solid;
-}
-
-table.slideshow {
-    border: 2px solid;
-    margin: 0 auto;
-}
-
-table.slideshow td {
-    text-align: center;
-}
-
-span.inactive_section {
-    color: #0000FF;
-    cursor: pointer;
-}
-
-span.inactive_section:hover {
-    color: #6666FF;
-}
-
-span.active_section {
-    color: #0000FF;
-    background-color: #BBDDFF;
-    cursor: pointer;
-}
-
-span.active_section:hover {
-    color: #6666FF;
-}
-'''
+# load CSS from style file
+_css_filename = os.path.join(os.path.split(__file__)[0], "slideshow.css")
+_css_file = open(_css_filename, 'r')
+SLIDESHOW_STYLE = _css_file.read()
+_css_file.close()
 
 
 class HTMLSlideShow(templet.Template):
