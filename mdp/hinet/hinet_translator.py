@@ -90,75 +90,13 @@ class HiNetTranslator(object):
 
 ## Specialized HTML Translator ##
 
-# CSS for hinet representation.
-#
-# Warning: In nested tables the top table css overwrites the nested css if
-#    they are specified like 'table.flow td' (i.e. all td's below this table).
-#    So be careful about hiding/overriding nested td's.
-#
-# The tables "nodestruct" are used to separate the dimension values from 
-# the actual node text.
-
-HINET_STYLE = '''
-table.flow {
-    border-collapse: separate;
-    padding: 3 3 3 3;
-    border: 3px double;
-    border-color: #003399;
-}
-
-table.flow table {
-    width: 100%;
-    margin-left: 2px;
-    margin-right: 2px;
-    border-color: #003399; 
-}
-
-table.flow td {
-    padding: 1 5 1 5;
-    border-style: none;
-}
-
-table.layer {
-    border-collapse: separate;
-    border: 2px dashed;
-}
-
-table.flownode {
-    border-collapse: separate;
-    border: 1px dotted;
-}
-
-table.nodestruct {
-    border-style: none;
-}
-
-table.node {
-    border-collapse: separate;
-    border: 1px solid;
-    border-spacing: 2px;
-}
-
-td.nodename {
-    font-size: normal;
-    text-align: center;
-}
-
-td.nodeparams {
-    font-size: xx-small;
-    text-align: left;
-}
-
-td.dim {
-    font-size: xx-small;
-    text-align: center;
-    color: #008ADC;
-}
-
-span.memorycolor {
-    color: #CCBB77;
-}
-'''
+# load CSS from style file
+_css_filename = os.path.join(os.path.split(__file__)[0], "hinet.css")
+_css_file = open(_css_filename, 'r')
+HINET_STYLE = _css_file.read()
+_css_file.close()
+del _css_filename
+del _css_file
 
 
 class  HTMLExtensionNode(mdp.ExtensionNode, mdp.Node):
