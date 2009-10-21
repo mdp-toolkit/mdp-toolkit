@@ -749,5 +749,5 @@ def show_image_slideshow(filenames, image_size, filename=None, title=None,
     html_file.write('</body>\n</html>')
     html_file.close()
     if browser_open:
-        webbrowser.open(filename)
+        webbrowser.open(os.path.abspath(filename))
     return filename

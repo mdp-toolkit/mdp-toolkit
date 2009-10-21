@@ -65,5 +65,5 @@ html_file.write(mdp.utils.image_slideshow(
                                 shortcuts=False, section_ids=section_ids2))
 html_file.write('</body>\n</html>')
 html_file.close()
-webbrowser.open(filename)
+webbrowser.open(os.path.abspath(filename))
 print "done."

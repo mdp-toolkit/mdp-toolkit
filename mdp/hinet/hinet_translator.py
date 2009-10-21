@@ -401,7 +401,7 @@ def show_flow(flow, filename=None, title="MDP flow display",
     html_file.write('</body>\n</html>')
     html_file.close()
     if browser_open:
-        webbrowser.open(filename)
+        webbrowser.open(os.path.abspath(filename))
     return filename
     
         
