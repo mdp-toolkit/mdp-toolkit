@@ -165,9 +165,9 @@ def show_training(flow, data_iterables, msg_iterables=None, stop_messages=None,
                                  stop_messages=stop_messages,
                                  debug=debug, show_size=show_size,
                                  verbose=False)
-    slideshow_filename = os.path.join(path, "training_inspection.html")
+    filename = os.path.join(path, "training_inspection.html")
     title = "Training Inspection"
-    html_file = open(slideshow_filename, 'w')
+    html_file = open(filename, 'w')
     html_file.write('<html>\n<head>\n<title>%s</title>\n' % title)
     html_file.write('<style type="text/css" media="screen">')
     html_file.write(INSPECTION_STYLE)
@@ -178,8 +178,8 @@ def show_training(flow, data_iterables, msg_iterables=None, stop_messages=None,
     html_file.write('</body>\n</html>')
     html_file.close()
     if browser_open:
-        webbrowser.open(slideshow_filename)
-    return slideshow_filename
+        webbrowser.open(os.path.abspath(filename))
+    return filename
 
 def inspect_execution(flow, x, msg=None, target=None, path=None, name=None,
                       trace_inspector=None, debug=False,
@@ -297,5 +297,5 @@ def show_execution(flow, x, msg=None, target=None, path=None, name=None,
     html_file.write('</body>\n</html>')
     html_file.close()
     if browser_open:
-        webbrowser.open(filename)
+        webbrowser.open(os.path.abspath(filename))
     return filename, result
