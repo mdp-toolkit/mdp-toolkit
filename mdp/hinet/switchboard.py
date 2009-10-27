@@ -95,6 +95,9 @@ class ChannelSwitchboard(Switchboard):
                  in_channel_dim=1):
         """Initialize the switchboard.
         
+        connections -- Connection sequence like for a standard switchboard
+            (the indices do not correspond to whole channels, but single
+             connections).
         out_channel_dim -- Number of connections per output channel.
         in_channel_dim -- Number of connections per input channel (default 1).
             All the components of an input channel are treated equally
@@ -102,6 +105,16 @@ class ChannelSwitchboard(Switchboard):
             channel).
         """
         super(ChannelSwitchboard, self).__init__(input_dim, connections)
+        # perform checks
+        if self.output_dim % out_channel_dim:
+            err = ("Output dim %d is not multiple of out_channel_dim %d." %
+                   (self.output_dim, out_channel_dim))
+            raise SwitchboardException(err)
+        if input_dim % in_channel_dim:
+            err = ("Input dim %d is not multiple of in_channel_dim %d." %
+                   (self.input_dim, in_channel_dim))
+            raise SwitchboardException(err)
+        # finalize initialization
         self.out_channel_dim = out_channel_dim
         self.in_channel_dim = in_channel_dim
         self.output_channels = self.output_dim // out_channel_dim
