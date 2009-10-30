@@ -50,102 +50,50 @@ class ExecuteHTMLSlideShow(HTMLSlideShow):
     
     js_loadslide_template = r'''
     
-    $<js_ajax_template>
+    $<js_loadhtml_template>
     
     that.loadSlide = function () {
-        loadWholePage(slideselect[current_slide].value);
+        loadPage(slideselect[current_slide].value);
     }
 '''
     
-    js_ajax_template = r'''
+    js_loadhtml_template = r'''
     /**
-        Content of file responseHTML.js 
-        from http://www.xul.fr/ajax/responseHTML-attribute.html
+     * Code to load the body content from HTMl files and inject it.
+     * 
+     * Loosely based on code from
+     *   http://www.xul.fr/ajax/responseHTML-attribute.html
+     *
+     *   responseHTML
+     *   (c) 2007-2008 xul.fr        
+     *   Licence Mozilla 1.1
+     */
     
-        responseHTML
-        (c) 2007-2008 xul.fr        
-        Licence Mozilla 1.1
-        
-        Searches for body, extracts and return the content
-        New version contributed by users
-    */
-    
+    // Extract body content from html content.
     function getBody(content) {
-       var test = content.toLowerCase();  // to eliminate case sensitivity
-       var x = test.indexOf("<body");
-       if(x == -1) return "";
-       x = test.indexOf(">", x);
-       if(x == -1) return "";
-       var y = test.lastIndexOf("</body>");
-       if(y == -1) y = test.lastIndexOf("</html>");
-       // If no HTML then just grab everything till end.
-       if(y == -1) y = content.length;
-       return content.slice(x + 1, y);   
-    } 
-    
-    /**
-        Loads a HTML page
-        Put the content of the body tag into the current page.
-        Arguments:
-            url of the other HTML page to load
-            id of the tag that has to hold the content
-    */        
-    
-    function loadHTML(url, fun, storage, param) {
-        var xhr = createXHR();
-        xhr.onreadystatechange = function()
-        { 
-            if(xhr.readyState == 4)
-            {
-                //if(xhr.status == 200)
-                {
-                    storage.innerHTML = getBody(xhr.responseText);
-                    fun(storage, param);
-                }
-            } 
-        }; 
-        xhr.open("GET", url, true);
-        xhr.send(null); 
-    } 
-    
-    /**
-        Callback
-        Assign directly a tag
-    */        
-    
-    function processHTML(temp, target) {
-        target.innerHTML = temp.innerHTML;
+        var lowContent = content.toLowerCase();  // eliminate case sensitivity
+        // deal with attributes
+        var i_start = lowContent.indexOf("<body");
+        if (i_start === -1) {
+            return "";
+        }
+        i_start = lowContent.indexOf(">", i_start);
+        if (i_start === -1) {
+            return "";
+        }
+        var i_end = lowContent.lastIndexOf("</body>");
+        if (i_end === -1) {
+            i_end = lowContent.lastIndexOf("</html>");
+        }
+        // if no HTML then just grab everything till end.
+        if (i_end === -1) {
+            i_end = content.length;
+        }
+        return content.slice(i_start + 1, i_end);   
     }
     
-    function loadWholePage(url) {
-        var y = document.getElementById("storage");
-        var x = document.getElementById("displayed");
-        loadHTML(url, processHTML, x, y);
-    }    
-    
-    // Create responseHTML for access by DOM's methods
-    function processByDOM(responseHTML, target) {
-        target.innerHTML = "Extracted by id:<br />";
-        var message =
-            responseHTML.getElementsByTagName("div").item(1).innerHTML;
-        target.innerHTML += message;
-        target.innerHTML += "<br />Extracted by name:<br />";
-        message = responseHTML.getElementsByTagName("form").item(0);
-        target.innerHTML += message.dyn.value;
-    }
-    
-    function accessByDOM(url) {
-        var responseHTML = document.getElementById("storage");
-        var y = document.getElementById("displayed");
-        loadHTML(url, processByDOM, responseHTML, y);
-    }    
-    
-    /**
-        Content of file ajax.js 
-        from http://www.xul.fr/ajax/responseHTML-attribute.html
-    */
-    
-    function createXHR() 
+    // Return a XMLHttpRequest object (browser independent).
+    function getXHR() 
     {
         var request = false;
             try {
@@ -166,14 +114,27 @@ class ExecuteHTMLSlideShow(HTMLSlideShow):
             }
         return request;
     }
+    
+    // Load an HTML page and inject the content.
+    function loadPage(url) {
+        var storage = document.getElementById("html_storage");
+        var target = document.getElementById("html_display");
+        var xhr = getXHR();
+        xhr.onreadystatechange = function() {
+            if(xhr.readyState == 4) {
+                storage.innerHTML = getBody(xhr.responseText);
+                target.innerHTML = storage.innerHTML;
+            } 
+        }
+        xhr.open("GET", url, true);
+        xhr.send(null); 
+    }    
     '''
     
     # Note: We do not use an id prefix, since there is only one slideshow.
     html_bottom_template = r'''
-<div id="storage" style="display:none;">
-</div>
-<div id="displayed">
-</div>
+<div id="html_storage" style="display:none;"></div>
+<div id="html_display"></div>
 '''
 
 
