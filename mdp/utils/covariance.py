@@ -55,9 +55,11 @@ class CovarianceMatrix(object):
         self.bias = bias
 
     def _init_internals(self, x):
-        """Inits some internals structures. The reason this is not done in
-        the constructor is that we want to be able to derive the input
-        dimension and the dtype directly from the data this class receives.
+        """Init the internal structures.
+        
+        The reason this is not done in the constructor is that we want to be
+        able to derive the input dimension and the dtype directly from the
+        data this class receives.
         """
         # init dtype
         if self._dtype is None:
@@ -71,12 +73,13 @@ class CovarianceMatrix(object):
         self._avg = numx.zeros(dim, type_)
 
     def update(self, x):
-        """Update internal structures."""
+        """Update internal structures.
+        
+        Note that no consistency checks are performed on the data (this is
+        typically done in the enclosing node).
+        """
         if self._cov_mtx is None:
             self._init_internals(x)
-            
-        #?? check the input dimension
-
         # cast input
         x = mdp.utils.refcast(x, self._dtype)
         # update the covariance matrix, the average and the number of

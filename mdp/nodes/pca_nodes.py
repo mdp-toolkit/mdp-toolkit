@@ -62,8 +62,8 @@ class PCANode(Node):
         # empirical covariance matrix, updated during the training phase
         self._cov_mtx = CovarianceMatrix(dtype)
         # attributes that defined in stop_training
-        self.d = None
-        self.v = None
+        self.d = None  # eigenvalues  
+        self.v = None  # eigenvectors, first index for coordinates
         self.total_variance = None
         self.tlen = None
         self.avg = None
