@@ -56,21 +56,49 @@ class ExecuteHTMLSlideShow(HTMLSlideShow):
         node_ids -- Sequence of the active node ids for each slide.  
         """
         kwargs.update(vars())
+        # create a list of the possible node ids
+        unique_node_ids = list(set(node_ids))
+        kwargs["unique_node_ids"] = unique_node_ids
         del kwargs["self"]
         super(ExecuteHTMLSlideShow, self).__init__(**kwargs)
-    
-    # TODO: implement click for node_id support
     
     js_loadslide_template = r'''
     
     // maps slide index to active node id
-    var slide_node_ids = new Array($node_ids);
+    var slide_node_ids = $node_ids;
+    // list of all node ids that are available
+    var unique_node_ids = $unique_node_ids;
     
     $<js_loadhtml_template>
     
     that.loadSlide = function () {
         loadPage(slideselect[current_slide].value);
     }
+    
+    // is called by loadPage after the loading has happened
+    function makeNodesClickable() {
+        var i;
+        for (i = 0; i < unique_node_ids.length; i += 1) {
+            document.getElementById(unique_node_ids[i]).
+                addEventListener("click", nodeClickCallback, false);
+        }
+    }
+    
+    function nodeClickCallback() {
+        // TODO: use event.srcElement for IE (event.target for W3C)
+        var node_id = this.id;
+        // search for next occurance of this node id
+        var i;
+        for (i = current_slide + 1; i < slide_node_ids.length; i += 1) {
+            if (slide_node_ids[i] === node_id) {
+                current_slide = i;
+                that.updateSlide();
+                return;
+            }
+        }
+        // alert("Node is not reached after this slide.");
+    }
+    
 '''
     
     js_loadhtml_template = r'''
@@ -133,13 +161,12 @@ class ExecuteHTMLSlideShow(HTMLSlideShow):
     
     // Load an HTML page and inject the content.
     function loadPage(url) {
-        var storage = document.getElementById("html_storage");
         var target = document.getElementById("html_display");
         var xhr = getXHR();
         xhr.onreadystatechange = function() {
             if(xhr.readyState == 4) {
-                storage.innerHTML = getBody(xhr.responseText);
-                target.innerHTML = storage.innerHTML;
+                target.innerHTML = getBody(xhr.responseText);
+                makeNodesClickable();
             } 
         }
         xhr.open("GET", url, true);
@@ -149,7 +176,6 @@ class ExecuteHTMLSlideShow(HTMLSlideShow):
     
     # Note: We do not use an id prefix, since there is only one slideshow.
     html_bottom_template = r'''
-<div id="html_storage" style="display:none;"></div>
 <div id="html_display"></div>
 '''
 
@@ -160,8 +186,6 @@ class SectExecuteHTMLSlideShow(SectionHTMLSlideShow, ExecuteHTMLSlideShow):
 
     
 class TrainHTMLSlideShow(SectionHTMLSlideShow, ExecuteHTMLSlideShow):
-    
-    # TODO: add node_id support
     
     def __init__(self, filenames, node_ids, index_table, **kwargs):
         """Return the complete HTML code for the slideshow.

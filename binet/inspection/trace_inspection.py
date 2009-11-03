@@ -649,9 +649,10 @@ class TraceBiNetHTMLTranslator(BiNetHTMLTranslator):
         html_line += ' %s' % type_id
         # assign id only to nodes which trigger a slide creation,
         # i.e. only if the node can become active 
-        if type_id == "node" and hasattr(node, TRACING_WRAP_FLAG): 
+        if hasattr(node, TRACING_WRAP_FLAG): 
             node_id = CLICKABLE_NODE_ID % self._node_id_index
-            self._current_node_id = node_id
+            if node is self._current_node:
+                self._current_node_id = node_id
             self._node_id_index += 1
             html_line +=  ' clickable" id="%s">' % node_id
         else:
