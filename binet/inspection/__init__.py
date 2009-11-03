@@ -12,18 +12,19 @@ inspect_execution or the simpler show_execution.
 
 
 from bihinet_translator import (BINET_STYLE, BiNetHTMLTranslator)
-from trace_inspection import (prepare_training_inspection,
-                              remove_inspection_residues,
-                              BiNetTraceDebugException,
-                              HTMLTraceInspector,
-                              HTMLTraceTranslator, TraceBiNetHTMLTranslator,
-                              _trace_biflow_training,
-                              INSPECT_TRACE_STYLE, NODE_TRACE_METHOD_NAMES,
-                              BINODE_TRACE_METHOD_NAMES)
-from trace_slideshow import (TrainHTMLSlideShow, SectExecuteHTMLSlideShow,
-                             ExecuteHTMLSlideShow)
-from facade import (INSPECTION_STYLE, SLIDE_CSS_FILENAME, inspect_training,
-                    show_training, inspect_execution, show_execution)
+from trace_inspection import (
+    prepare_training_inspection, remove_inspection_residues,
+    BiNetTraceDebugException, HTMLTraceInspector, TraceBiNetHTMLTranslator,
+    _trace_biflow_training, INSPECT_TRACE_STYLE, NODE_TRACE_METHOD_NAMES,
+    BINODE_TRACE_METHOD_NAMES
+)
+from trace_slideshow import (
+    TrainHTMLSlideShow, SectExecuteHTMLSlideShow, ExecuteHTMLSlideShow
+)
+from facade import (
+    INSPECTION_STYLE, SLIDE_CSS_FILENAME, inspect_training,
+    show_training, inspect_execution, show_execution
+)
 
 del bihinet_translator
 del trace_inspection

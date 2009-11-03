@@ -74,13 +74,15 @@ def inspect_training(snapshot_path, x_samples, msg_samples=None,
     del slide_style
     # create slides
     try:
-        slide_filenames, index_table = _trace_biflow_training(**vars())
+        slide_filenames, slide_node_ids, index_table = \
+            _trace_biflow_training(**vars())
     except BiNetTraceDebugException, debug_exception:
-        slide_filenames, index_table = debug_exception.result
+        slide_filenames, slide_node_ids, index_table = debug_exception.result
     if index_table is None:
         return None  # no snapshots were found
     # create slideshow
     slideshow = TrainHTMLSlideShow(filenames=slide_filenames,
+                                   node_ids=slide_node_ids,
                                    index_table=index_table,
                                    delay=500, delay_delta=100, loop=False)
     return str(slideshow)
@@ -220,20 +222,21 @@ def inspect_execution(flow, x, msg=None, target=None, path=None, name=None,
                                 css_filename=css_filename)
     # create slides
     try:
-        slide_filenames, section_ids, result = trace_inspector.trace_execution(
-                                                 path=path,
-                                                 trace_name=name,
-                                                 flow=flow,
-                                                 x=x, msg=msg, target=target,
-                                                 debug=debug)
+        slide_filenames, slide_node_ids, section_ids, result = \
+            trace_inspector.trace_execution(path=path,
+                                            trace_name=name,
+                                            flow=flow,
+                                            x=x, msg=msg, target=target,
+                                            debug=debug)
     except BiNetTraceDebugException, debug_exception:
         if not debug_exception.result:
             return None
-        slide_filenames, section_ids = debug_exception.result
+        slide_filenames, slide_node_ids, section_ids = debug_exception.result
         result = None
     # create slideshow file
     if not section_ids:
         slideshow = ExecuteHTMLSlideShow(filenames=slide_filenames,
+                                         node_ids=slide_node_ids,
                                          delay=500, delay_delta=100,
                                          loop=False)
     else:
@@ -241,6 +244,7 @@ def inspect_execution(flow, x, msg=None, target=None, path=None, name=None,
         if len(section_ids) < len(slide_filenames):
             section_ids.append(section_ids[-1])
         slideshow = SectExecuteHTMLSlideShow(filenames=slide_filenames,
+                                             node_ids=slide_node_ids,
                                              section_ids=section_ids,
                                              delay=500, delay_delta=100,
                                              loop=False)
