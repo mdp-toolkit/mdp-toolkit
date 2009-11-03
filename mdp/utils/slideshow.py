@@ -36,8 +36,8 @@ par.explanation {
 }
 
 table.flow {
-    margin-left:auto;
-    margin-right:auto;
+    margin-left: auto;
+    margin-right: auto;
 }
 '''
 
@@ -515,11 +515,14 @@ self.write(link + '\n')
 </td></tr>
 '''
 
-# use nearest neighbour resampling in Firefox 3.6+
-# TODO: change this to standard CSS value when possible
+# Use nearest neighbour resampling in Firefox 3.6+ and IE.
+# TODO: Implement electric shock for people who actually use IE.
+# Webkit (Chrome, Safari) does not support this yet,
+# see http://code.google.com/p/chromium/issues/detail?id=1502 
 IMAGE_SLIDESHOW_STYLE = SLIDESHOW_STYLE + '''
-div.slideshow {
+img.slideshow {
     image-rendering: -moz-crisp-edges;
+    -ms-interpolation-mode: nearest-neighbor;
 }
 '''  
 
@@ -620,7 +623,7 @@ class ImageHTMLSlideShow(HTMLSlideShow):
     html_box_template = r'''
 <tr>
 <td style="padding: 20 20 20 20">
-<img src="" name="${slideshow_id}_image_display"
+<img class="slideshow" src="" name="${slideshow_id}_image_display"
     width="$width" height="$height">
 </td>
 </tr>
