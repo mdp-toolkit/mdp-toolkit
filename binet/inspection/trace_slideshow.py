@@ -104,13 +104,7 @@ class ExecuteHTMLSlideShow(HTMLSlideShow):
     js_loadhtml_template = r'''
     /**
      * Code to load the body content from HTMl files and inject it.
-     * 
-     * Loosely based on code from
-     *   http://www.xul.fr/ajax/responseHTML-attribute.html
-     *
-     *   responseHTML
-     *   (c) 2007-2008 xul.fr        
-     *   Licence Mozilla 1.1
+     * inspired by http://www.xul.fr/ajax/responseHTML-attribute.html
      */
     
     // Extract body content from html content.

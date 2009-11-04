@@ -153,7 +153,7 @@ var $slideshow_id = function () {
             if (!loop_slideshow &&
                 (current_slide === slideselect.length-1)) {
                 // restart slideshow
-                current_slide = 0;
+                current_slide = -1;  // is directly increased by showAuto
             }
             that.showAuto();
         } else {
