@@ -29,7 +29,7 @@ then feed the output into a Layer and each Node will get the correct input.
 
 from flownode import FlowNode
 from layer import Layer, SameInputLayer, CloneLayer
-from switchboard import (Switchboard, ChannelSwitchboard,
+from switchboard import (Switchboard, SwitchboardException, ChannelSwitchboard,
                          Rectangular2dSwitchboardException, 
                          Rectangular2dSwitchboard, DoubleRect2dSwitchboard,
                          DoubleRect2dSwitchboardException,
@@ -45,7 +45,7 @@ del switchboard
 del hinet_translator
 
 __all__ = ['FlowNode', 'Layer', 'SameInputLayer', 'CloneLayer',
-           'Switchboard', 'ChannelSwitchboard'
+           'Switchboard', 'SwitchboardException', 'ChannelSwitchboard'
            'Rectangular2dSwitchboard', 'Rectangular2dSwitchboardException',
            'DoubleRect2dSwitchboard', 'DoubleRect2dSwitchboardException',
            'DoubleRhomb2dSwitchboard', 'DoubleRhomb2dSwitchboardException',

@@ -19,26 +19,29 @@ However, since the extension mechanism provides a special Metaclass it is
 still possible to define the extension nodes as classes derived from nodes.
 This keeps the code readable and is compatible with automatic code checkers
 (like the background pylint checks in the Eclipse IDE with PyDev).
+
+Note that static methods and class methods are also supported by the
+extension mechanism.
 """
 
 import types
 
 from mdp import MDPException, NodeMetaclass
 
+# Note: There is no way to get the affected node instances when an extension
+#    is activated, these are not registered anywhere.
+
+# TODO: add support for non-method attributes?
+#    Problem: For some data types can't add the attributes like
+#    ext_original_method.
+#    Anyway, this might not be worth the added complexity?
 
 # TODO: note the ParllelBiFlowNode purge_nodes method, which is not part
 #    of the ParallelNode interface. Allow this?
 
-# TODO: allow optional setup and restore methods that are called for a node
-#    when the extension is activated. This could for example add special
-#    attributes.
-#    e.g. call them _parallel_setup, _parallel_teardown
-#    Use this for the likelihood extension.
-#    Problem: There is no way to get the affected node instances, these are
-#    not registered anywhere.
-
 # TODO: Add warning about overriding public methods with respect to
 #    the docstring wrappers?
+
 # TODO: in the future could use ABC's to register nodes with extension nodes
 
 
@@ -67,8 +70,7 @@ def _register_function(ext_name, node_cls, func, method_name=None):
         method_name = func.__name__
     # perform safety check
     if method_name in node_cls.__dict__:
-        original_method = getattr(node_cls, method_name)
-        if not isinstance(original_method, types.MethodType):
+        if not isinstance(getattr(node_cls, method_name), types.MethodType):
             err = ("Extension method " + method_name + " tries to "
                    "override non-method attribute in class " +
                    str(node_cls))
@@ -77,7 +79,7 @@ def _register_function(ext_name, node_cls, func, method_name=None):
     # do not set this now to be more flexibel
     func.ext_original_method = None
     func.ext_extension_name = ext_name
-
+    
 def extension_method(ext_name, node_cls, method_name=None):
     """Returns a function to register a function as extension method.
     
@@ -122,12 +124,21 @@ class ExtensionNodeMetaclass(NodeMetaclass):
             # initial creation of ExtensionNode class
             return super(ExtensionNodeMetaclass, ExtensionNodeMetaclass). \
                         __new__(cls, classname, bases, members)
+        # check if this is a new extension definition,
+        # in that case this node is directly derived from ExtensionNode
         if ExtensionNode in bases:
             ext_name = members["extension_name"]
+            if not ext_name:
+                err = "No extension name has been specified."
+                raise ExtensionException(err)
             if ext_name not in _extensions:
                 # creation of a new extension, add entry in dict
                 _extensions[ext_name] = dict()
-        # find node that this extension is for
+            else:
+                err = ("An extension with the name '" + ext_name +
+                       "' has already been defined.")
+                raise ExtensionException(err)
+        # find the node that this extension node belongs to
         base_node_cls = None
         for base in bases:
             if type(base) is not ExtensionNodeMetaclass:
@@ -138,14 +149,13 @@ class ExtensionNodeMetaclass(NodeMetaclass):
                            "normal nodes.")
                     raise ExtensionException(err)
         if base_node_cls is None:
+            # this new extension is not directly derived from a node,
+            # so there is nothing to register (no default implementation) 
             return super(ExtensionNodeMetaclass, ExtensionNodeMetaclass). \
                         __new__(cls, classname, bases, members)
         ext_node_cls = super(ExtensionNodeMetaclass, ExtensionNodeMetaclass). \
                         __new__(cls, classname, bases, members)
         ext_name = ext_node_cls.extension_name
-        if not ext_name:
-            err = "No extension name has been specified."
-            raise ExtensionException(err)
         if not base_node_cls in _extensions[ext_name]:
             # register the base node
             _extensions[ext_name][base_node_cls] = dict()
