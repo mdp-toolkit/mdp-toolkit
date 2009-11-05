@@ -8,7 +8,7 @@ class TestMDPExtensions(unittest.TestCase):
     
     def tearDown(self):
         """Deactivate all extensions and remove testing extensions."""
-        mdp.deactivate_extensions(mdp.get_active_extensions())
+        mdp.deactivate_extensions(*mdp.get_active_extensions())
         for key in mdp.get_extensions().copy():
             if key.startswith("__test"):
                 del mdp.get_extensions()[key]
@@ -134,7 +134,7 @@ class TestMDPExtensions(unittest.TestCase):
         self.assert_(not hasattr(mdp.nodes.SFANode, "_testtest1"))
         mdp.activate_extension("__test1")
         node._testtest1()
-        mdp.deactivate_extensions(set(["__test1", "__test2"]))
+        mdp.deactivate_extensions(*set(["__test1", "__test2"]))
         self.assert_(not hasattr(mdp.nodes.SFANode, "_testtest1"))
         self.assert_(not hasattr(mdp.nodes.SFANode, "_testtest2"))
         
@@ -149,7 +149,7 @@ class TestMDPExtensions(unittest.TestCase):
             def _testtest(self):
                 pass
         self.assertRaises(mdp.ExtensionException,
-                    lambda: mdp.activate_extensions(["__test1", "__test2"]))
+                    lambda: mdp.activate_extensions(*["__test1", "__test2"]))
         # none of the extension should be active after the exception
         self.assert_(not hasattr(mdp.Node, "_testtest"))
       

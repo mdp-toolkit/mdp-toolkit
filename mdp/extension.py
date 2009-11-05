@@ -28,13 +28,16 @@ import types
 
 from mdp import MDPException, NodeMetaclass
 
+# TODO: Add support data-attributes attributes (like classmethods).
+#    store ext_original_method in _extensions?
+#    can drop ext_extension_name
+#    have to change the activation and deactivation
+#    see http://stackoverflow.com/questions/1677468/how-does-a-classmethod-object-work
+#    for classmethod issue
+#    add unittests for classmethods, staticmethods and data attributes
+
 # Note: There is no way to get the affected node instances when an extension
 #    is activated, these are not registered anywhere.
-
-# TODO: add support for non-method attributes?
-#    Problem: For some data types can't add the attributes like
-#    ext_original_method.
-#    Anyway, this might not be worth the added complexity?
 
 # TODO: note the ParllelBiFlowNode purge_nodes method, which is not part
 #    of the ParallelNode interface. Allow this?
@@ -161,7 +164,10 @@ class ExtensionNodeMetaclass(NodeMetaclass):
             _extensions[ext_name][base_node_cls] = dict()
         # register methods
         for member in members.values():
-            if isinstance(member, types.FunctionType):
+            # TODO: change this to accept attributes
+            if (isinstance(member, types.FunctionType) or
+                isinstance(member, classmethod) or
+                isinstance(member, staticmethod)):
                 _register_function(ext_name, base_node_cls, member)
         return ext_node_cls
                                                      
@@ -198,8 +204,8 @@ class ExtensionNode(object):
 def get_extensions():
     """Return a dictionary currently registered extensions.
     
-    Be careful that this is not a copy, so if you change anything in this dict
-    then the whole extension mechanism will be affected. If you just want the
+    Note that this is not a copy, so if you change anything in this dict
+    the whole extension mechanism will be affected. If you just want the
     names of the available extensions use get_extensions().keys().
     """
     return _extensions
@@ -260,8 +266,8 @@ def deactivate_extension(extension_name):
                     pass
     _active_extensions.remove(extension_name)
 
-def activate_extensions(extension_names):
-    """Activate all the extensions for the given list of names."""
+def activate_extensions(*extension_names):
+    """Activate all the extensions for the given names."""
     try:
         for extension_name in extension_names:
             activate_extension(extension_name)
@@ -272,8 +278,8 @@ def activate_extensions(extension_names):
         deactivate_extensions(get_active_extensions())
         raise
 
-def deactivate_extensions(extension_names):
-    """Deactivate all the extensions for the given list of names.
+def deactivate_extensions(*extension_names):
+    """Deactivate all the extensions for the given names.
     
     extension_names -- Sequence of extension names.
     """
