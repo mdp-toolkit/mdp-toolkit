@@ -3,7 +3,7 @@ blockers for MDP 3.0
 ====================
 - switch from SVN to Hg
 - add classifier stuff
-- finisch SVN integration (already done?)
+- finish SVM integration and port my existing shogun bindings to newest version (rike)
 - decide if we want to move binet into MDP (maybe declare binet as "beta"
     in MDP 3.0), discuss possible changes that would improve binet
 - binet: write more unittests and write tutorial section
