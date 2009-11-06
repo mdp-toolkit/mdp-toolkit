@@ -1,10 +1,40 @@
-TODO:
 
+blockers for MDP 3.0
+====================
+- switch from SVN to Hg
+- add classifier stuff
+- finisch SVN integration (already done?)
+- decide if we want to move binet into MDP (maybe declare binet as "beta"
+    in MDP 3.0), discuss possible changes that would improve binet
+- binet: write more unittests and write tutorial section
+
+
+optional for MDP 3.0
+====================
+- switch to a more permissive license (like BSD)
+- add example section on the homepage
+- binet: add deep belief network example
+- parallel: use shared memory for data in the parallel ProcessScheduler
+    and use caching for the results as well
+- refactor unitests
+- check if sphinx could be used as an alternative for automatic API docs
+- add cross-correlation tools, maybe support the use of a parallel scheduler
+
+
+beyond the next release
+=======================
+- migration to Python 3 when the dependencies are ready
+- parallel: provide adapters for more sophisticated schedulers
+
+
+
+
+old list
+========
 
 MDP 2.5 30.06.2009:
 
 - solve the svn revision tracking problem (see log comment on rev 468)
-- integrate binet
 
 MDP 2.4 17.10.2008:
 
@@ -27,15 +57,6 @@ MDP 2.4 17.10.2008:
 - think about a better structure for the unittests in the future,
   the transition could happen package by package 
   (starting with parallel)
-- Mark parallelizable nodes with a class decorator when they are defined.
-  The class decorator would be given the parallel class. We could then store all
-  the __init__ parameters, so that new instances can be created more easily in
-  fork.
-  Or decorate only the parallel node version with a reference to the original
-  node.
-  If we add additional parallelisation techniques (e.g. OpenCL) one could
-  introduce more class decorators. The same would work for stuff like a
-  gradient decent interface.
 - Implement Node.copy() via the copy module? Provide __deepcopy__ method?
 - Use the new property decorators when migrating to Python 2.6 (see
   http://docs.python.org/library/functions.html#property).
