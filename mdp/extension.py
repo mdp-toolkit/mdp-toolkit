@@ -46,7 +46,7 @@ ORIGINAL_ATTR_PREFIX = "_non_extension_"
 # prefix used to store the current extension name for an attribute 
 EXTENSION_ATTR_PREFIX = "_extension_for_"
 # list of attribute names that are not affected by extensions,
-NON_EXTENSION_ATTRIBUTES = ["__module__", " __doc__", "extension_name"]
+NON_EXTENSION_ATTRIBUTES = ["__module__", "__doc__", "extension_name"]
 
 # dict of dicts of dicts, contains a key for each extension,
 # the inner dict maps the node types to their extension node,
@@ -167,8 +167,7 @@ class ExtensionNode(object):
     The concrete node implementations are then derived from this extension
     node class.
     
-    Important note:
-    To call a method from a parent class you have two options.
+    To call an instance method from a parent class you have multiple options:
     
     - use super, but with the normal node class, e.g.:
         super(mdp.nodes.SFA2Node, self).method()
@@ -181,8 +180,9 @@ class ExtensionNode(object):
     - call it explicitly using the im_func attribute:
         parent_class.method.im_func(self)
         
-    - To call the original method in the same class use the
-      'ext_original_method' attribute of the injected method.
+    To call the original (pre-extension) method in the same class use you
+    simply prefix the method name with '_non_extension_' (this is the value
+    of the ORIGINAL_ATTR_PREFIX constant in this module).
     """
     __metaclass__ = ExtensionNodeMetaclass
     # override this name in a concrete extension node base class
