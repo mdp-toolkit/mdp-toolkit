@@ -29,20 +29,27 @@ then feed the output into a Layer and each Node will get the correct input.
 
 from flownode import FlowNode
 from layer import Layer, SameInputLayer, CloneLayer
-from switchboard import (Switchboard, SwitchboardException, ChannelSwitchboard,
-                         Rectangular2dSwitchboardException, 
-                         Rectangular2dSwitchboard, DoubleRect2dSwitchboard,
-                         DoubleRect2dSwitchboardException,
-                         DoubleRhomb2dSwitchboardException,
-                         DoubleRhomb2dSwitchboard)
-from hinet_translator import (HiNetTranslator, HiNetHTMLTranslator,
-                              HiNetXHTMLTranslator,
-                              HINET_STYLE, NewlineWriteFile, show_flow)
+from switchboard import (
+    Switchboard, SwitchboardException, ChannelSwitchboard,
+    Rectangular2dSwitchboard, Rectangular2dSwitchboardException,
+    DoubleRect2dSwitchboard, DoubleRect2dSwitchboardException,
+    DoubleRhomb2dSwitchboard, DoubleRhomb2dSwitchboardException
+)
+from hinet_translator import (
+    HiNetTranslator, HiNetHTMLTranslator, HiNetXHTMLTranslator,
+    HINET_STYLE, NewlineWriteFile, show_flow
+)
+from switchboard_factory import (
+    get_2d_image_switchboard, FactoryExtensionChannelSwitchboard,
+    FactoryRectangular2dSwitchboard, FactoryDoubleRect2dSwitchboard,
+    FactoryDoubleRhomb2dSwitchboard
+)
 
 del flownode
 del layer
 del switchboard
 del hinet_translator
+del switchboard_factory
 
 __all__ = ['FlowNode', 'Layer', 'SameInputLayer', 'CloneLayer',
            'Switchboard', 'SwitchboardException', 'ChannelSwitchboard'
@@ -50,5 +57,6 @@ __all__ = ['FlowNode', 'Layer', 'SameInputLayer', 'CloneLayer',
            'DoubleRect2dSwitchboard', 'DoubleRect2dSwitchboardException',
            'DoubleRhomb2dSwitchboard', 'DoubleRhomb2dSwitchboardException',
            'HiNetTranslator', 'HiNetHTMLTranslator', 'HiNetXHTMLTranslator',
-           'HINET_STYLE', 'NewlineWriteFile', 'show_flow'
+           'HINET_STYLE', 'NewlineWriteFile', 'show_flow',
+           'get_2d_image_switchboard'
            ]
