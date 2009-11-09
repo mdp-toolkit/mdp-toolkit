@@ -14,8 +14,8 @@ optional for MDP 3.0
 - switch to a more permissive license (like BSD)
 - add example section on the homepage
 - binet: add deep belief network example
-- parallel: use shared memory for data in the parallel ProcessScheduler
-    and use caching for the results as well
+- parallel: use shared memory for data in the parallel ProcessScheduler,
+	maybe send data back only on demand
 - refactor unitests
 - check if sphinx could be used as an alternative for automatic API docs
 - add cross-correlation tools, maybe support the use of a parallel scheduler

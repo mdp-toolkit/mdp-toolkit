@@ -5,6 +5,18 @@ Process based scheduler for distribution across multiple CPU cores.
 # TODO: use a queue instead of sleep?
 #    http://docs.python.org/library/queue.html
 
+# TODO: use shared memory for data numpy arrays
+
+# TODO: only return result when get_results is called,
+#    this sends a special request to the processes to send their data,
+#    we would have to add support for this to the callable,
+#    might get too complicated
+
+# TODO: leverage process forks on unix systems,
+#    might be very efficient due to copy-on-write, see
+#    http://gael-varoquaux.info/blog/?p=119
+#    http://www.ibm.com/developerworks/aix/library/au-multiprocessing/
+
 import sys
 import os
 import cPickle as pickle

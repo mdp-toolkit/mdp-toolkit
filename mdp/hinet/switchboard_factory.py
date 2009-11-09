@@ -2,6 +2,8 @@
 Extension for building switchboards in a 2d hierarchical network.
 """
 
+# TODO: add unittests and maybe mention it in the tutorial
+
 # TODO: maybe integrate all this into the original switchboard classes?
 
 import mdp
@@ -63,10 +65,10 @@ class FactoryExtensionChannelSwitchboard(mdp.ExtensionNode,
             if isinstance(prev_switchboard, base_class):
                 compatible = True
         if not compatible:
-            err = ("This prev_switchboard class ('%s')" %
-                        prev_switchboard.__name__ +
+            err = ("The prev_switchboard class '%s'" %
+                        prev_switchboard.__class__.__name__ +
                    " is not compatible with this switchboard class" +
-                   " ('%s')" % cls.__name__)
+                   " '%s'." % cls.__name__)
             raise mdp.hinet.SwitchboardException(err)
         for key, value in free_params.items():
             if key.endswith('_xy') and isinstance(value, int):
