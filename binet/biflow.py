@@ -60,7 +60,7 @@ class MessageResultContainer(object):
                         self._msg_results[key] = msg[key]
                     else:
                         try:
-                            self._msg_array_results[key] += msg[key]
+                            self._msg_results[key] += msg[key]
                         except:
                             err = ("Could not combine final msg results "
                                    "in BiFlow.")
