@@ -22,6 +22,7 @@ import test_parallelnodes
 import test_parallelflows
 import test_parallelhinet
 import test_process_schedule
+import test_classifier
 
 # check if we have parallel python
 HAVE_PP = hasattr(mdp.parallel, 'pp')
@@ -64,7 +65,8 @@ test_suites = {'flows': (test_flows.get_suite, 0),
                'parallelflows': (test_parallelflows.get_suite, 8),
                'parallelhinet': (test_parallelhinet.get_suite, 9),
                'process_schedule': (test_process_schedule.get_suite, 10),
-               'contrib': (test_contrib.get_suite, 11)}
+               'contrib': (test_contrib.get_suite, 11),
+               'classifier': (test_classifier.get_suite, 12)}
                            
 
 def test(suitename = 'all', verbosity = 2, seed = None, testname = None):

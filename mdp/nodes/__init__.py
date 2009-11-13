@@ -13,6 +13,8 @@ from misc_nodes import (IdentityNode, HitParadeNode, TimeFramesNode,
 from isfa_nodes import ISFANode
 from rbm_nodes import RBMNode, RBMWithLabelsNode
 from regression_nodes import LinearRegressionNode
+from classifier_nodes import (ClassifierNode, SignumClassifier, PerceptronClassifier,
+                              NaiveBayesClassifier, SimpleMarkovClassifier)
 
 # import internals for use in test_suites
 from misc_nodes import OneDimensionalHitParade as _OneDimensionalHitParade
@@ -34,6 +36,7 @@ del misc_nodes
 del isfa_nodes
 del rbm_nodes
 del regression_nodes
+del classifier_nodes
 #del mdp.contrib
 del mdp
 
@@ -47,4 +50,6 @@ __all__ = ['CuBICANode', 'EtaComputerNode', 'FANode', 'FDANode', 'FastICANode',
            'TDSEPNode', 'TimeFramesNode','WhiteningNode', 'XSFANode',
            'LinearRegressionNode',
            '_OneDimensionalHitParade', '_expanded_dim',
-           'CutoffNode', 'HistogramNode', 'AdaptiveCutoffNode']
+           'CutoffNode', 'HistogramNode', 'AdaptiveCutoffNode',
+           'ClassifierNode', 'SignumClassifier', 'PerceptronClassifier',
+           'NaiveBayesClassifier', 'SimpleMarkovClassifier']
