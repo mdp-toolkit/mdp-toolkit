@@ -139,6 +139,9 @@ from extension import (ExtensionException, extension_method,
                        activate_extension, deactivate_extension,
                        activate_extensions, deactivate_extensions)
 
+# import classifier node
+from classifier_node import ClassifierNode 
+
 # import our modules
 import nodes
 import hinet
@@ -151,6 +154,7 @@ from test import test
 del signal_node
 del linear_flows
 del extension
+del classifier_node
 
 # explicitly set __all__, mainly needed for epydoc
 __all__ = ['CheckpointFlow', 'CheckpointFunction', 'CheckpointSaveFunction',
@@ -164,7 +168,8 @@ __all__ = ['CheckpointFlow', 'CheckpointFunction', 'CheckpointSaveFunction',
            'extension_method', 'ExtensionNodeMetaclass', 'ExtensionNode',
            'get_extensions', 'get_active_extension_names', 'with_extension',
            'activate_extension', 'deactivate_extension', 'activate_extensions',
-           'deactivate_extensions']
+           'deactivate_extensions',
+           'ClassifierNode']
 
 __version__ = '2.6'
 __revision__ = utils.get_svn_revision()

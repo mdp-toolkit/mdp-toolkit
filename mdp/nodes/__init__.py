@@ -13,7 +13,7 @@ from misc_nodes import (IdentityNode, HitParadeNode, TimeFramesNode,
 from isfa_nodes import ISFANode
 from rbm_nodes import RBMNode, RBMWithLabelsNode
 from regression_nodes import LinearRegressionNode
-from classifier_nodes import (ClassifierNode, SignumClassifier, PerceptronClassifier,
+from classifier_nodes import (SignumClassifier, PerceptronClassifier,
                               NaiveBayesClassifier, SimpleMarkovClassifier)
 
 # import internals for use in test_suites
@@ -51,5 +51,5 @@ __all__ = ['CuBICANode', 'EtaComputerNode', 'FANode', 'FDANode', 'FastICANode',
            'LinearRegressionNode',
            '_OneDimensionalHitParade', '_expanded_dim',
            'CutoffNode', 'HistogramNode', 'AdaptiveCutoffNode',
-           'ClassifierNode', 'SignumClassifier', 'PerceptronClassifier',
+           'SignumClassifier', 'PerceptronClassifier',
            'NaiveBayesClassifier', 'SimpleMarkovClassifier']

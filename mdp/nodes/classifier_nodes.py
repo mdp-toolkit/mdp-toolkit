@@ -2,52 +2,8 @@ import mdp
 from mdp import numx as numx
 import operator
 import random
-
-class ClassifierNode(mdp.Node):
-    """A ClassifierNode can be used for classification tasks that should not interfere
-    with the normal execution flow. A Reason for that may be that the labels used
-    for classification are not in the normal feature space but in label space.
-    """
-    def rank(self, x, threshold = None):
-        """Returns ordered list with all labels ordered according to prob(x)
-        (e.g., [3 1 2])
-        """
-        p = prob(x)
-        ranking = [(k,v) for k,v in p if v > threshold]
-        ranking.sort(cmp=lambda x, y: cmp(x[1], y[1]))
-        return ranking
-    
-    def _classify(self, x, *args, **kargs):
-        raise NotImplementedError
-    
-    def _prob(self, x, *args, **kargs):
-        raise NotImplementedError
-    
-    ### User interface to the overwritten methods
-    
-    def classify(self, x, *args, **kwargs):
-        """Returns an array with best labels.
-        
-        By default, subclasses should overwrite _classify to implement
-        their classify. The docstring of the '_classify' method
-        overwrites this docstring.
-        """
-        self._pre_execution_checks(x)
-        return self._classify(x, *args, **kwargs)
   
-    def prob(self, x, *args, **kwargs):
-        """Returns the probability for each datapoint and label
-        (e.g., {1:0.1, 2:0.0, 3:0.9})
-
-        By default, subclasses should overwrite _prob to implement
-        their prob. The docstring of the '_prob' method
-        overwrites this docstring.        
-        """
-        self._pre_execution_checks(x)
-        return self._prob(x, *args, **kwargs)
-        
-  
-class SignumClassifier(ClassifierNode):
+class SignumClassifier(mdp.ClassifierNode):
     """This classifier node classifies as 1, if the sum of the data points is positive
         and as -1, if the data point is negative"""
     def is_trainable(self):
@@ -59,7 +15,7 @@ class SignumClassifier(ClassifierNode):
             ret[i] = numx.sign(x[i, :].sum())
         return ret
     
-class PerceptronClassifier(ClassifierNode):
+class PerceptronClassifier(mdp.ClassifierNode):
     """A simple perceptron with input_dim input nodes."""
     def __init__(self, input_dim = None, dtype = None):
         super(PerceptronClassifier, self).__init__(input_dim, None, dtype)
@@ -122,7 +78,7 @@ class PerceptronClassifier(ClassifierNode):
         """
         return numx.sign(numx.dot(x, self.weights) + self.offset_weight)
     
-class NaiveBayesClassifier(ClassifierNode):
+class NaiveBayesClassifier(mdp.ClassifierNode):
     """A naive Bayes Classificator.
     In order to be usable for spam filtering, the words must be transformed
     with a hash function.
@@ -260,7 +216,7 @@ class NaiveBayesClassifier(ClassifierNode):
         print "q =", q
         return - numx.sign(q - 1)
     
-class SimpleMarkovClassifier(ClassifierNode):
+class SimpleMarkovClassifier(mdp.ClassifierNode):
     """A simple version of a Markov classifier.
     It can be trained on a vector of tuples the label being the next element
     in the testing data.
