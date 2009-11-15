@@ -69,10 +69,14 @@ class NodeMetaclass(type):
             wrapped_method = getattr(super(new_cls, new_cls), wrapper_name)
             wrapped_info = cls._get_infodict(wrapped_method)
             priv_info['name'] = wrapper_name
-            # preserve signature, since it can be different for binodes
-            priv_info['signature'] = wrapped_info['signature']
-            priv_info['argnames'] = wrapped_info['argnames']
-            priv_info['defaults'] = wrapped_info['defaults']
+            # Preserve the signature only if it does not end with kwargs
+            # (this is important for binodes).
+            # Note that this relies on the exact name 'kwargs', if this causes
+            # problems we could switch to looking for ** in the signature.
+            if not wrapped_info['argnames'][-1] == "kwargs":
+                priv_info['signature'] = wrapped_info['signature']
+                priv_info['argnames'] = wrapped_info['argnames']
+                priv_info['defaults'] = wrapped_info['defaults']
             setattr(new_cls, wrapper_name,
                     cls._wrap_method(priv_info, new_cls))
         return new_cls
@@ -547,7 +551,7 @@ class Node(object):
         if self.get_remaining_train_phase() == 0:
             self._training = False
 
-    def execute(self, x, *args, **kargs):
+    def execute(self, x, *args, **kwargs):
         """Process the data contained in 'x'.
         
         If the object is still in the training phase, the function
@@ -560,9 +564,9 @@ class Node(object):
         overwrites this docstring.
         """
         self._pre_execution_checks(x)
-        return self._execute(self._refcast(x), *args, **kargs)
+        return self._execute(self._refcast(x), *args, **kwargs)
 
-    def inverse(self, y, *args, **kargs):
+    def inverse(self, y, *args, **kwargs):
         """Invert 'y'.
         
         If the node is invertible, compute the input x such that
@@ -573,12 +577,12 @@ class Node(object):
         overwrites this docstring.
         """
         self._pre_inversion_checks(y)
-        return self._inverse(self._refcast(y), *args, **kargs)
+        return self._inverse(self._refcast(y), *args, **kwargs)
 
-    def __call__(self, x, *args, **kargs):
+    def __call__(self, x, *args, **kwargs):
         """Calling an instance of Node is equivalent to call
         its 'execute' method."""
-        return self.execute(x, *args, **kargs)
+        return self.execute(x, *args, **kwargs)
 
     ###### adding nodes returns flows
 

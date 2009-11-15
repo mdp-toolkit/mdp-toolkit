@@ -129,7 +129,7 @@ class ExtensionNodeMetaclass(NodeMetaclass):
                 _extensions[ext_name] = dict()
             else:
                 err = ("An extension with the name '" + ext_name +
-                       "' has already been defined.")
+                       "' has already been registered.")
                 raise ExtensionException(err)
         # find the node that this extension node belongs to
         base_node_cls = None
