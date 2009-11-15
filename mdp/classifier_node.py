@@ -5,12 +5,15 @@ class ClassifierNode(mdp.Node):
     with the normal execution flow. A Reason for that may be that the labels used
     for classification are not in the normal feature space but in label space.
     """
-    def rank(self, x, threshold = None):
+    def rank(self, x, threshold=None):
         """Returns ordered list with all labels ordered according to prob(x)
-        (e.g., [3 1 2])
+        (e.g., [3 1 2]).
+        
+        The optional threshold parameter is used to exclude labels having equal
+        or less probability. E.g. threshold=0 excludes all labels with zero probability.
         """
-        p = prob(x)
-        ranking = [(k,v) for k,v in p if v > threshold]
+        p = self.prob(x)
+        ranking = [(k,v) for k,v in p.items() if v > threshold]
         ranking.sort(cmp=lambda x, y: cmp(x[1], y[1]))
         return ranking
     
