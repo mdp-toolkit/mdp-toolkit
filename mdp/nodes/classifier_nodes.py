@@ -221,6 +221,97 @@ class SimpleMarkovClassifier(mdp.ClassifierNode):
     It can be trained on a vector of tuples the label being the next element
     in the testing data.
     """
-    pass
+    def __init__(self, input_dim = None, dtype = None):
+        super(SimpleMarkovClassifier, self).__init__(input_dim, None, dtype)
+        self.ntotal_connections = 0
+
+        self.features = {}
+        self.labels = {}
+        self.connections = {}
+
+    def _check_train_args(self, x, cl):
+        if (isinstance(cl, (list, tuple, numx.ndarray)) and
+            len(cl) != x.shape[0]):
+            msg = ("The number of labels should be equal to the number of "
+                   "datapoints (%d != %d)" % (len(cl), x.shape[0]))
+            raise mdp.TrainingException(msg)
+        
+        if (not isinstance(cl, (list, tuple, numx.ndarray))):
+            cl = [cl]
+
+    def _train(self, x, cl):
+        """Update the internal structures according to the input data 'x'.
+        
+        x -- a matrix having different variables on different columns
+             and observations on the rows.
+        cl -- can be a list, tuple or array of labels (one for each data point)
+              or a single label, in which case all input data is assigned to
+              the same class.
+        """
+
+        # if cl is a number, all x's belong to the same class
+        if isinstance(cl, (list, tuple, numx.ndarray)):
+            cl = numx.array(cl)
+        else:
+            cls = [cl] * len(x)
+            cl = numx.array(cls)
+        
+        for i in range(x.shape[0]):
+            self._learn(x[i, :], cl[i])
+    
+    def _learn(self, feature, label):
+        feature = tuple(feature)
+        self.ntotal_connections += 1
+
+        if label in self.labels:
+            self.labels[label] += 1
+        else:
+            self.labels[label] = 1
+        
+        if feature in self.features:
+            self.features[feature] += 1
+        else:
+            self.features[feature] = 1
+
+        connection = (feature, label)
+        if connection in self.connections:
+            self.connections[connection] += 1
+        else:
+            self.connections[connection] = 1
+
+    def _prob(self, features):
+        return [self._prob_one(features[i, :]) for i in range(features.shape[0])]
+    
+    def _prob_one(self, feature):
+        feature = tuple(feature)
+        probabilities = {}
+        
+        try:
+            n_feature_connections = self.features[feature]
+        except KeyError:
+            n_feature_connections = 0
+            # if n_feature_connections == 0, we get a division by zero
+            # we could throw here, but maybe it's best to simply return
+            # an empty dict object
+            return {}
+        
+        for label in self.labels:
+            conn = (feature, label)
+            try:
+                n_conn = self.connections[conn]
+            except KeyError:
+                n_conn = 0
+            
+            try:
+                n_label_connections = self.labels[label]
+            except KeyError:
+                n_label_connections = 0
+            
+            p_feature_given_label = 1.0 * n_conn / n_label_connections
+            p_label = 1.0 * n_label_connections / self.ntotal_connections
+            p_feature = 1.0 * n_feature_connections / self.ntotal_connections
+            prob = 1.0 * p_feature_given_label * p_label / p_feature
+            probabilities[label] = prob
+        return probabilities
     
     

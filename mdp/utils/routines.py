@@ -2,6 +2,7 @@ import mdp
 
 # import numeric module (scipy, Numeric or numarray)
 numx, numx_rand, numx_linalg  = mdp.numx, mdp.numx_rand, mdp.numx_linalg
+import random
 
 class SymeigException(mdp.MDPException):
     pass
@@ -447,4 +448,25 @@ def _product(iterable):
         result = [x+[y] for x in result for y in pool]
     for prod in result:
         yield tuple(prod)
+
+def weighted_choice(a_dict, is_normalised=False):
+    """Returns a key from a dictionary based on the weight that the value suggests.
+    If is_normalised=True, the sum of the weights must be one.
+    
+    TODO: It might be good to shuffle the order before using it to minimise possible degeneration.
+    """
+    if not is_normalised:
+        d = a_dict.copy()
+        s = sum(d.values())
+        for key, val in d.items():
+            d[key] = d[key] / s
+    else:
+        d = a_dict
+    rand_num = random.random()
+    total_rand = 0
+    for key, val in d.items():
+        total_rand += val
+        if total_rand > rand_num:
+            return key
+    return None
 

@@ -12,7 +12,9 @@ import inspect
 
 import mdp
 from mdp import numx
-from mdp.nodes import SignumClassifier, PerceptronClassifier, NaiveBayesClassifier
+from mdp.nodes import (SignumClassifier, PerceptronClassifier, NaiveBayesClassifier,
+                       SimpleMarkovClassifier)
+from mdp.utils import weighted_choice
 
 class ClassifierTestSuite(unittest.TestSuite):
     def __init__(self, testname=None):
@@ -94,6 +96,41 @@ class ClassifierTestSuite(unittest.TestSuite):
         #textvals = mdp.numx.array([[hash(s) for s in text]])
         #print bc.prob(textvals)
 
+    def testSimpleMarkovClassifier(self):
+        mc = SimpleMarkovClassifier(dtype="unicode")
+        text = "after the letter e follows either space or the letters r t or i"
+        
+        for word in text.split():
+            word = word.lower()
+
+            features = zip(" " + word)
+            labels = list(word + " ")
+            mc.train(mdp.numx.array(features), labels)
+        
+        num_transitions = 0
+        features = mc.features
+        for feature, count in features.items():
+            if count:
+                prob = mc.prob(mdp.numx.array([feature]))
+                prob_sum = 0
+                for p in prob:
+                    for k, v in p.items():
+                        prob_sum += v
+                        if v:
+                            num_transitions += 1
+                            #print "".join(feature).replace(" ", "_"), "->", k, "(", v, ")"
+                assert abs(prob_sum - 1.0) < 1e-5
+        assert num_transitions == 37
+        
+        letters_following_e = [' ', 'r', 't', 'i']
+        letters_prob = mc.prob(mdp.numx.array([['e']]))[0]
+        prob_sum = 0
+        for letter, prob in letters_prob.items():
+            prob_sum += prob
+            if prob > 1e-5:
+                assert letter in letters_following_e
+        
+        assert abs(prob_sum - 1.0) < 1e-5
 
 def get_suite(testname=None):
     return ClassifierTestSuite(testname=testname)
