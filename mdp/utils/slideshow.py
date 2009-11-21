@@ -286,7 +286,8 @@ $slideshow_id.onLoad();
     }
 '''
 
-    # define keyboard shortcuts
+    # define keyboard shortcuts,
+    # note that these are also mentionend in the button hover-text
     js_keyboard_shortcuts_template = r'''
 document.onkeydown = function(e) {
     if (!e.ctrlKey) {  // control key must be pressed
@@ -312,15 +313,17 @@ document.onkeydown = function(e) {
     
     html_buttons_template = r'''
 <input type=button onClick="$slideshow_id.first();"
-    value="|<<" title="beginning" id="${slideshow_id}_firstButton">
+    value="|<<" title="First" id="${slideshow_id}_firstButton">
 <input type=button onClick="$slideshow_id.previous();"
-    value="<" title="previous" id="${slideshow_id}_prevButton">
+    value="<" title="Previous (Ctrl+Left)" id="${slideshow_id}_prevButton">
 <input type=button name="startbutton"
     onClick="$slideshow_id.startstop(this.value);"
-    value="Start" title="autoplay" id="${slideshow_id}_startButton">
-<input type=button onClick="$slideshow_id.next();" value=">" title="next"
+    value="Start" title="Autoplay (Ctrl+Insert)"
+    id="${slideshow_id}_startButton">
+<input type=button onClick="$slideshow_id.next();" value=">"
+    title="Next (Ctrl+Right)"
     id="${slideshow_id}_nextButton">
-<input type=button onClick="$slideshow_id.last();" value=">>|" title="end"
+<input type=button onClick="$slideshow_id.last();" value=">>|" title="Last"
     id="${slideshow_id}_lastButton">
 '''
     
@@ -336,8 +339,8 @@ if delay is not None:
     html_delay_template = r'''
 delay: <input type="text" name="${slideshow_id}_delaytext"
     onChange="$slideshow_id.changeDelay();" value="0" size="4"> ms
-<input type=button onClick="$slideshow_id.faster();" value="-" title="faster">
-<input type=button onClick="$slideshow_id.slower();" value="+" title="slower">
+<input type=button onClick="$slideshow_id.faster();" value="-" title="Faster">
+<input type=button onClick="$slideshow_id.slower();" value="+" title="Slower">
 '''
     
     html_top_template = r'''
@@ -449,7 +452,8 @@ class SectionHTMLSlideShow(HTMLSlideShow):
     $<js_loadslide_template>
 '''
     
-    # define keyboard shortcuts
+    # define keyboard shortcuts,
+    # note that these are also mentionend in the button hover-text
     js_keyboard_shortcuts_template = r'''
 document.onkeydown = function(e) {
     if (!e.ctrlKey) { // control key must be pressed
@@ -475,19 +479,21 @@ document.onkeydown = function(e) {
     
     html_buttons_template = r'''
 <input type=button onClick="$slideshow_id.first();"
-    value="|<<" title="beginning" id="${slideshow_id}_firstButton">
+    value="|<<" title="First" id="${slideshow_id}_firstButton">
 <input type=button onClick="$slideshow_id.previousSection();" value="|<"
-    title="previous section" id="${slideshow_id}_prevSectionButton">
-<input type=button onClick="$slideshow_id.previous();" value="<"
-    title="previous" id="${slideshow_id}_prevButton">
+    title="Previous Section (Ctrl+Up)" id="${slideshow_id}_prevSectionButton">
+<input type=button onClick="$slideshow_id.previous();"
+    value="<" title="Previous (Ctrl+Left)" id="${slideshow_id}_prevButton">
 <input type=button name="startbutton"
     onClick="$slideshow_id.startstop(this.value);"
-    value="Start" title="autoplay" id="${slideshow_id}_startButton">
-<input type=button onClick="$slideshow_id.next();" value=">" title="next"
+    value="Start" title="Autoplay (Ctrl+Insert)"
+    id="${slideshow_id}_startButton">
+<input type=button onClick="$slideshow_id.next();" value=">"
+    title="Next (Ctrl+Right)"
     id="${slideshow_id}_nextButton">
 <input type=button onClick="$slideshow_id.nextSection();" value=">|"
-    title="next section" id="${slideshow_id}_nextSectionButton">
-<input type=button onClick="$slideshow_id.last();" value=">>|" title="end"
+    title="Next Section (Ctrl+Down)" id="${slideshow_id}_nextSectionButton">
+<input type=button onClick="$slideshow_id.last();" value=">>|" title="Last"
     id="${slideshow_id}_lastButton">
 '''
     
@@ -646,8 +652,8 @@ if mag_control or (delay is not None):
     html_mag_template = r'''
 magnification: <input type="text" name="${slideshow_id}_magtext"
     onChange="$slideshow_id.changeMag();" value="0" size="2">
-<input type=button onClick="$slideshow_id.smaller();" value="-" title="smaller">
-<input type=button onClick="$slideshow_id.larger();" value="+" title="larger">
+<input type=button onClick="$slideshow_id.smaller();" value="-" title="Smaller">
+<input type=button onClick="$slideshow_id.larger();" value="+" title="Larger">
 '''
     
     
