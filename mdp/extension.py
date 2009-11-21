@@ -115,8 +115,8 @@ class ExtensionNodeMetaclass(NodeMetaclass):
         """
         if classname == "ExtensionNode":
             # initial creation of ExtensionNode class
-            return super(ExtensionNodeMetaclass, ExtensionNodeMetaclass). \
-                        __new__(cls, classname, bases, members)
+            return super(ExtensionNodeMetaclass, cls).__new__(cls, classname,
+                                                              bases, members)
         # check if this is a new extension definition,
         # in that case this node is directly derived from ExtensionNode
         if ExtensionNode in bases:
@@ -144,10 +144,10 @@ class ExtensionNodeMetaclass(NodeMetaclass):
         if base_node_cls is None:
             # this new extension is not directly derived from a node,
             # so there is nothing to register (no default implementation) 
-            return super(ExtensionNodeMetaclass, ExtensionNodeMetaclass). \
-                        __new__(cls, classname, bases, members)
-        ext_node_cls = super(ExtensionNodeMetaclass, ExtensionNodeMetaclass). \
-                        __new__(cls, classname, bases, members)
+            return super(ExtensionNodeMetaclass, cls).__new__(cls, classname,
+                                                              bases, members)
+        ext_node_cls = super(ExtensionNodeMetaclass, cls).__new__(
+                                                cls, classname, bases, members)
         ext_name = ext_node_cls.extension_name
         if not base_node_cls in _extensions[ext_name]:
             # register the base node

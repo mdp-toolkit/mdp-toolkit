@@ -61,8 +61,8 @@ class NodeMetaclass(type):
                 if pubname not in members:
                     wrapper_names.append(pubname)
                     priv_infos.append(priv_info)
-        new_cls = super(NodeMetaclass, NodeMetaclass).__new__(cls, classname,
-                                                              bases, members)
+        new_cls = super(NodeMetaclass, cls).__new__(cls, classname,
+                                                    bases, members)
         # now add the wrappers
         for wrapper_name, priv_info in zip(wrapper_names, priv_infos):
             # Note: super works because we never wrap in the defining class
