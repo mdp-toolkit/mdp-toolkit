@@ -160,7 +160,7 @@ class HTMLTraceInspector(hinet.HiNetTranslator):
         self._undecorate_mode = False 
         
     def trace_training(self, path, flow, x, msg=None, stop_msg=None,
-                       trace_name="training", debug=False):
+                       trace_name="training", debug=False, **kwargs):
         """Trace a single training phase and the stop_training.
         
         Return a tuple containing a list of the training slide filenames, the
@@ -168,6 +168,8 @@ class HTMLTraceInspector(hinet.HiNetTranslator):
         
         path -- Path were the inspection files will be stored.
         trace_name -- Name prefix for this inspection (default is training).
+        **kwargs -- Additional arguments for flow.train can be specified
+            as keyword arguments.
         """
         self._reset_variables()
         self._trace_path = path
@@ -177,7 +179,7 @@ class HTMLTraceInspector(hinet.HiNetTranslator):
         self._translate_flow(flow)
         biflownode = BiFlowNode(BiFlow(flow.flow))
         try:
-            biflownode.train(x=x, msg=msg)
+            biflownode.train(x=x, msg=msg, **kwargs)
         except Exception, exception:
             if debug:
                 # insert the error slide and encapsulate the exception
@@ -214,7 +216,7 @@ class HTMLTraceInspector(hinet.HiNetTranslator):
         return train_filenames, train_node_ids, stop_filenames, stop_node_ids
     
     def trace_execution(self, path, trace_name, flow, x, msg=None, target=None,
-                        debug=False):
+                        debug=False, **kwargs):
         """Trace a single execution.
         
         The return value is a tuple containing a list of the slide filenames,
@@ -223,6 +225,8 @@ class HTMLTraceInspector(hinet.HiNetTranslator):
         
         path -- Path were the inspection files will be stored.
         trace_name -- Name prefix for this inspection.
+        **kwargs -- Additional arguments for flow.execute can be specified
+            as keyword arguments.
         """
         self._reset_variables()
         self._trace_path = path
@@ -236,9 +240,9 @@ class HTMLTraceInspector(hinet.HiNetTranslator):
             raise Exception(err)
         try:
             if msg is None:
-                y = self._flow.execute(x)
+                y = self._flow.execute(x, **kwargs)
             else:
-                y = self._flow.execute(x, msg, target)
+                y = self._flow.execute(x, msg, target, **kwargs)
         except Exception, exception:
             if debug:
                 self._write_error_frame(exception)
@@ -741,7 +745,8 @@ def remove_inspection_residues(flow):
 def _trace_biflow_training(snapshot_path, inspection_path, css_filename,
                            x_samples, msg_samples=None, stop_messages=None,
                            trace_inspector=None,
-                           debug=False, show_size=False, verbose=True):
+                           debug=False, show_size=False, verbose=True,
+                           **kwargs):
     """Load flow snapshots and perform the inspection with the given data.
     
     The return value consists of the slide filenames, the slide node ids,
@@ -762,6 +767,8 @@ def _trace_biflow_training(snapshot_path, inspection_path, css_filename,
     show_size -- Show the approximate memory footprint of all nodes.
     verbose -- If True (default value) a status message is printed for each
         loaded snapshot.
+    **kwargs -- Additional arguments for flow.train can be specified
+        as keyword arguments.
     """
     if not trace_inspector:
         trace_translator = TraceBiNetHTMLTranslator(show_size=show_size)
@@ -812,7 +819,8 @@ def _trace_biflow_training(snapshot_path, inspection_path, css_filename,
                                             path=inspection_path,
                                             flow=biflow,
                                             x=x, msg=msg, stop_msg=stop_msg,
-                                            debug=debug)
+                                            debug=debug,
+                                            **kwargs)
                 slide_filenames += train_files
                 train_index = len(slide_filenames) - 1
                 slide_filenames += stop_files

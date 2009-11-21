@@ -38,7 +38,7 @@ def inspect_training(snapshot_path, x_samples, msg_samples=None,
                      stop_messages=None, inspection_path=None,
                      trace_inspector=None, debug=False,
                      slide_style=SLIDE_STYLE, show_size=False,
-                     verbose=True):
+                     verbose=True, **kwargs):
     """Return the HTML code for an inspection slideshow of the training.
     
     This function must be used after the training was completed. Before the
@@ -64,6 +64,8 @@ def inspect_training(snapshot_path, x_samples, msg_samples=None,
     show_size -- Show the approximate memory footprint of all nodes.
     verbose -- If True (default value) a status message is printed for each
         loaded snapshot.
+    **kwargs -- Additional arguments for flow.train can be specified
+        as keyword arguments.
     """
     if not inspection_path:
         inspection_path = snapshot_path
@@ -75,7 +77,7 @@ def inspect_training(snapshot_path, x_samples, msg_samples=None,
     # create slides
     try:
         slide_filenames, slide_node_ids, index_table = \
-            _trace_biflow_training(**vars())
+            _trace_biflow_training(**(vars().update(kwargs)))
     except BiNetTraceDebugException, debug_exception:
         slide_filenames, slide_node_ids, index_table = debug_exception.result
     if index_table is None:
@@ -89,7 +91,7 @@ def inspect_training(snapshot_path, x_samples, msg_samples=None,
 
 def show_training(flow, data_iterables, msg_iterables=None, stop_messages=None,
                   path=None, trace_inspector=None, debug=False,
-                  show_size=False, browser_open=True, **train_kwargs):
+                  show_size=False, browser_open=True, **kwargs):
     """Perform both the flow training and the training inspection.
     
     The return value is the filename of the slideshow HTML file. 
@@ -110,10 +112,10 @@ def show_training(flow, data_iterables, msg_iterables=None, stop_messages=None,
     debug -- Ignore exception during training and try to complete the slideshow
         (default value is False).
     show_size -- Show the approximate memory footprint of all nodes.
-    **train_kwargs -- Additional arguments for flow.train can be specified
-        as keyword arguments.
     browser_open -- If True (default value) then the slideshow file is
         automatically opened in a webbrowser.
+    **kwargs -- Additional arguments for flow.train can be specified
+        as keyword arguments.
     """
     if path is None:
         path = tempfile.mkdtemp(prefix='MDP_')
@@ -151,9 +153,9 @@ def show_training(flow, data_iterables, msg_iterables=None, stop_messages=None,
     # perform the training and gather snapshots 
     prepare_training_inspection(flow=flow, path=path)
     if isinstance(flow, BiFlow):
-        flow.train(data_iterables, msg_iterables, stop_messages, **train_kwargs)
+        flow.train(data_iterables, msg_iterables, stop_messages, **kwargs)
     else:
-        flow.train(data_iterables, **train_kwargs)
+        flow.train(data_iterables, **kwargs)
     remove_inspection_residues(flow)
     # reload data samples
     sample_file = open(os.path.join(path, "training_data_samples.pckl"), "rb")
@@ -185,7 +187,8 @@ def show_training(flow, data_iterables, msg_iterables=None, stop_messages=None,
 
 def inspect_execution(flow, x, msg=None, target=None, path=None, name=None,
                       trace_inspector=None, debug=False,
-                      slide_style=SLIDE_STYLE, show_size=False):
+                      slide_style=SLIDE_STYLE, show_size=False,
+                      **kwargs):
     """Return the HTML code for an inspection slideshow of the execution
     and the return value of the execution (in a tuple).
     
@@ -205,6 +208,8 @@ def inspect_execution(flow, x, msg=None, target=None, path=None, name=None,
     slide_style -- CSS code for the individual slides (when they are
         viewed as single HTML files), has no effect on the slideshow appearance.
     show_size -- Show the approximate memory footprint of all nodes.
+    **kwargs -- Additional arguments for flow.execute can be specified
+        as keyword arguments.
     """
     if path is None:
         path = tempfile.mkdtemp(prefix='MDP_')
@@ -227,7 +232,8 @@ def inspect_execution(flow, x, msg=None, target=None, path=None, name=None,
                                             trace_name=name,
                                             flow=flow,
                                             x=x, msg=msg, target=target,
-                                            debug=debug)
+                                            debug=debug,
+                                            **kwargs)
     except BiNetTraceDebugException, debug_exception:
         if not debug_exception.result:
             return None
@@ -252,7 +258,7 @@ def inspect_execution(flow, x, msg=None, target=None, path=None, name=None,
 
 def show_execution(flow, x, msg=None, target=None, path=None, name=None,
                    trace_inspector=None, debug=False, show_size=False,
-                   browser_open=True):
+                   browser_open=True, **kwargs):
     """Write the inspection slideshow into an HTML file and open it in the
     browser.
     
@@ -272,6 +278,8 @@ def show_execution(flow, x, msg=None, target=None, path=None, name=None,
     show_size -- Show the approximate memory footprint of all nodes.
     browser_open -- If True (default value) then the slideshow file is
         automatically opened in a webbrowser.
+    **kwargs -- Additional arguments for flow.execute can be specified
+        as keyword arguments.
     """
     if path is None:
         path = tempfile.mkdtemp(prefix='MDP_')
@@ -288,7 +296,8 @@ def show_execution(flow, x, msg=None, target=None, path=None, name=None,
                         name=name,
                         trace_inspector=trace_inspector,
                         debug=debug,
-                        show_size=show_size)
+                        show_size=show_size,
+                        **kwargs)
     # inspect execution created the path if required, so no need to check here
     html_file = open(filename, 'w')
     html_file.write('<html>\n<head>\n<title>%s</title>\n' % title)
