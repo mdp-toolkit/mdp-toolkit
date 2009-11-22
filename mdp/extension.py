@@ -26,14 +26,12 @@ extension mechanism.
 
 from mdp import MDPException, NodeMetaclass
 
-# TODO: update the Tutorial
-# TODO: add attribute specific unittests (e.g. for classmethods)
-
-# Note: There is no way to get the affected node instances when an extension
-#    is activated, these are not registered anywhere.
-
 # TODO: note the ParllelBiFlowNode purge_nodes method, which is not part
 #    of the ParallelNode interface. Allow this?
+
+# TODO: Register the node instances as well?
+#    This would allow instance initialization when an extension is activated.
+#    Implementing this should not be too hard via the metclass.
 
 # TODO: Add warning about overriding public methods with respect to
 #    the docstring wrappers?

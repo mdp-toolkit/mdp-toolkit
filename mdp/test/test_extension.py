@@ -14,22 +14,25 @@ class TestMDPExtensions(unittest.TestCase):
                 del mdp.get_extensions()[key]
     
     def testSimpleExtension(self):
-        """Basic test with a single new extension."""
+        """Test for a single new extension."""
         class TestExtensionNode(mdp.ExtensionNode):
             extension_name = "__test"
             def _testtest(self):
                 pass
+            _testtest_attr = 1337
         class TestSFANode(TestExtensionNode, mdp.nodes.SFANode):
             def _testtest(self):
                 return 42
+            _testtest_attr = 1338
         sfa_node = mdp.nodes.SFANode()
         mdp.activate_extension("__test")
         self.assert_(sfa_node._testtest() == 42) 
+        self.assert_(sfa_node._testtest_attr == 1338) 
         mdp.deactivate_extension("__test")
         self.assert_(not hasattr(mdp.nodes.SFANode, "_testtest")) 
         
     def testDecoratorExtension(self):
-        """Basic test with a single new extension."""
+        """Test extension decorator with a single new extension."""
         class TestExtensionNode(mdp.ExtensionNode):
             extension_name = "__test"
             def _testtest(self):
@@ -50,7 +53,7 @@ class TestMDPExtensions(unittest.TestCase):
         self.assert_(not hasattr(mdp.nodes.SFA2Node, "_testtest")) 
         
     def testDecoratorInheritance(self):
-        """Basic test with a single new extension."""
+        """Test inhertiance with decorators for a single new extension."""
         class TestExtensionNode(mdp.ExtensionNode):
             extension_name = "__test"
             def _testtest(self):
@@ -68,7 +71,7 @@ class TestMDPExtensions(unittest.TestCase):
         self.assert_(sfa2_node._testtest() == 84)
     
     def testExtensionInheritance(self):
-        """Testing inheritance of extension nodes."""
+        """Test inheritance of extension nodes."""
         class TestExtensionNode(mdp.ExtensionNode):
             extension_name = "__test"
             def _testtest(self):
@@ -76,15 +79,17 @@ class TestMDPExtensions(unittest.TestCase):
         class TestSFANode(TestExtensionNode, mdp.nodes.SFANode):
             def _testtest(self):
                 return 42
+            _testtest_attr = 1337
         class TestSFA2Node(TestSFANode, mdp.nodes.SFA2Node):
             def _testtest(self):
                 return TestSFANode._testtest.im_func(self)
         sfa2_node = mdp.nodes.SFA2Node()
         mdp.activate_extension("__test")
         self.assert_(sfa2_node._testtest() == 42)
+        self.assert_(sfa2_node._testtest_attr == 1337)
         
     def testExtensionInheritance2(self):
-        """Testing inheritance of extension nodes, using super."""
+        """Test inheritance of extension nodes, using super."""
         class TestExtensionNode(mdp.ExtensionNode):
             extension_name = "__test"
             def _testtest(self):
@@ -100,7 +105,7 @@ class TestMDPExtensions(unittest.TestCase):
         self.assert_(sfa2_node._testtest() == 42)
         
     def testExtensionInheritance3(self):
-        """Testing explicit use of extension nodes and inheritance."""
+        """Test explicit use of extension nodes and inheritance."""
         class TestExtensionNode(mdp.ExtensionNode):
             extension_name = "__test"
             def _testtest(self):
@@ -116,7 +121,7 @@ class TestMDPExtensions(unittest.TestCase):
         self.assert_(sfa2_node._testtest() == 42) 
         
     def testMultipleExtensions(self):
-        """Test the behavior of multiple extensions."""
+        """Test behavior of multiple extensions."""
         class Test1ExtensionNode(mdp.ExtensionNode, mdp.Node):
             extension_name = "__test1"
             def _testtest1(self):
@@ -139,7 +144,7 @@ class TestMDPExtensions(unittest.TestCase):
         self.assert_(not hasattr(mdp.nodes.SFANode, "_testtest2"))
         
     def testExtCollision(self):
-        """Test check for method name collision."""
+        """Test the check for method name collision."""
         class Test1ExtensionNode(mdp.ExtensionNode, mdp.Node):
             extension_name = "__test1"
             def _testtest(self):
