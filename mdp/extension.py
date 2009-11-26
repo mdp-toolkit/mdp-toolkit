@@ -1,11 +1,11 @@
 """
 Extension Mechanism for nodes.
 
-The extension mechanism makes it possible to dynamically add methods for
-specific features node classes (e.g. for parallelization nodes need a
-_fork and _join method). It is also possible for users to define new extensions
-and providing new functionality for MDP nodes without having to modify any
-MDP code.
+The extension mechanism makes it possible to dynamically add class attributes,
+especially methods, for specific features to node classes
+(e.g. for parallelization nodes need a _fork and _join method).
+It is also possible for users to define new extensions to provide new
+functionality for MDP nodes without having to modify any MDP code.
 
 Without the extension mechanism extending nodes would be done by inheritance,
 which is fine unless one wants to use multiple inheritance at the same time
@@ -19,9 +19,6 @@ However, since the extension mechanism provides a special Metaclass it is
 still possible to define the extension nodes as classes derived from nodes.
 This keeps the code readable and is compatible with automatic code checkers
 (like the background pylint checks in the Eclipse IDE with PyDev).
-
-Note that static methods and class methods are also supported by the
-extension mechanism.
 """
 
 from mdp import MDPException, NodeMetaclass
@@ -101,7 +98,7 @@ def extension_method(ext_name, node_cls, method_name=None):
 class ExtensionNodeMetaclass(NodeMetaclass):
     """This is the metaclass for node extension superclasses.
     
-    It takes care of registering extensions and the methods in the
+    It takes care of registering extensions and the attributes in the
     extension.
     """
     
