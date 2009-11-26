@@ -69,15 +69,20 @@ def inspect_training(snapshot_path, x_samples, msg_samples=None,
     """
     if not inspection_path:
         inspection_path = snapshot_path
-    # create CSS file for the slides
+    ## create CSS file for the slides
     css_filename = SLIDE_CSS_FILENAME
     robust_write_file(path=inspection_path, filename=css_filename,
                        content=slide_style)
     del slide_style
-    # create slides
+    ## create slides
     try:
+        # combine all the arguments to be used as kwargs
+        all_kwargs = kwargs
+        all_kwargs.update(vars())
+        del all_kwargs["kwargs"]
+        del all_kwargs["all_kwargs"]
         slide_filenames, slide_node_ids, index_table = \
-            _trace_biflow_training(**(vars().update(kwargs)))
+            _trace_biflow_training(**all_kwargs)
     except BiNetTraceDebugException, debug_exception:
         slide_filenames, slide_node_ids, index_table = debug_exception.result
     if index_table is None:
