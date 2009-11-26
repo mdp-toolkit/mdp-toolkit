@@ -605,6 +605,9 @@ class BiFlow(mdp.Flow):
                     return x
                 else:
                     return (x, msg)
+            # check if we should exit in inverse mode
+            if (target == -1) and (i_node == 0):
+                return x, msg, target
             # update i_node to the target node
             i_node = self._target_to_index(target, i_node)
             if not isinstance(i_node, int):
