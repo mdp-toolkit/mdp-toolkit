@@ -7,19 +7,30 @@ blockers for MDP 3.0
 - decide if we want to move binet into MDP (maybe declare binet as "beta"
     in MDP 3.0), discuss possible changes that would improve binet
 - binet: write more unittests and write tutorial section
-
+- create a Flow metaclass to enable Flow extensions (think of ParallelFlow!)
+- implement an extension context manager with additional parameters and 
+  exception handling. E.g.:
+  flow = Flow([PCANode()])
+  with extension('parallel', args=(ProcessScheduler,8)):
+      flow.train(x)
+  note that the context manager takes care of initialize and shutting down the
+  scheduler. Proposed syntax:
+  extension(string, args=tuple, kwargs=dictionary)
+- switch to a more permissive license (like BSD)
+- refactor tests for nodes using optional libraries
+- offer interface to query available optional libraries (remove try excepts)
 
 optional for MDP 3.0
 ====================
-- switch to a more permissive license (like BSD)
-- add example section on the homepage
+- add example section on the homepage (and on mercurial)
 - binet: add deep belief network example
 - parallel: use shared memory for data in the parallel ProcessScheduler,
 	maybe send data back only on demand
 - refactor unitests
 - check if sphinx could be used as an alternative for automatic API docs
 - add cross-correlation tools, maybe support the use of a parallel scheduler
-
+- add execute memoize extension?
+- drop python 2.4 and use/advertise 'with' statement syntax?
 
 beyond the next release
 =======================
