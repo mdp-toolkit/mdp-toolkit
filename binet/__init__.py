@@ -81,7 +81,7 @@ terminated the normal flow execution will be resumed.
 
 # TODO: nodes should be in binet.nodes
 
-from binode import BiNodeException, BiNode 
+from binode import BiNodeException, BiNode, NODE_ID_KEY
 from biflow import (MessageResultContainer, BiFlowException, BiFlow,
                     BiCheckpointFlow, EXIT_TARGET)
 from binodes import *

@@ -137,6 +137,31 @@ class JumpBiNode(IdentityBiNode):
 class SenderBiNode(IdentityBiNode):
     """Sends the incoming x data to another node via bi_message."""
     
+    def __init__(self, target=None, node_id=None, input_dim=None, dtype=None):
+        """Initialize the internal variables.
+        
+        target -- None or the target key for the data.
+        """
+        super(SenderBiNode, self).__init__(node_id=node_id,
+                                           input_dim=input_dim,
+                                           output_dim=input_dim,
+                                           dtype=dtype)
+        self._target = target
+        
+    def _execute(self, x):
+        msg = dict()
+        if self._target:
+            msg[self._target + NODE_ID_KEY + "msg_x"] = x
+        else:
+            msg["msg_x"] = x
+        return x, msg
+
+# old version of the sender node, relying on branching
+# TODO: remove this node when the branching is removed
+
+class OldSenderBiNode(IdentityBiNode):
+    """Sends the incoming x data to another node via bi_message."""
+    
     def __init__(self, target=None, msg_supplement=None, **kwargs):
         """Initialize the internal variables.
         
@@ -148,7 +173,7 @@ class SenderBiNode(IdentityBiNode):
         args and kwargs are forwarded via super to the next __init__ method
         in the MRO.
         """
-        super(SenderBiNode, self).__init__(**kwargs)
+        super(OldSenderBiNode, self).__init__(**kwargs)
         self._target = target
         self._msg_supplement = msg_supplement
     
