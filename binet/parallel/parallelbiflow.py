@@ -448,8 +448,7 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
             # callable can handle this  
             task_callable((x, msg))
             if self.verbose:
-                print ("    finished nonparallel task "
-                       "no. %d (in this training phase)" % i_task)
+                print ("    finished nonparallel task no. %d" % i_task)
         if self.verbose:
             print ("finished nonparallel training phase of " + 
                    "node no. %d in parallel flow" % 
@@ -458,6 +457,7 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
         self._stop_training_hook()
         result = self._flownode.stop_training(
                                 self._stop_messages[self._i_train_node])
+        self._post_stop_training_hook()
         if (result is not None) and (not isinstance(result, dict)):
             err = ("Target node not found in flow during " +
                    "stop_message propagation, last result: " + 
@@ -622,6 +622,7 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
             self._stop_training_hook()
             result = self._flownode.stop_training(
                                     self._stop_messages[self._i_train_node])
+            self._post_stop_training_hook()
             if (result is not None) and (not isinstance(result, dict)):
                 err = ("Target node not found in flow during " +
                        "stop_message propagation, last result: " + 
@@ -721,13 +722,5 @@ class ParallelCheckpointBiFlow(mdp.parallel.ParallelCheckpointFlow,
                                     train_callable_class=train_callable_class,
                                     msg_iterables=msg_iterables,
                                     **kwargs)
-        
-    def use_results(self, results):
-        """Checkpoint version of use_results.
-        
-        Calls the checkpoint functions when necessary.
-        """
-        # this call goes to ParallelCheckpointFlow and then ParallelBiFlow
-        return super(ParallelCheckpointBiFlow, self).use_results(results)
         
 

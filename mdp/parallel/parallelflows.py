@@ -381,40 +381,51 @@ class ParallelFlow(mdp.Flow):
                     print ("start nonparallel training phase of " + 
                            "node no. %d in parallel flow" % 
                            (self._i_train_node+1))
-                # the training is done directly on self._flownode
-                task_callable = self._train_callable_class(self._flownode)
-                empty_iterator = True   
-                for i_task, data in enumerate(data_iterable):
-                    empty_iterator = False
-                    # Note: if x contains additional args assume that the
-                    # callable can handle this  
-                    task_callable(data)
-                    if self.verbose:
-                        print ("    finished nonparallel task "
-                               "no. %d (in this training phase)" % (i_task+1))
-                if empty_iterator:
-                    if current_node.get_current_train_phase() == 1:
-                        err_str = ("The training data iteration for node "
-                                   "no. %d could not be repeated for the "
-                                   "second training phase, you probably "
-                                   "provided an iterator instead of an "
-                                   "iterable." % (self._i_train_node+1))
-                        raise mdp.FlowException(err_str)
-                    else:
-                        err_str = ("The training data iterator for node "
-                                   "no. %d is empty." % (self._i_train_node+1))
-                        raise mdp.FlowException(err_str)
+                self._local_train_phase(data_iterable)
                 if self.verbose:
                     print ("finished nonparallel training phase of " + 
                            "node no. %d in parallel flow" % 
                            (self._i_train_node+1))
                 self._stop_training_hook()
                 self._flownode.stop_training()
+                self._post_stop_training_hook()
                 if not self.flow[self._i_train_node].is_training():
                     self._i_train_node += 1
         else:
             # training is finished
             self._i_train_node = None
+            
+    def _local_train_phase(self, data_iterable):
+        """Perform a single training phase locally.
+        
+        The internal _train_callable_class is used for the training.
+        """
+        current_node = self.flow[self._i_train_node]
+        task_callable = self._train_callable_class(self._flownode)
+        empty_iterator = True   
+        for i_task, data in enumerate(data_iterable):
+            empty_iterator = False
+            # Note: if x contains additional args assume that the
+            # callable can handle this  
+            task_callable(data)
+            if self.verbose:
+                print ("    finished nonparallel task no. %d" % (i_task+1))
+        if empty_iterator:
+            if current_node.get_current_train_phase() == 1:
+                err_str = ("The training data iteration for node "
+                           "no. %d could not be repeated for the "
+                           "second training phase, you probably "
+                           "provided an iterator instead of an "
+                           "iterable." % (self._i_train_node+1))
+                raise mdp.FlowException(err_str)
+            else:
+                err_str = ("The training data iterator for node "
+                           "no. %d is empty." % (self._i_train_node+1))
+                raise mdp.FlowException(err_str)
+            
+    def _post_stop_training_hook(self):
+        """Hook method that is called after stop_training is called."""
+        pass
             
     def _create_train_task(self):
         """Create and return a single training task without callable.
@@ -593,6 +604,7 @@ class ParallelFlow(mdp.Flow):
                        "%d in parallel flow" % (self._i_train_node+1))
             self._stop_training_hook()
             node.stop_training()
+            self._post_stop_training_hook()
             if not node.is_training():
                 self._i_train_node += 1
             self._next_train_phase()
@@ -643,28 +655,13 @@ class ParallelCheckpointFlow(ParallelFlow, mdp.CheckpointFlow):
                                     train_callable_class=train_callable_class,
                                     **kwargs)
     
-    def use_results(self, results):
-        """Checkpoint version of use_results.
-        
-        Calls the checkpoint functions when necessary.
-        """
-        if self.is_parallel_training:
-            i_node = self._i_train_node
-            # save this info before use_results() is called, 
-            # since afterwards it is ambiguous
-            checkpoint_reached = False
-            if self.flow[i_node].get_remaining_train_phase() == 1:
-                checkpoint_reached = True
-            super(ParallelCheckpointFlow, self).use_results(results=results)
-            if checkpoint_reached:
-                if ((i_node <= len(self._checkpoints)) 
-                    and self._checkpoints[i_node]):
-                    dict = self._checkpoints[i_node](self.flow[i_node])
-                    # store result, just like in the original CheckpointFlow
-                    if dict: 
-                        self.__dict__.update(dict)
-        elif self.is_parallel_executing:
-            return super(ParallelCheckpointFlow, self).use_results(
-                                                            results=results)
-
-
+    def _post_stop_training_hook(self):
+        """Check if we reached a checkpoint."""
+        i_node = self._i_train_node
+        if self.flow[i_node].get_remaining_train_phase() == 0:
+            if ((i_node <= len(self._checkpoints)) 
+                and self._checkpoints[i_node]):
+                dict = self._checkpoints[i_node](self.flow[i_node])
+                # store result, just like in the original CheckpointFlow
+                if dict: 
+                    self.__dict__.update(dict)
