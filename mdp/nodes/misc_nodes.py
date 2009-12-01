@@ -521,7 +521,13 @@ class GaussianClassifierNode(Node):
         self.cov_objs[lbl].update(x)
 
     def _train(self, x, cl):
-        # if cl is a number, all x's belong to the same class
+        """
+        Additional input arguments:
+        cl -- Can be a list, tuple or array of labels (one for each data point)
+              or a single label, in which case all input data is assigned to
+              the same class.
+        """
+         # if cl is a number, all x's belong to the same class
         if isinstance(cl, (list, tuple, numx.ndarray)):
             # get all classes from cl
             for lbl in  utils.uniq(cl):
@@ -529,15 +535,6 @@ class GaussianClassifierNode(Node):
                 self._update_covs(x_lbl, lbl)
         else:
             self._update_covs(x, cl)
-
-    def train(self, x, cl):
-        """
-        Additional input arguments:
-        cl -- Can be a list, tuple or array of labels (one for each data point)
-              or a single label, in which case all input data is assigned to
-              the same class.
-        """
-        super(GaussianClassifierNode, self).train(x, cl)
 
     def _stop_training(self):
         self.labels = self.cov_objs.keys()
