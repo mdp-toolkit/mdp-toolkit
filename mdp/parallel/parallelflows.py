@@ -657,6 +657,7 @@ class ParallelCheckpointFlow(ParallelFlow, mdp.CheckpointFlow):
     
     def _post_stop_training_hook(self):
         """Check if we reached a checkpoint."""
+        super(ParallelCheckpointFlow, self)._post_stop_training_hook()
         i_node = self._i_train_node
         if self.flow[i_node].get_remaining_train_phase() == 0:
             if ((i_node <= len(self._checkpoints)) 
