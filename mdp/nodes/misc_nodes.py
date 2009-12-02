@@ -446,7 +446,12 @@ class NoiseNode(Node):
             return x+noise_mat
         elif self.noise_type == 'multiplicative':
             return x*(1.+noise_mat)
-        
+
+    def save(self, filename, protocol = -1):
+        raise NotImplementedError('NoiseNode can not be saved!')
+
+    def copy(self, protocol = -1):
+        raise NotImplementedError('NoiseNode can not be saved!')
         
 class NormalNoiseNode(mdp.Node):
     """Special version of NoiseNode for Gaussian additive noise.

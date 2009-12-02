@@ -1286,6 +1286,14 @@ class NodesTestSuite(unittest.TestSuite):
         x = numx.array([range(100), range(100)])
         node.execute(x)
 
+    def testNoiseNodePickling(self):
+        node = mdp.nodes.NoiseNode()
+        try:
+            node.copy()
+            raise Exception('NoiseNode says it can be pickled, but it lies!')
+        except NotImplementedError:
+            pass
+        
     def testFDANode(self):
         mean1 = [0., 2.]
         mean2 = [0., -2.]
