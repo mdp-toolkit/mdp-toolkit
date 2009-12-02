@@ -256,11 +256,12 @@ class FlowsTestSuite(unittest.TestSuite):
         assert type(flow) is mdp.Flow
         assert len(flow) == 4
 
+    def testFlowWrongItarablesExceptionBug(self):
+        samples = mdp.numx_rand.random((100,10))
+        labels = mdp.numx.arange(100)
+        flow = mdp.Flow([mdp.nodes.PCANode(), mdp.nodes.FDANode()])
+        flow.train([[samples], [samples, labels]])
         
-        
-        
-        
-    
     def testCheckpointFlow(self):
         lst = []
         # checkpoint function, it collects a '1' for each call
