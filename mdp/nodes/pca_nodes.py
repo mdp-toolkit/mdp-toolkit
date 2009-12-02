@@ -33,7 +33,7 @@ class PCANode(Node):
 
         Other Keyword Arguments:
 
-        svd -- if True use Singular Valude Decomposition instead of the
+        svd -- if True use Singular Value Decomposition instead of the
                standard eigenvalue problem solver. Use it when PCANode
                complains about singular covariance matrices
 
