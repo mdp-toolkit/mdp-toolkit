@@ -2,6 +2,7 @@ import mdp
 from mdp import numx, numx_linalg, utils, Node, NodeException
 
 import cPickle as pickle
+import pickle as real_pickle
 
 MAX_NUM = {numx.dtype('b'): 127,
            numx.dtype('h'): 32767,
@@ -448,10 +449,30 @@ class NoiseNode(Node):
             return x*(1.+noise_mat)
 
     def save(self, filename, protocol = -1):
-        raise NotImplementedError('NoiseNode can not be saved!')
+        """Save a pickled serialization of the node to 'filename'.
+        If 'filename' is None, return a string.
+
+        Note: the pickled Node is not guaranteed to be upward or
+        backward compatible."""
+        if filename is None:
+            return real_pickle.dumps(self, protocol)
+        else:
+            # if protocol != 0 open the file in binary mode
+            if protocol != 0:
+                mode = 'wb'
+            else:
+                mode = 'w'
+            flh = open(filename, mode)
+            real_pickle.dump(self, flh, protocol)
+            flh.close()
+        
 
     def copy(self, protocol = -1):
-        raise NotImplementedError('NoiseNode can not be saved!')
+        """Return a deep copy of the node.
+        Protocol is the pickle protocol."""
+        as_str = real_pickle.dumps(self, protocol)
+        return real_pickle.loads(as_str)
+
         
 class NormalNoiseNode(mdp.Node):
     """Special version of NoiseNode for Gaussian additive noise.

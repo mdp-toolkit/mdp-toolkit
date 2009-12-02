@@ -1288,11 +1288,8 @@ class NodesTestSuite(unittest.TestSuite):
 
     def testNoiseNodePickling(self):
         node = mdp.nodes.NoiseNode()
-        try:
-            node.copy()
-            raise Exception('NoiseNode says it can be pickled, but it lies!')
-        except NotImplementedError:
-            pass
+        node.copy()
+        dummy = node.save(None)
         
     def testFDANode(self):
         mean1 = [0., 2.]
