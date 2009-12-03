@@ -1,6 +1,7 @@
 import mdp
 import sys as _sys
 import os as _os
+import inspect as _inspect
 import traceback as _traceback
 import cPickle as _cPickle
 import warnings as _warnings
@@ -138,6 +139,9 @@ class Flow(object):
             return
             
         try:
+            # inspect for needed train arguments in addition to self and x
+            train_arg_keys = _inspect.getargspec(node.train)[0][2:]
+            train_args_needed = bool(len(train_arg_keys))
             ## We leave the last training phase open for the
             ## CheckpointFlow class.
             ## Checkpoint functions must close it explicitly if needed!
@@ -155,6 +159,16 @@ class Flow(object):
                         x = x[0]
                     else:
                         arg = ()
+                    # check if the required number of arguments was given
+                    if train_args_needed:
+                        if len(train_arg_keys) > len(arg):
+                            err = ("Not enough argument values provided by " +
+                                   "the iterable for node %d " % nodenr +
+                                   "(%d needed, %d given). " %
+                                        (len(train_arg_keys), len(arg)) +
+                                   "List of the missing argument keys: " +
+                                   str(train_arg_keys[len(arg):]))
+                            raise FlowException(err)
                     # filter x through the previous nodes
                     if nodenr > 0:
                         x = self._execute_seq(x, nodenr-1)

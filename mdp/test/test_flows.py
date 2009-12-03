@@ -256,11 +256,19 @@ class FlowsTestSuite(unittest.TestSuite):
         assert type(flow) is mdp.Flow
         assert len(flow) == 4
 
-    def testFlowWrongItarablesExceptionBug(self):
+    def testFlowWrongItarableException(self):
         samples = mdp.numx_rand.random((100,10))
         labels = mdp.numx.arange(100)
         flow = mdp.Flow([mdp.nodes.PCANode(), mdp.nodes.FDANode()])
-        flow.train([[samples], [samples, labels]])
+        try:
+            flow.train([[samples], [samples, labels]])
+            # correct line would be (note the second iterable):
+            #    flow.train([[samples]], [[samples, labels]]])
+            # should trigger exception for missing train argument for FDANode 
+            err = "Flow did not raise FlowException for wrong iterable."
+            raise Exception(err)
+        except mdp.FlowException:
+            pass
         
     def testCheckpointFlow(self):
         lst = []
