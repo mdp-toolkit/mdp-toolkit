@@ -263,12 +263,20 @@ class FlowsTestSuite(unittest.TestSuite):
         try:
             flow.train([[samples], [samples, labels]])
             # correct line would be (note the second iterable):
-            #    flow.train([[samples]], [[samples, labels]]])
+            #    flow.train([[[samples]], [[samples, labels]]])
             # should trigger exception for missing train argument for FDANode 
             err = "Flow did not raise FlowException for wrong iterable."
             raise Exception(err)
         except mdp.FlowException:
             pass
+        try:
+            # try to give one argument too much!
+            flow.train([[[samples]], [[samples, labels, labels]]])
+            err = "Flow did not raise FlowException for wrong iterable."
+            raise Exception(err)
+        except mdp.FlowException:
+            pass
+        
         
     def testCheckpointFlow(self):
         lst = []

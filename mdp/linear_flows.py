@@ -161,13 +161,13 @@ class Flow(object):
                         arg = ()
                     # check if the required number of arguments was given
                     if train_args_needed:
-                        if len(train_arg_keys) > len(arg):
-                            err = ("Not enough argument values provided by " +
-                                   "the iterable for node %d " % nodenr +
-                                   "(%d needed, %d given). " %
-                                        (len(train_arg_keys), len(arg)) +
-                                   "List of the missing argument keys: " +
-                                   str(train_arg_keys[len(arg):]))
+                        if len(train_arg_keys) != len(arg):
+                            err = ("Wrong number of arguments provided by " +
+                                   "the iterable for node #%d " % nodenr +
+                                   "(%d needed, %d given).\n" %
+                                   (len(train_arg_keys), len(arg)) +
+                                   "List of required argument keys: " +
+                                   str(train_arg_keys))
                             raise FlowException(err)
                     # filter x through the previous nodes
                     if nodenr > 0:
