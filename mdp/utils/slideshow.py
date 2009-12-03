@@ -707,9 +707,9 @@ def image_slideshow(filenames, image_size, title=None, section_ids=None,
     image_size -- Tuple (x,y) with the original image size, or enter
         a different size to force scaling.
     title -- Optional slideshow title (for default None not title is shown).
-    section_ids -- List with the section slideshow_id for each slide index.
-        The slideshow_id can a string or a number. Default value None disables
-        the section feature.
+    section_ids -- List with the section id for each slide index. The id
+            can be a string or a number. Default value None disables the
+            section feature.
    
     For additional keyword arguments see the ImageHTMLSlideShow class.
     """
