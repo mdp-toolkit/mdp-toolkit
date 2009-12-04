@@ -355,6 +355,10 @@ class Node(object):
     def _get_train_seq(self):
         return [(self._train, self._stop_training)]
 
+    def has_multiple_training_phases(self):
+        """Return True if the node has multiple training phases."""
+        return len(self._train_seq) > 1
+    
     ### Node states
     def is_training(self):
         """Return True if the node is in the training phase,
