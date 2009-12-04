@@ -518,6 +518,11 @@ class Node(object):
         By default, subclasses should overwrite _train to implement their
         training phase. The docstring of the '_train' method overwrites this
         docstring.
+
+        Note: a subclass supporting multiple training phases should implement
+        the *same* signature for all the training phases and document the
+        meaning of the arguments in the '_train' method doc-string. Having
+        consistent signatures is a requirement to use the node in a flow.
         """
 
         if not self.is_trainable():
