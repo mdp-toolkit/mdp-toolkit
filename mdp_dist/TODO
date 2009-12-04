@@ -19,6 +19,11 @@ blockers for MDP 3.0
 - switch to a more permissive license (like BSD)
 - refactor tests for nodes using optional libraries
 - offer interface to query available optional libraries (remove try excepts)
+- add an example of training a node with multiple training phases using a flow,
+  where the training is done first using lists and then using a custom iterators.
+  special care should be taken on explaining how to pass additional arguments to
+  the train method. an example of how this can look confusing and go wrong can be 
+  found in the testFlowWrongItarableException test in test_flows.py
 
 optional for MDP 3.0
 ====================
