@@ -12,6 +12,9 @@ http://javascript.internet.com/miscellaneous/image-slideshow.html
 (which in turn seems to be based on something from http://www.ricocheting.com)
 """
 
+# TODO: make it possible to turn off controls?
+# TODO: place CSS for section stuff separatly?
+
 import random
 import tempfile
 import os
@@ -55,14 +58,13 @@ class HTMLSlideShow(templet.Template):
     some of the templating attributes. See ImageHTMLSlideShow for an example.
     """
     
-    def __init__(self, title=None, delay=100, delay_delta=None,
+    def __init__(self, title=None, delay=100, delay_delta=20,
                  loop=True, slideshow_id=None, shortcuts=True, **kwargs):
         """Return the complete HTML code for the slideshow.
         
         title -- Optional slideshow title (for defualt None not title is shown).
         delay - Delay between slides in ms (default 100).
-        delay_delta - Step size for increasing or decreasing the delay,
-            or use the (default) value None for no delay control.
+        delay_delta - Step size for increasing or decreasing the delay.
         loop -- If True continue with first slide when the last slide is
             reached during the automatic slideshow (default is False).
         slideshow_id -- String with the id used for the JS closure, and this
@@ -666,8 +668,8 @@ class SectionImageHTMLSlideShow(SectionHTMLSlideShow, ImageHTMLSlideShow):
         For keyword arguments see the super classes.
         """
         if len(section_ids) != len(filenames):
-            err = ("The number of section slideshow_id entries does not match the "
-                   "number of slides / filenames.")
+            err = ("The number of section slideshow_id entries does not match "
+                   "the number of slides / filenames.")
             raise Exception(err)
         kwargs.update(vars())
         del kwargs["self"]
@@ -741,7 +743,7 @@ def show_image_slideshow(filenames, image_size, filename=None, title=None,
     For additional keyword arguments see the ImageHTMLSlideShow class.
     """
     if filename is None:
-        (fd, filename) = tempfile.mkstemp(suffix=".html", prefix="MDP_")
+        fd, filename = tempfile.mkstemp(suffix=".html", prefix="MDP_")
         html_file = os.fdopen(fd, 'w')
     else:
         html_file = open(filename, 'w')
