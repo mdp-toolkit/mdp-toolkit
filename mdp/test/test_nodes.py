@@ -1810,7 +1810,6 @@ class NodesTestSuite(unittest.TestSuite):
             p, v = bm._sample_v(h)
 
         # see that w remains stable after learning
-        delta = (0.,0.,0.)
         for k in range(100):
             if k%5==0: spinner()
             err = bm.train(v)
@@ -1829,14 +1828,13 @@ class NodesTestSuite(unittest.TestSuite):
 
         # the observations consist of two disjunct patterns that
         # never appear together
-        N=10000
+        N = 1e4
         v = numx.zeros((N,I))
         for n in range(N):
             r = numx_rand.random()
             if r>0.666: v[n,:] = [0,1,0,1]
             elif r>0.333: v[n,:] = [1,0,1,0]
 
-        delta = (0.,0.,0.)
         for k in range(1500):
             if k%5==0: spinner()
 

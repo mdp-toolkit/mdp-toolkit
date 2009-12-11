@@ -6,6 +6,9 @@ random = mdp.numx_rand.random
 randn = mdp.numx_rand.randn
 exp = mdp.numx.exp
 
+# TODO: does it make sense to define the inverse of RBMNode as sampling
+#    from the visible layer given an hidden state?
+
 # this and the other replication functions should go in mdp.utils
 def rrep(x, n):
     """Replicate x n-times on a new last dimension"""
