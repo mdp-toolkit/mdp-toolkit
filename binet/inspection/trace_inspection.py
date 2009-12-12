@@ -183,15 +183,15 @@ class HTMLTraceInspector(hinet.HiNetTranslator):
         except Exception, exception:
             if debug:
                 # insert the error slide and encapsulate the exception
-                self._write_error_frame(exception)
+                traceback.print_exc()
+                self._write_error_frame(traceback.format_exc().
+                                            replace('\n', '<br>'))
                 result = (self._slide_filenames, self._slide_node_ids,
                           None, None)
                 raise BiNetTraceDebugException(result=result,
                                                exception=exception) 
             else:
-                traceback.print_exc()
-                err = "Exception during training trace."
-                raise Exception(err)
+                raise
         train_filenames = self._slide_filenames
         train_node_ids = self._slide_node_ids
         self._reset_variables()
@@ -201,7 +201,9 @@ class HTMLTraceInspector(hinet.HiNetTranslator):
         except Exception, exception:
             if debug:
                 # insert the error slide and encapsulate the exception
-                self._write_error_frame(exception)
+                traceback.print_exc()
+                self._write_error_frame(traceback.format_exc().
+                                            replace('\n', '<br>'))
                 result = (train_filenames, train_node_ids,
                           self._slide_filenames, self._slide_node_ids)
                 raise BiNetTraceDebugException(result=result,
@@ -245,7 +247,10 @@ class HTMLTraceInspector(hinet.HiNetTranslator):
                 y = self._flow.execute(x, msg, target, **kwargs)
         except Exception, exception:
             if debug:
-                self._write_error_frame(exception)
+                # insert the error slide and encapsulate the exception
+                traceback.print_exc()
+                self._write_error_frame(traceback.format_exc().
+                                            replace('\n', '<br>'))
                 if not self._section_ids:
                     self._section_ids = None
                 result = (self._slide_filenames, self._slide_node_ids,

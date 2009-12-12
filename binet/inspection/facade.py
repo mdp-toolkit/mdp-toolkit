@@ -170,6 +170,7 @@ def show_training(flow, data_iterables, msg_iterables=None, stop_messages=None,
             print ("exception during training, " +
                    "inspecting up to failure point...")
             # create the last snapshot manually
+            flow._bi_reset()
             filename = (flow._snapshot_name_ + "_%d" % flow._snapshot_counter_ 
                         + PICKLE_EXT)
             robust_pickle(flow._snapshot_path_, filename, flow)
