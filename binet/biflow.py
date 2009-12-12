@@ -210,9 +210,10 @@ class BiFlow(mdp.Flow):
                     break
                 elif isinstance(result, tuple):
                     if len(result) == 2:
+                        target = self._target_to_index(result[1], i_node)
                         result = self._branch_message_seq(
                                                     msg=result[0],
-                                                    target=result[1],
+                                                    target=target,
                                                     current_node=i_node)
                         if isinstance(result, tuple):
                             err = ("Target node not found in flow during " +
@@ -241,6 +242,7 @@ class BiFlow(mdp.Flow):
                         err = ("Node produced invalid return value " +
                                "during training: " + str(result))
                         raise BiFlowException(err)
+                    target = self._target_to_index(target, i_node)
             self._bi_reset()
         if empty_iterator:
             if self.flow[i_node].get_current_train_phase() == 1:
