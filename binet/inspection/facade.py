@@ -6,6 +6,7 @@ import os
 import webbrowser
 import cPickle as pickle
 import tempfile
+import traceback
 
 import mdp
 from mdp import hinet
@@ -17,6 +18,7 @@ from bihinet_translator import BINET_STYLE
 from trace_inspection import (_trace_biflow_training,
                               BiNetTraceDebugException,
                               INSPECT_TRACE_STYLE, SLIDE_CSS_FILENAME,
+                              PICKLE_EXT,
                               TraceBiNetHTMLTranslator, HTMLTraceInspector,
                               prepare_training_inspection,
                               remove_inspection_residues)
@@ -157,10 +159,22 @@ def show_training(flow, data_iterables, msg_iterables=None, stop_messages=None,
     del msg_samples
     # perform the training and gather snapshots 
     prepare_training_inspection(flow=flow, path=path)
-    if isinstance(flow, BiFlow):
-        flow.train(data_iterables, msg_iterables, stop_messages, **kwargs)
-    else:
-        flow.train(data_iterables, **kwargs)
+    try:
+        if isinstance(flow, BiFlow):
+            flow.train(data_iterables, msg_iterables, stop_messages, **kwargs)
+        else:
+            flow.train(data_iterables, **kwargs)
+    except:
+        if debug:
+            traceback.print_exc()
+            print ("exception during training, " +
+                   "inspecting up to failure point...")
+            # create the last snapshot manually
+            filename = (flow._snapshot_name_ + "_%d" % flow._snapshot_counter_ 
+                        + PICKLE_EXT)
+            robust_pickle(flow._snapshot_path_, filename, flow)
+        else:
+            raise
     remove_inspection_residues(flow)
     # reload data samples
     sample_file = open(os.path.join(path, "training_data_samples.pckl"), "rb")
@@ -242,6 +256,8 @@ def inspect_execution(flow, x, msg=None, target=None, path=None, name=None,
     except BiNetTraceDebugException, debug_exception:
         if not debug_exception.result:
             return None
+        print ("exception during excecution, " + 
+               "create inspection up to failure point...")
         slide_filenames, slide_node_ids, section_ids = debug_exception.result
         result = None
     # create slideshow file

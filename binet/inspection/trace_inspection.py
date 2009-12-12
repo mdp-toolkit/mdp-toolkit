@@ -29,7 +29,7 @@ from utils import robust_pickle
 # TODO: wrap inner methods (e.g. _train) to document effective arguments?
 # TODO: pretty print numpy arrays 
 
-PICKLE_EXT = ".pckl" 
+PICKLE_EXT = ".pckl"
 PICKLE_PROTO = -1
 SNAPSHOT_FILENAME = "snapshot"
 
@@ -835,11 +835,13 @@ def _trace_biflow_training(snapshot_path, inspection_path, css_filename,
         train_files, train_ids, stop_files, stop_ids = debug_exception.result
         slide_filenames += train_files
         train_index = len(slide_filenames) - 1
-        slide_filenames += stop_files
+        if stop_files:
+            slide_filenames += stop_files
         stop_index = len(slide_filenames) - 1
         index_table[i_train_node].append((train_index, stop_index))
         slide_node_ids += train_ids
-        slide_node_ids += stop_ids
+        if stop_ids:
+            slide_node_ids += stop_ids
         debug_exception.result = (slide_filenames, slide_node_ids, index_table)
         raise
     if i_snapshot == 0:

@@ -220,7 +220,11 @@ class TrainHTMLSlideShow(SectionHTMLSlideShow, ExecuteHTMLSlideShow):
                 # stop link stuff
                 start_index = end_index + 1
                 end_index = index_table[i_node][i_phase][1]
-                html_string += ('<span class="inactive_section" ' +
+                if start_index > end_index:
+                    # this can happen due to an exception during training
+                    start_index = end_index
+                else:
+                    html_string += ('<span class="inactive_section" ' +
                         'id="%s_section_id_%d" ' % (slideshow_id, train_id) +
                         'onClick="%s.setSlide(%d);">stop</span>' %
                             (slideshow_id, start_index))
