@@ -179,6 +179,7 @@ class BiFlowNode(BiNode, hinet.FlowNode):
                                                           current_node=_i_node)
                 elif len(result) == 3:
                     x, msg, target = result
+                    target = self._flow._target_to_index(target, _i_node)
                     continue
                 # deal with combination of branch and continued execution
                 if len(result) == 4:
@@ -190,6 +191,7 @@ class BiFlowNode(BiNode, hinet.FlowNode):
                                                     msg=result[3],
                                                     target=result[4],
                                                     current_node=_i_node)
+                result[2] = self._flow._target_to_index(result[2], _i_node)
                 if branch_result:
                     # message for outside, store target for reenter
                     if isinstance(result[2], int):
