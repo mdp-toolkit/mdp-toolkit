@@ -137,25 +137,30 @@ class JumpBiNode(IdentityBiNode):
 class SenderBiNode(IdentityBiNode):
     """Sends the incoming x data to another node via bi_message."""
     
-    def __init__(self, target=None, node_id=None, input_dim=None, dtype=None):
+    def __init__(self, recipient_id=None, node_id=None, input_dim=None,
+                 dtype=None):
         """Initialize the internal variables.
         
-        target -- None or the target key for the data.
+        recipient_id -- None or the id for the data recipient.
         """
         super(SenderBiNode, self).__init__(node_id=node_id,
                                            input_dim=input_dim,
                                            output_dim=input_dim,
                                            dtype=dtype)
-        self._target = target
+        self._recipient_id = recipient_id
         
-    def _execute(self, x):
+    def _execute(self, x, no_x=None):
+        """Add x to the message (adressed to a specific target if defined)."""
         msg = dict()
-        if self._target:
-            msg[self._target + NODE_ID_KEY + "msg_x"] = x
+        if self._recipient_id:
+            msg[self._recipient_id + NODE_ID_KEY + "msg_x"] = x
         else:
             msg["msg_x"] = x
-        return x, msg
-
+        if no_x:
+            x = None
+        else:
+            return x, msg
+    
 # old version of the sender node, relying on branching
 # TODO: remove this node when the branching is removed
 
