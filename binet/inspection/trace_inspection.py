@@ -511,6 +511,28 @@ class TraceBiNetHTMLTranslator(BiNetHTMLTranslator):
         # this might change in the future
         self._current_node_id = None
         self._node_id_index = None  # counter for nodes to give them an id
+        
+    @staticmethod
+    def _array_pretty_html(ar):
+        """Return a nice HTML representation of the given numpy array."""
+        ar_str = 'shape: %s<br>\n' % str(ar.shape)
+        ar_str += (str(ar).replace(' [', '<br>\n[').
+                    replace(']\n ...', ']<br>\n...'))
+        return ar_str
+    
+    @staticmethod
+    def _dict_pretty_html(dic):
+        """Return a nice HTML representation of the given numpy array."""
+        dic_str = '{'
+        first = True
+        for key, value in dic.items():
+            if first:
+                first = False
+            else:
+                dic_str += ',<br>\n'
+            dic_str += repr(key) + ': ' + str(value)
+        dic_str += '}'
+        return dic_str
     
     def write_flow_to_file(self, path, html_file, flow, node, method_name, 
                            result, args, kwargs, branch_base_node):
@@ -566,14 +588,13 @@ class TraceBiNetHTMLTranslator(BiNetHTMLTranslator):
                 args = args[1:]
                 if isinstance(x, n.ndarray):
                     f.write('<tr><td><pre>x = </pre></td>' +
-                            '<td>(shape: %s)' % str(x.shape) + str(x) +
-                            '</td></tr>')
+                            '<td>' + self._array_pretty_html(x) + '</td></tr>')
                 else:
-                    f.write('<tr><td><pre>x = </pre></td>' + '<td>' + str(x) +
+                    f.write('<tr><td><pre>x = </pre></td><td>' + str(x) +
                             '</td></tr>')
             if args:
-                f.write('<tr><td><pre>msg = </pre></td>' + '<td>' +
-                        str(args[0]) + '</td></tr>')
+                f.write('<tr><td><pre>msg = </pre></td><td>' +
+                        self._dict_pretty_html(args[0]) + '</td></tr>')
             # normally the kwargs should be empty
             for arg_key in kwargs:
                 f.write('<tr><td><pre>' + arg_key + ' = </pre></td><td>' + 
@@ -585,12 +606,11 @@ class TraceBiNetHTMLTranslator(BiNetHTMLTranslator):
         if result is None:
             f.write('<tr><td><pre>None</pre></tr></td>')
         elif isinstance(result, n.ndarray):
-            f.write('<tr><td><pre>x = </pre></td>' +
-                    '<td>(shape: %s)' % str(result.shape) + str(result) +
-                    '</td></tr>')
+            f.write('<tr><td><pre>x = </pre></td><td>' +
+                    self._array_pretty_html(result) + '</td></tr>')
         elif isinstance(result, dict):
-            f.write('<tr><td><pre>msg = </pre></td><td>' + str(result) +
-                    '</td></tr>')
+            f.write('<tr><td><pre>msg = </pre></td><td>' +
+                    self._dict_pretty_html(result) + '</td></tr>')
         elif isinstance(result, tuple):
             # interpret the results depending on the method name
             if method_name == "execute":
@@ -608,8 +628,11 @@ class TraceBiNetHTMLTranslator(BiNetHTMLTranslator):
                 f.write('<tr><td><pre>' + result_names[i_result_part] +
                         ' = </pre></td><td>')
                 if isinstance(result_part, n.ndarray):
-                    f.write('(shape: %s)' % str(result_part.shape) +
-                            str(result_part) + '</td></tr>')
+                    f.write(self._array_pretty_html(result_part) +
+                            '</td></tr>')
+                elif isinstance(result_part, dict):
+                    f.write(self._dict_pretty_html(result_part) +
+                            '</td></tr>')
                 else:
                     f.write(str(result_part) + '</td></tr>')
         else:
