@@ -123,6 +123,27 @@ class HinetTestSuite(NodesTestSuite):
         flownode = mh.FlowNode(flow)
         assert not flownode.is_training()
         flownode.execute(x)
+        
+    def testFlowNode_copy1(self):
+        flow = mdp.Flow([mdp.nodes.PCANode(), mdp.nodes.SFANode()])
+        flownode = mh.FlowNode(flow)
+        flownode.copy()
+        
+    def testFlowNode_copy2(self):
+        # Test that the FlowNode copy method delegates to internal nodes.
+        class CopyFailException(Exception):
+            pass
+        class CopyFailNode(mdp.Node):
+            def copy(self):
+                raise CopyFailException()
+        flow = mdp.Flow([mdp.Node(), CopyFailNode()])
+        flownode = mh.FlowNode(flow)
+        try:
+            flownode.copy()
+        except CopyFailException:
+            pass
+        else:
+            assert False, 'Did not raise expected exception.'
 
     def testLayer(self):
         node1 = mdp.nodes.PCANode(input_dim=10, output_dim=5)

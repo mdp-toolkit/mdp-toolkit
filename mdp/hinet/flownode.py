@@ -148,6 +148,16 @@ class FlowNode(mdp.Node):
     def _inverse(self, x):
         return self._flow.inverse(x)
     
+    def copy(self, protocol=-1):
+        """Return a copy of this node.
+        
+        The copy call is delegated to the internal node, which allows the use
+        of custom copy methods for special nodes.
+        """
+        new_nodes = [node.copy(protocol=protocol) for node in self._flow[:]]
+        new_flow = self._flow.__class__(new_nodes)
+        return self.__class__(new_flow)
+    
     ## container methods ##
     
     def __len__(self):
