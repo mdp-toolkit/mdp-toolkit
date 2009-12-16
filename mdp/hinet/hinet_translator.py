@@ -1,6 +1,9 @@
 """
 Module to translate HiNet structures into other representations, like HTML.
+
+This module contains the HTML node extension.
 """
+
 import tempfile
 import os
 import webbrowser
@@ -100,7 +103,7 @@ _css_file.close()
 class  HTMLExtensionNode(mdp.ExtensionNode, mdp.Node):
     """Extension node for HTML representations of individual nodes."""
     
-    extension_name = "html_representation"
+    extension_name = "html"
     
     def html_representation(self):
         """Return an HTML representation of the node."""
@@ -115,8 +118,7 @@ class  HTMLExtensionNode(mdp.ExtensionNode, mdp.Node):
         return ""
     
     
-@mdp.extension_method("html_representation",
-                      switchboard.Rectangular2dSwitchboard,
+@mdp.extension_method("html", switchboard.Rectangular2dSwitchboard,
                       "_html_representation")
 def _rect2d_switchoard_html(self):
     lines = ['rec. field size (in channels): %d x %d = %d' % 
@@ -133,8 +135,7 @@ def _rect2d_switchoard_html(self):
                      (self.x_unused_channels, self.y_unused_channels))
     return lines
 
-@mdp.extension_method("html_representation",
-                      switchboard.DoubleRect2dSwitchboard,
+@mdp.extension_method("html", switchboard.DoubleRect2dSwitchboard,
                       "_html_representation")
 def _double_rect2d_switchoard_html(self):
     lines = ['rec. field size (in channels): %d x %d = %d' % 
@@ -150,8 +151,7 @@ def _double_rect2d_switchoard_html(self):
                      (self.x_unused_channels, self.y_unused_channels))
     return lines
 
-@mdp.extension_method("html_representation",
-                      switchboard.DoubleRhomb2dSwitchboard,
+@mdp.extension_method("html", switchboard.DoubleRhomb2dSwitchboard,
                       "_html_representation")
 def _double_rhomb2d_switchoard_html(self):
     lines = ['rec. field size: %d' % self.diag_field_channels,
@@ -161,29 +161,26 @@ def _double_rhomb2d_switchoard_html(self):
              'channel width: %d' % self.in_channel_dim]
     return lines
 
-@mdp.extension_method("html_representation", mdp.nodes.SFA2Node,
-                      "_html_representation")
+@mdp.extension_method("html", mdp.nodes.SFA2Node, "_html_representation")
 def _sfa_html(self):
     return 'expansion dim: ' + str(self._expnode.output_dim)
 
-@mdp.extension_method("html_representation", mdp.nodes.NormalNoiseNode,
+@mdp.extension_method("html", mdp.nodes.NormalNoiseNode,
                       "_html_representation")   
 def _noise_html(self):
     return ['noise level: ' + str(self.noise_args[1]),
             'noise offset: ' + str(self.noise_args[0])]
 
-@mdp.extension_method("html_representation", mdp.nodes.CutoffNode,
-                      "_html_representation") 
+@mdp.extension_method("html", mdp.nodes.CutoffNode, "_html_representation") 
 def _cutoff_html(self):
     return ['lower bound: ' + str(self.lower_bound),
             'upper bound: ' + str(self.upper_bound)]
 
-@mdp.extension_method("html_representation", mdp.nodes.HistogramNode,
-                      "_html_representation")   
+@mdp.extension_method("html", mdp.nodes.HistogramNode, "_html_representation")   
 def _hist_html(self):
     return 'history data fraction: ' + str(self.hist_fraction)
 
-@mdp.extension_method("html_representation", mdp.nodes.AdaptiveCutoffNode,
+@mdp.extension_method("html", mdp.nodes.AdaptiveCutoffNode,
                       "_html_representation")
 def _adap_html(self):
     return ['lower cutoff fraction: ' + str(self.lower_cutoff_fraction), 
@@ -236,7 +233,7 @@ class HiNetHTMLTranslator(HiNetTranslator):
     
     # overwrite private methods
     
-    @mdp.with_extension("html_representation")
+    @mdp.with_extension("html")
     def _translate_flow(self, flow):
         """Translate the flow into HTML and write it into the internal file.
         

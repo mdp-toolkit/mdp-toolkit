@@ -19,7 +19,7 @@ span.bicolor {
 }
 """
 
-@mdp.extension_method("html_representation", SenderBiNode)
+@mdp.extension_method("html", SenderBiNode)
 def _html_representation(self):
     return ('<span class="bicolor">recipient id: %s </span><br>' %
             str(self._recipient_id))
