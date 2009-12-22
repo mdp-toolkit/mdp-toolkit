@@ -57,6 +57,7 @@ class TestBiFlow(unittest.TestCase):
         x = n.random.random([100,10])
         flow.execute(x)
         
+    # TODO: update this test after the branching removal
     def test_bi_training(self):
         """Test calling bi_message during training and stop_bi_train."""
         tracelog = []
@@ -86,6 +87,7 @@ class TestBiFlow(unittest.TestCase):
                           [n.random.random((1,1)) for _ in range(2)], 
                           [n.random.random((1,1)) for _ in range(2)]]
         biflow.train(data_iterables)
+        #binet.show_training(biflow, data_iterables)
         # tracelog reference
         reference = [
             ('node_1', 'bi_reset'), 

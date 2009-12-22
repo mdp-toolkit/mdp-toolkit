@@ -592,7 +592,8 @@ class TraceBiNetHTMLTranslator(BiNetHTMLTranslator):
                 else:
                     f.write('<tr><td><pre>x = </pre></td><td>' + str(x) +
                             '</td></tr>')
-            if args:
+            # remaining arg is message
+            if args and args[0] is not None:
                 f.write('<tr><td><pre>msg = </pre></td><td>' +
                         self._dict_pretty_html(args[0]) + '</td></tr>')
             # normally the kwargs should be empty
