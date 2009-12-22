@@ -134,7 +134,7 @@ class HinetTestSuite(NodesTestSuite):
         class CopyFailException(Exception):
             pass
         class CopyFailNode(mdp.Node):
-            def copy(self):
+            def copy(self, protocol=-1):
                 raise CopyFailException()
         flow = mdp.Flow([mdp.Node(), CopyFailNode()])
         flownode = mh.FlowNode(flow)

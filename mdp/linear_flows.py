@@ -140,7 +140,11 @@ class Flow(object):
             
         try:
             # inspect for needed train arguments in addition to self and x
-            train_arg_keys = _inspect.getargspec(node.train)[0][2:]
+            train_arg_spec = _inspect.getargspec(node.train)
+            train_arg_keys = train_arg_spec[0][2:]  # ignore self, x
+            if train_arg_spec[3]:
+                # subtract arguments with a default value
+                train_arg_keys = train_arg_keys[:-len(train_arg_spec[3])]
             train_args_needed = bool(len(train_arg_keys))
             ## We leave the last training phase open for the
             ## CheckpointFlow class.
