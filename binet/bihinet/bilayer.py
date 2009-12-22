@@ -374,7 +374,8 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
             return [None] * len(self.nodes)
         msgs = [dict() for _ in range(len(self.nodes))]
         for (key, value) in msg.items():
-            if type(value) is n.ndarray:
+            if isinstance(value, n.ndarray) and (len(value.shape) >= 2):
+                # split the data along the second index
                 split_values = n.hsplit(value, len(self.nodes))
                 for i, split_value in enumerate(split_values):
                     msgs[i][key] = split_value
@@ -395,7 +396,8 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
             return None
         msg = dict()
         for (key, first_value) in msgs[-1].items():
-            if type(first_value) is n.ndarray:
+            if (isinstance(first_value, n.ndarray) and
+                (len(first_value.shape) >= 2)):
                 msg[key] = n.hstack([node_msg[key] for node_msg in msgs])
             else:
                 # pick the msg value of the last node
