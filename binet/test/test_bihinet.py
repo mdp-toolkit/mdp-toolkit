@@ -87,7 +87,7 @@ class TestCloneBiLayer(unittest.TestCase):
 class TestBiSwitchboardNode(unittest.TestCase):
     """Test the behavior of the BiSwitchboardNode."""
     
-    def test_message_routing(self):
+    def test_execute_routing(self):
         """Test the standard feed-forward routing."""
         sboard = binet.BiSwitchboard(input_dim=3, connections=[2,0,1])
         x = n.array([[1,2,3],[4,5,6]])
@@ -101,37 +101,37 @@ class TestBiSwitchboardNode(unittest.TestCase):
         self.assertTrue(out_msg["list"] == msg["list"])
         self.assertTrue(n.all(out_msg["data"] == reference_y))
     
-    def test_down_routing(self):
-        """Test the top-down routing."""
-        sboard = binet.BiSwitchboard(input_dim=3, connections=[2,0,1])
-        x = n.array([[1,2,3],[4,5,6]])
-        msg = {"string": "blabla",
-               "send_down": True,
-               "list": [1,2],
-               "data": x,
-               "target": "test"}
-        out_msg, target = sboard.message(msg)
-        self.assertTrue(target == "test")
-        reference_y = n.array([[2,3,1],[5,6,4]])
-        self.assertTrue(out_msg["string"] == msg["string"])
-        self.assertTrue(out_msg["list"] == msg["list"])
-        self.assertTrue(n.all(out_msg["data"] == reference_y))
+#    def test_down_routing(self):
+#        """Test the top-down routing."""
+#        sboard = binet.BiSwitchboard(input_dim=3, connections=[2,0,1])
+#        x = n.array([[1,2,3],[4,5,6]])
+#        msg = {"string": "blabla",
+#               "send_down": True,
+#               "list": [1,2],
+#               "data": x,
+#               "target": "test"}
+#        out_msg, target = sboard.message(msg)
+#        self.assertTrue(target == "test")
+#        reference_y = n.array([[2,3,1],[5,6,4]])
+#        self.assertTrue(out_msg["string"] == msg["string"])
+#        self.assertTrue(out_msg["list"] == msg["list"])
+#        self.assertTrue(n.all(out_msg["data"] == reference_y))
     
-    def test_updata_params(self):
-        """Test changing switching direction and target via msg."""
-        sboard = binet.BiSwitchboard(input_dim=3, connections=[2,0,1])
-        x = n.array([[1,2,3],[4,5,6]])
-        msg = {"string": "blabla",
-               "list": [1,2],
-               "data": x,
-               "send_down": True,
-               "target": "test2"}
-        out_msg, target = sboard.message(msg)
-        self.assertTrue(target == "test2")
-        reference_y = n.array([[2,3,1],[5,6,4]])
-        self.assertTrue(out_msg["string"] == msg["string"])
-        self.assertTrue(out_msg["list"] == msg["list"])
-        self.assertTrue(n.all(out_msg["data"] == reference_y))
+#    def test_updata_params(self):
+#        """Test changing switching direction and target via msg."""
+#        sboard = binet.BiSwitchboard(input_dim=3, connections=[2,0,1])
+#        x = n.array([[1,2,3],[4,5,6]])
+#        msg = {"string": "blabla",
+#               "list": [1,2],
+#               "data": x,
+#               "send_down": True,
+#               "target": "test2"}
+#        out_msg, target = sboard.message(msg)
+#        self.assertTrue(target == "test2")
+#        reference_y = n.array([[2,3,1],[5,6,4]])
+#        self.assertTrue(out_msg["string"] == msg["string"])
+#        self.assertTrue(out_msg["list"] == msg["list"])
+#        self.assertTrue(n.all(out_msg["data"] == reference_y))
         
 
 class TestBiMeanSwitchboard(unittest.TestCase):

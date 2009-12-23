@@ -372,10 +372,6 @@ class BiFlow(mdp.Flow):
         
     ### New Methods for BiNet. ###
     
-    def global_message(self, msg):
-        """Process a message containing global keys."""
-        self._global_message_seq(msg)
-        
     def _bi_reset(self):
         """Reset the nodes and internal flow variables."""
         self._global_message_emitter = None
@@ -515,17 +511,6 @@ class BiFlow(mdp.Flow):
                 raise BiFlowException(err)
             return absolute_index
     
-    def _target_for_reentry(self, target, current_node=0):
-        """Return the target node index for reentry after a branch.
-        
-        The important difference to _target_to_index is that when possible a
-        string target id is preserved.
-        """
-        if isinstance(target, int):
-            return current_node + target
-        else:
-            return target
-        
     def _execute_seq(self, x, msg=None, target=0, stop_at_node=None):
         """Execute the whole flow as far as possible.
         
@@ -618,46 +603,6 @@ class BiFlow(mdp.Flow):
                 return x, msg, target
         # reached stop_at_node, signal this by returning target value True
         return (x, msg, True)
-    
-    def _branch_message_seq(self, msg, target, current_node=0):
-        """Propagate a branch message through the flow.
-        
-        If the message becomes empty or None at some point then the branch is
-        terminated and the return value is None.
-        If there is no target specified  at some point then the return value
-        is the remaining msg. 
-        If a target node was not found along the way the return value 
-        is (msg, target).
-        """
-        i_node = self._target_to_index(target, current_node)
-        if not isinstance(i_node, int):
-            # target not found in this flow
-            return msg, target
-        while True:
-            if not isinstance(self.flow[i_node], BiNode):
-                err = ("A message was sent to a non-BiNode (" + 
-                       "(" + str(self.flow[i_node]) + "), the message is: " +
-                       str(msg))
-                raise BiFlowException(err)
-            result = self.flow[i_node].message(msg)
-            # check the type of the result
-            if result is None:
-                # reached end of message sequence
-                return None
-            if isinstance(result, dict):
-                # no target specified, so process the global message
-                self._global_message_seq(msg, ignore_node=i_node)
-                return msg
-            if len(result) != 2:
-                err = ("BiNode message returned " +
-                       "tuple of length %d instead of 2." % len(result))
-                raise BiFlowException(err)
-            msg, target = result
-            # update i_node to the target node
-            i_node = self._target_to_index(target, i_node)
-            if not isinstance(i_node, int):
-                # target not found in this flow
-                return msg, target
             
     def _stop_message_seq(self, msg, target, current_node=0):
         """Propagate a stop_message through the flow.
@@ -697,35 +642,6 @@ class BiFlow(mdp.Flow):
             if not isinstance(i_node, int):
                 # target not found in this flow
                 return msg, target
-            
-    def _global_message_seq(self, msg, ignore_node=None):
-        """Process the global keys of a message.
-        
-        The msg might be modified in place (keys can be removed).
-        
-        ignore_node -- Index of a node to be excluded. This is used when the
-            msg was emitted by one node in the flow.
-        """
-        if not BiFlow._message_is_global(msg):
-            return None
-        for i_node in range(len(self.flow)):
-            if i_node == ignore_node:
-                continue
-            if isinstance(self.flow[i_node], BiNode):
-                self.flow[i_node].global_message(msg)
-                if not BiFlow._message_is_global(msg):
-                    return None
-        return msg
-    
-    @staticmethod
-    def _message_is_global(msg):
-        """Return True if the message contains any global part."""
-        if not msg:
-            return False
-        for key in msg:
-            if "@" in key:
-                return True
-        return False
             
       
 ### Some useful flow classes. ###

@@ -221,16 +221,17 @@ class BiFlowNode(BiNode, hinet.FlowNode):
             # process stop_training result
             if not result:
                 return None
-            elif isinstance(result, dict):
-                self._flow._global_message_seq(result, ignore_node=_i_node)
-                return result
-            elif len(result) == 2:
+            elif not isinstance(result, tuple):
+                if _i_node + 1 < len(self._flow):
+                    return self._flow._stop_message_seq(msg=result,
+                                                        target=1,
+                                                        current_node=_i_node)
+                else:
+                    return result
+            else:
                 return self._flow._stop_message_seq(msg=result[0],
                                                     target=result[1],
                                                     current_node=_i_node)
-            err = ("Internal node produced invalid return "
-                   "value for stop_training: " + str(result))
-            raise BiNodeException(err)
         # return the custom _stop_training function
         return _stop_training
     
@@ -245,10 +246,6 @@ class BiFlowNode(BiNode, hinet.FlowNode):
         return _stop_training_wrapper
     
     ### Special BiNode methods ###
-    
-    def _message(self, msg=None):
-        target = self._get_target()
-        return self._flow._branch_message_seq(msg, target)
     
     def _stop_message(self, msg=None):
         target = self._get_target()

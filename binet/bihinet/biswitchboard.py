@@ -5,6 +5,9 @@ n = mdp.numx
 
 from ..binode import BiNode
 
+# TODO: can hugely simplify this whole class, just implement inverse!
+#    also update the unittests
+
         
 class BiSwitchboard(BiNode, hinet.Switchboard):
     """BiNet version of the normal Switchboard.
@@ -49,18 +52,6 @@ class BiSwitchboard(BiNode, hinet.Switchboard):
             result = result[0]
         return result
     
-    def _message(self, msg=None, send_down=False):
-        """Route the incoming msg to the next target.
-        
-        send_down -- True if this call should use top-down routing 
-            instead of the standard feed-forward one.
-        """
-        if send_down:
-            msg = self._down_execute_msg(msg)
-        else:
-            msg = self._execute_msg(msg)
-        return msg
-        
     def _stop_message(self, msg=None, send_down=False, target=None):
         return self._message(self, msg, send_down, target)
     

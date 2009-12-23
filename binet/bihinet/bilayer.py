@@ -257,25 +257,6 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
             
     ## BiNode methods ##
         
-    def _message(self, msg=None):
-        """Call message on the internal nodes."""
-        msgs = []
-        target = None
-        for (node, node_msg) in zip(self.nodes, self._get_split_messages(msg)):
-            node_result = node.message(node_msg)
-            ## store result
-            if isinstance(node_result, dict):
-                msgs.append(node_result)
-            else:
-                msgs.append(node_result[0])
-                target = node_result[1]
-        ## combine message results
-        msg = self._get_combined_message(msgs)
-        if target is None:
-            return msg
-        elif msg:
-            return msg
-    
     def _stop_message(self, use_copies=None, msg=None):
         """Call stop_message on the internal nodes.
         
@@ -304,13 +285,6 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
         elif msg:
             return msg
         
-    def _global_message(self, use_copies=None, msg=None):
-        """Call stop_message on the internal nodes."""
-        if use_copies is not None:
-            self.use_copies = use_copies
-        for (node, node_msg) in zip(self.nodes, self._get_split_messages(msg)):
-            node.global_message(node_msg)
-     
     def bi_reset(self):
         """Call bi_reset on all the inner nodes."""
         if self.use_copies:

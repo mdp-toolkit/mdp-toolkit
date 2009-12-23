@@ -26,7 +26,6 @@ class TestCloneBiLayer(unittest.TestCase):
                                                 node_id="clonelayer")
         data = [[n.random.random((100,30)) for _ in range(5)]]
         biflow = binet.ParallelBiFlow([clonelayer])
-        #biflow.train(data, scheduler=mdp.parallel.Scheduler())
         biflow.train(data, scheduler=mdp.parallel.Scheduler())
         assert(clonelayer.use_copies is True)
         

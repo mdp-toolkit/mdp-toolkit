@@ -87,22 +87,12 @@ class TestJumpBiNode(unittest.TestCase):
         tmsg = {"test value": n.zeros((10))}  # test msg
         execute_results = [(tmsg, "test", tmsg, "test"), None, 
                            (tmsg, "e3", tmsg, "e4")]
-        message_results = [None, (tmsg, "bt1")]
         stop_message_results = [(tmsg, "test"), None]
         jumpnode = binet.JumpBiNode(
                         execute_results=execute_results, 
-                        message_results=message_results,
                         stop_message_results=stop_message_results)
         x = n.random.random((10,5))
         self.assertTrue(not jumpnode.is_trainable())
-        # execution with message called on self
-        result = jumpnode.execute(x)
-        self.assertTrue(result == (x,) + execute_results[0])
-        result = jumpnode.message(result[3])
-        self.assertTrue(result == message_results[1])
-        result = jumpnode.execute(x)
-        self.assertTrue(result == (x,) + execute_results[2])
-        jumpnode.bi_reset()
         # stop_message results
         result = jumpnode.stop_message()
         self.assertTrue(result == stop_message_results[0])
@@ -110,62 +100,62 @@ class TestJumpBiNode(unittest.TestCase):
         self.assertTrue(result == stop_message_results[0][0])
         jumpnode.bi_reset()
 
-class _DummyUDNode(binet.UpDownBiNode):
-    def __init__(self, **kwargs):
-        super(_DummyUDNode, self).__init__(**kwargs)
-        self._up, self._down = 0, 0
-        self._trained = False
-    def _up_pass(self, msg=None):
-        #print 'up', self._node_id
-        self._up += 1
-    def _down_pass(self, y, top=False, msg=None):
-        #print '\ndown', self._node_id
-        self._down += 1
-        self._down_y = y
-        self._is_top = top
-        return y
-    def _train(self, x):
-        #print 'train'
-        self._trained = True
+#class _DummyUDNode(binet.UpDownBiNode):
+#    def __init__(self, **kwargs):
+#        super(_DummyUDNode, self).__init__(**kwargs)
+#        self._up, self._down = 0, 0
+#        self._trained = False
+#    def _up_pass(self, msg=None):
+#        #print 'up', self._node_id
+#        self._up += 1
+#    def _down_pass(self, y, top=False, msg=None):
+#        #print '\ndown', self._node_id
+#        self._down += 1
+#        self._down_y = y
+#        self._is_top = top
+#        return y
+#    def _train(self, x):
+#        #print 'train'
+#        self._trained = True
 
-class TestUpDownNode(unittest.TestCase):
-
-    def test_updown(self):
-        NUPDOWN = 3
-        flow = binet.BiFlow([_DummyUDNode(node_id='bottom'),
-                             _DummyUDNode(node_id='top'),
-                             binet.TopUpDownBiNode(bottom_id='bottom',
-                                                   top_id='top')])
-        x = mdp.numx_rand.random((10,2))
-        flow.train([x, x, [x]*NUPDOWN])
-        y = flow(x)
-        
-        assert n.all(x==y)        
-        for i in range(len(flow)-1):
-            # check that the nodes are trained
-            assert not flow[i].is_training()
-            assert not flow[i].is_bi_training()
-            assert flow[i]._trained
-            # check the number of up-down phases
-            assert flow[i]._up == NUPDOWN
-            assert flow[i]._down == NUPDOWN
-            # check that the input-output is not saved at the end of
-            # the global training
-            assert not hasattr(flow[i], '_save_x')
-            assert not hasattr(flow[i], '_save_y')
-            # check that during the down phase one receives the
-            # output of the network
-            assert n.all(flow[i]._down_y==y)
-        # check that the 'top' message arrives at destination
-        assert not flow[0]._is_top
-        assert flow[-2]._is_top
+#class TestUpDownNode(unittest.TestCase):
+#
+#    def test_updown(self):
+#        NUPDOWN = 3
+#        flow = binet.BiFlow([_DummyUDNode(node_id='bottom'),
+#                             _DummyUDNode(node_id='top'),
+#                             binet.TopUpDownBiNode(bottom_id='bottom',
+#                                                   top_id='top')])
+#        x = mdp.numx_rand.random((10,2))
+#        flow.train([x, x, [x]*NUPDOWN])
+#        y = flow(x)
+#        
+#        assert n.all(x==y)        
+#        for i in range(len(flow)-1):
+#            # check that the nodes are trained
+#            assert not flow[i].is_training()
+#            assert not flow[i].is_bi_training()
+#            assert flow[i]._trained
+#            # check the number of up-down phases
+#            assert flow[i]._up == NUPDOWN
+#            assert flow[i]._down == NUPDOWN
+#            # check that the input-output is not saved at the end of
+#            # the global training
+#            assert not hasattr(flow[i], '_save_x')
+#            assert not hasattr(flow[i], '_save_y')
+#            # check that during the down phase one receives the
+#            # output of the network
+#            assert n.all(flow[i]._down_y==y)
+#        # check that the 'top' message arrives at destination
+#        assert not flow[0]._is_top
+#        assert flow[-2]._is_top
 
 def get_suite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(TestBiNode))
     suite.addTest(unittest.makeSuite(TestStopTrainBiNode))
     suite.addTest(unittest.makeSuite(TestJumpBiNode))
-    suite.addTest(unittest.makeSuite(TestUpDownNode))
+    #suite.addTest(unittest.makeSuite(TestUpDownNode))
     return suite
             
 if __name__ == '__main__':

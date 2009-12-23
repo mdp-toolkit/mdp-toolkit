@@ -46,15 +46,6 @@ class TraceJumpBiNode(binet.JumpBiNode):
             print self._tracelog[-1]
         return super(TraceJumpBiNode, self).stop_training()
         
-    def message(self, msg):
-        if self._log_data:
-            self._tracelog.append((self._node_id, "message", msg))
-        else:
-            self._tracelog.append((self._node_id, "message"))
-        if self._verbose:
-            print self._tracelog[-1]
-        return super(TraceJumpBiNode, self).message(msg)
-        
     def stop_message(self, msg=None):
         if self._log_data:
             self._tracelog.append((self._node_id, "stop_message", msg))

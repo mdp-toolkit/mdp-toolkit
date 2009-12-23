@@ -20,23 +20,6 @@ parsed against the method signature in the following way:
 The msg returned from the inner part of the method (e.g. _execute) is then used
 to update the original message (so values can be overwritten).
 
-Additionally there can be global message parts, which are used during the
-global message phase:
-    
-    @key -- Is copied if key is in signature and passed as kwarg.
-        
-    node_id@key -- Is extracted (i.e. removed in original message) and passed 
-        as a kwarg.
-        
-    If _global_message of has a kwarg named msg, then the whole remaining
-    message is passed (and can be modified _in place_ by the node).
-        
-The global message phase is entered whenever there is no target
-specified for the message in a branch or for the stop message. When training
-terminates in a node, then any remaining global messages are also processed.
-When the flow is exited during execution any remaining global messages are
-processed as well.
-        
 If the message results in passing kwargs that are not args of the Node or if
 args without default value are missing in the message, this will result in the
 standard Python missing-arguments-exception (this is not checked by BiNode
@@ -47,28 +30,15 @@ BiNode Return Value Options:
 ============================
 
  result for execute:
-     (x, msg, target, branch_msg, branch_target)
-     or shorter: x, (x, msg), (x, msg, target), (x, msg, target, branch_msg)
+     x, (x, msg), (x, msg, target)
      
  result for train:
-     training phase is stopped if one of the following is returned:
-         None
-         msg
-         (msg, target)
-     exceution goes on if one of the following is returned:
-         (x, msg, target, branch_msg, branch_target),
-         (x, msg, target, branch_msg)
+    None -- terminates training
+    x, (x, msg), (x, msg, target) -- Execution is continued and
+        this node will be reached at a later time to terminate training.
      
- result for stop_training
-     (msg, target)
-     or shorter form: msg
-     
- result for message and stop_message:
-     (msg, target)
-     or shorter form msg
-     
- result for global_message: 
-     None
+ result for stop_training and stop_message
+    msg or (msg, target)
      
 
 Magic keyword arguments:
@@ -98,6 +68,11 @@ keywords are treated in a special way:
      
 """
 
+# TODO: use a target seperator like : and allow multiple occurances,
+#    when the node is reached then one is removed until there is only one left.
+#    Example: node_id:::target will use the target value when the node is
+#        reached for the third time.
+
 # TODO: use of namedtuple for the return value?
 #    see http://docs.python.org/library/collections.html#collections.namedtuple
 
@@ -105,20 +80,12 @@ keywords are treated in a special way:
 #    Check that last element is not None? Use assume?
 #    Should this match the level of output-checking of MDP?
 
-# TODO: If no node_id is specified, a random unique identifier should
-# be provided
-
-# TODO: Control that the message is either a dictionary or None and
-# raise a meaningful exception
-
 import inspect
 
 import mdp
 
 # separator / flag strings for message keys
 NODE_ID_KEY = "=>"  
-GLOBAL_CHAR = "@"  # single char prefix for global keys
-GLOBAL_ID_KEY = "@"
 
 
 class BiNodeException(mdp.NodeException):
@@ -168,17 +135,16 @@ class BiNode(mdp.Node):
     def execute(self, x, msg=None):
         """Return single value y or a result tuple.
         
-        The possible result tuples are (y, msg), (y, msg, target),
-        (y, msg, target, bi_msg) or (y, msg, target, branch_msg, branch_target).
-        
-        The outgoing msg carries forward the incoming message content, while 
-        branch_msg starts blank.
-        
-        The last entry in a result tuple must not be None. 
         x can be None, then the usual checks are omitted.
+
+        The possible return types are y, (y, msg), (y, msg, target)
+        The outgoing msg carries forward the incoming message content. 
+        The last entry in a result tuple must not be None. 
         y can be None if the result is a tuple.
         
-        This template method calls the corresponding _execute method.
+        This template method normally calls the corresponding _execute method
+        or another method as specified in the message (using the magic 'method'
+        key. 
         """
         if msg is None:
             return super(BiNode, self).execute(x)
@@ -197,45 +163,26 @@ class BiNode(mdp.Node):
             elif method == self._inverse:
                 self._pre_inversion_checks(x)
         result = method(x, **arg_dict)
-        # overwrite result values if necessary and return
-        if isinstance(result, tuple):
-            if msg:
-                if result[1]:
-                    # combine outgoing msg and remaining msg values
-                    msg.update(result[1])
-                result = (result[0], msg) + result[2:]
-            if target is not None:
-                if len(result) == 2:
-                    result += (target,)
-                elif result[2] is None:
-                    result = result[:2] + (target,) + result[3:]
-            return result
-        else:
-            # result is only single array
-            if (not msg) and (target is None):
-                return result
-            elif target is None:
-                return result, msg
-            else:
-                return result, msg, target
+        return self._combine_execute_result(result, msg, target)
     
     def is_trainable(self):
         """Return the return value from super."""
         return super(BiNode, self).is_trainable()
     
     def train(self, x, msg=None):
-        """Train and return None, msg or a result tuple.
+        """Train and return None or more if the execution should continue.
         
-        The training execution ends here for return values of:
-            None, msg, (msg, target)
-        The training execution continues for:
-            (x, msg, target, branch_msg, branch_target),
-            (x, msg, target, branch_msg),
-            (x, msg, target)
+        The possible return types are None, y, (y, msg), (y, msg, target).
+        The last entry in a result tuple must not be None.
+        y can be None if the result is a tuple.
         
-        Any leftover msg is merged into the first result msg.
-        
-        This template method calls a _train(x, msg) method from self._train_seq.
+        This template method normally calls the corresponding _train method
+        or another method as specified in the message (using the magic 'method'
+        key. 
+
+        Note that the remaining msg and taret values are only used if _train
+        (or the requested method) returns something different from None
+        (so an empty dict can be used to trigger continued execution).
         """
         # perform checks, adapted from Node.train
         if not self.is_trainable():
@@ -266,21 +213,12 @@ class BiNode(mdp.Node):
             elif method == self._inverse:
                 self._pre_inversion_checks(x)
         result = method(x, **arg_dict)
-        # overwrite result values if necessary and return
-        if isinstance(result, tuple) and (len(result) >= 3):
-            # continue with training execution
-            if msg: 
-                if result[1]:
-                    msg.update(result[1])
-                result = (result[0], msg) + result[2:]
-            if target is not None:
-                if len(result) == 2:
-                    result += (target,)
-                elif result[2] is None:
-                    result = result[:2] + (target,) + result[3:]
+        if result is not None:  #  {} is ok to trigger continued execution
+            # any remaining or messages values are thrown away
+            return None
         else:
-            result = self._combine_message_result(result, msg, target)
-        return result
+            # continue execution
+            return self._combine_execute_result(result, msg, target)
     
     def stop_training(self, msg=None):
         """Stop training phase and return None, msg or (msg, target).
@@ -301,68 +239,42 @@ class BiNode(mdp.Node):
         if not self.is_training():
             err = "The training phase has already finished."
             raise mdp.TrainingFinishedException(err)
-        # get message information for stored stop message
+        # get stored stop message and update it with provided msg
         if isinstance(self._stop_msg, tuple):
             stored_stop_msg = self._stop_msg[self._train_phase]
         else:
             stored_stop_msg = self._stop_msg
-        # call stop_training
-        stop_method = self._train_seq[self._train_phase][1]
-        if not msg:
-            result = stop_method()
+        if stored_stop_msg:
+            if msg:
+                stored_stop_msg.update(msg)
             msg = stored_stop_msg
+        # call stop_training
+        if not msg:
+            result = self._train_seq[self._train_phase][1]()
             target = None
         else:
-            # extract relevant message parts
             msg_id_keys = self._get_msg_id_keys(msg)
-            msg, arg_dict = self._extract_method_args(stop_method,
-                                                      msg, msg_id_keys)
-            result = stop_method(**arg_dict)
-            if stored_stop_msg:
-                msg.update(stored_stop_msg)
-        # overwrite result values if necessary
-        result = self._combine_message_result(result, msg, target)
+            target = self._extract_message_key("target", msg, msg_id_keys)
+            method_name = self._extract_message_key("method", msg, msg_id_keys)
+            default_method = self._train_seq[self._train_phase][1]
+            method, target = self._get_method(method_name, default_method, target)
+            msg, arg_dict = self._extract_method_args(method, msg, msg_id_keys)
+            result = method(**arg_dict)
         # close the current phase
         self._train_phase += 1
         self._train_phase_started = False
         # check if we have some training phase left
         if self.get_remaining_train_phase() == 0:
             self._training = False
-        return result
+        return self._combine_message_result(result, msg, target)
     
     ### New methods for node messaging. ###
-    
-    def message(self, msg=None):
-        """Receive message and return None, msg or (msg, target).
-        
-        If the return value is (msg, target) then message(msg) is called on
-        the target node.
-        
-        This template method calls the _message method.
-        """
-        if not msg:
-            return self._message()
-        msg_id_keys = self._get_msg_id_keys(msg)
-        target = self._extract_message_key("target", msg, msg_id_keys)
-        method_name = self._extract_message_key("method", msg, msg_id_keys)
-        method, target = self._get_method(method_name, self._message, target)
-        msg, arg_dict = self._extract_method_args(method, msg, msg_id_keys)
-        result = method(**arg_dict)
-        return self._combine_message_result(result, msg, target)
-
-    def _message(self):
-        """Hook method, overwrite when needed. 
-        
-        This default implementation only raises an exception.
-        """
-        err = "This node does not support calling message."
-        raise BiNodeException(err)
     
     def stop_message(self, msg=None):
         """Receive message and return None, msg or (msg, target).
         
-        If the return value is (msg, target) then stop_message(msg) is called on
-        the target node.
+        If the return value is (msg, target) then stop_message(msg) is called
+        on the target node.
         
         This template method calls the _stop_message method.
         """
@@ -384,23 +296,6 @@ class BiNode(mdp.Node):
         """
         err = "This node does not support calling stop_message."
         raise BiNodeException(err)
-    
-    def global_message(self, msg=None):
-        """Receive a message and return None.
-        
-        Note that keys that come with a node_id are removed from msg.
-        
-        This template method calls the _global_message method.
-        """
-        msg_id_keys = self._get_global_msg_id_keys(msg)
-        method_name = self._extract_message_key("method", msg, msg_id_keys)
-        method, _ = self._get_method(method_name, self._global_message, None)
-        arg_dict = self._extract_global_method_args(method, msg, msg_id_keys)
-        method(**arg_dict)
-    
-    def _global_message(self):
-        """Hook method, overwrite when needed."""
-        pass
     
     ## Additional new methods. ##
     
@@ -469,19 +364,6 @@ class BiNode(mdp.Node):
                     msg_id_keys.append((key, fullkey))
         return msg_id_keys
                     
-    def _get_global_msg_id_keys(self, msg):
-        """Return the id specific message keys for this node.
-        
-        The format is [(key, fullkey),...].
-        """
-        msg_id_keys = []
-        for fullkey in msg:
-            if fullkey.find(GLOBAL_ID_KEY) > 0:
-                node_id, key = fullkey.split(GLOBAL_ID_KEY)
-                if node_id == self._node_id:
-                    msg_id_keys.append((key, fullkey))
-        return msg_id_keys
-    
     @staticmethod
     def _extract_message_key(key, msg, msg_id_keys):
         """Extract and return the requested key from the message.
@@ -505,7 +387,7 @@ class BiNode(mdp.Node):
         Return the new message and a dict with the keyword arguments (the
         return of the message is done because it can be set to None).
         """
-        arg_keys = inspect.getargspec(method)[0]      
+        arg_keys = inspect.getargspec(method)[0]   
         arg_dict = dict([(key, msg[key]) for key in msg if key in arg_keys])
         arg_dict.update(dict([(key, msg.pop(fullkey))  # notice remove by pop
                                 for key, fullkey in msg_id_keys
@@ -515,26 +397,6 @@ class BiNode(mdp.Node):
             msg = None
         return msg, arg_dict
       
-    @staticmethod  
-    def _extract_global_method_args(method, msg, msg_id_keys):
-        """Extract the method arguments form the message.
-        
-        Return the the keyword arguments.
-        
-        The original msg dict might get modified in-place.
-        Note that keys that come with a node_id are removed from msg.
-        """
-        arg_keys = inspect.getargspec(method)[0]      
-        arg_dict = dict([(key[1:], msg[key]) for key in msg 
-                         if (key.startswith(GLOBAL_CHAR) and
-                             key[1:] in arg_keys)])
-        arg_dict.update(dict([(key, msg.pop(fullkey))  # notice remove by pop
-                              for key, fullkey in msg_id_keys
-                              if key in arg_keys]))
-        if "msg" in arg_keys:
-            arg_dict["msg"] = msg
-        return arg_dict
-    
     def _get_method(self, method_name, default_method, target):
         """Return the method to be called and the target.
         
@@ -557,35 +419,64 @@ class BiNode(mdp.Node):
                 raise BiNodeException(err)
         return method, target
     
-    def _combine_message_result(self, result, msg, target):
-        """Combine the result value with the msg and the target.
-
-        result -- Result of the form None, msg or (msg, target).
-        msg -- Remaining msg after parsing.
-        target -- Target value originally extracted from msg (can be None).
+    @staticmethod
+    def _combine_message_result(result, msg, target):
+        """Combine the message result with the provided values.
         
-        The return value is the updated result.
+        result -- None, msg or (msg, target)
+        
+        The values in result always has priority.
         """
-        # update message dict in result
         if not result:
-            result = msg
-        elif msg:
-            if not isinstance(result, tuple):
-                # result is msg
-                msg.update(result)
-                result = msg
+            if target is not None:
+                # use given target if not target value was returned
+                return (msg, target)
             else:
+                return msg
+        elif not isinstance(result, tuple):
+            # result is msg
+            if msg:
+                msg.update(result)
+            else:
+                msg = result
+            if target is not None:
+                # use given target if not target value was returned
+                return (msg, target)
+            else:
+                return msg
+        else:
+            # result contains target value 
+            if msg:
                 if result[0]:
                     msg.update(result[0])
-                result = (msg, result[1])
-        # update target value in result
-        if target is not None:
-            # replace target result value if necessary
-            if isinstance(result, tuple):
-                if result[1] is None:
-                    result = (result[0], target)
+                return msg, result[1]
             else:
-                result = (result, target)
-        return result
-    
-    
+                return result
+                
+    @staticmethod
+    def _combine_execute_result(result, msg, target):
+        """Combine the execution result with the provided values.
+        
+        result -- None, msg or (msg, target)
+        
+        The values in result always has priority.
+        """
+        # overwrite result values if necessary and return
+        if isinstance(result, tuple):
+            if msg:
+                if result[1]:
+                    # combine outgoing msg and remaining msg values
+                    msg.update(result[1])
+                result = (result[0], msg) + result[2:]
+            if (target is not None) and (len(result) == 2):
+                # use given target if not target value was returned
+                result += (target,)
+            return result
+        else:
+            # result is only single array
+            if (not msg) and (target is None):
+                return result
+            elif target is None:
+                return result, msg
+            else:
+                return result, msg, target

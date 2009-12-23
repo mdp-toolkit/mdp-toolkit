@@ -39,8 +39,8 @@ class JumpBiNode(IdentityBiNode):
     # TODO: implement multiple train results, when execution is continued
     
     def __init__(self, train_results=None, stop_train_results=None, 
-                 execute_results=None, message_results=None,
-                 stop_message_results=None, *args, **kwargs):
+                 execute_results=None, stop_message_results=None,
+                 *args, **kwargs):
         """Initialize this BiNode.
         
         Note that this node has an internal variable self.loop_counter which is
@@ -53,13 +53,12 @@ class JumpBiNode(IdentityBiNode):
         execute_results -- Single result tuple starting at msg or list of
             results, which are used according to the loop counter. The list
             entries can also be None (then x is simply forwarded).
-        message_results, stop_message_results -- Like execute_results.
+        stop_message_results -- Like execute_results.
         """
         self.loop_counter = 0 # counter for execution phase
         self._train_results = train_results
         self._stop_train_results = stop_train_results
         self._execute_results = execute_results
-        self._message_results = message_results
         self._stop_message_results = stop_message_results
         super(JumpBiNode, self).__init__(*args, **kwargs)
         
@@ -106,15 +105,6 @@ class JumpBiNode(IdentityBiNode):
         else:
             return (x,) + result
             
-    def _message(self):
-        """Return the predefined values for the current loop count value."""
-        self.loop_counter += 1
-        if not self._message_results:
-            return None
-        if self.loop_counter-1 >= len(self._message_results):
-            return None
-        return self._message_results[self.loop_counter-1]
-    
     def _stop_message(self):
         """Return the predefined values for the current loop count value."""
         self.loop_counter += 1
@@ -161,50 +151,3 @@ class SenderBiNode(IdentityBiNode):
         else:
             return x, msg
     
-# old version of the sender node, relying on branching
-# TODO: remove this node when the branching is removed
-
-class OldSenderBiNode(IdentityBiNode):
-    """Sends the incoming x data to another node via bi_message."""
-    
-    def __init__(self, target=None, msg_supplement=None, **kwargs):
-        """Initialize the internal variables.
-        
-        target -- None or the sender target. Data will only be send if the
-            target is not none.
-        msg_supplement -- None or a dict that will be combined with the output
-            msg.
-        
-        args and kwargs are forwarded via super to the next __init__ method
-        in the MRO.
-        """
-        super(OldSenderBiNode, self).__init__(**kwargs)
-        self._target = target
-        self._msg_supplement = msg_supplement
-    
-    def _global_message(self, target=False, msg_supplement=False):
-        """Overwrite the saved target and msg parameters.
-        
-        target -- Update the target.
-        msg_supplement -- Update the msg_supplement.
-        """
-        if target is not False:
-            self._target = target
-        if msg_supplement is not False:
-            self._msg_supplement = msg_supplement
-                
-    def _execute(self, x):
-        """Send the x value to the stored target via bi_message.
-        
-        The x in the message has the key bi_x. 
-        """
-        if self._target is not None:
-            if isinstance(self._target, str):
-                bi_msg = {self._target + NODE_ID_KEY + "x": x}
-            else:
-                bi_msg = {"x": x}
-            if self._msg_supplement is not None:
-                bi_msg.update(self._msg_supplement)
-            return x, None, None, bi_msg, self._target
-        else:
-            return x, None
