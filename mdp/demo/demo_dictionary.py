@@ -33,14 +33,17 @@ probabilities from two consecutive letters to the next.
         self.get_words(num_words)
     
     def show_available(self):
+        available_dicts = []
+        for name in ('/usr/share/dict/words', ):
+            available_dicts.append(name)
+
         try:
             possible_dicts = subprocess.Popen(["locate", ".dic"], stdout=subprocess.PIPE).stdout
         except OSError:
             raise NotImplementedError("Sorry, you need to have ‘locate’ on your system.")
-        
+        print possible_dicts
         filename = re.compile('.*\/\w{2,3}_\w{2,3}\.dic$')
         
-        available_dicts = []
         for name in possible_dicts:
             match = filename.match(name)
             if match:
