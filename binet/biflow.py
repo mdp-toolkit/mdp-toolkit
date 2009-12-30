@@ -174,75 +174,43 @@ class BiFlow(mdp.Flow):
             ## execute the flow until the nodes return value is right
             target = 0
             while True:
-                # ?? this is really difficult to read
                 result = self._execute_seq(x, msg, target=target,
                                            stop_at_node=i_node)
-                ## check, process and sanitize the execution result
-                if (not isinstance(result, tuple)) or (len(result) < 3):
+                ## check the execution result, target should be True
+                if (not isinstance(result, tuple)) or (len(result) != 3):
                     err = ("The Node to be trained was not reached " +
                            "during training, last result: " + str(result))
                     raise BiFlowException(err)
-                elif len(result) == 5:
-                    err = ("Message target node not found in flow during " +
-                           "training, last result: " + str(result))
-                    raise BiFlowException(err)
-                elif len(result) == 4:
-                    # can ignore remaining global message
-                    result = result[:3]
-                if (len(result) == 3) and (result[2] is True):
+                elif result[2] is True:
                     x = result[0]
                     msg = result[1]
                 else:
                     err = ("Target node not found in flow during " +
-                           "training, last result: " + str(result))
+                           "training, last target value: " + str(result[2]))
                     raise BiFlowException(err)
                 ## perform node training
                 if isinstance(self.flow[i_node], BiNode):
                     result = self.flow[i_node].train(x, msg)
+                    if not result:
+                        break  # training is done for this chunk
                 else:
                     self.flow[i_node].train(x)
                     break
-                ## check, process and sanitize the training result
-                if not result:
-                    break
-                elif isinstance(result, dict):
-                    self._global_message_seq(result, ignore_node=i_node)
-                    break
-                elif isinstance(result, tuple):
-                    if len(result) == 2:
-                        target = self._target_to_index(result[1], i_node)
-                        result = self._branch_message_seq(
-                                                    msg=result[0],
-                                                    target=target,
-                                                    current_node=i_node)
-                        if isinstance(result, tuple):
-                            err = ("Target node not found in flow during " +
-                                   "bi-training, last result: " + str(result))
-                            raise BiFlowException(err)
-                        break
-                    elif len(result) == 3:
-                        x, msg, target = result
-                    elif len(result) == 4:
-                        self._global_message_seq(result[3], ignore_node=i_node)
-                        x, msg, target = result[:3]
-                    elif len(result) == 5:
-                        branch_result = self._branch_message_seq(
-                                                    msg=result[3],
-                                                    target=result[4],
-                                                    current_node=i_node)
-                        # can ignore remaining global message
-                        if not (branch_result or 
-                                isinstance(branch_result, dict)):
-                            err = ("Message target node not found in flow " +
-                                   "during training, last result: " + 
-                                   str(result))
-                            raise BiFlowException(err)
-                        x, msg, target = result[:3]
-                    else:        
-                        err = ("Node produced invalid return value " +
-                               "during training: " + str(result))
-                        raise BiFlowException(err)
-                    target = self._target_to_index(target, i_node)
+                ## training execution continues, interpret result
+                if not isinstance(result, tuple):
+                    x = result
+                    msg = None
+                    target = None
+                elif len(result) == 2:
+                    x, msg = result
+                    target = 1
+                elif len(result) == 3:
+                    x, msg, target = result
+                else:        
+                    err = ("Node produced invalid return value " +
+                           "during training: " + str(result))
+                    raise BiFlowException(err)
+                target = self._target_to_index(target, i_node)
             self._bi_reset()
         if empty_iterator:
             if self.flow[i_node].get_current_train_phase() == 1:
@@ -264,9 +232,7 @@ class BiFlow(mdp.Flow):
         else:
             result = self.flow[i_node].stop_training(stop_msg)
         if result is not None:
-            if isinstance(result, dict):
-                self._global_message_seq(result, ignore_node=i_node)
-            elif len(result) == 2:
+            if len(result) == 2:
                 result = self._stop_message_seq(msg=result[0],
                                                 target=result[1],
                                                 current_node=i_node)
@@ -324,17 +290,14 @@ class BiFlow(mdp.Flow):
                     y, msg = result[:2]
                     self._global_message_seq(msg)
                     break
-                elif (len(result) == 3) or (len(result) == 5):
+                elif len(result) == 3:
                     err = ("Target node not found in flow during execute," + 
                            " last result: " + str(result))
                     raise BiFlowException(err)
-                elif (len(result) == 4):
-                    # discard global message, continue execution
-                    x, msg, target = result[:3]
-                    continue
-                err = ("BiNode execution returned invalid result type: " + 
-                       result)
-                raise BiFlowException(err)    
+                else:
+                    err = ("BiNode execution returned invalid result type: " + 
+                           result)
+                    raise BiFlowException(err)    
             self._bi_reset()
             if msg:
                 msg_results.add_message(msg)
@@ -525,11 +488,6 @@ class BiFlow(mdp.Flow):
         or (y, msg).
         If the an execution target node is not found then (x, msg, target) is
         returned. 
-        If a branch message target node is not found the return value is
-        (y, msg, target (abs. index or string), branch_msg, branch_target).
-        If global keys remain in a branch message then the return value is
-        (y, msg, target (abs. index or string), branch_msg).
-        
         If an untrained node or a node in training is encountered, then a 
         exception is raised.
         
@@ -542,7 +500,6 @@ class BiFlow(mdp.Flow):
             # target not found in this flow
             return x, msg, target
         while i_node != stop_at_node:
-            ## do branch / global processing if required
             if isinstance(self.flow[i_node], BiNode):
                 result = self.flow[i_node].execute(x, msg)
                 # check the type of the result
@@ -555,28 +512,6 @@ class BiFlow(mdp.Flow):
                     target = 1
                 elif len(result) == 3:
                     x, msg, target = result
-                elif len(result) == 4:
-                    self._global_message_seq(result[3], ignore_node=i_node)
-                    if result[3]:
-                        target = self._target_for_reentry(result[2], i_node)
-                        return (result[0], result[1], target, result[3])
-                    else:
-                        x, msg, target = result
-                elif len(result) == 5:
-                    (x, msg, target, branch_msg, branch_target) = result
-                    branch_result = self._branch_message_seq(branch_msg,
-                                                             branch_target,
-                                                             i_node)
-                    if branch_result:
-                        if isinstance(branch_result, dict):
-                            # global message remaining, so exit
-                            target = self._target_for_reentry(target, i_node)
-                            return (x, msg, target, branch_result)
-                        else:
-                            # bi_train_target not in this flow
-                            branch_msg, branch_target = branch_result
-                            target = self._target_for_reentry(target, i_node)
-                            return (x, msg, target, branch_msg, branch_target)
                 else:
                     err = ("BiNode execution returned invalid result type: " + 
                            result)
@@ -592,8 +527,7 @@ class BiFlow(mdp.Flow):
                     return x
                 else:
                     return (x, msg)
-            # check if we should exit in inverse mode
-            if (target == -1) and (i_node == 0):
+            elif (target == -1) and (i_node == 0):
                 return x, msg, target
             # update i_node to the target node
             i_node = self._target_to_index(target, i_node)
@@ -602,7 +536,7 @@ class BiFlow(mdp.Flow):
                 # this is also the exit point when EXIT_TARGET is given
                 return x, msg, target
         # reached stop_at_node, signal this by returning target value True
-        return (x, msg, True)
+        return x, msg, True
             
     def _stop_message_seq(self, msg, target, current_node=0):
         """Propagate a stop_message through the flow.
@@ -628,11 +562,7 @@ class BiFlow(mdp.Flow):
             if result is None:
                 # reached end of message sequence
                 return None
-            if isinstance(result, dict):
-                # no target specified, so process the global message
-                self._global_message_seq(msg, ignore_node=i_node)
-                return msg
-            if len(result) != 2:
+            elif len(result) != 2:
                 err = ("BiNode stop_message returned tuple " +
                        "of length %d instead of 2." % len(result))
                 raise BiFlowException(err)
