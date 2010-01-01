@@ -4,7 +4,7 @@ import mdp.hinet as hinet
 n = mdp.numx
 
 from ..binode import BiNode, BiNodeException
-from ..biflow import BiFlow
+from ..biflow import BiFlow, BiFlowException
 
 # TODO: add derived BiFlowNode which allow specification message flag for
 #    BiFlowNode to specify the internal target? Or hardwired target?
@@ -40,7 +40,7 @@ class BiFlowNode(BiNode, hinet.FlowNode):
         super(BiFlowNode, self).__init__(flow=biflow,
                                          input_dim=input_dim,
                                          output_dim=output_dim, dtype=dtype)
-        # last successful request for target node_id, is used for reentry
+        # last successful request for target node_id
         self._last_id_request = None
         
     def _get_target(self):
@@ -57,27 +57,6 @@ class BiFlowNode(BiNode, hinet.FlowNode):
             return 0
         return 0
     
-    def _target_for_reentry(self, target):
-        """Try to translate the target value to a node_id and return it.
-        
-        If this is not possible because the target node has no node_id then
-        an exception is raised.
-        """
-        # TODO: assign random target id to node if it has no node_id
-        #    or do this even earlier? can turn it off via flag?
-        if isinstance(target, int):
-            if isinstance(self._flow[target], BiNode):
-                str_target = self._flow[target].node_id
-                if str_target is not None:
-                    return str_target
-            err = ("Flow reentry after global message is not possible since "
-                   "the target value " + target + " refering to a node of "
-                   "type " + self._flow[target] + " cannot be translated into "
-                   "a node id.")
-            raise BiNodeException(err)
-        else:    
-            return target
-        
     def _get_method(self, method_name, default_method, target):
         """Return the default method and the target.
         
@@ -96,12 +75,7 @@ class BiFlowNode(BiNode, hinet.FlowNode):
        
     def _execute(self, x, msg=None):
         target = self._get_target()
-        result = self._flow._execute_seq(x, msg, target)
-        if (isinstance(result, tuple) and (len(result) > 3) and
-            isinstance(result[2], int)):
-            target = self._target_for_reentry(result[2])
-            result = result[:2] + (target,) + result[3:]
-        return result
+        return self._flow._execute_seq(x, msg, target)
     
     def _get_execute_method(self, x, method_name, target):
         """Return _execute and the provided target.
@@ -130,108 +104,109 @@ class BiFlowNode(BiNode, hinet.FlowNode):
     
     ## Helper methods for _get_train_seq. ##
     
-    def _get_train_function(self, _i_node):
+    def _get_train_function(self, nodenr):
         """Internal function factory for train.
         
-        _i_node -- the index of the node to be trained
+        nodenr -- the index of the node to be trained
         """
         # This method is similar to BiFlow._train_node_single_phase.
         def _train(x, msg=None):
             target = self._get_target()
+            i_node = self._flow._target_to_index(target)
             ## loop until we have to go outside or complete train
             while True:
                 ## execute flow before training node
-                result = self._flow._execute_seq(x, msg, target=target,
-                                                 stop_at_node=_i_node)
-                if isinstance(result, tuple):
-                    if (len(result) == 2):
-                        # did not reach the training node this time
-                        return result
-                    elif (len(result) == 3) and (result[2] is True):
-                        # reached the training node
-                        x = result[0]
-                        msg = result[1]
-                    else:
-                        # message for outside, reenter flownode later
-                        if isinstance(result[2], int):
-                            target = self._target_for_reentry(result[2])
-                            result = result[:2] + (target,) + result[3:]
-                        return result
+                result = self._flow._execute_seq(x, msg, i_node=i_node,
+                                                 stop_at_node=nodenr)
+                if (isinstance(result, tuple) and len(result) == 3 and
+                    result[2] is True):
+                    # we have reached the training node
+                    x = result[0]
+                    msg = result[1]
                 else:
-                    # did not reach the training node this time, return y
+                    # flownode should be reentered later
                     return result
                 ## perform node training
-                if isinstance(self._flow[_i_node], BiNode):
-                    result = self._flow[_i_node].train(x, msg)
+                if isinstance(self._flow[nodenr], BiNode):
+                    result = self._flow[nodenr].train(x, msg)
+                    if result is None:
+                        return None  # training is done for this chunk
                 else:
-                    self._flow[_i_node].train(x)
-                    result = None
-                ## process the training result
-                if not result:
+                    self._flow[nodenr].train(x)
                     return None
-                elif isinstance(result, dict):
-                    self._flow._global_message_seq(result, ignore_node=_i_node)
-                    return result
+                ## training execution continues, interpret result
+                if not isinstance(result, tuple):
+                    x = result
+                    msg = None
+                    target = None
                 elif len(result) == 2:
-                    branch_msg, branch_target = result
-                    return self._flow._branch_message_seq(msg=branch_msg,
-                                                          target=branch_target,
-                                                          current_node=_i_node)
+                    x, msg = result
+                    target = None
                 elif len(result) == 3:
                     x, msg, target = result
-                    target = self._flow._target_to_index(target, _i_node)
-                    continue
-                # deal with combination of branch and continued execution
-                if len(result) == 4:
-                    branch_result = result[3]
-                    self._flow._global_message_seq(branch_result,
-                                                   ignore_node=_i_node)
-                else:
-                    branch_result = self._flow._branch_message_seq(
-                                                    msg=result[3],
-                                                    target=result[4],
-                                                    current_node=_i_node)
-                result[2] = self._flow._target_to_index(result[2], _i_node)
-                if branch_result:
-                    # message for outside, store target for reenter
-                    if isinstance(result[2], int):
-                        target = self._target_for_reentry(result[2])
-                        result = result[:2] + (target,) + result[3:]
+                else:        
+                    # reaching this is probably an error, leave the handling
+                    # to the outer flow
                     return result
+                ## check if the target is in this flow, return otherwise
+                if isinstance(target, int):
+                    i_node = i_node + target
+                    # values of +1 and -1 beyond this flow are allowed
+                    if i_node == len(self._flow):
+                        if not msg:
+                            return x
+                        else:
+                            return (x, msg)
+                    elif i_node + target == -1:
+                        return x, msg, -1
                 else:
-                    x, msg, target = result[:3]
-                    continue
-                err = ("Internal node produced invalid return "
-                       "value for train: " + str(result))
-                raise BiNodeException(err)
+                    i_node = self._flow._target_to_index(target, i_node)
+                    if not isinstance(i_node, int):
+                        # target not found in this flow
+                        # this is also the exit point when EXIT_TARGET is given
+                        return x, msg, target
         # return the custom _train function
         return _train
     
-    def _get_stop_training_function(self, _i_node):
+    def _get_stop_training_function(self, nodenr):
         """Internal function factory for stop_training.
         
-        _i_node -- the index of the node for which the training stops
+        nodenr -- the index of the node for which the training stops
         """
         def _stop_training(msg=None):
-            # run stop_bi_training locally for relative target
-            if msg:
-                result = self._flow[_i_node].stop_training(msg)
+            if msg is None:
+                result = self._flow[nodenr].stop_training()
             else:
-                result = self._flow[_i_node].stop_training()
-            # process stop_training result
+                result = self._flow[nodenr].stop_training(msg=None)    
+            ## process stop_training result
             if not result:
                 return None
             elif not isinstance(result, tuple):
-                if _i_node + 1 < len(self._flow):
+                if nodenr + 1 < len(self._flow):
                     return self._flow._stop_message_seq(msg=result,
-                                                        target=1,
-                                                        current_node=_i_node)
+                                                        i_node=nodenr+1)
                 else:
                     return result
+            elif len(result) == 2:
+                msg, target = result
+                if isinstance(target, int):
+                    i_node = nodenr + target
+                    # values of +1 and -1 beyond this flow are allowed
+                    if i_node == len(self._flow):
+                        return msg
+                    elif i_node + target == -1:
+                        return msg, -1
+                else:
+                    i_node = self._flow._target_to_index(target, i_node)
+                    if not isinstance(i_node, int):
+                        # target not found in this flow
+                        # this is also the exit point when EXIT_TARGET is given
+                        return msg, target
+                return self._flow._stop_message_seq(msg=msg, i_node=i_node)
             else:
-                return self._flow._stop_message_seq(msg=result[0],
-                                                    target=result[1],
-                                                    current_node=_i_node)
+                err = ("Node stop_message produced invalid return value " +
+                       "during training: " + str(result))
+                raise BiFlowException(err)
         # return the custom _stop_training function
         return _stop_training
     
@@ -249,7 +224,8 @@ class BiFlowNode(BiNode, hinet.FlowNode):
     
     def _stop_message(self, msg=None):
         target = self._get_target()
-        return self._flow._stop_message_seq(msg, target)
+        i_node = self._flow._target_to_index(target)
+        return self._flow._stop_message_seq(msg=msg, i_node=i_node)
     
     def bi_reset(self):
         self._last_id_request = None
