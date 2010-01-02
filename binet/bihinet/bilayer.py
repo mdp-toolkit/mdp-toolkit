@@ -106,8 +106,6 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
         y_results = []
         msg_results = []
         target = None
-        branch_msg_results = []
-        branch_target = None
         node_msgs = self._get_split_messages(msg)
         if x is not None:
             # use the dimension of x, because this also works for inverse
@@ -130,25 +128,16 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
             else:
                 y_results.append(node_result[0])
                 msg_results.append(node_result[1])
-                if len(node_result) >= 3:
+                if len(node_result) == 3:
                     target = node_result[2]
-                if len(node_result) >= 4:
-                    branch_msg_results.append(node_result[3])
-                if len(node_result) == 5:
-                    branch_target = node_result[4]
         ## combine message results
         msg = self._get_combined_message(msg_results)
-        branch_msg = self._get_combined_message(branch_msg_results)
         if (not y_results) or (y_results[-1] is None):
             y = None
         else:
             y = n.hstack(y_results)
         ## return result
-        if branch_target is not None:
-            return (y, msg, target, branch_msg, branch_target)
-        elif branch_msg:
-            return (y, msg, target, branch_msg)
-        elif target is not None:
+        if target is not None:
             return (y, msg, target)
         elif msg:
             return (y, msg)
@@ -157,61 +146,48 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
         
     def _train(self, x, msg=None):
         """Perform single training step by training the internal nodes."""
-        x_start_index = 0  # for array variables like x and the current node
-        x_stop_index = 0
+        ## this code is mostly identical to the execute code,
+        ## currently the only difference is that train is called
         y_results = []
-        msgs = []
+        msg_results = []
         target = None
-        branch_msgs = []
-        branch_target = None
-        for (node, node_msg) in zip(self.nodes, self._get_split_messages(msg)):
-            if x is not None:
-                x_start_index = x_stop_index
-                x_stop_index += node.input_dim
-                node_x = x[:, x_start_index : x_stop_index]
+        node_msgs = self._get_split_messages(msg)
+        if x is not None:
+            # use the dimension of x, because this also works for inverse
+            node_dim = x.shape[1] / len(self.nodes)
+        else:
+            node_dim = None
+        for i_node, node in enumerate(self.nodes):
+            if node_dim:
+                node_x = x[:, node_dim*i_node : node_dim*(i_node+1)]
             else:
                 node_x = None
+            node_msg = node_msgs[i_node]
             if node_msg:
                 node_result = node.train(node_x, node_msg)
             else:
                 node_result = node.train(node_x)
             ## store result
-            if node_result is None:
-                continue
-            elif isinstance(node_result, dict):
-                msgs.append(node_result)
-            elif len(node_result) == 2:
-                branch_msgs.append(node_result[0])
-                branch_target = node_result[1]
-            elif len(node_result) >= 3:
+            if not isinstance(node_result, tuple):
+                y_results.append(node_result)
+            else:
                 y_results.append(node_result[0])
-                msgs.append(node_result[1])
-                target = node_result[2]
-                if len(node_result) >= 4:
-                    branch_msgs.append(node_result[3])
-                if len(node_result) == 5:
-                    branch_target = node_result[4]
+                msg_results.append(node_result[1])
+                if len(node_result) == 3:
+                    target = node_result[2]
         ## combine message results
-        msg = self._get_combined_message(msgs)
-        branch_msg = self._get_combined_message(branch_msgs)
+        msg = self._get_combined_message(msg_results)
         if (not y_results) or (y_results[-1] is None):
             y = None
         else:
             y = n.hstack(y_results)
         ## return result
-        if target is None:
-            if branch_target is None:
-                return branch_msg
-            else:
-                return (branch_msg, branch_target)
+        if target is not None:
+            return (y, msg, target)
+        elif msg:
+            return (y, msg)
         else:
-            if branch_target is None:
-                if branch_msg:
-                    return (y, msg, target, branch_msg)
-                else:
-                    return (y, msg, target)
-            else:
-                return (y, msg, target, branch_msg, branch_target)
+            return y
                 
         
     def _stop_training(self, msg=None):
@@ -234,7 +210,8 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
             ## complex case, call stop_training on all node copies 
             msgs = []
             target = None
-            for (node, node_msg) in zip(self.nodes, self._get_split_messages(msg)):
+            for (node, node_msg) in zip(self.nodes,
+                                        self._get_split_messages(msg)):
                 if node_msg:
                     node_result = node.stop_training(node_msg)
                 else:

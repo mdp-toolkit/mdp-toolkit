@@ -88,7 +88,7 @@ class TestBiSwitchboardNode(unittest.TestCase):
     """Test the behavior of the BiSwitchboardNode."""
     
     def test_execute_routing(self):
-        """Test the standard feed-forward routing."""
+        """Test the standard routing for messages."""
         sboard = binet.BiSwitchboard(input_dim=3, connections=[2,0,1])
         x = n.array([[1,2,3],[4,5,6]])
         msg = {"string": "blabla",
@@ -101,62 +101,22 @@ class TestBiSwitchboardNode(unittest.TestCase):
         self.assertTrue(out_msg["list"] == msg["list"])
         self.assertTrue(n.all(out_msg["data"] == reference_y))
     
-#    def test_down_routing(self):
-#        """Test the top-down routing."""
-#        sboard = binet.BiSwitchboard(input_dim=3, connections=[2,0,1])
-#        x = n.array([[1,2,3],[4,5,6]])
-#        msg = {"string": "blabla",
-#               "send_down": True,
-#               "list": [1,2],
-#               "data": x,
-#               "target": "test"}
-#        out_msg, target = sboard.message(msg)
-#        self.assertTrue(target == "test")
-#        reference_y = n.array([[2,3,1],[5,6,4]])
-#        self.assertTrue(out_msg["string"] == msg["string"])
-#        self.assertTrue(out_msg["list"] == msg["list"])
-#        self.assertTrue(n.all(out_msg["data"] == reference_y))
-    
-#    def test_updata_params(self):
-#        """Test changing switching direction and target via msg."""
-#        sboard = binet.BiSwitchboard(input_dim=3, connections=[2,0,1])
-#        x = n.array([[1,2,3],[4,5,6]])
-#        msg = {"string": "blabla",
-#               "list": [1,2],
-#               "data": x,
-#               "send_down": True,
-#               "target": "test2"}
-#        out_msg, target = sboard.message(msg)
-#        self.assertTrue(target == "test2")
-#        reference_y = n.array([[2,3,1],[5,6,4]])
-#        self.assertTrue(out_msg["string"] == msg["string"])
-#        self.assertTrue(out_msg["list"] == msg["list"])
-#        self.assertTrue(n.all(out_msg["data"] == reference_y))
-        
-
-class TestBiMeanSwitchboard(unittest.TestCase):
-    
-    def test_rec_down_execute(self):
-        """Test correct downward execution of a MeanBiSwitchboard."""
-        sboard = binet.MeanBiSwitchboard(input_dim=3,
-                                         connections=[0,2,1,1,0])
-        y = n.array([[1.0, 2.0, 3.0, 4.0, 5.0]])
-        x = sboard._down_execute(y)
-        ref_x = n.array([[(1.0 + 5.0) / 2,
-                          (3.0 + 4.0) / 2,
-                          2.0]])
-        self.assertTrue(n.all(x == ref_x))
-        
-    def test_rec_down_execute2(self):
-        """Test correct downward execution for larger y."""
-        sboard = binet.MeanBiSwitchboard(input_dim=3,
-                                         connections=[0,2,1,1,0])
-        y = n.array([[1.0, 2.0, 3.0, 4.0, 5.0],
-                     [1.5, 5.0, 1.2, 3.7, 1.1]])
-        x = sboard._down_execute(y)
-        ref_x = n.array([[(1.0 + 5.0) / 2, (3.0 + 4.0) / 2, 2.0],
-                         [(1.5 + 1.1) / 2, (1.2 + 3.7) / 2, 5.0]])
-        self.assertTrue(n.all(x == ref_x))
+    def test_inverse_message_routing(self):
+        """Test the inverse routing for messages."""
+        sboard = binet.BiSwitchboard(input_dim=3, connections=[2,0,1])
+        x = n.array([[1,2,3],[4,5,6]])
+        msg = {"string": "blabla",
+               "method": "inverse",
+               "list": [1,2],
+               "data": x,
+               "target": "test"}
+        y, out_msg, target = sboard.execute(None, msg)
+        self.assertTrue(y is None)
+        self.assertTrue(target == "test")
+        reference_y = n.array([[2,3,1],[5,6,4]])
+        self.assertTrue(out_msg["string"] == msg["string"])
+        self.assertTrue(out_msg["list"] == msg["list"])
+        self.assertTrue(n.all(out_msg["data"] == reference_y))
     
 
 def get_suite():
@@ -164,7 +124,6 @@ def get_suite():
     suite.addTest(unittest.makeSuite(TestBiFlowNode))
     suite.addTest(unittest.makeSuite(TestCloneBiLayer))
     suite.addTest(unittest.makeSuite(TestBiSwitchboardNode))
-    suite.addTest(unittest.makeSuite(TestBiMeanSwitchboard))
     return suite
             
 if __name__ == '__main__':

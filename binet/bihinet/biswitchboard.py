@@ -5,9 +5,6 @@ n = mdp.numx
 
 from ..binode import BiNode
 
-# TODO: can hugely simplify this whole class, just implement inverse!
-#    also update the unittests
-
         
 class BiSwitchboard(BiNode, hinet.Switchboard):
     """BiNet version of the normal Switchboard.
@@ -32,46 +29,46 @@ class BiSwitchboard(BiNode, hinet.Switchboard):
             self.down_connections = n.argsort(self.connections, 
                                               kind="mergesort")
     
-    def _execute(self, x, msg=None, y=None, send_down=False):
-        """Return the routed input data.
-        
-        y -- Provide y instead of x for inverse routing. If y is given then
-            the x return value is None and msg contains x instead.
-        """
-        if (y is not None) or send_down:
-            msg = self._down_execute_msg(msg)
-            if y is not None:
-                x = self._down_execute(y)
-                msg["y"] = x
-            result = (None, msg)
-        else:
+    def _execute(self, x, msg=None):
+        """Return the routed input data."""
+        if x is not None:
             y = super(BiSwitchboard, self)._execute(x)
-            msg = self._execute_msg(msg)
-            result = (y, msg)
-        if result[1] is None:
-            result = result[0]
-        return result
+        else:
+            y = None
+        msg = self._execute_msg(msg)
+        if not msg:
+            return y
+        else:
+            return y, msg
     
-    def _stop_message(self, msg=None, send_down=False, target=None):
-        return self._message(self, msg, send_down, target)
+    def _inverse(self, x, msg=None):
+        """Return the routed input data."""
+        if x is not None:
+            y = super(BiSwitchboard, self)._inverse(x)
+        else:
+            y = None
+        msg = self._inverse_msg(msg)
+        if not msg:
+            return y
+        else:
+            return y, msg
+    
+    def _stop_message(self, msg=None):
+        return self._execute_msg(msg)
     
     def is_bi_training(self):
         return False
     
     ## Helper methods ##
             
-    def _down_execute(self, x):
-        """Return the top-down routed x."""
-        return x[:,self.inverse_connections]
-    
-    def _down_execute_msg(self, msg):
-        """Top-down routing for msg."""
+    def _inverse_msg(self, msg):
+        """Inverse routing for msg."""
         if not msg:
             return None
         out_msg = {}
         for (key, value) in msg.items():
             if type(value) is n.ndarray:
-                out_msg[key] = self._down_execute(value)
+                out_msg[key] = super(BiSwitchboard, self)._inverse(value)
             else:
                 out_msg[key] = value
         return out_msg
@@ -87,37 +84,7 @@ class BiSwitchboard(BiNode, hinet.Switchboard):
             else:
                 out_msg[key] = value
         return out_msg
-    
 
-class MeanBiSwitchboard(BiSwitchboard):
-    """Variant of BiSwitchboard with modified down-execute."""    
-    
-    def _down_execute(self, x):
-        """Take the mean of overlapping values."""
-        # note that x refers to signal on top
-        n_y_cons = n.bincount(self.connections)  # n. connections to y_i
-        y_cons = n.argsort(self.connections)  # x indices for y_i
-        y = n.zeros((len(x), self.input_dim))
-        i_x_counter = 0  # counter for processed x indices
-        i_y = 0  # current y index
-        while True:
-            n_cons = n_y_cons[i_y]
-            if n_cons > 0:
-                y[:,i_y] = n.sum(x[:,y_cons[i_x_counter:
-                                            i_x_counter + n_cons]],
-                                 axis=1) / n_cons
-                i_x_counter += n_cons
-                if i_x_counter >= self.output_dim:
-                    break
-            i_y += 1
-        return y
-    
-    def is_invertible(self):
-        return True
-    
-    def _inverse(self, x):
-        return self._down_execute(x)
-        
 
 class Rectangular2dBiSwitchboardException(
                                     hinet.Rectangular2dSwitchboardException):
@@ -126,13 +93,11 @@ class Rectangular2dBiSwitchboardException(
 
 class Rectangular2dBiSwitchboard(BiSwitchboard,
                                  hinet.Rectangular2dSwitchboard):
-    """BiNet version of the Rectangular2dSwitchboard."""
     pass
 
     
-class Rectangular2dMeanBiSwitchboard(MeanBiSwitchboard,
-                                     Rectangular2dBiSwitchboard):
-    """Combinations of Rectangular2dBiSwitchboard with MeanBiSwitchboard."""
+class Rectangular2dMeanBiSwitchboard(Rectangular2dBiSwitchboard,
+                                     hinet.MeanInverseSwitchboard):
     pass
 
 
