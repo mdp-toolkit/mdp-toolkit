@@ -47,10 +47,6 @@ table.current_node {
     background-color: #D1FFC7;
 }
 
-table.current_branch_base_node {
-    background-color: #E1FFDD;
-}
-
 table.clickable {
     cursor: pointer;
 }
@@ -148,7 +144,6 @@ class HTMLTraceInspector(hinet.HiNetTranslator):
         self._section_ids = None  # can be used during execution
         self._slide_node_ids = None  # active node for each slide index
         self._undecorate_mode = None  # if True undecorate nodes
-        self._branch_base_state = None  # used for branching
         
     def _reset_variables(self):
         """Reset the internal variables for new tracing."""
@@ -156,7 +151,6 @@ class HTMLTraceInspector(hinet.HiNetTranslator):
         self._slide_filenames = []
         self._section_ids = []
         self._slide_node_ids = []
-        self._branch_base_state = None
         self._undecorate_mode = False 
         
     def trace_training(self, path, flow, x, msg=None, stop_msg=None,
@@ -283,16 +277,6 @@ class HTMLTraceInspector(hinet.HiNetTranslator):
         result -- Return value of the method.
         args, kwargs -- The arguments of the method call.
         """
-        ## store data to be prepared for branch,
-        branch_base_node = None
-        if method_name in NODE_TRACE_METHOD_NAMES:
-            # a message after training or stop_training is here also
-            # considered as a branch and the base node gets highlighted
-            self._branch_base_state = (node, method_name, result)
-        elif method_name in BINODE_TRACE_METHOD_NAMES:
-            # deal with message branch
-            if self._branch_base_state is not None:
-                branch_base_node = self._branch_base_state[0]
         ## write visualization to html_file
         try:
             html_file = self._begin_HTML_frame()
@@ -304,8 +288,7 @@ class HTMLTraceInspector(hinet.HiNetTranslator):
                                             method_name=method_name, 
                                             result=result,
                                             args=args,
-                                            kwargs=kwargs,
-                                            branch_base_node=branch_base_node)
+                                            kwargs=kwargs)
             self._slide_index += 1
             if section_id is not None:
                 self._section_ids.append(section_id)
@@ -506,7 +489,6 @@ class TraceBiNetHTMLTranslator(BiNetHTMLTranslator):
         self._current_node = None
         self._method_name = None
         self._result = None
-        self._branch_node = None
         # this the HTML node id, not the Node attribute
         # this might change in the future
         self._current_node_id = None
@@ -535,7 +517,7 @@ class TraceBiNetHTMLTranslator(BiNetHTMLTranslator):
         return dic_str
     
     def write_flow_to_file(self, path, html_file, flow, node, method_name, 
-                           result, args, kwargs, branch_base_node):
+                           result, args, kwargs):
         """Write the HTML translation of the flow into the provided file.
         
         Return value is the section id and the HTML/CSS id of the active node.
@@ -548,7 +530,6 @@ class TraceBiNetHTMLTranslator(BiNetHTMLTranslator):
         result -- The result from the last call.
         args -- args that were given to the method
         kwargs -- kwargs that were given to the method
-        branch_base_node -- Node from which the current branch started.
         """
         self._html_file = hinet.NewlineWriteFile(html_file)
         f = self._html_file
@@ -556,21 +537,20 @@ class TraceBiNetHTMLTranslator(BiNetHTMLTranslator):
         f.write('<br><br>')
         f.write('<table><tr><td id="inspect_biflow_td">')
         f.write("<h3>flow state</h3>")
-        self._translate_flow(flow, node, branch_base_node)
+        self._translate_flow(flow, node)
         # now the argument / result part of the table
         f.write('</td><td id="inspect_result_td">')
         section_id = self._write_right_side(
                                path=path, html_file=html_file, flow=flow,
                                node=node, method_name=method_name,
-                               result=result, args=args, kwargs=kwargs,
-                               branch_base_node=branch_base_node)
+                               result=result, args=args, kwargs=kwargs)
         f.write('</table>')
         f.write('</td></tr>\n</table>')
         self._html_file = None
         return section_id, self._current_node_id
     
     def _write_right_side(self, path, html_file, flow, node, method_name, 
-                          result, args, kwargs, branch_base_node):
+                          result, args, kwargs):
         """Write the result part of the translation.
         
         Return value is None, but could be section_id.
@@ -614,15 +594,8 @@ class TraceBiNetHTMLTranslator(BiNetHTMLTranslator):
                     self._dict_pretty_html(result) + '</td></tr>')
         elif isinstance(result, tuple):
             # interpret the results depending on the method name
-            if method_name == "execute":
-                result_names = ["x", "msg", "target", "branch_msg",
-                                "branch_target"]
-            elif method_name == "train":
-                if len(result) == 2:
-                    result_names = ["msg", "target"]
-                else:
-                    result_names = ["x", "msg", "target", "branch_msg",
-                                    "branch_target"]
+            if method_name == "execute" or method_name == "train":
+                result_names = ["x", "msg", "target"]
             else:
                 result_names = ["msg", "target"]
             for i_result_part, result_part in enumerate(result):
@@ -642,7 +615,7 @@ class TraceBiNetHTMLTranslator(BiNetHTMLTranslator):
         
     # overwrite private methods
     
-    def _translate_flow(self, flow, current_node=None, branch_base_node=None):
+    def _translate_flow(self, flow, current_node=None):
         """Translate the flow into HTML and write it into the internal file.
         
         Use write_flow_to_file instead of calling this method directly.
@@ -650,14 +623,11 @@ class TraceBiNetHTMLTranslator(BiNetHTMLTranslator):
         part of the slide).
         
         current_node -- The current_node that was called last.
-        branch_base_node -- Node from which the current bi_message branch
-            started.
             
         These arguments are stored as attributes and are then used in
         _open_node_env.
         """
         self._current_node = current_node
-        self._branch_base_node = branch_base_node
         self._node_id_index = 0
         self._current_node_id = None
         super(TraceBiNetHTMLTranslator, self)._translate_flow(flow)
@@ -675,8 +645,9 @@ class TraceBiNetHTMLTranslator(BiNetHTMLTranslator):
         trace_class = None
         if node is self._current_node:
             trace_class = "current_node"
-        elif node is self._branch_base_node:
-            trace_class = "current_branch_base_node"
+            
+        # TODO: add special trace_class for node currently in training
+
         if trace_class:
             html_line += ' %s' % trace_class
         html_line += ' %s' % type_id
