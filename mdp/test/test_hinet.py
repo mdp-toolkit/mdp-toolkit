@@ -211,6 +211,24 @@ class HinetTestSuite(NodesTestSuite):
                                 connections=[2,1,1])
         assert not sboard.is_invertible()
         
+    ## Tests for MeanInverseSwitchboard ##
+    
+    def testMeanInverseSwitchboard1(self):
+        sboard = mh.MeanInverseSwitchboard(input_dim=3,
+                                           connections=[0,0,2])
+        assert sboard.is_invertible()
+        y = numx.array([[2,4,3],[1,1,7]])
+        x = sboard.inverse(y)
+        assert numx.all(x == numx.array([[3,0,3],[1,0,7]]))
+        
+    def testMeanInverseSwitchboard2(self):
+        sboard = mh.MeanInverseSwitchboard(input_dim=3,
+                                           connections=[1,1,1,2,2])
+        assert sboard.is_invertible()
+        y = numx.array([[2,4,0,1,1],[3,3,3,2,4]])
+        x = sboard.inverse(y)
+        assert numx.all(x == numx.array([[0,2,1],[0,3,3]]))    
+    
     ## Tests for ChannelSwitchboard ##
     
     def testOutChannelInput(self):

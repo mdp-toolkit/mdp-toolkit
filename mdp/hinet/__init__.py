@@ -30,7 +30,8 @@ then feed the output into a Layer and each Node will get the correct input.
 from flownode import FlowNode
 from layer import Layer, SameInputLayer, CloneLayer
 from switchboard import (
-    Switchboard, SwitchboardException, ChannelSwitchboard,
+    Switchboard, SwitchboardException, MeanInverseSwitchboard,
+    ChannelSwitchboard,
     Rectangular2dSwitchboard, Rectangular2dSwitchboardException,
     DoubleRect2dSwitchboard, DoubleRect2dSwitchboardException,
     DoubleRhomb2dSwitchboard, DoubleRhomb2dSwitchboardException

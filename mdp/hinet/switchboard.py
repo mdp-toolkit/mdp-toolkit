@@ -78,6 +78,39 @@ class Switchboard(mdp.Node):
             raise SwitchboardException("Connections are not invertible.")
         else:
             return x[:, self.inverse_connections]
+        
+        
+class MeanInverseSwitchboard(Switchboard):
+    """Variant of Switchboard with modified inverse.
+    
+    If the switchboard mapping is not injective, then the mean
+    values are used for the inverse. Inputs that are discarded in the
+    mapping are set to zero.
+    
+    You can use this class as a mixin for other switchboard classes.
+    """    
+    
+    def _inverse(self, x):
+        """Take the mean of overlapping values."""
+        n_y_cons = numx.bincount(self.connections)  # n. connections to y_i
+        y_cons = numx.argsort(self.connections)  # x indices for y_i
+        y = numx.zeros((len(x), self.input_dim))
+        i_x_counter = 0  # counter for processed x indices
+        i_y = 0  # current y index
+        while True:
+            n_cons = n_y_cons[i_y]
+            if n_cons > 0:
+                y[:,i_y] = numx.sum(x[:,y_cons[i_x_counter:
+                                               i_x_counter + n_cons]],
+                                    axis=1) / n_cons
+                i_x_counter += n_cons
+                if i_x_counter >= self.output_dim:
+                    break
+            i_y += 1
+        return y
+    
+    def is_invertible(self):
+        return True
     
 
 class ChannelSwitchboard(Switchboard):
