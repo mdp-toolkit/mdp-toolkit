@@ -123,6 +123,7 @@ class BiFlowNode(BiNode, hinet.FlowNode):
                     # we have reached the training node
                     x = result[0]
                     msg = result[1]
+                    i_node = nodenr  # have to update this manually
                 else:
                     # flownode should be reentered later
                     return result
@@ -157,7 +158,7 @@ class BiFlowNode(BiNode, hinet.FlowNode):
                             return x
                         else:
                             return (x, msg)
-                    elif i_node + target == -1:
+                    elif i_node == -1:
                         return x, msg, -1
                 else:
                     i_node = self._flow._target_to_index(target, i_node)
@@ -194,7 +195,7 @@ class BiFlowNode(BiNode, hinet.FlowNode):
                     # values of +1 and -1 beyond this flow are allowed
                     if i_node == len(self._flow):
                         return msg
-                    elif i_node + target == -1:
+                    elif i_node == -1:
                         return msg, -1
                 else:
                     i_node = self._flow._target_to_index(target, i_node)

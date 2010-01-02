@@ -37,7 +37,7 @@ SLIDE_CSS_FILENAME = "inspect.css"
 CLICKABLE_NODE_ID = "clickable_node_%d"
 
 NODE_TRACE_METHOD_NAMES = ["execute", "train", "stop_training"]
-BINODE_TRACE_METHOD_NAMES = ["message", "stop_message", "global_message"]
+BINODE_TRACE_METHOD_NAMES = ["stop_message"]
 TRACING_WRAP_FLAG = "_insp_is_wrapped_for_tracing_"
 ORIGINAL_METHOD_PREFIX = "_insp_original_"
 

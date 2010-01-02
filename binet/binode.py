@@ -36,6 +36,8 @@ BiNode Return Value Options:
     None -- terminates training
     x, (x, msg), (x, msg, target) -- Execution is continued and
         this node will be reached at a later time to terminate training.
+        If the result has the form (None, msg) then the msg is dropped (so
+        it is not required to 'clear' the message manually).
      
  result for stop_training and stop_message
     msg or (msg, target)
@@ -213,12 +215,14 @@ class BiNode(mdp.Node):
             elif method == self._inverse:
                 self._pre_inversion_checks(x)
         result = method(x, **arg_dict)
-        if result is not None:  #  {} is ok to trigger continued execution
-            # any remaining or messages values are thrown away
+        if result is None:
             return None
-        else:
-            # continue execution
-            return self._combine_execute_result(result, msg, target)
+        result = self._combine_execute_result(result, msg, target)
+        if (isinstance(result, tuple) and len(result) == 2 and
+            result[0] is None):
+            # drop the remaining msg, so that no maual clearing is required
+            return None
+        return result 
     
     def stop_training(self, msg=None):
         """Stop training phase and return None, msg or (msg, target).
@@ -457,7 +461,7 @@ class BiNode(mdp.Node):
     def _combine_execute_result(result, msg, target):
         """Combine the execution result with the provided values.
         
-        result -- None, msg or (msg, target)
+        result -- x, (x, msg) or (x, msg, target)
         
         The values in result always has priority.
         """
@@ -469,7 +473,7 @@ class BiNode(mdp.Node):
                     msg.update(result[1])
                 result = (result[0], msg) + result[2:]
             if (target is not None) and (len(result) == 2):
-                # use given target if not target value was returned
+                # use given target if no target value was returned
                 result += (target,)
             return result
         else:

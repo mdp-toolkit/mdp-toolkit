@@ -242,7 +242,7 @@ class BiFlow(mdp.Flow):
             if isinstance(target, int):
                 i_node = i_node + target
                 # values of +1 and -1 beyond this flow are tolerated
-                if i_node == len(self.flow) or i_node + target == -1:
+                if i_node == len(self.flow) or i_node == -1:
                     return
             else:
                 i_node = self._target_to_index(target, nodenr)
@@ -533,7 +533,7 @@ class BiFlow(mdp.Flow):
                         return x
                     else:
                         return (x, msg)
-                elif i_node + target == -1:
+                elif i_node == -1:
                     return x, msg, -1
             else:
                 i_node = self._target_to_index(target, i_node)
@@ -579,7 +579,7 @@ class BiFlow(mdp.Flow):
                 # values of +1 and -1 beyond this flow are allowed
                 if i_node == len(self.flow):
                     return msg
-                elif i_node + target == -1:
+                elif i_node == -1:
                     return msg, -1
             else:
                 i_node = self._target_to_index(target, i_node)
