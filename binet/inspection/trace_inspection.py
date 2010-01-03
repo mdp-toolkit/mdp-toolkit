@@ -649,7 +649,7 @@ class TraceBiNetHTMLTranslator(BiNetHTMLTranslator):
         trace_class = None
         if node is self._current_node:
             trace_class = "current_node"
-        elif isinstance(node, mdp.Node) and node._train_phase_started:
+        elif type_id == "node" and node._train_phase_started:
             trace_class = "training_node"
         if trace_class:
             html_line += ' %s' % trace_class
