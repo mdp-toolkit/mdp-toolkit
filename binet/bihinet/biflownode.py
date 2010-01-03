@@ -183,22 +183,18 @@ class BiFlowNode(BiNode, hinet.FlowNode):
             if not result:
                 return None
             elif not isinstance(result, tuple):
-                if nodenr + 1 < len(self._flow):
-                    return self._flow._stop_message_seq(msg=result,
-                                                        i_node=nodenr+1)
-                else:
-                    return result
+                return None  # a message without target is dropped
             elif len(result) == 2:
                 msg, target = result
                 if isinstance(target, int):
                     i_node = nodenr + target
                     # values of +1 and -1 beyond this flow are allowed
                     if i_node == len(self._flow):
-                        return msg
+                        return msg, 1
                     elif i_node == -1:
                         return msg, -1
                 else:
-                    i_node = self._flow._target_to_index(target, i_node)
+                    i_node = self._flow._target_to_index(target, nodenr)
                     if not isinstance(i_node, int):
                         # target not found in this flow
                         # this is also the exit point when EXIT_TARGET is given

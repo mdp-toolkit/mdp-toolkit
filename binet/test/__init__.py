@@ -12,8 +12,8 @@ test_suites = {
     "binode": test_binode.get_suite(),
     "biflow": test_biflow.get_suite(),
     "bihinet": test_bihinet.get_suite(),
-    "parallelbiflow": test_parallelbiflow.get_suite(),
-    "parallelbihinet": test_parallelbihinet.get_suite(),
+#    "parallelbiflow": test_parallelbiflow.get_suite(),
+#    "parallelbihinet": test_parallelbihinet.get_suite(),
 }
 
 def get_suite():

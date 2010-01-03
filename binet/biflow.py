@@ -565,8 +565,7 @@ class BiFlow(mdp.Flow):
                 # reached end of message sequence
                 return None
             elif not isinstance(result, tuple):
-                msg = result
-                target = 1
+                return None
             elif len(result) == 2:
                 msg, target = result
             else:
@@ -578,7 +577,7 @@ class BiFlow(mdp.Flow):
                 i_node = i_node + target
                 # values of +1 and -1 beyond this flow are allowed
                 if i_node == len(self.flow):
-                    return msg
+                    return msg, 1
                 elif i_node == -1:
                     return msg, -1
             else:

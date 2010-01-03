@@ -33,16 +33,16 @@ class TestStopTrainBiNode(unittest.TestCase):
         # define class for testing
         class BiSFANode(binet.BiNode, mdp.nodes.SFANode):
             pass
-        stop_msg = {"test": 0}
-        bi_sfa_node = BiSFANode(stop_msg=stop_msg,
+        stop_result = ({"test": 0}, 1)
+        bi_sfa_node = BiSFANode(stop_result=stop_result,
                                 node_id="testing binode")
         self.assertTrue(bi_sfa_node.is_trainable())
         x = n.random.random((100,10))
         train_result = bi_sfa_node.train(x)
         self.assertTrue(train_result == None)
         self.assertTrue(bi_sfa_node.is_training())
-        msg = bi_sfa_node.stop_training()
-        self.assertTrue(msg == stop_msg)
+        result = bi_sfa_node.stop_training()
+        self.assertTrue(result == stop_result)
         self.assertTrue(bi_sfa_node.input_dim == 10)
         self.assertTrue(bi_sfa_node.output_dim == 10)
         self.assertTrue(bi_sfa_node.dtype == "float64")
@@ -97,7 +97,7 @@ class TestJumpBiNode(unittest.TestCase):
         result = jumpnode.stop_message()
         self.assertTrue(result == stop_message_results[0])
         result = jumpnode.stop_message(tmsg)
-        self.assertTrue(result == stop_message_results[0][0])
+        self.assertTrue(result is None)
         jumpnode.bi_reset()
 
 #class _DummyUDNode(binet.UpDownBiNode):

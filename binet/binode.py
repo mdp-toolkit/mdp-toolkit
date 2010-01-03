@@ -39,8 +39,10 @@ BiNode Return Value Options:
         If the result has the form (None, msg) then the msg is dropped (so
         it is not required to 'clear' the message manually).
      
- result for stop_training and stop_message
-    msg or (msg, target)
+ result for stop_training and stop_message:
+    (msg, target) -- If no target is specified then the remaining msg is
+        dropped.
+    
      
 
 Magic keyword arguments:
@@ -96,8 +98,7 @@ class BiNodeException(mdp.NodeException):
 
 
 # methods that can overwrite docs:
-mdp.NodeMetaclass.DOC_METHODS += ['_message', '_stop_message',
-                                  '_global_message']
+mdp.NodeMetaclass.DOC_METHODS += ['_stop_message']
 
     
 class BiNode(mdp.Node):
@@ -115,21 +116,20 @@ class BiNode(mdp.Node):
     work.
     """
     
-    def __init__(self, node_id=None, stop_msg=None, **kwargs):
+    def __init__(self, node_id=None, stop_result=None, **kwargs):
         """Initialize BiNode.
         
         node_id -- None or string which identifies the node.
-        stop_msg -- A msg dict which is send by stop_training.
-            If the node has multiple training phases then this
-            can also be a list with one entry for each training phase.
-            This argument is added purely for convenience and should only be
-            used for global messages.
+        stop_result -- A (msg, target) tupple which is used as the result for
+            stop_training (but can be overwritten by any actual results).
+            If the node has multiple training phases then this must be None or
+            an iterable with one entry for each training phase.
         
         kwargs are forwarded via super to the next __init__ method
         in the MRO.
         """
         self._node_id = node_id
-        self._stop_msg = stop_msg
+        self._stop_result = stop_result
         super(BiNode, self).__init__(**kwargs)
         
     ### Modified template methods from mdp.Node. ###
@@ -225,7 +225,7 @@ class BiNode(mdp.Node):
         return result 
     
     def stop_training(self, msg=None):
-        """Stop training phase and return None, msg or (msg, target).
+        """Stop training phase and return None or (msg, target).
         
         The result tuple is then used to call stop_message on the target node.
         The outgoing msg carries forward the incoming message content.
@@ -234,8 +234,8 @@ class BiNode(mdp.Node):
         Note that it is not possible to select other methods via the 'method'
         message key.
         
-        If a stop_msg was given in __init__ then it is incorporated into the
-        outgoing msg (but can be overwritten by the _stop_training msg output).
+        If a stop_result was given in __init__ then it is used but can be
+        overwritten by the _stop_training result.
         """
         # basic checks
         if self.is_training() and self._train_phase_started == False:
@@ -243,15 +243,6 @@ class BiNode(mdp.Node):
         if not self.is_training():
             err = "The training phase has already finished."
             raise mdp.TrainingFinishedException(err)
-        # get stored stop message and update it with provided msg
-        if isinstance(self._stop_msg, tuple):
-            stored_stop_msg = self._stop_msg[self._train_phase]
-        else:
-            stored_stop_msg = self._stop_msg
-        if stored_stop_msg:
-            if msg:
-                stored_stop_msg.update(msg)
-            msg = stored_stop_msg
         # call stop_training
         if not msg:
             result = self._train_seq[self._train_phase][1]()
@@ -270,6 +261,17 @@ class BiNode(mdp.Node):
         # check if we have some training phase left
         if self.get_remaining_train_phase() == 0:
             self._training = False
+        # use stored stop message and update it with the result
+        if self._stop_result:
+            if self.has_multiple_training_phases():
+                stored_stop_result = self._stop_result[self._train_phase]
+            else:
+                stored_stop_result = self._stop_result
+            if msg:
+                stored_stop_result[0].update(msg)
+            msg = stored_stop_result[0]
+            if target is None:
+                target = stored_stop_result[1]
         return self._combine_message_result(result, msg, target)
     
     ### New methods for node messaging. ###
@@ -427,27 +429,25 @@ class BiNode(mdp.Node):
     def _combine_message_result(result, msg, target):
         """Combine the message result with the provided values.
         
-        result -- None, msg or (msg, target)
+        result -- None or (msg, target)
         
-        The values in result always has priority.
+        The values in result always have priority.
+        If not target is available then the remaining message is dropped.
         """
         if not result:
             if target is not None:
-                # use given target if not target value was returned
                 return (msg, target)
             else:
-                return msg
+                return None
         elif not isinstance(result, tuple):
             # result is msg
+            if target is None:
+                return None
             if msg:
                 msg.update(result)
             else:
                 msg = result
-            if target is not None:
-                # use given target if not target value was returned
-                return (msg, target)
-            else:
-                return msg
+            return (msg, target)
         else:
             # result contains target value 
             if msg:
