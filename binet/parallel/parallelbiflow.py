@@ -623,11 +623,16 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
             result = self._flownode.stop_training(
                                     self._stop_messages[self._i_train_node])
             self._post_stop_training_hook()
-            if (result is not None) and (not isinstance(result, dict)):
-                err = ("Target node not found in flow during " +
-                       "stop_message propagation, last result: " + 
-                       str(result))
-                raise BiFlowException(err)
+            if (result is not None):
+                target = result[1]
+                # values of +1 and -1 are tolerated
+                if isinstance(target, int) and (target == 1 or target == -1):
+                    pass
+                else:
+                    err = ("Target node not found in flow during " +
+                           "stop_message propagation, last result: " + 
+                           str(result))
+                    raise BiFlowException(err)
             self._flownode.bi_reset()
             # update the node list of this flow
             self.flow = self._flownode._flow.flow

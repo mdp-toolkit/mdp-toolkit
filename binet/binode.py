@@ -72,6 +72,8 @@ keywords are treated in a special way:
      
 """
 
+# TODO: provide a ParallelBiNode base class to copy the _stop_result attribute?
+
 # TODO: use a target seperator like : and allow multiple occurances,
 #    when the node is reached then one is removed until there is only one left.
 #    Example: node_id:::target will use the target value when the node is

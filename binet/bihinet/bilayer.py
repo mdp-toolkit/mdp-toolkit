@@ -201,9 +201,6 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
             node_result = self.node.stop_training(msg)
             if node_result is None:
                 return None
-            elif isinstance(node_result, dict):
-                msg = node_result
-                target = None
             else:
                 msg, target = node_result
         else:
@@ -227,10 +224,11 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
         # check for outgoing message for use_copies key
         if msg is not None:
             self._extract_message_copy_flag(msg)
-        if target is None:
-            return msg
-        else:
-            return msg, target
+            # if the msg is now empty and if the msg was aimed at this note
+            # then abort the stop_message processing, for convenience
+            if not msg and target == self.node_id:
+                return None
+        return msg, target
             
     ## BiNode methods ##
         

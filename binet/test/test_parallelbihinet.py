@@ -16,8 +16,8 @@ class TestCloneBiLayer(unittest.TestCase):
     
     def test_use_copies_msg(self):
         """Test the correct reaction to an outgoing use_copies message."""
-        stop_msg = {"clonelayer=>use_copies": True}
-        stop_sfa_node = BiSFANode(stop_msg=stop_msg,
+        stop_result = ({"clonelayer=>use_copies": True}, "clonelayer")
+        stop_sfa_node = BiSFANode(stop_result=stop_result,
                                   input_dim=10, output_dim=3)
         biflownode = binet.ParallelBiFlowNode(binet.BiFlow([stop_sfa_node]))
         clonelayer = binet.ParallelCloneBiLayer(node=biflownode, 
