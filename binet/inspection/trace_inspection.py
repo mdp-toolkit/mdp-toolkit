@@ -17,6 +17,7 @@ import copy
 
 import numpy as n
 
+import mdp
 import mdp.hinet as hinet
 
 from ..binode import BiNode
@@ -27,7 +28,6 @@ from bihinet_translator import BiNetHTMLTranslator
 from utils import robust_pickle
 
 # TODO: wrap inner methods (e.g. _train) to document effective arguments?
-# TODO: pretty print numpy arrays 
 
 PICKLE_EXT = ".pckl"
 PICKLE_PROTO = -1
@@ -45,6 +45,10 @@ ORIGINAL_METHOD_PREFIX = "_insp_original_"
 INSPECT_TRACE_STYLE = """
 table.current_node {
     background-color: #D1FFC7;
+}
+
+table.training_node {
+    background-color: #FFFFCC;
 }
 
 table.clickable {
@@ -645,9 +649,8 @@ class TraceBiNetHTMLTranslator(BiNetHTMLTranslator):
         trace_class = None
         if node is self._current_node:
             trace_class = "current_node"
-            
-        # TODO: add special trace_class for node currently in training
-
+        elif isinstance(node, mdp.Node) and node._train_phase_started:
+            trace_class = "training_node"
         if trace_class:
             html_line += ' %s' % trace_class
         html_line += ' %s' % type_id
