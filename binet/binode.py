@@ -40,10 +40,10 @@ BiNode Return Value Options:
         it is not required to 'clear' the message manually).
      
  result for stop_training and stop_message:
+    None -- terminates the stop_message propagation
     (msg, target) -- If no target is specified then the remaining msg is
-        dropped.
+        dropped (terminates the propagation).
     
-     
 
 Magic keyword arguments:
 ========================

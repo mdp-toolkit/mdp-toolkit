@@ -189,7 +189,6 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
         else:
             return y
                 
-        
     def _stop_training(self, msg=None):
         """Call stop_training on the internal nodes.
         
