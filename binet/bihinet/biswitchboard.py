@@ -85,35 +85,37 @@ class BiSwitchboard(BiNode, hinet.Switchboard):
                 out_msg[key] = value
         return out_msg
     
-
-class FactoryExtensionChannelBiSwitchboard(
-                                mdp.hinet.FactoryExtensionChannelSwitchboard):
     
-    @classmethod
-    def create_switchboard(cls, free_params, prev_switchboard,
-                           prev_output_dim, node_id):
-        """Modified method to support node_id."""
-        compatible = False
-        for base_class in cls.compatible_pre_switchboards:
-            if isinstance(prev_switchboard, base_class):
-                compatible = True
-        if not compatible:
-            err = ("The prev_switchboard class '%s'" %
-                        prev_switchboard.__class__.__name__ +
-                   " is not compatible with this switchboard class" +
-                   " '%s'." % cls.__name__)
-            raise mdp.hinet.SwitchboardException(err)
-        for key, value in free_params.items():
-            if key.endswith('_xy') and isinstance(value, int):
-                free_params[key] = (value, value)
-        kwargs = cls._get_switchboard_kwargs(free_params, prev_switchboard,
-                                             prev_output_dim)
-        return cls(node_id=node_id, **kwargs)
-
-
 ## create BiSwitchboard versions of the standard MDP switchboards ##
-# corresponding FactoryExtension nodes will created as well
 
+# corresponding methods for the switchboard_factory extension are
+# created as well
+
+@classmethod
+def _binode_create_switchboard(cls, free_params, prev_switchboard,
+                       prev_output_dim, node_id):
+    """Modified version of create_switchboard to support node_id.
+    
+    This method can be used as a substitute when using the switchboard_factory
+    extension.
+    """
+    compatible = False
+    for base_class in cls.compatible_pre_switchboards:
+        if isinstance(prev_switchboard, base_class):
+            compatible = True
+    if not compatible:
+        err = ("The prev_switchboard class '%s'" %
+                    prev_switchboard.__class__.__name__ +
+               " is not compatible with this switchboard class" +
+               " '%s'." % cls.__name__)
+        raise mdp.hinet.SwitchboardException(err)
+    for key, value in free_params.items():
+        if key.endswith('_xy') and isinstance(value, int):
+            free_params[key] = (value, value)
+    kwargs = cls._get_switchboard_kwargs(free_params, prev_switchboard,
+                                         prev_output_dim)
+    return cls(node_id=node_id, **kwargs)
+  
 # use a function to avoid poluting the namespace
 def _create_bi_switchboards():
     switchboard_classes = [
@@ -123,24 +125,17 @@ def _create_bi_switchboards():
         mdp.hinet.DoubleRhomb2dSwitchboard,
     ]
     current_module = sys.modules[__name__]
-    node_metaclass = mdp.NodeMetaclass
-    factory_metaclass = mdp.ExtensionNodeMetaclass
     for switchboard_class in switchboard_classes:
         node_name = switchboard_class.__name__
         binode_name = node_name[:-len("Switchboard")] + "BiSwitchboard"
         docstring = ("Automatically created BiSwitchboard version of %s." %
                      node_name)
-        binode_class = node_metaclass.__new__(node_metaclass, binode_name,
-                                              (BiSwitchboard, switchboard_class),
-                                              {"__doc__": docstring})
-        setattr(current_module, binode_name, binode_class)
+        docstring = "Automatically created BiNode version of %s." % node_name
+        exec ('class %s(BiSwitchboard, mdp.hinet.%s): "%s"' %
+              (binode_name, node_name, docstring)) in current_module.__dict__
         # create appropriate FactoryExtension nodes
-        factory_name = ("Factory" + node_name[:-len("Switchboard")] +
-                        "BiSwitchboard")
-        factory_class = factory_metaclass.__new__(
-                            factory_metaclass, factory_name,
-                            (FactoryExtensionChannelBiSwitchboard, binode_class),
-                            {})
-        setattr(current_module, factory_name, factory_class)
+        mdp.extension_method("switchboard_factory",
+                             current_module.__dict__[binode_name],
+                             "create_switchboard")(_binode_create_switchboard)
         
 _create_bi_switchboards()   
