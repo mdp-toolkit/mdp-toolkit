@@ -35,9 +35,7 @@ target specifications and other magic for more convenient usage.
 # TODO: add target BiNode unittest
 # TODO: add unittests for message parsing, especially magic method key
 
-# TODO: automatically create BiNode versions of all MDP nodes,
-#    use exec to define new classes and create fitting docstring,
-#    first check is a bi-version is already present
+# TODO: use a special wrapper for classifier nodes
 
 # TODO: provide ParallelBiNode to copy the stop_result attribute?
 #    Or can we guarantee that stop_training is always called on the original
