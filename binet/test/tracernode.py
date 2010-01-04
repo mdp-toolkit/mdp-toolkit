@@ -70,12 +70,6 @@ class ParallelTraceJumpBiNode(TraceJumpBiNode):
     def _join(self):
         pass
     
-    def _bi_fork(self):
-        return self.copy()
-    
-    def _bi_join(self):
-        pass
-    
 
 class IdNode(mdp.Node):
     """Non-bi identity node for testing."""
