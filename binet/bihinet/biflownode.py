@@ -75,7 +75,9 @@ class BiFlowNode(BiNode, hinet.FlowNode):
        
     def _execute(self, x, msg=None):
         target = self._get_target()
-        return self._flow._execute_seq(x, msg, target)
+        i_node = self._flow._target_to_index(target)
+        # we know that _get_target returned a valid target, so no check
+        return self._flow._execute_seq(x, msg, i_node)
     
     def _get_execute_method(self, x, method_name, target):
         """Return _execute and the provided target.
