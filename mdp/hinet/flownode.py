@@ -2,6 +2,7 @@
 Module for the FlowNode class.
 """
 
+import cPickle as pickle
 import mdp
 
 
@@ -154,9 +155,23 @@ class FlowNode(mdp.Node):
         The copy call is delegated to the internal node, which allows the use
         of custom copy methods for special nodes.
         """
-        new_nodes = [node.copy(protocol=protocol) for node in self._flow[:]]
-        new_flow = self._flow.__class__(new_nodes)
-        return self.__class__(new_flow)
+        # Warning: If we create a new FlowNode with the copied internal
+        #    nodes then it will differ from the original one if some nodes
+        #    were trained in the meantime. Especially _get_train_seq would
+        #    return a shorter list in that case, possibly breaking stuff
+        #    outside of this FlowNode (e.g. if it is enclosed by another
+        #    FlowNode the _train_phase of this node will no longer fit the
+        #    result of _get_train_seq).
+        #
+        # copy the nodes by delegation
+        old_nodes = self._flow[:]
+        new_nodes = [node.copy(protocol=protocol) for node in old_nodes]
+        # now copy the rest of this flownode via pickle
+        self._flow.flow = None
+        new_flownode = pickle.loads(pickle.dumps(self, protocol))
+        new_flownode._flow.flow = new_nodes
+        self._flow.flow = old_nodes
+        return new_flownode
     
     ## container methods ##
     
