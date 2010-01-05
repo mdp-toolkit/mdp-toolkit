@@ -389,7 +389,7 @@ class HTMLTraceInspector(hinet.HiNetTranslator):
                 if use_copies and not self.use_copies:
                     # switch to node copies, no problem
                     clonelayer._original_set_use_copies(use_copies)
-                elif not use_copies and self._use_copies:
+                elif not use_copies and self.use_copies:
                     # switch to a single node instance
                     # but use a (decorated) deep copy for first node
                     clonelayer._original_set_use_copies(use_copies)

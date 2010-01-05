@@ -193,7 +193,8 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
         """Call stop_training on the internal nodes.
         
         The outgoing message is also searched for a use_copies key, which is
-        then applied if found. It is not required to provide a target for this.
+        then applied if found. If the message is then empty and is aimed at
+        this node then the stop_message propagation is terminated.
         """
         if not self.use_copies:
             ## simple case of a single instance

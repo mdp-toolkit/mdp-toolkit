@@ -254,7 +254,8 @@ class BiNode(mdp.Node):
             target = self._extract_message_key("target", msg, msg_id_keys)
             method_name = self._extract_message_key("method", msg, msg_id_keys)
             default_method = self._train_seq[self._train_phase][1]
-            method, target = self._get_method(method_name, default_method, target)
+            method, target = self._get_method(method_name,
+                                              default_method, target)
             msg, arg_dict = self._extract_method_args(method, msg, msg_id_keys)
             result = method(**arg_dict)
         # close the current phase
@@ -302,7 +303,8 @@ class BiNode(mdp.Node):
         
         This default implementation only raises an exception.
         """
-        err = "This node does not support calling stop_message."
+        err = ("This node (%s) does not support calling stop_message." %
+               str(self))
         raise BiNodeException(err)
     
     ## Additional new methods. ##
