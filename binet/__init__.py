@@ -36,6 +36,13 @@ target specifications and other magic for more convenient usage.
 # TODO: add unittests for message parsing, especially magic method key
 
 # TODO: use a special wrapper for classifier nodes
+#    can already access methods like prop via the method magic,
+#    but the return values of these methods have to be put into msg,
+#    maybe make it also possible to use both prob and rank at the same time,
+#    maybe by adding flags to the init or execute method?
+#    Maybe make the standard classifier execute return a message dict if
+#    requested, then no special wrapper would be required, could still use
+#    this in standard MDP via the special classifier flow (no downsides!)
 
 # TODO: provide ParallelBiNode to copy the stop_result attribute?
 #    Or can we guarantee that stop_training is always called on the original
@@ -45,6 +52,14 @@ target specifications and other magic for more convenient usage.
 #    Use subpackages or import everything into binet?
 
 # ------------- optional ----------------
+
+# TODO: use a target seperator like : and allow multiple occurances,
+#    when the node is reached then one is removed until there is only one left.
+#    Example: node_id:::target will use the target value when the node is
+#        reached for the third time.
+
+# TODO: Implement more internal checks for node output result?
+#    Check that last element is not None? Use assume?
 
 # TODO: implement switchlayer, a layer where each column represents a different
 #    target, so the target value determines which nodes are used

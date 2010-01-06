@@ -72,20 +72,6 @@ keywords are treated in a special way:
      
 """
 
-# TODO: provide a ParallelBiNode base class to copy the _stop_result attribute?
-
-# TODO: use a target seperator like : and allow multiple occurances,
-#    when the node is reached then one is removed until there is only one left.
-#    Example: node_id:::target will use the target value when the node is
-#        reached for the third time.
-
-# TODO: use of namedtuple for the return value?
-#    see http://docs.python.org/library/collections.html#collections.namedtuple
-
-# TODO: Implement internal checks for node output result?
-#    Check that last element is not None? Use assume?
-#    Should this match the level of output-checking of MDP?
-
 import inspect
 
 import mdp
@@ -93,14 +79,14 @@ import mdp
 # separator / flag strings for message keys
 NODE_ID_KEY = "=>"  
 
+# methods that can overwrite docs:
+if '_stop_message' not in mdp.NodeMetaclass.DOC_METHODS:
+    mdp.NodeMetaclass.DOC_METHODS.append('_stop_message')
+
 
 class BiNodeException(mdp.NodeException):
     """Exception for BiNode problems."""
     pass
-
-
-# methods that can overwrite docs:
-mdp.NodeMetaclass.DOC_METHODS += ['_stop_message']
 
     
 class BiNode(mdp.Node):
