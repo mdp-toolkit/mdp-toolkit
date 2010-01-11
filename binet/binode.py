@@ -384,10 +384,10 @@ class BiNode(mdp.Node):
         return of the message is done because it can be set to None).
         """
         arg_keys = inspect.getargspec(method)[0]   
-        arg_dict = dict([(key, msg[key]) for key in msg if key in arg_keys])
-        arg_dict.update(dict([(key, msg.pop(fullkey))  # notice remove by pop
-                                for key, fullkey in msg_id_keys
-                                if key in arg_keys]))
+        arg_dict = dict((key, msg[key]) for key in msg if key in arg_keys)
+        arg_dict.update(dict((key, msg.pop(fullkey))  # notice remove by pop
+                             for key, fullkey in msg_id_keys
+                             if key in arg_keys))
         if "msg" in arg_keys:
             arg_dict["msg"] = msg
             msg = None

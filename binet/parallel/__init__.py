@@ -1,4 +1,5 @@
 
+from parallelbinode import ParallelExtensionBiNode
 from parallelbiflow import (BiFlowTrainTaskException, BiFlowTrainCallable,
         BiFlowTrainResultContainer, BiFlowExecuteTaskException,
         BiFlowExecuteCallable, OrderedBiExecuteResultContainer,
@@ -6,5 +7,6 @@ from parallelbiflow import (BiFlowTrainTaskException, BiFlowTrainCallable,
 from parallelbihinet import (BiLearningPhaseNotParallelException,
                              ParallelBiFlowNode, ParallelCloneBiLayer)
 
+del parallelbinode
 del parallelbiflow
 del parallelbihinet

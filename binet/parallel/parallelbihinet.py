@@ -4,11 +4,11 @@ Parallel version of bihinet.
 
 import mdp
 
-import mdp.parallel as parallel
-
 from ..binode import BiNode, BiNodeException
 from ..biflow import BiFlow
 from ..bihinet import BiFlowNode, CloneBiLayer
+
+from parallelbinode import ParallelExtensionBiNode
 
 
 class BiLearningPhaseNotParallelException(BiNodeException):
@@ -23,15 +23,7 @@ class DummyNode(mdp.Node):
         return False
 
 
-class ParallelBiFlowNode(BiFlowNode, parallel.ParallelExtensionNode):
-    
-    def fork(self):
-        """Return a new instance of this node for remote training or execution.
-        
-        Unlike a normal ParallelFlowNode a fork is always allowed, not only
-        during training.
-        """
-        return self._fork()
+class ParallelBiFlowNode(BiFlowNode, ParallelExtensionBiNode):
     
     def _fork(self):
         """Fork the training nodes and assemble it with the rest of the flow.
@@ -83,7 +75,7 @@ class ParallelBiFlowNode(BiFlowNode, parallel.ParallelExtensionNode):
                 self._flow[i_node] = DummyNode()
                 
                 
-class ParallelCloneBiLayer(CloneBiLayer, parallel.ParallelExtensionNode):
+class ParallelCloneBiLayer(CloneBiLayer, ParallelExtensionBiNode):
     """Parallel version of CloneBiLayer.
     
     This class also adds support for calling switch_to_instance during training,
