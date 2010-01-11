@@ -10,6 +10,8 @@ training, parallel execution works with any Node that can be pickled.
 # http://projects.scipy.org/scipy/numpy/ticket/551
 # To circumvent this, you can use a copy() of all unpickled arrays. 
 
+import inspect
+
 import mdp
 from mdp import numx
 
@@ -82,10 +84,11 @@ class ParallelExtensionNode(mdp.ExtensionNode, mdp.Node):
     ## hook methods, overwrite these ##
     
     def _fork(self):
-        """Hook method for forking, to be overridden.
+        """Hook method for forking with default implementation.
         
-        For better inheritance support you should use self.__class__ to create
-        new class instances (instead of explicitly referencing the filename).
+        Overwrite this method for nodes that can be parallelized.
+        You can use _default_fork, if that is compatible with your node class,
+        typically the hard part is the joining.
         """
         raise TrainingPhaseNotParallelException("fork is not implemented " +
                                                 "by this node (%s)" %
@@ -97,6 +100,44 @@ class ParallelExtensionNode(mdp.ExtensionNode, mdp.Node):
                                                 "by this node (%s)" %
                                                 str(self.__class__))
     
+    ## helper methods ##
+        
+    def _default_fork(self):
+        """Default implementation of _fork.
+        
+        It uses introspection to determine the init kwargs and tries to fill
+        them with public attributes. These kwargs are then used to instanciate
+        self.__class__ to create the fork instance.
+        
+        So you can use this method if all the required keys are also public
+        attributes or have a single underscore in front.
+        """
+        args, varargs, varkw, defaults = inspect.getargspec(self.__init__)
+        args.remove("self")
+        if defaults:
+            non_default_keys = args[:-len(defaults)]
+        else:
+            non_default_keys = []
+        kwargs = dict((key, getattr(self, key))
+                      for key in args if hasattr(self, key))
+        # look for the key with an underscore in front
+        for key in kwargs:
+            args.remove(key)
+        under_kwargs = dict((key, getattr(self, '_' + key))
+                            for key in args if hasattr(self, '_' + key))
+        for key in under_kwargs:
+            args.remove(key)
+        kwargs.update(under_kwargs)
+        # check that all the keys without default arguments are covered
+        if non_default_keys:
+            missing_defaults = set(non_default_keys) & set(args)
+            if missing_defaults:
+                err = ("could not find attributes for init arguments %s" %
+                       str(missing_defaults))
+                raise TrainingPhaseNotParallelException(err)
+        # create new instance
+        return self.__class__(**kwargs)
+    
 
 ## MDP parallel node implementations ##
 
@@ -104,14 +145,7 @@ class ParallelPCANode(ParallelExtensionNode, mdp.nodes.PCANode):
     """Parallel version of MDP PCA node."""
     
     def _fork(self):
-        """Fork the node and (if necessary) init the covariance matrices."""
-        forked_node = self.__class__(input_dim=self.input_dim, 
-                                     output_dim=self.output_dim, 
-                                     dtype=self.dtype,
-                                     svd=self.svd, reduce=self.reduce, 
-                                     var_rel=self.var_rel, var_abs=self.var_abs, 
-                                     var_part=self.var_part)
-        return forked_node
+        return self._default_fork()
     
     def _join(self, forked_node):
         """Combine the covariance matrices."""
@@ -128,10 +162,7 @@ class ParallelSFANode(ParallelExtensionNode, mdp.nodes.SFANode):
     """Parallel version of MDP SFA node."""
     
     def _fork(self):
-        """Fork the node and (if necessary) init the covariance matrices."""
-        return self.__class__(input_dim=self.input_dim, 
-                              output_dim=self.output_dim, 
-                              dtype=self.dtype)
+        return self._default_fork()
     
     def _join(self, forked_node):
         """Combine the covariance matrices."""
@@ -157,9 +188,7 @@ class ParallelFDANode(ParallelExtensionNode, mdp.nodes.FDANode):
             self._S_W = None
             self._allcov = mdp.utils.CovarianceMatrix(dtype=self.dtype)
         else:
-            forked_node = self.__class__(input_dim=self.input_dim, 
-                                         output_dim=self.output_dim, 
-                                         dtype=self.dtype)
+            forked_node = self._default_fork()
         return forked_node
     
     def _join(self, forked_node):
@@ -191,10 +220,7 @@ class ParallelHistogramNode(ParallelExtensionNode, mdp.nodes.HistogramNode):
     """Parallel version of the HistogramNode."""
     
     def _fork(self):
-        return self.__class__(hist_fraction=self.hist_fraction,
-                              hist_filename=self._hist_filename,
-                              input_dim=self.input_dim, 
-                              dtype=self.dtype)
+        return self._default_fork()
     
     def _join(self, forked_node):
         if (self.data_hist is not None) and (forked_node.data_hist is not None):
@@ -202,18 +228,4 @@ class ParallelHistogramNode(ParallelExtensionNode, mdp.nodes.HistogramNode):
                                             forked_node.data_hist])
         elif forked_node.data_hist != None:
             self.data_hist = forked_node.data_hist
-    
-
-class ParallelAdaptiveCutoffNode(ParallelHistogramNode,
-                                 mdp.nodes.AdaptiveCutoffNode):
-    """Parallel version of the AdaptiveCutoffNode."""
-    
-    def _fork(self):
-        return self.__class__(
-                        lower_cutoff_fraction=self.lower_cutoff_fraction,
-                        upper_cutoff_fraction=self.upper_cutoff_fraction,             
-                        hist_fraction=self.hist_fraction,
-                        hist_filename=self._hist_filename,
-                        input_dim=self.input_dim,
-                        dtype=self.dtype)
     
