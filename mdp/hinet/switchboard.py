@@ -174,7 +174,7 @@ class ChannelSwitchboard(Switchboard):
         channels -- Sequence of the requested output channels or a single
             channel index (i.e. a number).
         
-        The retured array contains the indices of all input channels which
+        The returned array contains the indices of all input channels which
         are connected to at least one of the given output channels.
         """
         if isinstance(channels, int):
@@ -193,7 +193,6 @@ class ChannelSwitchboard(Switchboard):
 class Rectangular2dSwitchboardException(SwitchboardException):
     """Exception for routing problems in the Rectangular2dSwitchboard class."""
     pass
-
 
 class Rectangular2dSwitchboard(ChannelSwitchboard):
     """Switchboard for a 2-dimensional topology.
@@ -251,12 +250,12 @@ class Rectangular2dSwitchboard(ChannelSwitchboard):
         self.y_unused_channels = 0
         ## check parameters for inconsistencies
         if (x_field_channels > x_in_channels):
-            err = ("Number of field channels"
+            err = ("Number of field channels "
                    "exceeds the number of input channels in x-direction. "
                    "This would lead to an empty connection list.")
             raise Rectangular2dSwitchboardException(err)
         if (y_field_channels > y_in_channels):
-            err = ("Number of field channels"
+            err = ("Number of field channels "
                    "exceeds the number of input channels in y-direction. "
                    "This would lead to an empty connection list.")
             raise Rectangular2dSwitchboardException(err)
@@ -298,10 +297,10 @@ class Rectangular2dSwitchboard(ChannelSwitchboard):
                 # inner loop over field
                 x_start_chan = x_out_chan * x_field_spacing
                 y_start_chan = y_out_chan * y_field_spacing
-                for x_in_chan in range(x_start_chan,
-                                       x_start_chan + self.x_field_channels):
-                    for y_in_chan in range(y_start_chan,
-                                        y_start_chan + self.y_field_channels):
+                for y_in_chan in range(y_start_chan,
+                                       y_start_chan + self.y_field_channels):
+                    for x_in_chan in range(x_start_chan,
+                                        x_start_chan + self.x_field_channels):
                         first_in_con = (in_trans.image_to_index(
                                                     x_in_chan, y_in_chan) *
                                         in_channel_dim)

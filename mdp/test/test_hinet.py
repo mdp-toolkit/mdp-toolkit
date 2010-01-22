@@ -293,6 +293,31 @@ class HinetTestSuite(NodesTestSuite):
         channel_sboard = sboard.get_out_channel_node(0)
         channel_sboard.execute(x)
         
+    def testRect2dRouting3(self):
+        sboard = mh.Rectangular2dSwitchboard(x_in_channels=2, 
+                                             y_in_channels=4, 
+                                             in_channel_dim=1,
+                                             x_field_channels=2, 
+                                             y_field_channels=2,
+                                             x_field_spacing=1, 
+                                             y_field_spacing=2)
+        assert numx.all(sboard.connections ==
+                        numx.array([0, 1, 2, 3, 4, 5, 6, 7]))
+        
+    def testRect2dRouting4(self):
+        sboard = mh.Rectangular2dSwitchboard(x_in_channels=4, 
+                                             y_in_channels=4, 
+                                             in_channel_dim=1,
+                                             x_field_channels=3, 
+                                             y_field_channels=2,
+                                             x_field_spacing=1, 
+                                             y_field_spacing=2)
+        assert numx.all(sboard.connections ==
+                        numx.array([0, 1, 2, 4, 5, 6,
+                                    1, 2, 3, 5, 6, 7,
+                                    8, 9, 10, 12, 13, 14,
+                                    9, 10, 11, 13, 14, 15]))    
+    
     def testRect2d_get_out_channel_node(self):
         sboard = mh.Rectangular2dSwitchboard(x_in_channels=5, 
                                              y_in_channels=4,
