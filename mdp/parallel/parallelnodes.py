@@ -185,8 +185,8 @@ class ParallelFDANode(ParallelExtensionNode, mdp.nodes.FDANode):
         if self.get_current_train_phase() == 1:
             forked_node = self.copy()
             # reset the variables that might contain data from this train phase
-            self._S_W = None
-            self._allcov = mdp.utils.CovarianceMatrix(dtype=self.dtype)
+            forked_node._S_W = None
+            forked_node._allcov = mdp.utils.CovarianceMatrix(dtype=self.dtype)
         else:
             forked_node = self._default_fork()
         return forked_node

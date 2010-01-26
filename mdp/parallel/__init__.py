@@ -17,18 +17,24 @@ have to know anything about flows or nodes.
 """
 
 
-from scheduling import (ResultContainer, ListResultContainer,
-                        OrderedResultContainer, TaskCallable, SqrTestCallable,
-                        SleepSqrTestCallable, TaskCallableWrapper, Scheduler)
+from scheduling import (
+    ResultContainer, ListResultContainer, OrderedResultContainer, TaskCallable,
+    SqrTestCallable, SleepSqrTestCallable, TaskCallableWrapper, Scheduler
+)
 from process_schedule import ProcessScheduler
-import parallelnodes
-from parallelnodes import (ParallelExtensionNode,
-                           TrainingPhaseNotParallelException)
-from parallelflows import (FlowTaskCallable, FlowTrainCallable,
-                           FlowExecuteCallable, NodeResultContainer,
-                           ParallelFlowException, NoTaskException,
-                           ParallelFlow, ParallelCheckpointFlow)
-import parallelhinet
+from parallelnodes import (
+    ParallelExtensionNode, JoinParallelNodeException,
+    TrainingPhaseNotParallelException,
+    ParallelPCANode, ParallelSFANode, ParallelFDANode, ParallelHistogramNode
+)
+from parallelflows import (
+    FlowTaskCallable, FlowTrainCallable, FlowExecuteCallable,
+    NodeResultContainer, ParallelFlowException, NoTaskException,
+    ParallelFlow, ParallelCheckpointFlow
+)
+from parallelhinet import (
+    ParallelFlowNode, ParallelLayer, ParallelCloneLayer
+)
 
 try:
     import pp
@@ -38,15 +44,21 @@ except ImportError:
 
 del scheduling
 del process_schedule
+del parallelnodes
 del parallelflows
+del parallelhinet
 
 # Note: the modules with the actual extension node classes are still available 
 
-__all__ = ["ResultContainer", "ListResultContainer", "OrderedResultContainer",
-           "TaskCallable", "SqrTestCallable", "SleepSqrTestCallable",
-           "TaskCallableWrapper", "Scheduler",
-           "ProcessScheduler",
-           "ParallelExtensionNode", "TrainingPhaseNotParallelException",
-           "FlowTrainCallable", "NodeResultContainer", "FlowExecuteCallable",
-           "ParallelFlowException", "NoTaskException",
-           "ParallelFlow", "ParallelCheckpointFlow"]
+__all__ = [
+    "ResultContainer", "ListResultContainer",
+    "OrderedResultContainer", "TaskCallable", "SqrTestCallable",
+    "SleepSqrTestCallable", "TaskCallableWrapper", "Scheduler",
+    "ProcessScheduler", "ParallelExtensionNode", "JoinParallelNodeException",
+    "TrainingPhaseNotParallelException",
+    "ParallelSFANode", "ParallelSFANode", "ParallelFDANode",
+    "ParallelHistogramNode",
+    "FlowTaskCallable", "FlowTrainCallable", "FlowExecuteCallable",
+    "NodeResultContainer", "ParallelFlowException", "NoTaskException",
+    "ParallelFlow", "ParallelCheckpointFlow",
+    "ParallelFlowNode", "ParallelLayer", "ParallelCloneLayer"]

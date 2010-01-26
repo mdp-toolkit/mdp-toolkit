@@ -3,7 +3,6 @@ import unittest
 
 import mdp
 import mdp.parallel as parallel
-import mdp.parallel.parallelnodes as pnodes
 from mdp import utils, numx, numx_rand
 from testing_tools import assert_array_almost_equal, assert_almost_equal
 
@@ -20,7 +19,7 @@ class TestParallelMDPNodes(unittest.TestCase):
         x *= numx.arange(1,11)
         x_test *= numx.arange(1,11)
         pca_node = mdp.nodes.PCANode()
-        parallel_pca_node = pnodes.ParallelPCANode()
+        parallel_pca_node = parallel.ParallelPCANode()
         chunksize = 25
         chunks = [x[i*chunksize : (i+1)*chunksize] 
                     for i in range(len(x)/chunksize)]
@@ -47,7 +46,7 @@ class TestParallelMDPNodes(unittest.TestCase):
         x *= numx.arange(1,11)
         x_test *= numx.arange(1,11)
         sfa_node = mdp.nodes.SFANode()
-        parallel_sfa_node = pnodes.ParallelSFANode()
+        parallel_sfa_node = parallel.ParallelSFANode()
         chunksize = 25
         chunks = [x[i*chunksize : (i+1)*chunksize] 
                     for i in range(len(x)/chunksize)]
@@ -84,7 +83,7 @@ class TestParallelMDPNodes(unittest.TestCase):
         # labels
         cl1 = numx.ones((x1.shape[0],), dtype='d')
         cl2 = 2.*numx.ones((x2.shape[0],), dtype='d')
-        flow = parallel.ParallelFlow([pnodes.ParallelFDANode()])
+        flow = parallel.ParallelFlow([parallel.ParallelFDANode()])
         flow.train([[(x1, cl1), (x2, cl2)]], scheduler=parallel.Scheduler())
         fda_node = flow[0]
         self.assertTrue(fda_node.tlens[1] == npoints)
@@ -106,7 +105,7 @@ class TestParallelMDPNodes(unittest.TestCase):
         
     def test_ParallelHistogramNode_nofraction(self):
         """Test HistogramNode with fraction set to 1.0."""
-        node = pnodes.ParallelHistogramNode()
+        node = parallel.ParallelHistogramNode()
         x1 = numx.array([[0.1, 0.2], [0.3, 0.5]])
         x2 = numx.array([[0.3, 0.6], [0.2, 0.1]])
         x = numx.concatenate([x1, x2])
@@ -120,7 +119,7 @@ class TestParallelMDPNodes(unittest.TestCase):
         
     def test_ParallelHistogramNode_fraction(self):
         """Test HistogramNode with fraction set to 0.5."""
-        node = pnodes.ParallelHistogramNode(hist_fraction=0.5)
+        node = parallel.ParallelHistogramNode(hist_fraction=0.5)
         x1 = numx.random.random((1000, 3))
         x2 = numx.random.random((500, 3))
         chunks = [x1, x2]
@@ -170,7 +169,6 @@ class TestDerivedParallelMDPNodes(unittest.TestCase):
         # set different variances (avoid numerical errors)
         x *= numx.arange(1,11)
         x_test *= numx.arange(1,11)
-        sfa2_node = mdp.nodes.SFA2Node()
         node = mdp.nodes.SFA2Node()
         chunksize = 25
         chunks = [x[i*chunksize : (i+1)*chunksize] 
