@@ -1,9 +1,7 @@
 
 from miscnodes import IdentityBiNode, JumpBiNode, SenderBiNode
-from updownnodes import UpDownBiNode, TopUpDownBiNode
 
 del miscnodes
-del updownnodes
 
 
 ## automatically create BiNode versions of all Nodes in mdp.nodes ##
