@@ -12,12 +12,11 @@ import os
 import new
 import cPickle as pickle
 import fnmatch
-import traceback
 import copy
+import traceback
 
 import numpy as n
 
-import mdp
 import mdp.hinet as hinet
 
 from ..binode import BiNode
@@ -88,6 +87,7 @@ span.inactive_section {
 
 div.error {
     color: #FF0000;
+    text-align: left;
 }
 
 div.error h3 {
@@ -182,8 +182,7 @@ class HTMLTraceInspector(hinet.HiNetTranslator):
             if debug:
                 # insert the error slide and encapsulate the exception
                 traceback.print_exc()
-                self._write_error_frame(traceback.format_exc().
-                                            replace('\n', '<br>'))
+                self._write_error_frame()
                 result = (self._slide_filenames, self._slide_node_ids,
                           None, None)
                 raise BiNetTraceDebugException(result=result,
@@ -200,8 +199,7 @@ class HTMLTraceInspector(hinet.HiNetTranslator):
             if debug:
                 # insert the error slide and encapsulate the exception
                 traceback.print_exc()
-                self._write_error_frame(traceback.format_exc().
-                                            replace('\n', '<br>'))
+                self._write_error_frame()
                 result = (train_filenames, train_node_ids,
                           self._slide_filenames, self._slide_node_ids)
                 raise BiNetTraceDebugException(result=result,
@@ -247,8 +245,7 @@ class HTMLTraceInspector(hinet.HiNetTranslator):
             if debug:
                 # insert the error slide and encapsulate the exception
                 traceback.print_exc()
-                self._write_error_frame(traceback.format_exc().
-                                            replace('\n', '<br>'))
+                self._write_error_frame()
                 if not self._section_ids:
                     self._section_ids = None
                 result = (self._slide_filenames, self._slide_node_ids,
@@ -256,7 +253,6 @@ class HTMLTraceInspector(hinet.HiNetTranslator):
                 raise BiNetTraceDebugException(result=result,
                                                exception=exception) 
             else:
-                traceback.print_exc()
                 raise
         self._undecorate_mode = True
         self._translate_flow(flow)
@@ -327,11 +323,26 @@ class HTMLTraceInspector(hinet.HiNetTranslator):
         html_file.write('</body>\n</html>')
         html_file.close()
         
-    def _write_error_frame(self, exception):
+    def _write_error_frame(self):
         html_file = self._begin_HTML_frame()
         html_file.write('<div class="error">')
         html_file.write('<h3>Encountered Exception</h3>')
-        html_file.write(str(exception))
+        traceback_html = traceback.format_exc().replace('\n', '<br>')
+#        # get HTML traceback
+#        import StringIO as stringio
+#        import cgitb
+#        import mdp
+#        exception_type, exception, tb = sys.exc_info()
+#        # Problem: only the text of the original exception is stored in
+#        #     mdp.FlowExceptionCR, and the text is not even correctpy displayed.
+##        if exception_type is mdp.FlowExceptionCR:
+##            exception.args = tuple()
+##            exception.message = None
+#        buffer = stringio.StringIO()
+#        handler = cgitb.Hook(file=buffer)
+#        handler.handle((exception_type, exception, tb))
+#        traceback_html = buffer.getvalue()
+        html_file.write(traceback_html)
         html_file.write('</div>')
         self._end_HTML_frame(html_file)
         

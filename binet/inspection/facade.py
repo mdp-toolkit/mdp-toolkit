@@ -6,7 +6,6 @@ import os
 import webbrowser
 import cPickle as pickle
 import tempfile
-import traceback
 
 import mdp
 from mdp import hinet
@@ -164,13 +163,16 @@ def show_training(flow, data_iterables, msg_iterables=None, stop_messages=None,
             flow.train(data_iterables, msg_iterables, stop_messages, **kwargs)
         else:
             flow.train(data_iterables, **kwargs)
-    except:
+    except Exception:
         if debug:
-            traceback.print_exc()
             print ("exception during training, " +
                    "inspecting up to failure point...")
             # create the last snapshot manually
-            flow._bi_reset()
+            try:
+                # if a normal mdp.Flow instance was given then this fails
+                flow._bi_reset()
+            except Exception:
+                pass
             filename = (flow._snapshot_name_ + "_%d" % flow._snapshot_counter_ 
                         + PICKLE_EXT)
             robust_pickle(flow._snapshot_path_, filename, flow)

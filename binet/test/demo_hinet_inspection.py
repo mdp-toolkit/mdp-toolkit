@@ -10,7 +10,7 @@ import numpy
 import mdp
 import binet
 
-# create the flow
+## Create the flow.
 noisenode = mdp.nodes.NormalNoiseNode(input_dim=20*20, 
                                       noise_args=(0, 0.0001))
 sfa_node = mdp.nodes.SFANode(input_dim=20*20, output_dim=10, dtype='f')
@@ -28,8 +28,10 @@ flow = mdp.Flow([switchboard, sfa_layer])
 train_data = [numpy.cast['f'](numpy.random.random((10, 100*100)))
               for _ in range(5)]
 
-# do the inspection, open in browser
-binet.show_training(flow=flow, data_iterables=[None, train_data])
-filename, out = binet.show_execution(flow, x=train_data[0])
+## Do the inspections and open in browser.
+# The debug=True is not needed here, unless one starts experimenting.
+binet.show_training(flow=flow, data_iterables=[None, train_data], debug=True)
+filename, out = binet.show_execution(flow, x=train_data[0], debug=True)
+
 print "done."
 
