@@ -4,37 +4,142 @@ import unittest
 import mdp
 n = mdp.numx
 
-import binet
+from binet import (
+    BiNode, IdentityBiNode, JumpBiNode, NODE_ID_KEY, SFABiNode, FDABiNode
+)
 
 
 class TestBiNode(unittest.TestCase):
+    
+    def test_msg_parsing1(self):
+        """Test the message parsing and recombination."""
+        class TestBiNode(BiNode):
+            def _execute(self, x, a, b, d):
+                self.a = a
+                self.b = b
+                self.d = d
+                return x, {"g": 15, "z": 3}
+            def is_trainable(self): return False
+        binode = TestBiNode(node_id="test")
+        b_key = "test" + NODE_ID_KEY + "b"
+        d_key = "test" + NODE_ID_KEY + "d"
+        msg = {"c": 12, b_key: 42, "a": 13, d_key: "bla"}
+        _, msg = binode.execute(None, msg)
+        self.assert_("a" in msg)
+        self.assert_(b_key not in msg)
+        self.assert_(d_key not in msg)
+        self.assert_(binode.a == 13)
+        self.assert_(binode.b == 42)
+        self.assert_(binode.d == "bla")
+        # test the message combination
+        self.assert_(msg["g"] == 15)
+        self.assert_(msg["z"] == 3)
+        
+    def test_msg_parsing2(self):
+        """Test that an adressed argument is not found."""
+        class TestBiNode(BiNode):
+            def _execute(self, x, a, b):
+                self.a = a
+                self.b = b
+            def is_trainable(self): return False
+        binode = TestBiNode(node_id="test")
+        b_key = "test" + NODE_ID_KEY + "b"
+        d_key = "test" + NODE_ID_KEY + "d"
+        msg = {"c": 12, b_key: 42, "a": 13, d_key: "bla"}
+        binode.execute(None, msg)
+        # TODO: could change this behavior to raise an exception if an
+        #    adressed argument is not found.
+        # self.assertRaises(Exception, lambda: binode.execute(None, msg))
+        
+    def test_msg_magic(self):
+        """Test that the magic msg argument works."""
+        class TestBiNode(BiNode):
+            def _execute(self, x, a, msg, b):
+                self.a = a
+                self.b = b
+                del msg["c"]
+                msg["f"] = 1
+                return x, msg
+            def is_trainable(self): return False
+        binode = TestBiNode(node_id="test")
+        b_key = "test" + NODE_ID_KEY + "b"
+        msg = {"c": 12, b_key: 42, "a": 13}
+        _, msg = binode.execute(None, msg)
+        self.assert_("a" in msg)
+        self.assert_("c" not in msg)  # was deleted in _execute  
+        self.assert_(msg["f"] == 1)
+        self.assert_(b_key not in msg)
+        self.assert_(binode.a == 13)
+        self.assert_(binode.b == 42)
+        
+    def test_method_magic(self):
+        """Test the magic method message key."""
+        class TestBiNode(BiNode):
+            def _test(self, x, a, b):
+                self.a = a
+                self.b = b
+            def is_trainable(self): return False
+        binode = TestBiNode(node_id="test")
+        b_key = "test" + NODE_ID_KEY + "b"
+        msg = {"c": 12, "a": 13, b_key: 42, "method": "test"}
+        binode.execute(None, msg)
+        self.assert_("a" in msg)
+        self.assert_(b_key not in msg)
+        self.assert_(binode.b == 42)
+        
+    def test_target_magic(self):
+        """Test the magic target message key."""
+        class TestBiNode(BiNode):
+            def _execute(self, x, a, b):
+                self.a = a
+                self.b = b
+            def is_trainable(self): return False
+        binode = TestBiNode(node_id="test")
+        b_key = "test" + NODE_ID_KEY + "b"
+        target_key = "test" + NODE_ID_KEY + "target"
+        msg = {"c": 12, b_key: 42, "a": 13, target_key: "test2"}
+        result = binode.execute(None, msg)
+        self.assert_(len(result) == 3)
+        self.assert_(result[2] == "test2")
+        
+    def test_inverse_magic1(self):
+        """Test the magic inverse method argument."""
+        class TestBiNode(BiNode):
+            def _inverse(self, x, a, b):
+                self.a = a
+                self.b = b
+                y = n.zeros((len(x), self.input_dim))
+                return y
+            def is_trainable(self): return False
+        binode = TestBiNode(node_id="test", input_dim=20, output_dim=10)
+        b_key = "test" + NODE_ID_KEY + "b"
+        msg = {"c": 12, "a": 13, b_key: 42, "method": "inverse"}
+        x = n.zeros((5, binode.output_dim))
+        result = binode.execute(x, msg)
+        self.assert_(len(result) == 3)
+        self.assert_(result[2] == -1)
+        self.assert_(result[0].shape == (5, 20))
 
-    def test_idnode(self):
-        """Perform a basic test on the IdentityBiNode.
-        
-        Instantiation is tested and it should perform like an id node, but 
-        accept msg arguments.
-        """
-        binode = binet.IdentityBiNode(node_id="testing binode")
-        x = n.random.random((10,5))
-        msg = {"some array": n.random.random((10,3))}
-        # see if msg causes no problem
-        y, msg = binode.execute(x, msg)
-        self.assertTrue(n.all(x==y))
-        # see if missing msg causes problem
-        y = binode.execute(x)
-        self.assertTrue(n.all(x==y))
-        
-        
-class TestStopTrainBiNode(unittest.TestCase):
-
-    def test_node(self):
-        """Test a derived node of StopTrainJumpBiNode."""
-        # define class for testing
-        class BiSFANode(binet.BiNode, mdp.nodes.SFANode):
-            pass
+    def test_inverse_magic2(self):
+        """Test overriding the magic inverse target."""
+        class TestBiNode(BiNode):
+            def _inverse(self, x, a, b):
+                self.a = a
+                self.b = b
+                y = n.zeros((len(x), self.input_dim))
+                return y, None, "test2"
+            def is_trainable(self): return False
+        binode = TestBiNode(node_id="test", input_dim=20, output_dim=10)
+        b_key = "test" + NODE_ID_KEY + "b"
+        msg = {"c": 12, "a": 13, b_key: 42, "method": "inverse"}
+        x = n.zeros((5, binode.output_dim))
+        result = binode.execute(x, msg)
+        self.assert_(result[2] == "test2")
+    
+    def test_stoptrain_result1(self):
+        """Test that stop_result is handled correctly."""
         stop_result = ({"test": 0}, 1)
-        bi_sfa_node = BiSFANode(stop_result=stop_result,
+        bi_sfa_node = SFABiNode(stop_result=stop_result,
                                 node_id="testing binode")
         self.assertTrue(bi_sfa_node.is_trainable())
         x = n.random.random((100,10))
@@ -46,7 +151,40 @@ class TestStopTrainBiNode(unittest.TestCase):
         self.assertTrue(bi_sfa_node.input_dim == 10)
         self.assertTrue(bi_sfa_node.output_dim == 10)
         self.assertTrue(bi_sfa_node.dtype == "float64")
+
+    def test_stoptrain_result2(self):
+        """Test that stop_result is handled correctly for multiple phases."""
+        stop_result = [({"test": 0}, 1), ({"test2": 0}, 2)]
+        binode = FDABiNode(stop_result=stop_result,
+                           node_id="testing binode")
+        x = n.random.random((100,10))
+        msg = {"cl": n.zeros(len(x))}
+        binode.train(x, msg)
+        result = binode.stop_training()
+        self.assertTrue(result == stop_result[0])
+        binode.train(x, msg)
+        result = binode.stop_training()
+        self.assertTrue(result == stop_result[1])
+
+    
+class TestIdentityBiNode(unittest.TestCase):
+    
+    def test_idnode(self):
+        """Perform a basic test on the IdentityBiNode.
         
+        Instantiation is tested and it should perform like an id node, but 
+        accept msg arguments.
+        """
+        binode = IdentityBiNode(node_id="testing binode")
+        x = n.random.random((10,5))
+        msg = {"some array": n.random.random((10,3))}
+        # see if msg causes no problem
+        y, msg = binode.execute(x, msg)
+        self.assertTrue(n.all(x==y))
+        # see if missing msg causes problem
+        y = binode.execute(x)
+        self.assertTrue(n.all(x==y))
+
         
 class TestJumpBiNode(unittest.TestCase):
 
@@ -55,9 +193,9 @@ class TestJumpBiNode(unittest.TestCase):
         train_results = [(0, "t1"), None, (3, "t3")]
         stop_train_results = [None, (5, "st2"), (6, "st3")]
         execute_results = [(0, "et1"), None, (3, "et3", 4, "et4")]
-        jumpnode = binet.JumpBiNode(train_results=train_results, 
-                                    stop_train_results=stop_train_results, 
-                                    execute_results=execute_results)
+        jumpnode = JumpBiNode(train_results=train_results, 
+                              stop_train_results=stop_train_results, 
+                              execute_results=execute_results)
         x = n.random.random((10,5))
         self.assertTrue(jumpnode.is_trainable())
         # training
@@ -88,7 +226,7 @@ class TestJumpBiNode(unittest.TestCase):
         execute_results = [(tmsg, "test", tmsg, "test"), None, 
                            (tmsg, "e3", tmsg, "e4")]
         stop_message_results = [(tmsg, "test"), None]
-        jumpnode = binet.JumpBiNode(
+        jumpnode = JumpBiNode(
                         execute_results=execute_results, 
                         stop_message_results=stop_message_results)
         x = n.random.random((10,5))
@@ -100,62 +238,12 @@ class TestJumpBiNode(unittest.TestCase):
         self.assertTrue(result is None)
         jumpnode.bi_reset()
 
-#class _DummyUDNode(binet.UpDownBiNode):
-#    def __init__(self, **kwargs):
-#        super(_DummyUDNode, self).__init__(**kwargs)
-#        self._up, self._down = 0, 0
-#        self._trained = False
-#    def _up_pass(self, msg=None):
-#        #print 'up', self._node_id
-#        self._up += 1
-#    def _down_pass(self, y, top=False, msg=None):
-#        #print '\ndown', self._node_id
-#        self._down += 1
-#        self._down_y = y
-#        self._is_top = top
-#        return y
-#    def _train(self, x):
-#        #print 'train'
-#        self._trained = True
-
-#class TestUpDownNode(unittest.TestCase):
-#
-#    def test_updown(self):
-#        NUPDOWN = 3
-#        flow = binet.BiFlow([_DummyUDNode(node_id='bottom'),
-#                             _DummyUDNode(node_id='top'),
-#                             binet.TopUpDownBiNode(bottom_id='bottom',
-#                                                   top_id='top')])
-#        x = mdp.numx_rand.random((10,2))
-#        flow.train([x, x, [x]*NUPDOWN])
-#        y = flow(x)
-#        
-#        assert n.all(x==y)        
-#        for i in range(len(flow)-1):
-#            # check that the nodes are trained
-#            assert not flow[i].is_training()
-#            assert not flow[i].is_bi_training()
-#            assert flow[i]._trained
-#            # check the number of up-down phases
-#            assert flow[i]._up == NUPDOWN
-#            assert flow[i]._down == NUPDOWN
-#            # check that the input-output is not saved at the end of
-#            # the global training
-#            assert not hasattr(flow[i], '_save_x')
-#            assert not hasattr(flow[i], '_save_y')
-#            # check that during the down phase one receives the
-#            # output of the network
-#            assert n.all(flow[i]._down_y==y)
-#        # check that the 'top' message arrives at destination
-#        assert not flow[0]._is_top
-#        assert flow[-2]._is_top
 
 def get_suite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(TestBiNode))
-    suite.addTest(unittest.makeSuite(TestStopTrainBiNode))
+    suite.addTest(unittest.makeSuite(TestIdentityBiNode))
     suite.addTest(unittest.makeSuite(TestJumpBiNode))
-    #suite.addTest(unittest.makeSuite(TestUpDownNode))
     return suite
             
 if __name__ == '__main__':

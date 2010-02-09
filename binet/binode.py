@@ -4,18 +4,17 @@ Special BiNode class derived from Node to allow complicated flow patterns.
 Messages:
 =========
 
-The message argument 'msg' is either a dict or None (which is treated equivalent 
-to an empty dict and is the default value). The message is automatically 
-parsed against the method signature in the following way:
+The message argument 'msg' of the outer method 'execute' or 'train' is either a
+dict or None (which is treated equivalently to an empty dict and is the default
+value). The message is automatically parsed against the method signature of
+_train or _execute (or any other specified method) in the following way:
 
-    normal key string -- Is copied if in signature and passed as kwarg.
+    normal key string -- Is copied if in signature and passed as a named
+        argument.
     
     node_id=>key -- Is extracted (i.e. removed in original message) and passed 
-        as a kwarg.
-        
-    If a node has a kwarg named msg then the whole remaining message is
-    passed after parsing. It is then completely replaced by the result
-    message (so one has to forward everything that should be kept).
+        as a named argument. The separator '=>' is also stored available
+        as the constant NODE_ID_KEY. 
         
 The msg returned from the inner part of the method (e.g. _execute) is then used
 to update the original message (so values can be overwritten).
@@ -45,8 +44,8 @@ BiNode Return Value Options:
         dropped (terminates the propagation).
     
 
-Magic keyword arguments:
-========================
+Magic message keys:
+===================
 
 When the incoming message is parsed by the BiNode base class, some argument
 keywords are treated in a special way:
@@ -55,7 +54,7 @@ keywords are treated in a special way:
      remaining message (after parsing the other keywords) is supplied. The
      message in the return value then completely replaces the original message
      (instead of only updating it). This way a node can completely control the
-     message.
+     message and for example remove keys.
      
  'target' -- If any template method like execute finds a 'target' keyword in
      the message then this is used as the target value in the return value.
@@ -253,7 +252,7 @@ class BiNode(mdp.Node):
         # use stored stop message and update it with the result
         if self._stop_result:
             if self.has_multiple_training_phases():
-                stored_stop_result = self._stop_result[self._train_phase]
+                stored_stop_result = self._stop_result[self._train_phase - 1]
             else:
                 stored_stop_result = self._stop_result
             if msg:

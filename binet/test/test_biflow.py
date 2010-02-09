@@ -23,8 +23,6 @@ class TestMessageResultContainer(unittest.TestCase):
         pass
 
 
-# TODO: test global messages
-
 class TestBiFlow(unittest.TestCase):
 
     def test_normal_flow(self):
@@ -57,36 +55,41 @@ class TestBiFlow(unittest.TestCase):
         x = n.random.random([100,10])
         flow.execute(x)
         
-    # TODO: update this test after the branching removal
 #    def test_bi_training(self):
 #        """Test calling bi_message during training and stop_bi_train."""
 #        tracelog = []
 #        verbose = False
 #        node1 = TraceJumpBiNode(
+#                    output_dim=1,
 #                    tracelog=tracelog,
 #                    node_id="node_1",
-#                    train_results=[(None, "node_3")],
-#                    stop_train_results=[(None, "node_3")],
+#                    train_results=[None],
+#                    stop_train_results=[None],
 #                    verbose=verbose)
 #        node2 = TraceJumpBiNode(
+#                    output_dim=1,
 #                    tracelog=tracelog,
 #                    node_id="node_2",
-#                    train_results=[(None, "node_1")],
+#                    
+#                    # Problem: can't do much since there is no counter support
+#                    #    during training yet, always results in infinite loop
+#                    
+#                    train_results=[None],
 #                    stop_train_results=[(None, "node_1")],
-#                    stop_message_results=[(None, "node_1")],
+#                    #stop_message_results=[(None, "node_1")],
 #                    verbose=verbose)
 #        node3 = TraceJumpBiNode(
+#                    output_dim=1,
 #                    tracelog=tracelog,
 #                    node_id="node_3",
-#                    train_results=[(None, "node_2")],
-#                    stop_train_results=[(None, "node_2")],
+#                    #stop_train_results=[(None, "node_2")],
 #                    verbose=verbose)
 #        biflow = binet.BiFlow([node1, node2, node3])
 #        data_iterables = [[n.random.random((1,1)) for _ in range(2)], 
 #                          [n.random.random((1,1)) for _ in range(2)], 
 #                          [n.random.random((1,1)) for _ in range(2)]]
-#        biflow.train(data_iterables)
-#        #binet.show_training(biflow, data_iterables)
+#        # biflow.train(data_iterables)
+#        binet.show_training(biflow, data_iterables, debug=True)
 #        # tracelog reference
 #        reference = [
 #            ('node_1', 'bi_reset'), 
@@ -186,7 +189,7 @@ class TestBiFlow(unittest.TestCase):
 #            ('node_2', 'bi_reset'), 
 #            ('node_3', 'bi_reset')]
 #        self.assertEqual(tracelog, reference)
-    
+#    
 #    def test_mixed_execution(self):
 #        """Test calling execution of a mixed flow."""
 #        tracelog = []
@@ -214,7 +217,7 @@ class TestBiFlow(unittest.TestCase):
 #            ('node_1', 'bi_reset'), 
 #            ('node_3', 'bi_reset')]
 #        self.assertEqual(tracelog, reference)
-        
+#        
 
 def get_suite():
     suite = unittest.TestSuite()
