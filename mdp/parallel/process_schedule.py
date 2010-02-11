@@ -5,7 +5,8 @@ Process based scheduler for distribution across multiple CPU cores.
 # TODO: use a queue instead of sleep?
 #    http://docs.python.org/library/queue.html
 
-# TODO: use shared memory for data numpy arrays
+# TODO: use shared memory for data numpy arrays, but this also requires the
+#    use of multiprocessing since the ctype objects can't be pickled
 
 # TODO: only return result when get_results is called,
 #    this sends a special request to the processes to send their data,
@@ -35,6 +36,8 @@ if __name__ == "__main__":
 
 import mdp
 import scheduling
+
+SLEEP_TIME = 0.1  # time spend sleeping when waiting for a free process
 
 
 class ProcessScheduler(scheduling.Scheduler):
@@ -71,8 +74,9 @@ class ProcessScheduler(scheduling.Scheduler):
             generally be less efficient since the task_callable has to be
             pickled each time.
         """
-        scheduling.Scheduler.__init__(self, result_container=result_container,
-                                      verbose=verbose)
+        super(ProcessScheduler, self).__init__(
+                                        result_container=result_container,
+                                        verbose=verbose)
         self._n_processes = n_processes
         self._cache_callable = cache_callable
         if python_executable is None:
@@ -127,7 +131,7 @@ class ProcessScheduler(scheduling.Scheduler):
             if not len(self._free_processes):
                 # release lock for other threads and wait
                 self._lock.release()
-                time.sleep(1.5)
+                time.sleep(SLEEP_TIME)
                 self._lock.acquire()
             else:
                 try:

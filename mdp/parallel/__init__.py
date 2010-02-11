@@ -22,6 +22,7 @@ from scheduling import (
     SqrTestCallable, SleepSqrTestCallable, TaskCallableWrapper, Scheduler
 )
 from process_schedule import ProcessScheduler
+from thread_schedule import ThreadScheduler
 from parallelnodes import (
     ParallelExtensionNode, JoinParallelNodeException,
     TrainingPhaseNotParallelException,
@@ -44,6 +45,7 @@ except ImportError:
 
 del scheduling
 del process_schedule
+del thread_schedule
 del parallelnodes
 del parallelflows
 del parallelhinet
@@ -54,7 +56,8 @@ __all__ = [
     "ResultContainer", "ListResultContainer",
     "OrderedResultContainer", "TaskCallable", "SqrTestCallable",
     "SleepSqrTestCallable", "TaskCallableWrapper", "Scheduler",
-    "ProcessScheduler", "ParallelExtensionNode", "JoinParallelNodeException",
+    "ProcessScheduler", "ThreadScheduler",
+    "ParallelExtensionNode", "JoinParallelNodeException",
     "TrainingPhaseNotParallelException",
     "ParallelSFANode", "ParallelSFANode", "ParallelFDANode",
     "ParallelHistogramNode",

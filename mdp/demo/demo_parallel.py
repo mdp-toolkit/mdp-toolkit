@@ -22,25 +22,37 @@ import numpy as np
 import mdp
 import time
 
-n_processes = 4
+n_processes = 2
 
-n_chunks = 30
-n_chunk_samples = 10000
+n_chunks = 10
+n_chunk_samples = 5000
 n_dim = 30
 
-## parallel training
+## threads
 
-print "starting parallel training..."
+print "starting thread parallel training..."
 flow = mdp.parallel.ParallelFlow([mdp.nodes.SFA2Node()])
 x_iter = [np.random.random((n_chunk_samples, n_dim)) for _ in range(n_chunks)]
-scheduler = mdp.parallel.ProcessScheduler(n_processes=n_processes,
-                                          verbose=True)
+scheduler = mdp.parallel.ThreadScheduler(n_threads=n_processes, verbose=True)
 
 start_time = time.time()
 flow.train([x_iter], scheduler)
 parallel_time = time.time() - start_time
 scheduler.shutdown()
-print "parallel in %.3f secs" % parallel_time
+print "thread parallel in %.3f secs" % parallel_time
+
+## processes
+
+print "starting process parallel training..."
+flow = mdp.parallel.ParallelFlow([mdp.nodes.SFA2Node()])
+x_iter = [np.random.random((n_chunk_samples, n_dim)) for _ in range(n_chunks)]
+scheduler = mdp.parallel.ProcessScheduler(n_processes=n_processes, verbose=True)
+
+start_time = time.time()
+flow.train([x_iter], scheduler)
+parallel_time = time.time() - start_time
+scheduler.shutdown()
+print "process parallel in %.3f secs" % parallel_time
 
 ## sequential training
 
