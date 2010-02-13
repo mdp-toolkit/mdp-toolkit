@@ -178,6 +178,8 @@ class HTMLTraceInspector(hinet.HiNetTranslator):
         biflownode = BiFlowNode(BiFlow(flow.flow))
         try:
             biflownode.train(x=x, msg=msg, **kwargs)
+            # reset is important for the following stop_training
+            biflownode.bi_reset()
         except Exception, exception:
             if debug:
                 # insert the error slide and encapsulate the exception

@@ -5,8 +5,10 @@ import mdp
 n = mdp.numx
 
 from binet import (
-    BiNode, IdentityBiNode, JumpBiNode, NODE_ID_KEY, SFABiNode, FDABiNode
+    BiNode, IdentityBiNode, NODE_ID_KEY, SFABiNode, FDABiNode
 )
+
+from testnodes import JumpBiNode
 
 
 class TestBiNode(unittest.TestCase):
@@ -190,35 +192,33 @@ class TestJumpBiNode(unittest.TestCase):
 
     def test_node(self):
         """Test the JumpBiNode."""
-        train_results = [(0, "t1"), None, (3, "t3")]
+        train_results = [[(0, "t1")], [None], [(3, "t3")]]
         stop_train_results = [None, (5, "st2"), (6, "st3")]
-        execute_results = [(0, "et1"), None, (3, "et3", 4, "et4")]
+        execute_results = [(None, {}), None, (None, {}, "et4")]
         jumpnode = JumpBiNode(train_results=train_results, 
                               stop_train_results=stop_train_results, 
                               execute_results=execute_results)
-        x = n.random.random((10,5))
+        x = n.random.random((2,2))
         self.assertTrue(jumpnode.is_trainable())
         # training
         rec_train_results = []
         rec_stop_train_results = []
         for _ in range(len(train_results)):
-            rec_train_results.append(jumpnode.train(x))
+            rec_train_results.append([jumpnode.train(x)])
+            jumpnode.bi_reset()
             rec_stop_train_results.append(jumpnode.stop_training())
+            jumpnode.bi_reset()
         self.assertTrue(not jumpnode.is_training())
         self.assertTrue(rec_train_results == train_results)
         self.assertTrue(rec_stop_train_results == rec_stop_train_results)
         # execution
         rec_execute_results = []
-        for _ in range(5):  # note that this is more then the execute_targets
-            result = jumpnode.execute(x)
-            if type(result) == tuple:
-                # skip y value
-                result = result[1:]
-            elif type(result) == n.ndarray:
-                result = None
-            rec_execute_results.append(result) 
-        self.assertTrue((rec_execute_results == execute_results + [None, None]))
-        self.assertTrue(jumpnode.loop_counter == 5)
+        for _ in range(4):  # note that this is more then the execute_targets
+            rec_execute_results.append(jumpnode.execute(x))
+        execute_results[1] = x
+        execute_results.append(x)
+        self.assertTrue((rec_execute_results == execute_results))
+        self.assertTrue(jumpnode.loop_counter == 4)
         
     def test_node_bi(self):
         """Test the message and stop_message of JumpBiNode."""

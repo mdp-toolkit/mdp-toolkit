@@ -23,17 +23,20 @@ New BiNet concepts: Jumps and Messages
 Jump targets are numbers (relative position in the flow) or strings, which are
 then compared to the optional node_id. The target number 0 refers to the node
 itself.
+During execution a node can also use the value of EXIT_TARGET (which is
+currently just 'exit') as target value to end the execution. The BiFlow
+will then return the last output as result.  
 
 Messages are standard Python dictionaries to transport information
 that would not fit well into the standard x array. The dict keys also support
 target specifications and other magic for more convenient usage.
-
+This is described in more detail in the BiNode module.
 """
 
 ### T O D O ###
 
-# TODO: add target BiNode unittest
-# TODO: add unittests for message parsing, especially magic method key
+# TODO: rename binet to bimdp, use the standard subpackage name for nodes,
+#    hinet and parallel, but maybe keep inspection in base bimdp
 
 # TODO: use a special wrapper for classifier nodes
 #    can already access methods like prop via the method magic,
@@ -47,9 +50,6 @@ target specifications and other magic for more convenient usage.
 # TODO: provide ParallelBiNode to copy the stop_result attribute?
 #    Or can we guarantee that stop_training is always called on the original
 #    version? If we relly on this then it should be specified in the API. 
-
-# TODO: nodes should be in binet.nodes?
-#    Use subpackages or import everything into binet?
 
 # ------------- optional ----------------
 
@@ -67,16 +67,7 @@ target specifications and other magic for more convenient usage.
 # TODO: show more information in trace slides via mouse hover,
 #    or enable some kind of folding (might be possible via CSS like suckerfish)
 
-# TODO: use special class for binet results instead of tuples???
-# PB: YES! this would get tid of all the if len(results)==5: ...
-#    maybe using __slots__?
-#    named tuple (2.6) is supposed to be very efficient, I think it uses
-#    __slots__
-# NW: The situation has imo been mostly settled by the latest simplifications
-#    (removing branches). The results are now so simple that I don't think
-#    a special result class would be worth it.
-
-# TODO: make comments conform to RST format
+# TODO: make comments conform to RST format for use with sphinx
 
 
 from binode import BiNodeException, BiNode, NODE_ID_KEY

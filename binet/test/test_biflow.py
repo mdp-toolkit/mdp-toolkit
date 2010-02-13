@@ -1,27 +1,60 @@
 
 import unittest
-import numpy as n
+import numpy as np
 
 import mdp
 
 import binet
 
-from tracernode import TraceJumpBiNode, IdNode
+from testnodes import TraceJumpBiNode, IdNode
 
 
 class TestMessageResultContainer(unittest.TestCase):
     """Test the behavior of the BetaResultContainer."""
     
-    # TODO: implement
-    
-    def test_array_dict(self):
+    def test_mixed_dict(self):
         """Test msg being a dict containing an array."""
-        pass
-    
-    def test_list_dict(self):
-        """Test msg being a dict containing a list."""
-        pass
-
+        rescont = binet.MessageResultContainer()
+        msg1 = {
+            "f": 2,
+            "a": np.zeros((10,3), 'int'),
+            "b": "aaa",
+            "c": 1,
+        }
+        msg2 = {
+            "a": np.ones((15,3), 'int'),
+            "b": "bbb",
+            "c": 3,
+            "d": 1,
+        }
+        rescont.add_message(msg1)
+        rescont.add_message(msg2)
+        combined_msg = rescont.get_message()
+        a = np.zeros((25,3), 'int')
+        a[10:] = 1
+        reference_msg = {"a": a, "c": 4, "b": "aaabbb", "d": 1, "f": 2}
+        self.assertTrue(np.all(reference_msg["a"] == reference_msg["a"]))
+        combined_msg.pop("a")
+        reference_msg.pop("a")
+        self.assertTrue(combined_msg == reference_msg)
+        
+    def test_none_msg(self):
+        """Test with one message being None."""
+        rescont = binet.MessageResultContainer()
+        msgs = [None, {"a": 1}, None, {"a": 2, "b": 1}, None]
+        for msg in msgs:
+            rescont.add_message(msg)
+        msg = rescont.get_message()
+        self.assertTrue(msg == {"a": 3, "b": 1})
+        
+    def test_incompatible_arrays(self):
+        """Test with incompatible arrays."""
+        rescont = binet.MessageResultContainer()
+        msgs = [{"a":  np.zeros((10,3))}, {"a":  np.zeros((10,4))}]
+        for msg in msgs:
+            rescont.add_message(msg)
+        self.assertRaises(ValueError, lambda: rescont.get_message())
+        
 
 class TestBiFlow(unittest.TestCase):
 
@@ -30,11 +63,11 @@ class TestBiFlow(unittest.TestCase):
         flow = binet.BiFlow([mdp.nodes.SFANode(output_dim=5),
                              mdp.nodes.PolynomialExpansionNode(degree=3),
                              mdp.nodes.SFANode(output_dim=20)])
-        data_iterables = [[n.random.random((20,10)) for _ in range(6)], 
+        data_iterables = [[np.random.random((20,10)) for _ in range(6)], 
                           None, 
-                          [n.random.random((20,10)) for _ in range(6)]]
+                          [np.random.random((20,10)) for _ in range(6)]]
         flow.train(data_iterables)
-        x = n.random.random([100,10])
+        x = np.random.random([100,10])
         flow.execute(x)
         
     def test_normal_multiphase(self):
@@ -48,180 +81,175 @@ class TestBiFlow(unittest.TestCase):
         flow = binet.BiFlow([flownode,
                              mdp.nodes.PolynomialExpansionNode(degree=2),
                              mdp.nodes.SFANode(output_dim=5)])
-        data_iterables = [[n.random.random((30,10)) for _ in range(6)], 
+        data_iterables = [[np.random.random((30,10)) for _ in range(6)], 
                           None, 
-                          [n.random.random((30,10)) for _ in range(6)]]
+                          [np.random.random((30,10)) for _ in range(6)]]
         flow.train(data_iterables)
-        x = n.random.random([100,10])
+        x = np.random.random([100,10])
         flow.execute(x)
         
-#    def test_bi_training(self):
-#        """Test calling bi_message during training and stop_bi_train."""
-#        tracelog = []
-#        verbose = False
-#        node1 = TraceJumpBiNode(
-#                    output_dim=1,
-#                    tracelog=tracelog,
-#                    node_id="node_1",
-#                    train_results=[None],
-#                    stop_train_results=[None],
-#                    verbose=verbose)
-#        node2 = TraceJumpBiNode(
-#                    output_dim=1,
-#                    tracelog=tracelog,
-#                    node_id="node_2",
-#                    
-#                    # Problem: can't do much since there is no counter support
-#                    #    during training yet, always results in infinite loop
-#                    
-#                    train_results=[None],
-#                    stop_train_results=[(None, "node_1")],
-#                    #stop_message_results=[(None, "node_1")],
-#                    verbose=verbose)
-#        node3 = TraceJumpBiNode(
-#                    output_dim=1,
-#                    tracelog=tracelog,
-#                    node_id="node_3",
-#                    #stop_train_results=[(None, "node_2")],
-#                    verbose=verbose)
-#        biflow = binet.BiFlow([node1, node2, node3])
-#        data_iterables = [[n.random.random((1,1)) for _ in range(2)], 
-#                          [n.random.random((1,1)) for _ in range(2)], 
-#                          [n.random.random((1,1)) for _ in range(2)]]
-#        # biflow.train(data_iterables)
-#        binet.show_training(biflow, data_iterables, debug=True)
-#        # tracelog reference
-#        reference = [
-#            ('node_1', 'bi_reset'), 
-#            ('node_2', 'bi_reset'), 
-#            ('node_3', 'bi_reset'),
-#            # training of node 1
-#            ('node_1', 'train'), 
-#            ('node_3', 'message'), 
-#            ('node_1', 'bi_reset'), 
-#            ('node_2', 'bi_reset'), 
-#            ('node_3', 'bi_reset'), 
-#            ('node_1', 'train'), 
-#            ('node_3', 'message'), 
-#            ('node_1', 'bi_reset'), 
-#            ('node_2', 'bi_reset'), 
-#            ('node_3', 'bi_reset'), 
-#            ('node_1', 'stop_training'), 
-#            ('node_3', 'stop_message'), 
-#            ('node_1', 'bi_reset'), 
-#            ('node_2', 'bi_reset'), 
-#            ('node_3', 'bi_reset'),
-#            # training of node 2
-#            ('node_1', 'execute'), 
-#            ('node_2', 'train'), 
-#            ('node_1', 'message'), 
-#            ('node_1', 'bi_reset'), 
-#            ('node_2', 'bi_reset'), 
-#            ('node_3', 'bi_reset'), 
-#            ('node_1', 'execute'), 
-#            ('node_2', 'train'), 
-#            ('node_1', 'message'), 
-#            ('node_1', 'bi_reset'), 
-#            ('node_2', 'bi_reset'), 
-#            ('node_3', 'bi_reset'), 
-#            ('node_2', 'stop_training'), 
-#            ('node_1', 'stop_message'), 
-#            ('node_1', 'bi_reset'), 
-#            ('node_2', 'bi_reset'), 
-#            ('node_3', 'bi_reset'),
-#            # training of node 3
-#            ('node_1', 'execute'), 
-#            ('node_2', 'execute'), 
-#            ('node_3', 'train'), 
-#            ('node_2', 'message'), 
-#            ('node_1', 'bi_reset'), 
-#            ('node_2', 'bi_reset'), 
-#            ('node_3', 'bi_reset'), 
-#            ('node_1', 'execute'), 
-#            ('node_2', 'execute'), 
-#            ('node_3', 'train'), 
-#            ('node_2', 'message'), 
-#            ('node_1', 'bi_reset'), 
-#            ('node_2', 'bi_reset'), 
-#            ('node_3', 'bi_reset'), 
-#            ('node_3', 'stop_training'), 
-#            ('node_2', 'stop_message'), 
-#            ('node_1', 'stop_message'), 
-#            ('node_1', 'bi_reset'), 
-#            ('node_2', 'bi_reset'), 
-#            ('node_3', 'bi_reset') ]
-#        self.assertEqual(tracelog, reference)
-        
-#    def test_bi_execution(self):
-#        """Test calling bi_message during execution."""
-#        tracelog = []
-#        verbose = False
-#        node1 = TraceJumpBiNode(
-#                    tracelog=tracelog,
-#                    node_id="node_1",
-#                    execute_results=[(None, 1, None, "node_3")],
-#                    verbose=verbose)
-#        node2 = TraceJumpBiNode(
-#                    tracelog=tracelog,
-#                    node_id="node_2",
-#                    execute_results=[None, (None, -1, None, "node_3")],
-#                    verbose=verbose)
-#        node3 = TraceJumpBiNode(
-#                    tracelog=tracelog,
-#                    node_id="node_3",
-#                    verbose=verbose)
-#        biflow = binet.BiFlow([node1, node2, node3])
-#        biflow.execute(n.random.random((1,1)))
-#        # tracelog reference
-#        reference = [
-#            ('node_1', 'bi_reset'), 
-#            ('node_2', 'bi_reset'), 
-#            ('node_3', 'bi_reset'),
-#            ('node_1', 'execute'),
-#            ('node_3', 'message'),
-#            ('node_2', 'message'),
-#            ('node_2', 'execute'),
-#            ('node_3', 'message'),
-#            ('node_1', 'execute'),
-#            ('node_2', 'execute'),
-#            ('node_3', 'execute'),
-#            ('node_1', 'bi_reset'), 
-#            ('node_2', 'bi_reset'), 
-#            ('node_3', 'bi_reset')]
-#        self.assertEqual(tracelog, reference)
-#    
-#    def test_mixed_execution(self):
-#        """Test calling execution of a mixed flow."""
-#        tracelog = []
-#        verbose = False
-#        node1 = TraceJumpBiNode(
-#                    tracelog=tracelog,
-#                    node_id="node_1",
-#                    execute_results=[(None, 1, None, "node_3")],
-#                    verbose=verbose)
-#        node2 = IdNode()
-#        node3 = TraceJumpBiNode(
-#                    tracelog=tracelog,
-#                    node_id="node_3",
-#                    verbose=verbose)
-#        biflow = binet.BiFlow([node1, node2, node3])
-#        biflow.execute(n.random.random((1,1)))
-#        # tracelog reference
-#        reference = [
-#            ('node_1', 'bi_reset'), 
-#            ('node_3', 'bi_reset'),
-#            ('node_1', 'execute'),
-#            ('node_3', 'message'),
-#            ('node_1', 'message'),
-#            ('node_3', 'execute'),
-#            ('node_1', 'bi_reset'), 
-#            ('node_3', 'bi_reset')]
-#        self.assertEqual(tracelog, reference)
-#        
+    def test_training_targets(self):
+        """Test targeting during training and stop_training."""
+        tracelog = []
+        verbose = False
+        node1 = TraceJumpBiNode(
+                    output_dim=1,
+                    tracelog=tracelog,
+                    node_id="node_1",
+                    train_results=[[None]],
+                    stop_train_results=[[None]],
+                    execute_results=[None, (None, None, "node_3")],
+                    verbose=verbose)
+        node2 = TraceJumpBiNode(
+                    output_dim=1,
+                    tracelog=tracelog,
+                    node_id="node_2",
+                    train_results=[[None]],
+                    stop_train_results=[(None, "node_1")],
+                    execute_results=[None, (None, None, "node_1")],
+                    stop_message_results=[(None, "node_1")],
+                    verbose=verbose)
+        node3 = TraceJumpBiNode(
+                    output_dim=1,
+                    tracelog=tracelog,
+                    node_id="node_3",
+                    train_results=[[(None, {"a": 1}, "node_2"), None]],
+                    stop_train_results=[({"a": 1}, "node_2")],
+                    verbose=verbose)
+        biflow = binet.BiFlow([node1, node2, node3])
+        data_iterables = [[np.random.random((1,1)) for _ in range(2)], 
+                          [np.random.random((1,1)) for _ in range(2)], 
+                          [np.random.random((1,1)) for _ in range(2)]]
+        biflow.train(data_iterables)
+        # binet.show_training(biflow, data_iterables, debug=True)
+        # tracelog reference
+        reference = [
+            ('node_1', 'bi_reset'),
+            ('node_2', 'bi_reset'),
+            ('node_3', 'bi_reset'),
+            ('node_1', 'train'),
+            ('node_1', 'bi_reset'),
+            ('node_2', 'bi_reset'),
+            ('node_3', 'bi_reset'),
+            ('node_1', 'train'),
+            ('node_1', 'bi_reset'),
+            ('node_2', 'bi_reset'),
+            ('node_3', 'bi_reset'),
+            ('node_1', 'stop_training'),
+            ('node_1', 'bi_reset'),
+            ('node_2', 'bi_reset'),
+            ('node_3', 'bi_reset'),
+            ('node_1', 'execute'),
+            ('node_2', 'train'),
+            ('node_1', 'bi_reset'),
+            ('node_2', 'bi_reset'),
+            ('node_3', 'bi_reset'),
+            ('node_1', 'execute'),
+            ('node_2', 'train'),
+            ('node_1', 'bi_reset'),
+            ('node_2', 'bi_reset'),
+            ('node_3', 'bi_reset'),
+            ('node_2', 'stop_training'),
+            ('node_1', 'stop_message'),
+            ('node_1', 'bi_reset'),
+            ('node_2', 'bi_reset'),
+            ('node_3', 'bi_reset'),
+            ('node_1', 'execute'),
+            ('node_2', 'execute'), 
+            ('node_3', 'train'),
+            ('node_2', 'execute'),
+            ('node_1', 'execute'),
+            ('node_3', 'train'),
+            ('node_1', 'bi_reset'),
+            ('node_2', 'bi_reset'),
+            ('node_3', 'bi_reset'),
+            ('node_1', 'execute'),
+            ('node_2', 'execute'),
+            ('node_3', 'train'),
+            ('node_2', 'execute'),
+            ('node_1', 'execute'),
+            ('node_3', 'train'),
+            ('node_1', 'bi_reset'),
+            ('node_2', 'bi_reset'),
+            ('node_3', 'bi_reset'),
+            ('node_3', 'stop_training'),
+            ('node_2', 'stop_message'),
+            ('node_1', 'stop_message'),
+            ('node_1', 'bi_reset'),
+            ('node_2', 'bi_reset'),
+            ('node_3', 'bi_reset')
+        ]
+        self.assertEqual(tracelog, reference)
+
+    def test_execute_jump(self):
+        """Test jumping around during execution."""
+        tracelog = []
+        verbose = False
+        node1 = TraceJumpBiNode(
+                    tracelog=tracelog,
+                    node_id="node_1",
+                    execute_results=[(None, None, "node_3"),
+                                     (None, None, "node_2")],
+                    verbose=verbose)
+        node2 = TraceJumpBiNode(
+                    tracelog=tracelog,
+                    node_id="node_2",
+                    execute_results=[(None, None, "node_1")],
+                    verbose=verbose)
+        node3 = TraceJumpBiNode(
+                    tracelog=tracelog,
+                    node_id="node_3",
+                    execute_results=[(None, None, "node_1")],
+                    verbose=verbose)
+        biflow = binet.BiFlow([node1, node2, node3])
+        biflow.execute(None, {"a": 1})
+        # binet.show_execution(biflow, x=None, msg={"a": 1}, debug=True)
+        # tracelog reference
+        reference = [
+            ('node_1', 'bi_reset'),
+            ('node_2', 'bi_reset'),
+            ('node_3', 'bi_reset'),
+            ('node_1', 'execute'),
+            ('node_3', 'execute'),
+            ('node_1', 'execute'),
+            ('node_2', 'execute'),
+            ('node_1', 'execute'),
+            ('node_2', 'execute'),
+            ('node_3', 'execute'),
+            ('node_1', 'bi_reset'),
+            ('node_2', 'bi_reset'),
+            ('node_3', 'bi_reset'),
+        ]
+        self.assertEqual(tracelog, reference)
+
+    def test_msg_normal_node(self):
+        """Test that the msg is passed over a normal node."""
+        node = IdNode()
+        biflow = binet.BiFlow([node])
+        msg = {"a": 1}
+        result = biflow.execute(np.random.random((1,1)), msg)
+        self.assertTrue(msg == result[1])
+
+    def test_exit_target(self):
+        """Test that the magic exit target works."""
+        tracelog = []
+        node1 = TraceJumpBiNode(
+                    tracelog=tracelog,
+                    execute_results=[(None, None, binet.EXIT_TARGET)],
+                    verbose=False)
+        node2 = IdNode()
+        biflow = binet.BiFlow([node1, node2])
+        biflow.execute(None, {"a": 1})
+        # binet.show_execution(biflow, x=None, msg={"a": 1}, debug=True)
+        reference = [
+           (None, 'bi_reset'), (None, 'execute'), (None, 'bi_reset')
+        ]
+        self.assertEqual(tracelog, reference)
+    
 
 def get_suite():
     suite = unittest.TestSuite()
-    # suite.addTest(unittest.makeSuite(TestBetaResultContainer))
+    suite.addTest(unittest.makeSuite(TestMessageResultContainer))
     suite.addTest(unittest.makeSuite(TestBiFlow))
     return suite
             
