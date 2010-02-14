@@ -60,12 +60,11 @@ class ProcessScheduler(scheduling.Scheduler):
             (default value is False).
         n_processes -- Number of processes used in parallel. This should
             correspond to the number of processors / cores.
-        source_paths -- List of paths to the source code of the project using 
-            the scheduler. These paths will be appended to sys.path in the
-            processes to make the task unpickling work. 
-            A single path instead of a list is also accepted.
-            Set to None if no sources are needed for unpickling the task (this 
-            is the default value).
+        source_paths -- List of paths that are added to sys.path in
+            the processes to make the task unpickling work. A single path
+            instead of a list is also accepted.
+            If None (default value) then source_paths is set to sys.path.
+            To prevent this you can specify an empty list.
         python_executable -- Python executable that is used for the processes.
             The default value is None, in which case sys.executable will be
             used.
@@ -90,10 +89,11 @@ class ProcessScheduler(scheduling.Scheduler):
         #    copy_reg.
         process_args = [python_executable, "-u", module_file]
         process_args.append(str(self._cache_callable))
-        if type(source_paths) is str:
+        if isinstance(source_paths, str):
             source_paths = [source_paths]
-        if source_paths is not None:
-            process_args += source_paths
+        if source_paths is None:
+            source_paths = sys.path
+        process_args += source_paths
         # list of processes not in use, start the processes now
         self._free_processes = [subprocess.Popen(args=process_args,
                                                  stdout=subprocess.PIPE, 
