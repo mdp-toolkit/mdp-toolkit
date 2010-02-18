@@ -230,11 +230,11 @@ class ContribTestSuite(NodesTestSuite):
         tval = t[:ny]
         for yv in yval:
             idx = numx.nonzero(y==yv)[0]
-            assert res[idx,1]-res[idx[0],1]<1e-2,\
+            assert numx.all(res[idx,1]-res[idx[0],1]<1e-2),\
                    'Projection should be aligned as original space'
         for tv in tval:
             idx = numx.nonzero(t==tv)[0]
-            assert res[idx,0]-res[idx[0],0]<1e-2,\
+            assert numx.all(res[idx,0]-res[idx[0],0]<1e-2),\
                    'Projection should be aligned as original space'
 
     def testLLENode_outputdim_float_bug(self):
@@ -278,11 +278,11 @@ class ContribTestSuite(NodesTestSuite):
         tval = t[:ny]
         for yv in yval:
             idx = numx.nonzero(y==yv)[0]
-            assert res[idx,1]-res[idx[0],1]<1e-2,\
+            assert numx.all(res[idx,1]-res[idx[0],1]<1e-2),\
                    'Projection should be aligned as original space'
         for tv in tval:
             idx = numx.nonzero(t==tv)[0]
-            assert res[idx,0]-res[idx[0],0]<1e-2,\
+            assert numx.all(res[idx,0]-res[idx[0],0]<1e-2),\
                    'Projection should be aligned as original space'
 
     def testXSFANode(self):
