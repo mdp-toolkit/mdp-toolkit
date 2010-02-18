@@ -21,7 +21,7 @@ import mdp.hinet as hinet
 
 from ..binode import BiNode
 from ..biflow import BiFlow
-from ..bihinet import BiFlowNode, CloneBiLayer
+from ..hinet import BiFlowNode, CloneBiLayer
 
 from bihinet_translator import BiNetHTMLTranslator
 from utils import robust_pickle

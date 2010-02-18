@@ -8,8 +8,8 @@ HiNetHTML class.
 import mdp
 
 from ..binode import BiNode
-from ..binodes import SenderBiNode
-from ..bihinet import CloneBiLayer
+from ..nodes import SenderBiNode
+from ..hinet import CloneBiLayer
 
 # TODO: use <pre>   </pre> for whitespaces?
 

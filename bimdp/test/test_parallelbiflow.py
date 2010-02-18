@@ -4,16 +4,17 @@ import numpy as n
 
 import mdp
 
-import binet
+from bimdp import BiFlow
+from bimdp.parallel import ParallelBiFlow, ParallelBiFlowNode
 
 
 class TestParallelBiFlow(unittest.TestCase):
     
     def test_nonparallel_flow(self):
         """Test a ParallelBiFlow with normal non-parallel nodes."""
-        flow = binet.ParallelBiFlow([mdp.nodes.SFANode(output_dim=5),
-                             mdp.nodes.PolynomialExpansionNode(degree=3),
-                             mdp.nodes.SFANode(output_dim=20)])
+        flow = ParallelBiFlow([mdp.nodes.SFANode(output_dim=5),
+                               mdp.nodes.PolynomialExpansionNode(degree=3),
+                               mdp.nodes.SFANode(output_dim=20)])
         data_iterables = [[n.random.random((20,10)) for _ in range(6)], 
                           None, 
                           [n.random.random((20,10)) for _ in range(6)]]
@@ -32,11 +33,10 @@ class TestParallelBiFlow(unittest.TestCase):
         """
         sfa_node = mdp.nodes.SFANode(input_dim=10, output_dim=8)
         sfa2_node = mdp.nodes.SFA2Node(input_dim=8, output_dim=6)
-        flownode = binet.ParallelBiFlowNode(binet.BiFlow([sfa_node, 
-                                                          sfa2_node]))
-        flow = binet.ParallelBiFlow([flownode,
-                         mdp.nodes.PolynomialExpansionNode(degree=2),
-                         mdp.nodes.SFANode(output_dim=5)])
+        flownode = ParallelBiFlowNode(BiFlow([sfa_node, sfa2_node]))
+        flow = ParallelBiFlow([flownode,
+                               mdp.nodes.PolynomialExpansionNode(degree=2),
+                               mdp.nodes.SFANode(output_dim=5)])
         data_iterables = [[n.random.random((30,10)) for _ in range(6)], 
                           None, 
                           [n.random.random((30,10)) for _ in range(6)]]
@@ -56,7 +56,7 @@ class TestParallelBiFlow(unittest.TestCase):
         """
         sfa_node = mdp.nodes.SFANode(input_dim=10, output_dim=8)
         sfa2_node = mdp.nodes.SFA2Node(input_dim=8, output_dim=6)
-        flow = binet.ParallelBiFlow([sfa_node, sfa2_node])
+        flow = ParallelBiFlow([sfa_node, sfa2_node])
         data_iterables = [[n.random.random((30,10)) for _ in range(6)], 
                           [n.random.random((30,10)) for _ in range(7)]]
         scheduler = mdp.parallel.ProcessScheduler(n_processes=2)

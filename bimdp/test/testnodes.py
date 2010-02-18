@@ -3,10 +3,10 @@ Classes for tracing BiNode behavior in flows.
 """
 
 import mdp
-import binet
+from bimdp.nodes import IdentityBiNode
 
 
-class JumpBiNode(binet.IdentityBiNode):
+class JumpBiNode(IdentityBiNode):
     """BiNode which can perform all kinds of jumps.
     
     This is useful for testing or flow control. It can also be used 

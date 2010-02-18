@@ -6,7 +6,7 @@ import mdp
 
 from ..binode import BiNode, BiNodeException
 from ..biflow import BiFlow
-from ..bihinet import BiFlowNode, CloneBiLayer
+from ..hinet import BiFlowNode, CloneBiLayer
 
 from parallelbinode import ParallelExtensionBiNode
 

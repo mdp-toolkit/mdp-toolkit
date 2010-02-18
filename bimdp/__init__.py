@@ -1,20 +1,20 @@
 """
-The BiNet package is an extension of the pure feed-forward flow concept in MDP.
+The BiMDP package is an extension of the pure feed-forward flow concept in MDP.
 
 It defines a framework for far more general flow sequences, involving 
 top-down processes (e.g. for error backpropagation) or even loops.
 So the 'bi' in BiNet primarily stands for 'bidirectional'.
 
-BiNet is implemented by extending both the Node and the Flow concept. Both the
+BiMDP is implemented by extending both the Node and the Flow concept. Both the
 new BiNode and BiFlow classes are downward compatible with the classical
 Nodes and Flows, allowing them to be combined with BiNet elements. 
 
-The fundamental addition in BiNet is that BiNodes can specify a target node for
+The fundamental addition in BiMDP is that BiNodes can specify a target node for
 their output and that they can send messages to other nodes. A BiFlow is then
 needed to interpret these arguments, e.g. to continue the flow execution at the
 specified target node.
 
-BiNet is fully integrated with the HiNet and the Parallel packages.
+BiMDP is fully supports and extends the HiNet and the Parallel packages.
 
 
 New BiNet concepts: Jumps and Messages
@@ -34,9 +34,6 @@ This is described in more detail in the BiNode module.
 """
 
 ### T O D O ###
-
-# TODO: rename binet to bimdp, use the standard subpackage name for nodes,
-#    hinet and parallel, but maybe keep inspection in base bimdp
 
 # TODO: use a special wrapper for classifier nodes
 #    can already access methods like prop via the method magic,
@@ -67,21 +64,18 @@ This is described in more detail in the BiNode module.
 # TODO: show more information in trace slides via mouse hover,
 #    or enable some kind of folding (might be possible via CSS like suckerfish)
 
-# TODO: make comments conform to RST format for use with sphinx
-
 
 from binode import BiNodeException, BiNode, NODE_ID_KEY
 from biflow import (MessageResultContainer, BiFlowException, BiFlow,
                     BiCheckpointFlow, EXIT_TARGET)
-from binodes import *
-from bihinet import *
+# the inspection stuff is considered a core functionality
 from inspection import *
-from parallel import *
+
+import nodes
+import hinet
+import parallel
 import test
 
 del binode
-del binodes
 del biflow
-del bihinet
 del inspection
-del parallel

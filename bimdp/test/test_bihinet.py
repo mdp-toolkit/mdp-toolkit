@@ -4,8 +4,9 @@ import numpy as n
 
 import mdp
 
-import binet
-from binet import SFABiNode
+from bimdp import BiFlow
+from bimdp.hinet import BiFlowNode, CloneBiLayer, BiSwitchboard
+from bimdp.nodes import SFABiNode
 
 
 class TestBiFlowNode(unittest.TestCase):
@@ -15,7 +16,7 @@ class TestBiFlowNode(unittest.TestCase):
         """Test a TestBiFlowNode with two normal nodes."""
         sfa_node = mdp.nodes.SFANode(input_dim=10, output_dim=8)
         sfa2_node = mdp.nodes.SFA2Node(input_dim=8, output_dim=6)
-        flownode = binet.BiFlowNode(binet.BiFlow([sfa_node, sfa2_node]))
+        flownode = BiFlowNode(BiFlow([sfa_node, sfa2_node]))
         for _ in range(2):
             for _ in range(6):
                 flownode.train(n.random.random((30,10)))
@@ -27,7 +28,7 @@ class TestBiFlowNode(unittest.TestCase):
         """Test a TestBiFlowNode with two normal nodes using a normal Flow."""
         sfa_node = mdp.nodes.SFANode(input_dim=10, output_dim=8)
         sfa2_node = mdp.nodes.SFA2Node(input_dim=8, output_dim=6)
-        flownode = binet.BiFlowNode(binet.BiFlow([sfa_node, sfa2_node]))
+        flownode = BiFlowNode(BiFlow([sfa_node, sfa2_node]))
         flow = mdp.Flow([flownode])
         data_iterables = [[n.random.random((30,10)) for _ in range(6)]]
         flow.train(data_iterables)
@@ -38,12 +39,12 @@ class TestBiFlowNode(unittest.TestCase):
         """Test a TestBiFlowNode with two normal pretrained nodes."""
         sfa_node = mdp.nodes.SFANode(input_dim=10, output_dim=8)
         sfa2_node = mdp.nodes.SFA2Node(input_dim=8, output_dim=6)
-        flownode = binet.BiFlowNode(binet.BiFlow([sfa_node, sfa2_node]))
+        flownode = BiFlowNode(BiFlow([sfa_node, sfa2_node]))
         flow = mdp.Flow([flownode])
         data_iterables = [[n.random.random((30,10)) for _ in range(6)]]
         flow.train(data_iterables)
         pretrained_flow = flow[0]._flow
-        biflownode = binet.BiFlowNode(pretrained_flow)
+        biflownode = BiFlowNode(pretrained_flow)
         x = n.random.random([100,10])
         biflownode.execute(x)
         
@@ -56,10 +57,10 @@ class TestCloneBiLayer(unittest.TestCase):
         stop_result = ({"clonelayer=>use_copies": True}, 1)
         stop_sfa_node = SFABiNode(stop_result=stop_result,
                                   input_dim=10, output_dim=3)
-        clonelayer = binet.CloneBiLayer(node=stop_sfa_node, 
-                                        n_nodes=3, 
-                                        use_copies=False, 
-                                        node_id="clonelayer")
+        clonelayer = CloneBiLayer(node=stop_sfa_node, 
+                                  n_nodes=3, 
+                                  use_copies=False, 
+                                  node_id="clonelayer")
         x = n.random.random((100,30))
         clonelayer.train(x)
         clonelayer.stop_training()
@@ -70,11 +71,11 @@ class TestCloneBiLayer(unittest.TestCase):
         stop_result = ({"clonelayer=>use_copies": True}, "clonelayer")
         stop_sfa_node = SFABiNode(stop_result=stop_result,
                                   input_dim=10, output_dim=3)
-        biflownode = binet.BiFlowNode(binet.BiFlow([stop_sfa_node]))
-        clonelayer = binet.CloneBiLayer(node=biflownode, 
-                                        n_nodes=3, 
-                                        use_copies=False, 
-                                        node_id="clonelayer")
+        biflownode = BiFlowNode(BiFlow([stop_sfa_node]))
+        clonelayer = CloneBiLayer(node=biflownode, 
+                                  n_nodes=3, 
+                                  use_copies=False, 
+                                  node_id="clonelayer")
         x = n.random.random((100,30))
         clonelayer.train(x)
         clonelayer.stop_training()
@@ -86,7 +87,7 @@ class TestBiSwitchboardNode(unittest.TestCase):
     
     def test_execute_routing(self):
         """Test the standard routing for messages."""
-        sboard = binet.BiSwitchboard(input_dim=3, connections=[2,0,1])
+        sboard = BiSwitchboard(input_dim=3, connections=[2,0,1])
         x = n.array([[1,2,3],[4,5,6]])
         msg = {"string": "blabla",
                "list": [1,2],
@@ -100,7 +101,7 @@ class TestBiSwitchboardNode(unittest.TestCase):
     
     def test_inverse_message_routing(self):
         """Test the inverse routing for messages."""
-        sboard = binet.BiSwitchboard(input_dim=3, connections=[2,0,1])
+        sboard = BiSwitchboard(input_dim=3, connections=[2,0,1])
         x = n.array([[1,2,3],[4,5,6]])
         msg = {"string": "blabla",
                "method": "inverse",

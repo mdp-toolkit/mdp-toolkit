@@ -4,8 +4,7 @@ import numpy as np
 
 import mdp
 
-import binet
-
+from bimdp import MessageResultContainer, BiFlow, EXIT_TARGET
 from testnodes import TraceJumpBiNode, IdNode
 
 
@@ -14,7 +13,7 @@ class TestMessageResultContainer(unittest.TestCase):
     
     def test_mixed_dict(self):
         """Test msg being a dict containing an array."""
-        rescont = binet.MessageResultContainer()
+        rescont = MessageResultContainer()
         msg1 = {
             "f": 2,
             "a": np.zeros((10,3), 'int'),
@@ -40,7 +39,7 @@ class TestMessageResultContainer(unittest.TestCase):
         
     def test_none_msg(self):
         """Test with one message being None."""
-        rescont = binet.MessageResultContainer()
+        rescont = MessageResultContainer()
         msgs = [None, {"a": 1}, None, {"a": 2, "b": 1}, None]
         for msg in msgs:
             rescont.add_message(msg)
@@ -49,7 +48,7 @@ class TestMessageResultContainer(unittest.TestCase):
         
     def test_incompatible_arrays(self):
         """Test with incompatible arrays."""
-        rescont = binet.MessageResultContainer()
+        rescont = MessageResultContainer()
         msgs = [{"a":  np.zeros((10,3))}, {"a":  np.zeros((10,4))}]
         for msg in msgs:
             rescont.add_message(msg)
@@ -60,9 +59,9 @@ class TestBiFlow(unittest.TestCase):
 
     def test_normal_flow(self):
         """Test a BiFlow with normal nodes."""
-        flow = binet.BiFlow([mdp.nodes.SFANode(output_dim=5),
-                             mdp.nodes.PolynomialExpansionNode(degree=3),
-                             mdp.nodes.SFANode(output_dim=20)])
+        flow = BiFlow([mdp.nodes.SFANode(output_dim=5),
+                       mdp.nodes.PolynomialExpansionNode(degree=3),
+                       mdp.nodes.SFANode(output_dim=20)])
         data_iterables = [[np.random.random((20,10)) for _ in range(6)], 
                           None, 
                           [np.random.random((20,10)) for _ in range(6)]]
@@ -78,9 +77,9 @@ class TestBiFlow(unittest.TestCase):
         sfa_node = mdp.nodes.SFANode(input_dim=10, output_dim=8)
         sfa2_node = mdp.nodes.SFA2Node(input_dim=8, output_dim=6)
         flownode = mdp.hinet.FlowNode(mdp.Flow([sfa_node, sfa2_node]))
-        flow = binet.BiFlow([flownode,
-                             mdp.nodes.PolynomialExpansionNode(degree=2),
-                             mdp.nodes.SFANode(output_dim=5)])
+        flow = BiFlow([flownode,
+                       mdp.nodes.PolynomialExpansionNode(degree=2),
+                       mdp.nodes.SFANode(output_dim=5)])
         data_iterables = [[np.random.random((30,10)) for _ in range(6)], 
                           None, 
                           [np.random.random((30,10)) for _ in range(6)]]
@@ -116,7 +115,7 @@ class TestBiFlow(unittest.TestCase):
                     train_results=[[(None, {"a": 1}, "node_2"), None]],
                     stop_train_results=[({"a": 1}, "node_2")],
                     verbose=verbose)
-        biflow = binet.BiFlow([node1, node2, node3])
+        biflow = BiFlow([node1, node2, node3])
         data_iterables = [[np.random.random((1,1)) for _ in range(2)], 
                           [np.random.random((1,1)) for _ in range(2)], 
                           [np.random.random((1,1)) for _ in range(2)]]
@@ -201,7 +200,7 @@ class TestBiFlow(unittest.TestCase):
                     node_id="node_3",
                     execute_results=[(None, None, "node_1")],
                     verbose=verbose)
-        biflow = binet.BiFlow([node1, node2, node3])
+        biflow = BiFlow([node1, node2, node3])
         biflow.execute(None, {"a": 1})
         # binet.show_execution(biflow, x=None, msg={"a": 1}, debug=True)
         # tracelog reference
@@ -225,7 +224,7 @@ class TestBiFlow(unittest.TestCase):
     def test_msg_normal_node(self):
         """Test that the msg is passed over a normal node."""
         node = IdNode()
-        biflow = binet.BiFlow([node])
+        biflow = BiFlow([node])
         msg = {"a": 1}
         result = biflow.execute(np.random.random((1,1)), msg)
         self.assertTrue(msg == result[1])
@@ -235,10 +234,10 @@ class TestBiFlow(unittest.TestCase):
         tracelog = []
         node1 = TraceJumpBiNode(
                     tracelog=tracelog,
-                    execute_results=[(None, None, binet.EXIT_TARGET)],
+                    execute_results=[(None, None, EXIT_TARGET)],
                     verbose=False)
         node2 = IdNode()
-        biflow = binet.BiFlow([node1, node2])
+        biflow = BiFlow([node1, node2])
         biflow.execute(None, {"a": 1})
         # binet.show_execution(biflow, x=None, msg={"a": 1}, debug=True)
         reference = [

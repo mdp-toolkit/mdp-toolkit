@@ -1,5 +1,5 @@
 """
-Flow handling classes for a BiNet.
+BiMDP Flow class for flexible (bidirectional) data flow.
 
 The central class is a BiFlow, which implements all the flow handling options
 offered by the BiNode class (see binode.py for a description).

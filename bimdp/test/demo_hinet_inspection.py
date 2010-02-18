@@ -8,7 +8,7 @@ should not be included in the unittests.
 import numpy
 
 import mdp
-import binet
+import bimdp
 
 ## Create the flow.
 noisenode = mdp.nodes.NormalNoiseNode(input_dim=20*20, 
@@ -30,8 +30,8 @@ train_data = [numpy.cast['f'](numpy.random.random((10, 100*100)))
 
 ## Do the inspections and open in browser.
 # The debug=True is not needed here, unless one starts experimenting.
-binet.show_training(flow=flow, data_iterables=[None, train_data], debug=True)
-filename, out = binet.show_execution(flow, x=train_data[0], debug=True)
+bimdp.show_training(flow=flow, data_iterables=[None, train_data], debug=True)
+filename, out = bimdp.show_execution(flow, x=train_data[0], debug=True)
 
 print "done."
 

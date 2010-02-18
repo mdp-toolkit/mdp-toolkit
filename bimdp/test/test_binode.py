@@ -4,10 +4,8 @@ import unittest
 import mdp
 n = mdp.numx
 
-from binet import (
-    BiNode, IdentityBiNode, NODE_ID_KEY, SFABiNode, FDABiNode
-)
-
+from bimdp import BiNode, NODE_ID_KEY
+from bimdp.nodes import IdentityBiNode, SFABiNode, FDABiNode
 from testnodes import JumpBiNode
 
 
