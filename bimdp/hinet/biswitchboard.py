@@ -7,7 +7,7 @@ from ..binode import BiNode
 
         
 class BiSwitchboard(BiNode, hinet.Switchboard):
-    """BiNet version of the normal Switchboard.
+    """BiMDP version of the normal Switchboard.
     
     In addition to the feed-forward routing it also allows top-down routing.
     This is the default behavior for message.

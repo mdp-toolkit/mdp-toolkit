@@ -1,8 +1,8 @@
 """
 Module to trace and document the training and execution of a BiFlow.
 
-The BiNetTraceInspector class is used to decorate a flow for inspection, the
-snapshots are created with the TraceBiNetHTMLTranslator class.
+The BiMDPTraceInspector class is used to decorate a flow for inspection, the
+snapshots are created with the TraceBiMDPHTMLTranslator class.
 
 This module also supports (Bi)HiNet structures. Monkey patching is used to
 inject the tracing code into the Flow.
@@ -23,7 +23,7 @@ from ..binode import BiNode
 from ..biflow import BiFlow
 from ..hinet import BiFlowNode, CloneBiLayer
 
-from bihinet_translator import BiNetHTMLTranslator
+from bihinet_translator import BiHTMLTranslator
 from utils import robust_pickle
 
 # TODO: wrap inner methods (e.g. _train) to document effective arguments?
@@ -101,7 +101,7 @@ html {
 """
 
 
-class BiNetTraceDebugException(Exception):
+class TraceDebugException(Exception):
     """Exception for return the information when debug is True."""
     
     def __init__(self, result, exception):
@@ -132,7 +132,7 @@ class HTMLTraceInspector(hinet.HiNetTranslator):
     def __init__(self, trace_translator, css_filename=SLIDE_CSS_FILENAME):
         """Prepare for tracing and create the HTML translator.
         
-        trace_translator -- TraceBiNetHTMLTranslator instance, with a write
+        trace_translator -- TraceBiMDPHTMLTranslator instance, with a write
             method to create the status visualization on each slide.
         css_filename -- CSS file used for all the slides.
         """
@@ -187,8 +187,7 @@ class HTMLTraceInspector(hinet.HiNetTranslator):
                 self._write_error_frame()
                 result = (self._slide_filenames, self._slide_node_ids,
                           None, None)
-                raise BiNetTraceDebugException(result=result,
-                                               exception=exception) 
+                raise TraceDebugException(result=result, exception=exception) 
             else:
                 raise
         train_filenames = self._slide_filenames
@@ -204,8 +203,7 @@ class HTMLTraceInspector(hinet.HiNetTranslator):
                 self._write_error_frame()
                 result = (train_filenames, train_node_ids,
                           self._slide_filenames, self._slide_node_ids)
-                raise BiNetTraceDebugException(result=result,
-                                               exception=exception) 
+                raise TraceDebugException(result=result, exception=exception) 
             else:
                 raise 
         stop_filenames = self._slide_filenames
@@ -252,8 +250,7 @@ class HTMLTraceInspector(hinet.HiNetTranslator):
                     self._section_ids = None
                 result = (self._slide_filenames, self._slide_node_ids,
                           self._section_ids)
-                raise BiNetTraceDebugException(result=result,
-                                               exception=exception) 
+                raise TraceDebugException(result=result, exception=exception) 
             else:
                 raise
         self._undecorate_mode = True
@@ -492,7 +489,7 @@ class HTMLTraceInspector(hinet.HiNetTranslator):
         delattr(node, "__getstate__")
 
 
-class TraceBiNetHTMLTranslator(BiNetHTMLTranslator):
+class TraceBiHTMLTranslator(BiHTMLTranslator):
     """Class to visualize the state of a BiFlow during execution or training.
     
     The single snapshoot is a beefed up version of the standard HTML view.
@@ -502,7 +499,7 @@ class TraceBiNetHTMLTranslator(BiNetHTMLTranslator):
     
     def __init__(self, show_size=False):
         """Initialize the internal variables."""
-        super(TraceBiNetHTMLTranslator, self).__init__(show_size=show_size)
+        super(TraceBiHTMLTranslator, self).__init__(show_size=show_size)
         self._current_node = None
         self._method_name = None
         self._result = None
@@ -647,7 +644,7 @@ class TraceBiNetHTMLTranslator(BiNetHTMLTranslator):
         self._current_node = current_node
         self._node_id_index = 0
         self._current_node_id = None
-        super(TraceBiNetHTMLTranslator, self)._translate_flow(flow)
+        super(TraceBiHTMLTranslator, self)._translate_flow(flow)
         
     def _open_node_env(self, node, type_id="node"):
         """Open the HTML environment for the node internals.
@@ -779,7 +776,7 @@ def _trace_biflow_training(snapshot_path, inspection_path, css_filename,
         default class.
     debug -- If True (default is False) then any exception will be
         caught and the gathered data up to that point is returned in the
-        normal way. This is useful for binet debugging.
+        normal way. This is useful for bimdp debugging.
     show_size -- Show the approximate memory footprint of all nodes.
     verbose -- If True (default value) a status message is printed for each
         loaded snapshot.
@@ -787,7 +784,7 @@ def _trace_biflow_training(snapshot_path, inspection_path, css_filename,
         as keyword arguments.
     """
     if not trace_inspector:
-        trace_translator = TraceBiNetHTMLTranslator(show_size=show_size)
+        trace_translator = TraceBiHTMLTranslator(show_size=show_size)
         trace_inspector = HTMLTraceInspector(
                                 trace_translator=trace_translator,
                                 css_filename=css_filename)
@@ -847,7 +844,7 @@ def _trace_biflow_training(snapshot_path, inspection_path, css_filename,
                 if verbose:
                     print "got traces for snapshot %d" % (i_snapshot + 1)
                 i_snapshot += 1
-    except BiNetTraceDebugException, debug_exception:
+    except TraceDebugException, debug_exception:
         train_files, train_ids, stop_files, stop_ids = debug_exception.result
         slide_filenames += train_files
         train_index = len(slide_filenames) - 1

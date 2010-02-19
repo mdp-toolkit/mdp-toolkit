@@ -4,7 +4,7 @@ Module for HTML slideshows.
 It uses the templating library 'Templet'. 
 
 The slideshow base class HTMLSlideShow does not display anything, but can
-be used to derive custom slideshows like in BiNet. 
+be used to derive custom slideshows like in BiMDP. 
 
 The JavaScript slideshow code in this module was originally inspired by a
 slideshow script found at

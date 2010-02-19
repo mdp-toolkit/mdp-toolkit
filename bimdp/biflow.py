@@ -88,7 +88,7 @@ class MessageResultContainer(object):
 #    _node_with_id method?
 
 class BiFlow(mdp.Flow):
-    """BiNet version of a flow, which supports jumps between nodes.
+    """BiMDP version of a flow, which supports jumps between nodes.
     
     This capabilities can be used by classes derived from BiNode. 
     
@@ -340,7 +340,7 @@ class BiFlow(mdp.Flow):
         """Calling an instance is equivalent to call its 'execute' method."""
         return self.execute(iterable, msg_iterable=msg_iterable)
         
-    ### New Methods for BiNet. ###
+    ### New Methods for BiMDP. ###
     
     def _bi_reset(self):
         """Reset the nodes and internal flow variables."""

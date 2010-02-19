@@ -120,7 +120,7 @@ class TestBiFlow(unittest.TestCase):
                           [np.random.random((1,1)) for _ in range(2)], 
                           [np.random.random((1,1)) for _ in range(2)]]
         biflow.train(data_iterables)
-        # binet.show_training(biflow, data_iterables, debug=True)
+        # bimdp.show_training(biflow, data_iterables, debug=True)
         # tracelog reference
         reference = [
             ('node_1', 'bi_reset'),
@@ -202,7 +202,7 @@ class TestBiFlow(unittest.TestCase):
                     verbose=verbose)
         biflow = BiFlow([node1, node2, node3])
         biflow.execute(None, {"a": 1})
-        # binet.show_execution(biflow, x=None, msg={"a": 1}, debug=True)
+        # bimdp.show_execution(biflow, x=None, msg={"a": 1}, debug=True)
         # tracelog reference
         reference = [
             ('node_1', 'bi_reset'),
@@ -239,7 +239,7 @@ class TestBiFlow(unittest.TestCase):
         node2 = IdNode()
         biflow = BiFlow([node1, node2])
         biflow.execute(None, {"a": 1})
-        # binet.show_execution(biflow, x=None, msg={"a": 1}, debug=True)
+        # bimdp.show_execution(biflow, x=None, msg={"a": 1}, debug=True)
         reference = [
            (None, 'bi_reset'), (None, 'execute'), (None, 'bi_reset')
         ]

@@ -307,10 +307,10 @@ class ContribTestSuite(NodesTestSuite):
         flow.train([[mix[:T/2, :], mix[T/2:, :]]])
         
         out = flow(mix)
-        #import binet
-        #tr_filename = binet.show_training(flow=flow,
+        #import bimdp
+        #tr_filename = bimdp.show_training(flow=flow,
         #                                  data_iterators=[[mix[:T/2, :], mix[T/2:, :]]])
-        #ex_filename, out = binet.show_execution(flow, x=mix)
+        #ex_filename, out = bimdp.show_execution(flow, x=mix)
 
         corrs = mdp.utils.cov_maxima(mdp.utils.cov2(out, src))
         assert min(corrs) > 0.8, ('source/estimate minimal'

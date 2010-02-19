@@ -86,7 +86,7 @@ class ParallelCloneBiLayer(CloneBiLayer, ParallelExtensionBiNode):
         """Switch internally between using a single node instance or copies.
         
         In a normal CloneLayer a single node instance is used to represent all 
-        the horizontally aligned nodes. But in a BiNet where the nodes store 
+        the horizontally aligned nodes. But in a BiMDP where the nodes store 
         temporary data this may not work. 
         Via this method one can therefore create copies of the single node 
         instance.

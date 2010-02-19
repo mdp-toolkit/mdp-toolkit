@@ -14,16 +14,15 @@ from mdp import numx
 from ..biflow import BiFlow
 
 from bihinet_translator import BINET_STYLE
-from trace_inspection import (_trace_biflow_training,
-                              BiNetTraceDebugException,
-                              INSPECT_TRACE_STYLE, SLIDE_CSS_FILENAME,
-                              PICKLE_EXT,
-                              TraceBiNetHTMLTranslator, HTMLTraceInspector,
-                              prepare_training_inspection,
-                              remove_inspection_residues)
-from trace_slideshow import (INSPECT_SLIDESHOW_STYLE,
-                             TrainHTMLSlideShow, ExecuteHTMLSlideShow,
-                             SectExecuteHTMLSlideShow)
+from trace_inspection import (
+    _trace_biflow_training, TraceDebugException,
+    INSPECT_TRACE_STYLE, SLIDE_CSS_FILENAME, PICKLE_EXT,
+    TraceBiHTMLTranslator, HTMLTraceInspector,
+    prepare_training_inspection, remove_inspection_residues
+)
+from trace_slideshow import (
+    INSPECT_SLIDESHOW_STYLE, TrainHTMLSlideShow, ExecuteHTMLSlideShow,
+    SectExecuteHTMLSlideShow)
 from utils import robust_write_file, robust_pickle, first_iterable_elem
 
 # style for slides, used when the slides are not viewed in a slideshow
@@ -59,7 +58,7 @@ def inspect_training(snapshot_path, x_samples, msg_samples=None,
         default class.
     debug -- If True (default is False) then any exception will be
         caught and the gathered data up to that point is returned in the
-        normal way. This is useful for binet debugging.
+        normal way. This is useful for bimdp debugging.
     slide_style -- CSS code for the individual slides (when they are
         viewed as single HTML files), has no effect on the slideshow appearance.
     show_size -- Show the approximate memory footprint of all nodes.
@@ -84,7 +83,7 @@ def inspect_training(snapshot_path, x_samples, msg_samples=None,
         del all_kwargs["all_kwargs"]
         slide_filenames, slide_node_ids, index_table = \
             _trace_biflow_training(**all_kwargs)
-    except BiNetTraceDebugException, debug_exception:
+    except TraceDebugException, debug_exception:
         slide_filenames, slide_node_ids, index_table = debug_exception.result
     if index_table is None:
         return None  # no snapshots were found
@@ -226,7 +225,7 @@ def inspect_execution(flow, x, msg=None, target=None, path=None, name=None,
     trace_inspector -- Optionally provide a custom HTMLTraceInspector instance.
     debug -- If True (default is False) then any exception will be
         caught and the gathered data up to that point is returned in the
-        normal way. This is useful for binet debugging.
+        normal way. This is useful for bimdp debugging.
     slide_style -- CSS code for the individual slides (when they are
         viewed as single HTML files), has no effect on the slideshow appearance.
     show_size -- Show the approximate memory footprint of all nodes.
@@ -243,7 +242,7 @@ def inspect_execution(flow, x, msg=None, target=None, path=None, name=None,
                       content=slide_style)
     del slide_style
     if not trace_inspector:
-        trace_translator = TraceBiNetHTMLTranslator(show_size=show_size)
+        trace_translator = TraceBiHTMLTranslator(show_size=show_size)
         trace_inspector = HTMLTraceInspector(
                                 trace_translator=trace_translator,
                                 css_filename=css_filename)
@@ -256,7 +255,7 @@ def inspect_execution(flow, x, msg=None, target=None, path=None, name=None,
                                             x=x, msg=msg, target=target,
                                             debug=debug,
                                             **kwargs)
-    except BiNetTraceDebugException, debug_exception:
+    except TraceDebugException, debug_exception:
         if not debug_exception.result:
             return None
         print ("exception during excecution, " + 
@@ -298,7 +297,7 @@ def show_execution(flow, x, msg=None, target=None, path=None, name=None,
     trace_inspector -- Optionally provide a custom HTMLTraceInspector instance.
     debug -- If True (default is False) then any exception will be
         caught and the gathered data up to that point is returned in the
-        normal way. This is useful for binet debugging.
+        normal way. This is useful for bimdp debugging.
     show_size -- Show the approximate memory footprint of all nodes.
     browser_open -- If True (default value) then the slideshow file is
         automatically opened in a webbrowser.

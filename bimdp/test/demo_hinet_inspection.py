@@ -1,5 +1,5 @@
 """
-Test the inspection of a normal (non-bi) Flow with the BiNet inspection.
+Test the inspection of a normal (non-bi) Flow with the BiMDP inspection.
 
 Since this requires the creation of files and opens them in a browser this
 should not be included in the unittests.

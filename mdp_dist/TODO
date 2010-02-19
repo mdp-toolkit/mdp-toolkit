@@ -1,12 +1,9 @@
 
 blockers for MDP 3.0
 ====================
-- switch from SVN to Hg
 - add classifier stuff
 - finish SVM integration and port my existing shogun bindings to newest version (rike)
-- decide if we want to move binet into MDP (maybe declare binet as "beta"
-    in MDP 3.0), discuss possible changes that would improve binet
-- binet: write more unittests and write tutorial section
+- bimdp: write more unittests and write tutorial section
 - create a Flow metaclass to enable Flow extensions (think of ParallelFlow!)
 - implement an extension context manager with additional parameters and 
   exception handling. E.g.:
@@ -27,10 +24,8 @@ blockers for MDP 3.0
 
 optional for MDP 3.0
 ====================
-- add example section on the homepage (and on mercurial)
-- binet: add deep belief network example
-- parallel: use shared memory for data in the parallel ProcessScheduler,
-	maybe send data back only on demand
+- add example section on the homepage
+- bimdp: add deep belief network example
 - refactor unitests
 - check if sphinx could be used as an alternative for automatic API docs
 - add cross-correlation tools, maybe support the use of a parallel scheduler

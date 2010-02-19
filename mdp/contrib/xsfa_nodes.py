@@ -27,13 +27,13 @@ class XSFANode(mdp.Node):
     memory usage.
     
     If you need to debug training and/or execution of this node, the
-    suggested approach is to use the capabilities of mdp.binet. For example:
+    suggested approach is to use the capabilities of BiMDP. For example:
 
     >>> flow = mdp.Flow([XSFANode()])
-    >>> tr_filename = binet.show_training(flow=flow, data_iterators=x)
-    >>> ex_filename, out = binet.show_execution(flow, x=x)
+    >>> tr_filename = bimdp.show_training(flow=flow, data_iterators=x)
+    >>> ex_filename, out = bimdp.show_execution(flow, x=x)
 
-    this will run training and execution with binet inspection. Snapshots
+    this will run training and execution with bimdp inspection. Snapshots
     of the internal flow state for each training phase and execution step
     will be opened in a web brower and presented as a slideshow.
     

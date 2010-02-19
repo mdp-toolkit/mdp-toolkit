@@ -3,11 +3,11 @@ The BiMDP package is an extension of the pure feed-forward flow concept in MDP.
 
 It defines a framework for far more general flow sequences, involving 
 top-down processes (e.g. for error backpropagation) or even loops.
-So the 'bi' in BiNet primarily stands for 'bidirectional'.
+So the 'bi' in BiMDP primarily stands for 'bidirectional'.
 
 BiMDP is implemented by extending both the Node and the Flow concept. Both the
 new BiNode and BiFlow classes are downward compatible with the classical
-Nodes and Flows, allowing them to be combined with BiNet elements. 
+Nodes and Flows, allowing them to be combined with BiMDP elements. 
 
 The fundamental addition in BiMDP is that BiNodes can specify a target node for
 their output and that they can send messages to other nodes. A BiFlow is then
@@ -17,7 +17,7 @@ specified target node.
 BiMDP is fully supports and extends the HiNet and the Parallel packages.
 
 
-New BiNet concepts: Jumps and Messages
+New BiMDP concepts: Jumps and Messages
 ======================================
 
 Jump targets are numbers (relative position in the flow) or strings, which are

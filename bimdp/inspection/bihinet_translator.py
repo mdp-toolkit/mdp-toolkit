@@ -1,5 +1,5 @@
 """
-Module to translate a binet node structure.
+Module to translate a bimdp node structure.
 
 Currently we only implement the translation into HTML. This is done via the
 HiNetHTML class.
@@ -34,14 +34,14 @@ def _html_representation(self):
 #    return html_repr
     
 
-class BiNetHTMLTranslator(mdp.hinet.HiNetHTMLTranslator):
+class BiHTMLTranslator(mdp.hinet.HiNetHTMLTranslator):
     """Special version of HiNetHTMLTranslator with BiNode support.
     
-    All binet attributes are highligthed via the span.bicolor css tag.
+    All bimdp attributes are highligthed via the span.bicolor css tag.
     """
     
     def __init__(self, show_size=False):
-        super(BiNetHTMLTranslator, self).__init__(show_size=show_size)
+        super(BiHTMLTranslator, self).__init__(show_size=show_size)
         
     def _translate_clonelayer(self, clonelayer):
         """This specialized version checks for CloneBiLayer."""
