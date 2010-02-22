@@ -31,7 +31,8 @@ if __name__ == "__main__":
     # shut off warnings of any kinds
     warnings.filterwarnings("ignore", ".*")
     # trick to find mdp in a remote process
-    mdp_path = __file__.split("mdp")[0]
+    mdp_path = __file__
+    mdp_path =  mdp_path[:mdp_path.rfind("mdp")-1]
     sys.path.append(mdp_path)
 
 import mdp
