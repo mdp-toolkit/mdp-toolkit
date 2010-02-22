@@ -104,6 +104,7 @@ probabilities from two consecutive letters to the next.
                     break
                 features.append(new_f)
             print "".join(features)
-    
-demo = DictionaryDemo(20, 2)
+
+if __name__ == '__main__':
+    demo = DictionaryDemo(20, 2)
 

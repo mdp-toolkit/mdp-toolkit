@@ -472,8 +472,11 @@ def weighted_choice(a_dict, is_normalised=False):
 
 def bool_to_sign(an_array):
     """Return -1 for each False; +1 for each True"""
-    return numx.sign(pattern - 0.5)
+    return numx.sign(an_array - 0.5)
 
-def sign_to_bool(an_array):
+def sign_to_bool(an_array, zero=True):
     """Return False for each negative value, else True"""
-    return numx.array(an_array) >= 0
+    if zero:
+        return numx.array(an_array) >= 0
+    else:
+        return numx.array(an_array) > 0

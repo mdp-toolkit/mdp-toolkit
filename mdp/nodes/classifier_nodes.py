@@ -2,7 +2,9 @@ import mdp
 from mdp import numx as numx
 import operator
 import random
+import itertools
   
+
 class SignumClassifier(mdp.ClassifierNode):
     """This classifier node classifies as 1, if the sum of the data points is positive
         and as -1, if the data point is negative"""
@@ -10,11 +12,10 @@ class SignumClassifier(mdp.ClassifierNode):
         return False
     
     def _classify(self, x):
-        ret = numx.zeros(x.shape[0])
-        for i in range(x.shape[0]):
-            ret[i] = numx.sign(x[i, :].sum())
-        return ret
+        ret = [xi.sum() for xi in x]
+        return numx.sign(ret)
     
+
 class PerceptronClassifier(mdp.ClassifierNode):
     """A simple perceptron with input_dim input nodes."""
     def __init__(self, input_dim = None, dtype = None):
@@ -77,7 +78,8 @@ class PerceptronClassifier(mdp.ClassifierNode):
         """Classifies the perceptron.
         """
         return numx.sign(numx.dot(x, self.weights) + self.offset_weight)
-    
+
+
 class NaiveBayesClassifier(mdp.ClassifierNode):
     """A naive Bayes Classificator.
     In order to be usable for spam filtering, the words must be transformed
@@ -124,8 +126,8 @@ class NaiveBayesClassifier(mdp.ClassifierNode):
             cls = [cl] * len(x)
             cl = numx.array(cls)
         
-        for i in range(x.shape[0]):
-            self._learn(x[i, :], cl[i])
+        for xi, cli in itertools.izip(x, cl):
+            self._learn(xi, cli)
             
         # clear input dim hack
         self._set_input_dim(None)
@@ -215,7 +217,8 @@ class NaiveBayesClassifier(mdp.ClassifierNode):
             return 1
         print "q =", q
         return - numx.sign(q - 1)
-    
+
+
 class SimpleMarkovClassifier(mdp.ClassifierNode):
     """A simple version of a Markov classifier.
     It can be trained on a vector of tuples the label being the next element
@@ -256,8 +259,8 @@ class SimpleMarkovClassifier(mdp.ClassifierNode):
             cls = [cl] * len(x)
             cl = numx.array(cls)
         
-        for i in range(x.shape[0]):
-            self._learn(x[i, :], cl[i])
+        for xi, cli in itertools.izip(x, cl):
+            self._learn(xi, cli)
     
     def _learn(self, feature, label):
         feature = tuple(feature)
@@ -280,7 +283,7 @@ class SimpleMarkovClassifier(mdp.ClassifierNode):
             self.connections[connection] = 1
 
     def _prob(self, features):
-        return [self._prob_one(features[i, :]) for i in range(features.shape[0])]
+        return [self._prob_one(feature) for feature in features]
     
     def _prob_one(self, feature):
         feature = tuple(feature)

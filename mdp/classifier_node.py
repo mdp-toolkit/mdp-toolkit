@@ -12,8 +12,8 @@ class ClassifierNode(mdp.Node):
         The optional threshold parameter is used to exclude labels having equal
         or less probability. E.g. threshold=0 excludes all labels with zero probability.
         """
-        p = self.prob(x)
-        ranking = [(k,v) for k,v in p.items() if v > threshold]
+        prob = self.prob(x)
+        ranking = [(k, v) for k, v in prob.items() if v > threshold]
         ranking.sort(cmp=lambda x, y: cmp(x[1], y[1]))
         return ranking
     

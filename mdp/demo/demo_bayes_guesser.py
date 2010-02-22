@@ -83,18 +83,18 @@ class LanguageGuesserDemo():
         prob = self.nbc.prob(textvals)
         return {"first": prob[1], "second": prob[-1]}
         
-        
+if __name__ == '__main__':
 
-parser = OptionParser("usage: %prog --first=FILE --second=file [options] arg")
-parser.add_option("--first", dest="first",
-                  help="select the first file to learn", metavar="FILE")
-parser.add_option("--second", dest="second",
-                  help="select the second file to learn", metavar="FILE")
+    parser = OptionParser("usage: %prog --first=FILE --second=file [options] arg")
+    parser.add_option("--first", dest="first",
+                      help="select the first file to learn", metavar="FILE")
+    parser.add_option("--second", dest="second",
+                      help="select the second file to learn", metavar="FILE")
 
-(options, args) = parser.parse_args()
+    (options, args) = parser.parse_args()
 
-if not (options.first and options.second):
-    parser.error("You have to supply first and second.")
+    if not (options.first and options.second):
+        parser.error("You have to supply first and second.")
     
-demo = LanguageGuesserDemo((options.first, options.second))
+    demo = LanguageGuesserDemo((options.first, options.second))
 
