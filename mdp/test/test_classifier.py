@@ -13,7 +13,7 @@ import inspect
 import mdp
 from mdp import numx
 from mdp.nodes import (SignumClassifier, PerceptronClassifier, NaiveBayesClassifier,
-                       SimpleMarkovClassifier)
+                       SimpleMarkovClassifier, DiscreteHopfieldClassifier)
 from mdp.utils import weighted_choice
 
 class ClassifierTestSuite(unittest.TestSuite):
@@ -131,6 +131,36 @@ class ClassifierTestSuite(unittest.TestSuite):
                 assert letter in letters_following_e
         
         assert abs(prob_sum - 1.0) < 1e-5
+    
+    def testDiscreteHopfieldClassifier(self):
+        h = DiscreteHopfieldClassifier()
+        
+        memory_size = 100
+        patterns = numx.array(
+                   [numx.sin(numx.linspace(0, 100 * numx.pi, memory_size)) > 0,
+                    numx.sin(numx.linspace(0, 50 * numx.pi, memory_size)) > 0,
+                    numx.sin(numx.linspace(0, 20 * numx.pi, memory_size)) > 0,
+                    numx.sin(numx.linspace(0, 15 * numx.pi, memory_size)) > 0,
+                    numx.sin(numx.linspace(0, 10 * numx.pi, memory_size)) > 0,
+                    numx.sin(numx.linspace(0, 5 * numx.pi, memory_size)) > 0,
+                    numx.sin(numx.linspace(0, 2 * numx.pi, memory_size)) > 0
+                    ])
+        h.train(patterns)
+        
+        for p in patterns:
+            # check if patterns are fixpoints
+            assert numx.all(p == h.classify(numx.array([p])))
+        
+        for p in patterns:
+            # check, if a noisy pattern is recreated
+            noisy = numx.array(p)
+            for i in range(len(noisy)):
+                if numx.random.random() > 0.9:
+                    noisy[i] = not noisy[i]
+            retrieved = h.classify(numx.array([noisy]))
+            # Hopfield nets are blind for inversion, need to check either case
+            assert numx.all(retrieved == p) or numx.all(retrieved != p)
+        
 
 def get_suite(testname=None):
     return ClassifierTestSuite(testname=testname)

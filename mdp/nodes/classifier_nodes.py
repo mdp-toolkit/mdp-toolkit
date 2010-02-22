@@ -317,4 +317,78 @@ class SimpleMarkovClassifier(mdp.ClassifierNode):
             probabilities[label] = prob
         return probabilities
     
+
+class DiscreteHopfieldClassifier(mdp.ClassifierNode):
+    """Node for simulating a simple discrete Hopfield model"""
+    # TODO: It is unclear if this belongs to classifiers or is a general node
+    # because label space is a subset of feature space
+    def __init__(self, input_dim = None):
+        dtype = bool
+        super(DiscreteHopfieldClassifier, self).__init__(input_dim, input_dim, dtype)
+        self._weight_matrix = 0 # assigning zero to ease addition
+        self._num_patterns = 0
+        self._shuffled_update = True
     
+    def _train(self, x):
+        """Provide the hopfield net with the possible states.
+        
+        x -- a matrix having different variables on different columns
+            and observations on rows.
+        """
+        for pattern in x:
+            self._train_one(pattern)
+    
+    def _train_one(self, pattern):
+        pattern = mdp.utils.bool_to_sign(pattern)
+        weights = numx.outer(pattern, pattern)
+        self._weight_matrix += weights / float(self.input_dim)
+        self._num_patterns += 1
+    
+    @property
+    def memory_size(self):
+        """Returns the Hopfield net's memory size"""
+        return self.input_dim
+    
+    @property
+    def load_parameter(self):
+        """Returns the load parameter of the Hopfield net.
+        The quality of memory recall for a Hopfield net breaks down when the
+        load parameter is larger than 0.14."""
+        return self._num_patterns / float(self.input_dim)
+    
+    def _stop_training(self):
+        # remove self-feedback
+        for i in range(self.input_dim):
+            self._weight_matrix[i][i] = 0
+    
+    def _classify(self, x, threshold = 0):
+        """Retrieves patterns from the associative memory.
+        """
+        threshold = numx.zeros(self.input_dim) + threshold
+        return numx.array([self._classify_one(pattern, threshold) for pattern in x])
+    
+    def _classify_one(self, pattern, threshold):
+        pattern = mdp.utils.bool_to_sign(pattern)    
+        
+        has_converged = False
+        while not has_converged:
+            has_converged = True
+            iter_order = range(len(self._weight_matrix))
+            if self._shuffled_update:
+                numx.random.shuffle(iter_order)
+            for row in iter_order:
+                w_row = self._weight_matrix[row]
+                
+                thresh_row = threshold[row]
+                new_pattern_row = numx.sign(numx.dot(w_row, pattern) - thresh_row)
+                
+                if new_pattern_row == 0:
+                    # Following McKay, Neural Networks, we do nothing
+                    # when the new pattern is zero
+                    pass
+                elif pattern[row] != new_pattern_row:
+                    has_converged = False
+                    pattern[row] = new_pattern_row
+        return mdp.utils.sign_to_bool(pattern)
+
+
