@@ -1,13 +1,14 @@
 """
 Module to automatically create a module with BiMDP versions of MDP nodes.
 
-Run this module to overwrite the autogen_binodes module with a fresh version.
+Run this module to overwrite the autogen_binodes module with a new version.
 """
 
 import inspect
 import mdp
 
-# trick to load Binode without loading BiMDP (which would cause a loop).
+# trick to load BiNode without loading BiMDP (which would try to import the
+# autogen_binodes module, leading to a chicken-egg situation).
 import sys
 bimdp_path = __file__
 bimdp_path = bimdp_path[:bimdp_path.rfind("nodes")-1]

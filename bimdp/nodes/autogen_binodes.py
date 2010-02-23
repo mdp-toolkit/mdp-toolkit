@@ -1,7 +1,7 @@
 """
 AUTOMATICALLY GENERATED CODE, DO NOT MODIFY!
 
-Edit and run autogen.py instead to overwite this module.
+Edit and run autogen.py instead to overwrite this module.
 """
 
 import mdp.nodes
