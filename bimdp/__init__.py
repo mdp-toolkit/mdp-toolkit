@@ -74,7 +74,7 @@ from inspection import *
 import nodes
 import hinet
 import parallel
-import test
+from test import test
 
 del binode
 del biflow

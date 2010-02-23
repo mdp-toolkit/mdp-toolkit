@@ -7,14 +7,6 @@ Run this module to overwrite the autogen_binodes module with a new version.
 import inspect
 import mdp
 
-# trick to load BiNode without loading BiMDP (which would try to import the
-# autogen_binodes module, leading to a chicken-egg situation).
-import sys
-bimdp_path = __file__
-bimdp_path = bimdp_path[:bimdp_path.rfind("nodes")-1]
-sys.path.append(bimdp_path)
-from binode import BiNode, BiNodeException
-
 # Note: 'NoiseNode' was removed because the function argument default value
 #    causes problems.
 AUTOMATIC_MDP_NODES = [
@@ -96,7 +88,6 @@ def _write_binode_code(fid, node_classes, from_module=mdp.nodes):
                 fid.write(', ')
             fid.write('**%s' % varkw)
         fid.write(')\n\n')
-        
 
 if __name__ == "__main__":
     filename = "autogen_binodes.py"
