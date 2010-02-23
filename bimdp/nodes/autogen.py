@@ -15,11 +15,6 @@ bimdp_path = bimdp_path[:bimdp_path.rfind("nodes")-1]
 sys.path.append(bimdp_path)
 from binode import BiNode, BiNodeException
 
-# import from the automatically generated module
-AUTOGEN_NAME = "autogen_binodes"
-
-# TODO: use a special wrapper for classifier nodes
-
 # Note: 'NoiseNode' was removed because the function argument default value
 #    causes problems.
 AUTOMATIC_MDP_NODES = [
@@ -35,12 +30,15 @@ AUTOMATIC_MDP_NODES = [
     'TimeFramesNode', 'WhiteningNode', 'XSFANode',
 ]
 
+# TODO: use a special wrapper for classifier nodes, these are currently ignored
 AUTOMATIC_MDP_CLASSIFIERS = [
      'GaussianClassifierNode', 'NaiveBayesClassifier'                     
 ]
 
+# this function is currently not needed, but can be used for node_classes
 def _get_node_subclasses(node_class=mdp.Node, module=mdp.nodes):
-    """Return all node classes in module which are subclasses of node_class.
+    """
+    Return all node classes in module which are subclasses of node_class.
     """
     node_subclasses = []
     for node_subclass in (getattr(module, name) for name in dir(module)):
@@ -101,7 +99,7 @@ def _write_binode_code(fid, node_classes, from_module=mdp.nodes):
         
 
 if __name__ == "__main__":
-    filename = AUTOGEN_NAME + ".py"
+    filename = "autogen_binodes.py"
     autogen_file = open(filename, 'w')
     try:
         _write_binode_code(autogen_file,
