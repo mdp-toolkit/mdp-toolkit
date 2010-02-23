@@ -30,11 +30,18 @@ import warnings
 if __name__ == "__main__":
     # shut off warnings of any kinds
     warnings.filterwarnings("ignore", ".*")
-    # trick to find mdp in a remote process
+    ## try to make sure that mdp can be imported by adding to sys.path
+    # first try if __file__ contains the full path
     mdp_path = __file__
-    mdp_path =  mdp_path[:mdp_path.rfind("mdp")-1]
-    sys.path.append(mdp_path)
-
+    mdp_index = mdp_path.rfind("mdp")
+    if mdp_index:
+        mdp_path =  mdp_path[:mdp_index-1]
+        sys.path.append(mdp_path)
+    else:
+        # as a last resort assume that the current working directory contains
+        # mdp (this can help on windows, e.g. when calling bimdp.test())
+        sys.path.append(os.getcwd())
+    
 import mdp
 import scheduling
 
