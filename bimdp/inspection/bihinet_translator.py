@@ -13,7 +13,7 @@ from ..hinet import CloneBiLayer
 
 # TODO: use <pre>   </pre> for whitespaces?
 
-BINET_STYLE = """
+BIHINET_STYLE = """
 span.bicolor {
     color: #6633FC;
 }

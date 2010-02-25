@@ -93,7 +93,7 @@ class BiSwitchboard(BiNode, hinet.Switchboard):
 
 @classmethod
 def _binode_create_switchboard(cls, free_params, prev_switchboard,
-                       prev_output_dim, node_id):
+                               prev_output_dim, node_id):
     """Modified version of create_switchboard to support node_id.
     
     This method can be used as a substitute when using the switchboard_factory
@@ -115,7 +115,11 @@ def _binode_create_switchboard(cls, free_params, prev_switchboard,
     kwargs = cls._get_switchboard_kwargs(free_params, prev_switchboard,
                                          prev_output_dim)
     return cls(node_id=node_id, **kwargs)
-  
+
+
+# TODO: Use same technique as for binodes?
+#    But have to take care of the switchboard_factory extension.
+
 # use a function to avoid poluting the namespace
 def _create_bi_switchboards():
     switchboard_classes = [

@@ -11,10 +11,10 @@ inspect_execution or the simpler show_execution.
 """
 
 
-from bihinet_translator import (BINET_STYLE, BiHTMLTranslator)
+from bihinet_translator import (BIHINET_STYLE, BiHTMLTranslator)
 from trace_inspection import (
     prepare_training_inspection, remove_inspection_residues,
-    TraceDebugException, HTMLTraceInspector, TraceBiHTMLTranslator,
+    TraceDebugException, TraceHTMLInspector, TraceHTMLTranslator,
     _trace_biflow_training, INSPECT_TRACE_STYLE, NODE_TRACE_METHOD_NAMES,
     BINODE_TRACE_METHOD_NAMES
 )

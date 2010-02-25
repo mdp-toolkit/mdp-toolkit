@@ -114,7 +114,7 @@ class TraceDebugException(Exception):
         self.exception = exception
 
 
-class HTMLTraceInspector(hinet.HiNetTranslator):
+class TraceHTMLInspector(hinet.HiNetTranslator):
     """Class for inspecting a single pass through a provided flow.
     
     This class is based on a translator that wraps the flow elements with 
@@ -136,7 +136,7 @@ class HTMLTraceInspector(hinet.HiNetTranslator):
             method to create the status visualization on each slide.
         css_filename -- CSS file used for all the slides.
         """
-        super(HTMLTraceInspector, self).__init__()
+        super(TraceHTMLInspector, self).__init__()
         self._css_filename = css_filename
         self._trace_path = None  # path for the current trace 
         self._trace_name = None  # name for the current trace 
@@ -149,13 +149,18 @@ class HTMLTraceInspector(hinet.HiNetTranslator):
         self._slide_node_ids = None  # active node for each slide index
         self._undecorate_mode = None  # if True undecorate nodes
         
-    def _reset_variables(self):
-        """Reset the internal variables for new tracing."""
+    def _reset(self):
+        """Reset the internal variables for a new tracing.
+        
+        Should be called before 'train', 'stop_training' or 'execute' is called
+        on the flow.
+        """
         self._slide_index = 0
         self._slide_filenames = []
         self._section_ids = []
         self._slide_node_ids = []
-        self._undecorate_mode = False 
+        self._undecorate_mode = False
+        self.trace_translator.reset()
         
     def trace_training(self, path, flow, x, msg=None, stop_msg=None,
                        trace_name="training", debug=False, **kwargs):
@@ -169,7 +174,7 @@ class HTMLTraceInspector(hinet.HiNetTranslator):
         **kwargs -- Additional arguments for flow.train can be specified
             as keyword arguments.
         """
-        self._reset_variables()
+        self._reset()
         self._trace_path = path
         # train and stop filenames must be different
         self._trace_name = trace_name + "_t"
@@ -192,7 +197,7 @@ class HTMLTraceInspector(hinet.HiNetTranslator):
                 raise
         train_filenames = self._slide_filenames
         train_node_ids = self._slide_node_ids
-        self._reset_variables()
+        self._reset()
         self._trace_name = trace_name + "_s"
         try:
             biflownode.stop_training(stop_msg)
@@ -226,7 +231,7 @@ class HTMLTraceInspector(hinet.HiNetTranslator):
         **kwargs -- Additional arguments for flow.execute can be specified
             as keyword arguments.
         """
-        self._reset_variables()
+        self._reset()
         self._trace_path = path
         self._trace_name = trace_name
         self._flow = flow
@@ -265,7 +270,8 @@ class HTMLTraceInspector(hinet.HiNetTranslator):
         return (self._slide_filenames, self._slide_node_ids,
                 self._section_ids, y)
     
-    def _tracer_callback(self, node, method_name, result, args, kwargs):
+    def _tracer_callback(self, node, method_name, method_result, method_args,
+                         method_kwargs):
         """This method is called by the tracers.
         
         The calling tracer also provides this method with the needed state
@@ -285,9 +291,9 @@ class HTMLTraceInspector(hinet.HiNetTranslator):
                                             flow=self._flow,
                                             node=node,
                                             method_name=method_name, 
-                                            result=result,
-                                            args=args,
-                                            kwargs=kwargs)
+                                            method_result=method_result,
+                                            method_args=method_args,
+                                            method_kwargs=method_kwargs)
             self._slide_index += 1
             if section_id is not None:
                 self._section_ids.append(section_id)
@@ -352,7 +358,7 @@ class HTMLTraceInspector(hinet.HiNetTranslator):
     
     def _translate_flow(self, flow):
         """Wrap the flow in place and return it."""
-        super(HTMLTraceInspector, self)._translate_flow(flow)
+        super(TraceHTMLInspector, self)._translate_flow(flow)
         return flow
     
     # TODO: enable the use of a shallow copy to save memory,
@@ -489,17 +495,17 @@ class HTMLTraceInspector(hinet.HiNetTranslator):
         delattr(node, "__getstate__")
 
 
-class TraceBiHTMLTranslator(BiHTMLTranslator):
+class TraceHTMLTranslator(BiHTMLTranslator):
     """Class to visualize the state of a BiFlow during execution or training.
     
-    The single snapshoot is a beefed up version of the standard HTML view.
+    The single snapshot is a beefed up version of the standard HTML view.
     Capturing the data to make this possible is not the responsibility of this
     class.
     """
     
     def __init__(self, show_size=False):
         """Initialize the internal variables."""
-        super(TraceBiHTMLTranslator, self).__init__(show_size=show_size)
+        super(TraceHTMLTranslator, self).__init__(show_size=show_size)
         self._current_node = None
         self._method_name = None
         self._result = None
@@ -530,20 +536,32 @@ class TraceBiHTMLTranslator(BiHTMLTranslator):
         dic_str += '}'
         return dic_str
     
+    def reset(self):
+        """Reset internal variables for a new trace.
+        
+        It is called (by TraceHTMLInspector) before calling 'train',
+        'stop_training' or 'execute' on the flow.
+        
+        This method can be overridden by derived that need to keep track of the
+        training or execution phase. 
+        """
+        pass
+    
     def write_flow_to_file(self, path, html_file, flow, node, method_name, 
-                           result, args, kwargs):
+                           method_result, method_args, method_kwargs):
         """Write the HTML translation of the flow into the provided file.
         
-        Return value is the section id and the HTML/CSS id of the active node.
+        Return value is the section_id and the HTML/CSS id of the active node.
+        The section id is ignored during training.
         
         path -- Path of the slide (e.h. to store additional images).
         html_file -- File of current slide, where the translation is written.
         flow -- The overall flow.
         node -- The node that was called last.
         method_name -- The method that was called on the last node.
-        result -- The result from the last call.
-        args -- args that were given to the method
-        kwargs -- kwargs that were given to the method
+        method_result -- The result from the last call.
+        method_args -- args that were given to the method
+        method_kwargs -- kwargs that were given to the method
         """
         self._html_file = hinet.NewlineWriteFile(html_file)
         f = self._html_file
@@ -557,17 +575,21 @@ class TraceBiHTMLTranslator(BiHTMLTranslator):
         section_id = self._write_right_side(
                                path=path, html_file=html_file, flow=flow,
                                node=node, method_name=method_name,
-                               result=result, args=args, kwargs=kwargs)
+                               method_result=method_result,
+                               method_args=method_args,
+                               method_kwargs=method_kwargs)
         f.write('</table>')
         f.write('</td></tr>\n</table>')
         self._html_file = None
         return section_id, self._current_node_id
     
     def _write_right_side(self, path, html_file, flow, node, method_name, 
-                          result, args, kwargs):
+                          method_result, method_args, method_kwargs):
         """Write the result part of the translation.
         
-        Return value is None, but could be section_id.
+        Return value can be a section_id or None. The section_id is ignored
+        during training (since the slideshow sections are used for the
+        training phases). 
         
         This method can be overriden for custom visualisations. Usually this
         original method should still be called via super.
@@ -576,10 +598,10 @@ class TraceBiHTMLTranslator(BiHTMLTranslator):
         if not method_name == "stop_training":
             f.write('<h3>%s arguments</h3>' % method_name)
             f.write('<table class="inspect_io_data">')
-            if (method_name in ["execute", "train"]) and args:
+            if (method_name in ["execute", "train"]) and method_args:
                 # deal with x separately
-                x = args[0]
-                args = args[1:]
+                x = method_args[0]
+                args = method_args[1:]
                 if isinstance(x, n.ndarray):
                     f.write('<tr><td><pre>x = </pre></td>' +
                             '<td>' + self._array_pretty_html(x) + '</td></tr>')
@@ -591,28 +613,28 @@ class TraceBiHTMLTranslator(BiHTMLTranslator):
                 f.write('<tr><td><pre>msg = </pre></td><td>' +
                         self._dict_pretty_html(args[0]) + '</td></tr>')
             # normally the kwargs should be empty
-            for arg_key in kwargs:
+            for arg_key in method_kwargs:
                 f.write('<tr><td><pre>' + arg_key + ' = </pre></td><td>' + 
-                        str(kwargs[arg_key]) + '</td></tr>')
+                        str(method_kwargs[arg_key]) + '</td></tr>')
             f.write('</table>')
         ## print results
         f.write("<h3>%s result</h3>" % method_name)
         f.write('<table class="inspect_io_data">')
-        if result is None:
+        if method_result is None:
             f.write('<tr><td><pre>None</pre></tr></td>')
-        elif isinstance(result, n.ndarray):
+        elif isinstance(method_result, n.ndarray):
             f.write('<tr><td><pre>x = </pre></td><td>' +
-                    self._array_pretty_html(result) + '</td></tr>')
-        elif isinstance(result, dict):
+                    self._array_pretty_html(method_result) + '</td></tr>')
+        elif isinstance(method_result, dict):
             f.write('<tr><td><pre>msg = </pre></td><td>' +
-                    self._dict_pretty_html(result) + '</td></tr>')
-        elif isinstance(result, tuple):
+                    self._dict_pretty_html(method_result) + '</td></tr>')
+        elif isinstance(method_result, tuple):
             # interpret the results depending on the method name
             if method_name == "execute" or method_name == "train":
                 result_names = ["x", "msg", "target"]
             else:
                 result_names = ["msg", "target"]
-            for i_result_part, result_part in enumerate(result):
+            for i_result_part, result_part in enumerate(method_result):
                 f.write('<tr><td><pre>' + result_names[i_result_part] +
                         ' = </pre></td><td>')
                 if isinstance(result_part, n.ndarray):
@@ -625,7 +647,7 @@ class TraceBiHTMLTranslator(BiHTMLTranslator):
                     f.write(str(result_part) + '</td></tr>')
         else:
             f.write('<tr><td><pre>unknown result type: </pre></td><td>' +
-                    str(result) + '</td></tr>')
+                    str(method_result) + '</td></tr>')
         
     # overwrite private methods
     
@@ -644,7 +666,7 @@ class TraceBiHTMLTranslator(BiHTMLTranslator):
         self._current_node = current_node
         self._node_id_index = 0
         self._current_node_id = None
-        super(TraceBiHTMLTranslator, self)._translate_flow(flow)
+        super(TraceHTMLTranslator, self)._translate_flow(flow)
         
     def _open_node_env(self, node, type_id="node"):
         """Open the HTML environment for the node internals.
@@ -784,8 +806,8 @@ def _trace_biflow_training(snapshot_path, inspection_path, css_filename,
         as keyword arguments.
     """
     if not trace_inspector:
-        trace_translator = TraceBiHTMLTranslator(show_size=show_size)
-        trace_inspector = HTMLTraceInspector(
+        trace_translator = TraceHTMLTranslator(show_size=show_size)
+        trace_inspector = TraceHTMLInspector(
                                 trace_translator=trace_translator,
                                 css_filename=css_filename)
     i_train_node = 0  # index of the training node

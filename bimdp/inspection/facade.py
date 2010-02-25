@@ -13,11 +13,11 @@ from mdp import numx
 
 from ..biflow import BiFlow
 
-from bihinet_translator import BINET_STYLE
+from bihinet_translator import BIHINET_STYLE
 from trace_inspection import (
     _trace_biflow_training, TraceDebugException,
     INSPECT_TRACE_STYLE, SLIDE_CSS_FILENAME, PICKLE_EXT,
-    TraceBiHTMLTranslator, HTMLTraceInspector,
+    TraceHTMLTranslator, TraceHTMLInspector,
     prepare_training_inspection, remove_inspection_residues
 )
 from trace_slideshow import (
@@ -26,11 +26,11 @@ from trace_slideshow import (
 from utils import robust_write_file, robust_pickle, first_iterable_elem
 
 # style for slides, used when the slides are not viewed in a slideshow
-SLIDE_STYLE = (hinet.HINET_STYLE + BINET_STYLE +
+SLIDE_STYLE = (hinet.HINET_STYLE + BIHINET_STYLE +
                INSPECT_TRACE_STYLE)
 
 # style for slideshow, can be used when embedding the slideshow
-INSPECTION_STYLE = (hinet.HINET_STYLE + BINET_STYLE +
+INSPECTION_STYLE = (hinet.HINET_STYLE + BIHINET_STYLE +
                     INSPECT_TRACE_STYLE + INSPECT_SLIDESHOW_STYLE)
 
 
@@ -242,8 +242,8 @@ def inspect_execution(flow, x, msg=None, target=None, path=None, name=None,
                       content=slide_style)
     del slide_style
     if not trace_inspector:
-        trace_translator = TraceBiHTMLTranslator(show_size=show_size)
-        trace_inspector = HTMLTraceInspector(
+        trace_translator = TraceHTMLTranslator(show_size=show_size)
+        trace_inspector = TraceHTMLInspector(
                                 trace_translator=trace_translator,
                                 css_filename=css_filename)
     # create slides
