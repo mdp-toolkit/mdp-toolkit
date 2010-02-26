@@ -5,13 +5,7 @@ from svm_nodes import _SVMNode
 
 import svm as libsvm
 
-
 class LibSVMNode(_SVMNode):
-    """
-        Problems with LibSVM:
-        - Screen output can only be disabled when a #if 1 clause in the cpp file is disabled
-    
-    """
 
     kernels = ["RBF", "LINEAR", "POLY", "SIGMOID"]
     classifiers = ["C_SVC", "NU_SVC", "ONE_CLASS", "EPSILON_SVR", "NU_SVR"]
@@ -20,6 +14,8 @@ class LibSVMNode(_SVMNode):
         """
         probability -- Shall the probability be computed
         """
+        self.normalize = False
+        
         self.kernel_type = libsvm.RBF
         self._probability = probability
         self._classification_type = "multi"
@@ -52,14 +48,16 @@ class LibSVMNode(_SVMNode):
         return model
 
     def _stop_training(self):
-        self._normalize_labels()
+        if self.normalize:
+            self._normalize_labels()
+        
         if self._probability:
             prob = 1
         else:
             prob = 0
         self.parameter = libsvm.svm_parameter(kernel_type = self.kernel_type, C=1, probability=prob)
 
-        labels = self._norm_labels
+        labels = self._cl
         features = self._x
 
         # Call svm training method.
@@ -68,7 +66,7 @@ class LibSVMNode(_SVMNode):
     def classify(self, x):
         self._pre_execution_checks(x)
         if isinstance(x, (list, tuple, numx.ndarray)):
-            return map(self.model.predict, x)
+            return numx.array([self.model.predict(xi) for xi in x]) 
         else:
             msg = "Data must be a sequence of vectors"
             raise mdp.NodeException(msg)

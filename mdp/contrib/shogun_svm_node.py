@@ -197,7 +197,9 @@ class ShogunSVMNode(_SVMNode):
         self.kernel = kernel_meth(*options)
         
     def _stop_training(self):
-        self._normalize_labels()
+        
+        # self._normalize_labels()
+        self._norm_labels = self._cl
 
         self.features = sgFeatures.RealFeatures(self._x.transpose())
 
@@ -206,6 +208,7 @@ class ShogunSVMNode(_SVMNode):
         else:
             self.kernel.init(self.features, self.features)
             self.svm.set_kernel(self.kernel)
+        
         # shogun expects floats
         labels = sgFeatures.Labels(self._norm_labels.astype(float))
         self.svm.set_labels(labels)

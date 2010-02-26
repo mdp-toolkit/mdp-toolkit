@@ -55,7 +55,7 @@ class _SVMNode(mdp.Node):
             msg = "Error in remapping method"
             raise mdp.NodeException(msg)
 
-        self._norm_labels = mdp.numx.array(norm_labels)
+        self._norm_labels = numx.array(norm_labels)
 
     def is_invertible(self):
         return False

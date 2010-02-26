@@ -98,7 +98,7 @@ def _dual_linear_separable_data(pos_1, pos_2, radius=1, num_elem=1000):
     data = numx.vstack( _random_clusters([pos_1, pos_2], radius, num_elem) )
     #data = numx.vstack( (numx.random.random( (num_elem,2) ) - dist,
     #                     numx.random.random( (num_elem,2) ) + dist) )
-    labels = numx.vstack((-numx.ones((num_elem, 1)), numx.ones((num_elem, 1))))
+    labels = numx.hstack((-numx.ones(num_elem), numx.ones(num_elem)))
     return data, labels
 
 class ContribTestSuite(NodesTestSuite):
@@ -312,8 +312,8 @@ class ContribTestSuite(NodesTestSuite):
 
     def testShogunSVMNode(self):
         # TODO: Implement parameter ranges
-        num_train = 100
-        num_test = 100
+        num_train = 10
+        num_test = 10
         dist = 1
         width = 2.1
         C = 1
@@ -324,7 +324,7 @@ class ContribTestSuite(NodesTestSuite):
                              ((1,1,1,1), (-1,1,1,1)),
                              ((1,1,1,1), (-1,-1,-1,-1))]:
 
-            radius = 1
+            radius = 0.3
 
             traindata_real, trainlab = _dual_linear_separable_data(pos_1, pos_2, radius, num_train)
             testdata_real, testlab = _dual_linear_separable_data(pos_1, pos_2, radius, num_test)
@@ -340,8 +340,11 @@ class ContribTestSuite(NodesTestSuite):
 
                 sg_node.stop_training()
                 out = sg_node.classify(testdata_real)
-                testerr = numx.where(numx.sign(out) * testlab.transpose() < 0)
-                assert testerr == 0, 'classification result'
+                
+                # Test also for inverse
+                testerr = numx.all(numx.sign(out) == testlab) or numx.all(numx.sign(out) == -testlab)
+                
+                assert testerr, ('classification result', comb)
 
     def testLibSVMNode(self):
         num_train = 100
@@ -355,11 +358,10 @@ class ContribTestSuite(NodesTestSuite):
                              ((1,1,1), (-1,-1,1)),
                              ((1,1,1,1), (-1,1,1,1)),
                              ((1,1,1,1), (-1,-1,-1,-1))]:
-            radius = 1
+            radius = 0.3
 
             traindata_real, trainlab = _dual_linear_separable_data(pos_1, pos_2, radius, num_train)
             testdata_real, testlab = _dual_linear_separable_data(pos_1, pos_2, radius, num_test)
-            testlab[0] = -1
         
             combinations = {'kernel': mdp.nodes.LibSVMNode.kernels,
                             'classifier': mdp.nodes.LibSVMNode.classifiers}
@@ -372,14 +374,13 @@ class ContribTestSuite(NodesTestSuite):
                 svm_node.stop_training()
 
                 out = svm_node.classify(testdata_real)
-                print out, testlab
-                testerr = numx.where(numx.sign(out) * testlab.transpose() < 0)
 
+                testerr = numx.all(numx.sign(out) == testlab)
                 # TODO: Cross-validation testing
                 #svm_node._cross_validation(3, svm_node.parameter)
                 #print r.probability(testdata_real)
         
-                assert testerr == 0, 'classification result'
+                assert testerr, ('classification result for ', comb)
 
 def get_suite(testname=None):
     return ContribTestSuite(testname=testname)
