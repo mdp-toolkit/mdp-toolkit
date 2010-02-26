@@ -232,10 +232,9 @@ class ShogunSVMNode(_SVMNode):
         else:
             return zip(self._cl, self._x)
 
-    def classify(self, x):
+    def _classify(self, x):
         """Classify the input data 'x'
         """
-        self._pre_execution_checks(x)
 
         test = sgFeatures.RealFeatures(x.transpose())
         if issubclass(self._classifier, sgClassifier.LinearClassifier):

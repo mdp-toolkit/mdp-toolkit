@@ -1,7 +1,13 @@
 import mdp
 from mdp import numx
 
-class _SVMNode(mdp.Node):
+class _LabelNormalizer(object):
+    """This class provides a transparent mapping from arbitrary labels
+    to a set of well-defined integers
+    """
+    pass
+
+class _SVMNode(mdp.ClassifierNode):
 
     def __init__(self, input_dim = None, dtype = None):
         self._x = numx.array([]) # train data
@@ -71,7 +77,7 @@ class _SVMNode(mdp.Node):
     def _check_train_args(self, x, cl):
         if (isinstance(cl, (list, tuple, numx.ndarray)) and
             len(cl) != x.shape[0]):
-            msg = ("The number of labels should be equal to the number of "
+            msg = ("The number of labels must be equal to the number of "
                    "datapoints (%d != %d)" % (len(cl), x.shape[0]))
             raise mdp.TrainingException(msg)
 

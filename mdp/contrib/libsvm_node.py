@@ -63,8 +63,7 @@ class LibSVMNode(_SVMNode):
         # Call svm training method.
         self.model = self._train_problem(labels, features, self.parameter)
 
-    def classify(self, x):
-        self._pre_execution_checks(x)
+    def _classify(self, x):
         if isinstance(x, (list, tuple, numx.ndarray)):
             return numx.array([self.model.predict(xi) for xi in x]) 
         else:
