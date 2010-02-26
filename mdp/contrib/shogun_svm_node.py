@@ -3,7 +3,7 @@ from mdp import numx
 
 import warnings
 
-from svm_nodes import _SVMNode
+from svm_nodes import _SVMNode, _LabelNormalizer
 
 import shogun.Kernel as sgKernel
 import shogun.Features as sgFeatures
@@ -197,9 +197,8 @@ class ShogunSVMNode(_SVMNode):
         self.kernel = kernel_meth(*options)
         
     def _stop_training(self):
-        
-        # self._normalize_labels()
-        self._norm_labels = self._cl
+        self.normalizer = _LabelNormalizer(self._cl)
+        labels = self.normalizer.normalize(self._cl)
 
         self.features = sgFeatures.RealFeatures(self._x.transpose())
 
@@ -210,7 +209,7 @@ class ShogunSVMNode(_SVMNode):
             self.svm.set_kernel(self.kernel)
         
         # shogun expects floats
-        labels = sgFeatures.Labels(self._norm_labels.astype(float))
+        labels = sgFeatures.Labels(labels.astype(float))
         self.svm.set_labels(labels)
         
         #print "Training:"
@@ -241,10 +240,10 @@ class ShogunSVMNode(_SVMNode):
             self.svm.set_features(self.features)
         else:
             self.kernel.init(self.features, test)
-
-#       still some problems with the backmapping 
-        if self._classification_type == "dual":
-            return self.svm.classify().get_labels()
+        
+        labels = self.svm.classify().get_labels()
+        if self.normalizer:
+            return self.normalizer.revert(labels)
         else:
-            labels = map(self._label_map.get, self.svm.classify().get_labels())
             return labels
+        

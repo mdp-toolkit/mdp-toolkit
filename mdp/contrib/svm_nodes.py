@@ -1,67 +1,65 @@
 import mdp
 from mdp import numx
+from itertools import count
 
 class _LabelNormalizer(object):
     """This class provides a transparent mapping from arbitrary labels
     to a set of well-defined integers
     """
-    pass
+    def __init__(self, labels, mode=None):
+        if mode is None:
+            mode = "id"
+        if mode == "id":
+            self.normalize = self.id
+            self.revert = self.id
+            return
+            
+        self._mode = mode
+        self._labels = set(labels)
+        self._mapping = {}
+        self._inverse = {}
+        if mode == "dual":
+            if len(self._labels) > 2:
+                msg = "In dual mode only two labels can be given"
+                raise mdp.NodeException(msg)
+            t_label_norm = zip(self._labels, [1, -1])
+            self._set_label_dicts(t_label_norm)
+        elif mode == "multi":
+            # enumerate from zero to len
+            t_label_norm = zip(self._labels, count())
+            self._set_label_dicts(t_label_norm)
+        else:
+            msg = "Remapping mode not known"
+            raise mdp.NodeException(msg)
+            
+    def _set_label_dicts(self, t_label_norm):
+        self._mapping = dict(t_label_norm)
+        self._inverse = dict((norm, label) for label, norm in t_label_norm)
+        
+        # check that neither original nor normalised labels have occured more than once
+        if not (len(self._mapping) == len(t_label_norm) == len(self._inverse)):
+            msg = "Error in label normalisation."
+            raise mdp.NodeException(msg) 
+    
+    def normalize(self, labels):
+        return map(self._mapping.get, labels)
+        
+    def revert(self, norm_labels):
+        return map(self._inverse.get, norm_labels)
+    
+    def id(self, labels):
+        return labels
+
 
 class _SVMNode(mdp.ClassifierNode):
 
     def __init__(self, input_dim = None, dtype = None):
         self._x = numx.array([]) # train data
         self._cl = numx.array([]) # labels
-        self._label_map = {}
 
-        self._norm_labels = numx.array([])
+        self.normalizer = None
 
         super(_SVMNode, self).__init__(input_dim, None, dtype)
-
-    def _normalize_labels(self, mode=None):
-        """To avoid problems with the algorithms, we normalise the labels to a
-        standard layout and take care of the mapping
-        """
-        if mode == None:
-            mode = self._classification_type
-        labels = set(self._cl)
-        if mode == "dual":
-            if len(labels) > 2:
-                msg = "In dual mode only two labels can be given"
-                raise mdp.NodeException(msg)
-            # pop first label and reduce
-            if len(labels) > 0:
-                l = labels.pop()
-                self._label_map[-1] = l
-            if len(labels) > 0:
-                l = labels.pop()
-                self._label_map[1] = l
-            else:
-                msg = "Training your SVM with only one label is not the most sensible thing to do."
-                raise mdp.MDPWarning(msg)
-        elif mode == "multi":
-            count = 0
-            for l in labels:
-                self._label_map[count] = l
-                count += 1
-        else:
-            msg = "Remapping mode not known"
-            raise mdp.NodeException(msg)
-
-        # now execute the mapping
-        try:
-            inverted = dict([(v, k) for k, v in self._label_map.iteritems()])
-        except TypeError:
-            # put more elaborated code here for circumventing this issue
-            msg = "Problem inverting. Labels maybe not hashable."
-            raise mdp.NodeException(msg)
-        norm_labels = map(inverted.get, self._cl)
-
-        if None in self._norm_labels:
-            msg = "Error in remapping method"
-            raise mdp.NodeException(msg)
-
-        self._norm_labels = numx.array(norm_labels)
 
     def is_invertible(self):
         return False

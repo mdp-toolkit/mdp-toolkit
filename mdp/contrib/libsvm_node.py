@@ -1,7 +1,7 @@
 import mdp
 from mdp import numx, numx_rand
 
-from svm_nodes import _SVMNode
+from svm_nodes import _SVMNode, _LabelNormalizer
 
 import svm as libsvm
 
@@ -13,9 +13,7 @@ class LibSVMNode(_SVMNode):
     def __init__(self, probability=True, input_dim=None, dtype=None):
         """
         probability -- Shall the probability be computed
-        """
-        self.normalize = False
-        
+        """        
         self.kernel_type = libsvm.RBF
         self._probability = probability
         self._classification_type = "multi"
@@ -48,8 +46,8 @@ class LibSVMNode(_SVMNode):
         return model
 
     def _stop_training(self):
-        if self.normalize:
-            self._normalize_labels()
+        self.normalizer = _LabelNormalizer(self._cl)
+        
         
         if self._probability:
             prob = 1
@@ -57,7 +55,7 @@ class LibSVMNode(_SVMNode):
             prob = 0
         self.parameter = libsvm.svm_parameter(kernel_type = self.kernel_type, C=1, probability=prob)
 
-        labels = self._cl
+        labels = self.normalizer.normalize(self._cl)
         features = self._x
 
         # Call svm training method.
@@ -79,3 +77,4 @@ class LibSVMNode(_SVMNode):
 
     def _train(self, x, cl):
         super(LibSVMNode, self)._train(x, cl)
+
