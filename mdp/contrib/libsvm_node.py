@@ -48,7 +48,6 @@ class LibSVMNode(_SVMNode):
     def _stop_training(self):
         self.normalizer = _LabelNormalizer(self._cl)
         
-        
         if self._probability:
             prob = 1
         else:

@@ -3,7 +3,7 @@ from mdp import numx as numx
 import operator
 import random
 import itertools
-  
+
 
 class SignumClassifier(mdp.ClassifierNode):
     """This classifier node classifies as 1, if the sum of the data points is positive

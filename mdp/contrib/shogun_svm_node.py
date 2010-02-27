@@ -28,6 +28,7 @@ class _OrderedDict:
         self._keys = []
         self._vals = []
         self.update(items)
+    
     def update(self, other):
         """Update an ordered dict with new values."""
         for entry in other:
@@ -43,6 +44,10 @@ class _OrderedDict:
             else:
                 self._keys.append(new_key)
                 self._vals.append(new_val)
+    
+    @property
+    def values(self):
+        return self._vals
 
 class ShogunSVMNode(_SVMNode):
     """The ShogunSVMNode works as a wrapper class for accessing the shogun library
@@ -191,15 +196,17 @@ class ShogunSVMNode(_SVMNode):
         if name in ShogunSVMNode.kernel_parameters and not isinstance(options, list):
             default_opts = _OrderedDict(ShogunSVMNode.kernel_parameters[name])
             default_opts.update(options)
-            options = default_opts._vals
+            options = default_opts.values
         
         kernel_meth = getattr(sgKernel, name)
         self.kernel = kernel_meth(*options)
         
     def _stop_training(self):
+        import pdb
+        pdb.set_trace()
         self.normalizer = _LabelNormalizer(self._cl)
         labels = self.normalizer.normalize(self._cl)
-
+        print self._x.shape
         self.features = sgFeatures.RealFeatures(self._x.transpose())
 
         if issubclass(self._classifier, sgClassifier.LinearClassifier):
@@ -215,18 +222,18 @@ class ShogunSVMNode(_SVMNode):
         #print "Training:"
         #print "Classifier: %s", self._classifier
         #print "Kernel: %s", self.kernel
+        
         self.svm.train()
 
     def training_set(self, ordered=False):
         """Shows the set of data that has been inserted to be trained."""
         if ordered:
-            z = zip(self._cl, self._x)
+            labels = set(self._cl)
             data = {}
-            for k, v in z:
-                if data.has_key(k):
-                    data[k] = data[k] + (v,)
-                else:
-                    data[k] = (v,)
+            for l in labels:
+                data[l] = []
+            for k, v in zip(self._cl, self._x):
+                data[k].append(v)
             return data
         else:
             return zip(self._cl, self._x)
@@ -237,7 +244,7 @@ class ShogunSVMNode(_SVMNode):
 
         test = sgFeatures.RealFeatures(x.transpose())
         if issubclass(self._classifier, sgClassifier.LinearClassifier):
-            self.svm.set_features(self.features)
+            self.svm.set_features(test)
         else:
             self.kernel.init(self.features, test)
         

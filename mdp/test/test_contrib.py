@@ -333,13 +333,18 @@ class ContribTestSuite(NodesTestSuite):
             combinations = {'classifier': ["libsvm", "SVMLin"],
                             'kernel': kernels}
             for comb in utils.orthogonal_permutations(combinations):
+                import pdb
+                pdb.set_trace()
                 sg_node = mdp.nodes.ShogunSVMNode(classifier=comb['classifier'], kernel=comb['kernel'])
+                sg_node.train( traindata_real, trainlab )
                 sg_node.train( traindata_real, trainlab )
 
                 out = sg_node.classify(testdata_real)                
                 # Test also for inverse
+                print testdata_real
+                print numx.sign(out), testlab
                 testerr = numx.all(numx.sign(out) == testlab) or numx.all(numx.sign(out) == -testlab)
-                
+                print testerr
                 assert testerr, ('classification result', comb)
 
     def testLibSVMNode(self):
@@ -366,6 +371,7 @@ class ContribTestSuite(NodesTestSuite):
                 svm_node = mdp.nodes.LibSVMNode()
                 svm_node.set_kernel(comb['kernel'])
                 svm_node.set_classifier(comb['classifier'])
+                svm_node.train(traindata_real, trainlab)
                 svm_node.train(traindata_real, trainlab)
 
                 out = svm_node.classify(testdata_real)

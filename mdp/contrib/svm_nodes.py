@@ -10,10 +10,10 @@ class _LabelNormalizer(object):
         if mode is None:
             mode = "id"
         if mode == "id":
-            self.normalize = self.id
-            self.revert = self.id
+            self.normalize = self._id
+            self.revert = self._id
             return
-            
+        
         self._mode = mode
         self._labels = set(labels)
         self._mapping = {}
@@ -31,7 +31,7 @@ class _LabelNormalizer(object):
         else:
             msg = "Remapping mode not known"
             raise mdp.NodeException(msg)
-            
+    
     def _set_label_dicts(self, t_label_norm):
         self._mapping = dict(t_label_norm)
         self._inverse = dict((norm, label) for label, norm in t_label_norm)
@@ -43,11 +43,11 @@ class _LabelNormalizer(object):
     
     def normalize(self, labels):
         return map(self._mapping.get, labels)
-        
+    
     def revert(self, norm_labels):
         return map(self._inverse.get, norm_labels)
     
-    def id(self, labels):
+    def _id(self, labels):
         return labels
 
 
@@ -79,6 +79,20 @@ class _SVMNode(mdp.ClassifierNode):
                    "datapoints (%d != %d)" % (len(cl), x.shape[0]))
             raise mdp.TrainingException(msg)
 
+    def _append_data(self, x, cl):
+        """Updates self._x and self._cl with appended data from x and cl.
+        """
+        if not len(self._x):
+            self._x = x
+        else:
+            self._x = numx.concatenate( (self._x, x) )
+        # if cl is a number, all x's belong to the same class
+        if isinstance(cl, (list, tuple, numx.ndarray)):
+            self._cl = numx.concatenate( (self._cl, cl) )
+        else:
+            cls = [cl] * len(x)
+            self._cl = numx.concatenate( (self._cl, cls) )
+
     def _train(self, x, cl):
         """Update the internal structures according to the input data 'x'.
         
@@ -88,13 +102,5 @@ class _SVMNode(mdp.ClassifierNode):
               or a single label, in which case all input data is assigned to
               the same class.
         """
-        if not len(self._x):
-            self._x = x
-        else:
-            self._x = mdp.numx.append( self._x, x )
-        # if cl is a number, all x's belong to the same class
-        if isinstance(cl, (list, tuple, numx.ndarray)):
-            self._cl = mdp.numx.append( self._cl, cl )
-        else:
-            cls = [cl] * len(x)
-            self._cl = mdp.numx.append( self._cl, cls )
+        self._append_data(x, cl)
+        
