@@ -9,7 +9,7 @@ from quad_forms import QuadraticForm
 from covariance import (CovarianceMatrix, DelayCovarianceMatrix,
                         MultipleCovarianceMatrices,CrossCovarianceMatrix)
 from progress_bar import progressinfo
-from svn_revision import get_svn_revision
+from repo_revision import get_git_revision
 from slideshow import (BASIC_STYLE, SLIDESHOW_STYLE, HTMLSlideShow,
                        IMAGE_SLIDESHOW_STYLE, ImageHTMLSlideShow,
                        SectionHTMLSlideShow, SectionImageHTMLSlideShow,
@@ -85,6 +85,7 @@ del quad_forms
 del covariance
 del progress_bar
 del slideshow
+del repo_revision
 
 __all__ = ['CovarianceMatrix', 'DelayCovarianceMatrix','CrossCovarianceMatrix',
            'MultipleCovarianceMatrices', 'QuadraticForm', 'SymeigException',
@@ -93,7 +94,7 @@ __all__ = ['CovarianceMatrix', 'DelayCovarianceMatrix','CrossCovarianceMatrix',
            'norm2', 'ordered_uniq', 'permute', 'pinv', 'progressinfo',
            'random_rot', 'refcast', 'rotate', 'scast', 'solve', 'sqrtm',
            'svd', 'symeig', 'symrand', 'timediff', 'uniq', 'matmult',
-           'get_svn_revision', 'SLIDESHOW_STYLE', 'HTMLSlideShow',
+           'get_git_revision', 'SLIDESHOW_STYLE', 'HTMLSlideShow',
            'ImageHTMLSlideShow', 'IMAGE_SLIDESHOW_STYLE',
            'SectionHTMLSlideShow',
            'SectionImageHTMLSlideShow', 'image_slideshow',

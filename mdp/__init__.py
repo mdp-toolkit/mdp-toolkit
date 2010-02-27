@@ -172,7 +172,7 @@ __all__ = ['CheckpointFlow', 'CheckpointFunction', 'CheckpointSaveFunction',
            'ClassifierNode']
 
 __version__ = '2.6'
-__revision__ = utils.get_svn_revision()
+__revision__ = utils.get_git_revision()
 __authors__ = 'Pietro Berkes, Henning Sprekeler, Niko Wilbert, and Tiziano Zito'
 __copyright__ = '(c) 2003-2009 Pietro Berkes, Henning Sprekeler, Niko Wilbert, Tiziano Zito'
 __license__ = 'LGPL v3, http://www.gnu.org/licenses/lgpl.html'
