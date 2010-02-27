@@ -410,6 +410,22 @@ def irep(x, n, dim):
     return x.reshape(shp).repeat(n, axis=dim)
 # /replication functions
 
+try:
+    # product exists only in itertools >= 2.6
+    from itertools import product
+except ImportError:
+    def product(*args, **kwds):
+        """Cartesian product of input iterables.
+        """
+        # taken from python docs 2.6
+        # product('ABCD', 'xy') --> Ax Ay Bx By Cx Cy Dx Dy
+        # product(range(2), repeat=3) --> 000 001 010 011 100 101 110 111
+        pools = map(tuple, args) * kwds.get('repeat', 1)
+        result = [[]]
+        for pool in pools:
+            result = [x+[y] for x in result for y in pool]
+        for prod in result:
+            yield tuple(prod)
 
 def orthogonal_permutations(a_dict):
     """
@@ -437,17 +453,8 @@ def orthogonal_permutations(a_dict):
         # check the size of the list in the second item of the tuple
         args_with_fun = [(func, arg) for arg in all_args]
         args.append(args_with_fun)
-    for i in _product(args):
+    for i in product(*args):
         yield dict(i)
-
-def _product(iterable):
-    # taken and adapted from itertools 2.6
-    pools = tuple(iterable)
-    result = [[]]
-    for pool in pools:
-        result = [x+[y] for x in result for y in pool]
-    for prod in result:
-        yield tuple(prod)
 
 def weighted_choice(a_dict, is_normalised=False):
     """Returns a key from a dictionary based on the weight that the value suggests.
