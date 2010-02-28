@@ -180,6 +180,8 @@ class ShogunSVMNode(_SVMNode):
         """
         # Non-standard cases
         if param == "C" and len(value) == 1:
+            # set_C needs two arguments, but if we get only one,
+            # we call set_C(arg, arg)
             value += value
         # get the parameter setting method
         meth = getattr(self.svm, "set_"+param)
@@ -200,20 +202,20 @@ class ShogunSVMNode(_SVMNode):
         
         kernel_meth = getattr(sgKernel, name)
         self.kernel = kernel_meth(*options)
-        
+    
     def _stop_training(self):
-        import pdb
-        pdb.set_trace()
         self.normalizer = _LabelNormalizer(self._cl)
         labels = self.normalizer.normalize(self._cl)
-        print self._x.shape
         self.features = sgFeatures.RealFeatures(self._x.transpose())
 
         if issubclass(self._classifier, sgClassifier.LinearClassifier):
             self.svm.set_features(self.features)
-        else:
+        elif issubclass(self._classifier, sgClassifier.CKernelMachine):
             self.kernel.init(self.features, self.features)
             self.svm.set_kernel(self.kernel)
+        else:
+            msg = "Sorry, other shogun classifiers are not yet implemented"
+            raise mdp.Exception(msg)
         
         # shogun expects floats
         labels = sgFeatures.Labels(labels.astype(float))
@@ -245,10 +247,11 @@ class ShogunSVMNode(_SVMNode):
         test = sgFeatures.RealFeatures(x.transpose())
         if issubclass(self._classifier, sgClassifier.LinearClassifier):
             self.svm.set_features(test)
-        else:
+        elif issubclass(self._classifier, sgClassifier.CKernelMachine):
             self.kernel.init(self.features, test)
         
         labels = self.svm.classify().get_labels()
+        
         if self.normalizer:
             return self.normalizer.revert(labels)
         else:

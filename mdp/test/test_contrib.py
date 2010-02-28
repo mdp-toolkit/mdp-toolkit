@@ -12,7 +12,8 @@ from test_nodes import *
 
 mc = mdp.nodes
 
-import itertools    
+import itertools
+import random
 
 def _s_shape(theta):
     """
@@ -90,16 +91,21 @@ def _random_clusters(positions, radius=1, num_elem=1000):
         data.append(ball)
     return data
 
-def _dual_linear_separable_data(pos_1, pos_2, radius=1, num_elem=1000):
+def _linear_separable_data(positions, labels, radius=1, num_elem=1000, shuffled=False):
     """Tries to make up some linear separable data.
     num_elem - the number of elements in each
     """
+    assert len(positions) == len(labels)
     
-    data = numx.vstack( _random_clusters([pos_1, pos_2], radius, num_elem) )
+    data = numx.vstack( _random_clusters(positions, radius, num_elem) )
     #data = numx.vstack( (numx.random.random( (num_elem,2) ) - dist,
     #                     numx.random.random( (num_elem,2) ) + dist) )
-    labels = numx.hstack((-numx.ones(num_elem), numx.ones(num_elem)))
-    return data, labels
+    a_labels = numx.hstack(map(lambda x: [x] * num_elem, labels))
+    if shuffled:
+        ind = range(len(data))
+        random.shuffle(ind)
+        return data[ind], a_labels[ind]
+    return data, a_labels
 
 class ContribTestSuite(NodesTestSuite):
     def __init__(self, testname=None):
@@ -312,8 +318,8 @@ class ContribTestSuite(NodesTestSuite):
 
     def testShogunSVMNode(self):
         # TODO: Implement parameter ranges
-        num_train = 10
-        num_test = 10
+        num_train = 100
+        num_test = 100
         dist = 1
         width = 2.1
         C = 1
@@ -326,25 +332,20 @@ class ContribTestSuite(NodesTestSuite):
 
             radius = 0.3
 
-            traindata_real, trainlab = _dual_linear_separable_data(pos_1, pos_2, radius, num_train)
-            testdata_real, testlab = _dual_linear_separable_data(pos_1, pos_2, radius, num_test)
+            traindata_real, trainlab = _linear_separable_data((pos_1, pos_2), (-1, 1), radius, num_train, True)
+            testdata_real, testlab = _linear_separable_data((pos_1, pos_2), (-1, 1), radius, num_test, True)
         
             kernels = list(mdp.nodes.ShogunSVMNode.kernel_parameters.keys())
             combinations = {'classifier': ["libsvm", "SVMLin"],
                             'kernel': kernels}
             for comb in utils.orthogonal_permutations(combinations):
-                import pdb
-                pdb.set_trace()
                 sg_node = mdp.nodes.ShogunSVMNode(classifier=comb['classifier'], kernel=comb['kernel'])
                 sg_node.train( traindata_real, trainlab )
                 sg_node.train( traindata_real, trainlab )
 
                 out = sg_node.classify(testdata_real)                
                 # Test also for inverse
-                print testdata_real
-                print numx.sign(out), testlab
                 testerr = numx.all(numx.sign(out) == testlab) or numx.all(numx.sign(out) == -testlab)
-                print testerr
                 assert testerr, ('classification result', comb)
 
     def testLibSVMNode(self):
@@ -361,8 +362,8 @@ class ContribTestSuite(NodesTestSuite):
                              ((1,1,1,1), (-1,-1,-1,-1))]:
             radius = 0.3
 
-            traindata_real, trainlab = _dual_linear_separable_data(pos_1, pos_2, radius, num_train)
-            testdata_real, testlab = _dual_linear_separable_data(pos_1, pos_2, radius, num_test)
+            traindata_real, trainlab = _linear_separable_data((pos_1, pos_2), (-1, 1), radius, num_train, True)
+            testdata_real, testlab = _linear_separable_data((pos_1, pos_2), (-1, 1), radius, num_test, True)
         
             combinations = {'kernel': mdp.nodes.LibSVMNode.kernels,
                             'classifier': mdp.nodes.LibSVMNode.classifiers}
