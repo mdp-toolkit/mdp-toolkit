@@ -85,7 +85,7 @@ class LanguageGuesserDemo():
         
 if __name__ == '__main__':
 
-    parser = OptionParser("usage: %prog --first=FILE --second=file [options] arg")
+    parser = OptionParser("usage: %prog --first=FILE --second=FILE [options] arg")
     parser.add_option("--first", dest="first",
                       help="select the first file to learn", metavar="FILE")
     parser.add_option("--second", dest="second",
@@ -94,7 +94,7 @@ if __name__ == '__main__':
     (options, args) = parser.parse_args()
 
     if not (options.first and options.second):
-        parser.error("You have to supply first and second.")
+        parser.error("You have to supply two files.")
     
     demo = LanguageGuesserDemo((options.first, options.second))
 
