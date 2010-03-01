@@ -46,7 +46,7 @@ class LibSVMNode(_SVMNode):
         return model
 
     def _stop_training(self):
-        self.normalizer = _LabelNormalizer(self._cl)
+        self.normalizer = _LabelNormalizer(self._in_labels)
         
         if self._probability:
             prob = 1
@@ -54,8 +54,8 @@ class LibSVMNode(_SVMNode):
             prob = 0
         self.parameter = libsvm.svm_parameter(kernel_type = self.kernel_type, C=1, probability=prob)
 
-        labels = self.normalizer.normalize(self._cl)
-        features = self._x
+        labels = self.normalizer.normalize(self._in_labels)
+        features = self._in_features
 
         # Call svm training method.
         self.model = self._train_problem(labels, features, self.parameter)

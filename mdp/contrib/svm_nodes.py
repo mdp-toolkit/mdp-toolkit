@@ -54,8 +54,8 @@ class _LabelNormalizer(object):
 class _SVMNode(mdp.ClassifierNode):
 
     def __init__(self, input_dim = None, dtype = None):
-        self._x = numx.array([]) # train data
-        self._cl = numx.array([]) # labels
+        self._in_features = numx.array([]) # train data
+        self._in_labels = numx.array([]) # labels
 
         self.normalizer = None
 
@@ -80,18 +80,18 @@ class _SVMNode(mdp.ClassifierNode):
             raise mdp.TrainingException(msg)
 
     def _append_data(self, x, cl):
-        """Updates self._x and self._cl with appended data from x and cl.
+        """Updates self._in_featurs and self._in_labels with appended data from x and cl.
         """
-        if not len(self._x):
-            self._x = x
+        if not len(self._in_features):
+            self._in_features = x
         else:
-            self._x = numx.concatenate( (self._x, x) )
+            self._in_features = numx.concatenate( (self._in_features, x) )
         # if cl is a number, all x's belong to the same class
         if isinstance(cl, (list, tuple, numx.ndarray)):
-            self._cl = numx.concatenate( (self._cl, cl) )
+            self._in_labels = numx.concatenate( (self._in_labels, cl) )
         else:
             cls = [cl] * len(x)
-            self._cl = numx.concatenate( (self._cl, cls) )
+            self._in_labels = numx.concatenate( (self._in_labels, cls) )
 
     def _train(self, x, cl):
         """Update the internal structures according to the input data 'x'.

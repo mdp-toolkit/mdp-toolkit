@@ -339,11 +339,19 @@ class ContribTestSuite(NodesTestSuite):
             combinations = {'classifier': ["libsvm", "SVMLin"],
                             'kernel': kernels}
             for comb in utils.orthogonal_permutations(combinations):
-                sg_node = mdp.nodes.ShogunSVMNode(classifier=comb['classifier'], kernel=comb['kernel'])
-                sg_node.train( traindata_real, trainlab )
-                sg_node.train( traindata_real, trainlab )
+                if comb['kernel'] in ['PyramidChi2', 'Chi2Kernel']:
+                    # We don't have good init arguments for that one
+                    continue
+                
+                sg_node = mdp.nodes.ShogunSVMNode(classifier=comb['classifier'])
+                if sg_node.classifier.takes_kernel:
+                    sg_node.set_kernel(comb['kernel'])
+                    
+                # train in two chunks to check update mechanism
+                sg_node.train( traindata_real[:num_train], trainlab[:num_train] )
+                sg_node.train( traindata_real[num_train:], trainlab[num_train:] )
 
-                out = sg_node.classify(testdata_real)                
+                out = sg_node.classify(testdata_real)
                 # Test also for inverse
                 testerr = numx.all(numx.sign(out) == testlab) or numx.all(numx.sign(out) == -testlab)
                 assert testerr, ('classification result', comb)
@@ -372,8 +380,10 @@ class ContribTestSuite(NodesTestSuite):
                 svm_node = mdp.nodes.LibSVMNode()
                 svm_node.set_kernel(comb['kernel'])
                 svm_node.set_classifier(comb['classifier'])
-                svm_node.train(traindata_real, trainlab)
-                svm_node.train(traindata_real, trainlab)
+                
+                # train in two chunks to check update mechanism
+                svm_node.train( traindata_real[:num_train], trainlab[:num_train] )
+                svm_node.train( traindata_real[num_train:], trainlab[num_train:] )
 
                 out = svm_node.classify(testdata_real)
 
