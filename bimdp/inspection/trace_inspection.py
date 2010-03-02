@@ -601,7 +601,7 @@ class TraceHTMLTranslator(BiHTMLTranslator):
             if (method_name in ["execute", "train"]) and method_args:
                 # deal with x separately
                 x = method_args[0]
-                args = method_args[1:]
+                method_args = method_args[1:]
                 if isinstance(x, n.ndarray):
                     f.write('<tr><td><pre>x = </pre></td>' +
                             '<td>' + self._array_pretty_html(x) + '</td></tr>')
@@ -609,9 +609,9 @@ class TraceHTMLTranslator(BiHTMLTranslator):
                     f.write('<tr><td><pre>x = </pre></td><td>' + str(x) +
                             '</td></tr>')
             # remaining arg is message
-            if args and args[0] is not None:
+            if method_args and method_args[0] is not None:
                 f.write('<tr><td><pre>msg = </pre></td><td>' +
-                        self._dict_pretty_html(args[0]) + '</td></tr>')
+                        self._dict_pretty_html(method_args[0]) + '</td></tr>')
             # normally the kwargs should be empty
             for arg_key in method_kwargs:
                 f.write('<tr><td><pre>' + arg_key + ' = </pre></td><td>' + 
