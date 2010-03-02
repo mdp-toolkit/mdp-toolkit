@@ -72,7 +72,7 @@ class Classifier(object):
         self._class = None
         self._instance = None
         
-    def set_classifier(self, classifier):
+    def set_classifier(self, classifier, args):
         """Sets and initialises the classifier. If a classifier is reset by the user, 
         the parameters will have to be set again.
         'name' can be a string, a subclass of shogun.Classifier or an instance of such
@@ -91,7 +91,7 @@ class Classifier(object):
             if is_shogun_classifier(classifier):
                 try:
                     self._class = classifier
-                    self._instance = self._class()
+                    self._instance = self._class(*args)
                 except AttributeError:
                     msg = "Library '%s' could not be instantiated. Abstract class?" % classifier
                     raise mdp.NodeException(msg)
@@ -110,7 +110,7 @@ class Classifier(object):
             # Take the first classifier which works
             for cl in possibleClasses:
                 try:
-                    self._instance = cl()
+                    self._instance = cl(*args)
                     self._class = cl
                 except AttributeError:
                     # we might have a virtual class here
@@ -120,8 +120,13 @@ class Classifier(object):
                 raise mdp.NodeException(msg)
 
         if not self._class or not self._instance:
-            msg = "The classifier '%s' is not supported." %classifier
+            msg = "The classifier '%s' is not supported." % classifier
             raise mdp.NodeException(msg)
+        
+        if self.classifier_type() == "CT_NONE":
+            msg = "The classifier '%s' is not valid." % classifier
+            raise mdp.NodeException(msg) 
+            
     
     def classifier_type(self):
         return shogun_classifier_types[self._instance.get_classifier_type()]
@@ -154,11 +159,13 @@ class Classifier(object):
                 raise mdp.NodeException(msg)
             #self.svm.set_kernel(self.kernel)
         else:
-            msg = "Sorry, other shogun classifiers are not yet implemented"
+            msg = "Sorry, shogun classifiers of this type are not yet implemented"
             raise mdp.NodeException(msg)
         
         self._instance.set_labels(labels)
-        
+    
+    def train(self):
+        self._instance.train()
     
     def classify(self, test_features):
         return self._instance.classify(test_features).get_labels()
@@ -205,12 +212,14 @@ class ShogunSVMNode(_SVMNode):
         'SigmoidKernel': [('size', 10), ('gamma', 1), ('coef0', 0)]
     }
 
-    def __init__(self, classifier="libsvmmulticlass", classifier_options=None,
+    def __init__(self, classifier="libsvmmulticlass", classifier_arguments=(),
+                 classifier_options=None,
                  num_threads="autodetect", input_dim=None, dtype=None):
         """
         Keyword arguments:
             
             classifier  -- The classifier to use
+            classifier_arguments -- Arguments needed for the constructor of the classifier
             classifier_options -- Options for the classifier
             num_threads -- The number of threads, shogun should use
                            can be set to "autodetect", then shogun will use the number of cpu cores.
@@ -223,12 +232,15 @@ class ShogunSVMNode(_SVMNode):
             classifier_options = {}
 
         self.classifier = Classifier()
-        self.classifier.set_classifier(classifier)
+        self.classifier.set_classifier(classifier, classifier_arguments)
         self.classifier_options = self.default_parameters
         self.classifier_options.update(classifier_options)
 
         for p in self.classifier_options.keys():
-            self.set_classifier_param(p, self.classifier_options[p])
+            try:
+                self.set_classifier_param(p, self.classifier_options[p])
+            except:
+                pass
             
         self._num_threads = num_threads
         self._set_num_threads()
@@ -290,7 +302,7 @@ class ShogunSVMNode(_SVMNode):
         features = sgFeatures.RealFeatures(self._in_features.transpose())
         
         self.classifier.set_train_features(features, labels)
-        self.classifier._instance.train()
+        self.classifier.train()
         
 
     def training_set(self, ordered=False):
