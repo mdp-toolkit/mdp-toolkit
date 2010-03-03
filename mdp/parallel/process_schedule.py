@@ -38,12 +38,12 @@ if __name__ == "__main__":
         sys.path.append(mdp_path)
     
 import mdp
-import scheduling
+from scheduling import Scheduler, cpu_count
 
 SLEEP_TIME = 0.1  # time spend sleeping when waiting for a free process
 
 
-class ProcessScheduler(scheduling.Scheduler):
+class ProcessScheduler(Scheduler):
     """Scheduler that distributes the task to multiple processes.
     
     The subprocess module is used to start the requested number of processes.
@@ -61,8 +61,8 @@ class ProcessScheduler(scheduling.Scheduler):
         result_container -- ResultContainer used to store the results.
         verbose -- Set to True to get progress reports from the scheduler
             (default value is False).
-        n_processes -- Number of processes used in parallel. This should
-            correspond to the number of processors / cores.
+        n_processes -- Number of processes used in parallel. If None (default)
+            then the number of detected CPU cores is used.
         source_paths -- List of paths that are added to sys.path in
             the processes to make the task unpickling work. A single path
             instead of a list is also accepted.
@@ -79,7 +79,10 @@ class ProcessScheduler(scheduling.Scheduler):
         super(ProcessScheduler, self).__init__(
                                         result_container=result_container,
                                         verbose=verbose)
-        self._n_processes = n_processes
+        if n_processes:
+            self._n_processes = n_processes
+        else:
+            self._n_processes = cpu_count()
         self._cache_callable = cache_callable
         if python_executable is None:
             python_executable = sys.executable

@@ -4,6 +4,12 @@ This module contains the basic classes for task processing via a scheduler.
 
 import threading
 import time
+import os
+try:
+    import multiprocessing
+except ImportError:
+    # Python version < 2.6, have to use fallbacks
+    pass
 
 
 class ResultContainer(object):
@@ -127,6 +133,32 @@ class TaskCallableWrapper(TaskCallable):
     def __call__(self, data):
         """Call the internal callable with the data and return the result."""
         return self._callable(data)
+    
+    
+# helper function
+def cpu_count():
+    """Return the number of CPU cores."""
+    try:
+        return multiprocessing.cpu_count()
+    except NameError:
+        ## This code part is taken from parallel python.
+        # Linux, Unix and MacOS
+        if hasattr(os, "sysconf"):
+            if os.sysconf_names.has_key("SC_NPROCESSORS_ONLN"):
+                # Linux & Unix
+                n_cpus = os.sysconf("SC_NPROCESSORS_ONLN")
+                if isinstance(n_cpus, int) and n_cpus > 0:
+                    return n_cpus
+            else:
+                # OSX
+                return int(os.popen2("sysctl -n hw.ncpu")[1].read())
+        # Windows
+        if os.environ.has_key("NUMBER_OF_PROCESSORS"):
+            n_cpus = int(os.environ["NUMBER_OF_PROCESSORS"])
+            if n_cpus > 0:
+                return n_cpus
+        # Default
+        return 1 
     
 
 class Scheduler(object):

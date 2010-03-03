@@ -19,6 +19,11 @@ class TestScheduler(unittest.TestCase):
         # check result
         results = n.array(results)
         self.assertTrue(n.all(results == n.array([0,1,4,9,16,25])))
+        
+    def test_cpu_count(self):
+        """Test the cpu_count helper function."""
+        n_cpus = parallel.cpu_count()
+        self.assertTrue(isinstance(n_cpus, int))
     
         
 class TestThreadScheduler(unittest.TestCase):

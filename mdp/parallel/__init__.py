@@ -19,7 +19,8 @@ have to know anything about flows or nodes.
 
 from scheduling import (
     ResultContainer, ListResultContainer, OrderedResultContainer, TaskCallable,
-    SqrTestCallable, SleepSqrTestCallable, TaskCallableWrapper, Scheduler
+    SqrTestCallable, SleepSqrTestCallable, TaskCallableWrapper, Scheduler,
+    cpu_count
 )
 from process_schedule import ProcessScheduler
 from thread_schedule import ThreadScheduler

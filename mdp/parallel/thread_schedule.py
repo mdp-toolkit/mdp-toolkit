@@ -5,7 +5,7 @@ Thread based scheduler for distribution across multiple CPU cores.
 import threading
 import time
 
-from scheduling import Scheduler
+from scheduling import Scheduler, cpu_count
 
 SLEEP_TIME = 0.1  # time spend sleeping when waiting for a thread to finish
 
@@ -20,10 +20,21 @@ class ThreadScheduler(Scheduler):
     """
 
     def __init__(self, result_container=None, verbose=False, n_threads=1):
+        """Initialize the scheduler.
+        
+        result_container -- ResultContainer used to store the results.
+        verbose -- Set to True to get progress reports from the scheduler
+            (default value is False).
+        n_threads -- Number of threads used in parallel. If None (default)
+            then the number of detected CPU cores is used.
+        """
         super(ThreadScheduler, self).__init__(
                                             result_container=result_container,
                                             verbose=verbose)
-        self._n_threads = n_threads
+        if n_threads:
+            self._n_threads = n_threads
+        else:
+            self._n_threads = cpu_count()
         self._n_active_threads = 0
         
     def _process_task(self, data, task_callable, task_index):
