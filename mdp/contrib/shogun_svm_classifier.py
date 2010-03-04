@@ -3,7 +3,7 @@ from mdp import numx
 
 import warnings
 
-from svm_nodes import _SVMNode, _LabelNormalizer
+from svm_classifiers import _SVMClassifier, _LabelNormalizer
 
 import shogun.Kernel as sgKernel
 import shogun.Features as sgFeatures
@@ -22,13 +22,14 @@ import shogun.Classifier as sgClassifier
 #    warnings.warn(msg, UserWarning)
 
 
+# maybe integrate to the class
 def is_shogun_classifier(test_classifier):
     try:
         return issubclass(test_classifier, sgClassifier.Classifier)
     except (TypeError, NameError):
         # need to fetch NameError for some swig reasons
         return False
-
+    
 default_shogun_classifiers = []
 for cl in dir(sgClassifier):
     test_classifier = getattr(sgClassifier, cl)
@@ -39,6 +40,7 @@ shogun_classifier_types = {}
 for ct in dir(sgClassifier):
     if ct.startswith("CT_"):
         shogun_classifier_types[getattr(sgClassifier, ct)] = ct
+
 
 class _OrderedDict(object):
     """Very simple version of an ordered dict."""
@@ -191,8 +193,8 @@ class Classifier(object):
     kernel = property(_get_kernel, _set_kernel)
     
 
-class ShogunSVMNode(_SVMNode):
-    """The ShogunSVMNode works as a wrapper class for accessing the shogun library
+class ShogunSVMClassifier(_SVMClassifier):
+    """The ShogunSVMClassifier works as a wrapper class for accessing the shogun library
     for support vector machines.
     """
 
@@ -226,7 +228,7 @@ class ShogunSVMNode(_SVMNode):
                            Attention: this could crash on windows
         
         """
-        super(ShogunSVMNode, self).__init__(input_dim=input_dim, dtype=dtype)
+        super(ShogunSVMClassifier, self).__init__(input_dim=input_dim, dtype=dtype)
         
         if classifier_options is None:
             classifier_options = {}
@@ -278,8 +280,8 @@ class ShogunSVMNode(_SVMNode):
         """
         if kernel_options is None:
             kernel_options = {}
-        if kernel_name in ShogunSVMNode.kernel_parameters and not isinstance(kernel_options, list):
-            default_opts = _OrderedDict(ShogunSVMNode.kernel_parameters[kernel_name])
+        if kernel_name in ShogunSVMClassifier.kernel_parameters and not isinstance(kernel_options, list):
+            default_opts = _OrderedDict(ShogunSVMClassifier.kernel_parameters[kernel_name])
             default_opts.update(kernel_options)
             options = default_opts.values
         
@@ -329,4 +331,3 @@ class ShogunSVMNode(_SVMNode):
             return self.normalizer.revert(labels)
         else:
             return labels
-        

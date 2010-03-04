@@ -1,11 +1,11 @@
 import mdp
 from mdp import numx, numx_rand
 
-from svm_nodes import _SVMNode, _LabelNormalizer
+from svm_classifiers import _SVMClassifier, _LabelNormalizer
 
 import svm as libsvm
 
-class LibSVMNode(_SVMNode):
+class LibSVMClassifier(_SVMClassifier):
 
     kernels = ["RBF", "LINEAR", "POLY", "SIGMOID"]
     classifiers = ["C_SVC", "NU_SVC", "ONE_CLASS", "EPSILON_SVR", "NU_SVR"]
@@ -17,7 +17,7 @@ class LibSVMNode(_SVMNode):
         self.kernel_type = libsvm.RBF
         self._probability = probability
         self._classification_type = "multi"
-        super(LibSVMNode, self).__init__(input_dim=input_dim, dtype=dtype)
+        super(LibSVMClassifier, self).__init__(input_dim=input_dim, dtype=dtype)
 
     def set_classifier(self, classifier):
         if classifier.upper() in self.classifiers:
@@ -75,5 +75,5 @@ class LibSVMNode(_SVMNode):
             return self.model.predict_probability(x)
 
     def _train(self, x, cl):
-        super(LibSVMNode, self)._train(x, cl)
+        super(LibSVMClassifier, self)._train(x, cl)
 

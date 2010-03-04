@@ -51,7 +51,7 @@ class _LabelNormalizer(object):
         return labels
 
 
-class _SVMNode(mdp.ClassifierNode):
+class _SVMClassifier(mdp.ClassifierNode):
 
     def __init__(self, input_dim = None, dtype = None):
         self._in_features = numx.array([]) # train data
@@ -59,7 +59,7 @@ class _SVMNode(mdp.ClassifierNode):
 
         self.normalizer = None
 
-        super(_SVMNode, self).__init__(input_dim, None, dtype)
+        super(_SVMClassifier, self).__init__(input_dim, None, dtype)
 
     def is_invertible(self):
         return False

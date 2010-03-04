@@ -434,13 +434,13 @@ class LLEBiNode(BiNode, mdp.nodes.LLENode):
         """
         super(LLEBiNode, self).__init__(k=k, r=r, svd=svd, verbose=verbose, input_dim=input_dim, output_dim=output_dim, dtype=dtype, node_id=node_id, stop_result=stop_result)
 
-class LibSVMBiNode(BiNode, mdp.nodes.LibSVMNode):
-    """Automatically created BiNode version of LibSVMNode."""
+class LibSVMClassiBiNode(BiNode, mdp.nodes.LibSVMClassifier):
+    """Automatically created BiNode version of LibSVMClassifier."""
     def __init__(self, probability=True, input_dim=None, dtype=None, node_id=None, stop_result=None):
         """
         probability -- Shall the probability be computed
         """
-        super(LibSVMBiNode, self).__init__(probability=probability, input_dim=input_dim, dtype=dtype, node_id=node_id, stop_result=stop_result)
+        super(LibSVMClassiBiNode, self).__init__(probability=probability, input_dim=input_dim, dtype=dtype, node_id=node_id, stop_result=stop_result)
 
 class LinearRegressionBiNode(BiNode, mdp.nodes.LinearRegressionNode):
     """Automatically created BiNode version of LinearRegressionNode."""
@@ -576,30 +576,21 @@ class SFABiNode(BiNode, mdp.nodes.SFANode):
     def __init__(self, input_dim=None, output_dim=None, dtype=None, node_id=None, stop_result=None):
         super(SFABiNode, self).__init__(input_dim=input_dim, output_dim=output_dim, dtype=dtype, node_id=node_id, stop_result=stop_result)
 
-class ShogunSVMBiNode(BiNode, mdp.nodes.ShogunSVMNode):
-    """Automatically created BiNode version of ShogunSVMNode."""
-    def __init__(self, classifier='libsvmmulticlass', classifier_options=None, kernel='GaussianKernel', kernel_options=None, num_threads='autodetect', input_dim=None, dtype=None, node_id=None, stop_result=None):
+class ShogunSVMClassiBiNode(BiNode, mdp.nodes.ShogunSVMClassifier):
+    """Automatically created BiNode version of ShogunSVMClassifier."""
+    def __init__(self, classifier='libsvmmulticlass', classifier_arguments=(), classifier_options=None, num_threads='autodetect', input_dim=None, dtype=None, node_id=None, stop_result=None):
         """
         Keyword arguments:
             
             classifier  -- The classifier to use
+            classifier_arguments -- Arguments needed for the constructor of the classifier
             classifier_options -- Options for the classifier
-            kernel      -- The kernel to use. Default parameters are specified for
-                             "PolyKernel"
-                             "GaussianKernel"
-                             "LinearKernel"
-                             "SigmoidKernel"
-                            Further kernels are possible if they are included in shogun
-                            and if kernel_options provides the correct init arguments.
-            kernel_options -- For known kernels, a dict specifying the options is possible,
-                           options not included take a default value.
-                           Unknown kernels need an ordered list of constructor arguments.
             num_threads -- The number of threads, shogun should use
                            can be set to "autodetect", then shogun will use the number of cpu cores.
                            Attention: this could crash on windows
         
         """
-        super(ShogunSVMBiNode, self).__init__(classifier=classifier, classifier_options=classifier_options, kernel=kernel, kernel_options=kernel_options, num_threads=num_threads, input_dim=input_dim, dtype=dtype, node_id=node_id, stop_result=stop_result)
+        super(ShogunSVMClassiBiNode, self).__init__(classifier=classifier, classifier_arguments=classifier_arguments, classifier_options=classifier_options, num_threads=num_threads, input_dim=input_dim, dtype=dtype, node_id=node_id, stop_result=stop_result)
 
 class SignumClassiBiNode(BiNode, mdp.nodes.SignumClassifier):
     """Automatically created BiNode version of SignumClassifier."""

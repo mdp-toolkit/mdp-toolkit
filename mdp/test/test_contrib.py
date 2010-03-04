@@ -316,7 +316,7 @@ class ContribTestSuite(NodesTestSuite):
         assert min(corrs) > 0.8, ('source/estimate minimal'
                                   ' covariance: %g' % min(corrs))
 
-    def testShogunSVMNode(self):
+    def testShogunSVMClassifier(self):
         # TODO: Implement parameter ranges
         num_train = 10
         num_test = 10
@@ -359,7 +359,7 @@ class ContribTestSuite(NodesTestSuite):
             
             print default_shogun_classifiers
             
-            kernels = list(mdp.nodes.ShogunSVMNode.kernel_parameters.keys())
+            kernels = list(mdp.nodes.ShogunSVMClassifier.kernel_parameters.keys())
             combinations = {'classifier': default_shogun_classifiers, # ["libsvm", "SVMLin"],
                             'kernel': kernels}
             for comb in utils.orthogonal_permutations(combinations):
@@ -374,7 +374,7 @@ class ContribTestSuite(NodesTestSuite):
                     continue
                 #print "Trying", comb
                 try:
-                    sg_node = mdp.nodes.ShogunSVMNode(classifier=comb['classifier'])
+                    sg_node = mdp.nodes.ShogunSVMClassifier(classifier=comb['classifier'])
                 except mdp.NodeException:
                     print "%s failed to initialise" % comb['classifier']
                     continue
@@ -394,7 +394,7 @@ class ContribTestSuite(NodesTestSuite):
                     print numx.sign(out).astype(int), testlab
                 #assert testerr, ('classification result', comb)
 
-    def testLibSVMNode(self):
+    def testLibSVMClassifier(self):
         num_train = 100
         num_test = 100
         dist = 0.4
@@ -411,11 +411,11 @@ class ContribTestSuite(NodesTestSuite):
             traindata_real, trainlab = _linear_separable_data((pos_1, pos_2), (-1, 1), radius, num_train, True)
             testdata_real, testlab = _linear_separable_data((pos_1, pos_2), (-1, 1), radius, num_test, True)
         
-            combinations = {'kernel': mdp.nodes.LibSVMNode.kernels,
-                            'classifier': mdp.nodes.LibSVMNode.classifiers}
+            combinations = {'kernel': mdp.nodes.LibSVMClassifier.kernels,
+                            'classifier': mdp.nodes.LibSVMClassifier.classifiers}
         
             for comb in utils.orthogonal_permutations(combinations):
-                svm_node = mdp.nodes.LibSVMNode()
+                svm_node = mdp.nodes.LibSVMClassifier()
                 svm_node.set_kernel(comb['kernel'])
                 svm_node.set_classifier(comb['classifier'])
                 

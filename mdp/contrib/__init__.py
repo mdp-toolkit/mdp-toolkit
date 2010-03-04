@@ -6,16 +6,16 @@ from xsfa_nodes import XSFANode
 __all__ = ['JADENode', 'NIPALSNode', 'LLENode', 'HLLENode', 'XSFANode']
 
 try:
-    from shogun_svm_node import ShogunSVMNode
-    __all__ += ['ShogunSVMNode']
-    del shogun_svm_node
+    from shogun_svm_classifier import ShogunSVMClassifier
+    __all__ += ['ShogunSVMClassifier']
+    del shogun_svm_classifier
 except ImportError:
     pass
 
 try:
-    from libsvm_node import LibSVMNode
-    __all__ += ['LibSVMNode']
-    del libsvm_node
+    from libsvm_classifier import LibSVMClassifier
+    __all__ += ['LibSVMClassifier']
+    del libsvm_classifier
 except ImportError:
     pass
 

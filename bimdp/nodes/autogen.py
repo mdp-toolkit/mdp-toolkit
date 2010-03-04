@@ -13,11 +13,11 @@ AUTOMATIC_MDP_NODES = [
     'AdaptiveCutoffNode', 'CuBICANode', 'CutoffNode', 'EtaComputerNode',
     'FANode', 'FDANode', 'FastICANode', 'GrowingNeuralGasExpansionNode',
     'GrowingNeuralGasNode', 'HLLENode', 'HistogramNode', 'HitParadeNode',
-    'ICANode', 'ISFANode', 'IdentityNode', 'JADENode', 'LLENode', 'LibSVMNode',
+    'ICANode', 'ISFANode', 'IdentityNode', 'JADENode', 'LLENode', 'LibSVMClassifier',
     'LinearRegressionNode', 'NIPALSNode', 'NormalNoiseNode',
     'PCANode', 'PerceptronClassifier', 'PolynomialExpansionNode',
     'QuadraticExpansionNode', 'RBFExpansionNode', 'RBMNode',
-    'RBMWithLabelsNode', 'SFA2Node', 'SFANode', 'ShogunSVMNode',
+    'RBMWithLabelsNode', 'SFA2Node', 'SFANode', 'ShogunSVMClassifier',
     'SignumClassifier', 'SimpleMarkovClassifier', 'TDSEPNode',
     'TimeFramesNode', 'WhiteningNode', 'XSFANode',
 ]
