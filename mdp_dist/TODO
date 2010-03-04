@@ -1,0 +1,82 @@
+
+blockers for MDP 3.0
+====================
+- add classifier stuff
+- finish SVM integration and port my existing shogun bindings to newest version (rike)
+- bimdp: write more unittests and write tutorial section
+- create a Flow metaclass to enable Flow extensions (think of ParallelFlow!)
+- implement an extension context manager with additional parameters and 
+  exception handling. E.g.:
+  flow = Flow([PCANode()])
+  with extension('parallel', args=(ProcessScheduler,8)):
+      flow.train(x)
+  note that the context manager takes care of initialize and shutting down the
+  scheduler. Proposed syntax:
+  extension(string, args=tuple, kwargs=dictionary)
+- switch to a more permissive license (like BSD)
+- refactor tests for nodes using optional libraries
+- offer interface to query available optional libraries (remove try excepts)
+- add an example of training a node with multiple training phases using a flow,
+  where the training is done first using lists and then using a custom iterators.
+  special care should be taken on explaining how to pass additional arguments to
+  the train method. an example of how this can look confusing and go wrong can be 
+  found in the testFlowWrongItarableException test in test_flows.py
+
+optional for MDP 3.0
+====================
+- add example section on the homepage
+- bimdp: add deep belief network example
+- refactor unitests
+- check if sphinx could be used as an alternative for automatic API docs
+- add cross-correlation tools, maybe support the use of a parallel scheduler
+- add execute memoize extension?
+- drop python 2.4 and use/advertise 'with' statement syntax?
+
+beyond the next release
+=======================
+- migration to Python 3 when the dependencies are ready
+- parallel: provide adapters for more sophisticated schedulers
+
+
+
+
+old list
+========
+
+MDP 2.5 30.06.2009:
+
+- solve the svn revision tracking problem (see log comment on rev 468)
+
+MDP 2.4 17.10.2008:
+
+- LinearRegressionNode: add optional 2nd phase that computes residuals
+  and significance of the slope
+- check eta value calculations: shouldn't t-> T/t=tlen?
+- provide a Node pickler, for arrays use the binary numpy format (npy,
+  numpy.save, numpy.load) and not pickle: pickling arrays is unsupported
+- add benchmarks for parallel module
+- provide different versions of the MDP logo which includes the
+  website address, possibly one higher quality print version,
+  available in "how to cite" section
+- short and long description in a single file, automatically 
+  updated everywhere (tutorial, sf.net, setup.py, webpage, 
+  MDP announcement, ...) 
+- wrappers for external libraries? (which ones?)
+- forward compatible with python 3?
+- POSTPONED TO PY2.6 should is_trainable, is_invertible be class 
+  attributes or maybe a class decorator?
+- think about a better structure for the unittests in the future,
+  the transition could happen package by package 
+  (starting with parallel)
+- Implement Node.copy() via the copy module? Provide __deepcopy__ method?
+- Use the new property decorators when migrating to Python 2.6 (see
+  http://docs.python.org/library/functions.html#property).
+
+MDP 2.3 15.5.2008:
+
+- check weird Segmentation Fault in testRoundOffWarningCovMatrix with type='g'
+  (it's probably a numpy.dot bug)
+- better tests for 'QuadraticForms'
+- kalman filters
+- memory profiler
+- GUI

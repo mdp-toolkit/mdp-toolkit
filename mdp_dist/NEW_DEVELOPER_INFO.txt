@@ -1,0 +1,82 @@
+Dear new MDP developer, we'll try here to summarize some policies
+and best-practices we'd like any MDP contributor to follow. 
+
+- Create an account on sourceforge.net and tell us your username
+  there, so that we can add you to the list of developers and give
+  you access to our SVN/HG repositories
+
+- Please only commit code in the directory 
+  mdp/trunk/mdp/contrib/ 
+  If your code contributions should need modification somewhere else
+  in the MDP code base, write to
+  mdp-toolkit-devel@lists.sourceforge.net
+  for assistance and instructions how to proceed.
+  
+- The only exception to the previous rule are the tests for your code. They
+  should be added in 
+  mdp/trunk/mdp/test/test_contrib.py
+  Look how other contrib nodes are tested in the ContribTestSuite
+  class in this file, and make sure your tests fit within that
+  framework. Be particularly aware of the automatic testing of
+  setting and consistency of input_dim, output_dim and dtype.
+
+- Remember to set the supported dtypes for your nodes.
+  Example of a node supporting only single and double precision:
+  SFANode in mdp/trunk/mdp/nodes/sfa_nodes.py
+  Example of a node supporting almost every dtype:
+  HitParadeNode in mdp/trunk/mdp/nodes/misc_nodes.py
+
+- If setting input_dim, output_dim or dtype has side effects, remember to
+  implement that in the _set_input_dim, _set_output_dim, _set_dtype
+  functions. 
+  Several examples are available in 
+  mdp/trunk/mdp/nodes/
+
+- Your code contribution should not have any additional
+  dependencies, i.e. they should require only the numpy module to be
+  installed. If your code requires some other module, e.g. scipy or
+  C++ compilation, ask
+  mdp-toolkit-devel@lists.sourceforge.net
+  for assistance.
+
+- Always import numpy in your code as 
+  from mdp import numx
+  "numx" is a placeholder we use to automatically import scipy
+  instead of numpy when scipy is installed on the system.
+
+- Only raise NodeException. If you need custom exceptions, derive
+  them from mdp.NodeException
+
+- Your nodes needs to pass the automatic tests for setting and
+  consistency of input_dim, output_dim and dtype *and* at least one
+  functional test, which should test the algorithm possibly in a
+  non-trivial way and compare its results with exact data you can
+  derive analytically. If the latter is not possible, you should
+  compare results and expected data within a certain precision. Look
+  for example at testPCANode in mdp/trun/test/test_nodes.py .
+
+- You nodes must have telling and explicit doc-strings. In
+  particular, the class doc-string must cite references (if any) for
+  the algorithm, and list the internal attributes of interest for
+  the user. Any method not belonging to the base Node class must be
+  clearly documented in its doc-string. Error messages must give an
+  hint to the user what's wrong and possible ways around the
+  problem. Any non trivial algorithmic step in the code must be
+  commented, so that other developers understand what's going on. If
+  you have doubts, mark the code with 
+  
+  #???
+  
+  If you think a better implementation is possible or additional
+  work is needed, mark the code with
+  
+  #TODO
+
+  Have a look at the SFANode implementation for an example.
+
+- When you commit your code *always* provide a meaningful log
+  message: it will be mailed automatically to all other developers!
+
+- This list is far from being complete, please let us know your
+  comments and remarks :-)
+ 
