@@ -255,9 +255,12 @@ class BiNode(mdp.Node):
                 stored_stop_result = self._stop_result[self._train_phase - 1]
             else:
                 stored_stop_result = self._stop_result
+            # make sure that the original dict in stored_stop_result is not
+            # modified (this could have unexpected consequences in some cases)
+            stored_msg = stored_stop_result[0].copy()
             if msg:
-                stored_stop_result[0].update(msg)
-            msg = stored_stop_result[0]
+                stored_msg.update(msg)
+                msg = stored_msg
             if target is None:
                 target = stored_stop_result[1]
         return self._combine_message_result(result, msg, target)
@@ -292,14 +295,20 @@ class BiNode(mdp.Node):
                 if isinstance(result, tuple):
                     x = result[0]
                     if result[1] is not None:
-                        # result 1 must be dict
+                        # result[1] must be dict
                         result[1]["x"] = x
-                        result = result[1:]
+                        if len(result) > 2:
+                            result = result[1:]
+                        else:
+                            result = result[1]
                     else:
-                        result = ({"x": x},) + result[2:]
+                        if len(result) > 2:
+                            result = ({"x": x}, result[2])
+                        else:
+                            result = {"x": x}
                 else:
                     # result must be single x value
-                    result = {"x": x}
+                    result = {"x": result}
         return self._combine_message_result(result, msg, target)
     
     def _stop_message(self):
@@ -437,7 +446,7 @@ class BiNode(mdp.Node):
     def _combine_message_result(result, msg, target):
         """Combine the message result with the provided values.
         
-        result -- None or (msg, target)
+        result -- None, msg or (msg, target)
         
         The values in result always have priority.
         If not target is available then the remaining message is dropped.
