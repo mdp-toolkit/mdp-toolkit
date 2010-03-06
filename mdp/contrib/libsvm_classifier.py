@@ -74,6 +74,9 @@ class LibSVMClassifier(_SVMClassifier):
         else:
             return self.model.predict_probability(x)
 
+    def _prob(self, x):
+        return [self.model.predict_probability(xi)[1] for xi in x]
+
     def _train(self, x, cl):
         super(LibSVMClassifier, self)._train(x, cl)
 
