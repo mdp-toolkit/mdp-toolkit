@@ -25,7 +25,7 @@ blockers for MDP 3.0
 optional for MDP 3.0
 ====================
 - add example section on the homepage
-- bimdp: add deep belief network flow
+- bimdp: add deep belief network flow and nodes
 - refactor unitests
 - check if sphinx could be used as an alternative for automatic API docs
 - add cross-correlation tools, maybe support the use of a parallel scheduler
