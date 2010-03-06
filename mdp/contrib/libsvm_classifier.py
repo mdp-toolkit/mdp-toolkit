@@ -52,7 +52,9 @@ class LibSVMClassifier(_SVMClassifier):
             prob = 1
         else:
             prob = 0
-        self.parameter = libsvm.svm_parameter(kernel_type = self.kernel_type, C=1, probability=prob)
+        self.parameter = libsvm.svm_parameter(svm_type=self.classifier_type,
+                                              kernel_type=self.kernel_type,
+                                              C=1, probability=prob)
 
         labels = self.normalizer.normalize(self._in_labels)
         features = self._in_features
