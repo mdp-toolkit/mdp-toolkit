@@ -270,7 +270,10 @@ class BiNode(mdp.Node):
         If the return value is (msg, target) then stop_message(msg) is called
         on the target node.
         
-        This template method calls the _stop_message method.
+        This template method calls the _stop_message method or another method
+        specified in the method. If the specified method is specified as
+        'execute' or 'inverse' then the 'x' value is extracted and stored in
+        the message and the target defaults to 1 or -1.
         """
         if not msg:
             return self._stop_message()
@@ -279,8 +282,24 @@ class BiNode(mdp.Node):
         method_name = self._extract_message_key("method", msg, msg_id_keys)
         method, target = self._get_method(method_name, self._stop_message,
                                           target)
+        if method_name == "execute":
+            # TODO: perform dimensionality checks?
+            target = 1
         msg, arg_dict = self._extract_method_args(method, msg, msg_id_keys)
         result = method(**arg_dict)
+        if method_name == "execute" or method_name == "inverse":
+            if result is not None:
+                if isinstance(result, tuple):
+                    x = result[0]
+                    if result[1] is not None:
+                        # result 1 must be dict
+                        result[1]["x"] = x
+                        result = result[1:]
+                    else:
+                        result = ({"x": x},) + result[2:]
+                else:
+                    # result must be single x value
+                    result = {"x": x}
         return self._combine_message_result(result, msg, target)
     
     def _stop_message(self):
