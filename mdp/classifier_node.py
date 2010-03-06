@@ -1,4 +1,5 @@
 import mdp
+import operator
 
 class ClassifierNode(mdp.Node):
     """A ClassifierNode can be used for classification tasks that should not interfere
@@ -12,10 +13,14 @@ class ClassifierNode(mdp.Node):
         The optional threshold parameter is used to exclude labels having equal
         or less probability. E.g. threshold=0 excludes all labels with zero probability.
         """
+        all_ranking = []
         prob = self.prob(x)
-        ranking = [(k, v) for k, v in prob.items() if v > threshold]
-        ranking.sort(cmp=lambda x, y: cmp(x[1], y[1]))
-        return ranking
+        for p in prob:
+            ranking = [(k, v) for k, v in p.items() if v > threshold]
+            ranking.sort(key=operator.itemgetter(1))
+            ranking = map(operator.itemgetter(0), ranking)
+            all_ranking.append(ranking)
+        return all_ranking
     
     def _classify(self, x, *args, **kargs):
         raise NotImplementedError
