@@ -518,6 +518,7 @@ class TraceHTMLTranslator(BiHTMLTranslator):
     def _array_pretty_html(ar):
         """Return a nice HTML representation of the given numpy array."""
         ar_str = 'shape: %s<br>\n' % str(ar.shape)
+        # TODO: use np.savetxt instead?
         ar_str += (str(ar).replace(' [', '<br>\n[').
                     replace(']\n ...', ']<br>\n...'))
         return ar_str
