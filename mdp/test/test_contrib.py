@@ -69,19 +69,14 @@ def _randomly_filled_hypercube(widths, num_elem=1000):
 
 def _randomly_filled_hyperball(dim, radius, num_elem=1000):
     """Fills a hyperball with a number of random elements.
-    
-    Note: the algorithm is of a very bad order for large dimensions.
     """
-    p = []
-    widths = [radius*2 for _ in range(dim)]
-    for i in xrange(num_elem):
-        while True:
-            cube_point = _randomly_filled_hypercube(widths, 1)[0]
-            norm = numx.math.sqrt(numx.dot(cube_point, cube_point))
-            if norm < radius:
-                p.append(cube_point)
-                break
-    return p
+    r = numx.random.random(num_elem)
+    points = numx.random.random((num_elem, dim))
+    for i in xrange(len(points)):
+        norm = numx.linalg.norm(points[i])
+        scale = pow(r[i], 1./dim)
+        points[i] = points[i] * radius * scale / norm
+    return points
 
 def _random_clusters(positions, radius=1, num_elem=1000):
     """Puts random clusters with num_elem elements at the given positions.
