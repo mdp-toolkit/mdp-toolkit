@@ -318,17 +318,18 @@ class ContribTestSuite(NodesTestSuite):
 
     def testShogunSVMClassifier(self):
         # TODO: Implement parameter ranges
-        num_train = 10
-        num_test = 10
+        num_train = 100
+        num_test = 50
         dist = 1
         width = 2.1
         C = 1
         epsilon = 1e-5
-        for positions in [#((1,), (-1,)),
-                          ((1,1), (-1,-1), (1, -1), (-1, 1)),
-                          #((1,1,1), (-1,-1,1)),
-                          #((1,1,1,1), (-1,1,1,1)),
-                          #((1,1,1,1), (-1,-1,-1,-1))
+        for positions in [((1,), (-1,)),
+                          ((1,1), (-1,-1)),
+                          ((1,1,1), (-1,-1,1)),
+                          ((1,1,1,1), (-1,1,1,1)),
+                          ((1,1,1,1), (-1,-1,-1,-1)),
+                          ((1,1), (-1,-1), (1, -1), (-1, 1))
                           ]:
 
             radius = 0.3
@@ -343,41 +344,28 @@ class ContribTestSuite(NodesTestSuite):
             testdata_real, testlab = _linear_separable_data(positions, labels, radius, num_test)
             
             
-            from shogun import Classifier
-            def is_shogun_classifier(test_classifier):
-                try:
-                    return issubclass(test_classifier, (Classifier.CKernelMachine, Classifier.LinearClassifier))
-                except (TypeError, NameError):
-                    # need to fetch NameError for some swig reasons
-                    return False
-
-            default_shogun_classifiers = []
-            for cl in dir(Classifier):
-                test_classifier = getattr(Classifier, cl)
-                if is_shogun_classifier(test_classifier):
-                    default_shogun_classifiers.append(test_classifier)
+            classifiers = ['GMNPSVM', 'GNPPSVM', 'GPBTSVM', 'KernelPerceptron', 'LDA',
+                           'LibSVM',# 'LibSVMOneClass',# 'MPDSVM', 
+                           'Perceptron', 'SVMLin']
+            kernels = ['PolyKernel', 'LinearKernel', 'SigmoidKernel', 'GaussianKernel']
             
-            print default_shogun_classifiers
-            
-            kernels = list(mdp.nodes.ShogunSVMClassifier.kernel_parameters.keys())
-            combinations = {'classifier': default_shogun_classifiers, # ["libsvm", "SVMLin"],
+            #kernels = list(mdp.nodes.ShogunSVMClassifier.kernel_parameters.keys())
+            combinations = {'classifier': classifiers,
                             'kernel': kernels}
+            
             for comb in utils.orthogonal_permutations(combinations):
+                # this is redundant but makes it clear what has been taken out deliberately
                 if comb['kernel'] in ['PyramidChi2', 'Chi2Kernel']:
-                    # We don't have good init arguments for that one
+                    # We don't have good init arguments for these
                     continue
-                if comb['classifier'].__name__ in ['LaRank', 'LibLinear', 'LibSVMMultiClass',
-                                                   'MKLClassification', 'MKLMultiClass', 'MKLOneClass',
-                                                   'MultiClassSVM', 'SVM', 'SVMOcas', 'SVMSGD', 'ScatterSVM',
-                                                   'SubGradientSVM']:
-                    # We don't have good init arguments for that one
+                if comb['classifier'] in ['LaRank', 'LibLinear', 'LibSVMMultiClass',
+                                          'MKLClassification', 'MKLMultiClass', 'MKLOneClass',
+                                          'MultiClassSVM', 'SVM', 'SVMOcas', 'SVMSGD', 'ScatterSVM',
+                                          'SubGradientSVM']:
+                    # We don't have good init arguments for these and/or they work differently
                     continue
-                #print "Trying", comb
-                try:
-                    sg_node = mdp.nodes.ShogunSVMClassifier(classifier=comb['classifier'])
-                except mdp.NodeException:
-                    print "%s failed to initialise" % comb['classifier']
-                    continue
+                
+                sg_node = mdp.nodes.ShogunSVMClassifier(classifier=comb['classifier'])
                 
                 if sg_node.classifier.takes_kernel:
                     sg_node.set_kernel(comb['kernel'])
@@ -387,16 +375,45 @@ class ContribTestSuite(NodesTestSuite):
                 sg_node.train( traindata_real[num_train:], trainlab[num_train:] )
                 
                 out = sg_node.classify(testdata_real)
+                
+                if sg_node.classifier.takes_kernel:
+                    # check that the kernel has stored all our training vectors
+                    assert sg_node.classifier.kernel.get_num_vec_lhs() == num_train * len(positions)
+                    # check that the kernel has also stored the latest classification vectors in rhs
+                    assert sg_node.classifier.kernel.get_num_vec_rhs() == num_test * len(positions)
+                
                 # Test also for inverse
-                test_okay = numx.all(numx.sign(out) == testlab) or numx.all(numx.sign(out) != testlab)
-                if not test_okay:
-                    print comb, "failed"
-                    print numx.sign(out).astype(int), testlab
-                #assert testerr, ('classification result', comb)
+                worked = numx.all(numx.sign(out) == testlab) or numx.all(numx.sign(out) == -testlab)
+                failed = not worked
+
+                should_fail = False
+                if len(positions) == 2:
+                    if comb['classifier'] in ['LibSVMOneClass', 'KernelPerceptron', 'GMNPSVM', ]:
+                        should_fail = True
+                    if comb['classifier'] == 'GPBTSVM' and comb['kernel'] in ['LinearKernel']:
+                        should_fail = True
+                
+                # xor problem
+                if len(positions) == 4:
+                    if comb['classifier'] in ['LibSVMOneClass', 'SVMLin', 'Perceptron', 'LDA', 'KernelPerceptron', 'GMNPSVM']:
+                        should_fail = True
+                    if comb['classifier'] == 'LibSVM' and comb['kernel'] in ['LinearKernel', 'SigmoidKernel']:
+                        should_fail = True
+                    if comb['classifier'] == 'GPBTSVM' and comb['kernel'] in ['LinearKernel', 'SigmoidKernel']:
+                        should_fail = True
+                    if comb['classifier'] == 'GNPPSVM' and comb['kernel'] in ['LinearKernel', 'SigmoidKernel']:
+                        should_fail = True
+                
+                if should_fail:
+                    msg = "Classification should fail but did not in %s. Positions %s." % (sg_node.classifier, positions)
+                else:
+                    msg = "Classification should not fail but failed in %s. Positions %s." % (sg_node.classifier, positions)
+                
+                assert should_fail == failed, msg
 
     def testLibSVMClassifier(self):
         num_train = 100
-        num_test = 100
+        num_test = 50
         dist = 0.4
         width = 2.1
         C = 1
@@ -415,6 +432,12 @@ class ContribTestSuite(NodesTestSuite):
                             'classifier': mdp.nodes.LibSVMClassifier.classifiers}
         
             for comb in utils.orthogonal_permutations(combinations):
+                # Take out non-working cases
+                if comb['classifier'] in ["ONE_CLASS"]:
+                    continue
+                if comb['kernel'] in ["SIGMOID"]:
+                    continue
+                
                 svm_node = mdp.nodes.LibSVMClassifier()
                 svm_node.set_kernel(comb['kernel'])
                 svm_node.set_classifier(comb['classifier'])
@@ -426,11 +449,16 @@ class ContribTestSuite(NodesTestSuite):
                 out = svm_node.classify(testdata_real)
 
                 testerr = numx.all(numx.sign(out) == testlab)
-                # TODO: Cross-validation testing
-                #svm_node._cross_validation(3, svm_node.parameter)
-                #print r.probability(testdata_real)
-        
-                assert testerr, ('classification result for ', comb)
+                assert testerr, ('classification error for ', comb)
+                
+                # we don't have ranks in our regression models
+                if not comb['classifier'].endswith("SVR"):
+                    pos1_rank = numx.array(svm_node.rank(numx.array([pos_1], dtype='double')))
+                    pos2_rank = numx.array(svm_node.rank(numx.array([pos_2], dtype='double')))
+                    
+                    assert numx.all(pos1_rank == -pos2_rank)
+                    assert numx.all(abs(pos1_rank) == 1)
+                    assert numx.all(abs(pos2_rank) == 1)
 
 def get_suite(testname=None):
     return ContribTestSuite(testname=testname)
