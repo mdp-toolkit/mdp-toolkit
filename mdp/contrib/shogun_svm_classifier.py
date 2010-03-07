@@ -1,13 +1,13 @@
 import mdp
 from mdp import numx
 
-import warnings
-
 from svm_classifiers import _SVMClassifier, _LabelNormalizer
 
 import shogun.Kernel as sgKernel
 import shogun.Features as sgFeatures
 import shogun.Classifier as sgClassifier
+
+#import warnings
 
 #Warn wrong version.
 #try:
@@ -24,6 +24,7 @@ import shogun.Classifier as sgClassifier
 
 # maybe integrate to the class
 def is_shogun_classifier(test_classifier):
+    """Check, if a class is a subclass of a shogun classifier."""
     try:
         return issubclass(test_classifier, sgClassifier.Classifier)
     except (TypeError, NameError):
@@ -69,17 +70,30 @@ class _OrderedDict(object):
     def values(self):
         return self._vals
 
+
 class Classifier(object):
+    """This Classifier class hides the logic of setting a classifier and kernel
+    from the main classifier node.
+    It is currently not intended to be used on its own and might, in fact, get
+    completely integrated into the ShogunSVMClassifier class."""
+    
     def __init__(self):
         self._class = None
         self._instance = None
         
-    def set_classifier(self, classifier, args):
+    def set_classifier(self, classifier, args=None):
         """Sets and initialises the classifier. If a classifier is reset by the user, 
         the parameters will have to be set again.
-        'name' can be a string, a subclass of shogun.Classifier or an instance of such
-        a class
+        'classifier' can be a string, a subclass of shogun.Classifier or an instance of such
+        a class.
+        Note that some classifiers require initialisation arguments while others don't.
+        Also note that neither labels nor feature vectors should be given with 'args'. 
+        
+        classifier -- the shogun classifier to use
+        args -- the list of arguments needed for the shogun constructor method of the classifier
         """
+        if args is None:
+            args = []
         self._class = None
         self._instance = None
         
@@ -131,10 +145,13 @@ class Classifier(object):
             
     
     def classifier_type(self):
+        """Returns the shogun classifier type as a string."""
         return shogun_classifier_types[self._instance.get_classifier_type()]
     
     def set_param(self, param, *value):
         """Sets parameters for the classifier.
+        
+        This calls set_param(*value) on the classifier instance.
         """
         # Non-standard cases
         if param == "C" and len(value) == 1:
@@ -147,6 +164,11 @@ class Classifier(object):
         meth(*value)
         
     def get_param(self, param, *args):
+        """Returns the parameter for a with a given name.
+        
+        This calls get_param(*args) on the classifier instance.
+        
+        """
         meth = getattr(self._instance, "get_" + param)
         return meth(*args)
 
@@ -174,9 +196,11 @@ class Classifier(object):
     
     @property
     def takes_kernel(self):
+        """Returns true, if the current classifier is a kernel machine."""
         return issubclass(self._class, sgClassifier.CKernelMachine)
     
     def _get_kernel(self):
+        """Retrieve the currently set kernel from the classifier instance."""
         try:
             return self._instance.get_kernel()
         except AttributeError:
@@ -184,6 +208,7 @@ class Classifier(object):
             raise mdp.NodeException(msg)
     
     def _set_kernel(self, kernel):
+        """Set the kernel in the current classifier instance"""
         try:
             self._instance.set_kernel(kernel)
         except AttributeError:
@@ -192,10 +217,22 @@ class Classifier(object):
     
     kernel = property(_get_kernel, _set_kernel)
     
+    def __str__(self):
+        str = self._instance.__class__.__name__
+        try:
+            str = str + " with %s kernel" % self.kernel.get_name()
+        except (mdp.NodeException, AttributeError):
+            pass
+        return str
+
 
 class ShogunSVMClassifier(_SVMClassifier):
     """The ShogunSVMClassifier works as a wrapper class for accessing the shogun library
     for support vector machines.
+    
+    Most kernel machines and linear classifier should work with this class.
+    
+    Currently, distance machines such as the K-means classifier are not supported yet.
     """
 
     default_parameters = {
@@ -267,16 +304,16 @@ class ShogunSVMClassifier(_SVMClassifier):
         'options' must be a tuple with the arguments of the kernel constructor in shogun.
         Therefore, in case of error, you will have to consult the shogun documentation.
         
-        kernel      -- The kernel to use. Default parameters are specified for
-                             "PolyKernel"
-                             "GaussianKernel"
-                             "LinearKernel"
-                             "SigmoidKernel"
-                            Further kernels are possible if they are included in shogun
-                            and if kernel_options provides the correct init arguments.
-            kernel_options -- For known kernels, a dict specifying the options is possible,
-                           options not included take a default value.
-                           Unknown kernels need an ordered list of constructor arguments.
+        kernel    --    The kernel to use. Default parameters are specified for
+                            "PolyKernel"
+                            "GaussianKernel"
+                            "LinearKernel"
+                            "SigmoidKernel"
+                        Further kernels are possible if they are included in shogun
+                        and if kernel_options provides the correct init arguments.
+        kernel_options -- For known kernels, a dict specifying the options is possible,
+                          options not included take a default value.
+                          Unknown kernels need an ordered list of constructor arguments.
         """
         if kernel_options is None:
             kernel_options = {}
@@ -305,8 +342,7 @@ class ShogunSVMClassifier(_SVMClassifier):
         
         self.classifier.set_train_features(features, labels)
         self.classifier.train()
-        
-
+    
     def training_set(self, ordered=False):
         """Shows the set of data that has been inserted to be trained."""
         if ordered:
@@ -319,7 +355,7 @@ class ShogunSVMClassifier(_SVMClassifier):
             return data
         else:
             return zip(self._in_labels, self._in_features)
-
+    
     def _classify(self, x):
         """Classify the input data 'x'
         """

@@ -1,5 +1,5 @@
 import mdp
-from mdp import numx, numx_rand
+from mdp import numx
 
 from svm_classifiers import _SVMClassifier, _LabelNormalizer
 
@@ -12,7 +12,7 @@ class LibSVMClassifier(_SVMClassifier):
 
     def __init__(self, probability=True, input_dim=None, dtype=None):
         """
-        probability -- Shall the probability be computed
+        probability -- Must be set to True, if algorithms based on probability shall be used.
         """        
         self.kernel_type = libsvm.RBF
         self._probability = probability
