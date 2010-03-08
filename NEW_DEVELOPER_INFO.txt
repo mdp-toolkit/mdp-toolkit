@@ -1,20 +1,30 @@
-Dear new MDP developer, we'll try here to summarize some policies
-and best-practices we'd like any MDP contributor to follow. 
+Dear new MDP developer, we’ll try here to summarize some policies
+and best-practices we’d like any MDP contributor to follow.
 
 - Create an account on sourceforge.net and tell us your username
   there, so that we can add you to the list of developers and give
-  you access to our SVN/HG repositories
+  you access to our git repositories
 
-- Please only commit code in the directory 
-  mdp/trunk/mdp/contrib/ 
+- Since our migration to git, the repository setup consists of
+  four separate repositories:
+
+  * mdp-toolkit
+  * docs
+  * examples
+  * contrib
+
+- Please only commit code in contrib repository.
   If your code contributions should need modification somewhere else
   in the MDP code base, write to
   mdp-toolkit-devel@lists.sourceforge.net
   for assistance and instructions how to proceed.
+  For simple fixes that don’t need much discussion, you can also send
+  a mail patch to the list using ‘git format-patch’ or similar.
   
 - The only exception to the previous rule are the tests for your code. They
   should be added in 
-  mdp/trunk/mdp/test/test_contrib.py
+  mdp-toolkit/mdp/test/test_contrib.py
+  or in some yet-to-be-defined place in the contrib repository.
   Look how other contrib nodes are tested in the ContribTestSuite
   class in this file, and make sure your tests fit within that
   framework. Be particularly aware of the automatic testing of
@@ -22,15 +32,15 @@ and best-practices we'd like any MDP contributor to follow.
 
 - Remember to set the supported dtypes for your nodes.
   Example of a node supporting only single and double precision:
-  SFANode in mdp/trunk/mdp/nodes/sfa_nodes.py
+  SFANode in mdp-toolkit/mdp/nodes/sfa_nodes.py
   Example of a node supporting almost every dtype:
-  HitParadeNode in mdp/trunk/mdp/nodes/misc_nodes.py
+  HitParadeNode in mdp-toolkit/mdp/nodes/misc_nodes.py
 
 - If setting input_dim, output_dim or dtype has side effects, remember to
   implement that in the _set_input_dim, _set_output_dim, _set_dtype
   functions. 
   Several examples are available in 
-  mdp/trunk/mdp/nodes/
+  mdp-toolkit/mdp/nodes/
 
 - Your code contribution should not have any additional
   dependencies, i.e. they should require only the numpy module to be
@@ -53,16 +63,16 @@ and best-practices we'd like any MDP contributor to follow.
   non-trivial way and compare its results with exact data you can
   derive analytically. If the latter is not possible, you should
   compare results and expected data within a certain precision. Look
-  for example at testPCANode in mdp/trun/test/test_nodes.py .
+  for example at testPCANode in mdp-toolkit/mdp/test/test_nodes.py .
 
 - You nodes must have telling and explicit doc-strings. In
   particular, the class doc-string must cite references (if any) for
   the algorithm, and list the internal attributes of interest for
   the user. Any method not belonging to the base Node class must be
   clearly documented in its doc-string. Error messages must give an
-  hint to the user what's wrong and possible ways around the
+  hint to the user what’s wrong and possible ways around the
   problem. Any non trivial algorithmic step in the code must be
-  commented, so that other developers understand what's going on. If
+  commented, so that other developers understand what’s going on. If
   you have doubts, mark the code with 
   
   #???
