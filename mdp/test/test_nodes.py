@@ -1830,7 +1830,7 @@ class NodesTestSuite(unittest.TestSuite):
         # never appear together
         N = 1e4
         v = numx.zeros((N,I))
-        for n in range(N):
+        for n in range(int(N)):
             r = numx_rand.random()
             if r>0.666: v[n,:] = [0,1,0,1]
             elif r>0.333: v[n,:] = [1,0,1,0]
