@@ -260,7 +260,7 @@ class BiNode(mdp.Node):
             stored_msg = stored_stop_result[0].copy()
             if msg:
                 stored_msg.update(msg)
-                msg = stored_msg
+            msg = stored_msg
             if target is None:
                 target = stored_stop_result[1]
         return self._combine_message_result(result, msg, target)

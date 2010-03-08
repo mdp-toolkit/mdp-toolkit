@@ -434,14 +434,6 @@ class LLEBiNode(BiNode, mdp.nodes.LLENode):
         """
         super(LLEBiNode, self).__init__(k=k, r=r, svd=svd, verbose=verbose, input_dim=input_dim, output_dim=output_dim, dtype=dtype, node_id=node_id, stop_result=stop_result)
 
-class LibSVMClassiBiNode(BiNode, mdp.nodes.LibSVMClassifier):
-    """Automatically created BiNode version of LibSVMClassifier."""
-    def __init__(self, probability=True, input_dim=None, dtype=None, node_id=None, stop_result=None):
-        """
-        probability -- Shall the probability be computed
-        """
-        super(LibSVMClassiBiNode, self).__init__(probability=probability, input_dim=input_dim, dtype=dtype, node_id=node_id, stop_result=stop_result)
-
 class LinearRegressionBiNode(BiNode, mdp.nodes.LinearRegressionNode):
     """Automatically created BiNode version of LinearRegressionNode."""
     def __init__(self, with_bias=True, use_pinv=False, input_dim=None, output_dim=None, dtype=None, node_id=None, stop_result=None):
@@ -575,22 +567,6 @@ class SFABiNode(BiNode, mdp.nodes.SFANode):
     """Automatically created BiNode version of SFANode."""
     def __init__(self, input_dim=None, output_dim=None, dtype=None, node_id=None, stop_result=None):
         super(SFABiNode, self).__init__(input_dim=input_dim, output_dim=output_dim, dtype=dtype, node_id=node_id, stop_result=stop_result)
-
-class ShogunSVMClassiBiNode(BiNode, mdp.nodes.ShogunSVMClassifier):
-    """Automatically created BiNode version of ShogunSVMClassifier."""
-    def __init__(self, classifier='libsvmmulticlass', classifier_arguments=(), classifier_options=None, num_threads='autodetect', input_dim=None, dtype=None, node_id=None, stop_result=None):
-        """
-        Keyword arguments:
-            
-            classifier  -- The classifier to use
-            classifier_arguments -- Arguments needed for the constructor of the classifier
-            classifier_options -- Options for the classifier
-            num_threads -- The number of threads, shogun should use
-                           can be set to "autodetect", then shogun will use the number of cpu cores.
-                           Attention: this could crash on windows
-        
-        """
-        super(ShogunSVMClassiBiNode, self).__init__(classifier=classifier, classifier_arguments=classifier_arguments, classifier_options=classifier_options, num_threads=num_threads, input_dim=input_dim, dtype=dtype, node_id=node_id, stop_result=stop_result)
 
 class SignumClassiBiNode(BiNode, mdp.nodes.SignumClassifier):
     """Automatically created BiNode version of SignumClassifier."""

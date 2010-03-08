@@ -13,18 +13,19 @@ AUTOMATIC_MDP_NODES = [
     'AdaptiveCutoffNode', 'CuBICANode', 'CutoffNode', 'EtaComputerNode',
     'FANode', 'FDANode', 'FastICANode', 'GrowingNeuralGasExpansionNode',
     'GrowingNeuralGasNode', 'HLLENode', 'HistogramNode', 'HitParadeNode',
-    'ICANode', 'ISFANode', 'IdentityNode', 'JADENode', 'LLENode', 'LibSVMClassifier',
+    'ICANode', 'ISFANode', 'IdentityNode', 'JADENode', 'LLENode',
     'LinearRegressionNode', 'NIPALSNode', 'NormalNoiseNode',
     'PCANode', 'PerceptronClassifier', 'PolynomialExpansionNode',
     'QuadraticExpansionNode', 'RBFExpansionNode', 'RBMNode',
-    'RBMWithLabelsNode', 'SFA2Node', 'SFANode', 'ShogunSVMClassifier',
+    'RBMWithLabelsNode', 'SFA2Node', 'SFANode',
     'SignumClassifier', 'SimpleMarkovClassifier', 'TDSEPNode',
     'TimeFramesNode', 'WhiteningNode', 'XSFANode',
 ]
 
 # TODO: use a special wrapper for classifier nodes, these are currently ignored
 AUTOMATIC_MDP_CLASSIFIERS = [
-     'GaussianClassifierNode', 'NaiveBayesClassifier'                     
+     'GaussianClassifierNode', 'NaiveBayesClassifier', 'LibSVMClassifier',
+     'ShogunSVMClassifier'                  
 ]
 
 # this function is currently not needed, but can be used for node_classes
@@ -75,7 +76,7 @@ def _write_binode_code(fid, node_classes, from_module=mdp.nodes):
             err = ("varargs are not supported by the BiNode class, " +
                    "please disable the automatic binode creation for class " +
                    node_name)
-            raise BiNodeException(err)
+            raise Exception(err)
         if varkw:
             fid.write(', *%s' % varkw)
         fid.write('):')
