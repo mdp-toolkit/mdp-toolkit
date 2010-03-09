@@ -340,12 +340,15 @@ class ContribTestSuite(NodesTestSuite):
                 labels = (-1, 1, 1)
             elif len(positions) == 4:
                 labels = (-1, -1, 1, 1)
-            traindata_real, trainlab = _linear_separable_data(positions, labels, radius, num_train)
-            testdata_real, testlab = _linear_separable_data(positions, labels, radius, num_test)
+
+            traindata_real, trainlab = _linear_separable_data(positions, labels,
+                                                              radius, num_train)
+            testdata_real, testlab = _linear_separable_data(positions, labels,
+                                                            radius, num_test)
             
             
-            classifiers = ['GMNPSVM', 'GNPPSVM', 'GPBTSVM', 'KernelPerceptron', 'LDA',
-                           'LibSVM',# 'LibSVMOneClass',# 'MPDSVM', 
+            classifiers = ['GMNPSVM', 'GNPPSVM', 'GPBTSVM', 'KernelPerceptron',
+                           'LDA', 'LibSVM', # 'LibSVMOneClass',# 'MPDSVM', 
                            'Perceptron', 'SVMLin']
             kernels = ['PolyKernel', 'LinearKernel', 'SigmoidKernel', 'GaussianKernel']
             
@@ -354,13 +357,15 @@ class ContribTestSuite(NodesTestSuite):
                             'kernel': kernels}
             
             for comb in utils.orthogonal_permutations(combinations):
-                # this is redundant but makes it clear what has been taken out deliberately
+                # this is redundant but makes it clear,
+                # what has been taken out deliberately
                 if comb['kernel'] in ['PyramidChi2', 'Chi2Kernel']:
                     # We don't have good init arguments for these
                     continue
                 if comb['classifier'] in ['LaRank', 'LibLinear', 'LibSVMMultiClass',
-                                          'MKLClassification', 'MKLMultiClass', 'MKLOneClass',
-                                          'MultiClassSVM', 'SVM', 'SVMOcas', 'SVMSGD', 'ScatterSVM',
+                                          'MKLClassification', 'MKLMultiClass',
+                                          'MKLOneClass', 'MultiClassSVM', 'SVM',
+                                          'SVMOcas', 'SVMSGD', 'ScatterSVM',
                                           'SubGradientSVM']:
                     # We don't have good init arguments for these and/or they work differently
                     continue
@@ -374,7 +379,7 @@ class ContribTestSuite(NodesTestSuite):
                 sg_node.train( traindata_real[:num_train], trainlab[:num_train] )
                 sg_node.train( traindata_real[num_train:], trainlab[num_train:] )
                 
-                assert svm_node.input_dim == len(traindata_real.T)
+                assert sg_node.input_dim == len(traindata_real.T)
                 
                 out = sg_node.classify(testdata_real)
                 
@@ -385,31 +390,40 @@ class ContribTestSuite(NodesTestSuite):
                     assert sg_node.classifier.kernel.get_num_vec_rhs() == num_test * len(positions)
                 
                 # Test also for inverse
-                worked = numx.all(numx.sign(out) == testlab) or numx.all(numx.sign(out) == -testlab)
+                worked = numx.all(numx.sign(out) == testlab) or \
+                         numx.all(numx.sign(out) == -testlab)
                 failed = not worked
 
                 should_fail = False
                 if len(positions) == 2:
-                    if comb['classifier'] in ['LibSVMOneClass', 'KernelPerceptron', 'GMNPSVM', ]:
+                    if comb['classifier'] in ['LibSVMOneClass', 'KernelPerceptron',
+                                              'GMNPSVM']:
                         should_fail = True
-                    if comb['classifier'] == 'GPBTSVM' and comb['kernel'] in ['LinearKernel']:
+                    if comb['classifier'] == 'GPBTSVM' and \
+                       comb['kernel'] in ['LinearKernel']:
                         should_fail = True
                 
                 # xor problem
                 if len(positions) == 4:
-                    if comb['classifier'] in ['LibSVMOneClass', 'SVMLin', 'Perceptron', 'LDA', 'KernelPerceptron', 'GMNPSVM']:
+                    if comb['classifier'] in ['LibSVMOneClass', 'SVMLin', 'Perceptron',
+                                              'LDA', 'KernelPerceptron', 'GMNPSVM']:
                         should_fail = True
-                    if comb['classifier'] == 'LibSVM' and comb['kernel'] in ['LinearKernel', 'SigmoidKernel']:
+                    if comb['classifier'] == 'LibSVM' and \
+                       comb['kernel'] in ['LinearKernel', 'SigmoidKernel']:
                         should_fail = True
-                    if comb['classifier'] == 'GPBTSVM' and comb['kernel'] in ['LinearKernel', 'SigmoidKernel']:
+                    if comb['classifier'] == 'GPBTSVM' and \
+                       comb['kernel'] in ['LinearKernel', 'SigmoidKernel']:
                         should_fail = True
-                    if comb['classifier'] == 'GNPPSVM' and comb['kernel'] in ['LinearKernel', 'SigmoidKernel']:
+                    if comb['classifier'] == 'GNPPSVM' and \
+                       comb['kernel'] in ['LinearKernel', 'SigmoidKernel']:
                         should_fail = True
                 
                 if should_fail:
-                    msg = "Classification should fail but did not in %s. Positions %s." % (sg_node.classifier, positions)
+                    msg = ("Classification should fail but did not in %s. Positions %s." %
+                          (sg_node.classifier, positions))
                 else:
-                    msg = "Classification should not fail but failed in %s. Positions %s." % (sg_node.classifier, positions)
+                    msg = ("Classification should not fail but failed in %s. Positions %s." %
+                          (sg_node.classifier, positions))
                 
                 assert should_fail == failed, msg
 
@@ -420,15 +434,17 @@ class ContribTestSuite(NodesTestSuite):
         width = 2.1
         C = 1
         epsilon = 1e-5
-        for pos_1, pos_2 in [((1,), (-1,)),
-                             ((1,1), (-1,-1)),
-                             ((1,1,1), (-1,-1,1)),
-                             ((1,1,1,1), (-1,1,1,1)),
-                             ((1,1,1,1), (-1,-1,-1,-1))]:
+        for positions in [((1,), (-1,)),
+                          ((1,1), (-1,-1)),
+                          ((1,1,1), (-1,-1,1)),
+                          ((1,1,1,1), (-1,1,1,1)),
+                          ((1,1,1,1), (-1,-1,-1,-1))]:
             radius = 0.3
 
-            traindata_real, trainlab = _linear_separable_data((pos_1, pos_2), (-1, 1), radius, num_train, True)
-            testdata_real, testlab = _linear_separable_data((pos_1, pos_2), (-1, 1), radius, num_test, True)
+            traindata_real, trainlab = _linear_separable_data(positions, (-1, 1),
+                                                              radius, num_train, True)
+            testdata_real, testlab = _linear_separable_data(positions, (-1, 1),
+                                                            radius, num_test, True)
         
             combinations = {'kernel': mdp.nodes.LibSVMClassifier.kernels,
                             'classifier': mdp.nodes.LibSVMClassifier.classifiers}
@@ -445,8 +461,8 @@ class ContribTestSuite(NodesTestSuite):
                 svm_node.set_classifier(comb['classifier'])
                 
                 # train in two chunks to check update mechanism
-                svm_node.train( traindata_real[:num_train], trainlab[:num_train] )
-                svm_node.train( traindata_real[num_train:], trainlab[num_train:] )
+                svm_node.train(traindata_real[:num_train], trainlab[:num_train])
+                svm_node.train(traindata_real[num_train:], trainlab[num_train:])
                 
                 assert svm_node.input_dim == len(traindata_real.T)
 
@@ -457,8 +473,10 @@ class ContribTestSuite(NodesTestSuite):
                 
                 # we don't have ranks in our regression models
                 if not comb['classifier'].endswith("SVR"):
-                    pos1_rank = numx.array(svm_node.rank(numx.array([pos_1], dtype='double')))
-                    pos2_rank = numx.array(svm_node.rank(numx.array([pos_2], dtype='double')))
+                    pos1_rank = numx.array(svm_node.rank(numx.array([positions[0]],
+                                                         dtype='double')))
+                    pos2_rank = numx.array(svm_node.rank(numx.array([positions[1]],
+                                                         dtype='double')))
                     
                     assert numx.all(pos1_rank == -pos2_rank)
                     assert numx.all(abs(pos1_rank) == 1)
