@@ -29,6 +29,25 @@ and best-practices we’d like any MDP contributor to follow.
   class in this file, and make sure your tests fit within that
   framework. Be particularly aware of the automatic testing of
   setting and consistency of input_dim, output_dim and dtype.
+  
+- If you want to develop on a Windows system you might run into some issues
+  with git. Here is what we use for git on Windows:
+  
+  * Install the msysgit git client.
+  * If you don't like working on the command line there are several graphical
+	user interfaces available, the commercial SmartGit currently seems
+    to work best (there is a free version for non-commercial use).
+	
+  If you want to use the Eclipse IDE (with PyDev) here is what you can do:
+  
+  * You can install the EGit plugin for Eclipse, but this is not yet stable. So
+    you might want to use the command line or SmartGit for most actions.
+  * Create a new PyDev project for each MDP git repo you want to work on. Clone
+    the git repository to some arbitrary location and then move all the content
+	(including the hidden .git folder) to the root of the corresponding project
+	(EGit currently will not work if the .git is in some subdirectory).
+  * Right-click on the project and select Team -> share to connect the git
+    information to EGit.
 
 - Remember to set the supported dtypes for your nodes.
   Example of a node supporting only single and double precision:
@@ -48,7 +67,15 @@ and best-practices we’d like any MDP contributor to follow.
   C++ compilation, ask
   mdp-toolkit-devel@lists.sourceforge.net
   for assistance.
-
+  
+- Your code should strictly follow the PEP 8 coding convenctions
+  (http://www.python.org/dev/peps/pep-0008/). Note that some older code
+  sections in MDP do not follow PEP 8 100%, but when the opportunity arrises
+  (e.g., when we make changes in the code) we are improving this. So new code
+  should always follow PEP 8. Additional style guidelines can be learned from
+  the famous 'Code like a Pythonista' presentation at
+  http://python.net/~goodger/projects/pycon/2007/idiomatic/handout.html.
+  
 - Always import numpy in your code as 
   from mdp import numx
   "numx" is a placeholder we use to automatically import scipy
