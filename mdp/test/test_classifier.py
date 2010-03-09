@@ -43,6 +43,7 @@ class ClassifierTestSuite(unittest.TestSuite):
     def testSignumClassifier(self):
         c = SignumClassifier()
         res = c.classify(mdp.numx.array([[1, 2, -3, -4], [1, 2, 3, 4]]))
+        assert c.input_dim == 4
         assert res.tolist() == [-1, 1]
         
     def testPerceptronClassifier(self):
@@ -50,6 +51,8 @@ class ClassifierTestSuite(unittest.TestSuite):
         for i in range(100):
             or_Classifier.train(mdp.numx.array([[0, 0]]), -1)
             or_Classifier.train(mdp.numx.array([[0, 1], [1, 0], [1, 1]]), 1)
+        assert or_Classifier.input_dim == 2
+        
         res = or_Classifier.classify(mdp.numx.array([[0, 0], [0, 1], [1, 0], [1, 1]]))
         assert res.tolist() == [-1, 1, 1, 1]
                             
@@ -107,6 +110,8 @@ class ClassifierTestSuite(unittest.TestSuite):
             labels = list(word + " ")
             mc.train(mdp.numx.array(features), labels)
         
+        assert mc.input_dim == 2
+        
         num_transitions = 0
         features = mc.features
         for feature, count in features.items():
@@ -120,7 +125,10 @@ class ClassifierTestSuite(unittest.TestSuite):
                             num_transitions += 1
                             #print "".join(feature).replace(" ", "_"), "->", k, "(", v, ")"
                 assert abs(prob_sum - 1.0) < 1e-5
-        assert num_transitions == 37
+        
+        # calculate the number of transitions (the negative set deletes the artefact of two spaces)
+        trans = len(set((zip("  ".join(text.split()) + " ", " " + "  ".join(text.split())))) - set([(' ', ' ')]))
+        assert num_transitions == trans
         
         letters_following_e = [' ', 'r', 't', 'i']
         letters_prob = mc.prob(mdp.numx.array([['e']]))[0]
@@ -146,6 +154,7 @@ class ClassifierTestSuite(unittest.TestSuite):
                     numx.sin(numx.linspace(0, 2 * numx.pi, memory_size)) > 0
                     ])
         h.train(patterns)
+        h.input_dim = memory_size
         
         for p in patterns:
             # check if patterns are fixpoints
