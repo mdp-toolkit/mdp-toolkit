@@ -165,6 +165,48 @@ class TestBiNode(unittest.TestCase):
         binode.train(x, msg)
         result = binode.stop_training()
         self.assertTrue(result == stop_result[1])
+        
+    def test_stop_message_execute(self):
+        """Test the magic execute method argument for stop_message."""
+        class TestBiNode(BiNode):
+            def _execute(self, x, a):
+                self.a = a
+                self.x = x
+                y = n.zeros((len(x), self.output_dim))
+                return y
+            def is_trainable(self): return False
+        binode = TestBiNode(input_dim=20, output_dim=10)
+        x = n.ones((5, binode.input_dim))
+        msg = {"x": x, "a": 13, "method": "execute"}
+        result = binode.stop_message(msg)
+        self.assert_(n.all(binode.x == x))
+        self.assert_(binode.x.shape == (5, binode.input_dim))
+        self.assert_(binode.a == 13)
+        self.assert_(len(result) == 2)
+        self.assert_(result[1] == 1)
+        self.assert_(result[0]["x"].shape == (5, binode.output_dim))
+        self.assertFalse(n.any(result[0]["x"]))
+        
+    def test_stop_message_inverse(self):
+        """Test the magic inverse method argument for stop_message."""
+        class TestBiNode(BiNode):
+            def _inverse(self, x, a):
+                self.a = a
+                self.x = x
+                y = n.zeros((len(x), self.input_dim))
+                return y
+            def is_trainable(self): return False
+        binode = TestBiNode(input_dim=20, output_dim=10)
+        x = n.ones((5, binode.output_dim))
+        msg = {"x": x, "a": 13, "method": "inverse"}
+        result = binode.stop_message(msg)
+        self.assert_(n.all(binode.x == x))
+        self.assert_(binode.x.shape == (5, binode.output_dim))
+        self.assert_(binode.a == 13)
+        self.assert_(len(result) == 2)
+        self.assert_(result[1] == -1)
+        self.assert_(result[0]["x"].shape == (5, binode.input_dim))
+        self.assertFalse(n.any(result[0]["x"]))
 
     
 class TestIdentityBiNode(unittest.TestCase):

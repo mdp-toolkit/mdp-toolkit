@@ -68,6 +68,15 @@ keywords are treated in a special way:
       one would have to provide 'execute'.
       If 'inverse' is given then the inverse dimension check will be performed
       and if no target is provided it will be set to -1.
+      
+  'method' in stop_message -- To make it possible to call 'execute' and
+      'inverse' in 'stop_message' there is some magic going on if these are
+      specified as message arguments: In addition to the normal automatic
+      extraction of an 'x' key from the message the array output of the node
+      is also stored back as 'x' in the message (overwriting the previous
+      value). Additionally the target is given a default value of 1 or -1
+      (so setting the 'method' value is sufficient for normal execution
+      or inverse).
      
 """
 
@@ -275,8 +284,10 @@ class BiNode(mdp.Node):
         
         This template method calls the _stop_message method or another method
         specified in the method. If the specified method is specified as
-        'execute' or 'inverse' then the 'x' value is extracted and stored in
-        the message and the target defaults to 1 or -1.
+        'execute' or 'inverse' then the x/y return value is extracted and
+        stored in the message under the key 'x' and the target defaults to
+        1 or -1 (so setting the 'method' value is sufficient for normal
+        execution or inverse).
         """
         if not msg:
             return self._stop_message()
@@ -285,12 +296,15 @@ class BiNode(mdp.Node):
         method_name = self._extract_message_key("method", msg, msg_id_keys)
         method, target = self._get_method(method_name, self._stop_message,
                                           target)
-        if method_name == "execute":
-            # TODO: perform dimensionality checks?
+        if method_name == "execute" and target is None:
+            # use 1 as default target for execution, note that in order to
+            # terminate the execution one therefore has to call another method
             target = 1
+        # TODO: perform dimensionality checks for execute/inverse?
         msg, arg_dict = self._extract_method_args(method, msg, msg_id_keys)
         result = method(**arg_dict)
         if method_name == "execute" or method_name == "inverse":
+            ## magic to add array result back to message
             if result is not None:
                 if isinstance(result, tuple):
                     x = result[0]

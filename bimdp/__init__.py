@@ -9,12 +9,19 @@ BiMDP is implemented by extending both the Node and the Flow concept. Both the
 new BiNode and BiFlow classes are downward compatible with the classical
 Nodes and Flows, allowing them to be combined with BiMDP elements. 
 
-The fundamental addition in BiMDP is that BiNodes can specify a target node for
-their output and that they can send messages to other nodes. A BiFlow is then
-needed to interpret these arguments, e.g. to continue the flow execution at the
-specified target node.
+The first fundamental addition in BiMDP is that BiNodes can specify a target
+node for their output, to continue the flow execution at the specified target 
+node. The second new feature is that Nodes can use messages to propagate
+arbitrary information, in addition to the standard single array data.
+A BiFlow is needed to enable these features, and the BiNode class has adds
+convenience functionality to help with this. 
 
-BiMDP is fully supports and extends the HiNet and the Parallel packages.
+Another important addition are the inspection capapbilities (e.g.,
+bimdo.show_training), which create and interactive HTML representation of the
+data flow. This makes debugging much easier and can also be extended to
+visualize data (see the demos in the test folder).
+ 
+BiMDP fully supports and extends the HiNet and the Parallel packages.
 
 
 New BiMDP concepts: Jumps and Messages
