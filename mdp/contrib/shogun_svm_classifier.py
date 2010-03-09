@@ -7,19 +7,18 @@ import shogun.Kernel as sgKernel
 import shogun.Features as sgFeatures
 import shogun.Classifier as sgClassifier
 
-#import warnings
-
-#Warn wrong version.
-#try:
-#    version = sgKernel._Kernel.Version_get_version_release()
-#except AttributeError:
-#    version = ""
-
-# Must check for version 0.8
+# We need to have at least shogun 0.9, as we rely on
+# shogun's CClassifier::classify() method.
+# (It makes our code much nicer, by the way.)
 #
-#if not (version.startswith('v0.7') or version.startswith('v0.8')):
-#    msg = "Unsupported API version of shogun. Some things may break."
-#    warnings.warn(msg, UserWarning)
+try:
+    version = sgKernel._Kernel.Version_get_version_release()
+except AttributeError:
+    version = ""
+
+if not (version.startswith('v0.9') or version.startswith('v1.')):
+    msg = "We need at least shogun version 0.9."
+    raise ImportError(msg)
 
 
 # maybe integrate to the class

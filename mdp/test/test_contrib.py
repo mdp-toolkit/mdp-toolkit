@@ -374,6 +374,8 @@ class ContribTestSuite(NodesTestSuite):
                 sg_node.train( traindata_real[:num_train], trainlab[:num_train] )
                 sg_node.train( traindata_real[num_train:], trainlab[num_train:] )
                 
+                assert svm_node.input_dim == len(traindata_real.T)
+                
                 out = sg_node.classify(testdata_real)
                 
                 if sg_node.classifier.takes_kernel:
@@ -445,6 +447,8 @@ class ContribTestSuite(NodesTestSuite):
                 # train in two chunks to check update mechanism
                 svm_node.train( traindata_real[:num_train], trainlab[:num_train] )
                 svm_node.train( traindata_real[num_train:], trainlab[num_train:] )
+                
+                assert svm_node.input_dim == len(traindata_real.T)
 
                 out = svm_node.classify(testdata_real)
 
