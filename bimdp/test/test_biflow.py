@@ -4,7 +4,7 @@ import numpy as np
 
 import mdp
 
-from bimdp import MessageResultContainer, BiFlow, EXIT_TARGET
+from bimdp import MessageResultContainer, BiFlow, EXIT_TARGET, nodes
 from testnodes import TraceJumpBiNode, IdNode
 
 
@@ -87,6 +87,39 @@ class TestBiFlow(unittest.TestCase):
         x = np.random.random([100,10])
         flow.execute(x)
         
+    def test_wrong_iterableException(self):
+        samples = mdp.numx_rand.random((100,10))
+        labels = mdp.numx.arange(100)
+        # 1.
+        # proper way of passing iterables for a normal Flow
+        flow = mdp.Flow([mdp.nodes.PCANode(), mdp.nodes.FDANode()])
+        flow.train([[[samples]], [[samples, labels]]])
+        # 2.
+        # if i give the wrong number of iterables (I forget one bracket),
+        # I expect a FlowException:
+        try:
+            flow = mdp.Flow([mdp.nodes.PCANode(), mdp.nodes.FDANode()])
+            flow.train([[samples], [samples, labels]])
+            err = "Flow did not raise FlowException for wrong iterable."
+            raise Exception(err)
+        except mdp.FlowException:
+            pass
+
+        # do the same with a BiFlow
+        # 1.
+        flow = BiFlow([nodes.PCABiNode(), nodes.FDABiNode()])
+        flow.train([[[samples]], [[samples, labels]]])
+        # throws AttributeError: 'list' object has no attribute 'ndim'
+        # 2.
+        try:
+            flow = BiFlow([nodes.PCABiNode(), nodes.FDABiNode()])
+            flow.train([[samples], [samples, labels]])
+            err = "Flow did not raise FlowException for wrong iterable."
+            raise Exception(err)
+        except mdp.FlowException:
+            pass
+        
+    
     def test_training_targets(self):
         """Test targeting during training and stop_training."""
         tracelog = []
