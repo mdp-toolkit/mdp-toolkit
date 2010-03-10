@@ -87,14 +87,21 @@ class TestBiFlow(unittest.TestCase):
         x = np.random.random([100,10])
         flow.execute(x)
         
-    def test_wrong_iterableException(self):
+    def test_wrong_iterableException1(self):
         samples = mdp.numx_rand.random((100,10))
         labels = mdp.numx.arange(100)
         # 1.
         # proper way of passing iterables for a normal Flow
         flow = mdp.Flow([mdp.nodes.PCANode(), mdp.nodes.FDANode()])
         flow.train([[[samples]], [[samples, labels]]])
-        # 2.
+        # do the same with a BiFlow
+        # 1.
+        flow = BiFlow([mdp.nodes.PCANode(), mdp.nodes.FDANode()])
+        flow.train([[[samples]], [[samples, labels]]])
+
+    def test_wrong_iterableException2(self):
+        samples = mdp.numx_rand.random((100,10))
+        labels = mdp.numx.arange(100)        
         # if i give the wrong number of iterables (I forget one bracket),
         # I expect a FlowException:
         try:
@@ -104,16 +111,30 @@ class TestBiFlow(unittest.TestCase):
             raise Exception(err)
         except mdp.FlowException:
             pass
-
-        # do the same with a BiFlow
-        # 1.
-        flow = BiFlow([nodes.PCABiNode(), nodes.FDABiNode()])
-        flow.train([[[samples]], [[samples, labels]]])
-        # throws AttributeError: 'list' object has no attribute 'ndim'
-        # 2.
         try:
-            flow = BiFlow([nodes.PCABiNode(), nodes.FDABiNode()])
+            flow = BiFlow([mdp.nodes.PCANode(), mdp.nodes.FDANode()])
             flow.train([[samples], [samples, labels]])
+            err = "Flow did not raise FlowException for wrong iterable."
+            raise Exception(err)
+        except mdp.FlowException:
+            pass
+    
+    def test_wrong_iterableException3(self):
+        samples = mdp.numx_rand.random((100,10))
+        labels = mdp.numx.arange(100)        
+        flow = mdp.Flow([mdp.nodes.PCANode(), mdp.nodes.FDANode()])
+        try:
+            # try to give one argument too much!
+            flow.train([[[samples]], [[samples, labels, labels]]])
+            err = "Flow did not raise FlowException for wrong iterable."
+            raise Exception(err)
+        except mdp.FlowException:
+            pass
+
+        flow = BiFlow([mdp.nodes.PCANode(), mdp.nodes.FDANode()])
+        try:
+            # try to give one argument too much!
+            flow.train([[[samples]], [[samples, labels, labels]]])
             err = "Flow did not raise FlowException for wrong iterable."
             raise Exception(err)
         except mdp.FlowException:
