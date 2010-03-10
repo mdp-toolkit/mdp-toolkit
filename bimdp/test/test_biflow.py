@@ -87,17 +87,12 @@ class TestBiFlow(unittest.TestCase):
         x = np.random.random([100,10])
         flow.execute(x)
         
-    def test_wrong_iterableException1(self):
+    def test_fda_binode(self):
+        """Test using the FDABiNode in a BiFlow."""
         samples = mdp.numx_rand.random((100,10))
         labels = mdp.numx.arange(100)
-        # 1.
-        # proper way of passing iterables for a normal Flow
-        flow = mdp.Flow([mdp.nodes.PCANode(), mdp.nodes.FDANode()])
-        flow.train([[[samples]], [[samples, labels]]])
-        # do the same with a BiFlow
-        # 1.
-        flow = BiFlow([mdp.nodes.PCANode(), mdp.nodes.FDANode()])
-        flow.train([[[samples]], [[samples, labels]]])
+        flow = BiFlow([mdp.nodes.PCANode(), nodes.FDABiNode()])
+        flow.train([[samples],[samples]], [None,[{"cl": labels}]])
 
     def test_wrong_iterableException2(self):
         samples = mdp.numx_rand.random((100,10))
