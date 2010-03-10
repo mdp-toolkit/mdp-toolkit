@@ -139,12 +139,7 @@ class Flow(object):
             return
             
         try:
-            # inspect for needed train arguments in addition to self and x
-            train_arg_spec = _inspect.getargspec(node.train)
-            train_arg_keys = train_arg_spec[0][2:]  # ignore self, x
-            if train_arg_spec[3]:
-                # subtract arguments with a default value
-                train_arg_keys = train_arg_keys[:-len(train_arg_spec[3])]
+            train_arg_keys = self._get_required_train_args(node)
             train_args_needed = bool(len(train_arg_keys))
             ## We leave the last training phase open for the
             ## CheckpointFlow class.
@@ -219,6 +214,19 @@ class Flow(object):
     def _stop_training_hook(self):
         """Hook method that is called before stop_training is called."""
         pass
+    
+    @staticmethod
+    def _get_required_train_args(node):
+        """Return arguments in addition to self and x for node.train.
+        
+        Argumentes that have a default value are ignored.
+        """
+        train_arg_spec = _inspect.getargspec(node.train)
+        train_arg_keys = train_arg_spec[0][2:]  # ignore self, x
+        if train_arg_spec[3]:
+            # subtract arguments with a default value
+            train_arg_keys = train_arg_keys[:-len(train_arg_spec[3])]
+        return train_arg_keys
             
     def _train_check_iterables(self, data_iterables):
         """Return the data iterables after some checks and sanitizing.
