@@ -515,3 +515,46 @@ class BiNode(mdp.Node):
                 return result, msg
             else:
                 return result, msg, target
+    
+    ### Overwrite Special Methods ###
+        
+    def __repr__(self):
+        """BiNode version of the Node representation, adding the node_id.""" 
+        name = type(self).__name__
+        inp = "input_dim=%s" % str(self.input_dim)
+        out = "output_dim=%s" % str(self.output_dim)
+        if self.dtype is None:
+            typ = 'dtype=None'
+        else:
+            typ = "dtype='%s'" % self.dtype.name
+        node_id = self.node_id
+        if node_id is None:
+            nid = 'node_id=None'
+        else:
+            nid = 'node_id="%s"' % node_id
+        args = ', '.join((inp, out, typ, nid))
+        return name + '(' + args + ')'
+    
+    def __add__(self, other):
+        """Adding binodes returns a BiFlow.
+        
+        If a normal Node or Flow is added to a BiNode then a BiFlow is
+        returned.
+        Note that if a flow is added then a deep copy is used (deep
+        copies of the nodes are used).
+        """
+        # unfortunately the inline import are required to avoid
+        # a cyclic import (unless one add a helper function somewhere else)
+        if isinstance(other, mdp.Node):
+            import bimdp
+            return bimdp.BiFlow([self, other])
+        elif isinstance(other, mdp.Flow):
+            flow_copy = other.copy()
+            import bimdp
+            biflow = bimdp.BiFlow([self.copy()] + flow_copy.flow)
+            return biflow
+        else:
+            # can delegate old cases
+            return super(BiNode, self).__add__(other)
+        
+        

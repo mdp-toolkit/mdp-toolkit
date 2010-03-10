@@ -4,7 +4,7 @@ import unittest
 import mdp
 n = mdp.numx
 
-from bimdp import BiNode, NODE_ID_KEY
+from bimdp import BiNode, NODE_ID_KEY, BiFlow
 from bimdp.nodes import IdentityBiNode, SFABiNode, FDABiNode
 from testnodes import JumpBiNode
 
@@ -277,6 +277,25 @@ class TestJumpBiNode(unittest.TestCase):
         result = jumpnode.stop_message(tmsg)
         self.assertTrue(result is None)
         jumpnode.bi_reset()
+        
+    def test_flow_from_sum(self):
+        """Test the special addition method for BiNode."""
+        node1 = IdentityBiNode()
+        node2 = mdp.Node()
+        flow = node1 + node2
+        self.assert_(type(flow) is BiFlow)
+        node2 = IdentityBiNode()
+        flow = node1 + node2
+        self.assert_(type(flow) is BiFlow)
+        self.assert_(len(flow) == 2)
+        node3 = IdentityBiNode()
+        flow = node1 + node2 + node3
+        self.assert_(type(flow) is BiFlow)
+        self.assert_(len(flow) == 3)
+        node4 = IdentityBiNode()
+        flow = node4 + flow
+        self.assert_(type(flow) is BiFlow)
+        self.assert_(len(flow) == 4)
 
 
 def get_suite():

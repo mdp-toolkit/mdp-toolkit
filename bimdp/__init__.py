@@ -73,8 +73,10 @@ This is described in more detail in the BiNode module.
 
 
 from binode import BiNodeException, BiNode, NODE_ID_KEY
-from biflow import (MessageResultContainer, BiFlowException, BiFlow,
-                    BiCheckpointFlow, EXIT_TARGET)
+from biflow import (
+    MessageResultContainer, BiFlowException, BiFlow, BiCheckpointFlow,
+    EXIT_TARGET
+)
 # the inspection stuff is considered a core functionality
 from inspection import *
 
