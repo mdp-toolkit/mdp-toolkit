@@ -4,7 +4,9 @@ import numpy as np
 
 import mdp
 
-from bimdp import MessageResultContainer, BiFlow, EXIT_TARGET, nodes
+from bimdp import (
+    MessageResultContainer, BiFlow, BiFlowException, EXIT_TARGET, nodes
+)
 from testnodes import TraceJumpBiNode, IdNode
 
 
@@ -94,48 +96,21 @@ class TestBiFlow(unittest.TestCase):
         flow = BiFlow([mdp.nodes.PCANode(), nodes.FDABiNode()])
         flow.train([[samples],[samples]], [None,[{"cl": labels}]])
 
-    def test_wrong_iterableException2(self):
+    def test_wrong_argument_handling(self):
+        """Test correct error for additional arguments in Node instance."""
         samples = mdp.numx_rand.random((100,10))
-        labels = mdp.numx.arange(100)        
-        # if i give the wrong number of iterables (I forget one bracket),
-        # I expect a FlowException:
-        try:
-            flow = mdp.Flow([mdp.nodes.PCANode(), mdp.nodes.FDANode()])
-            flow.train([[samples], [samples, labels]])
-            err = "Flow did not raise FlowException for wrong iterable."
-            raise Exception(err)
-        except mdp.FlowException:
-            pass
-        try:
-            flow = BiFlow([mdp.nodes.PCANode(), mdp.nodes.FDANode()])
-            flow.train([[samples], [samples, labels]])
-            err = "Flow did not raise FlowException for wrong iterable."
-            raise Exception(err)
-        except mdp.FlowException:
-            pass
-    
-    def test_wrong_iterableException3(self):
-        samples = mdp.numx_rand.random((100,10))
-        labels = mdp.numx.arange(100)        
-        flow = mdp.Flow([mdp.nodes.PCANode(), mdp.nodes.FDANode()])
-        try:
-            # try to give one argument too much!
-            flow.train([[[samples]], [[samples, labels, labels]]])
-            err = "Flow did not raise FlowException for wrong iterable."
-            raise Exception(err)
-        except mdp.FlowException:
-            pass
-
+        labels = mdp.numx.arange(100)
+        # cl argument of FDANode is not supported in biflow     
         flow = BiFlow([mdp.nodes.PCANode(), mdp.nodes.FDANode()])
-        try:
-            # try to give one argument too much!
-            flow.train([[[samples]], [[samples, labels, labels]]])
-            err = "Flow did not raise FlowException for wrong iterable."
-            raise Exception(err)
-        except mdp.FlowException:
-            pass
+        # the iterables are passed as if this were a normal Flow
+        self.assertRaises(BiFlowException,
+                          lambda: flow.train([[samples], [samples, labels]]))
+        # messing up the data iterables further doesn't matter, this is
+        # actually interpreted as three data chunks for the FDANode training,
+        # since argument iterables are not supported by BiFlow
+        self.assertRaises(BiFlowException,
+                    lambda: flow.train([[samples], [samples, labels, labels]]))
         
-    
     def test_training_targets(self):
         """Test targeting during training and stop_training."""
         tracelog = []

@@ -111,6 +111,10 @@ class BiFlow(mdp.Flow):
         
         data_iterables -- Sequence of iterables with the training data for each
             trainable node. Can also be a single array or None.
+            Note that iterables yielding tuples for additonal node arguments
+            (e.g. the class labels for an FDANode) are not supported in a
+            BiFlow. Instead use the BiNode version of the node and provide
+            the arguments in the message (via msg_iterables).
         msg_iterables -- Sequence of iterables with the msg training data 
             for each trainable node.
         stop_messages -- Sequence of messages for stop_training.
@@ -194,7 +198,22 @@ class BiFlow(mdp.Flow):
                     if result is None:
                         break  # training is done for this chunk
                 else:
-                    self.flow[nodenr].train(x)
+                    try:
+                        self.flow[nodenr].train(x)
+                    except TypeError:
+                        # check if error is caused by additional node arguments
+                        train_arg_keys = self._get_required_train_args(
+                                                        self.flow[nodenr])
+                        if len(train_arg_keys):
+                            err = ("The node '%s' " % str(self.flow[nodenr]) +
+                                   "requires additional training " +
+                                   " arguments, which is not supported in a " +
+                                   "BiFlow. Instead use the BiNode version " +
+                                   "of the node and put the arguments in " +
+                                   "the msg.")
+                            raise BiFlowException(err)
+                        else:
+                            raise
                     break
                 ## training execution continues, interpret result
                 if not isinstance(result, tuple):
