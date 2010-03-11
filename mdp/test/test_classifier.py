@@ -108,9 +108,10 @@ class ClassifierTestSuite(unittest.TestSuite):
 
             features = zip(" " + word)
             labels = list(word + " ")
+
             mc.train(mdp.numx.array(features), labels)
         
-        assert mc.input_dim == 2
+        assert mc.input_dim == 1
         
         num_transitions = 0
         features = mc.features

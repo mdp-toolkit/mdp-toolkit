@@ -473,10 +473,8 @@ class ContribTestSuite(NodesTestSuite):
                 
                 # we don't have ranks in our regression models
                 if not comb['classifier'].endswith("SVR"):
-                    pos1_rank = numx.array(svm_node.rank(numx.array([positions[0]],
-                                                         dtype='double')))
-                    pos2_rank = numx.array(svm_node.rank(numx.array([positions[1]],
-                                                         dtype='double')))
+                    pos1_rank = numx.array(svm_node.rank(numx.array([positions[0]])))
+                    pos2_rank = numx.array(svm_node.rank(numx.array([positions[1]])))
                     
                     assert numx.all(pos1_rank == -pos2_rank)
                     assert numx.all(abs(pos1_rank) == 1)

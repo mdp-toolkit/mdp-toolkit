@@ -38,7 +38,7 @@ class ClassifierNode(mdp.Node):
         overwrites this docstring.
         """
         self._pre_execution_checks(x)
-        return self._classify(x, *args, **kwargs)
+        return self._classify(self._refcast(x), *args, **kwargs)
   
     def prob(self, x, *args, **kwargs):
         """Returns the probability for each datapoint and label
@@ -49,5 +49,5 @@ class ClassifierNode(mdp.Node):
         overwrites this docstring.        
         """
         self._pre_execution_checks(x)
-        return self._prob(x, *args, **kwargs)
+        return self._prob(self._refcast(x), *args, **kwargs)
         
