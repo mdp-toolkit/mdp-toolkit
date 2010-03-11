@@ -514,9 +514,12 @@ class Flow(object):
             # if no exception was raised, accept the new sequence
             return self.__class__(flow_copy)
         elif isinstance(other, mdp.Node):
-            flow_copy = self.copy()
+            flow_copy = list(self.flow)
             flow_copy.append(other)
-            return flow_copy
+            # check dimension consistency
+            self._check_nodes_consistency(flow_copy)
+            # if no exception was raised, accept the new sequence
+            return self.__class__(flow_copy)
         else:
             err_str = ('can only concatenate flow'
                        ' (not \'%s\') to flow' % (type(other).__name__))

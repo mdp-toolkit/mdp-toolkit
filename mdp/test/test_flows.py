@@ -241,6 +241,15 @@ class FlowsTestSuite(unittest.TestSuite):
         except ValueError:
             assert_equal(len(flow), length)
 
+    def testFlow_append_node_copy(self):
+        # when appending a node to a flow,
+        # we don't want the flow to be a copy!
+        node1 = _BogusNode()
+        node2 = _BogusNode()
+        flow = mdp.Flow([node1])
+        flow += node2
+        assert flow[0] is node1
+        
     def testFlow_as_sum_of_nodes(self):
         node1 = _BogusNode()
         node2 = _BogusNode()
