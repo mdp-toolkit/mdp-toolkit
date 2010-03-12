@@ -268,6 +268,15 @@ class TestBiFlow(unittest.TestCase):
            (None, 'bi_reset'), (None, 'execute'), (None, 'bi_reset')
         ]
         self.assertEqual(tracelog, reference)
+        
+    def test_append_node_copy(self):
+        """Test that appending a node does not perform a deept copy."""
+        node1 = nodes.IdentityBiNode()
+        node2 = nodes.IdentityBiNode()
+        flow = BiFlow([node1])
+        flow += node2
+        self.assert_(flow[0] is node1)
+        self.assert_(type(flow) is BiFlow)
     
 
 def get_suite():

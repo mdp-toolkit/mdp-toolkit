@@ -207,6 +207,25 @@ class TestBiNode(unittest.TestCase):
         self.assert_(result[1] == -1)
         self.assert_(result[0]["x"].shape == (5, binode.input_dim))
         self.assertFalse(n.any(result[0]["x"]))
+        
+    def test_flow_from_sum(self):
+        """Test the special addition method for BiNode."""
+        node1 = IdentityBiNode()
+        node2 = mdp.Node()
+        flow = node1 + node2
+        self.assert_(type(flow) is BiFlow)
+        node2 = IdentityBiNode()
+        flow = node1 + node2
+        self.assert_(type(flow) is BiFlow)
+        self.assert_(len(flow) == 2)
+        node3 = IdentityBiNode()
+        flow = node1 + node2 + node3
+        self.assert_(type(flow) is BiFlow)
+        self.assert_(len(flow) == 3)
+        node4 = IdentityBiNode()
+        flow = node4 + flow
+        self.assert_(type(flow) is BiFlow)
+        self.assert_(len(flow) == 4)
 
     
 class TestIdentityBiNode(unittest.TestCase):
@@ -278,25 +297,6 @@ class TestJumpBiNode(unittest.TestCase):
         self.assertTrue(result is None)
         jumpnode.bi_reset()
         
-    def test_flow_from_sum(self):
-        """Test the special addition method for BiNode."""
-        node1 = IdentityBiNode()
-        node2 = mdp.Node()
-        flow = node1 + node2
-        self.assert_(type(flow) is BiFlow)
-        node2 = IdentityBiNode()
-        flow = node1 + node2
-        self.assert_(type(flow) is BiFlow)
-        self.assert_(len(flow) == 2)
-        node3 = IdentityBiNode()
-        flow = node1 + node2 + node3
-        self.assert_(type(flow) is BiFlow)
-        self.assert_(len(flow) == 3)
-        node4 = IdentityBiNode()
-        flow = node4 + flow
-        self.assert_(type(flow) is BiFlow)
-        self.assert_(len(flow) == 4)
-
 
 def get_suite():
     suite = unittest.TestSuite()

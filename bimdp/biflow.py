@@ -416,7 +416,7 @@ class BiFlow(mdp.Flow):
                 return False
         else:
             return super(BiFlow, self).__contains__(key)
-    
+        
     ### Flow Implementation Methods ###
     
     def _sanitize_training_iterables(self, data_iterables, msg_iterables):
