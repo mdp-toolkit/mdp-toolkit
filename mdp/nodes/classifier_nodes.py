@@ -48,23 +48,15 @@ class PerceptronClassifier(mdp.ClassifierNode):
               the same class.
         """
 
-        # if cl is a number, all x's belong to the same class
-        if isinstance(cl, (list, tuple, numx.ndarray)):
-            cl = numx.array(cl)
-        else:
-            cls = [cl] * x.shape[0]
-            cl = numx.array(cls)
-            
         # if weights are not yet initialised, initialise them
         if not len(self.weights):
             self.weights = numx.ones(self.input_dim)
         
-        for i in range(x.shape[0]):
+        for xi, cli in mdp.utils.izip_stretched(x, cl):
             new_weights = self.weights
             new_offset = self.offset_weight
-            xi = x[i, :]
-            
-            rate = self.learning_rate * (cl[i] - self._classify(xi))
+
+            rate = self.learning_rate * (cli - self._classify(xi))
             for j in range(self.input_dim):
                 new_weights[j] = self.weights[j] + rate * xi[j]
 
@@ -118,15 +110,7 @@ class NaiveBayesClassifier(mdp.ClassifierNode):
               or a single label, in which case all input data is assigned to
               the same class.
         """
-
-        # if cl is a number, all x's belong to the same class
-        if isinstance(cl, (list, tuple, numx.ndarray)):
-            cl = numx.array(cl)
-        else:
-            cls = [cl] * len(x)
-            cl = numx.array(cls)
-        
-        for xi, cli in itertools.izip(x, cl):
+        for xi, cli in mdp.utils.izip_stretched(x, cl):
             self._learn(xi, cli)
             
         # clear input dim hack
@@ -251,15 +235,8 @@ class SimpleMarkovClassifier(mdp.ClassifierNode):
               or a single label, in which case all input data is assigned to
               the same class.
         """
-
         # if cl is a number, all x's belong to the same class
-        if isinstance(cl, (list, tuple, numx.ndarray)):
-            cl = numx.array(cl)
-        else:
-            cls = [cl] * len(x)
-            cl = numx.array(cls)
-        
-        for xi, cli in itertools.izip(x, cl):
+        for xi, cli in mdp.utils.izip_stretched(x, cl):
             self._learn(xi, cli)
     
     def _learn(self, feature, label):
