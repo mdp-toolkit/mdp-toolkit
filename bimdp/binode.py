@@ -434,10 +434,13 @@ class BiNode(mdp.Node):
             msg = None
         return msg, arg_dict
       
-    def _get_method(self, method_name, default_method, target):
-        """Return the method to be called and the target.
+    def _get_method(self, method_name, default_method, target=None):
+        """Return the method to be called and the target return value.
         
-        Note that msg might be modified when the method name is extracted.
+        method_name -- as provided in msg (without underscore)
+        default_method -- bound method object
+        target -- return target value as provided in message or None
+        
         If the chosen method is _inverse then the default target is -1.
         """
         if not method_name:
