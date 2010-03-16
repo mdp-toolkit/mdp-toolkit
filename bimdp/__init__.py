@@ -53,14 +53,33 @@ This is described in more detail in the BiNode module.
 
 # TODO: provide ParallelBiNode to copy the stop_result attribute?
 #    Or can we guarantee that stop_training is always called on the original
-#    version? If we relly on this then it should be specified in the API. 
+#    version? If we relly on this then it should be specified in the API.
+#
+#    This would be related to guranteeing that join/fork is always called on
+#    the original node. For fork this would prevent caching, for join this
+#    would prevent gathering the results in remote nodes/processes.
+#    Could be optional depending on node, fork could somehow return a
+#    non-forkable node?
+
+# TODO: Split arrays in message only when the dimension matches exactly
+#    the inputdim? That should also be consistent with the switchboard
+#    behavior. Could later also add option when it matches the number of
+#    nodes / channels.
+#    And add argument to turn automatic message splitting on/off. Could be
+#    later allowed to accept list of key values as well.
+
+# TODO: change => to -> to allow later addtion of more options (see below)
 
 # ------------- optional ----------------
 
-# TODO: use a target seperator like : and allow multiple occurances,
-#    when the node is reached then one is removed until there is only one left.
-#    Example: node_id:::target will use the target value when the node is
-#        reached for the third time.
+# TODO: add a target seperator that does not remove the key. Could use
+#    -> remove key
+#    --> remove one '-' on entry
+#    => do not remove the key
+#  Note that adding this kind of magic is relatively cheap in BiNode,
+#  in parsing first check just for > .
+#  Remove the CONST values for these symbols, this isn't really required as
+#  should only occur in the BiNode file.
 
 # TODO: Implement more internal checks for node output result?
 #    Check that last element is not None? Use assume?
