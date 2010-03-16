@@ -13,7 +13,8 @@ import inspect
 import mdp
 from mdp import numx
 from mdp.nodes import (SignumClassifier, PerceptronClassifier, NaiveBayesClassifier,
-                       SimpleMarkovClassifier, DiscreteHopfieldClassifier)
+                       SimpleMarkovClassifier, DiscreteHopfieldClassifier,
+                       KMeansClassifier)
 from mdp.utils import weighted_choice
 
 class ClassifierTestSuite(unittest.TestSuite):
@@ -170,6 +171,27 @@ class ClassifierTestSuite(unittest.TestSuite):
             retrieved = h.classify(numx.array([noisy]))
             # Hopfield nets are blind for inversion, need to check either case
             assert numx.all(retrieved == p) or numx.all(retrieved != p)
+    
+    def testKMeansClassifier(self):
+        num_centroids = 3
+        k = KMeansClassifier(num_centroids)
+        a = numx.random.rand(50, 2)
+        k.train(a)
+        res = k.classify(a)
+        
+        # check that the number of centroids is correct
+        assert len(set(res)) == num_centroids
+        
+        k = KMeansClassifier(2)
+        a1 = numx.random.rand(50, 2) - 1
+        a2 = numx.random.rand(50, 2) + 1
+        k.train(a1)
+        k.train(a2)
+        res1 = k.classify(a1)
+        res2 = k.classify(a2)
+        # check that both clusters are completely identified and different
+        assert len(set(res1)) == 1 and len(set(res2)) == 1 and set(res1) != set(res2), \
+            "Error in K-Means classifier. This might be a bug or just a local minimum."
         
 
 def get_suite(testname=None):

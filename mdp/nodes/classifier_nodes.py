@@ -18,7 +18,7 @@ class SignumClassifier(mdp.ClassifierNode):
 
 class PerceptronClassifier(mdp.ClassifierNode):
     """A simple perceptron with input_dim input nodes."""
-    def __init__(self, input_dim = None, dtype = None):
+    def __init__(self, input_dim=None, dtype=None):
         super(PerceptronClassifier, self).__init__(input_dim, None, dtype)
         self.weights = []
         self.offset_weight = 0
@@ -80,7 +80,7 @@ class NaiveBayesClassifier(mdp.ClassifierNode):
     Right now, it is only a two-class model. If needed, it can be possible to
     allow for multiple class training and classification.
     """
-    def __init__(self, input_dim = None, dtype = None):
+    def __init__(self, input_dim=None, dtype=None):
         super(NaiveBayesClassifier, self).__init__(input_dim, None, dtype)
         self.nospam = {}
         self.spam = {}
@@ -208,7 +208,7 @@ class SimpleMarkovClassifier(mdp.ClassifierNode):
     It can be trained on a vector of tuples the label being the next element
     in the testing data.
     """
-    def __init__(self, input_dim = None, dtype = None):
+    def __init__(self, input_dim=None, dtype=None):
         super(SimpleMarkovClassifier, self).__init__(input_dim, None, dtype)
         self.ntotal_connections = 0
 
@@ -299,7 +299,7 @@ class DiscreteHopfieldClassifier(mdp.ClassifierNode):
     """Node for simulating a simple discrete Hopfield model"""
     # TODO: It is unclear if this belongs to classifiers or is a general node
     # because label space is a subset of feature space
-    def __init__(self, input_dim = None):
+    def __init__(self, input_dim=None):
         dtype = bool
         super(DiscreteHopfieldClassifier, self).__init__(input_dim, input_dim, dtype)
         self._weight_matrix = 0 # assigning zero to ease addition
@@ -368,3 +368,58 @@ class DiscreteHopfieldClassifier(mdp.ClassifierNode):
         return mdp.utils.sign_to_bool(pattern)
 
 
+class KMeansClassifier(mdp.ClassifierNode):
+    def __init__(self, num_clusters, input_dim=None, dtype=None):
+        """Simple classifier for K-Means clustering.
+        
+        num_clusters -- number of centroids to use = number of clusters
+        """
+        super(KMeansClassifier, self).__init__(input_dim, None, dtype)
+        self._num_clusters = num_clusters
+        self._data = None
+        self._centroids = None
+    
+    def _train(self, x):
+        # append all data
+        if self._data is None:
+            self._data = x
+        else:
+            self._data = numx.concatenate((self._data, x))
+    
+    def _stop_training(self):
+        num_points = len(self._data)
+        # choose initial centroids unless they are already given
+        if not self._centroids:
+            centr_idx = random.sample(xrange(len(self._data)), self._num_clusters)
+            centroids = self._data[centr_idx]
+        else:
+            centroids = self._centroids
+        
+        while True:
+            # list of (sum_position, num_clusters)
+            new_centroids = [(0, 0)] * len(centroids)
+            # cluster
+            for x in self._data:
+                idx = self._nearest_centroid_idx(x, centroids)
+                # update position and count
+                pos_count = (new_centroids[idx][0] + x, new_centroids[idx][1] + 1)
+                new_centroids[idx] = pos_count
+            
+            # get new centroid position
+            new_centroids = numx.array([c[0] / c[1] for c in new_centroids])
+            # check if we are stable
+            if numx.all(new_centroids == centroids):
+                self._centroids = centroids
+                return
+            centroids = new_centroids
+            
+    def _nearest_centroid_idx(self, data, centroids):
+        dists = [numx.linalg.norm(data - c) for c in centroids]
+        # return index
+        return min(enumerate(dists), key=operator.itemgetter(1))[0]
+
+    def _classify(self, x):
+        """For a set of feature vectors x, this classifier returns
+        a list of centroids.
+        """
+        return [self._nearest_centroid_idx(xi, self._centroids) for xi in x]
