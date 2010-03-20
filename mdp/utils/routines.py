@@ -459,11 +459,14 @@ def orthogonal_permutations(a_dict):
 
 
 def izip_stretched(*iterables):
-    """Same as izip, except that non-iterables are repeated ad infinitum.
+    """Same as izip, except that for convenience non-iterables are repeated ad infinitum.
     
     This is useful when trying to zip input data with respective labels
     and allows for having a single label for all data, as well as for
     havning a list of labels for each data vector.
+    Note that this will take strings as an iterable (of course), so
+    strings acting as a single value need to be wrapped in a repeat
+    statement of their own.
     
     Thus,
     >>> for zipped in izip_stretched([1, 2, 3], -1):
@@ -491,13 +494,20 @@ def izip_stretched(*iterables):
         yield tuple([it.next() for it in iterables])
 
 
-def weighted_choice(a_dict, is_normalised=False):
+def weighted_choice(a_dict, normalize=True):
     """Returns a key from a dictionary based on the weight that the value suggests.
-    If is_normalised=True, the sum of the weights must be one.
+    If 'normalize' is False, it is assumed the weights sum up to unity. Otherwise,
+    the algorithm will take care of normalising.
     
-    TODO: It might be good to shuffle the order before using it to minimise possible degeneration.
+    Example:
+    >>> d = {'a': 0.1, 'b': 0.5, 'c': 0.4}
+    >>> weighted_choice(d)
+    # draws 'b':'c':'a' with 5:4:1 probability
+    
+    TODO: It might be good to either shuffle the order or explicitely specify it,
+    before walking through the items, to minimise possible degeneration.
     """
-    if not is_normalised:
+    if normalize:
         d = a_dict.copy()
         s = sum(d.values())
         for key, val in d.items():
@@ -517,8 +527,13 @@ def bool_to_sign(an_array):
     return numx.sign(an_array - 0.5)
 
 def sign_to_bool(an_array, zero=True):
-    """Return False for each negative value, else True"""
+    """Return False for each negative value, else True.
+    
+    The value for 0 is specified with 'zero'.
+    """
     if zero:
         return numx.array(an_array) >= 0
     else:
         return numx.array(an_array) > 0
+
+

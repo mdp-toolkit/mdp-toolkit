@@ -9,14 +9,6 @@ that is pretty easy to do for an algorithm. Just supply some paragraphs of text
 from each language and let the classifier analyse them.
 """
 
-import mdp
-
-# -*- coding: utf-8 -*-
-"""
-Demo to show how mdp can help with creating a simple word generator based on
-Markovian assumptions.
-"""
-
 import subprocess
 import re
 import string
