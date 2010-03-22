@@ -61,13 +61,6 @@ This is described in more detail in the BiNode module.
 #    Could be optional depending on node, fork could somehow return a
 #    non-forkable node?
 
-# TODO: Split arrays in message only when the dimension matches exactly
-#    the inputdim? That should also be consistent with the switchboard
-#    behavior. Could later also add option when it matches the number of
-#    nodes / channels.
-#    And add argument to turn automatic message splitting on/off. Could be
-#    later allowed to accept list of key values as well.
-
 # TODO: change => to -> to allow later addtion of more options (see below).
 #    Could also use regular expression for the parsing, this would
 #    probably make it quite easy to allow wildcards?

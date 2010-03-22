@@ -6,7 +6,7 @@ import mdp
 
 from bimdp import BiFlow
 from bimdp.hinet import BiFlowNode, CloneBiLayer, BiSwitchboard
-from bimdp.nodes import SFABiNode
+from bimdp.nodes import SFABiNode, IdentityBiNode
 
 
 class TestBiFlowNode(unittest.TestCase):
@@ -49,9 +49,30 @@ class TestBiFlowNode(unittest.TestCase):
         biflownode.execute(x)
         
 
+class DummyBiNode(IdentityBiNode):
+    """Dummy class for CloneBiLayer tests."""
+    
+    def _execute(self, x, data1, data2):
+        self.data1 = data1
+        self.data2 = data2
+        return x
+
+    def is_trainable(self):
+        return False
+
+
 class TestCloneBiLayer(unittest.TestCase):
     """Test the behavior of the BiCloneLayer."""
     
+    def test_clonelayer(self):
+        """Test a simple clonelayer with three SFA Nodes."""
+        sfa_node = SFABiNode(input_dim=3, output_dim=2)
+        clonelayer = CloneBiLayer(sfa_node, 3)
+        x = n.random.random((100,9))
+        clonelayer.train(x)
+        clonelayer.stop_training()
+        clonelayer.execute(x) 
+
     def test_use_copies_msg(self):
         """Test the correct reaction to an outgoing use_copies message."""
         stop_result = ({"clonelayer=>use_copies": True}, 1)
@@ -80,6 +101,31 @@ class TestCloneBiLayer(unittest.TestCase):
         clonelayer.train(x)
         clonelayer.stop_training()
         assert(clonelayer.use_copies is True)
+        
+    def test_message_splitting(self):
+        """Test message array splitting and combination."""
+        node = DummyBiNode(input_dim=3)
+        clonelayer = CloneBiLayer(node, 2, use_copies=True)
+        x = n.random.random((10, 6))
+        data1 = n.random.random((10, 4))  # should be split
+        data2 = n.random.random((10, 5))  # should not be touched
+        msg = {
+            "string": "blabla",
+            "list": [1,2],
+            "data1": data1,
+            "data2": data2,
+        }
+        y, out_msg = clonelayer.execute(x, msg)
+        node1, node2 = clonelayer.nodes
+        self.assertTrue(n.all(x == y))
+        self.assertTrue(out_msg["string"] == msg["string"])
+        self.assertTrue(out_msg["list"] == msg["list"])
+        self.assertTrue(n.all(out_msg["data1"] == data1))
+        self.assertTrue(n.all(node1.data1 == data1[:,:2]))
+        self.assertTrue(n.all(node2.data1 == data1[:,2:]))
+        self.assertTrue(out_msg["data2"] is data2)
+        self.assertTrue(n.all(node1.data2 is data2))
+        self.assertTrue(n.all(node2.data2 is data2))
 
 
 class TestBiSwitchboardNode(unittest.TestCase):
