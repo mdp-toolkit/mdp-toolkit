@@ -68,7 +68,10 @@ This is described in more detail in the BiNode module.
 #    And add argument to turn automatic message splitting on/off. Could be
 #    later allowed to accept list of key values as well.
 
-# TODO: change => to -> to allow later addtion of more options (see below)
+# TODO: change => to -> to allow later addtion of more options (see below).
+#    Could also use regular expression for the parsing, this would
+#    probably make it quite easy to allow wildcards?
+#    Check with a small benchmark if regex is slower.
 
 # ------------- optional ----------------
 

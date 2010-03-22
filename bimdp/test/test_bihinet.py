@@ -89,25 +89,35 @@ class TestBiSwitchboardNode(unittest.TestCase):
         """Test the standard routing for messages."""
         sboard = BiSwitchboard(input_dim=3, connections=[2,0,1])
         x = n.array([[1,2,3],[4,5,6]])
-        msg = {"string": "blabla",
-               "list": [1,2],
-               "data": x.copy()}
+        msg = {
+            "string": "blabla",
+            "list": [1,2],
+            "data": x.copy(),  # should be mapped by switchboard
+            "data2": n.zeros(3),  # should not be modified
+            "data3": n.zeros((3,4)),  # should not be modified
+        }
         y, out_msg = sboard.execute(x, msg)
         reference_y = n.array([[3,1,2],[6,4,5]])
         self.assertTrue(n.all(y == reference_y))
         self.assertTrue(out_msg["string"] == msg["string"])
         self.assertTrue(out_msg["list"] == msg["list"])
         self.assertTrue(n.all(out_msg["data"] == reference_y))
+        self.assertTrue(out_msg["data2"].shape == (3,))
+        self.assertTrue(out_msg["data3"].shape == (3,4))
     
     def test_inverse_message_routing(self):
         """Test the inverse routing for messages."""
         sboard = BiSwitchboard(input_dim=3, connections=[2,0,1])
         x = n.array([[1,2,3],[4,5,6]])
-        msg = {"string": "blabla",
-               "method": "inverse",
-               "list": [1,2],
-               "data": x,
-               "target": "test"}
+        msg = {
+            "string": "blabla",
+            "method": "inverse",
+            "list": [1,2],
+            "data": x,  # should be mapped by switchboard
+            "data2": n.zeros(3),  # should not be modified
+            "data3": n.zeros((3,4)),  # should not be modified
+            "target": "test"
+        }
         y, out_msg, target = sboard.execute(None, msg)
         self.assertTrue(y is None)
         self.assertTrue(target == "test")
@@ -115,7 +125,30 @@ class TestBiSwitchboardNode(unittest.TestCase):
         self.assertTrue(out_msg["string"] == msg["string"])
         self.assertTrue(out_msg["list"] == msg["list"])
         self.assertTrue(n.all(out_msg["data"] == reference_y))
+        self.assertTrue(out_msg["data2"].shape == (3,))
+        self.assertTrue(out_msg["data3"].shape == (3,4))
     
+    def test_stop_message(self):
+        """Test the inverse routing for messages."""
+        sboard = BiSwitchboard(input_dim=3, connections=[2,0,1])
+        x = n.array([[1,2,3],[4,5,6]])
+        msg = {
+            "string": "blabla",
+            "list": [1,2],
+            "data": x,  # should be mapped by switchboard
+            "data2": n.zeros(3),  # should not be modified
+            "data3": n.zeros((3,4)),  # should not be modified
+            "target": "node123"
+        }
+        out_msg, _ = sboard.stop_message(msg)
+        reference_y = n.array([[3,1,2],[6,4,5]])
+        self.assertTrue(n.all(out_msg["data"] == reference_y))
+        self.assertTrue(out_msg["string"] == msg["string"])
+        self.assertTrue(out_msg["list"] == msg["list"])
+        self.assertTrue(n.all(out_msg["data"] == reference_y))
+        self.assertTrue(out_msg["data2"].shape == (3,))
+        self.assertTrue(out_msg["data3"].shape == (3,4))
+
 
 def get_suite():
     suite = unittest.TestSuite()
