@@ -54,7 +54,10 @@ class SFANode(Node):
 
     def _train(self, x):
         ## update the covariance matrices
-        # cut the final point to avoid a trivial solution in special cases
+        # Cut the final point to avoid a trivial solution in special cases. (?)
+        # This also makes sense if the last data point is duplicated as the
+        # first data point of the next chunk, in which case the chunking
+        # of the data has no influence on the result.
         self._cov_mtx.update(x[:-1, :])
         self._dcov_mtx.update(self.time_derivative(x))
 

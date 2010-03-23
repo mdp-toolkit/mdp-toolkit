@@ -254,8 +254,7 @@ class BiFlow(mdp.Flow):
         if result is None:
             return
         elif not isinstance(result, tuple) and  nodenr+1 < len(self.flow):
-            result = self._stop_message_seq(msg=result,
-                                            i_node=nodenr+1)
+            result = self._stop_message_seq(msg=result, i_node=nodenr+1)
         elif len(result) == 2:
             msg, target = result
             if isinstance(target, int):

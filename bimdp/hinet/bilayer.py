@@ -220,7 +220,7 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
                     msgs.append(node_result[0])
                     target = node_result[1]
             msg = self._get_combined_message(msgs)
-        # check for outgoing message for use_copies key
+        # check outgoing message for use_copies key
         if msg is not None:
             self._extract_message_copy_flag(msg)
             # if the msg is now empty and if the msg was aimed at this note
@@ -251,7 +251,7 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
                 target = node_result[1]
         ## combine message results
         msg = self._get_combined_message(msgs)
-        # check for outgoing message for use_copies key
+        # check outgoing message for use_copies key
         if msg is not None:
             self._extract_message_copy_flag(msg)
         if target is None:
