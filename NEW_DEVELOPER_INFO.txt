@@ -30,6 +30,26 @@ and best-practices we’d like any MDP contributor to follow.
   framework. Be particularly aware of the automatic testing of
   setting and consistency of input_dim, output_dim and dtype.
   
+- If you are about to test something and you’ve got the idea that your
+  code won’t last long in the repository, (maybe you want to show your
+  code to another developer or you want to just check, if you can commit
+  to the server,) you should create another branch for that.
+  The branch should be prefixed by an identifier such as your initials, so
+  that we can distinguish between all the ‘testing’ branches.
+
+  The advantage is, that it keeps our master branch clean from all those
+  ‘testing some really strange new stuff – please have a look’ commits, which
+  are likely to be reverted again. When you feel good about your commit, you
+  can cherry-pick or merge the good stuff to master.
+
+  When you’re done with testing, it’s all right to delete the branch again
+  from the server, in order to reduce the repository size and branch clutter.
+  However, one must be careful with this, so only delete online branches when
+  you know what you’re doing.
+  If you want to introduce a huge change, you’re welcome to do this on an
+  external public repository; that way only those developers interested
+  in your changes will need to download it.
+
 - If you want to develop on a Windows system you might run into some issues
   with git. Here is what we use for git on Windows:
   
