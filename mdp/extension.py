@@ -199,17 +199,21 @@ def get_active_extensions():
     # value is used in a for-loop (see deactivate_extensions function)
     return list(_active_extensions)
     
-def activate_extension(extension_name):
+def activate_extension(extension_name, verbose=False):
     """Activate the extension by injecting the extension methods."""
     if extension_name not in _extensions.keys():
         err = "Unknown extension name: %s" + str(extension_name)
         raise ExtensionException(err)
     if extension_name in _active_extensions:
+        if verbose:
+            print 'Extension "'+extension_name+'" already active!'
         return
     _active_extensions.add(extension_name)
     try:
         for node_cls, attributes in _extensions[extension_name].items():
             for attr_name, attr_value in attributes.items():
+                if verbose:
+                    print 'Adding "'+attr_name+'" to "'+node_cls.__name__+'"'
                 if attr_name in node_cls.__dict__:
                     if ((EXTENSION_ATTR_PREFIX + attr_name) in
                         node_cls.__dict__):
@@ -222,6 +226,9 @@ def activate_extension(extension_name):
                                extension_name + "'.")
                         raise ExtensionException(err)
                     original_attr = getattr(node_cls, attr_name)
+                    if verbose:
+                        print ('Overwriting "'+attr_name+'" in "'+
+                               node_cls.__name__+'"')
                     setattr(node_cls, ORIGINAL_ATTR_PREFIX + attr_name,
                             original_attr)
                 setattr(node_cls, attr_name, attr_value)
