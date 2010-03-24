@@ -335,7 +335,9 @@ class DiscreteHopfieldClassifier(mdp.ClassifierNode):
     
     def _stop_training(self):
         # remove self-feedback
-        numx.fill_diagonal(self._weight_matrix, 0)
+        # we could use numx.fill_diagonal, but thats numpy 1.4 only
+        for i in range(self.input_dim):
+            self._weight_matrix[i][i] = 0
     
     def _classify(self, x, threshold = 0):
         """Retrieves patterns from the associative memory.

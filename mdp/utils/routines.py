@@ -487,7 +487,8 @@ def izip_stretched(*iterables):
     
     iterables= map(iter_or_repeat, iterables)
     while iterables:
-        yield tuple(map(next, iterables))
+        # need to care about python < 2.6
+        yield tuple([it.next() for it in iterables])
 
 
 def weighted_choice(a_dict, is_normalised=False):
