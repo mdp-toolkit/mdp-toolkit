@@ -272,7 +272,7 @@ class BiNode(mdp.Node):
             msg = stored_msg
             if target is None:
                 target = stored_stop_result[1]
-        return self._combine_message_result(result, msg, target)
+        return self._combine_stop_message_result(result, msg, target)
     
     ### New methods for node messaging. ###
     
@@ -323,7 +323,7 @@ class BiNode(mdp.Node):
                 else:
                     # result must be single x value
                     result = {"x": result}
-        return self._combine_message_result(result, msg, target)
+        return self._combine_stop_message_result(result, msg, target)
     
     def _stop_message(self):
         """Hook method, overwrite when needed. 
@@ -434,10 +434,13 @@ class BiNode(mdp.Node):
             msg = None
         return msg, arg_dict
       
-    def _get_method(self, method_name, default_method, target):
-        """Return the method to be called and the target.
+    def _get_method(self, method_name, default_method, target=None):
+        """Return the method to be called and the target return value.
         
-        Note that msg might be modified when the method name is extracted.
+        method_name -- as provided in msg (without underscore)
+        default_method -- bound method object
+        target -- return target value as provided in message or None
+        
         If the chosen method is _inverse then the default target is -1.
         """
         if not method_name:
@@ -457,7 +460,7 @@ class BiNode(mdp.Node):
         return method, target
     
     @staticmethod
-    def _combine_message_result(result, msg, target):
+    def _combine_stop_message_result(result, msg, target):
         """Combine the message result with the provided values.
         
         result -- None, msg or (msg, target)
@@ -471,7 +474,7 @@ class BiNode(mdp.Node):
             else:
                 return None
         elif not isinstance(result, tuple):
-            # result is msg
+            # result has not target, terminate stop_message propagation
             if target is None:
                 return None
             if msg:

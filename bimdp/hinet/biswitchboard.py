@@ -9,8 +9,10 @@ from ..binode import BiNode
 class BiSwitchboard(BiNode, hinet.Switchboard):
     """BiMDP version of the normal Switchboard.
     
-    In addition to the feed-forward routing it also allows top-down routing.
-    This is the default behavior for message.
+    It adds support for stop_message and also tries to apply the switchboard
+    mapping to arrays in the message. The mapping is only applied if the
+    array is at least two dimensional and the second dimension matches the
+    switchboard dimension.
     """
     
     def __init__(self, **kwargs):
@@ -54,6 +56,7 @@ class BiSwitchboard(BiNode, hinet.Switchboard):
             return y, msg
     
     def _stop_message(self, msg=None):
+        """Return the message data routed like during execution."""
         return self._execute_msg(msg)
     
     def is_bi_training(self):
@@ -67,7 +70,8 @@ class BiSwitchboard(BiNode, hinet.Switchboard):
             return None
         out_msg = {}
         for (key, value) in msg.items():
-            if type(value) is n.ndarray:
+            if (type(value) is n.ndarray and
+                len(value.shape) >= 2 and value.shape[1] == self.output_dim):
                 out_msg[key] = super(BiSwitchboard, self)._inverse(value)
             else:
                 out_msg[key] = value
@@ -79,7 +83,8 @@ class BiSwitchboard(BiNode, hinet.Switchboard):
             return None
         out_msg = {}
         for (key, value) in msg.items():
-            if type(value) is n.ndarray:
+            if (type(value) is n.ndarray and
+                len(value.shape) >= 2 and value.shape[1] == self.input_dim):
                 out_msg[key] = super(BiSwitchboard, self)._execute(value)
             else:
                 out_msg[key] = value

@@ -5,12 +5,6 @@ n = mdp.numx
 
 from ..binode import BiNode, BiNodeException
 
-# TODO: not sure if always splitting up the msg parts is always such a great
-#    idea, maybe a switch should be introduced?
-
-# TODO: Maybe setting use_copies should be replaced with a method, since it
-#    can be quite costly.
-
 
 class CloneBiLayerException(BiNodeException):
     """CloneBiLayer specific exception."""
@@ -25,10 +19,15 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
     So if the notes return different kinds of results the overall result is very
     unpredictable.
     
-    The incoming data is split into len(self.nodes) chunks, so the actual chunk
+    The incoming data is split into len(self.nodes) parts, so the actual chunk
     size does not matter as long as it is compatible with this scheme.
     This also means that this class can deal with incoming data from a
     BiSwitchboard that is being send down.
+    Arrays in the message are split up if they can be evenlty split into
+    len(self.nodes) parts along the second axis, otherwise they are put
+    into each node message. Arrays in the outgoing message are joined along
+    the second axis (unless they are the same unsplit array), so if an array
+    is accidently split no harm should be done (there is only some overhead).
     
     Note that a msg is always passed to the internal nodes, even if the Layer
     itself was targeted. Additional target resolution can then happen in the
@@ -82,7 +81,7 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
                        "probably result in lost learning data.")
                 raise CloneBiLayerException(err)
             self.node = self.nodes[0]
-            self.nodes = (self.node,) * len(self.nodes) 
+            self.nodes = [self.node] * len(self.nodes) 
             
     def _get_method(self, method_name, default_method, target):
         """Return the default method and the unaltered target.
@@ -322,10 +321,13 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
         if not msg:
             return [None] * len(self.nodes)
         msgs = [dict() for _ in range(len(self.nodes))]
+        n_nodes = len(self.nodes)
         for (key, value) in msg.items():
-            if isinstance(value, n.ndarray) and (len(value.shape) >= 2):
+            if (isinstance(value, n.ndarray) and
+                # check if the array can be split up
+                len(value.shape) >= 2 and not value.shape[1] % n_nodes):
                 # split the data along the second index
-                split_values = n.hsplit(value, len(self.nodes))
+                split_values = n.hsplit(value, n_nodes)
                 for i, split_value in enumerate(split_values):
                     msgs[i][key] = split_value
             else:
@@ -343,10 +345,14 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
         """
         if (not msgs) or (msgs[-1] is None):
             return None
+        if len(msgs) == 1:
+            return msgs
         msg = dict()
-        for (key, first_value) in msgs[-1].items():
-            if (isinstance(first_value, n.ndarray) and
-                (len(first_value.shape) >= 2)):
+        for (key, one_value) in msgs[-1].items():
+            other_value = msgs[0][key]
+            if (isinstance(one_value, n.ndarray) and
+                # check if the array was originally split up
+                (len(one_value.shape) >= 2 and one_value is not other_value)):
                 msg[key] = n.hstack([node_msg[key] for node_msg in msgs])
             else:
                 # pick the msg value of the last node

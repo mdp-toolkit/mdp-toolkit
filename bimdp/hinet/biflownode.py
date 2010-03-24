@@ -24,7 +24,8 @@ class BiFlowNode(BiNode, hinet.FlowNode):
     internal flow.
     """
     
-    def __init__(self, biflow, input_dim=None, output_dim=None, dtype=None):
+    def __init__(self, biflow, input_dim=None, output_dim=None, dtype=None,
+                 node_id=None):
         """Wrap the given BiFlow into this node.
         
         Pretrained nodes are allowed, but the internal _flow should not 
@@ -39,7 +40,8 @@ class BiFlowNode(BiNode, hinet.FlowNode):
             raise BiNodeException("The biflow has to be an BiFlow instance.")
         super(BiFlowNode, self).__init__(flow=biflow,
                                          input_dim=input_dim,
-                                         output_dim=output_dim, dtype=dtype)
+                                         output_dim=output_dim, dtype=dtype,
+                                         node_id=node_id)
         # last successful request for target node_id
         self._last_id_request = None
         
@@ -240,6 +242,8 @@ class BiFlowNode(BiNode, hinet.FlowNode):
         return False    
     
     def _request_node_id(self, node_id):
+        if self._node_id == node_id:
+            return self
         for node in self._flow:
             if isinstance(node, BiNode):
                 found_node = node._request_node_id(node_id)

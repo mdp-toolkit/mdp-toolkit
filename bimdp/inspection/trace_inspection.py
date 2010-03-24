@@ -117,8 +117,8 @@ class TraceDebugException(Exception):
 class TraceHTMLInspector(hinet.HiNetTranslator):
     """Class for inspecting a single pass through a provided flow.
     
-    This class is based on a translator that wraps the flow elements with 
-    tracing decorators. It also provides a callback function for the tracers
+    This class is based on a translator that decorates the flow elements with 
+    tracing wrappers. It also provides a callback function for the tracers
     and stores everything else needed for the inspection.
     
     This class is already specialized for creating HTML slides in the callback
@@ -526,6 +526,7 @@ class TraceHTMLTranslator(BiHTMLTranslator):
     @staticmethod
     def _dict_pretty_html(dic):
         """Return a nice HTML representation of the given numpy array."""
+        # TODO: use an stringio buffer for efficency
         dic_str = '{'
         first = True
         for key, value in dic.items():
@@ -533,7 +534,11 @@ class TraceHTMLTranslator(BiHTMLTranslator):
                 first = False
             else:
                 dic_str += ',<br>\n'
-            dic_str += repr(key) + ': ' + str(value)
+            dic_str += repr(key) + ': '
+            if isinstance(value, str):
+                dic_str += repr(value)
+            else:
+                dic_str += str(value)
         dic_str += '}'
         return dic_str
     

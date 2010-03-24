@@ -3,6 +3,7 @@ import mdp
 # import numeric module (scipy, Numeric or numarray)
 numx, numx_rand, numx_linalg  = mdp.numx, mdp.numx_rand, mdp.numx_linalg
 import random
+import itertools
 
 class SymeigException(mdp.MDPException):
     pass
@@ -455,6 +456,39 @@ def orthogonal_permutations(a_dict):
         args.append(args_with_fun)
     for i in product(*args):
         yield dict(i)
+
+
+def izip_stretched(*iterables):
+    """Same as izip, except that non-iterables are repeated ad infinitum.
+    
+    This is useful when trying to zip input data with respective labels
+    and allows for having a single label for all data, as well as for
+    havning a list of labels for each data vector.
+    
+    Thus,
+    >>> for zipped in izip_stretched([1, 2, 3], -1):
+            print zipped
+    (1, -1)
+    (2, -1)
+    (3, -1)
+    
+    is equivalent to
+    >>> for zipped in izip([1, 2, 3], [-1] * 3):
+            print zipped
+    (1, -1)
+    (2, -1)
+    (3, -1)
+    """
+    def iter_or_repeat(val):
+        try:
+            return iter(val)
+        except TypeError:
+            return itertools.repeat(val)
+    
+    iterables= map(iter_or_repeat, iterables)
+    while iterables:
+        yield tuple(map(next, iterables))
+
 
 def weighted_choice(a_dict, is_normalised=False):
     """Returns a key from a dictionary based on the weight that the value suggests.
