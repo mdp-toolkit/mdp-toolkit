@@ -57,7 +57,10 @@ class _OrderedDict(object):
                 new_val = other[entry]
             else:
                 new_key = entry[0]
-                new_val = entry[1] if len(entry) > 1 else None
+                if len(entry) > 1: 
+                    new_val = entry[1]
+                else:
+                    None
             if new_key in self._keys:
                 i = self._keys.index(new_key)
                 self._vals[i] = new_val

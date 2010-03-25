@@ -4,7 +4,6 @@ import operator
 import random
 import itertools
 
-
 class SignumClassifier(mdp.ClassifierNode):
     """This classifier node classifies as 1, if the sum of the data points is positive
         and as -1, if the data point is negative"""
@@ -34,7 +33,7 @@ class PerceptronClassifier(mdp.ClassifierNode):
         if (not isinstance(cl, (list, tuple, numx.ndarray))):
             cl = [cl]
 
-        if (not all(map(lambda x: abs(x) == 1, cl))):
+        if (not numx.all(map(lambda x: abs(x) == 1, cl))):
             msg = "The labels must be either -1 or 1."
             raise mdp.TrainingException(msg)
 
@@ -418,7 +417,7 @@ class KMeansClassifier(mdp.ClassifierNode):
     def _nearest_centroid_idx(self, data, centroids):
         dists = [numx.linalg.norm(data - c) for c in centroids]
         # return index
-        return min(enumerate(dists), key=operator.itemgetter(1))[0]
+        return min(zip(dists, itertools.count()))[1] 
 
     def _classify(self, x):
         """For a set of feature vectors x, this classifier returns
