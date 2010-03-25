@@ -51,12 +51,6 @@ This is described in more detail in the BiNode module.
 #    requested, then no special wrapper would be required, could still use
 #    this in standard MDP via the special classifier flow (no downsides!)
 
-# TODO: change => to -> to allow later addtion of more options (see below).
-#    Could also use regular expression for the parsing, this would
-#    probably make it quite easy to allow wildcards?
-#    Check with a small benchmark if regex is slower.
-#    Also compare this to tuple.
-
 # ------------- optional ----------------
 
 # TODO: add a target seperator that does not remove the key. Could use
@@ -65,8 +59,10 @@ This is described in more detail in the BiNode module.
 #    => do not remove the key
 #  Note that adding this kind of magic is relatively cheap in BiNode,
 #  in parsing first check just for > .
-#  Remove the CONST values for these symbols, this isn't really required as
-#  should only occur in the BiNode file.
+
+# TODO: add wildcard support for node_id in message keys.
+#    Simply tread the node_id part of the key as a regex and check for match.
+#    This adds an overhead of about 1 sec per 100,000 messages.
 
 # TODO: Would it make sense to gurantee that join/fork is always called on
 #    the original node? For fork this would prevent caching, for join this
@@ -84,7 +80,7 @@ This is described in more detail in the BiNode module.
 #    or enable some kind of folding (might be possible via CSS like suckerfish)
 
 
-from binode import BiNodeException, BiNode, NODE_ID_KEY
+from binode import BiNodeException, BiNode, MSG_ID_SEP
 from biflow import (
     MessageResultContainer, BiFlowException, BiFlow, BiCheckpointFlow,
     EXIT_TARGET

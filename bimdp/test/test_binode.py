@@ -4,7 +4,7 @@ import unittest
 import mdp
 n = mdp.numx
 
-from bimdp import BiNode, NODE_ID_KEY, BiFlow
+from bimdp import BiNode, MSG_ID_SEP, BiFlow
 from bimdp.nodes import IdentityBiNode, SFABiNode, FDABiNode
 from testnodes import JumpBiNode
 
@@ -21,8 +21,8 @@ class TestBiNode(unittest.TestCase):
                 return x, {"g": 15, "z": 3}
             def is_trainable(self): return False
         binode = TestBiNode(node_id="test")
-        b_key = "test" + NODE_ID_KEY + "b"
-        d_key = "test" + NODE_ID_KEY + "d"
+        b_key = "test" + MSG_ID_SEP + "b"
+        d_key = "test" + MSG_ID_SEP + "d"
         msg = {"c": 12, b_key: 42, "a": 13, d_key: "bla"}
         _, msg = binode.execute(None, msg)
         self.assert_("a" in msg)
@@ -43,8 +43,8 @@ class TestBiNode(unittest.TestCase):
                 self.b = b
             def is_trainable(self): return False
         binode = TestBiNode(node_id="test")
-        b_key = "test" + NODE_ID_KEY + "b"
-        d_key = "test" + NODE_ID_KEY + "d"
+        b_key = "test" + MSG_ID_SEP + "b"
+        d_key = "test" + MSG_ID_SEP + "d"
         msg = {"c": 12, b_key: 42, "a": 13, d_key: "bla"}
         binode.execute(None, msg)
         # TODO: could change this behavior to raise an exception if an
@@ -62,7 +62,7 @@ class TestBiNode(unittest.TestCase):
                 return x, msg
             def is_trainable(self): return False
         binode = TestBiNode(node_id="test")
-        b_key = "test" + NODE_ID_KEY + "b"
+        b_key = "test" + MSG_ID_SEP + "b"
         msg = {"c": 12, b_key: 42, "a": 13}
         _, msg = binode.execute(None, msg)
         self.assert_("a" in msg)
@@ -80,7 +80,7 @@ class TestBiNode(unittest.TestCase):
                 self.b = b
             def is_trainable(self): return False
         binode = TestBiNode(node_id="test")
-        b_key = "test" + NODE_ID_KEY + "b"
+        b_key = "test" + MSG_ID_SEP + "b"
         msg = {"c": 12, "a": 13, b_key: 42, "method": "test"}
         binode.execute(None, msg)
         self.assert_("a" in msg)
@@ -95,8 +95,8 @@ class TestBiNode(unittest.TestCase):
                 self.b = b
             def is_trainable(self): return False
         binode = TestBiNode(node_id="test")
-        b_key = "test" + NODE_ID_KEY + "b"
-        target_key = "test" + NODE_ID_KEY + "target"
+        b_key = "test" + MSG_ID_SEP + "b"
+        target_key = "test" + MSG_ID_SEP + "target"
         msg = {"c": 12, b_key: 42, "a": 13, target_key: "test2"}
         result = binode.execute(None, msg)
         self.assert_(len(result) == 3)
@@ -112,7 +112,7 @@ class TestBiNode(unittest.TestCase):
                 return y
             def is_trainable(self): return False
         binode = TestBiNode(node_id="test", input_dim=20, output_dim=10)
-        b_key = "test" + NODE_ID_KEY + "b"
+        b_key = "test" + MSG_ID_SEP + "b"
         msg = {"c": 12, "a": 13, b_key: 42, "method": "inverse"}
         x = n.zeros((5, binode.output_dim))
         result = binode.execute(x, msg)
@@ -130,7 +130,7 @@ class TestBiNode(unittest.TestCase):
                 return y, None, "test2"
             def is_trainable(self): return False
         binode = TestBiNode(node_id="test", input_dim=20, output_dim=10)
-        b_key = "test" + NODE_ID_KEY + "b"
+        b_key = "test" + MSG_ID_SEP + "b"
         msg = {"c": 12, "a": 13, b_key: 42, "method": "inverse"}
         x = n.zeros((5, binode.output_dim))
         result = binode.execute(x, msg)

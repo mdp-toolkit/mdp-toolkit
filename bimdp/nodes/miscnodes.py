@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 
-from ..binode import BiNode, NODE_ID_KEY
+from ..binode import BiNode, MSG_ID_SEP
 
 
 class IdentityBiNode(BiNode):
@@ -46,7 +46,7 @@ class SenderBiNode(IdentityBiNode):
         """Add x to the message (adressed to a specific target if defined)."""
         msg = dict()
         if self._recipient_id:
-            msg[self._recipient_id + NODE_ID_KEY + "msg_x"] = x
+            msg[self._recipient_id + MSG_ID_SEP + "msg_x"] = x
         else:
             msg["msg_x"] = x
         if no_x:

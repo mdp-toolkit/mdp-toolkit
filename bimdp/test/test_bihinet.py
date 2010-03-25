@@ -4,7 +4,7 @@ import numpy as n
 
 import mdp
 
-from bimdp import BiFlow
+from bimdp import BiFlow, MSG_ID_SEP
 from bimdp.hinet import BiFlowNode, CloneBiLayer, BiSwitchboard
 from bimdp.nodes import SFABiNode, IdentityBiNode
 
@@ -75,7 +75,7 @@ class TestCloneBiLayer(unittest.TestCase):
 
     def test_use_copies_msg(self):
         """Test the correct reaction to an outgoing use_copies message."""
-        stop_result = ({"clonelayer=>use_copies": True}, 1)
+        stop_result = ({"clonelayer" + MSG_ID_SEP + "use_copies": True}, 1)
         stop_sfa_node = SFABiNode(stop_result=stop_result,
                                   input_dim=10, output_dim=3)
         clonelayer = CloneBiLayer(node=stop_sfa_node, 
@@ -89,7 +89,8 @@ class TestCloneBiLayer(unittest.TestCase):
         
     def test_use_copies_msg_flownode(self):
         """Test the correct reaction to an outgoing use_copies message."""
-        stop_result = ({"clonelayer=>use_copies": True}, "clonelayer")
+        stop_result = ({"clonelayer" + MSG_ID_SEP + "use_copies": True},
+                       "clonelayer")
         stop_sfa_node = SFABiNode(stop_result=stop_result,
                                   input_dim=10, output_dim=3)
         biflownode = BiFlowNode(BiFlow([stop_sfa_node]))

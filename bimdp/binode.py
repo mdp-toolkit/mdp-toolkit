@@ -12,8 +12,8 @@ _train or _execute (or any other specified method) in the following way:
     normal key string -- Is copied if in signature and passed as a named
         argument.
     
-    node_id=>key -- Is extracted (i.e. removed in original message) and passed 
-        as a named argument. The separator '=>' is also stored available
+    node_id->key -- Is extracted (i.e. removed in original message) and passed 
+        as a named argument. The separator '->' is also stored available
         as the constant NODE_ID_KEY. 
         
 The msg returned from the inner part of the method (e.g. _execute) is then used
@@ -84,8 +84,8 @@ import inspect
 
 import mdp
 
-# separator / flag strings for message keys
-NODE_ID_KEY = "=>"  
+# separator for node_id in message keys
+MSG_ID_SEP = "->"
 
 # methods that can overwrite docs:
 if '_stop_message' not in mdp.NodeMetaclass.DOC_METHODS:
@@ -395,8 +395,8 @@ class BiNode(mdp.Node):
         """
         msg_id_keys = []
         for fullkey in msg:
-            if fullkey.find(NODE_ID_KEY) > 0:
-                node_id, key = fullkey.split(NODE_ID_KEY)
+            if fullkey.find(MSG_ID_SEP) > 0:
+                node_id, key = fullkey.split(MSG_ID_SEP)
                 if node_id == self._node_id:
                     msg_id_keys.append((key, fullkey))
         return msg_id_keys
