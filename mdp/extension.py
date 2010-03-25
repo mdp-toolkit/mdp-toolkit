@@ -229,14 +229,15 @@ def activate_extension(extension_name, verbose=False):
         raise ExtensionException(err)
     if extension_name in _active_extensions:
         if verbose:
-            print 'Extension "'+extension_name+'" already active!'
+            print 'Extension "%s" is already active!' % extension_name
         return
     _active_extensions.add(extension_name)
     try:
         for node_cls, attributes in _extensions[extension_name].items():
             for attr_name, attr_value in attributes.items():
                 if verbose:
-                    print 'Adding "'+attr_name+'" to "'+node_cls.__name__+'"'
+                    print ("adding '%s' to '%s'" %
+                           (attr_name, node_cls.__name__))
                 if attr_name in dir(node_cls):
                     if ((EXTENSION_ATTR_PREFIX + attr_name) in
                         node_cls.__dict__):
@@ -254,8 +255,8 @@ def activate_extension(extension_name, verbose=False):
                         dir(node_cls)):
                         original_attr = getattr(node_cls, attr_name)
                         if verbose:
-                            print ('Overwriting "'+attr_name+'" in "'+
-                               node_cls.__name__+'"')
+                            print ("overwriting '%s' to '%s'" %
+                                   (attr_name, node_cls.__name__))
                         setattr(node_cls, ORIGINAL_ATTR_PREFIX + attr_name,
                                original_attr)
                 setattr(node_cls, attr_name, attr_value)
