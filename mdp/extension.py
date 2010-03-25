@@ -156,11 +156,23 @@ class ExtensionNodeMetaclass(NodeMetaclass):
         # classes which are subclasses from ExtensionNode.
         extension_subtree = False
         for base in reversed(ext_node_cls.__mro__):
-            if extension_subtree:
+            # make sure we only inject methods in classes which have
+            # ExtensionNode as superclass
+            if extension_subtree and ExtensionNode in base.__mro__:
                 for attr_name, attr_value in base.__dict__.items():
                     if attr_name not in NON_EXTENSION_ATTRIBUTES:
-                        _register_attribute(ext_name, base_node_cls,
-                                    attr_name, attr_value)
+                        # check if this attribute has not already been
+                        # extended in one of the base classes
+                        already_active = False
+                        for bb in ext_node_cls.__mro__:
+                            if (bb in _extensions[ext_name] and
+                            attr_name in _extensions[ext_name][bb] and
+                            _extensions[ext_name][bb][attr_name] == attr_value):
+                                already_active = True
+                        # only register if not yet active
+                        if not already_active:
+                            _register_attribute(ext_name, base_node_cls,
+                                                attr_name, attr_value)
             if base == ExtensionNode:
                 extension_subtree = True
         return ext_node_cls
