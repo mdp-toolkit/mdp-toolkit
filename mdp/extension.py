@@ -137,12 +137,8 @@ class ExtensionNodeMetaclass(NodeMetaclass):
                            "normal nodes.")
                     raise ExtensionException(err)
         if base_node_cls is None:
-            # This new extension is not directly derived from another class,
-            # so there is nothing to register (no default implementation).
-            # We disable the doc method extension mechanism as this class
-            # is not a node subclass and adding eg. _execute methods would
-            # give problems.
-            cls.DOC_METHODS = []
+            # this new extension is not directly derived from a node,
+            # so there is nothing to register (no default implementation) 
             return super(ExtensionNodeMetaclass, cls).__new__(cls, classname,
                                                               bases, members)
         ext_node_cls = super(ExtensionNodeMetaclass, cls).__new__(
@@ -151,18 +147,11 @@ class ExtensionNodeMetaclass(NodeMetaclass):
         if not base_node_cls in _extensions[ext_name]:
             # register the base node
             _extensions[ext_name][base_node_cls] = dict()
-        # Register methods from extension class hierarchy: iterate MRO in
-        # reverse order and register all attributes starting from the
-        # classes which are subclasses from ExtensionNode.
-        extension_subtree = False
-        for base in reversed(ext_node_cls.__mro__):
-            if extension_subtree:
-                for attr_name, attr_value in base.__dict__.items():
-                    if attr_name not in NON_EXTENSION_ATTRIBUTES:
-                        _register_attribute(ext_name, base_node_cls,
+        # register methods
+        for attr_name, attr_value in members.items():
+            if attr_name not in NON_EXTENSION_ATTRIBUTES:
+                _register_attribute(ext_name, base_node_cls,
                                     attr_name, attr_value)
-            if base == ExtensionNode:
-                extension_subtree = True
         return ext_node_cls
                                                      
 
