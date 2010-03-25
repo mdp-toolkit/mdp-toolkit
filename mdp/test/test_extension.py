@@ -157,9 +157,39 @@ class TestMDPExtensions(unittest.TestCase):
                     lambda: mdp.activate_extensions(["__test1", "__test2"]))
         # none of the extension should be active after the exception
         self.assert_(not hasattr(mdp.Node, "_testtest"))
-      
-        
-        
+
+    def testExtensionInheritanceInjection(self):
+        """Test the injection of inherited methods"""
+        class TestNode:
+            def _test1(self):
+                return 0 
+        class TestExtensionNode(mdp.ExtensionNode):
+            extension_name = "__test"
+            def _test1(self):
+                return 1
+            def _test2(self):
+                return 2
+            def _test3(self):
+                return 3
+        class TestNodeExt(TestExtensionNode, TestNode): 
+            def _test2(self):
+                return "2b"
+        @mdp.extension_method("__test", TestNode)
+        def _test4(self):
+            return 4
+        test_node = TestNode()
+        mdp.activate_extension("__test")
+        self.assert_(test_node._test1() == 1)
+        self.assert_(test_node._test2() == "2b")
+        self.assert_(test_node._test3() == 3)
+        self.assert_(test_node._test4() == 4)
+        mdp.deactivate_extension("__test") 
+        self.assert_(test_node._test1() == 0)
+        self.assert_(not hasattr(test_node, "_test2"))
+        self.assert_(not hasattr(test_node, "_test3"))
+        self.assert_(not hasattr(test_node, "_test4"))
+ 
+
 def get_suite(testname=None):
     # this suite just ignores the testname argument
     # you can't select tests by name here!
