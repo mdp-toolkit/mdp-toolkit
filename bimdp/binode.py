@@ -14,14 +14,14 @@ _train or _execute (or any other specified method) in the following way:
     
     node_id->key -- Is extracted (i.e. removed in original message) and passed 
         as a named argument. The separator '->' is also stored available
-        as the constant NODE_ID_KEY. 
+        as the constant MSG_ID_SEP. If the key is not an argument of the
+        message then the whole key is simply erased.
         
 The msg returned from the inner part of the method (e.g. _execute) is then used
 to update the original message (so values can be overwritten).
 
-If the message results in passing kwargs that are not args of the Node or if
-args without default value are missing in the message, this will result in the
-standard Python missing-arguments-exception (this is not checked by BiNode
+If args without default value are missing in the message, this will result in
+the standard Python missing-arguments-exception (this is not checked by BiNode
 itself). 
 
 
@@ -405,15 +405,17 @@ class BiNode(mdp.Node):
     def _extract_message_key(key, msg, msg_id_keys):
         """Extract and return the requested key from the message.
 
-        Note that msg is modfied if the found key was node_id specific.
+        Note that msg and msg_id_keys are modfied if the found key was
+        node_id specific.
         """
         value = None
         if key in msg:
             value = msg[key]
         # check for node_id specific key and remove it from the msg
-        for _key, _fullkey in msg_id_keys:
+        for i, (_key, _fullkey) in enumerate(msg_id_keys):
             if key == _key:
                 value = msg.pop(_fullkey)
+                msg_id_keys.pop(i)
                 break
         return value
     
@@ -426,9 +428,11 @@ class BiNode(mdp.Node):
         """
         arg_keys = inspect.getargspec(method)[0]   
         arg_dict = dict((key, msg[key]) for key in msg if key in arg_keys)
-        arg_dict.update(dict((key, msg.pop(fullkey))  # notice remove by pop
-                             for key, fullkey in msg_id_keys
-                             if key in arg_keys))
+        for key, fullkey in msg_id_keys:
+            if key in arg_keys:
+                arg_dict[key] = msg.pop(fullkey)
+            else:
+                del msg[fullkey]
         if "msg" in arg_keys:
             arg_dict["msg"] = msg
             msg = None

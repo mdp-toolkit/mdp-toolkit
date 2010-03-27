@@ -46,12 +46,11 @@ class TestBiNode(unittest.TestCase):
             def is_trainable(self): return False
         binode = TestBiNode(node_id="test")
         b_key = "test" + MSG_ID_SEP + "b"
+        # check that the 'd' key which is not an arg gets removed
         d_key = "test" + MSG_ID_SEP + "d"
         msg = {"c": 12, b_key: 42, "a": 13, d_key: "bla"}
-        binode.execute(None, msg)
-        # TODO: could change this behavior to raise an exception if an
-        #    adressed argument is not found.
-        # self.assertRaises(Exception, lambda: binode.execute(None, msg))
+        _, out_msg = binode.execute(None, msg)
+        self.assert_(d_key not in out_msg)
         
     def test_msg_magic(self):
         """Test that the magic msg argument works."""
