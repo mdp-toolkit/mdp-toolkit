@@ -346,7 +346,7 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
         if (not msgs) or (msgs[-1] is None):
             return None
         if len(msgs) == 1:
-            return msgs
+            return msgs[0]
         msg = dict()
         for (key, one_value) in msgs[-1].items():
             other_value = msgs[0][key]
