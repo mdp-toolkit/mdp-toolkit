@@ -205,6 +205,8 @@ class TestMDPExtensions(unittest.TestCase):
         self.assert_(hasattr(test_node, "_non_extension__execute"))
         mdp.deactivate_extension('__test')
         self.assert_(not hasattr(test_node, "_non_extension__execute"))
+        # Fail:
+        self.assert_("_execute" not in test_node.__class__.__dict__)
         
     def testExtensionInheritanceTwoExtensions(self):
         """Test non_extension injection for multiple extensions."""
