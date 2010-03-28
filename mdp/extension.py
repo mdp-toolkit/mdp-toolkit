@@ -237,7 +237,7 @@ def activate_extension(extension_name, verbose=False):
             for attr_name, attr_value in attributes.items():
                 if verbose:
                     print 'Adding "'+attr_name+'" to "'+node_cls.__name__+'"'
-                if attr_name in node_cls.__dict__:
+                if attr_name in dir(node_cls):
                     if ((EXTENSION_ATTR_PREFIX + attr_name) in
                         node_cls.__dict__):
                         # two extensions override the same attribute
@@ -248,12 +248,16 @@ def activate_extension(extension_name, verbose=False):
                                + "' and newly activated extension '" +
                                extension_name + "'.")
                         raise ExtensionException(err)
-                    original_attr = getattr(node_cls, attr_name)
-                    if verbose:
-                        print ('Overwriting "'+attr_name+'" in "'+
+                    # only overwrite the attribute if the extension is not
+                    # yet active on this class or its superclasses
+                    if ((EXTENSION_ATTR_PREFIX + attr_name) not in
+                        dir(node_cls)):
+                        original_attr = getattr(node_cls, attr_name)
+                        if verbose:
+                            print ('Overwriting "'+attr_name+'" in "'+
                                node_cls.__name__+'"')
-                    setattr(node_cls, ORIGINAL_ATTR_PREFIX + attr_name,
-                            original_attr)
+                        setattr(node_cls, ORIGINAL_ATTR_PREFIX + attr_name,
+                               original_attr)
                 setattr(node_cls, attr_name, attr_value)
                 # store to which extension this attribute belongs, this is also
                 # used as a flag that this is an extension attribute

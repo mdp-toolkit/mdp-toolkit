@@ -189,6 +189,22 @@ class TestMDPExtensions(unittest.TestCase):
         self.assert_(not hasattr(test_node, "_test3"))
         self.assert_(not hasattr(test_node, "_test4"))
  
+    def testExtensionInheritanceInjectionNonExtension(self):
+        """Test _non_extension__executen method injection for inherited methods from
+        super class."""
+        class TestExtensionNode(mdp.ExtensionNode):
+            extension_name = "__test"
+            def _execute(self):
+                return 0
+        class TestNode(mdp.Node):
+            pass
+        class ExtendedTestNode(TestExtensionNode, TestNode):
+            pass
+        test_node = TestNode()
+        mdp.activate_extension('__test')
+        self.assert_(hasattr(test_node, "_non_extension__execute"))
+        mdp.deactivate_extension('__test')
+        self.assert_(not hasattr(test_node, "_non_extension__execute"))
 
 def get_suite(testname=None):
     # this suite just ignores the testname argument
