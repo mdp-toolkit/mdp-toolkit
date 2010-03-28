@@ -229,15 +229,15 @@ def activate_extension(extension_name, verbose=False):
         raise ExtensionException(err)
     if extension_name in _active_extensions:
         if verbose:
-            print 'Extension "%s" is already active!' % extension_name
+            print 'Extension %s is already active!' % extension_name
         return
     _active_extensions.add(extension_name)
     try:
         for node_cls, attributes in _extensions[extension_name].items():
             for attr_name, attr_value in attributes.items():
                 if verbose:
-                    print ("adding '%s' to '%s'" %
-                           (attr_name, node_cls.__name__))
+                    print ("extension %s: adding %s to %s" %
+                           (extension_name, attr_name, node_cls.__name__))
                 ## store the original attribute / make it available
                 ext_attr_name = EXTENSION_ATTR_PREFIX + attr_name
                 if attr_name in dir(node_cls):
@@ -255,8 +255,8 @@ def activate_extension(extension_name, verbose=False):
                         attr_name in node_cls.__dict__):
                         original_attr = getattr(node_cls, attr_name)
                         if verbose:
-                            print ("overwriting '%s' to '%s'" %
-                                   (attr_name, node_cls.__name__))
+                            print ("extension %s: overwriting %s in %s" %
+                                (extension_name, attr_name, node_cls.__name__))
                         setattr(node_cls, ORIGINAL_ATTR_PREFIX + attr_name,
                                 original_attr)
                 setattr(node_cls, attr_name, attr_value)
@@ -268,7 +268,7 @@ def activate_extension(extension_name, verbose=False):
         deactivate_extension(extension_name)
         raise
 
-def deactivate_extension(extension_name):
+def deactivate_extension(extension_name, verbose=False):
     """Deactivate the extension by removing the injected methods."""
     if extension_name not in _extensions.keys():
         err = "Unknown extension name: " + str(extension_name)
@@ -278,8 +278,14 @@ def deactivate_extension(extension_name):
     for node_cls, attributes in _extensions[extension_name].items():
         for attr_name in attributes.keys():
             original_name = ORIGINAL_ATTR_PREFIX + attr_name
+            if verbose:
+                print ("extension %s: removing %s from %s" %
+                       (extension_name, attr_name, node_cls.__name__))
             if original_name in node_cls.__dict__:
                 # restore the original attribute
+                if verbose:
+                    print ("extension %s: restoring %s in %s" %
+                           (extension_name, attr_name, node_cls.__name__))
                 original_attr = getattr(node_cls, original_name)
                 setattr(node_cls, attr_name, original_attr)
                 delattr(node_cls, original_name)
@@ -297,14 +303,14 @@ def deactivate_extension(extension_name):
                 pass
     _active_extensions.remove(extension_name)
 
-def activate_extensions(extension_names):
+def activate_extensions(extension_names, verbose=False):
     """Activate all the extensions for the given names.
     
     extension_names -- Sequence of extension names.
     """
     try:
         for extension_name in extension_names:
-            activate_extension(extension_name)
+            activate_extension(extension_name, verbose=verbose)
     except:
         # if something goes wrong deactivate all, otherwise we might be
         # in an inconsistent state (e.g. methods for active extensions might
@@ -312,13 +318,13 @@ def activate_extensions(extension_names):
         deactivate_extensions(get_active_extensions())
         raise
 
-def deactivate_extensions(extension_names):
+def deactivate_extensions(extension_names, verbose=False):
     """Deactivate all the extensions for the given names.
     
     extension_names -- Sequence of extension names.
     """
     for extension_name in extension_names:
-        deactivate_extension(extension_name)
+        deactivate_extension(extension_name, verbose=verbose)
 
 def with_extension(extension_name):
     """Return a wrapper function to activate and deactivate the extension.
