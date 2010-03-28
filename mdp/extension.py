@@ -238,6 +238,7 @@ def activate_extension(extension_name, verbose=False):
                 if verbose:
                     print ("adding '%s' to '%s'" %
                            (attr_name, node_cls.__name__))
+                ## store the original attribute / make it available
                 if attr_name in dir(node_cls):
                     if ((EXTENSION_ATTR_PREFIX + attr_name) in
                         node_cls.__dict__):
