@@ -196,7 +196,27 @@ class TestMDPExtensions(unittest.TestCase):
             def _execute(self):
                 return 0
         class TestNode(mdp.Node):
+            # no _execute method
             pass
+        class ExtendedTestNode(TestExtensionNode, TestNode):
+            pass
+        test_node = TestNode()
+        mdp.activate_extension('__test')
+        mdp.deactivate_extension('__test')
+        self.assert_(not hasattr(test_node, "_non_extension__execute"))
+        self.assert_(not hasattr(test_node, "_extension_for__execute"))
+        # test that the non-native _execute has been completely removed
+        self.assert_("_execute" not in test_node.__class__.__dict__)
+        
+    def testExtensionInheritanceInjectionNonExtension2(self):
+        """Test non_extension method injection."""
+        class TestExtensionNode(mdp.ExtensionNode):
+            extension_name = "__test"
+            def _execute(self):
+                return 0
+        class TestNode(mdp.Node):
+            def _execute(self):
+                return 1
         class ExtendedTestNode(TestExtensionNode, TestNode):
             pass
         test_node = TestNode()
@@ -205,8 +225,9 @@ class TestMDPExtensions(unittest.TestCase):
         self.assert_(hasattr(test_node, "_non_extension__execute"))
         mdp.deactivate_extension('__test')
         self.assert_(not hasattr(test_node, "_non_extension__execute"))
-        # Fail:
-        self.assert_("_execute" not in test_node.__class__.__dict__)
+        self.assert_(not hasattr(test_node, "_extension_for__execute"))
+        # test that the native _execute has been preserved
+        self.assert_("_execute" in test_node.__class__.__dict__)
         
     def testExtensionInheritanceTwoExtensions(self):
         """Test non_extension injection for multiple extensions."""

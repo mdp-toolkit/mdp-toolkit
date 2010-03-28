@@ -239,32 +239,30 @@ def activate_extension(extension_name, verbose=False):
                     print ("adding '%s' to '%s'" %
                            (attr_name, node_cls.__name__))
                 ## store the original attribute / make it available
+                ext_attr_name = EXTENSION_ATTR_PREFIX + attr_name
                 if attr_name in dir(node_cls):
-                    if ((EXTENSION_ATTR_PREFIX + attr_name) in
-                        node_cls.__dict__):
+                    if (ext_attr_name in node_cls.__dict__):
                         # two extensions override the same attribute
                         err = ("Name collision for attribute '" + 
                                attr_name + "' between extension '" +
-                               getattr(node_cls,
-                                       EXTENSION_ATTR_PREFIX + attr_name)
+                               getattr(node_cls, ext_attr_name)
                                + "' and newly activated extension '" +
                                extension_name + "'.")
                         raise ExtensionException(err)
                     # only overwrite the attribute if the extension is not
                     # yet active on this class or its superclasses
-                    if ((EXTENSION_ATTR_PREFIX + attr_name) not in
-                        dir(node_cls)):
+                    if (ext_attr_name not in dir(node_cls) and
+                        attr_name in node_cls.__dict__):
                         original_attr = getattr(node_cls, attr_name)
                         if verbose:
                             print ("overwriting '%s' to '%s'" %
                                    (attr_name, node_cls.__name__))
                         setattr(node_cls, ORIGINAL_ATTR_PREFIX + attr_name,
-                               original_attr)
+                                original_attr)
                 setattr(node_cls, attr_name, attr_value)
                 # store to which extension this attribute belongs, this is also
                 # used as a flag that this is an extension attribute
-                setattr(node_cls, EXTENSION_ATTR_PREFIX + attr_name,
-                        extension_name)
+                setattr(node_cls, ext_attr_name, extension_name)
     except:
         # make sure that an incomplete activation is reverted
         deactivate_extension(extension_name)
