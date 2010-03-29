@@ -202,6 +202,7 @@ class TestMDPExtensions(unittest.TestCase):
             pass
         test_node = TestNode()
         mdp.activate_extension('__test')
+        self.assert_(hasattr(test_node, "_non_extension__execute"))
         mdp.deactivate_extension('__test')
         self.assert_(not hasattr(test_node, "_non_extension__execute"))
         self.assert_(not hasattr(test_node, "_extension_for__execute"))
