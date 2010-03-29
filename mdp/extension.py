@@ -241,7 +241,7 @@ def activate_extension(extension_name, verbose=False):
                 ## store the original attribute / make it available
                 ext_attr_name = EXTENSION_ATTR_PREFIX + attr_name
                 if attr_name in dir(node_cls):
-                    if (ext_attr_name in node_cls.__dict__):
+                    if ext_attr_name in node_cls.__dict__:
                         # two extensions override the same attribute
                         err = ("Name collision for attribute '" + 
                                attr_name + "' between extension '" +
@@ -251,8 +251,7 @@ def activate_extension(extension_name, verbose=False):
                         raise ExtensionException(err)
                     # only overwrite the attribute if the extension is not
                     # yet active on this class or its superclasses
-                    if (ext_attr_name not in dir(node_cls) and
-                        attr_name in node_cls.__dict__):
+                    if ext_attr_name not in dir(node_cls):
                         original_attr = getattr(node_cls, attr_name)
                         if verbose:
                             print ("extension %s: overwriting %s in %s" %
@@ -286,8 +285,16 @@ def deactivate_extension(extension_name, verbose=False):
                 if verbose:
                     print ("extension %s: restoring %s in %s" %
                            (extension_name, attr_name, node_cls.__name__))
+                delattr(node_cls, attr_name)
                 original_attr = getattr(node_cls, original_name)
-                setattr(node_cls, attr_name, original_attr)
+                # check if the attribute is defined by one of the super
+                # classes and test if the overwritten method is not that
+                # method, otherwise we would inject unwanted methods
+                # note: == tests identity for .im_func and .im_self,
+                #    but .im_class does not matter in Python 2.6
+                if all(map(lambda x:getattr(x, attr_name, None) !=
+                           original_attr, node_cls.__mro__[1:])):
+                    setattr(node_cls, attr_name, original_attr)
                 delattr(node_cls, original_name)
             else:
                 try:

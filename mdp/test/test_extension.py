@@ -160,7 +160,7 @@ class TestMDPExtensions(unittest.TestCase):
 
     def testExtensionInheritanceInjection(self):
         """Test the injection of inherited methods"""
-        class TestNode:
+        class TestNode(object):
             def _test1(self):
                 return 0 
         class TestExtensionNode(mdp.ExtensionNode):
