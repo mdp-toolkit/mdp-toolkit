@@ -1,4 +1,4 @@
-from mdp import Node
+from mdp import Node, numx
 import operator
 
 class ClassifierNode(Node):
@@ -51,4 +51,50 @@ class ClassifierNode(Node):
         self._pre_execution_checks(x)
         return self._prob(self._refcast(x), *args, **kwargs)
 
+
+class ClassifierCumulator(ClassifierNode):
+    """A ClassifierCumulator is a Node whose training phase simply collects
+    all input data and labels. In this way it is possible to easily implement
+    batch-mode learning.
+
+    The data is accessible in the attribute 'self.data' after
+    the beginning of the '_stop_training' phase. 'self.tlen' contains
+    the number of data points collected.
+    'self.labels' contains the assigned label to each data point.
+    """
+
+    def __init__(self, input_dim = None, output_dim = None, dtype = None):
+        super(ClassifierCumulator, self).__init__(input_dim, output_dim, dtype)
+        self.data = []
+        self.labels = []
+        self.tlen = 0
+
+    def _check_train_args(self, x, cl):
+        super(ClassifierCumulator, self)._check_train_args(x, cl)
+        if (isinstance(cl, (list, tuple, numx.ndarray)) and
+            len(cl) != x.shape[0]):
+            msg = ("The number of labels must be equal to the number of "
+                   "datapoints (%d != %d)" % (len(cl), x.shape[0]))
+            raise mdp.TrainingException(msg)
+
+    def _train(self, x, cl):
+        """Cumulate all input data in a one dimensional list."""
+        self.tlen += x.shape[0]
+        self.data.extend(x.ravel().tolist())
+
+        # if cl is a number, all x's belong to the same class
+        if isinstance(cl, (list, tuple, numx.ndarray)):
+            pass
+        else:
+            cl = [cl] * x.shape[0]
+
+        self.labels.extend(cl.ravel().tolist())
+
+    def _stop_training(self, *args, **kwargs):
+        """Transform the data and labels lists to array objects and reshape them."""
+        self.data = numx.array(self.data, dtype = self.dtype)
+        self.data.shape = (self.tlen, self.input_dim)
+        self.labels = numx.array(self.labels, dtype = self.dtype)
+        self.labels.shape = (self.tlen)
+        
 

@@ -140,7 +140,7 @@ from extension import (ExtensionException, extension_method,
                        activate_extensions, deactivate_extensions)
 
 # import classifier node
-from classifier_node import ClassifierNode 
+from classifier_node import (ClassifierNode, ClassifierCumulator)
 
 # import our modules
 import nodes
