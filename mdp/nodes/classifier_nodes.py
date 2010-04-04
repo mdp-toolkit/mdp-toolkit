@@ -1,10 +1,11 @@
 import mdp
+from mdp import ClassifierNode
 from mdp import numx as numx
 import operator
 import random
 import itertools
 
-class SignumClassifier(mdp.ClassifierNode):
+class SignumClassifier(ClassifierNode):
     """This classifier node classifies as 1, if the sum of the data points is positive
         and as -1, if the data point is negative"""
     def is_trainable(self):
@@ -15,7 +16,7 @@ class SignumClassifier(mdp.ClassifierNode):
         return numx.sign(ret)
     
 
-class PerceptronClassifier(mdp.ClassifierNode):
+class PerceptronClassifier(ClassifierNode):
     """A simple perceptron with input_dim input nodes."""
     def __init__(self, input_dim=None, dtype=None):
         super(PerceptronClassifier, self).__init__(input_dim, None, dtype)
@@ -71,7 +72,7 @@ class PerceptronClassifier(mdp.ClassifierNode):
         return numx.sign(numx.dot(x, self.weights) + self.offset_weight)
 
 
-class NaiveBayesClassifier(mdp.ClassifierNode):
+class NaiveBayesClassifier(ClassifierNode):
     """A naive Bayes Classificator.
     In order to be usable for spam filtering, the words must be transformed
     with a hash function.
@@ -202,7 +203,7 @@ class NaiveBayesClassifier(mdp.ClassifierNode):
         return - numx.sign(q - 1)
 
 
-class SimpleMarkovClassifier(mdp.ClassifierNode):
+class SimpleMarkovClassifier(ClassifierNode):
     """A simple version of a Markov classifier.
     It can be trained on a vector of tuples the label being the next element
     in the testing data.
@@ -294,7 +295,7 @@ class SimpleMarkovClassifier(mdp.ClassifierNode):
         return probabilities
     
 
-class DiscreteHopfieldClassifier(mdp.ClassifierNode):
+class DiscreteHopfieldClassifier(ClassifierNode):
     """Node for simulating a simple discrete Hopfield model"""
     # TODO: It is unclear if this belongs to classifiers or is a general node
     # because label space is a subset of feature space
@@ -369,7 +370,7 @@ class DiscreteHopfieldClassifier(mdp.ClassifierNode):
         return mdp.utils.sign_to_bool(pattern)
 
 
-class KMeansClassifier(mdp.ClassifierNode):
+class KMeansClassifier(ClassifierNode):
     def __init__(self, num_clusters, input_dim=None, dtype=None):
         """Simple classifier for K-Means clustering.
         

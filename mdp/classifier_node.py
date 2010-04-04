@@ -1,14 +1,14 @@
-import mdp
+from mdp import Node
 import operator
 
-class ClassifierNode(mdp.Node):
+class ClassifierNode(Node):
     """A ClassifierNode can be used for classification tasks that should not interfere
     with the normal execution flow. A Reason for that may be that the labels used
     for classification are not in the normal feature space but in label space.
     """
     def rank(self, x, threshold=None):
         """Returns ordered list with all labels ordered according to prob(x)
-        (e.g., [3 1 2]).
+        (e.g., [[3 1 2], [2 1 3], ...]).
         
         The optional threshold parameter is used to exclude labels having equal
         or less probability. E.g. threshold=0 excludes all labels with zero probability.
@@ -42,7 +42,7 @@ class ClassifierNode(mdp.Node):
   
     def prob(self, x, *args, **kwargs):
         """Returns the probability for each datapoint and label
-        (e.g., {1:0.1, 2:0.0, 3:0.9})
+        (e.g., [{1:0.1, 2:0.0, 3:0.9}, {1:1.0, 2:0.0, 3:0.0}, ...])
 
         By default, subclasses should overwrite _prob to implement
         their prob. The docstring of the '_prob' method
@@ -50,4 +50,5 @@ class ClassifierNode(mdp.Node):
         """
         self._pre_execution_checks(x)
         return self._prob(self._refcast(x), *args, **kwargs)
-        
+
+
