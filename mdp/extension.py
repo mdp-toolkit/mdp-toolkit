@@ -137,8 +137,12 @@ class ExtensionNodeMetaclass(NodeMetaclass):
                            "normal nodes.")
                     raise ExtensionException(err)
         if base_node_cls is None:
-            # this new extension is not directly derived from a node,
-            # so there is nothing to register (no default implementation) 
+            # This new extension is not directly derived from another class,
+            # so there is nothing to register (no default implementation).
+            # We disable the doc method extension mechanism as this class
+            # is not a node subclass and adding eg. _execute methods would
+            # give problems.
+            cls.DOC_METHODS = []
             return super(ExtensionNodeMetaclass, cls).__new__(cls, classname,
                                                               bases, members)
         ext_node_cls = super(ExtensionNodeMetaclass, cls).__new__(
@@ -147,11 +151,30 @@ class ExtensionNodeMetaclass(NodeMetaclass):
         if not base_node_cls in _extensions[ext_name]:
             # register the base node
             _extensions[ext_name][base_node_cls] = dict()
-        # register methods
-        for attr_name, attr_value in members.items():
-            if attr_name not in NON_EXTENSION_ATTRIBUTES:
-                _register_attribute(ext_name, base_node_cls,
-                                    attr_name, attr_value)
+        # Register methods from extension class hierarchy: iterate MRO in
+        # reverse order and register all attributes starting from the
+        # classes which are subclasses from ExtensionNode.
+        extension_subtree = False
+        for base in reversed(ext_node_cls.__mro__):
+            # make sure we only inject methods in classes which have
+            # ExtensionNode as superclass
+            if extension_subtree and ExtensionNode in base.__mro__:
+                for attr_name, attr_value in base.__dict__.items():
+                    if attr_name not in NON_EXTENSION_ATTRIBUTES:
+                        # check if this attribute has not already been
+                        # extended in one of the base classes
+                        already_active = False
+                        for bb in ext_node_cls.__mro__:
+                            if (bb in _extensions[ext_name] and
+                            attr_name in _extensions[ext_name][bb] and
+                            _extensions[ext_name][bb][attr_name] == attr_value):
+                                already_active = True
+                        # only register if not yet active
+                        if not already_active:
+                            _register_attribute(ext_name, base_node_cls,
+                                                attr_name, attr_value)
+            if base == ExtensionNode:
+                extension_subtree = True
         return ext_node_cls
                                                      
 
@@ -206,43 +229,45 @@ def activate_extension(extension_name, verbose=False):
         raise ExtensionException(err)
     if extension_name in _active_extensions:
         if verbose:
-            print 'Extension "%s" is already active!' % extension_name
+            print 'Extension %s is already active!' % extension_name
         return
     _active_extensions.add(extension_name)
     try:
         for node_cls, attributes in _extensions[extension_name].items():
             for attr_name, attr_value in attributes.items():
                 if verbose:
-                    print ("adding '%s' to '%s'" %
-                           (attr_name, node_cls.__name__))
-                if attr_name in node_cls.__dict__:
-                    if ((EXTENSION_ATTR_PREFIX + attr_name) in
-                        node_cls.__dict__):
+                    print ("extension %s: adding %s to %s" %
+                           (extension_name, attr_name, node_cls.__name__))
+                ## store the original attribute / make it available
+                ext_attr_name = EXTENSION_ATTR_PREFIX + attr_name
+                if attr_name in dir(node_cls):
+                    if ext_attr_name in node_cls.__dict__:
                         # two extensions override the same attribute
                         err = ("Name collision for attribute '" + 
                                attr_name + "' between extension '" +
-                               getattr(node_cls,
-                                       EXTENSION_ATTR_PREFIX + attr_name)
+                               getattr(node_cls, ext_attr_name)
                                + "' and newly activated extension '" +
                                extension_name + "'.")
                         raise ExtensionException(err)
-                    original_attr = getattr(node_cls, attr_name)
-                    if verbose:
-                        print ("overwriting '%s' to '%s'" %
-                               (attr_name, node_cls.__name__))
-                    setattr(node_cls, ORIGINAL_ATTR_PREFIX + attr_name,
-                            original_attr)
+                    # only overwrite the attribute if the extension is not
+                    # yet active on this class or its superclasses
+                    if ext_attr_name not in dir(node_cls):
+                        original_attr = getattr(node_cls, attr_name)
+                        if verbose:
+                            print ("extension %s: overwriting %s in %s" %
+                                (extension_name, attr_name, node_cls.__name__))
+                        setattr(node_cls, ORIGINAL_ATTR_PREFIX + attr_name,
+                                original_attr)
                 setattr(node_cls, attr_name, attr_value)
                 # store to which extension this attribute belongs, this is also
                 # used as a flag that this is an extension attribute
-                setattr(node_cls, EXTENSION_ATTR_PREFIX + attr_name,
-                        extension_name)
+                setattr(node_cls, ext_attr_name, extension_name)
     except:
         # make sure that an incomplete activation is reverted
         deactivate_extension(extension_name)
         raise
 
-def deactivate_extension(extension_name):
+def deactivate_extension(extension_name, verbose=False):
     """Deactivate the extension by removing the injected methods."""
     if extension_name not in _extensions.keys():
         err = "Unknown extension name: " + str(extension_name)
@@ -252,10 +277,24 @@ def deactivate_extension(extension_name):
     for node_cls, attributes in _extensions[extension_name].items():
         for attr_name in attributes.keys():
             original_name = ORIGINAL_ATTR_PREFIX + attr_name
+            if verbose:
+                print ("extension %s: removing %s from %s" %
+                       (extension_name, attr_name, node_cls.__name__))
             if original_name in node_cls.__dict__:
                 # restore the original attribute
+                if verbose:
+                    print ("extension %s: restoring %s in %s" %
+                           (extension_name, attr_name, node_cls.__name__))
+                delattr(node_cls, attr_name)
                 original_attr = getattr(node_cls, original_name)
-                setattr(node_cls, attr_name, original_attr)
+                # Check if the attribute is defined by one of the super
+                # classes and test if the overwritten method is not that
+                # method, otherwise we would inject unwanted methods.
+                # Note: '==' tests identity for .im_func and .im_self,
+                #    but .im_class does not matter in Python 2.6.
+                if all(map(lambda x:getattr(x, attr_name, None) !=
+                           original_attr, node_cls.__mro__[1:])):
+                    setattr(node_cls, attr_name, original_attr)
                 delattr(node_cls, original_name)
             else:
                 try:
@@ -271,14 +310,14 @@ def deactivate_extension(extension_name):
                 pass
     _active_extensions.remove(extension_name)
 
-def activate_extensions(extension_names):
+def activate_extensions(extension_names, verbose=False):
     """Activate all the extensions for the given names.
     
     extension_names -- Sequence of extension names.
     """
     try:
         for extension_name in extension_names:
-            activate_extension(extension_name)
+            activate_extension(extension_name, verbose=verbose)
     except:
         # if something goes wrong deactivate all, otherwise we might be
         # in an inconsistent state (e.g. methods for active extensions might
@@ -286,13 +325,13 @@ def activate_extensions(extension_names):
         deactivate_extensions(get_active_extensions())
         raise
 
-def deactivate_extensions(extension_names):
+def deactivate_extensions(extension_names, verbose=False):
     """Deactivate all the extensions for the given names.
     
     extension_names -- Sequence of extension names.
     """
     for extension_name in extension_names:
-        deactivate_extension(extension_name)
+        deactivate_extension(extension_name, verbose=verbose)
 
 def with_extension(extension_name):
     """Return a wrapper function to activate and deactivate the extension.

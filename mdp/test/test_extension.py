@@ -157,9 +157,132 @@ class TestMDPExtensions(unittest.TestCase):
                     lambda: mdp.activate_extensions(["__test1", "__test2"]))
         # none of the extension should be active after the exception
         self.assert_(not hasattr(mdp.Node, "_testtest"))
-      
+
+    def testExtensionInheritanceInjection(self):
+        """Test the injection of inherited methods"""
+        class TestNode(object):
+            def _test1(self):
+                return 0 
+        class TestExtensionNode(mdp.ExtensionNode):
+            extension_name = "__test"
+            def _test1(self):
+                return 1
+            def _test2(self):
+                return 2
+            def _test3(self):
+                return 3
+        class TestNodeExt(TestExtensionNode, TestNode): 
+            def _test2(self):
+                return "2b"
+        @mdp.extension_method("__test", TestNode)
+        def _test4(self):
+            return 4
+        test_node = TestNode()
+        mdp.activate_extension("__test")
+        self.assert_(test_node._test1() == 1)
+        self.assert_(test_node._test2() == "2b")
+        self.assert_(test_node._test3() == 3)
+        self.assert_(test_node._test4() == 4)
+        mdp.deactivate_extension("__test") 
+        self.assert_(test_node._test1() == 0)
+        self.assert_(not hasattr(test_node, "_test2"))
+        self.assert_(not hasattr(test_node, "_test3"))
+        self.assert_(not hasattr(test_node, "_test4"))
+ 
+    def testExtensionInheritanceInjectionNonExtension(self):
+        """Test non_extension method injection."""
+        class TestExtensionNode(mdp.ExtensionNode):
+            extension_name = "__test"
+            def _execute(self):
+                return 0
+        class TestNode(mdp.Node):
+            # no _execute method
+            pass
+        class ExtendedTestNode(TestExtensionNode, TestNode):
+            pass
+        test_node = TestNode()
+        mdp.activate_extension('__test')
+        self.assert_(hasattr(test_node, "_non_extension__execute"))
+        mdp.deactivate_extension('__test')
+        self.assert_(not hasattr(test_node, "_non_extension__execute"))
+        self.assert_(not hasattr(test_node, "_extension_for__execute"))
+        # test that the non-native _execute has been completely removed
+        self.assert_("_execute" not in test_node.__class__.__dict__)
         
+    def testExtensionInheritanceInjectionNonExtension2(self):
+        """Test non_extension method injection."""
+        class TestExtensionNode(mdp.ExtensionNode):
+            extension_name = "__test"
+            def _execute(self):
+                return 0
+        class TestNode(mdp.Node):
+            def _execute(self):
+                return 1
+        class ExtendedTestNode(TestExtensionNode, TestNode):
+            pass
+        test_node = TestNode()
+        mdp.activate_extension('__test')
+        # test that non-extended attribute has been added as well
+        self.assert_(hasattr(test_node, "_non_extension__execute"))
+        mdp.deactivate_extension('__test')
+        self.assert_(not hasattr(test_node, "_non_extension__execute"))
+        self.assert_(not hasattr(test_node, "_extension_for__execute"))
+        # test that the native _execute has been preserved
+        self.assert_("_execute" in test_node.__class__.__dict__)
         
+    def testExtensionInheritanceTwoExtensions(self):
+        """Test non_extension injection for multiple extensions."""
+        class Test1ExtensionNode(mdp.ExtensionNode):
+            extension_name = "__test1"
+            def _execute(self):
+                return 1
+        class Test2ExtensionNode(mdp.ExtensionNode):
+            extension_name = "__test2"
+        class Test3ExtensionNode(mdp.ExtensionNode):
+            extension_name = "__test3"
+            def _execute(self):
+                return "3a"
+        class TestNode1(mdp.Node):
+            pass
+        class TestNode2(TestNode1):
+            pass
+        class ExtendedTest1Node2(Test1ExtensionNode, TestNode2):
+            pass
+        class ExtendedTest2Node1(Test2ExtensionNode, TestNode1):
+            def _execute(self):
+                return 2
+        class ExtendedTest3Node1(Test3ExtensionNode, TestNode1):
+            def _execute(self):
+                return "3b"
+        test_node = TestNode2()
+        mdp.activate_extension('__test2')
+        self.assert_(test_node._execute() == 2)
+        mdp.deactivate_extension('__test2')
+        # in this order TestNode2 should get execute from __test1,
+        # the later addition by __test1 to TestNode1 doesn't matter
+        mdp.activate_extensions(['__test1', '__test2'])
+        self.assert_(test_node._execute() == 1)
+        mdp.deactivate_extensions(['__test2', '__test1'])
+        # now activate in inverse order
+        # TestNode2 already gets _execute from __test2, but that is still
+        # overriden by __test1, thats how its registered in _extensions
+        mdp.activate_extensions(['__test2', '__test1'])
+        self.assert_(test_node._execute() == 1)
+        mdp.deactivate_extensions(['__test2', '__test1'])
+        ## now the same with extension 3
+        mdp.activate_extension('__test3')
+        self.assert_(test_node._execute() == "3b")
+        mdp.deactivate_extension('__test3')
+        # __test3 does not override, since the _execute slot for Node2
+        # was first filled by __test1
+        mdp.activate_extensions(['__test3', '__test1'])
+        self.assert_(test_node._execute() == 1)
+        mdp.deactivate_extensions(['__test3', '__test1'])
+        # inverse order
+        mdp.activate_extensions(['__test1', '__test3'])
+        self.assert_(test_node._execute() == 1)
+        mdp.deactivate_extensions(['__test2', '__test1'])
+
 def get_suite(testname=None):
     # this suite just ignores the testname argument
     # you can't select tests by name here!
