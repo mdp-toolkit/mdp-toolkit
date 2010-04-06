@@ -287,11 +287,11 @@ def deactivate_extension(extension_name, verbose=False):
                            (extension_name, attr_name, node_cls.__name__))
                 delattr(node_cls, attr_name)
                 original_attr = getattr(node_cls, original_name)
-                # check if the attribute is defined by one of the super
+                # Check if the attribute is defined by one of the super
                 # classes and test if the overwritten method is not that
-                # method, otherwise we would inject unwanted methods
-                # note: == tests identity for .im_func and .im_self,
-                #    but .im_class does not matter in Python 2.6
+                # method, otherwise we would inject unwanted methods.
+                # Note: '==' tests identity for .im_func and .im_self,
+                #    but .im_class does not matter in Python 2.6.
                 if all(map(lambda x:getattr(x, attr_name, None) !=
                            original_attr, node_cls.__mro__[1:])):
                     setattr(node_cls, attr_name, original_attr)
