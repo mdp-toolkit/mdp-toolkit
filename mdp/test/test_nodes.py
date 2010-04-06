@@ -1399,8 +1399,8 @@ class NodesTestSuite(unittest.TestSuite):
         x = numx.concatenate((x1, x2), axis=0)
 
         # labels
-        cl1 = numx.ones((x1.shape[0],), dtype='d')
-        cl2 = 2.*numx.ones((x2.shape[0],), dtype='d')
+        cl1 = numx.ones((x1.shape[0],), dtype='i')
+        cl2 = 2*numx.ones((x2.shape[0],), dtype='i')
         classes = numx.concatenate((cl1, cl2))
 
         # shuffle the data

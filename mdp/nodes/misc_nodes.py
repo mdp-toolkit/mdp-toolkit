@@ -1,5 +1,5 @@
 import mdp
-from mdp import numx, numx_linalg, utils, Node, NodeException
+from mdp import numx, numx_linalg, utils, Node, ClassifierNode, NodeException
 
 import cPickle as pickle
 import pickle as real_pickle
@@ -505,7 +505,7 @@ class NormalNoiseNode(mdp.Node):
         return x + noise
 
 
-class GaussianClassifierNode(Node):
+class GaussianClassifierNode(ClassifierNode):
     """Perform a supervised Gaussian classification.
 
     Given a set of labelled data, the node fits a gaussian distribution
@@ -628,10 +628,15 @@ class GaussianClassifierNode(Node):
         tmp_tot = tmp_prob.sum(axis=1)
         tmp_tot = tmp_tot[:, numx.newaxis]
         return tmp_prob/tmp_tot
-        
-    def classify(self, x):
+ 
+    def _prob(self, x):
+        """Return the posterior probability of each class given the input in a dict."""
+
+        class_prob = self.class_probabilities(x)
+        return [dict(zip(self.labels, prob)) for prob in class_prob]
+
+    def _classify(self, x):
         """Classify the input data using Maximum A-Posteriori."""
-        self._pre_execution_checks(x)
 
         class_prob = self.class_probabilities(x)
         winner = class_prob.argmax(axis=-1)
