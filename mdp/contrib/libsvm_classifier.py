@@ -46,7 +46,8 @@ class LibSVMClassifier(_SVMClassifier):
         return model
 
     def _stop_training(self):
-        self.normalizer = _LabelNormalizer(self._in_labels)
+        super(LibSVMClassifier, self)._stop_training()
+        self.normalizer = _LabelNormalizer(self.labels)
         
         if self._probability:
             prob = 1
@@ -56,8 +57,8 @@ class LibSVMClassifier(_SVMClassifier):
                                               kernel_type=self.kernel_type,
                                               C=1, probability=prob)
 
-        labels = self.normalizer.normalize(self._in_labels)
-        features = self._in_features
+        labels = self.normalizer.normalize(self.labels)
+        features = self.data
 
         # Call svm training method.
         self.model = self._train_problem(labels, features, self.parameter)

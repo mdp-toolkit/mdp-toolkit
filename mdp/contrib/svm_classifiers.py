@@ -1,4 +1,5 @@
 import mdp
+from mdp import ClassifierCumulator
 from mdp import numx
 from itertools import count
 
@@ -62,13 +63,10 @@ class _LabelNormalizer(object):
         return labels
 
 
-class _SVMClassifier(mdp.ClassifierNode):
+class _SVMClassifier(ClassifierCumulator):
     """Base class for the SVM classifier nodes."""
 
     def __init__(self, input_dim = None, dtype = None):
-        self._in_features = numx.array([]) # train data
-        self._in_labels = numx.array([]) # labels
-
         self.normalizer = None
 
         super(_SVMClassifier, self).__init__(input_dim, None, dtype)
@@ -84,35 +82,3 @@ class _SVMClassifier(mdp.ClassifierNode):
         msg = "Output dim cannot be set explicitly!"
         raise mdp.NodeException(msg)
 
-    def _check_train_args(self, x, cl):
-        if (isinstance(cl, (list, tuple, numx.ndarray)) and
-            len(cl) != x.shape[0]):
-            msg = ("The number of labels must be equal to the number of "
-                   "datapoints (%d != %d)" % (len(cl), x.shape[0]))
-            raise mdp.TrainingException(msg)
-
-    def _append_data(self, x, cl):
-        """Updates self._in_featurs and self._in_labels with appended data from x and cl.
-        """
-        if not len(self._in_features):
-            self._in_features = x
-        else:
-            self._in_features = numx.concatenate( (self._in_features, x) )
-        # if cl is a number, all x's belong to the same class
-        if isinstance(cl, (list, tuple, numx.ndarray)):
-            self._in_labels = numx.concatenate( (self._in_labels, cl) )
-        else:
-            cls = [cl] * len(x)
-            self._in_labels = numx.concatenate( (self._in_labels, cls) )
-
-    def _train(self, x, cl):
-        """Update the internal structures according to the input data 'x'.
-        
-        x -- a matrix having different variables on different columns
-             and observations on the rows.
-        cl -- can be a list, tuple or array of labels (one for each data point)
-              or a single label, in which case all input data is assigned to
-              the same class.
-        """
-        self._append_data(x, cl)
-        

@@ -335,12 +335,13 @@ class ShogunSVMClassifier(_SVMClassifier):
         self.classifier.kernel = kernel
     
     def _stop_training(self):
-        self.normalizer = _LabelNormalizer(self._in_labels)
-        labels = self.normalizer.normalize(self._in_labels)
+        super(ShogunSVMClassifier, self)._stop_training()
+        self.normalizer = _LabelNormalizer(self.labels)
+        labels = self.normalizer.normalize(self.labels)
         # shogun expects float labels
         labels = sgFeatures.Labels(labels.astype(float))
         
-        features = sgFeatures.RealFeatures(self._in_features.transpose())
+        features = sgFeatures.RealFeatures(self.data.transpose())
         
         self.classifier.set_train_features(features, labels)
         self.classifier.train()
@@ -348,15 +349,15 @@ class ShogunSVMClassifier(_SVMClassifier):
     def training_set(self, ordered=False):
         """Shows the set of data that has been inserted to be trained."""
         if ordered:
-            labels = set(self._in_labels)
+            labels = set(self.labels)
             data = {}
             for l in labels:
                 data[l] = []
-            for k, v in zip(self._in_labels, self._in_features):
+            for k, v in zip(self.labels, self.data):
                 data[k].append(v)
             return data
         else:
-            return zip(self._in_labels, self._in_features)
+            return zip(self.labels, self.data)
     
     def _classify(self, x):
         """Classify the input data 'x'
