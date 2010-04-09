@@ -378,22 +378,24 @@ class KMeansClassifier(ClassifierNode):
         """
         super(KMeansClassifier, self).__init__(input_dim, None, dtype)
         self._num_clusters = num_clusters
-        self._data = None
+        self.data = []
+        self.tlen = 0
         self._centroids = None
     
     def _train(self, x):
         # append all data
-        if self._data is None:
-            self._data = x
-        else:
-            self._data = numx.concatenate((self._data, x))
+        # we could use a Cumulator class here
+        self.tlen += x.shape[0]
+        self.data.extend(x.ravel().tolist())
     
     def _stop_training(self):
-        num_points = len(self._data)
+        self.data = numx.array(self.data, dtype = self.dtype)
+        self.data.shape = (self.tlen, self.input_dim)
+
         # choose initial centroids unless they are already given
         if not self._centroids:
-            centr_idx = random.sample(xrange(len(self._data)), self._num_clusters)
-            centroids = self._data[centr_idx]
+            centr_idx = random.sample(xrange(self.tlen), self._num_clusters)
+            centroids = self.data[centr_idx]
         else:
             centroids = self._centroids
         
@@ -401,7 +403,7 @@ class KMeansClassifier(ClassifierNode):
             # list of (sum_position, num_clusters)
             new_centroids = [(0, 0)] * len(centroids)
             # cluster
-            for x in self._data:
+            for x in self.data:
                 idx = self._nearest_centroid_idx(x, centroids)
                 # update position and count
                 pos_count = (new_centroids[idx][0] + x, new_centroids[idx][1] + 1)
