@@ -33,6 +33,13 @@ SLIDE_STYLE = (hinet.HINET_STYLE + BIHINET_STYLE +
 INSPECTION_STYLE = (hinet.HINET_STYLE + BIHINET_STYLE +
                     INSPECT_TRACE_STYLE + INSPECT_SLIDESHOW_STYLE)
 
+def _open_custom_brower(open_browser, url):
+    """Helper function to support opening a custom browser."""
+    if isinstance(open_browser, str):
+        custom_browser = webbrowser.get(open_browser)
+        custom_browser.open(url)
+    else:
+        webbrowser.open(url)
 
 def inspect_training(snapshot_path, x_samples, msg_samples=None,
                      stop_messages=None, inspection_path=None,
@@ -96,7 +103,7 @@ def inspect_training(snapshot_path, x_samples, msg_samples=None,
 
 def show_training(flow, data_iterables, msg_iterables=None, stop_messages=None,
                   path=None, trace_inspector=None, debug=False,
-                  show_size=False, browser_open=True, **kwargs):
+                  show_size=False, open_browser=True, **kwargs):
     """Perform both the flow training and the training inspection.
     
     The return value is the filename of the slideshow HTML file. 
@@ -117,8 +124,10 @@ def show_training(flow, data_iterables, msg_iterables=None, stop_messages=None,
     debug -- Ignore exception during training and try to complete the slideshow
         (default value is False).
     show_size -- Show the approximate memory footprint of all nodes.
-    browser_open -- If True (default value) then the slideshow file is
-        automatically opened in a webbrowser.
+    open_browser -- If True (default value) then the slideshow file is
+        automatically opened in a webbrowser. One can also use string value
+        with the browser name (for webbrowser.get) to request a specific
+        browser.
     **kwargs -- Additional arguments for flow.train can be specified
         as keyword arguments.
     """
@@ -202,8 +211,8 @@ def show_training(flow, data_iterables, msg_iterables=None, stop_messages=None,
     html_file.write(slideshow)
     html_file.write('</body>\n</html>')
     html_file.close()
-    if browser_open:
-        webbrowser.open(os.path.abspath(filename))
+    if open_browser:
+        _open_custom_brower(open_browser, os.path.abspath(filename))
     return filename
 
 def inspect_execution(flow, x, msg=None, target=None, path=None, name=None,
@@ -281,7 +290,7 @@ def inspect_execution(flow, x, msg=None, target=None, path=None, name=None,
 
 def show_execution(flow, x, msg=None, target=None, path=None, name=None,
                    trace_inspector=None, debug=False, show_size=False,
-                   browser_open=True, **kwargs):
+                   open_browser=True, **kwargs):
     """Write the inspection slideshow into an HTML file and open it in the
     browser.
     
@@ -299,8 +308,10 @@ def show_execution(flow, x, msg=None, target=None, path=None, name=None,
         caught and the gathered data up to that point is returned in the
         normal way. This is useful for bimdp debugging.
     show_size -- Show the approximate memory footprint of all nodes.
-    browser_open -- If True (default value) then the slideshow file is
-        automatically opened in a webbrowser.
+    open_browser -- If True (default value) then the slideshow file is
+        automatically opened in a webbrowser. One can also use string value
+        with the browser name (for webbrowser.get) to request a specific
+        browser.
     **kwargs -- Additional arguments for flow.execute can be specified
         as keyword arguments.
     """
@@ -332,6 +343,6 @@ def show_execution(flow, x, msg=None, target=None, path=None, name=None,
     html_file.write(slideshow)
     html_file.write('</body>\n</html>')
     html_file.close()
-    if browser_open:
-        webbrowser.open(os.path.abspath(filename))
+    if open_browser:
+        _open_custom_brower(open_browser, os.path.abspath(filename))
     return filename, result

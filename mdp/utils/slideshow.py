@@ -12,9 +12,6 @@ http://javascript.internet.com/miscellaneous/image-slideshow.html
 (which in turn seems to be based on something from http://www.ricocheting.com)
 """
 
-# TODO: make it possible to turn off controls?
-# TODO: place CSS for section stuff separatly?
-
 import random
 import tempfile
 import os
@@ -724,7 +721,7 @@ def image_slideshow(filenames, image_size, title=None, section_ids=None,
 def show_image_slideshow(filenames, image_size, filename=None, title=None,
                          section_ids=None, delay=100, delay_delta=20,
                          loop=True, slideshow_id=None,
-                         magnification=1, mag_control=True, browser_open=True):
+                         magnification=1, mag_control=True, open_browser=True):
     """Write the slideshow into a HTML file, open it in the browser and
     return the file name.
     
@@ -737,8 +734,10 @@ def show_image_slideshow(filenames, image_size, filename=None, title=None,
     section_ids -- List with the section id for each slide index. The id
             can be a string or a number. Default value None disables the
             section feature.
-    browser_open -- If True (default value) then the slideshow file is
-        automatically opened in a webbrowser.
+    open_browser -- If True (default value) then the slideshow file is
+        automatically opened in a webbrowser. One can also use string value
+        with the browser name (for webbrowser.get) to request a specific
+        browser.
     
     For additional keyword arguments see the ImageHTMLSlideShow class.
     """
@@ -754,11 +753,15 @@ def show_image_slideshow(filenames, image_size, filename=None, title=None,
     html_file.write('</style>\n</head>\n<body>\n')
     kwargs = vars()
     del kwargs['filename']
-    del kwargs['browser_open']
+    del kwargs['open_browser']
     del kwargs['html_file']
     html_file.write(image_slideshow(**kwargs))
     html_file.write('</body>\n</html>')
     html_file.close()
-    if browser_open:
-        webbrowser.open(os.path.abspath(filename))
+    if open_browser:
+        if isinstance(open_browser, str):
+            custom_browser = webbrowser.get(open_browser)
+            custom_browser.open(os.path.abspath(filename))
+        else:
+            webbrowser.open(os.path.abspath(filename))
     return filename
