@@ -7,6 +7,7 @@ import webbrowser
 import cPickle as pickle
 import tempfile
 import traceback
+import warnings
 
 import mdp
 from mdp import hinet
@@ -37,8 +38,14 @@ INSPECTION_STYLE = (hinet.HINET_STYLE + BIHINET_STYLE +
 def _open_custom_brower(open_browser, url):
     """Helper function to support opening a custom browser."""
     if isinstance(open_browser, str):
-        custom_browser = webbrowser.get(open_browser)
-        custom_browser.open(url)
+        try:
+            custom_browser = webbrowser.get(open_browser)
+            custom_browser.open(url)
+        except webbrowser.Error:
+            err = ("Could not open browser '%s', using default." %
+                   open_browser)
+            warnings.warn(err)
+            webbrowser.open(url)
     else:
         webbrowser.open(url)
 

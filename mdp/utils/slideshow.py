@@ -16,6 +16,7 @@ import random
 import tempfile
 import os
 import webbrowser
+import warnings
 
 import templet
 
@@ -760,8 +761,14 @@ def show_image_slideshow(filenames, image_size, filename=None, title=None,
     html_file.close()
     if open_browser:
         if isinstance(open_browser, str):
-            custom_browser = webbrowser.get(open_browser)
-            custom_browser.open(os.path.abspath(filename))
+            try:
+                custom_browser = webbrowser.get(open_browser)
+                custom_browser.open(os.path.abspath(filename))
+            except webbrowser.Error:
+                err = ("Could not open browser '%s', using default." %
+                       open_browser)
+                warnings.warn(err)
+                webbrowser.open(os.path.abspath(filename))
         else:
             webbrowser.open(os.path.abspath(filename))
     return filename
