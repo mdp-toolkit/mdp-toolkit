@@ -6,6 +6,7 @@ import os
 import webbrowser
 import cPickle as pickle
 import tempfile
+import traceback
 
 import mdp
 from mdp import hinet
@@ -173,6 +174,7 @@ def show_training(flow, data_iterables, msg_iterables=None, stop_messages=None,
             flow.train(data_iterables, **kwargs)
     except Exception:
         if debug:
+            traceback.print_exc()
             print ("exception during training, " +
                    "inspecting up to failure point...")
             # create the last snapshot manually
@@ -267,6 +269,7 @@ def inspect_execution(flow, x, msg=None, target=None, path=None, name=None,
     except TraceDebugException, debug_exception:
         if not debug_exception.result:
             return None
+        traceback.print_exc()
         print ("exception during excecution, " + 
                "create inspection up to failure point...")
         slide_filenames, slide_node_ids, section_ids = debug_exception.result
