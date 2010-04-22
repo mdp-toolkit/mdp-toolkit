@@ -35,7 +35,8 @@ if __name__ == "__main__":
     mdp_index = mdp_path.rfind("mdp")
     if mdp_index:
         mdp_path =  mdp_path[:mdp_index-1]
-        sys.path.append(mdp_path)
+        # the mdp path takes precedence over PYTHONPATH
+        sys.path = [mdp_path] + sys.path
     
 import mdp
 from scheduling import Scheduler, cpu_count
@@ -238,7 +239,7 @@ if __name__ == "__main__":
         cache_callable = False
     if len(sys.argv) > 2:
         # remaining arguments are code paths,
-        # put them in front so that they can override the current sys.path
+        # put them in front so that they take precedence over PYTHONPATH
         new_paths = [sys_arg for sys_arg in sys.argv[2:]
                      if sys_arg not in sys.path]
         sys.path = new_paths + sys.path
