@@ -236,10 +236,12 @@ if __name__ == "__main__":
         cache_callable = True
     else:
         cache_callable = False
-    # remaining arguments are code paths to be appended to sys.path
     if len(sys.argv) > 2:
-        for sys_arg in sys.argv[2:]:
-            sys.path.append(sys_arg)
+        # remaining arguments are code paths,
+        # put them in front so that they can override the current sys.path
+        new_paths = [sys_arg for sys_arg in sys.argv[2:]
+                     if sys_arg not in sys.path]
+        sys.path = new_paths + sys.path
     _process_run(cache_callable=cache_callable)
     
     
