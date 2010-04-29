@@ -313,7 +313,8 @@ class BiFlow(mdp.Flow):
                 msg = None
             elif (len(result) == 2):
                 y, msg = result
-            elif (len(result) == 3) and (result[2] == EXIT_TARGET):
+            elif (len(result) == 3) and (result[2] in [EXIT_TARGET, -1]):
+                # target -1 is allowed for easier inverse handling
                 y, msg = result[:2]
             elif len(result) == 3:
                 err = ("Target node not found in flow during execute," + 
