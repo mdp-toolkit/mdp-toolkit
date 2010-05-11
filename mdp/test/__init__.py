@@ -24,27 +24,6 @@ import test_parallelhinet
 import test_process_schedule
 import test_classifier
 
-# check if we have parallel python
-HAVE_PP = hasattr(mdp.parallel, 'pp')
-
-# check what symeig are we using
-if mdp.utils.symeig is mdp.utils.wrap_eigh:
-    SYMEIG = 'scipy.linalg.eigh'
-else:
-    try:
-        import symeig
-        if mdp.utils.symeig is symeig.symeig:
-            SYMEIG = 'symeig'
-        elif mdp.utils.symeig is mdp.utils._symeig_fake:
-            SYMEIG = 'symeig_fake'
-        else:
-            SYMEIG = 'unknown'
-    except ImportError:
-        if mdp.utils.symeig is mdp.utils._symeig_fake:
-            SYMEIG = 'symeig_fake'
-        else:
-            SYMEIG = 'unknown'
-
 numx = mdp.numx
 numx_rand = mdp.numx_rand
 
