@@ -1,9 +1,21 @@
 
 blockers for MDP 3.0
 ====================
-- add classifier stuff
+- add more classifier stuff, like a ClassifierFlow
+- make FDANode compatible with ClassifierNode?
 - finish SVM integration and port my existing shogun bindings to newest version (rike)
-- bimdp: write more unittests and write tutorial section
+- switch to a more permissive license (like BSD)
+- refactor tests for nodes using optional libraries
+- offer interface to query available optional libraries (remove try excepts)
+  use this in the automatically generated BiClassifier code
+- add an example of training a node with multiple training phases using a flow,
+  where the training is done first using lists and then using a custom iterators.
+  special care should be taken on explaining how to pass additional arguments to
+  the train method. an example of how this can look confusing and go wrong can be 
+  found in the testFlowWrongItarableException test in test_flows.py
+
+optional for MDP 3.0
+====================
 - create a Flow metaclass to enable Flow extensions (think of ParallelFlow!)
 - implement an extension context manager with additional parameters and 
   exception handling. E.g.:
@@ -13,19 +25,8 @@ blockers for MDP 3.0
   note that the context manager takes care of initialize and shutting down the
   scheduler. Proposed syntax:
   extension(string, args=tuple, kwargs=dictionary)
-- switch to a more permissive license (like BSD)
-- refactor tests for nodes using optional libraries
-- offer interface to query available optional libraries (remove try excepts)
-- add an example of training a node with multiple training phases using a flow,
-  where the training is done first using lists and then using a custom iterators.
-  special care should be taken on explaining how to pass additional arguments to
-  the train method. an example of how this can look confusing and go wrong can be 
-  found in the testFlowWrongItarableException test in test_flows.py
-
-optional for MDP 3.0
-====================
 - add example section on the homepage
-- bimdp: add deep belief network flow and nodes
+- bimdp: add deep belief network flow and nodes to the core bimdp
 - refactor unitests
 - check if sphinx could be used as an alternative for automatic API docs
 - add cross-correlation tools, maybe support the use of a parallel scheduler
