@@ -150,6 +150,50 @@ import parallel
 # import test functions:
 from test import test
 
+__version__ = '2.6'
+__revision__ = utils.get_git_revision()
+__authors__ = 'Pietro Berkes, Henning Sprekeler, Niko Wilbert, and Tiziano Zito'
+__copyright__ = '(c) 2003-2009 Pietro Berkes, Henning Sprekeler, Niko Wilbert, Tiziano Zito'
+__license__ = 'LGPL v3, http://www.gnu.org/licenses/lgpl.html'
+__contact__ = 'mdp-toolkit-users AT lists.sourceforge.net'
+
+# gather information about us
+def info():
+    import sys
+    # list of features
+    features = ('MDP Version', 'MDP Revision', 'Numerical Backend',
+                'Symeig Backend', 'Parallel Python Support')
+    # keep stuff in a dictionary
+    # as soon as odict becomes a builtin, we can keep features and
+    # info in the same ordered dictionary!
+    info = {}
+    info['MDP Version'] = __version__
+    info['MDP Revision'] = __revision__
+    # parallel python support
+    info['Parallel Python Support'] = str(hasattr(parallel, 'pp'))
+    info['Numerical Backend'] = numx_description + numx_version
+    # check what symeig are we using
+    if utils.symeig is utils.wrap_eigh:
+        SYMEIG = 'scipy.linalg.eigh'
+    else:
+        try:
+            import symeig
+            if utils.symeig is symeig.symeig:
+                SYMEIG = 'symeig'
+            elif utils.symeig is utils._symeig_fake:
+                SYMEIG = 'symeig_fake'
+            else:
+                SYMEIG = 'unknown'
+        except ImportError:
+            if utils.symeig is utils._symeig_fake:
+                SYMEIG = 'symeig_fake'
+            else:
+                SYMEIG = 'unknown'
+    info['Symeig Backend'] = SYMEIG
+
+    for feature in features:
+        sys.stderr.write(feature+': '+info[feature]+'\n')
+
 # clean up namespace
 del signal_node
 del linear_flows
@@ -170,10 +214,3 @@ __all__ = ['CheckpointFlow', 'CheckpointFunction', 'CheckpointSaveFunction',
            'activate_extension', 'deactivate_extension', 'activate_extensions',
            'deactivate_extensions',
            'ClassifierNode']
-
-__version__ = '2.6'
-__revision__ = utils.get_git_revision()
-__authors__ = 'Pietro Berkes, Henning Sprekeler, Niko Wilbert, and Tiziano Zito'
-__copyright__ = '(c) 2003-2009 Pietro Berkes, Henning Sprekeler, Niko Wilbert, Tiziano Zito'
-__license__ = 'LGPL v3, http://www.gnu.org/licenses/lgpl.html'
-__contact__ = 'mdp-toolkit-users AT lists.sourceforge.net'

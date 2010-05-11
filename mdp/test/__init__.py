@@ -74,13 +74,7 @@ def test(suitename = 'all', verbosity = 2, seed = None, testname = None):
         seed = int(numx_rand.randint(2**31-1))
 
     numx_rand.seed(seed)
-
-    sys.stderr.write("MDP Version: " + mdp.__version__)
-    sys.stderr.write("\nMDP Revision: " + mdp.__revision__)
-    sys.stderr.write("\nNumerical backend: " + mdp.numx_description +
-                     mdp.numx_version)
-    sys.stderr.write("\nParallel Python Support: " + str(HAVE_PP))
-    sys.stderr.write("\nSymeig backend: " + SYMEIG)
+    mdp.info()
     sys.stderr.write("\nRandom Seed: " + str(seed)+'\n')
     if suitename == 'all':
         sorted_suites = [x[0](testname=testname)
@@ -92,11 +86,6 @@ def test(suitename = 'all', verbosity = 2, seed = None, testname = None):
     res = unittest.TextTestRunner(verbosity=verbosity).run(suite)
     if len(res.errors+res.failures) > 0:
         sys.stderr.write(_err_str)
-    sys.stderr.write("MDP Version: " + mdp.__version__)
-    sys.stderr.write("\nMDP Revision: " + mdp.__revision__)
-    sys.stderr.write("\nNumerical backend: " + mdp.numx_description +
-                     mdp.numx_version)
-    sys.stderr.write("\nParallel Python Support: " + str(HAVE_PP))
-    sys.stderr.write("\nSymeig backend: " + SYMEIG)
+    mdp.info()
     sys.stderr.write("\nRandom Seed was: " + str(seed)+'\n')
     
