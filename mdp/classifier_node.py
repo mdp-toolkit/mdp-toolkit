@@ -1,28 +1,17 @@
 from mdp import Node, numx
 import operator
 
+
 class ClassifierNode(Node):
-    """A ClassifierNode can be used for classification tasks that should not interfere
-    with the normal execution flow. A Reason for that may be that the labels used
-    for classification are not in the normal feature space but in label space.
+    """A ClassifierNode can be used for classification tasks that should not
+    interfere with the normal execution flow. A Reason for that may be that the
+    labels used for classification are not in the normal feature space but in
+    label space.
     """
-    def rank(self, x, threshold=None):
-        """Returns ordered list with all labels ordered according to prob(x)
-        (e.g., [[3 1 2], [2 1 3], ...]).
-        
-        The optional threshold parameter is used to exclude labels having equal
-        or less probability. E.g. threshold=0 excludes all labels with zero probability.
-        """
-        all_ranking = []
-        prob = self.prob(x)
-        for p in prob:
-            ranking = [(k, v) for k, v in p.items() if v > threshold]
-            ranking.sort(key=operator.itemgetter(1))
-            ranking = map(operator.itemgetter(0), ranking)
-            all_ranking.append(ranking)
-        return all_ranking
     
-    def _classify(self, x, *args, **kargs):
+    ### Methods to be implemented by the subclasses
+    
+    def _label(self, x, *args, **kargs):
         raise NotImplementedError
     
     def _prob(self, x, *args, **kargs):
@@ -30,15 +19,15 @@ class ClassifierNode(Node):
     
     ### User interface to the overwritten methods
     
-    def classify(self, x, *args, **kwargs):
-        """Returns an array with best labels.
+    def label(self, x, *args, **kwargs):
+        """Returns an array with best class labels.
         
-        By default, subclasses should overwrite _classify to implement
-        their classify. The docstring of the '_classify' method
+        By default, subclasses should overwrite _label to implement
+        their label. The docstring of the '_label' method
         overwrites this docstring.
         """
         self._pre_execution_checks(x)
-        return self._classify(self._refcast(x), *args, **kwargs)
+        return self._label(self._refcast(x), *args, **kwargs)
   
     def prob(self, x, *args, **kwargs):
         """Returns the probability for each datapoint and label
@@ -50,6 +39,23 @@ class ClassifierNode(Node):
         """
         self._pre_execution_checks(x)
         return self._prob(self._refcast(x), *args, **kwargs)
+    
+    def rank(self, x, threshold=None):
+        """Returns ordered list with all labels ordered according to prob(x)
+        (e.g., [[3 1 2], [2 1 3], ...]).
+        
+        The optional threshold parameter is used to exclude labels having equal
+        or less probability. E.g. threshold=0 excludes all labels with zero
+        probability.
+        """
+        all_ranking = []
+        prob = self.prob(x)
+        for p in prob:
+            ranking = [(k, v) for k, v in p.items() if v > threshold]
+            ranking.sort(key=operator.itemgetter(1))
+            ranking = map(operator.itemgetter(0), ranking)
+            all_ranking.append(ranking)
+        return all_ranking
 
 
 class ClassifierCumulator(ClassifierNode):
@@ -69,26 +75,26 @@ class ClassifierCumulator(ClassifierNode):
         self.labels = []
         self.tlen = 0
 
-    def _check_train_args(self, x, cl):
-        super(ClassifierCumulator, self)._check_train_args(x, cl)
-        if (isinstance(cl, (list, tuple, numx.ndarray)) and
-            len(cl) != x.shape[0]):
+    def _check_train_args(self, x, labels):
+        super(ClassifierCumulator, self)._check_train_args(x, labels)
+        if (isinstance(labels, (list, tuple, numx.ndarray)) and
+            len(labels) != x.shape[0]):
             msg = ("The number of labels must be equal to the number of "
-                   "datapoints (%d != %d)" % (len(cl), x.shape[0]))
+                   "datapoints (%d != %d)" % (len(labels), x.shape[0]))
             raise mdp.TrainingException(msg)
 
-    def _train(self, x, cl):
+    def _train(self, x, labels):
         """Cumulate all input data in a one dimensional list."""
         self.tlen += x.shape[0]
         self.data.extend(x.ravel().tolist())
 
-        # if cl is a number, all x's belong to the same class
-        if isinstance(cl, (list, tuple, numx.ndarray)):
+        # if labels is a number, all x's belong to the same class
+        if isinstance(labels, (list, tuple, numx.ndarray)):
             pass
         else:
-            cl = [cl] * x.shape[0]
+            labels = [labels] * x.shape[0]
 
-        self.labels.extend(cl.ravel().tolist())
+        self.labels.extend(labels.ravel().tolist())
 
     def _stop_training(self, *args, **kwargs):
         """Transform the data and labels lists to array objects and reshape them."""

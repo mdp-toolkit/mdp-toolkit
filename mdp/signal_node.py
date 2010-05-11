@@ -40,7 +40,7 @@ class NodeMetaclass(type):
 
     # methods that can overwrite docs:
     DOC_METHODS = ['_train', '_stop_training', '_execute', '_inverse',
-                   '_classify', '_prob']
+                   '_label', '_prob']
     
     def __new__(cls, classname, bases, members):
         # select private methods that can overwrite the docstring

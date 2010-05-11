@@ -6,12 +6,12 @@ import random
 import itertools
 
 class SignumClassifier(ClassifierNode):
-    """This classifier node classifies as 1, if the sum of the data points is positive
-        and as -1, if the data point is negative"""
+    """This classifier node classifies as 1, if the sum of the data points is
+    positive and as -1, if the data point is negative"""
     def is_trainable(self):
         return False
     
-    def _classify(self, x):
+    def _label(self, x):
         ret = [xi.sum() for xi in x]
         return numx.sign(ret)
     
@@ -24,26 +24,26 @@ class PerceptronClassifier(ClassifierNode):
         self.offset_weight = 0
         self.learning_rate = 0.1
     
-    def _check_train_args(self, x, cl):
-        if (isinstance(cl, (list, tuple, numx.ndarray)) and
-            len(cl) != x.shape[0]):
+    def _check_train_args(self, x, labels):
+        if (isinstance(labels, (list, tuple, numx.ndarray)) and
+            len(labels) != x.shape[0]):
             msg = ("The number of labels should be equal to the number of "
-                   "datapoints (%d != %d)" % (len(cl), x.shape[0]))
+                   "datapoints (%d != %d)" % (len(labels), x.shape[0]))
             raise mdp.TrainingException(msg)
         
-        if (not isinstance(cl, (list, tuple, numx.ndarray))):
-            cl = [cl]
+        if (not isinstance(labels, (list, tuple, numx.ndarray))):
+            labels = [labels]
 
-        if (not numx.all(map(lambda x: abs(x) == 1, cl))):
+        if (not numx.all(map(lambda x: abs(x) == 1, labels))):
             msg = "The labels must be either -1 or 1."
             raise mdp.TrainingException(msg)
 
-    def _train(self, x, cl):
+    def _train(self, x, labels):
         """Update the internal structures according to the input data 'x'.
         
         x -- a matrix having different variables on different columns
              and observations on the rows.
-        cl -- can be a list, tuple or array of labels (one for each data point)
+        labels -- can be a list, tuple or array of labels (one for each data point)
               or a single label, in which case all input data is assigned to
               the same class.
         """
@@ -52,11 +52,11 @@ class PerceptronClassifier(ClassifierNode):
         if not len(self.weights):
             self.weights = numx.ones(self.input_dim)
         
-        for xi, cli in mdp.utils.izip_stretched(x, cl):
+        for xi, labeli in mdp.utils.izip_stretched(x, labels):
             new_weights = self.weights
             new_offset = self.offset_weight
 
-            rate = self.learning_rate * (cli - self._classify(xi))
+            rate = self.learning_rate * (labeli - self._label(xi))
             for j in range(self.input_dim):
                 new_weights[j] = self.weights[j] + rate * xi[j]
 
@@ -66,8 +66,8 @@ class PerceptronClassifier(ClassifierNode):
             self.weights = new_weights
             self.offset_weight = new_offset
 
-    def _classify(self, x):
-        """Classifies the perceptron.
+    def _label(self, x):
+        """Returns an array with class labels from the perceptron.
         """
         return numx.sign(numx.dot(x, self.weights) + self.offset_weight)
 
@@ -87,38 +87,38 @@ class NaiveBayesClassifier(ClassifierNode):
         self.num_nospam = 0
         self.num_spam = 0
     
-    def _check_train_args(self, x, cl):
-        if (isinstance(cl, (list, tuple, numx.ndarray)) and
-            len(cl) != x.shape[0]):
+    def _check_train_args(self, x, labels):
+        if (isinstance(labels, (list, tuple, numx.ndarray)) and
+            len(labels) != x.shape[0]):
             msg = ("The number of labels should be equal to the number of "
-                   "datapoints (%d != %d)" % (len(cl), x.shape[0]))
+                   "datapoints (%d != %d)" % (len(labels), x.shape[0]))
             raise mdp.TrainingException(msg)
         
-        if (not isinstance(cl, (list, tuple, numx.ndarray))):
-            cl = [cl]
+        if (not isinstance(labels, (list, tuple, numx.ndarray))):
+            labels = [labels]
 
-        if (not all(map(lambda x: abs(x) == 1, cl))):
+        if (not all(map(lambda x: abs(x) == 1, labels))):
             msg = "The labels must be either -1 or 1."
             raise mdp.TrainingException(msg)
 
-    def _train(self, x, cl):
+    def _train(self, x, labels):
         """Update the internal structures according to the input data 'x'.
         
         x -- a matrix having different variables on different columns
              and observations on the rows.
-        cl -- can be a list, tuple or array of labels (one for each data point)
+        labels -- can be a list, tuple or array of labels (one for each data point)
               or a single label, in which case all input data is assigned to
               the same class.
         """
-        for xi, cli in mdp.utils.izip_stretched(x, cl):
-            self._learn(xi, cli)
+        for xi, labeli in mdp.utils.izip_stretched(x, labels):
+            self._learn(xi, labeli)
             
         # clear input dim hack
         self._set_input_dim(None)
 
-    def _learn(self, words, cl):
-        # assume words is iterable of ints, cl is number
-        if cl == -1:
+    def _learn(self, words, labels):
+        # assume words is iterable of ints, labels is number
+        if labels == -1:
             # mail is spam
             self.num_spam += 1
             for word in words:
@@ -126,7 +126,7 @@ class NaiveBayesClassifier(ClassifierNode):
                     self.spam[word] += 1
                 else:
                     self.spam[word] = 1
-        elif cl == 1:
+        elif labels == 1:
             # mail is not spam
             self.num_nospam += 1
             for word in words:
@@ -186,7 +186,7 @@ class NaiveBayesClassifier(ClassifierNode):
         
         return { -1: p_spam_W, 1: p_nospam_W }
                     
-    def _classify(self, words):
+    def _label(self, words):
         """Classifies the words.
         """
         # clear input dim hack
@@ -216,28 +216,28 @@ class SimpleMarkovClassifier(ClassifierNode):
         self.labels = {}
         self.connections = {}
 
-    def _check_train_args(self, x, cl):
-        if (isinstance(cl, (list, tuple, numx.ndarray)) and
-            len(cl) != x.shape[0]):
+    def _check_train_args(self, x, labels):
+        if (isinstance(labels, (list, tuple, numx.ndarray)) and
+            len(labels) != x.shape[0]):
             msg = ("The number of labels should be equal to the number of "
-                   "datapoints (%d != %d)" % (len(cl), x.shape[0]))
+                   "datapoints (%d != %d)" % (len(labels), x.shape[0]))
             raise mdp.TrainingException(msg)
         
-        if (not isinstance(cl, (list, tuple, numx.ndarray))):
-            cl = [cl]
+        if (not isinstance(labels, (list, tuple, numx.ndarray))):
+            labels = [labels]
 
-    def _train(self, x, cl):
+    def _train(self, x, labels):
         """Update the internal structures according to the input data 'x'.
         
         x -- a matrix having different variables on different columns
              and observations on the rows.
-        cl -- can be a list, tuple or array of labels (one for each data point)
+        labels -- can be a list, tuple or array of labels (one for each data point)
               or a single label, in which case all input data is assigned to
               the same class.
         """
-        # if cl is a number, all x's belong to the same class
-        for xi, cli in mdp.utils.izip_stretched(x, cl):
-            self._learn(xi, cli)
+        # if labels is a number, all x's belong to the same class
+        for xi, labeli in mdp.utils.izip_stretched(x, labels):
+            self._learn(xi, labeli)
     
     def _learn(self, feature, label):
         feature = tuple(feature)
@@ -339,13 +339,13 @@ class DiscreteHopfieldClassifier(ClassifierNode):
         for i in range(self.input_dim):
             self._weight_matrix[i][i] = 0
     
-    def _classify(self, x, threshold = 0):
+    def _label(self, x, threshold = 0):
         """Retrieves patterns from the associative memory.
         """
         threshold = numx.zeros(self.input_dim) + threshold
-        return numx.array([self._classify_one(pattern, threshold) for pattern in x])
+        return numx.array([self._label_one(pattern, threshold) for pattern in x])
     
-    def _classify_one(self, pattern, threshold):
+    def _label_one(self, pattern, threshold):
         pattern = mdp.utils.bool_to_sign(pattern)    
         
         has_converged = False
@@ -422,7 +422,7 @@ class KMeansClassifier(ClassifierNode):
         # return index
         return min(zip(dists, itertools.count()))[1] 
 
-    def _classify(self, x):
+    def _label(self, x):
         """For a set of feature vectors x, this classifier returns
         a list of centroids.
         """

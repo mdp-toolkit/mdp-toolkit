@@ -11,7 +11,7 @@ import unittest
 import inspect
 
 import mdp
-from mdp import numx
+from mdp import numx, numx_rand
 from mdp.nodes import (SignumClassifier, PerceptronClassifier, NaiveBayesClassifier,
                        SimpleMarkovClassifier, DiscreteHopfieldClassifier,
                        KMeansClassifier)
@@ -43,7 +43,7 @@ class ClassifierTestSuite(unittest.TestSuite):
                 
     def testSignumClassifier(self):
         c = SignumClassifier()
-        res = c.classify(mdp.numx.array([[1, 2, -3, -4], [1, 2, 3, 4]]))
+        res = c.label(mdp.numx.array([[1, 2, -3, -4], [1, 2, 3, 4]]))
         assert c.input_dim == 4
         assert res.tolist() == [-1, 1]
         
@@ -54,21 +54,21 @@ class ClassifierTestSuite(unittest.TestSuite):
             or_Classifier.train(mdp.numx.array([[0, 1], [1, 0], [1, 1]]), 1)
         assert or_Classifier.input_dim == 2
         
-        res = or_Classifier.classify(mdp.numx.array([[0, 0], [0, 1], [1, 0], [1, 1]]))
+        res = or_Classifier.label(mdp.numx.array([[0, 0], [0, 1], [1, 0], [1, 1]]))
         assert res.tolist() == [-1, 1, 1, 1]
                             
         and_Classifier = PerceptronClassifier()
         for i in range(100):
             and_Classifier.train(mdp.numx.array([[0, 0], [0, 1], [1, 0]]), -1)
             and_Classifier.train(mdp.numx.array([[1, 1]]), 1)
-        res = and_Classifier.classify(mdp.numx.array([[0, 0], [0, 1], [1, 0], [1, 1]]))
+        res = and_Classifier.label(mdp.numx.array([[0, 0], [0, 1], [1, 0], [1, 1]]))
         assert res.tolist() == [-1, -1, -1, 1]
                             
         xor_Classifier = PerceptronClassifier()
         for i in range(100):
             xor_Classifier.train(mdp.numx.array([[0, 0], [1, 1]]), -1)
             xor_Classifier.train(mdp.numx.array([[0, 1], [1, 0]]), 1)
-        res = xor_Classifier.classify(mdp.numx.array([[0, 0], [0, 1], [1, 0], [1, 1]]))
+        res = xor_Classifier.label(mdp.numx.array([[0, 0], [0, 1], [1, 0], [1, 1]]))
         assert res.tolist() != [-1, 1, 1, -1], "Something must be wrong here. XOR is impossible in a single-layered perceptron."
         
     def testNaiveBayesClassifier(self):
@@ -160,7 +160,7 @@ class ClassifierTestSuite(unittest.TestSuite):
         
         for p in patterns:
             # check if patterns are fixpoints
-            assert numx.all(p == h.classify(numx.array([p])))
+            assert numx.all(p == h.label(numx.array([p])))
         
         for p in patterns:
             # check, if a noisy pattern is recreated
@@ -168,7 +168,7 @@ class ClassifierTestSuite(unittest.TestSuite):
             for i in range(len(noisy)):
                 if numx.random.random() > 0.9:
                     noisy[i] = not noisy[i]
-            retrieved = h.classify(numx.array([noisy]))
+            retrieved = h.label(numx.array([noisy]))
             # Hopfield nets are blind for inversion, need to check either case
             assert numx.all(retrieved == p) or numx.all(retrieved != p)
     
@@ -177,7 +177,7 @@ class ClassifierTestSuite(unittest.TestSuite):
         k = KMeansClassifier(num_centroids)
         a = numx.random.rand(50, 2)
         k.train(a)
-        res = k.classify(a)
+        res = k.label(a)
         
         # check that the number of centroids is correct
         assert len(set(res)) == num_centroids
@@ -187,8 +187,8 @@ class ClassifierTestSuite(unittest.TestSuite):
         a2 = numx.random.rand(50, 2) + 1
         k.train(a1)
         k.train(a2)
-        res1 = k.classify(a1)
-        res2 = k.classify(a2)
+        res1 = k.label(a1)
+        res2 = k.label(a2)
         # check that both clusters are completely identified and different
         assert len(set(res1)) == 1 and len(set(res2)) == 1 and set(res1) != set(res2), \
             "Error in K-Means classifier. This might be a bug or just a local minimum."
