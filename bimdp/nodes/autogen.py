@@ -27,7 +27,7 @@ AUTOMATIC_MDP_CLASSIFIERS = [
      'SignumClassifier', 'PerceptronClassifier', 'NaiveBayesClassifier',
      'SimpleMarkovClassifier', 'DiscreteHopfieldClassifier',
      'KMeansClassifier',
-     #'LibSVMClassifier', 'ShogunSVMClassifier'
+     # 'LibSVMClassifier', 'ShogunSVMClassifier'
 ]
 
 # this function is currently not needed, but can be used for node_classes
