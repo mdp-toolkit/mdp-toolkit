@@ -46,6 +46,9 @@ This is described in more detail in the BiNode module.
 
 # ------------- optional ----------------
 
+# TODO: add some help for using coroutines (or maybe for the state pattern?)
+#    in BiNode, maybe in a special subclass.
+
 # TODO: add a target seperator that does not remove the key. Could use
 #    -> remove key
 #    --> remove one '-' on entry
@@ -57,7 +60,7 @@ This is described in more detail in the BiNode module.
 #    Simply tread the node_id part of the key as a regex and check for match.
 #    This adds an overhead of about 1 sec per 100,000 messages.
 
-# TODO: Would it make sense to gurantee that join/fork is always called on
+# TODO: Would it make sense to guarantee that join/fork is always called on
 #    the original node? For fork this would prevent caching, for join this
 #    would prevent gathering the results in remote nodes/processes.
 #    Could be optional depending on node, fork could somehow return a

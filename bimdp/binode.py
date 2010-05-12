@@ -298,7 +298,8 @@ class BiNode(mdp.Node):
                                           target)
         if method_name == "execute" and target is None:
             # use 1 as default target for execution, note that in order to
-            # terminate the execution one therefore has to call another method
+            # terminate the execution one therefore has to call another method,
+            # for inverse the -1 target is already provided by _get_method
             target = 1
         # TODO: perform dimensionality checks for execute/inverse?
         msg, arg_dict = self._extract_method_args(method, msg, msg_id_keys)
