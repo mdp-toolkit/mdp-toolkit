@@ -3,4 +3,5 @@ include COPYING
 include COPYING.LESSER
 include COPYRIGHT
 include INSTALL
+include README
 include TODO
