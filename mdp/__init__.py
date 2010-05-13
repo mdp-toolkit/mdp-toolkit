@@ -162,7 +162,8 @@ def info():
     import sys
     # list of features
     features = ('MDP Version', 'MDP Revision', 'Numerical Backend',
-                'Symeig Backend', 'Parallel Python Support')
+                'Symeig Backend', 'Parallel Python Support',
+                'LibSVM', 'Shogun')
     # keep stuff in a dictionary
     # as soon as odict becomes a builtin, we can keep features and
     # info in the same ordered dictionary!
@@ -171,6 +172,8 @@ def info():
     info['MDP Revision'] = __revision__
     # parallel python support
     info['Parallel Python Support'] = str(hasattr(parallel, 'pp'))
+    info['LibSVM'] = str(hasattr(nodes, 'LibSVMClassifier'))
+    info ['Shogun'] = str(hasattr(nodes, 'ShogunSVMClassifier'))
     info['Numerical Backend'] = numx_description + numx_version
     # check what symeig are we using
     if utils.symeig is utils.wrap_eigh:
