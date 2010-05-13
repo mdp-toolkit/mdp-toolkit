@@ -1410,7 +1410,7 @@ class NodesTestSuite(unittest.TestSuite):
         
         node = mdp.nodes.GaussianClassifierNode()
         node.train(x, classes)
-        classification = node.classify(x)
+        classification = node.label(x)
 
         assert_array_equal(classes, classification)
 
