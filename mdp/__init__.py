@@ -152,10 +152,10 @@ from test import test
 
 __version__ = '2.6'
 __revision__ = utils.get_git_revision()
-__authors__ = 'Pietro Berkes, Henning Sprekeler, Niko Wilbert, and Tiziano Zito'
-__copyright__ = '(c) 2003-2009 Pietro Berkes, Henning Sprekeler, Niko Wilbert, Tiziano Zito'
+__authors__ = 'Pietro Berkes, Rike-Benjamin Schuppner, Niko Wilbert, and Tiziano Zito'
+__copyright__ = '(c) 2003-2010 Pietro Berkes, Rike-Benjamin Schuppner, Niko Wilbert, Tiziano Zito'
 __license__ = 'LGPL v3, http://www.gnu.org/licenses/lgpl.html'
-__contact__ = 'mdp-toolkit-users AT lists.sourceforge.net'
+__contact__ = 'mdp-toolkit-users@lists.sourceforge.net'
 
 # gather information about us
 def info():
