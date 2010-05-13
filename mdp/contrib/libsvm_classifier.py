@@ -63,7 +63,7 @@ class LibSVMClassifier(_SVMClassifier):
         # Call svm training method.
         self.model = self._train_problem(labels, features, self.parameter)
 
-    def _classify(self, x):
+    def _label(self, x):
         if isinstance(x, (list, tuple, numx.ndarray)):
             return numx.array([self.model.predict(xi) for xi in x]) 
         else:
@@ -80,6 +80,6 @@ class LibSVMClassifier(_SVMClassifier):
     def _prob(self, x):
         return [self.model.predict_probability(xi)[1] for xi in x]
 
-    def _train(self, x, cl):
-        super(LibSVMClassifier, self)._train(x, cl)
+    def _train(self, x, labels):
+        super(LibSVMClassifier, self)._train(x, labels)
 

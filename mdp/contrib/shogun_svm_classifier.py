@@ -31,8 +31,8 @@ def is_shogun_classifier(test_classifier):
         return False
     
 default_shogun_classifiers = []
-for cl in dir(sgClassifier):
-    test_classifier = getattr(sgClassifier, cl)
+for labels in dir(sgClassifier):
+    test_classifier = getattr(sgClassifier, labels)
     if is_shogun_classifier(test_classifier):
         default_shogun_classifiers.append(test_classifier)
 
@@ -119,17 +119,18 @@ class Classifier(object):
 
         # If classifier is a string: Check, if it's the name of a default library
         elif isinstance(classifier, basestring):
-            possibleClasses = [cl for cl in default_shogun_classifiers if cl.__name__.lower() == classifier.lower()]
+            possibleClasses = [labels for labels in default_shogun_classifiers
+                               if labels.__name__.lower() == classifier.lower()]
 
             if not len(possibleClasses):
                 msg = "Library '%s' is not a known subclass of CClassifier." % classifier
                 raise mdp.NodeException(msg)
 
             # Take the first classifier which works
-            for cl in possibleClasses:
+            for labels in possibleClasses:
                 try:
-                    self._instance = cl(*args)
-                    self._class = cl
+                    self._instance = labels(*args)
+                    self._class = labels
                 except AttributeError:
                     # we might have a virtual class here
                     pass
@@ -193,8 +194,8 @@ class Classifier(object):
     def train(self):
         self._instance.train()
     
-    def classify(self, test_features):
-        return self._instance.classify(test_features).get_labels()
+    def label(self, test_features):
+        return self._instance.label(test_features).get_labels()
     
     @property
     def takes_kernel(self):
@@ -359,12 +360,12 @@ class ShogunSVMClassifier(_SVMClassifier):
         else:
             return zip(self.labels, self.data)
     
-    def _classify(self, x):
+    def _label(self, x):
         """Classify the input data 'x'
         """
         test_features = sgFeatures.RealFeatures(x.transpose())
 
-        labels = self.classifier.classify(test_features)
+        labels = self.classifier.label(test_features)
         
         if self.normalizer:
             return self.normalizer.revert(labels)
