@@ -221,7 +221,7 @@ class ContribTestSuite(NodesTestSuite):
         n, k = nt*ny, 8
         x, y, z, t = _s_shape_2D(nt, ny)
         data = numx.asarray([x,y,z]).T
-        res = mdp.nodes.LLENode(k, output_dim=2, svd=False)(data)
+        res = mdp.nodes.LLENode(k, output_dim=2, r=0.1, svd=True)(data)
         res[:,0] /= res[:,0].std()
         res[:,1] /= res[:,1].std()
 
@@ -230,12 +230,14 @@ class ContribTestSuite(NodesTestSuite):
         tval = t[:ny]
         for yv in yval:
             idx = numx.nonzero(y==yv)[0]
-            assert numx.all(res[idx,1]-res[idx[0],1]<1e-2),\
-                   'Projection should be aligned as original space'
+            err = (res[idx,1]-res[idx[0],1]).max()
+            assert err<0.01,\
+                   'Projection should be aligned as original space: %s'%(str(err))
         for tv in tval:
             idx = numx.nonzero(t==tv)[0]
-            assert numx.all(res[idx,0]-res[idx[0],0]<1e-2),\
-                   'Projection should be aligned as original space'
+            err = (res[idx,0]-res[idx[0],0]).max()
+            assert err<0.01,\
+                   'Projection should be aligned as original space: %s'%(str(err))
 
     def testLLENode_outputdim_float_bug(self):
         # 1D S-shape in 3D, output_dim
