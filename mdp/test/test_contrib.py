@@ -317,6 +317,8 @@ class ContribTestSuite(NodesTestSuite):
                                   ' covariance: %g' % min(corrs))
 
     def testShogunSVMClassifier(self):
+        if not hasattr(mdp.nodes,'ShogunSVMClassifier'):
+            return
         # TODO: Implement parameter ranges
         num_train = 100
         num_test = 50
@@ -428,6 +430,8 @@ class ContribTestSuite(NodesTestSuite):
                 assert should_fail == failed, msg
 
     def testLibSVMClassifier(self):
+        if not hasattr(mdp.nodes, 'LibSVMClassifier'):
+            return
         num_train = 100
         num_test = 50
         dist = 0.4
