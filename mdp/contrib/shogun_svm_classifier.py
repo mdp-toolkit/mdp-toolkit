@@ -195,7 +195,7 @@ class Classifier(object):
         self._instance.train()
     
     def label(self, test_features):
-        return self._instance.label(test_features).get_labels()
+        return self._instance.classify(test_features).get_labels()
     
     @property
     def takes_kernel(self):

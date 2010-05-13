@@ -381,7 +381,7 @@ class ContribTestSuite(NodesTestSuite):
                 
                 assert sg_node.input_dim == len(traindata_real.T)
                 
-                out = sg_node.classify(testdata_real)
+                out = sg_node.label(testdata_real)
                 
                 if sg_node.classifier.takes_kernel:
                     # check that the kernel has stored all our training vectors
@@ -466,7 +466,7 @@ class ContribTestSuite(NodesTestSuite):
                 
                 assert svm_node.input_dim == len(traindata_real.T)
 
-                out = svm_node.classify(testdata_real)
+                out = svm_node.label(testdata_real)
 
                 testerr = numx.all(numx.sign(out) == testlab)
                 assert testerr, ('classification error for ', comb)

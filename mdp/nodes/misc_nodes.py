@@ -511,7 +511,7 @@ class GaussianClassifierNode(ClassifierNode):
     Given a set of labelled data, the node fits a gaussian distribution
     to each class. Note that it is written as an analysis node (i.e., the
     execute function is the identity function). To perform classification,
-    use the 'classify' method. If instead you need the posterior
+    use the 'label' method. If instead you need the posterior
     probability of the classes given the data use the 'class_probabilities'
     method.
     """
@@ -635,7 +635,7 @@ class GaussianClassifierNode(ClassifierNode):
         class_prob = self.class_probabilities(x)
         return [dict(zip(self.labels, prob)) for prob in class_prob]
 
-    def _classify(self, x):
+    def _label(self, x):
         """Classify the input data using Maximum A-Posteriori."""
 
         class_prob = self.class_probabilities(x)
