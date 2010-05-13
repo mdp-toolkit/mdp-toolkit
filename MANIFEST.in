@@ -1,0 +1,6 @@
+include CHANGES
+include COPYING
+include COPYING.LESSER
+include COPYRIGHT
+include INSTALL
+include TODO
