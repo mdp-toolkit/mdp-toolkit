@@ -85,4 +85,6 @@ setup(name = 'MDP', version = '2.6',
                   'mdp.test', 'mdp.demo', 'mdp.graph', 'mdp.contrib',
                   'mdp.parallel', 'bimdp', 'bimdp.hinet', 'bimdp.inspection',
                   'bimdp.nodes', 'bimdp.parallel', 'bimdp.test'],
+      package_data = {'mdp.hinet': ['hinet.css'],
+                      'mdp.utils': ['slideshow.css']}
       )
