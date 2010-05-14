@@ -20,6 +20,11 @@ if not (version.startswith('v0.9') or version.startswith('v1.')):
     msg = "We need at least SHOGUN version 0.9."
     raise ImportError(msg)
 
+# switch off spurious warnings from shogun
+import warnings
+warnings.filterwarnings('ignore',
+                        '.*Perceptron algorithm did not converge after.*',
+                        RuntimeWarning)
 
 # maybe integrate to the class
 def is_shogun_classifier(test_classifier):
