@@ -1,6 +1,7 @@
 import mdp
 import sys as _sys
 import os as _os
+import inspect as _inspect
 import traceback as _traceback
 import cPickle as _cPickle
 import warnings as _warnings
@@ -138,6 +139,8 @@ class Flow(object):
             return
             
         try:
+            train_arg_keys = self._get_required_train_args(node)
+            train_args_needed = bool(len(train_arg_keys))
             ## We leave the last training phase open for the
             ## CheckpointFlow class.
             ## Checkpoint functions must close it explicitly if needed!
@@ -155,6 +158,16 @@ class Flow(object):
                         x = x[0]
                     else:
                         arg = ()
+                    # check if the required number of arguments was given
+                    if train_args_needed:
+                        if len(train_arg_keys) != len(arg):
+                            err = ("Wrong number of arguments provided by " +
+                                   "the iterable for node #%d " % nodenr +
+                                   "(%d needed, %d given).\n" %
+                                   (len(train_arg_keys), len(arg)) +
+                                   "List of required argument keys: " +
+                                   str(train_arg_keys))
+                            raise FlowException(err)
                     # filter x through the previous nodes
                     if nodenr > 0:
                         x = self._execute_seq(x, nodenr-1)
@@ -201,6 +214,19 @@ class Flow(object):
     def _stop_training_hook(self):
         """Hook method that is called before stop_training is called."""
         pass
+    
+    @staticmethod
+    def _get_required_train_args(node):
+        """Return arguments in addition to self and x for node.train.
+        
+        Argumentes that have a default value are ignored.
+        """
+        train_arg_spec = _inspect.getargspec(node.train)
+        train_arg_keys = train_arg_spec[0][2:]  # ignore self, x
+        if train_arg_spec[3]:
+            # subtract arguments with a default value
+            train_arg_keys = train_arg_keys[:-len(train_arg_spec[3])]
+        return train_arg_keys
             
     def _train_check_iterables(self, data_iterables):
         """Return the data iterables after some checks and sanitizing.
@@ -218,8 +244,8 @@ class Flow(object):
             data_iterables = [[data_iterables]] * len(flow)
 
         if not isinstance(data_iterables, list):
-            err_str = ("'data_iterables' is %s must be either a list of " 
-                       "iterables or an array, but got " %
+            err_str = ("'data_iterables' must be either a list of " 
+                       "iterables or an array, but got %s" %
                        str(type(data_iterables)))
             raise FlowException(err_str)
         
@@ -488,9 +514,12 @@ class Flow(object):
             # if no exception was raised, accept the new sequence
             return self.__class__(flow_copy)
         elif isinstance(other, mdp.Node):
-            flow_copy = self.copy()
+            flow_copy = list(self.flow)
             flow_copy.append(other)
-            return flow_copy
+            # check dimension consistency
+            self._check_nodes_consistency(flow_copy)
+            # if no exception was raised, accept the new sequence
+            return self.__class__(flow_copy)
         else:
             err_str = ('can only concatenate flow'
                        ' (not \'%s\') to flow' % (type(other).__name__))

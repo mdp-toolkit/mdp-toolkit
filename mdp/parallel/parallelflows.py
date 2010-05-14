@@ -8,17 +8,35 @@ as well.
 import mdp
 from mdp import numx as n
 
-import parallelnodes
+from parallelnodes import TrainingPhaseNotParallelException
 import scheduling
-import parallelhinet
+from mdp.hinet import FlowNode
 
 
 ### Train task classes ###
 
-class FlowTrainCallable(scheduling.TaskCallable):
+class FlowTaskCallable(scheduling.TaskCallable):
+    """Base class for all flow callables.
+    
+    It deals activating the required extensions.
+    """
+    
+    def __init__(self):
+        """Store the currently active extensions."""
+        self._used_extensions = mdp.get_active_extensions()
+        super(FlowTaskCallable, self).__init__()
+        
+    def setup_environment(self):
+        """Activate the used extensions."""
+        # deactivate all active extensions for safety
+        mdp.deactivate_extensions(mdp.get_active_extensions())
+        mdp.activate_extensions(self._used_extensions)
+
+
+class FlowTrainCallable(FlowTaskCallable):
     """Implements a single training phase in a flow for a data block.
     
-    A ParallelFlowNode is used to simplify the forking process and to 
+    A FlowNode is used to simplify the forking process and to 
     encapsulate the flow.
     
     You can also derive from this class to define your own callable class. 
@@ -31,7 +49,8 @@ class FlowTrainCallable(scheduling.TaskCallable):
         flownode -- FlowNode containing the flow to be trained.
         """
         self._flownode = flownode
-    
+        super(FlowTrainCallable, self).__init__()
+        
     def __call__(self, data):
         """Do the training and return only the trained node.
         
@@ -77,7 +96,7 @@ class NodeResultContainer(scheduling.ResultContainer):
 
 ### Execute task classes ###
 
-class FlowExecuteCallable(scheduling.TaskCallable):
+class FlowExecuteCallable(FlowTaskCallable):
     """Implements data execution through the whole flow.
     
     Note that one could also pass the flow itself as the callable, so this 
@@ -92,10 +111,13 @@ class FlowExecuteCallable(scheduling.TaskCallable):
         keyword arguments:
         flow -- flow instance for the execution
         nodenr -- optional nodenr argument for the flow execute method
+        extensions -- List of the names of the extensions required by the
+            callable. These are then activated by setup_environment.
         """
         self._flow = flow
         self._nodenr = nodenr
-    
+        super(FlowExecuteCallable, self).__init__()
+        
     def __call__(self, x):
         """Return the execution result.
         
@@ -161,6 +183,7 @@ class ParallelFlow(mdp.Flow):
         self._train_callable_class = None
         self._execute_callable_class = None
     
+    @mdp.with_extension("parallel")
     def train(self, data_iterables, scheduler=None, 
               train_callable_class=None,
               overwrite_result_container=True,
@@ -316,7 +339,7 @@ class ParallelFlow(mdp.Flow):
         in a certain train phase, then the training is done locally as well
         (but fork() is tested again for the next phase).
         """
-        self._flownode = parallelhinet.ParallelFlowNode(mdp.Flow(self.flow))
+        self._flownode = FlowNode(mdp.Flow(self.flow))
         # find next node that can be forked, if required do local training
         while self._i_train_node < len(self.flow):
             current_node = self.flow[self._i_train_node]
@@ -325,11 +348,7 @@ class ParallelFlow(mdp.Flow):
                 continue
             data_iterable = self._train_data_iterables[self._i_train_node]
             try:
-                # test if node can be forked
-                if isinstance(current_node, parallelnodes.ParallelNode):
-                    self._flownode.fork()
-                else:
-                    raise parallelnodes.TrainingPhaseNotParallelException()
+                self._flownode.fork()
                 # fork successful, prepare parallel training
                 if self.verbose:
                     print ("start parallel training phase of " +
@@ -355,45 +374,58 @@ class ParallelFlow(mdp.Flow):
                 self._next_task = (task_data_chunk,
                             self._train_callable_class(self._flownode.fork()))
                 break
-            except parallelnodes.TrainingPhaseNotParallelException:
+            except TrainingPhaseNotParallelException, e:
                 if self.verbose:
+                    print ("could not fork node no. %d: %s" %
+                           (self._i_train_node+1, str(e)))
                     print ("start nonparallel training phase of " + 
                            "node no. %d in parallel flow" % 
                            (self._i_train_node+1))
-                # the training is done directly on self._flownode
-                task_callable = self._train_callable_class(self._flownode)
-                empty_iterator = True   
-                for i_task, data in enumerate(data_iterable):
-                    empty_iterator = False
-                    # Note: if x contains additional args assume that the
-                    # callable can handle this  
-                    task_callable(data)
-                    if self.verbose:
-                        print ("    finished nonparallel task "
-                               "no. %d (in this training phase)" % (i_task+1))
-                if empty_iterator:
-                    if current_node.get_current_train_phase() == 1:
-                        err_str = ("The training data iteration for node "
-                                   "no. %d could not be repeated for the "
-                                   "second training phase, you probably "
-                                   "provided an iterator instead of an "
-                                   "iterable." % (self._i_train_node+1))
-                        raise mdp.FlowException(err_str)
-                    else:
-                        err_str = ("The training data iterator for node "
-                                   "no. %d is empty." % (self._i_train_node+1))
-                        raise mdp.FlowException(err_str)
+                self._local_train_phase(data_iterable)
                 if self.verbose:
                     print ("finished nonparallel training phase of " + 
                            "node no. %d in parallel flow" % 
                            (self._i_train_node+1))
                 self._stop_training_hook()
                 self._flownode.stop_training()
+                self._post_stop_training_hook()
                 if not self.flow[self._i_train_node].is_training():
                     self._i_train_node += 1
         else:
             # training is finished
             self._i_train_node = None
+            
+    def _local_train_phase(self, data_iterable):
+        """Perform a single training phase locally.
+        
+        The internal _train_callable_class is used for the training.
+        """
+        current_node = self.flow[self._i_train_node]
+        task_callable = self._train_callable_class(self._flownode)
+        empty_iterator = True   
+        for i_task, data in enumerate(data_iterable):
+            empty_iterator = False
+            # Note: if x contains additional args assume that the
+            # callable can handle this  
+            task_callable(data)
+            if self.verbose:
+                print ("    finished nonparallel task no. %d" % (i_task+1))
+        if empty_iterator:
+            if current_node.get_current_train_phase() == 1:
+                err_str = ("The training data iteration for node "
+                           "no. %d could not be repeated for the "
+                           "second training phase, you probably "
+                           "provided an iterator instead of an "
+                           "iterable." % (self._i_train_node+1))
+                raise mdp.FlowException(err_str)
+            else:
+                err_str = ("The training data iterator for node "
+                           "no. %d is empty." % (self._i_train_node+1))
+                raise mdp.FlowException(err_str)
+            
+    def _post_stop_training_hook(self):
+        """Hook method that is called after stop_training is called."""
+        pass
             
     def _create_train_task(self):
         """Create and return a single training task without callable.
@@ -405,6 +437,7 @@ class ParallelFlow(mdp.Flow):
         except StopIteration:
             return None
             
+    @mdp.with_extension("parallel")
     def execute(self, iterable, nodenr=None, scheduler=None, 
                 execute_callable_class=None,
                 overwrite_result_container=True):
@@ -571,6 +604,7 @@ class ParallelFlow(mdp.Flow):
                        "%d in parallel flow" % (self._i_train_node+1))
             self._stop_training_hook()
             node.stop_training()
+            self._post_stop_training_hook()
             if not node.is_training():
                 self._i_train_node += 1
             self._next_train_phase()
@@ -621,28 +655,14 @@ class ParallelCheckpointFlow(ParallelFlow, mdp.CheckpointFlow):
                                     train_callable_class=train_callable_class,
                                     **kwargs)
     
-    def use_results(self, results):
-        """Checkpoint version of use_results.
-        
-        Calls the checkpoint functions when necessary.
-        """
-        if self.is_parallel_training:
-            i_node = self._i_train_node
-            # save this info before use_results() is called, 
-            # since afterwards it is ambiguous
-            checkpoint_reached = False
-            if self.flow[i_node].get_remaining_train_phase() == 1:
-                checkpoint_reached = True
-            super(ParallelCheckpointFlow, self).use_results(results=results)
-            if checkpoint_reached:
-                if ((i_node <= len(self._checkpoints)) 
-                    and self._checkpoints[i_node]):
-                    dict = self._checkpoints[i_node](self.flow[i_node])
-                    # store result, just like in the original CheckpointFlow
-                    if dict: 
-                        self.__dict__.update(dict)
-        elif self.is_parallel_executing:
-            return super(ParallelCheckpointFlow, self).use_results(
-                                                            results=results)
-
-
+    def _post_stop_training_hook(self):
+        """Check if we reached a checkpoint."""
+        super(ParallelCheckpointFlow, self)._post_stop_training_hook()
+        i_node = self._i_train_node
+        if self.flow[i_node].get_remaining_train_phase() == 0:
+            if ((i_node <= len(self._checkpoints)) 
+                and self._checkpoints[i_node]):
+                dict = self._checkpoints[i_node](self.flow[i_node])
+                # store result, just like in the original CheckpointFlow
+                if dict: 
+                    self.__dict__.update(dict)

@@ -94,11 +94,11 @@ def _cov(x,y=None):
     #return mult(numx.transpose(x),y)/(x.shape[0]-1)
     return mult(numx.transpose(x),y)/(x.shape[0])
 
-#_spinner = itertools.cycle((' /\b\b', ' -\b\b', ' \\\b\b', ' |\b\b'))
+_spinner = itertools.cycle((' /\b\b', ' -\b\b', ' \\\b\b', ' |\b\b'))
 #_spinner = itertools.cycle((' .\b\b', ' o\b\b', ' 0\b\b', ' O\b\b',
 #                            ' 0\b\b', ' o\b\b'))
-_spinner = itertools.cycle([" '\b\b"]*2 + [' !\b\b']*2 + [' .\b\b']*2 +
-                           [' !\b\b']*2)
+#_spinner = itertools.cycle([" '\b\b"]*2 + [' !\b\b']*2 + [' .\b\b']*2 +
+#                           [' !\b\b']*2)
 
 # create spinner
 def spinner():
@@ -138,6 +138,8 @@ class NodesTestSuite(unittest.TestSuite):
                        mn.FastICANode,
                        mn.QuadraticExpansionNode,
                        (mn.PolynomialExpansionNode, [3], None),
+                       (mn.RBFExpansionNode, [[[0.]*5, [0.]*5], [1., 1.]], None),
+                       mn.GrowingNeuralGasExpansionNode,
                        (mn.HitParadeNode, [2, 5], None),
                        (mn.TimeFramesNode, [3, 4], None),
                        mn.EtaComputerNode,
@@ -207,31 +209,24 @@ class NodesTestSuite(unittest.TestSuite):
 
     def _fastica_test_factory(self):
         # generate FastICANode testcases
-        fica_parm = []
-        for approach in ['symm', 'defl']:
-            for g in ['pow3', 'tanh', 'gaus', 'skew']:
-                for fine_g in [ None, 'pow3', 'tanh', 'gaus', 'skew']:
-                    for sample_size in [ 1, 0.99999 ]:
-                        for mu in [1, 0.999999 ]:
-                            for stab in [False, True]:
-                                if mu != 1 and stab is False:
-                                    # mu != 1 implies setting stabilization
-                                    continue
-                                # skew nonlinearity only wroks with skewed
-                                # input data
-                                if g != 'skew' and fine_g == 'skew':
-                                    continue
-                                if g == 'skew' and fine_g != 'skew':
-                                    continue
-                                fica_parm.append({
-                                    'approach': approach,
-                                    'g': g,
-                                    'fine_g': fine_g,
-                                    'sample_size' : sample_size,
-                                    'mu' : mu,
-                                    'stabilization' : stab
-                                    })
-        for parms in fica_parm:
+        fica_parm = {'approach': ['symm', 'defl'],
+                     'g': ['pow3', 'tanh', 'gaus', 'skew'],
+                     'fine_g': [ None, 'pow3', 'tanh', 'gaus', 'skew'],
+                     'sample_size': [ 1, 0.99999 ],
+                     'mu': [1, 0.999999 ],
+                     'stabilization': [False, True]}
+
+        for parms in utils.orthogonal_permutations(fica_parm):
+            if parms['mu'] != 1 and parms['stabilization'] is False:
+                # mu != 1 implies setting stabilization
+                continue
+            # skew nonlinearity only wroks with skewed
+            # input data
+            if parms['g'] != 'skew' and parms['fine_g'] == 'skew':
+                continue
+            if parms['g'] == 'skew' and parms['fine_g'] != 'skew':
+                continue
+
             testfunc, funcdesc = self._get_testFastICA(parms)
             self.addTest(unittest.FunctionTestCase(testfunc,
                                                    description=funcdesc))
@@ -1211,6 +1206,9 @@ class NodesTestSuite(unittest.TestSuite):
         for i in range(0,length,gap):
             assert_array_equal(rec[i:i+block_size], inp[i:i+block_size])
 
+    def testTimeFramesNodeBugInputDim(self):
+        mdp.nodes.TimeFramesNode(time_frames=10, gap=1, input_dim=1)
+        
     def testEtaComputerNode(self):
         tlen = 1e5
         t = numx.linspace(0,2*numx.pi,tlen)
@@ -1288,6 +1286,11 @@ class NodesTestSuite(unittest.TestSuite):
         x = numx.array([range(100), range(100)])
         node.execute(x)
 
+    def testNoiseNodePickling(self):
+        node = mdp.nodes.NoiseNode()
+        node.copy()
+        dummy = node.save(None)
+        
     def testFDANode(self):
         mean1 = [0., 2.]
         mean2 = [0., -2.]
@@ -1380,6 +1383,12 @@ class NodesTestSuite(unittest.TestSuite):
                                       node.inv_covs[lbl_idx],
                                       self.decimal-2)
 
+    def testGaussianClassifier_labellistbug(self):
+        gc = mdp.nodes.GaussianClassifierNode()
+        # this was failing as of MDP-2.5-309-gefa0f9d!
+        gc.train(mdp.numx_rand.random((50, 3)), [+1] * 50)
+        
+
     def testGaussianClassifier_classify(self):
         mean1 = [0., 2.]
         mean2 = [0., -2.]
@@ -1396,8 +1405,8 @@ class NodesTestSuite(unittest.TestSuite):
         x = numx.concatenate((x1, x2), axis=0)
 
         # labels
-        cl1 = numx.ones((x1.shape[0],), dtype='d')
-        cl2 = 2.*numx.ones((x2.shape[0],), dtype='d')
+        cl1 = numx.ones((x1.shape[0],), dtype='i')
+        cl2 = 2*numx.ones((x2.shape[0],), dtype='i')
         classes = numx.concatenate((cl1, cl2))
 
         # shuffle the data
@@ -1407,7 +1416,7 @@ class NodesTestSuite(unittest.TestSuite):
         
         node = mdp.nodes.GaussianClassifierNode()
         node.train(x, classes)
-        classification = node.classify(x)
+        classification = node.label(x)
 
         assert_array_equal(classes, classification)
 
@@ -1807,7 +1816,6 @@ class NodesTestSuite(unittest.TestSuite):
             p, v = bm._sample_v(h)
 
         # see that w remains stable after learning
-        delta = (0.,0.,0.)
         for k in range(100):
             if k%5==0: spinner()
             err = bm.train(v)
@@ -1826,14 +1834,13 @@ class NodesTestSuite(unittest.TestSuite):
 
         # the observations consist of two disjunct patterns that
         # never appear together
-        N=10000
+        N = 1e4
         v = numx.zeros((N,I))
-        for n in range(N):
+        for n in range(int(N)):
             r = numx_rand.random()
             if r>0.666: v[n,:] = [0,1,0,1]
             elif r>0.333: v[n,:] = [1,0,1,0]
 
-        delta = (0.,0.,0.)
         for k in range(1500):
             if k%5==0: spinner()
 
@@ -1985,8 +1992,8 @@ class NodesTestSuite(unittest.TestSuite):
     def testHistogramNode_fraction(self):
         """Test HistogramNode with fraction set to 0.5."""
         node = mdp.nodes.HistogramNode(hist_fraction=0.5)
-        x1 = numx.random.random((1000, 3))
-        x2 = numx.random.random((500, 3))
+        x1 = numx_rand.random((1000, 3))
+        x2 = numx_rand.random((500, 3))
         node.train(x1)
         node.train(x2)
         assert len(node.data_hist) < 1000
@@ -2017,14 +2024,66 @@ class NodesTestSuite(unittest.TestSuite):
         node = mdp.nodes.AdaptiveCutoffNode(lower_cutoff_fraction= 0.2,
                                         upper_cutoff_fraction=0.4,
                                         hist_fraction=0.5)
-        x1 = numx.random.random((1000, 3))
-        x2 = numx.random.random((500, 3))
+        x1 = numx_rand.random((1000, 3))
+        x2 = numx_rand.random((500, 3))
         x = numx.concatenate([x1, x2])
         node.train(x1)
         node.train(x2)
         node.stop_training()
         node.execute(x)
-        
+
+    def testRBFExpansionNode(self):
+        rrep = mdp.utils.rrep
+        dim, n = 2, 10
+        centers = numx_rand.random((n, dim))
+        # grid of points to numerically compute the integral
+        grid = numx.meshgrid(numx.linspace(-3., 4., 100),
+                             numx.linspace(-3., 4., 100))
+        grid = numx.array([grid[0].flatten(), grid[1].flatten()]).T
+        # compute covariance for each point of the grid
+        grid_cov = numx.zeros((grid.shape[0], dim, dim))
+        for i in range(dim):
+            for j in range(dim):
+                grid_cov[:,i,j] = grid[:,i]*grid[:,j]
+
+        def check_mn_cov(rbf, real_covs):
+            y = rbf(grid)
+            # verify means, sizes
+            for i in range(n):
+                p = y[:,i]/y[:,i].sum()
+                # check mean
+                mn = (rrep(p,dim)*grid).sum(0)
+                assert_array_almost_equal(mn, centers[i,:], 2)
+                # check variance
+                vr = ((rrep(rrep(p,2),2)*grid_cov).sum(0)
+                      - numx.outer(mn, mn))
+                assert_array_almost_equal(vr, real_covs[i], 2)
+
+        def scalar_to_covs(x, n):
+            if numx.isscalar(x):
+                x = [x]*n
+            return [numx.array([[x[i],0],[0,x[i]]]) for i in range(n)]
+
+        # 1: sizes is a scalar
+        sizes = 0.32
+        rbf = mdp.nodes.RBFExpansionNode(centers, sizes)
+        check_mn_cov(rbf, scalar_to_covs(sizes, n))
+
+        # 2: sizes is many scalars
+        sizes = 0.3 + numx_rand.random(n)*0.2
+        rbf = mdp.nodes.RBFExpansionNode(centers, sizes)
+        check_mn_cov(rbf, scalar_to_covs(sizes, n))
+
+        # 3: sizes is one covariance
+        sizes = mdp.utils.symrand(numx.array([0.2, 0.4]))
+        rbf = mdp.nodes.RBFExpansionNode(centers, sizes)
+        check_mn_cov(rbf, [sizes]*n)
+
+        # 4: sizes is many covariances
+        sizes = [mdp.utils.symrand(numx.array([0.2, 0.4]))
+                 for i in range(n)]
+        rbf = mdp.nodes.RBFExpansionNode(centers, sizes)
+        check_mn_cov(rbf, sizes)
 
 def get_suite(testname=None):
     return NodesTestSuite(testname=testname)

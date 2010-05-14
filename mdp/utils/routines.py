@@ -2,6 +2,8 @@ import mdp
 
 # import numeric module (scipy, Numeric or numarray)
 numx, numx_rand, numx_linalg  = mdp.numx, mdp.numx_rand, mdp.numx_linalg
+import random
+import itertools
 
 class SymeigException(mdp.MDPException):
     pass
@@ -133,21 +135,6 @@ def norm2(v):
     
     return numx.sqrt((v*v).sum())
 
-def ordered_uniq(alist):
-    """Return the elements in alist without repetitions.
-    The order in the list is preserved.
-    Implementation by Raymond Hettinger, 2002/03/17"""
-    set_ = {}
-    return [set_.setdefault(e, e) for e in alist if e not in set_]
-
-def uniq(alist):
-    """Return the elements in alist without repetitions.
-    The order in the list is not preserved.
-    Implementation by Raymond Hettinger, 2002/03/17"""
-    set_ = {}
-    map(set_.__setitem__, alist, [])
-    return set_.keys()
-
 def cov2(x, y):
     """Compute the covariance between 2D matrices x and y.
     Complies with the old scipy.cov function: different variables
@@ -208,7 +195,14 @@ def get_dtypes(typecodes_key):
     typecodes defined in numpy.typecodes[typecodes_key].
     E.g., get_dtypes('Float') = [dtype('f'), dtype('d'), dtype('g')].
     """
-    return [numx.dtype(c) for c in numx.typecodes[typecodes_key]]
+    types = []
+    for c in numx.typecodes[typecodes_key]:
+        try:
+            type_ = numx.dtype(c)
+            types.append(type_)
+        except TypeError:
+            pass
+    return types
 
 # the following functions and classes were part of the scipy_emulation.py file
 
@@ -389,3 +383,149 @@ def sqrtm(A):
     """This is a symmetric definite positive matrix sqrt function"""
     d, V = mdp.utils.symeig(A)
     return mdp.utils.mult(V, mult_diag(numx.sqrt(d), V.T))
+
+# replication functions
+def lrep(x, n):
+    """Replicate x n-times on a new first dimension"""
+    shp = [1]
+    shp.extend(x.shape)
+    return x.reshape(shp).repeat(n, axis=0)
+
+def rrep(x, n):
+    """Replicate x n-times on a new last dimension"""
+    shp = x.shape + (1,)
+    return x.reshape(shp).repeat(n, axis=-1)
+
+def irep(x, n, dim):
+    """Replicate x n-times on a new dimension dim-th dimension"""
+    x_shape = x.shape
+    shp = x_shape[:dim] + (1,) + x_shape[dim:]
+    return x.reshape(shp).repeat(n, axis=dim)
+# /replication functions
+
+try:
+    # product exists only in itertools >= 2.6
+    from itertools import product
+except ImportError:
+    def product(*args, **kwds):
+        """Cartesian product of input iterables.
+        """
+        # taken from python docs 2.6
+        # product('ABCD', 'xy') --> Ax Ay Bx By Cx Cy Dx Dy
+        # product(range(2), repeat=3) --> 000 001 010 011 100 101 110 111
+        pools = map(tuple, args) * kwds.get('repeat', 1)
+        result = [[]]
+        for pool in pools:
+            result = [x+[y] for x in result for y in pool]
+        for prod in result:
+            yield tuple(prod)
+
+def orthogonal_permutations(a_dict):
+    """
+    Takes a dictionary with lists as keys and returns all permutations
+    of these list elements in new dicts.
+    
+    This function is useful, when a method with several arguments
+    shall be tested and all of the arguments can take several values.
+    
+    The order is not defined, therefore the elements should be
+    orthogonal to each other.
+    
+    >>> for i in orthogonal_permutations({'a': [1,2,3], 'b': [4,5]}):
+            print i
+    {'a': 1, 'b': 4}
+    {'a': 1, 'b': 5}
+    {'a': 2, 'b': 4}
+    {'a': 2, 'b': 5}
+    {'a': 3, 'b': 4}
+    {'a': 3, 'b': 5}
+    """
+    pool = dict(a_dict)
+    args = []
+    for func, all_args in pool.items():
+        # check the size of the list in the second item of the tuple
+        args_with_fun = [(func, arg) for arg in all_args]
+        args.append(args_with_fun)
+    for i in product(*args):
+        yield dict(i)
+
+
+def izip_stretched(*iterables):
+    """Same as izip, except that for convenience non-iterables are repeated ad infinitum.
+    
+    This is useful when trying to zip input data with respective labels
+    and allows for having a single label for all data, as well as for
+    havning a list of labels for each data vector.
+    Note that this will take strings as an iterable (of course), so
+    strings acting as a single value need to be wrapped in a repeat
+    statement of their own.
+    
+    Thus,
+    >>> for zipped in izip_stretched([1, 2, 3], -1):
+            print zipped
+    (1, -1)
+    (2, -1)
+    (3, -1)
+    
+    is equivalent to
+    >>> for zipped in izip([1, 2, 3], [-1] * 3):
+            print zipped
+    (1, -1)
+    (2, -1)
+    (3, -1)
+    """
+    def iter_or_repeat(val):
+        try:
+            return iter(val)
+        except TypeError:
+            return itertools.repeat(val)
+    
+    iterables= map(iter_or_repeat, iterables)
+    while iterables:
+        # need to care about python < 2.6
+        yield tuple([it.next() for it in iterables])
+
+
+def weighted_choice(a_dict, normalize=True):
+    """Returns a key from a dictionary based on the weight that the value suggests.
+    If 'normalize' is False, it is assumed the weights sum up to unity. Otherwise,
+    the algorithm will take care of normalising.
+    
+    Example:
+    >>> d = {'a': 0.1, 'b': 0.5, 'c': 0.4}
+    >>> weighted_choice(d)
+    # draws 'b':'c':'a' with 5:4:1 probability
+    
+    TODO: It might be good to either shuffle the order or explicitely specify it,
+    before walking through the items, to minimise possible degeneration.
+    """
+    if normalize:
+        d = a_dict.copy()
+        s = sum(d.values())
+        for key, val in d.items():
+            d[key] = d[key] / s
+    else:
+        d = a_dict
+    rand_num = random.random()
+    total_rand = 0
+    for key, val in d.items():
+        total_rand += val
+        if total_rand > rand_num:
+            return key
+    return None
+
+def bool_to_sign(an_array):
+    """Return -1 for each False; +1 for each True"""
+    return numx.sign(an_array - 0.5)
+
+def sign_to_bool(an_array, zero=True):
+    """Return False for each negative value, else True.
+    
+    The value for 0 is specified with 'zero'.
+    """
+    if zero:
+        return numx.array(an_array) >= 0
+    else:
+        return numx.array(an_array) > 0
+
+

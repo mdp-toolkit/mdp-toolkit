@@ -10,8 +10,6 @@ Run them with:
 # stuff we don't need. I know, this is a dirty trick.
 from test_nodes import *
 
-import itertools    
-
 import StringIO
 
 mh = mdp.hinet
@@ -125,6 +123,27 @@ class HinetTestSuite(NodesTestSuite):
         flownode = mh.FlowNode(flow)
         assert not flownode.is_training()
         flownode.execute(x)
+        
+    def testFlowNode_copy1(self):
+        flow = mdp.Flow([mdp.nodes.PCANode(), mdp.nodes.SFANode()])
+        flownode = mh.FlowNode(flow)
+        flownode.copy()
+        
+    def testFlowNode_copy2(self):
+        # Test that the FlowNode copy method delegates to internal nodes.
+        class CopyFailException(Exception):
+            pass
+        class CopyFailNode(mdp.Node):
+            def copy(self, protocol=-1):
+                raise CopyFailException()
+        flow = mdp.Flow([mdp.Node(), CopyFailNode()])
+        flownode = mh.FlowNode(flow)
+        try:
+            flownode.copy()
+        except CopyFailException:
+            pass
+        else:
+            assert False, 'Did not raise expected exception.'
 
     def testLayer(self):
         node1 = mdp.nodes.PCANode(input_dim=10, output_dim=5)
@@ -157,7 +176,7 @@ class HinetTestSuite(NodesTestSuite):
         layer = mh.Layer([node1, node2, node3])
         layer.train(x)
         y = layer.execute(x)
-        x_inverse = layer.inverse(y)
+        layer.inverse(y)
         
     def testSameInputLayer(self):
         node1 = mdp.nodes.PCANode(input_dim=10, output_dim=5)
@@ -191,8 +210,55 @@ class HinetTestSuite(NodesTestSuite):
         sboard = mh.Switchboard(input_dim=3,
                                 connections=[2,1,1])
         assert not sboard.is_invertible()
+        
+    ## Tests for MeanInverseSwitchboard ##
+    
+    def testMeanInverseSwitchboard1(self):
+        sboard = mh.MeanInverseSwitchboard(input_dim=3,
+                                           connections=[0,0,2])
+        assert sboard.is_invertible()
+        y = numx.array([[2,4,3],[1,1,7]])
+        x = sboard.inverse(y)
+        assert numx.all(x == numx.array([[3,0,3],[1,0,7]]))
+        
+    def testMeanInverseSwitchboard2(self):
+        sboard = mh.MeanInverseSwitchboard(input_dim=3,
+                                           connections=[1,1,1,2,2])
+        assert sboard.is_invertible()
+        y = numx.array([[2,4,0,1,1],[3,3,3,2,4]])
+        x = sboard.inverse(y)
+        assert numx.all(x == numx.array([[0,2,1],[0,3,3]]))    
+    
+    ## Tests for ChannelSwitchboard ##
+    
+    def testOutChannelInput(self):
+        sboard = mh.ChannelSwitchboard(input_dim=6,
+                                       connections=[5,5,
+                                                    0,1],
+                                       out_channel_dim=2,
+                                       in_channel_dim=2)
+        assert numx.all(sboard.get_out_channel_input(0) ==
+                        numx.array([5,5]))
+        assert numx.all(sboard.get_out_channel_input(1) ==
+                        numx.array([0,1]))
+        
+    def testOutChannelsInputChannels(self):
+        sboard = mh.ChannelSwitchboard(input_dim=6,
+                                       connections=[5,5, # out chan 1
+                                                    0,1], # out chan 2
+                                       out_channel_dim=2,
+                                       in_channel_dim=2)
+        # note that there are 3 input channels
+        assert numx.all(sboard.get_out_channels_input_channels(0) ==
+                        numx.array([2]))
+        assert numx.all(sboard.get_out_channels_input_channels(1) ==
+                        numx.array([0]))
+        assert numx.all(sboard.get_out_channels_input_channels([0,1]) ==
+                        numx.array([0,2]))
+        
+    ## Tests for Rectangular2dSwitchboard ##
 
-    def testSwitchboardRouting1(self):
+    def testRect2dRouting1(self):
         sboard = mh.Rectangular2dSwitchboard(x_in_channels=3, 
                                              y_in_channels=2,
                                              in_channel_dim=2,
@@ -210,7 +276,7 @@ class HinetTestSuite(NodesTestSuite):
         channel_sboard = sboard.get_out_channel_node(0)
         channel_sboard.execute(x)
 
-    def testSwitchboardRouting2(self):
+    def testRect2dRouting2(self):
         sboard = mh.Rectangular2dSwitchboard(x_in_channels=2, 
                                              y_in_channels=4, 
                                              in_channel_dim=1,
@@ -227,7 +293,32 @@ class HinetTestSuite(NodesTestSuite):
         channel_sboard = sboard.get_out_channel_node(0)
         channel_sboard.execute(x)
         
-    def testSwitchboard_get_out_channel_node(self):
+    def testRect2dRouting3(self):
+        sboard = mh.Rectangular2dSwitchboard(x_in_channels=2, 
+                                             y_in_channels=4, 
+                                             in_channel_dim=1,
+                                             x_field_channels=2, 
+                                             y_field_channels=2,
+                                             x_field_spacing=1, 
+                                             y_field_spacing=2)
+        assert numx.all(sboard.connections ==
+                        numx.array([0, 1, 2, 3, 4, 5, 6, 7]))
+        
+    def testRect2dRouting4(self):
+        sboard = mh.Rectangular2dSwitchboard(x_in_channels=4, 
+                                             y_in_channels=4, 
+                                             in_channel_dim=1,
+                                             x_field_channels=3, 
+                                             y_field_channels=2,
+                                             x_field_spacing=1, 
+                                             y_field_spacing=2)
+        assert numx.all(sboard.connections ==
+                        numx.array([0, 1, 2, 4, 5, 6,
+                                    1, 2, 3, 5, 6, 7,
+                                    8, 9, 10, 12, 13, 14,
+                                    9, 10, 11, 13, 14, 15]))    
+    
+    def testRect2d_get_out_channel_node(self):
         sboard = mh.Rectangular2dSwitchboard(x_in_channels=5, 
                                              y_in_channels=4,
                                              in_channel_dim=2,
@@ -245,7 +336,7 @@ class HinetTestSuite(NodesTestSuite):
         layer_y = layer.execute(x)
         assert numx.all(y==layer_y)
         
-    def testSwitchboardException1(self):
+    def testRect2dException1(self):
         try:
             mh.Rectangular2dSwitchboard(x_in_channels=12, 
                                         y_in_channels=8,
@@ -261,7 +352,7 @@ class HinetTestSuite(NodesTestSuite):
         else:
             assert False, 'Did not raise correct exception.'
             
-    def testSwitchboardException2(self):
+    def testRect2dException2(self):
         try:
             mh.Rectangular2dSwitchboard(x_in_channels=12, 
                                         y_in_channels=8,
@@ -277,7 +368,7 @@ class HinetTestSuite(NodesTestSuite):
         else:
             assert False, 'Did not raise correct exception.'
             
-    def testSwitchboardException3(self):
+    def testRect2dException3(self):
         try:
             mh.Rectangular2dSwitchboard(x_in_channels=12, 
                                         y_in_channels=8,
@@ -292,7 +383,142 @@ class HinetTestSuite(NodesTestSuite):
             pass
         else:
             assert False, 'Did not raise correct exception.'
+            
+    ## Tests for DoubleRect2dSwitchboard ##
+    
+    def testRectDoubleRouting1(self):
+        sboard = mh.DoubleRect2dSwitchboard(x_in_channels=4, 
+                                            y_in_channels=4, 
+                                            in_channel_dim=1,
+                                            x_field_channels=2, 
+                                            y_field_channels=2)
+        assert numx.all(sboard.connections == 
+                        numx.array([0,1,4,5, 2,3,6,7, 8,9,12,13, 10,11,14,15,
+                                    # uneven fields
+                                    5,6,9,10]))
+        x = numx.array([range(0, sboard.input_dim), 
+                        range(101, 101+sboard.input_dim)])
+        sboard.execute(x)
+            
+    def testRectDoubleRouting2(self):
+        sboard = mh.DoubleRect2dSwitchboard(x_in_channels=6, 
+                                            y_in_channels=4, 
+                                            in_channel_dim=1,
+                                            x_field_channels=2, 
+                                            y_field_channels=2)
+        assert numx.all(sboard.connections == 
+                        numx.array([0,1,6,7, 2,3,8,9, 4,5,10,11, 12,13,18,19,
+                                    14,15,20,21, 16,17,22,23,
+                                    # uneven fields
+                                    7,8,13,14, 9,10,15,16]))
+        x = numx.array([range(0, sboard.input_dim), 
+                        range(101, 101+sboard.input_dim)])
+        sboard.execute(x)
+        
+    def testRectDoubleRouting3(self):
+        sboard = mh.DoubleRect2dSwitchboard(x_in_channels=4, 
+                                            y_in_channels=6, 
+                                            in_channel_dim=1,
+                                            x_field_channels=2, 
+                                            y_field_channels=2)
+        assert numx.all(sboard.connections == 
+                        numx.array([0,1,4,5, 2,3,6,7, 8,9,12,13, 10,11,14,15,
+                                    16,17,20,21, 18,19,22,23,
+                                    # uneven fields
+                                    5,6,9,10, 13,14,17,18]))
+        x = numx.array([range(0, sboard.input_dim), 
+                        range(101, 101+sboard.input_dim)])
+        sboard.execute(x)
+        
+    ## Tests for DoubleRhomb2dSwitchboard ##
+        
+    def testDoubleRhombRouting1(self):
+        sboard = mh.DoubleRhomb2dSwitchboard(x_long_in_channels=3, 
+                                             y_long_in_channels=2, 
+                                             diag_field_channels=2,
+                                             in_channel_dim=1)
+        assert numx.all(sboard.connections == 
+                        numx.array([1,6,7,4]))
+        x = numx.array([range(0, sboard.input_dim), 
+                        range(101, 101+sboard.input_dim)])
+        sboard.execute(x)
+        
+    def testDoubleRhombRouting2(self):
+        sboard = mh.DoubleRhomb2dSwitchboard(x_long_in_channels=2, 
+                                             y_long_in_channels=3, 
+                                             diag_field_channels=2,
+                                             in_channel_dim=1)
+        assert numx.all(sboard.connections == 
+                        numx.array([6,2,3,7]))
+        x = numx.array([range(0, sboard.input_dim), 
+                        range(101, 101+sboard.input_dim)])
+        sboard.execute(x)
+        
+    def testDoubleRhombRouting3(self):
+        sboard = mh.DoubleRhomb2dSwitchboard(x_long_in_channels=4, 
+                                             y_long_in_channels=2, 
+                                             diag_field_channels=2,
+                                             in_channel_dim=1)
+        assert numx.all(sboard.connections == 
+                        numx.array([1,8,9,5, 2,9,10,6]))
+        x = numx.array([range(0, sboard.input_dim), 
+                        range(101, 101+sboard.input_dim)])
+        sboard.execute(x)
 
+    def testDoubleRhombRouting4(self):
+        sboard = mh.DoubleRhomb2dSwitchboard(x_long_in_channels=2, 
+                                             y_long_in_channels=4, 
+                                             diag_field_channels=2,
+                                             in_channel_dim=1)
+        assert numx.all(sboard.connections == 
+                        numx.array([8,2,3,9, 9,4,5,10]))
+        x = numx.array([range(0, sboard.input_dim), 
+                        range(101, 101+sboard.input_dim)])
+        sboard.execute(x)
+        
+    def testDoubleRhombRouting5(self):
+        sboard = mh.DoubleRhomb2dSwitchboard(x_long_in_channels=4, 
+                                             y_long_in_channels=4, 
+                                             diag_field_channels=2,
+                                             in_channel_dim=1)
+        assert numx.all(sboard.connections == 
+                        numx.array([1,16,17,5,
+                                    2,17,18,6,
+                                    5,19,20,9,
+                                    6,20,21,10,
+                                    9,22,23,13,
+                                    10,23,24,14]))
+        x = numx.array([range(0, sboard.input_dim), 
+                        range(101, 101+sboard.input_dim)])
+        sboard.execute(x)
+        
+    def testDoubleRhombRouting6(self):
+        sboard = mh.DoubleRhomb2dSwitchboard(x_long_in_channels=7, 
+                                             y_long_in_channels=4, 
+                                             diag_field_channels=4,
+                                             in_channel_dim=1)
+        x = numx.array([range(0, sboard.input_dim), 
+                        range(101, 101+sboard.input_dim)])
+        sboard.execute(x)
+
+    def testDoubleRhombRouting7(self):
+        sboard = mh.DoubleRhomb2dSwitchboard(x_long_in_channels=4, 
+                                             y_long_in_channels=7, 
+                                             diag_field_channels=4,
+                                             in_channel_dim=1)
+        x = numx.array([range(0, sboard.input_dim), 
+                        range(101, 101+sboard.input_dim)])
+        sboard.execute(x)
+
+    def testDoubleRhombRouting8(self):
+        sboard = mh.DoubleRhomb2dSwitchboard(x_long_in_channels=6, 
+                                             y_long_in_channels=7, 
+                                             diag_field_channels=4,
+                                             in_channel_dim=1)
+        x = numx.array([range(0, sboard.input_dim), 
+                        range(101, 101+sboard.input_dim)])
+        sboard.execute(x)
+    
     def testHinetSimpleNet(self):
         switchboard = mh.Rectangular2dSwitchboard(x_in_channels=12, 
                                                   y_in_channels=8,
@@ -342,6 +568,16 @@ class HinetTestSuite(NodesTestSuite):
         # create dummy file to write the HTML representation
         html_file = StringIO.StringIO()
         hinet_html = mdp.hinet.HiNetHTMLTranslator()
+        hinet_html.write_flow_to_file(flow, html_file)
+        html_file.close()
+        
+    def testHiNetXHTML(self):
+        # create some flow for testing
+        sfa_node = mdp.nodes.SFANode(input_dim=20*20, output_dim=10)
+        flow = mdp.Flow([sfa_node])
+        # create dummy file to write the HTML representation
+        html_file = StringIO.StringIO()
+        hinet_html = mdp.hinet.HiNetXHTMLTranslator()
         hinet_html.write_flow_to_file(flow, html_file)
         html_file.close()
     

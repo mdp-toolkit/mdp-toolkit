@@ -131,10 +131,6 @@ class QuadraticForm(object):
 
          w  -- w[:,i] is the direction of the i-th invariance 
          nu -- nu[i] second derivative on the sphere in the direction w[:,i]
-
-        IMPORTANT: this method will crash python on 64bit platforms because
-        of a bug in numpy.linalg.qr (as of numpy version 1.0.1). This bug
-        is fixed in the current numpy subversion repository.
         """
         
         # find a basis for the tangential plane of the sphere in x+
@@ -150,7 +146,7 @@ class QuadraticForm(object):
         # compute the invariances
         nu, w = self._eig_sort(Ht)
         nu -= ((mdp.utils.mult(self.H, xstar)*xstar).sum()
-               -(self.f*xstar).sum())/(r*r)
+               +(self.f*xstar).sum())/(r*r)
         idx = abs(nu).argsort()
         nu = nu[idx]
         w = w[:, idx]

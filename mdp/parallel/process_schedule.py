@@ -5,6 +5,19 @@ Process based scheduler for distribution across multiple CPU cores.
 # TODO: use a queue instead of sleep?
 #    http://docs.python.org/library/queue.html
 
+# TODO: use shared memory for data numpy arrays, but this also requires the
+#    use of multiprocessing since the ctype objects can't be pickled
+
+# TODO: only return result when get_results is called,
+#    this sends a special request to the processes to send their data,
+#    we would have to add support for this to the callable,
+#    might get too complicated
+
+# TODO: leverage process forks on unix systems,
+#    might be very efficient due to copy-on-write, see
+#    http://gael-varoquaux.info/blog/?p=119
+#    http://www.ibm.com/developerworks/aix/library/au-multiprocessing/
+
 import sys
 import os
 import cPickle as pickle
@@ -17,15 +30,21 @@ import warnings
 if __name__ == "__main__":
     # shut off warnings of any kinds
     warnings.filterwarnings("ignore", ".*")
-    # trick to find mdp in a remote process
-    mdp_path = __file__.split("mdp")[0]
-    sys.path.append(mdp_path)
-
+    # try to make sure that mdp can be imported by adding to sys.path
+    mdp_path = os.path.realpath(__file__)
+    mdp_index = mdp_path.rfind("mdp")
+    if mdp_index:
+        mdp_path =  mdp_path[:mdp_index-1]
+        # the mdp path takes precedence over PYTHONPATH
+        sys.path = [mdp_path] + sys.path
+    
 import mdp
-import scheduling
+from scheduling import Scheduler, cpu_count
+
+SLEEP_TIME = 0.1  # time spend sleeping when waiting for a free process
 
 
-class ProcessScheduler(scheduling.Scheduler):
+class ProcessScheduler(Scheduler):
     """Scheduler that distributes the task to multiple processes.
     
     The subprocess module is used to start the requested number of processes.
@@ -43,14 +62,13 @@ class ProcessScheduler(scheduling.Scheduler):
         result_container -- ResultContainer used to store the results.
         verbose -- Set to True to get progress reports from the scheduler
             (default value is False).
-        n_processes -- Number of processes used in parallel. This should
-            correspond to the number of processors / cores.
-        source_paths -- List of paths to the source code of the project using 
-            the scheduler. These paths will be appended to sys.path in the
-            processes to make the task unpickling work. 
-            A single path instead of a list is also accepted.
-            Set to None if no sources are needed for unpickling the task (this 
-            is the default value).
+        n_processes -- Number of processes used in parallel. If None (default)
+            then the number of detected CPU cores is used.
+        source_paths -- List of paths that are added to sys.path in
+            the processes to make the task unpickling work. A single path
+            instead of a list is also accepted.
+            If None (default value) then source_paths is set to sys.path.
+            To prevent this you can specify an empty list.
         python_executable -- Python executable that is used for the processes.
             The default value is None, in which case sys.executable will be
             used.
@@ -59,9 +77,13 @@ class ProcessScheduler(scheduling.Scheduler):
             generally be less efficient since the task_callable has to be
             pickled each time.
         """
-        scheduling.Scheduler.__init__(self, result_container=result_container,
-                                      verbose=verbose)
-        self._n_processes = n_processes
+        super(ProcessScheduler, self).__init__(
+                                        result_container=result_container,
+                                        verbose=verbose)
+        if n_processes:
+            self._n_processes = n_processes
+        else:
+            self._n_processes = cpu_count()
         self._cache_callable = cache_callable
         if python_executable is None:
             python_executable = sys.executable
@@ -74,10 +96,11 @@ class ProcessScheduler(scheduling.Scheduler):
         #    copy_reg.
         process_args = [python_executable, "-u", module_file]
         process_args.append(str(self._cache_callable))
-        if type(source_paths) is str:
+        if isinstance(source_paths, str):
             source_paths = [source_paths]
-        if source_paths is not None:
-            process_args += source_paths
+        if source_paths is None:
+            source_paths = sys.path
+        process_args += source_paths
         # list of processes not in use, start the processes now
         self._free_processes = [subprocess.Popen(args=process_args,
                                                  stdout=subprocess.PIPE, 
@@ -115,7 +138,7 @@ class ProcessScheduler(scheduling.Scheduler):
             if not len(self._free_processes):
                 # release lock for other threads and wait
                 self._lock.release()
-                time.sleep(1.5)
+                time.sleep(SLEEP_TIME)
                 self._lock.acquire()
             else:
                 try:
@@ -188,7 +211,10 @@ def _process_run(cache_callable=True):
                 elif cache_callable:
                     # store callable in cache
                     last_callable = callable
+                    callable.setup_environment()
                     callable = callable.fork()
+                else:
+                    callable.setup_environment()    
                 result = callable(data)
                 del callable  # free memory
                 pickle.dump(result, pickle_out, protocol=-1)
@@ -211,10 +237,12 @@ if __name__ == "__main__":
         cache_callable = True
     else:
         cache_callable = False
-    # remaining arguments are code paths to be appended to sys.path
     if len(sys.argv) > 2:
-        for sys_arg in sys.argv[2:]:
-            sys.path.append(sys_arg)
+        # remaining arguments are code paths,
+        # put them in front so that they take precedence over PYTHONPATH
+        new_paths = [sys_arg for sys_arg in sys.argv[2:]
+                     if sys_arg not in sys.path]
+        sys.path = new_paths + sys.path
     _process_run(cache_callable=cache_callable)
     
     

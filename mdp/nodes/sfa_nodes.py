@@ -29,7 +29,10 @@ class SFANode(Node):
 
         # set routine for eigenproblem
         self._symeig = symeig
-
+        
+        # SFA eigenvalues and eigenvectors, will be set after training
+        self.d = None
+        self.sf = None
     
     def _get_supported_dtypes(self):
         return ['float32', 'float64']
@@ -51,7 +54,10 @@ class SFANode(Node):
 
     def _train(self, x):
         ## update the covariance matrices
-        # cut the final point to avoid a trivial solution in special cases
+        # Cut the final point to avoid a trivial solution in special cases. (?)
+        # This also makes sense if the last data point is duplicated as the
+        # first data point of the next chunk, in which case the chunking
+        # of the data has no influence on the result.
         self._cov_mtx.update(x[:-1, :])
         self._dcov_mtx.update(self.time_derivative(x))
 
@@ -106,7 +112,7 @@ class SFANode(Node):
         return mult(x, sf) - bias
 
     def _inverse(self, y):
-        return mult(y, pinv(self.sf))+self.avg
+        return mult(y, pinv(self.sf)) + self.avg
 
     def get_eta_values(self, t=1):
         """Return the eta values of the slow components learned during
@@ -134,7 +140,8 @@ class SFANode(Node):
         """
         if self.is_training():
             self.stop_training()
-        return self._refcast(t/(2*numx.pi)*numx.sqrt(self.d))
+        return self._refcast(t / (2 * numx.pi) * numx.sqrt(self.d))
+
 
 class SFA2Node(SFANode):
     """Get an input signal, expand it in the space of
@@ -195,14 +202,14 @@ class SFA2Node(SFANode):
         quadratic form 1/2 x'Hx + f'x + c that defines the output
         of the component 'nr' of the SFA node.
         """
-
-        self._if_training_stop_training()
-
+        if self.sf is None:
+            self._if_training_stop_training()
+            
         sf = self.sf[:, nr]
         c = -mult(self.avg, sf)
         n = self.input_dim
         f = sf[:n]
-        h = numx.zeros((n, n), dtype = self.dtype)
+        h = numx.zeros((n, n), dtype=self.dtype)
         k = n
         for i in range(n):
             for j in range(n):
@@ -215,7 +222,7 @@ class SFA2Node(SFANode):
                 else:
                     h[i, j] = h[j, i]
 
-        return QuadraticForm(h, f, c, dtype = self.dtype)
+        return QuadraticForm(h, f, c, dtype=self.dtype)
 
                
 

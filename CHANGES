@@ -1,3 +1,496 @@
+MDP-2.6:
+
+2010-05-14: fix spurious shogun warning.
+2010-05-14: applied patch from Rike to re-enable some of the working Shogun
+            tests.
+2010-05-14: fixed bug when using most recent numpy (1.4.1). utils.get_dtype
+            was failing when called with 'All' argument. most of MDP unittests
+            were failing!
+2010-05-14: added stylesheet files to setup script. only *.py files are
+            installed by default.
+2010-05-14: modified mechanism to get git revision in order to properly handle
+            the case when git fails. added stylesheets to MANIFEST template
+2010-05-14: several additions to distribution files
+2010-05-14: removed NaiveBayesClassifer from automatically generated nodes in
+            bimdp. regenerated node wrappers
+2010-05-14: fixed bug in GaussianClassifierNode and FDANode when training with
+            a list of labels. Removed obsolete 'uniq' function in utils. we
+            can use builtin set instead.
+2010-05-14: disabled Shogun tests. they often fail withtou apparent reasons.
+            try for example: python2.5 -c 'import mdp;
+            mdp.test(seed=257416710)'
+2010-05-14: Added a maximum iteration constraint to the k-means classifier.
+2010-05-14: Moved the NaiveBayesClassifier to the demo.
+2010-05-14: Fixed a bug where the Classifier rank() method returned items in
+            the reverse order.
+2010-05-13: LLENode was not fixed ;-) disabled 2D test and added reminder to
+            TODO
+2010-05-13: fixed ever failing LLENode test.
+2010-05-13: added info about LibSVM and Shogun in mdp.info()
+2010-05-13: first take at disabling SVM tests when libraries are not available
+2010-05-12: Updated the todo list to reflect the latest developments.
+2010-05-12: Adjusted the BiClassifier node according to the renamings.
+2010-05-12: Renamings in the classifier nodes (classify->label, cl->labels).
+2010-05-11: removed code duplication from test/__init__.py
+2010-05-11: added info function to display infos about MDP and dependencies
+2010-04-29: Added ability to exit BiFlow with -1 target value, making it
+            easier to use inverse execution.
+2010-04-22: Inserted the new sys.path behavior also in the main clause.
+2010-04-22: Changed the sys.path behavior in subprocesses to fix problems with
+            multiple MDP versions on a system.
+2010-04-14: Fall back on default if specified browser is not available.
+2010-04-14: Added tracebacks to exception handling during debug inspection.
+2010-04-12: Added ability to specify a specific browser for slideshows, also
+            changed the argument name.
+2010-04-09: Rewrote K-Means training to be aligned with the Cumulator
+            training.
+2010-04-09: Adapted the SVM Classifiers to use the new ClassifierCumulator
+            class.
+2010-04-03: Made a Cumulator version for simple Classifiers.
+2010-04-06: Made GaussianClassifierNode inherit from ClassifierNode.
+2010-04-04: Simplified the inheritance names in classifier nodes’
+            declarations.
+2010-03-29: Patch from Benjamin Schrauwen to fix the method polution issue.
+2010-03-29: Fixed the dysfunctional unittest, it now breaks, currently no
+            solution.
+2010-03-29: Added test for pp scheduler with real flow.
+2010-03-28: Improved the extension verbose printing.
+2010-03-28: Fixed one more issue (method polution) and added a test.
+2010-03-28: Added new failing test, caused by polution.
+2010-03-28: Added unittest for the special behavior when multiple extensions
+            extend the same method.
+2010-03-28: Patch from Benjamin Schrauwen for extension mechanism.
+2010-03-27: Slightly changed the behavior of targeted message keys: They are
+            now removed even if they are not args of the method. Updated the
+            unittests accordingly.
+2010-03-27: Fixed bug for layer containing a single node.
+2010-03-26: Added BiClassifier and automatic creation of BiMDP versions for
+            MDP classifiers (currently except the SVN based ones).
+2010-03-25: Applied patch from Benjamin Schrauwen, the BiMDP tests now all
+            pass.
+2010-03-25: Changed the BiMDP msg key seperator from "=>" to "->" to allow for
+            more consistent convention in the future, when more options might
+            be added. Updated the todos accordingly.
+2010-03-25: Undid the changes to the extension mechanism, they are now
+            available in a seperate branch.
+2010-03-25: Enable inheritance in extensions. Patch thanks to Benjamin
+            Schrauwen! (cherry picking from commit
+            aacbc906be0f79e66124085e1c51c35a0aee731d) Enable inheritance in
+            extensions. Test thanks to Benjamin Schrauwen! (cherry picking
+            from commit 89b7facb223aff09d4581ce5aa68d07a8ef47b1b)
+2010-03-25: Enable inheritance in extensions. Test thanks to Benjamin
+            Schrauwen!
+2010-03-25: Enable inheritance in extensions. Patch thanks to Benjamin
+            Schrauwen!
+2010-03-24: Python fixes for compatibility with 2.4.
+2010-03-24: Reverted some of the Python 2.6 (and Numpy 1.4) only changes.
+2010-03-24: Added verbose argument to mdp.activate_extension.
+2010-03-23: Added a section about dealing with testing branches.
+2010-03-22: Added unittest for bimdp parallel stuff and updated another.
+            Update the todos.
+2010-03-22: Improved the CloneBiLayer message data splitting and added
+            corresponding unittest.
+2010-03-22: Slightly changed the message handing in BiSwitchboard and added
+            corresponding unittests. Small rename in BiNode. Small todo
+            update.
+2010-03-16: Added a simple k-means clustering classifier.
+2010-03-14: Added node_id support to BiFlowNode.
+2010-03-13: Added utility function izip_stretched.
+2010-03-12: Added test for adding node to flow. Moved one BiNode test to
+            correct class.
+2010-03-11: Fixed bug in flow in-place adding method.
+2010-03-11: Added a refcast to classify and prob methods.
+2010-03-10: Fixed the remaining failing tests from Tiziano. It was caused by
+            an ambiguity of the BiFlow.train docstring, so this is now
+            explained in more detail. An additional check was added to BiFlow
+            to detect this kind of error.
+2010-03-10: Refactored the additional argument check into seperate method, so
+            that it can be reused by derived flow classes (especially BiFlow).
+2010-03-10: Fixed the test for FDA in a biflow.
+2010-03-10: Added other failing tests for BiFlow.
+2010-03-10: Added failing tests for BiFlows.
+2010-03-10: Added special __add__ method to BiNode, creating a BiFlow. Also
+            added corresponding unittest.
+2010-03-09: Fixed an assertion bug in Shogun test.
+2010-03-09: Added unittests for recent stop_message magic. Also made some
+            small improvements and added for documentation for this. Made
+            small updates to the general bimdp docstring.
+2010-03-09: Added a section on using git with Windows or Eclipse. Added a
+            section on following PEP 8.
+2010-03-09: Added checks for input_dim.
+2010-03-09: We need to have shogun 0.9 for our SVM Classifier.
+2010-03-08: Updated NEW_DEVELOPER_INFO to ‘The git situation’.
+2010-03-08: Fixed Py2.6 DeprecationWarning in RBMLearning test.
+2010-03-08: Fixed a new bug in BiNode. Moved the SVN nodes to the classifier
+            part in the autogen module.
+2010-03-08: Made a larger set of additions to the SVM tests.
+2010-03-08: Updated the docstrings for the SVM classifiers.
+2010-03-06: Fix: Forgot to set the classifier_type in libsvm.
+2010-03-06: Added simple support for probability estimations in LibSVM through
+            our _prob() method.
+2010-03-04: Renamed SVM_Node -> SVM_Classifier.
+2010-03-02: Supplying arguments to the shogun classifier works now. Improved
+            the test suite.
+2010-03-01: Lots of updates and refinements to shogun integration.
+2010-02-28: Added some recognition for KernelMachines in shogun.
+2010-02-27: Applied some fixes and optimisations to the SVM code.
+2010-02-26: Added class _LabelNormalizer to ease the handling of label
+            mapping.
+2010-02-26: ClassifierNode-Migration: Now use ClassifierNode._classify in
+            SVMNodes.
+2010-02-26: Last commit before migration of SVM nodes to ClassifierNode.
+2009-09-16: Made some improvements in SVM testing and overall structure.
+2010-03-06: Improved the algorithm for _randomly_filled_hyperball(). Scaling
+            is much better now.
+2010-03-06: Fixed a bug in ClassifierNode.rank(). It now expects a list of
+            feature vectors to function.
+2010-03-06: Fixed one potential stop_message issue.
+2010-03-06: Added magic in BiNode to call execute or inverse from
+            stop_message.
+2010-02-27: Made the product helper method take advantage of Python 2.6.
+2010-03-04: Moved release files in root of master branch.
+2010-03-03: Added automatic detection of number of CPU cores. This is used in
+            the ProcessScheduler and the ThreadScheduler as the default value.
+2010-03-02: Fixed bug left over from inspection cleanup.
+2010-02-27: get_svn_revision --> get_git_revision
+2010-02-25: Made a couple of smaller improvements in the inspections stuff.
+            Added a nice demo for customized inspections.
+2010-02-22: Introducing a node for a simple discrete Hopfield model.
+2010-02-22: Stupid bug in bool_to_sign fixed.
+2010-02-23: Simplified the improved import precautions.
+2010-02-23: Enabled calling bimdp.test(). Removed redundant code from autogen.
+2010-02-23: Made the import process in the worker processes more robust, to
+            fix the problem with calling bimdp.test() from the command line.
+2010-02-23: Small updated in the autogen code.
+2010-02-23: Changed the automatic creation of BiNode versions for MDP nodes.
+            Now a module file is used that is created by a special script.
+            While less elegant than the original dynamic solution this is now
+            compatible with code checkers and is more transparent for users.
+2010-02-23: Added general purpose routines bool_to_sign and sign_to_bool.
+2010-02-22: Fixed mdp import bug in process scheduler (caused by the occurance
+            of mdp in the repo name).
+2010-02-19: Delete mdp_dist. All future updates should be made in
+            release-manager branch.
+2010-02-19: Removed remaining binet references. Renamed some inspection
+            classes to get the MDP out of the name. Updated the todo list.
+2010-02-19: Need to check against numpy.all when comparing array elements.
+2010-02-18: Corrected the common assert-statement-with-parentheses mistake.
+2010-02-18: Restructured bimdp to follow the mdp structure.
+2010-02-17: Renamed binet to bimdp.
+2009-08-01: Typo fix in progressbar script and clarification for OS X (the
+            automatic size works there as well).
+2010-02-17: Added .gitignore file for .pyc files and some generic patterns.
+2010-02-14: Added option to automatically handle the source_paths in the
+            worker processes.
+2010-02-13: Added more unittests for BiFlow. Fixed one bug in inspection.
+            Moved the JumpBiNode to the tests.
+2010-02-11: Updated the parallel demo.
+2010-02-11: Added a new thread based scheduler. Some very tiny updates to
+            ProcessScheduler.
+2010-02-09: Added more BiNode unittests. Updated BiNode documentation. Updated
+            BiFlow unittests (not yet complete).
+2010-01-30: Some small fixes in the inspection. Tried to use cgitd to show
+            nice HTML tracebacks, but so far this failed (FlowExceptionCR only
+            preserves a traceback string).
+2010-01-29: Removed the updown module (this should be no longer needed).
+2010-01-26: Added check in get_quadratic_form to make it more flexible (e.g.
+            when a derived class wants to use it in _stop_training). Also made
+            some small PEP8 updates.
+2010-01-26: Updated the imports for the parallel package. Fixed some other
+            small issues.
+2010-01-22: Fixed one issue in rectangular switchboards (the data in each
+            patch was transposed). Added corresponding unittests.
+2010-01-11: Seriously beefed up the automatic BiNode creation to preserve the
+            init signature. This makes it compatible with the introspection in
+            the parallel default fork implementation. Also added a special
+            ParallelBiNode and made a tiny style improvement in BiNode.
+2010-01-11: Added a default implementation for forking nodes.
+2010-01-06: Updated the todos. Also one small improvement to the metaclass
+            modification.
+2010-01-05: Some small fixes and cosmetic correction.
+2010-01-05: Fixed one bug from hell in FlowNode (copy was broken for nested
+            FlowNodes when the copy happened after training).
+2010-01-05: Fixed a bug in BiFlowNode.
+2010-01-04: Modified the automatic node creation, now is compatible with
+            pickle and should be 100% transparent. Also fixed the switchboard
+            factory extension support.
+2010-01-04: Put the automatic node creation into a function to avoid namespace
+            polution. Added automatic node creation for switchboards. There is
+            one remaining issue with pickling.
+2010-01-04: Fixed bugs from refactoring.
+2010-01-04: Small refactoring in switchboard factory extension (to allow
+            easier modification by derived classes).
+2010-01-04: Added automatic creation of BiNode versions of all nodes in
+            mdp.nodes.
+2010-01-04: Removed leftover code.
+2010-01-04: Updated todos and docstring in init. Small cosmetic updates
+            elsewhere.
+2010-01-03: Fixed bug of the new inspection training node highlighting
+            feature.
+2010-01-03: Fixed one issue with stop messages in ParallelBiFlow, added a
+            related convenience check to CloneBiLayer.
+2010-01-03: Small improvements and bugfixes with respect to stop_message.
+2010-01-03: Added highlighting of the currently training node in the
+            inspection.
+2010-01-02: Fixed a couple of bugs. The DBN example is now working again.
+2010-01-02: Inspection was simplified, parallel did not need any changes. The
+            binet simplification should now be complete (but I have not run
+            real-world tests yet).
+2010-01-02: Updated bilayer and biswitchboard (with some huge simplifications
+            in biswitchboard). Now parallel and inspection remain to be
+            updated.
+2010-01-02: Added a new switchboard.
+2010-01-01: Fixed some issues in BiFlow after simplification. Updated
+            BiFlowNode, this is hopefully done.
+2009-12-30: Finished simplification of BiFlow. bihinet still needs to be
+            updated as well.
+2009-12-25: Added /usr/share/dict/words to the list of dictionaries.
+2009-12-23: Started with the binet simplification. BiNode should be more or
+            less finished, most of the rest is not yet done. In principle
+            everything should already work, there is just a large amount of
+            dead code around.
+2009-12-22: Fixed one bug in the trace inspection (added check for msg being
+            None).
+2009-12-22: Slightly modified the BiLayer data splitting behavior.
+2009-12-22: Fixed bug in iterator / argument check for train: default argument
+            values were not considered.
+2009-12-16: Renamed the 'html_representation' extension to 'html'.
+2009-12-15: Added a copy method to FlowNode to enable delegation to internal
+            nodes. Added corresponding tests.
+2009-12-13: Prettified the argument representations in the slides.
+2009-12-12: Small update to SenderBiNode.
+2009-12-12: Improved the exception display in the inspection slideshows. Fixed
+            missing reset in fascade.
+2009-12-12: Fixed bug in BiFlow (same bug that was previously fixed in
+            BiFlowNode, just forgot to commit this).
+2009-12-12: Fixed bug in BiFlowNode (relative target index was not translated
+            to absolute index during training).
+2009-12-12: Increased the robustnes of the training inspection in debug mode
+            (it can now deal with exceptions before the stop training hook is
+            reached).
+2009-12-11: clean up a couple of lines in RBM nodes
+2009-12-09: Added a small parallelization demo to demonstrate and explore the
+            speedup.
+2009-12-05: Fixed outdated default value in slideshow (could cause JS error in
+            special circumstances).
+2009-12-04: added documentation about the convention for the train methods of
+            multiple training phase nodes.
+2009-12-04: added Node.has_multiple_training_phases method.
+2009-12-03: Modified check for missing argument in node training to also check
+            for too many arguments. Added a corresponding test.
+2009-12-03: Added check for missing training arguments in Flow (which should
+            be provided by the iterator). Also edited the corresponding
+            unittest.
+2009-12-03: Fixed small error in docstring for slideshow.
+2009-12-02: well, NoiseNode *can* be pickled if you use pickle instead of
+            cPickle. I hope this bug is fixed in python2.6 or python3 ;-)
+2009-12-02: raise error if trying to copying or saving the NoiseNode error
+            (bug in cPickle)
+2009-12-02: added failing test for iterables mess in flow.
+2009-12-01: Added missing super call.
+2009-12-01: Fixed one evil bug: When the last training phase of a node was not
+            parallelizable in a ParallelCheckpointFlow then the checkpoint
+            function was not called. The fix required the addition of another
+            hook method in ParallelFlow, but is overall much cleaner than the
+            previous solution. Also improved the status messages for local
+            training phases.
+2009-12-01: gaussian classifier still had overwritten train just to offer a
+            doc-string. putting the doc-string in _train is sufficient.
+2009-11-29: Added new version of SenderBiNode (doesn't use branching).
+2009-11-26: Fixed one biflow issue when in inverse mode (especially inside a
+            BiFlowNode).
+2009-11-26: Updated some docstrings for the extension mechanism (they were
+            only refering to methods and not attributes).
+2009-11-26: Fixed a bug in the inspection facade.
+2009-11-22: Improved the extension unittests (now testing class attributes as
+            well).
+2009-11-21: Improved the slideshow button text hints (they now also contain
+            the keyboard shortcuts).
+2009-11-21: Fixed one embarrassing mistake in the node metaclasses.
+2009-11-21: Added support for kwargs in training and execution inspection.
+2009-11-16: Added a SimpleMarkovClassifier node. There is duplicated
+            functionality compared to the NaiveBayesClassifier, so the
+            NaiveBayesClassifier could be refactored to be based on the
+            SimpleMarkovClassifier.
+2009-11-15: Fixed the signature overwriting in NodeMetaclass. Also renamed
+            some occurances of "kargs" to "kwargs" in the Node class
+            (previously both names were used in different methods).
+2009-11-15: Fixed a bug in rank().
+2009-11-14: Moved ClassifierNode up one directory.
+2009-11-14: added file with info for new developers
+2009-11-13: Added a ClassifierNode with basic methods classify, rank and prob.
+2009-11-13: Fixed one bug in the message container, thanks to Sven Dähne.
+2009-11-09: Fixed one small bug in switchboard factory. Added switchboard
+            factory extension in binet. Updated todos.
+2009-11-07: Added new switchboard factory node extension. This has been
+            factored out of the hinet planer and I will now use it in my
+            simulation software as well (therefore I wanted to integrate it
+            into MDP). Unittests and documentation are currently missing
+            (unittests will be somewhat tricky, not sure how deeply this
+            should be covered in the tutorial anyway).
+2009-11-06: Rewrote some parts of the extension mechanism. It now works for
+            arbitrary attributes. One nice things is that this actually
+            reduced the number of lines of code. The tutorial has not yet been
+            updated. Attribute specific unittests are missing as well.
+2009-11-06: Updated the todo list.
+2009-11-05: Slightly improved the API for activating multiple extensions.
+            Discovered that the extension mechanism does not work for
+            classmethods/staticmethods, since they appear as non-callable
+            descriptors. I will change the extension mechanism to work for
+            arbitrary attributes ASAP.
+2009-11-04: Small improvements in extension mechanism, added more comments.
+            Added missing Exception import in hinet init.
+2009-11-04: Fixed a small slideshow issue.
+2009-11-03: Completed the clickable inspection nodes. One can now click on a
+            node to jump to the next slide where it is reached. This does not
+            work in IE yet (the workaround would be simple, but don't want to
+            clutter the code with IE specific garbage). Also removed the AJAX
+            storage div (caused trouble due to duplicate ids and is not needed
+            anyway).
+2009-11-03: Added support for active node ids in binet inspection. This will
+            make it possible to click on a node and directly jump to the next
+            time it is reached. The JS part of this is not yet implemented.
+2009-11-03: Fixed the slideshow image CSS and added IE support.
+2009-10-30: Cleaned up the JavaScript code in the binet inspection.
+2009-10-27: Added checks in channel switchboard.
+2009-10-21: Sorry, forgot to fix the webbrowser.open issue in binet.
+2009-10-21: Fixed the webbrowser.open issue on MacOS as suggested by Rike.
+2009-10-20: Tweaked hinet css. Extracted slideshow css into speparate file.
+2009-10-20: Extracted CSS code into separate file.
+2009-10-18: Fixed error in rhombic switchboard, added corresponding unittest.
+2009-10-17: Added new features to the ChannelSwitchboard base class to get the
+            effective receptive fields in hierarchical networks. Also added
+            corresponding tests. Minor cosmetic updates in hinet translator.
+2009-10-16: Added hinet translatation adapter for valid XHTML (instead of
+            HTML). Also added a corresponding unittest, but this does not test
+            the validity of the XHTML.
+2009-10-16: Fixed two small issues in the hinet HTML representation.
+2009-10-14: fixed bug in TimeFramesNode when input_dim was set explicitly.
+            thanks to anonymous sourceforge user [Bug ID: 2865106]
+2009-10-14: Some CSS fixes and a fix in the demo.
+2009-10-14: Added slideshow CSS for crisp rescaling, in anticipation of the
+            Firefox 3.6 beta release.
+2009-10-12: Added feature that nicely line wraps the section ids in a
+            slideshow.
+2009-10-07: Added more checks to DoubleRect2dSwitchboard. Some small
+            improvements. Updated the package init file.
+2009-10-07: Reverted output_channels renaming in switchboard, to not create
+            compatibility issues.
+2009-10-07: Many switchboard updates. A new ChannelSwitchbard base class was
+            introduced, many code improvements, HTML representations were
+            added for the new switchboard types.
+2009-10-06: removed spurious print statement in QuadraticForm tests.
+2009-10-04: Added a section on the extension mechanism in the tutorial (note
+            that this is a first draft). Also added a description of the
+            slideshow stuff (plus a minor update in the slideshow code).
+2009-10-04: Migrated extension stuff to separate module.
+2009-10-01: Fixed some issues in the new DoubleRhomb2dSwitchboard, added more
+            tests.
+2009-09-29: Added a new switchboard class, DoubleRhomb2dSwitchboard. The tests
+            are currently incomplete and there are probably bugs in there.
+2009-09-29: Some simplifications in the switchboard classes.
+2009-09-29: Added a new switchboard class, DoubleRect2dSwitchboard. This will
+            probably be complemented in the future by a Rhomb2d switchboard
+            for multilayer networks.
+2009-09-24: Fixed support for multiple slideshows in one file. Added multiple
+            slideshow demo. Allowed keyboard shortcuts for slideshows to be
+            turned off.
+2009-09-23: Updated todos.
+2009-09-23: Fixed the template indentation handling. Updated the binet
+            inspection to work with the new slideshow. Moved the manual tests
+            for slideshow and hinet to the demos folder.
+2009-09-23: Some more cleanup for the slideshow stuff.
+2009-09-23: Small update in binet for moving the hinet basic CSS to utils.
+2009-09-23: Cleaned up the slideshow JavaScript code. Most importantly the use
+            of global variables is now minimized by using an object oriented
+            design with a closure. Some additional cleanup in the slideshow
+            classes was done as well. Added one helper function to directly
+            create an HTML slideshow. Moved the default CSS from hinet to
+            utils, so it can be used by both slideshow and hinet. Moved the
+            hinet HTML test/demo to the test folder and added a similar demo
+            for slideshow (using the MDP logo animation).
+2009-09-19: added script to analyze code coverage during tests and output html
+            report; needs figleaf,
+            http://darcs.idyll.org/~t/projects/figleaf/doc/; mostly, we don't
+            test exception, but there are some more worrying parts, like we
+            don't test for for flow inversion...
+2009-09-17: Added new utility function orthogonal_permutations. The function
+            helps avoiding deeply nested statements when several of several
+            arguments need to be tested against each other.
+2009-09-14: Many thanks to Christian Hinze for pointing out a bug in
+            QuadraticForm.get_invariances. Removed warning about bug in
+            linalg.qr in numpy 1.0.1.
+2009-09-14: Mainly added basic svm tests and did some cleanup and bug fixes.
+            Also, the requested comments have been investigated.
+2009-09-10: fixed bug in QuadraticForm.get_invariances: second derivative
+            value was wrong when linear term significantly large; second
+            derivative directions were ok
+2009-08-30: small cleanups of svm_nodes and comments/requests for comments.
+            rike?
+2009-08-30: changed import order in nodes/__init__.py to clean up import in
+            expansion_nodes.py for GrowingNeuralGasExpansionNode.
+2009-08-23: Made extension method attributes public. Improved the extension
+            unittests.
+2009-08-22: Small code improvement in binet inspector. Updated todo for
+            extensions.
+2009-08-22: Modified the NodeMetaclass wrapping procedure to use super instead
+            of direct method references. Hopefully this has no negative side
+            effects. The advantage is that it is compatible with runtime
+            monkey patching, so it enables more extension stuff.
+2009-08-21: Extension decorator now preserves function docstring and
+            signature.
+2009-08-17: Fixed extension related bug in ParallelBiFlow. Improved the
+            related unittests. Added some comments.
+2009-08-16: Added little comment.
+2009-08-16: Removed use of parallel FlowNodes in parallel flows. Small update
+            to extensions.
+2009-08-12: Added option to extension decorator to specify the method name.
+            Added extension decorator unittest (now we have 400 unittests,
+            wheee!).
+2009-08-12: Fixed left-over bugs from yesterdays mess, fixed unittests.
+2009-08-11: Added more unittests for the extension mechanism. Changes in the
+            extension documentation and comments, and one small fix.
+2009-08-11: Use set for list of active extensions.
+2009-08-11: Added safety mechanisms to extensions, added one corresponding
+            unittest.
+2009-08-10: Re-enabled Shogun nodes.
+2009-08-10: Added Henning Sprekeler to the list of developers and removed him
+            from the list of contributors. Updated the various copyright
+            statements all over the place, and the home page.
+2009-08-10: Corrected the docstring of the GrowingNeuralGasExpansionNode to be
+            more precise on the relation between max_nodes and the dimension
+            of the expansion.
+2009-08-10: added standard tests for GworingNeuralGasExpansionNode and cleaned
+            up its setting of output_dim.
+2009-08-07: Bug removed in GrowingNeuralGasExpansionNode: scipy -> numx
+2009-08-07: missing file added; UpDownNode modified so it can pass down the
+            results of computations at he top
+2009-08-07: Added GrowingNeuralGasExpansionNode to expansion_nodes. Tests are
+            still missing.
+2009-08-07: ShogunSVMNode only gets imported when libraries are present.
+            Stylistic changes (not all done yet). Some parameter issues and
+            docstring clarified. Non-kernel classification.
+            self._classification_type added. Parameter mapping for kernels
+            introduced.
+2009-08-06: remove import of svm_nodes in contrib. the automatic shogun import
+            is not ready for prime-time.
+2009-08-02: Initial SVM commit. Using only shogun for now. Still needs a lot
+            of work and a better API. But it is already working somehow.
+2009-08-02: uploaded UpDownBiNode, mother class for DBN, backpropagation;
+            corrected small bug in binet; I've got loads of questions about
+            binet
+2009-07-31: GaussianClassifierNode has now explicit output_dim method (which
+            fails).
+2009-07-25: Added RBF node, utilities to replicate array on an additional
+            dimension (rrep, lrep, irep) -> very useful
+2009-07-19: Updated BiNet todo list.
+2009-07-16: Fixed bug in rectangular switchboard that was introduced in the
+            previous update.
+2009-07-15: Added unused channel information to rectangular switchboard, this
+            is also shown in the HTML representation. Added comments in
+            slideshow.
+
+-------------------------------------------------------------------------------
 MDP-2.5:
 
 2009-06-30: Added online detection of numerical backend, parallel
@@ -48,7 +541,7 @@ MDP-2.5:
 2008-12-04: Fixed the empty data iterator handling in ParallelFlow.
             Also added empty iterator checks in the normal Flow (raise an 
             exception if the iterator is empty).
-2008-11-19: Modified pca and sfa nodes to check for negaive eigenvalues
+2008-11-19: Modified pca and sfa nodes to check for negative eigenvalues
             in the cov matrices
 2008-11-19: symeig integrated in scipy, mdp can use it from there now.
 2008-11-18: Added ParallelFDANode.

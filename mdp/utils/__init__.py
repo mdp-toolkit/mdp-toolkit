@@ -1,16 +1,19 @@
 from routines import (timediff, refcast, scast, rotate, random_rot, wrap_eigh,
-                      permute, symrand, norm2, uniq, ordered_uniq, cov2,
+                      permute, symrand, norm2, cov2,
                       mult_diag, comb, sqrtm, get_dtypes, nongeneral_svd,
-                      SymeigException, hermitian, _symeig_fake, cov_maxima)
+                      SymeigException, hermitian, _symeig_fake, cov_maxima,
+                      lrep, rrep, irep, orthogonal_permutations, izip_stretched,
+                      weighted_choice, bool_to_sign, sign_to_bool)
 from introspection import dig_node, get_node_size, get_node_size_str
 from quad_forms import QuadraticForm
 from covariance import (CovarianceMatrix, DelayCovarianceMatrix,
                         MultipleCovarianceMatrices,CrossCovarianceMatrix)
 from progress_bar import progressinfo
-from svn_revision import get_svn_revision
-from slideshow import (SLIDESHOW_STYLE, HTMLSlideShow, ImageHTMLSlideShow,
+from repo_revision import get_git_revision
+from slideshow import (BASIC_STYLE, SLIDESHOW_STYLE, HTMLSlideShow,
+                       IMAGE_SLIDESHOW_STYLE, ImageHTMLSlideShow,
                        SectionHTMLSlideShow, SectionImageHTMLSlideShow,
-                       image_slideshow)
+                       image_slideshow, show_image_slideshow)
 
 
 import mdp as _mdp
@@ -82,14 +85,19 @@ del quad_forms
 del covariance
 del progress_bar
 del slideshow
+del repo_revision
 
 __all__ = ['CovarianceMatrix', 'DelayCovarianceMatrix','CrossCovarianceMatrix',
            'MultipleCovarianceMatrices', 'QuadraticForm', 'SymeigException',
            'comb', 'cov2', 'dig_node', 'get_dtypes', 'get_node_size',
            'hermitian', 'inv', 'mult', 'mult_diag', 'nongeneral_svd',
-           'norm2', 'ordered_uniq', 'permute', 'pinv', 'progressinfo',
+           'norm2', 'permute', 'pinv', 'progressinfo',
            'random_rot', 'refcast', 'rotate', 'scast', 'solve', 'sqrtm',
-           'svd', 'symeig', 'symrand', 'timediff', 'uniq', 'matmult',
-           'get_svn_revision', 'SLIDESHOW_STYLE', 'HTMLSlideShow',
-           'ImageHTMLSlideShow', 'SectionHTMLSlideShow',
-           'SectionImageHTMLSlideShow', 'image_slideshow']
+           'svd', 'symeig', 'symrand', 'timediff', 'matmult',
+           'get_git_revision', 'SLIDESHOW_STYLE', 'HTMLSlideShow',
+           'ImageHTMLSlideShow', 'IMAGE_SLIDESHOW_STYLE',
+           'SectionHTMLSlideShow',
+           'SectionImageHTMLSlideShow', 'image_slideshow',
+           'lrep', 'rrep', 'irep',
+           'orthogonal_permutations', 'izip_stretched',
+           'weighted_choice', 'bool_to_sign', 'sign_to_bool']

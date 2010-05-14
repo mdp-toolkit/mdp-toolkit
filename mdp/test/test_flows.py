@@ -241,6 +241,15 @@ class FlowsTestSuite(unittest.TestSuite):
         except ValueError:
             assert_equal(len(flow), length)
 
+    def testFlow_append_node_copy(self):
+        # when appending a node to a flow,
+        # we don't want the flow to be a copy!
+        node1 = _BogusNode()
+        node2 = _BogusNode()
+        flow = mdp.Flow([node1])
+        flow += node2
+        assert flow[0] is node1
+        
     def testFlow_as_sum_of_nodes(self):
         node1 = _BogusNode()
         node2 = _BogusNode()
@@ -256,11 +265,28 @@ class FlowsTestSuite(unittest.TestSuite):
         assert type(flow) is mdp.Flow
         assert len(flow) == 4
 
+    def testFlowWrongItarableException(self):
+        samples = mdp.numx_rand.random((100,10))
+        labels = mdp.numx.arange(100)
+        flow = mdp.Flow([mdp.nodes.PCANode(), mdp.nodes.FDANode()])
+        try:
+            flow.train([[samples], [samples, labels]])
+            # correct line would be (note the second iterable):
+            #    flow.train([[[samples]], [[samples, labels]]])
+            # should trigger exception for missing train argument for FDANode 
+            err = "Flow did not raise FlowException for wrong iterable."
+            raise Exception(err)
+        except mdp.FlowException:
+            pass
+        try:
+            # try to give one argument too much!
+            flow.train([[[samples]], [[samples, labels, labels]]])
+            err = "Flow did not raise FlowException for wrong iterable."
+            raise Exception(err)
+        except mdp.FlowException:
+            pass
         
         
-        
-        
-    
     def testCheckpointFlow(self):
         lst = []
         # checkpoint function, it collects a '1' for each call

@@ -1,0 +1,9 @@
+include CHANGES
+include COPYING
+include COPYING.LESSER
+include COPYRIGHT
+include INSTALL
+include README
+include TODO
+include mdp/utils/slideshow.css
+include mdp/hinet/hinet.css

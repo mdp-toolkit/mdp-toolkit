@@ -69,19 +69,22 @@ classifiers = ["Development Status :: 5 - Production/Stable",
                "Topic :: Scientific/Engineering :: Mathematics"]
 
 
-setup(name = 'MDP', version = '2.5',
+setup(name = 'MDP', version = '2.6',
       author = 'Pietro Berkes, Niko Wilbert, and Tiziano Zito',
       author_email = 'berkes@brandeis.edu, mail@nikowilbert.de, tiziano.zito@bccn-berlin.de',
-      maintainer = 'Pietro Berkes, Niko Wilbert, and Tiziano Zito',
-      maintainer_email = 'berkes@brandeis.edu, mail@nikowilbert.de, tiziano.zito@bccn-berlin.de',
+      maintainer = 'Pietro Berkes, Rike-Benjamin Schuppner, Niko Wilbert, and Tiziano Zito',
+      maintainer_email = 'berkes@brandeis.edu, rike.schuppner@bccn-berlin.de, mail@nikowilbert.de, tiziano.zito@bccn-berlin.de',
       license = "http://www.gnu.org/licenses/lgpl.html",
       platforms = ["Any"],
       url = 'http://mdp-toolkit.sourceforge.net',
-      download_url = 'http://sourceforge.net/project/showfiles.php?group_id=116959',
+      download_url = 'http://sourceforge.net/projects/mdp-toolkit/files',
       description = short_description,
       long_description = long_description,
       classifiers = classifiers,
       packages = ['mdp', 'mdp.nodes', 'mdp.utils', 'mdp.hinet',
                   'mdp.test', 'mdp.demo', 'mdp.graph', 'mdp.contrib',
-                  'mdp.parallel'],
+                  'mdp.parallel', 'bimdp', 'bimdp.hinet', 'bimdp.inspection',
+                  'bimdp.nodes', 'bimdp.parallel', 'bimdp.test'],
+      package_data = {'mdp.hinet': ['hinet.css'],
+                      'mdp.utils': ['slideshow.css']}
       )

@@ -317,7 +317,7 @@ class SimpleIterable(object):
     def __init__(self, blocks):
         self.blocks = blocks
     def __iter__(self):
-# ...	        # this is a generator
+        # this is a generator
         for i in range(self.blocks):
             yield generate_some_data()
 # >>>
@@ -397,6 +397,19 @@ sfa_reloaded
 fl.close()
 import os
 os.remove('dummy.pic')
+class TestExtensionNode(mdp.ExtensionNode):
+    extension_name = "test"
+    def _execute(self):
+        return 0
+# ...
+class TestNode(mdp.Node):
+    def _execute(self):
+        return 1
+# ...
+class ExtendedTestNode(TestExtensionNode, TestNode):
+    pass
+# ...
+# >>>
 node1 = mdp.nodes.PCANode(input_dim=100, output_dim=10)
 node2 = mdp.nodes.SFANode(input_dim=100, output_dim=20)
 layer = mdp.hinet.Layer([node1, node2])
@@ -418,27 +431,31 @@ switchboard.execute(x)
 mdp.hinet.show_flow(flow)
 node1 = mdp.nodes.PCANode(input_dim=100, output_dim=10)
 node2 = mdp.nodes.SFA2Node(input_dim=10, output_dim=10)
-flow = node1 + node2
-n_data_chunks = 2
-data_iterables = [[mdp.numx_rand.random((200, 100))
-                   for _ in range(n_data_chunks)]
-                   for _ in range(2)]
-scheduler = mdp.parallel.ProcessScheduler(n_processes=2)
-parallel_flow = mdp.parallel.make_flow_parallel(flow)
-parallel_flow.train(data_iterables, scheduler=scheduler)
-scheduler.shutdown()
-node1 = mdp.parallel.ParallelPCANode(input_dim=100, output_dim=10)
-node2 = mdp.parallel.ParallelSFA2Node(input_dim=10, output_dim=10)
 parallel_flow = mdp.parallel.ParallelFlow([node1, node2])
 n_data_chunks = 2
 data_iterables = [[mdp.numx_rand.random((200, 100))
                    for _ in range(n_data_chunks)]
                    for _ in range(2)]
 scheduler = mdp.parallel.ProcessScheduler(n_processes=2)
+parallel_flow.train(data_iterables, scheduler=scheduler)
+scheduler.shutdown()
 try:
     parallel_flow.train(data_iterables, scheduler=scheduler)
 finally:
     scheduler.shutdown()
+# ...
+gc = mdp.nodes.GaussianClassifierNode()
+gc.train(mdp.numx_rand.random((50, 3)), +1)
+gc.train(mdp.numx_rand.random((50, 3)) - 0.8, -1)
+gc.train(mdp.numx_rand.random((50, 3)), [+1] * 50)
+test_data = mdp.numx.array([[0.1, 0.2, 0.1], [-0.1, -0.2, -0.1]])
+gc.label(test_data)
+# [1, -1]
+gc.prob(test_data)
+# [{-1: 0.21013407927789607, 1: 0.78986592072210393},
+# {-1: 0.99911458988539714, 1: 0.00088541011460285866}]
+gc.rank(test_data)
+# [[1, -1], [-1, 1]]
 p2 = mdp.numx.pi*2
 t = mdp.numx.linspace(0,1,10000,endpoint=0) # time axis 1s, samplerate 10KHz
 dforce = mdp.numx.sin(p2*5*t) + mdp.numx.sin(p2*11*t) + mdp.numx.sin(p2*13*t)
@@ -536,3 +553,16 @@ x, y, z, t = s_distr(n, hole=True)
 data = mdp.numx.array([x,y,z]).T
 lle_projected_data = mdp.nodes.LLENode(k, output_dim=2)(data)
 hlle_projected_data = mdp.nodes.HLLENode(k, output_dim=2)(data)
+import bimdp
+pca_node = bimdp.nodes.PCABiNode(node_id="pca")
+biflow = bimdp.BiFlow([pca_node])
+biflow["pca"]
+# PCABiNode(input_dim=None, output_dim=None, dtype=None, node_id="pca")
+samples = mdp.numx_rand.random((100,10))
+labels = mdp.numx.arange(100)
+flow = bimdp.BiFlow([mdp.nodes.PCANode(), bimdp.nodes.FDABiNode()])
+flow.train([[samples],[samples]], [None,[{"cl": labels}]])
+# git clone git://mdp-toolkit.git.sourceforge.net/gitroot/mdp-toolkit/mdp-toolkit
+# git clone git://mdp-toolkit.git.sourceforge.net/gitroot/mdp-toolkit/docs
+# git clone git://mdp-toolkit.git.sourceforge.net/gitroot/mdp-toolkit/examples
+# git clone git://mdp-toolkit.git.sourceforge.net/gitroot/mdp-toolkit/contrib

@@ -1,7 +1,8 @@
 import mdp
-from mdp import numx, numx_linalg, utils, Node, NodeException
+from mdp import numx, numx_linalg, utils, Node, ClassifierNode, NodeException
 
 import cPickle as pickle
+import pickle as real_pickle
 
 MAX_NUM = {numx.dtype('b'): 127,
            numx.dtype('h'): 32767,
@@ -220,8 +221,8 @@ class TimeFramesNode(Node):
         time_frames -- Number of delayed copies
         gap -- Time delay between the copies
         """
-        super(TimeFramesNode, self).__init__(input_dim, None, dtype)
         self.time_frames = time_frames
+        super(TimeFramesNode, self).__init__(input_dim, None, dtype)
         self.gap = gap
 
     def _get_supported_dtypes(self):
@@ -446,7 +447,32 @@ class NoiseNode(Node):
             return x+noise_mat
         elif self.noise_type == 'multiplicative':
             return x*(1.+noise_mat)
+
+    def save(self, filename, protocol = -1):
+        """Save a pickled serialization of the node to 'filename'.
+        If 'filename' is None, return a string.
+
+        Note: the pickled Node is not guaranteed to be upward or
+        backward compatible."""
+        if filename is None:
+            return real_pickle.dumps(self, protocol)
+        else:
+            # if protocol != 0 open the file in binary mode
+            if protocol != 0:
+                mode = 'wb'
+            else:
+                mode = 'w'
+            flh = open(filename, mode)
+            real_pickle.dump(self, flh, protocol)
+            flh.close()
         
+
+    def copy(self, protocol = -1):
+        """Return a deep copy of the node.
+        Protocol is the pickle protocol."""
+        as_str = real_pickle.dumps(self, protocol)
+        return real_pickle.loads(as_str)
+
         
 class NormalNoiseNode(mdp.Node):
     """Special version of NoiseNode for Gaussian additive noise.
@@ -479,13 +505,13 @@ class NormalNoiseNode(mdp.Node):
         return x + noise
 
 
-class GaussianClassifierNode(Node):
+class GaussianClassifierNode(ClassifierNode):
     """Perform a supervised Gaussian classification.
 
     Given a set of labelled data, the node fits a gaussian distribution
     to each class. Note that it is written as an analysis node (i.e., the
     execute function is the identity function). To perform classification,
-    use the 'classify' method. If instead you need the posterior
+    use the 'label' method. If instead you need the posterior
     probability of the classes given the data use the 'class_probabilities'
     method.
     """
@@ -495,7 +521,11 @@ class GaussianClassifierNode(Node):
 
     def _set_input_dim(self, n):
         self._input_dim = n
-        self.output_dim = n
+        self._output_dim = n
+
+    def _set_output_dim(self, n):
+        msg = "Output dim cannot be set explicitly!"
+        raise mdp.NodeException(msg)
 
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
@@ -504,11 +534,11 @@ class GaussianClassifierNode(Node):
     def is_invertible(self):
         return False
 
-    def _check_train_args(self, x, cl):
-        if isinstance(cl, (list, tuple, numx.ndarray)) and (
-            len(cl) != x.shape[0]):
+    def _check_train_args(self, x, labels):
+        if isinstance(labels, (list, tuple, numx.ndarray)) and (
+            len(labels) != x.shape[0]):
             msg = ("The number of labels should be equal to the number of "
-                   "datapoints (%d != %d)" % (len(cl), x.shape[0]))
+                   "datapoints (%d != %d)" % (len(labels), x.shape[0]))
             raise mdp.TrainingException(msg)
 
     def _update_covs(self, x, lbl):
@@ -516,24 +546,22 @@ class GaussianClassifierNode(Node):
             self.cov_objs[lbl] = utils.CovarianceMatrix(dtype=self.dtype)
         self.cov_objs[lbl].update(x)
 
-    def _train(self, x, cl):
-        # if cl is a number, all x's belong to the same class
-        if isinstance(cl, (list, tuple, numx.ndarray)):
-            # get all classes from cl
-            for lbl in  utils.uniq(cl):
-                x_lbl = numx.compress(cl==lbl, x, axis=0)
-                self._update_covs(x_lbl, lbl)
-        else:
-            self._update_covs(x, cl)
-
-    def train(self, x, cl):
+    def _train(self, x, labels):
         """
         Additional input arguments:
-        cl -- Can be a list, tuple or array of labels (one for each data point)
-              or a single label, in which case all input data is assigned to
-              the same class.
+        labels -- Can be a list, tuple or array of labels (one for each data point)
+                  or a single label, in which case all input data is assigned to
+                  the same class.
         """
-        super(GaussianClassifierNode, self).train(x, cl)
+         # if labels is a number, all x's belong to the same class
+        if isinstance(labels, (list, tuple, numx.ndarray)):
+            labels_ = numx.asarray(labels)
+            # get all classes from cl
+            for lbl in set(labels_):
+                x_lbl = numx.compress(labels_==lbl, x, axis=0)
+                self._update_covs(x_lbl, lbl)
+        else:
+            self._update_covs(x, labels)
 
     def _stop_training(self):
         self.labels = self.cov_objs.keys()
@@ -601,10 +629,15 @@ class GaussianClassifierNode(Node):
         tmp_tot = tmp_prob.sum(axis=1)
         tmp_tot = tmp_tot[:, numx.newaxis]
         return tmp_prob/tmp_tot
-        
-    def classify(self, x):
+ 
+    def _prob(self, x):
+        """Return the posterior probability of each class given the input in a dict."""
+
+        class_prob = self.class_probabilities(x)
+        return [dict(zip(self.labels, prob)) for prob in class_prob]
+
+    def _label(self, x):
         """Classify the input data using Maximum A-Posteriori."""
-        self._pre_execution_checks(x)
 
         class_prob = self.class_probabilities(x)
         winner = class_prob.argmax(axis=-1)

@@ -65,9 +65,10 @@ class FDANode(mdp.Node):
     def _train_means(self, x, cl):
         """Gather data to compute the means and number of elements."""
         if isinstance(cl, (list, tuple, numx.ndarray)):
-            for lbl in mdp.utils.uniq(cl):
+            labels_ = numx.asarray(cl)
+            for lbl in set(labels_):
                 # group for class
-                x_lbl = numx.compress(cl==lbl, x, axis=0)
+                x_lbl = numx.compress(labels_==lbl, x, axis=0)
                 self._update_means(x_lbl, lbl)
         else:
             self._update_means(x, cl)
@@ -101,10 +102,11 @@ class FDANode(mdp.Node):
         self._allcov.update(x)
         # if cl is a number, all x's belong to the same class
         if isinstance(cl, (list, tuple, numx.ndarray)):
+            labels_ = numx.asarray(cl)
             # get all classes from cl
-            for lbl in mdp.utils.uniq(cl):
+            for lbl in set(labels_):
                 # group for class
-                x_lbl = numx.compress(cl==lbl, x, axis=0)
+                x_lbl = numx.compress(labels_==lbl, x, axis=0)
                 self._update_SW(x_lbl, lbl)
         else:
             self._update_SW(x, cl)

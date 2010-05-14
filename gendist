@@ -1,12 +1,7 @@
 #!/bin/bash
-
 ./cleandist
-python -V
-python ./setup.py sdist --manifest-only
-mv MANIFEST MANIFEST2
-echo -ne 'CHANGES\nCOPYING\nCOPYING.LESSER\nCOPYRIGHT\nINSTALL\nTODO\n' > MANIFEST1
-ls mdp/demo/*py > MANIFEST3
-cat MANIFEST1 MANIFEST2 MANIFEST3 > MANIFEST
-rm -rf MANIFEST1 MANIFEST2 MANIFEST3
-python ./setup.py sdist --formats=zip,gztar
-python ./setup.py bdist_wininst
+python2.5 -V
+python2.5 ./setup.py sdist --manifest-only
+python2.5 ./setup.py sdist --formats=zip,gztar
+python2.5 ./setup.py bdist_wininst
+rm -rf MANIFEST

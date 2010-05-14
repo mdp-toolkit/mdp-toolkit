@@ -1,7 +1,9 @@
 import cPickle as _cPickle
 import inspect as _inspect
+
 import mdp
 from mdp import numx
+
 
 class NodeException(mdp.MDPException):
     """Base class for exceptions in Node subclasses."""
@@ -27,9 +29,6 @@ class IsNotInvertibleException(NodeException):
     pass
 
 
-# methods that can overwrite docs:
-DOC_METHODS = ['_train', '_stop_training', '_execute', '_inverse']
-
 class NodeMetaclass(type):
     """This Metaclass is meant to overwrite doc strings of methods like
     execute, stop_training, inverse with the ones defined in the corresponding
@@ -38,42 +37,56 @@ class NodeMetaclass(type):
     This makes it possible for subclasses of Node to document the usage
     of public methods, without the need to overwrite the ancestor's methods.
     """
+
+    # methods that can overwrite docs:
+    DOC_METHODS = ['_train', '_stop_training', '_execute', '_inverse',
+                   '_label', '_prob']
     
-    def __new__(mcl, classname, bases, members):
+    def __new__(cls, classname, bases, members):
         # select private methods that can overwrite the docstring
-        for privname in DOC_METHODS:
+        wrapper_names = []
+        priv_infos = []
+        for privname in cls.DOC_METHODS:
             if privname in members:
-                # the private method is present in the class
-                # inspect the private method
-                priv_info = mcl._get_infodict(members[privname])
+                priv_info = cls._get_infodict(members[privname])
                 # if the docstring is empty, don't overwrite it
                 if not priv_info['doc']:
                     continue
                 # get the name of the corresponding public method
                 pubname = privname[1:]
-                # if public method has been overwritten in this
-                # subclass, keep it
-                if pubname in members:
-                    continue
-                # look for public method by same name in ancestors
-                for base in bases:
-                    ancestor = base.__dict__
-                    if pubname in ancestor:
-                        # we found a method by the same name in the ancestor
-                        # add the class a wrapper of the ancestor public method
-                        # with docs, argument defaults, and signature of the
-                        # private method and name of the public method.
-                        priv_info['name'] = pubname
-                        members[pubname] = mcl._wrap_func(ancestor[pubname], 
-                                                          priv_info)
-                        break
-        return type.__new__(mcl, classname, bases, members)
-    
+                # If the public method has been overwritten in this
+                # subclass, then keep it.
+                # This is also important because we use super in the wrapper
+                # (so the public method in this class would be missed).
+                if pubname not in members:
+                    wrapper_names.append(pubname)
+                    priv_infos.append(priv_info)
+        new_cls = super(NodeMetaclass, cls).__new__(cls, classname,
+                                                    bases, members)
+        # now add the wrappers
+        for wrapper_name, priv_info in zip(wrapper_names, priv_infos):
+            # Note: super works because we never wrap in the defining class
+            wrapped_method = getattr(super(new_cls, new_cls), wrapper_name)
+            wrapped_info = cls._get_infodict(wrapped_method)
+            priv_info['name'] = wrapper_name
+            # Preserve the signature only if it does not end with kwargs
+            # (this is important for binodes).
+            # Note that this relies on the exact name 'kwargs', if this causes
+            # problems we could switch to looking for ** in the signature.
+            if not wrapped_info['argnames'][-1] == "kwargs":
+                priv_info['signature'] = wrapped_info['signature']
+                priv_info['argnames'] = wrapped_info['argnames']
+                priv_info['defaults'] = wrapped_info['defaults']
+            setattr(new_cls, wrapper_name,
+                    cls._wrap_method(priv_info, new_cls))
+        return new_cls
+         
     # The next two functions (originally called get_info, wrapper)
     # are adapted versions of functions in the
     # decorator module by Michele Simionato
     # Version: 2.3.1 (25 July 2008)
     # Download page: http://pypi.python.org/pypi/decorator
+    # Note: Moving these functions to utils would cause circular import.
     
     @staticmethod
     def _get_infodict(func):
@@ -119,7 +132,7 @@ class NodeMetaclass(type):
                     globals=func.func_globals, closure=func.func_closure)
     
     @staticmethod
-    def _wrap_func(original_func, wrapper_infodict):
+    def _wrap_function(original_func, wrapper_infodict):
         """Return a wrapped version of func.
         
         original_func -- The function to be wrapped.
@@ -136,6 +149,28 @@ class NodeMetaclass(type):
         wrapped_func.func_defaults = wrapper_infodict['defaults']
         wrapped_func.undecorated = wrapper_infodict
         return wrapped_func
+    
+    @staticmethod
+    def _wrap_method(wrapper_infodict, cls):
+        """Return a wrapped version of func.
+        
+        wrapper_infodict -- The infodict to be used for constructing the
+            wrapper.
+        cls -- Class to which the wrapper method will be added, this is used
+            for the super call.
+        """
+        src = ("lambda %(signature)s: " % wrapper_infodict+
+               "super(_wrapper_class_, _wrapper_class_)." +
+               "%(name)s(%(signature)s)" % wrapper_infodict)
+        wrapped_func = eval(src, {"_wrapper_class_": cls})
+        wrapped_func.__name__ = wrapper_infodict['name']
+        wrapped_func.__doc__ = wrapper_infodict['doc']
+        wrapped_func.__module__ = wrapper_infodict['module']
+        wrapped_func.__dict__.update(wrapper_infodict['dict'])
+        wrapped_func.func_defaults = wrapper_infodict['defaults']
+        wrapped_func.undecorated = wrapper_infodict
+        return wrapped_func
+
 
 
 class Node(object):
@@ -206,7 +241,7 @@ class Node(object):
             self._train_phase_started = False
             # this var is False if the complete training is finished
             self._training = True
-
+            
     ### properties
 
     def get_input_dim(self):
@@ -320,6 +355,10 @@ class Node(object):
     def _get_train_seq(self):
         return [(self._train, self._stop_training)]
 
+    def has_multiple_training_phases(self):
+        """Return True if the node has multiple training phases."""
+        return len(self._train_seq) > 1
+    
     ### Node states
     def is_training(self):
         """Return True if the node is in the training phase,
@@ -479,6 +518,11 @@ class Node(object):
         By default, subclasses should overwrite _train to implement their
         training phase. The docstring of the '_train' method overwrites this
         docstring.
+
+        Note: a subclass supporting multiple training phases should implement
+        the *same* signature for all the training phases and document the
+        meaning of the arguments in the '_train' method doc-string. Having
+        consistent signatures is a requirement to use the node in a flow.
         """
 
         if not self.is_trainable():
@@ -516,7 +560,7 @@ class Node(object):
         if self.get_remaining_train_phase() == 0:
             self._training = False
 
-    def execute(self, x, *args, **kargs):
+    def execute(self, x, *args, **kwargs):
         """Process the data contained in 'x'.
         
         If the object is still in the training phase, the function
@@ -529,9 +573,9 @@ class Node(object):
         overwrites this docstring.
         """
         self._pre_execution_checks(x)
-        return self._execute(self._refcast(x), *args, **kargs)
+        return self._execute(self._refcast(x), *args, **kwargs)
 
-    def inverse(self, y, *args, **kargs):
+    def inverse(self, y, *args, **kwargs):
         """Invert 'y'.
         
         If the node is invertible, compute the input x such that
@@ -542,12 +586,12 @@ class Node(object):
         overwrites this docstring.
         """
         self._pre_inversion_checks(y)
-        return self._inverse(self._refcast(y), *args, **kargs)
+        return self._inverse(self._refcast(y), *args, **kwargs)
 
-    def __call__(self, x, *args, **kargs):
+    def __call__(self, x, *args, **kwargs):
         """Calling an instance of Node is equivalent to call
         its 'execute' method."""
-        return self.execute(x, *args, **kargs)
+        return self.execute(x, *args, **kwargs)
 
     ###### adding nodes returns flows
 
@@ -605,6 +649,7 @@ class Node(object):
             _cPickle.dump(self, flh, protocol)
             flh.close()
 
+
 class Cumulator(Node):
     """A Cumulator is a Node whose training phase simply collects
     all input data. In this way it is possible to easily implement
@@ -629,3 +674,4 @@ class Cumulator(Node):
         """Transform the data list to an array object and reshape it."""
         self.data = numx.array(self.data, dtype = self.dtype)
         self.data.shape = (self.tlen, self.input_dim)
+        

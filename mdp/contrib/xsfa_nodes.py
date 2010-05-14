@@ -27,13 +27,13 @@ class XSFANode(mdp.Node):
     memory usage.
     
     If you need to debug training and/or execution of this node, the
-    suggested approach is to use the capabilities of mdp.binet. For example:
+    suggested approach is to use the capabilities of BiMDP. For example:
 
     >>> flow = mdp.Flow([XSFANode()])
-    >>> tr_filename = binet.show_training(flow=flow, data_iterators=x)
-    >>> ex_filename, out = binet.show_execution(flow, x=x)
+    >>> tr_filename = bimdp.show_training(flow=flow, data_iterators=x)
+    >>> ex_filename, out = bimdp.show_execution(flow, x=x)
 
-    this will run training and execution with binet inspection. Snapshots
+    this will run training and execution with bimdp inspection. Snapshots
     of the internal flow state for each training phase and execution step
     will be opened in a web brower and presented as a slideshow.
     
@@ -42,12 +42,6 @@ class XSFANode(mdp.Node):
     An Extension of Slow Feature Analysis for Nonlinear Blind Source Separation
     Journal of Machine Learning Research, submitted
     [pdf link follows]
-
-    Original code contributed by:
-      Henning Sprekeler
-      Laboratory of Computational Neuroscience Ecole Polytechnique Federal de
-      Lausanne (EPFL), Switzerland
-      henning.sprekeler@epfl.ch
     """
     def __init__(self, basic_exp=None, intern_exp=None, svd=False, verbose=False,
                  input_dim=None, output_dim=None, dtype=None):

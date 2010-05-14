@@ -1,0 +1,6 @@
+rm -f mdp_test.figleaf
+python test_coverage.py
+
+cd ..
+figleaf2html -d misc/coverage_html/ misc/mdp_test.figleaf
+cd misc

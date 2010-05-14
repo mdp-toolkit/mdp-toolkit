@@ -5,20 +5,28 @@ import mdp
 from mdp import numx as n
 import mdp.parallel as parallel
 import mdp.hinet as hinet
-from mdp import numx as n
-
-import testing_tools
 
 
-class TestParallelFlowNode(unittest.TestCase):
+class TestParallelHinetNodes(unittest.TestCase):
     """Tests for ParallelFlowNode."""
+    
+    def setUp(self):
+        if "parallel" in mdp.get_active_extensions():
+            self.set_parallel = False
+        else:
+            mdp.activate_extension("parallel")
+            self.set_parallel = True
+            
+    def tearDown(self):
+        if self.set_parallel:
+            mdp.deactivate_extension("parallel")
 
     def test_flownode(self):
         """Test ParallelFlowNode."""
-        flow = mdp.Flow([parallel.ParallelSFANode(output_dim=5),
+        flow = mdp.Flow([mdp.nodes.SFANode(output_dim=5),
                          mdp.nodes.PolynomialExpansionNode(degree=2),
-                         parallel.ParallelSFANode(output_dim=3)])
-        flownode = parallel.ParallelFlowNode(flow)
+                         mdp.nodes.SFANode(output_dim=3)])
+        flownode = mdp.hinet.FlowNode(flow)
         x = n.random.random([100,50])
         chunksize = 25
         chunks = [x[i*chunksize : (i+1)*chunksize] 
@@ -40,24 +48,6 @@ class TestParallelFlowNode(unittest.TestCase):
         """
         noisenode = mdp.nodes.NormalNoiseNode(input_dim=20*20, 
                                               noise_args=(0,0.0001))
-        sfa_node = parallel.ParallelSFANode(input_dim=20*20, output_dim=10)
-        switchboard = hinet.Rectangular2dSwitchboard(x_in_channels=100, 
-                                                     y_in_channels=100, 
-                                                     x_field_channels=20, 
-                                                     y_field_channels=20,
-                                                     x_field_spacing=10, 
-                                                     y_field_spacing=10)
-        flownode = parallel.ParallelFlowNode(mdp.Flow([noisenode, sfa_node]))
-        sfa_layer = parallel.ParallelCloneLayer(flownode, 
-                                                switchboard.output_channels)
-        flow = parallel.ParallelFlow([switchboard, sfa_layer])
-        data_iterables = [None,
-                          [n.random.random((10, 100*100)) for _ in range(3)]]
-        scheduler = parallel.Scheduler()
-        flow.train(data_iterables, scheduler=scheduler)
-        
-    def test_makeparallel(self):
-        """Test make_flow_parallel and unmake_flow_parallel for a hinet."""
         sfa_node = mdp.nodes.SFANode(input_dim=20*20, output_dim=10)
         switchboard = hinet.Rectangular2dSwitchboard(x_in_channels=100, 
                                                      y_in_channels=100, 
@@ -65,31 +55,21 @@ class TestParallelFlowNode(unittest.TestCase):
                                                      y_field_channels=20,
                                                      x_field_spacing=10, 
                                                      y_field_spacing=10)
-        flownode = hinet.FlowNode(mdp.Flow([sfa_node]))
-        sfa_layer = hinet.CloneLayer(flownode, switchboard.output_channels)
-        flow = mdp.Flow([switchboard, sfa_layer])
+        flownode = mdp.hinet.FlowNode(mdp.Flow([noisenode, sfa_node]))
+        sfa_layer = mdp.hinet.CloneLayer(flownode, 
+                                                switchboard.output_channels)
+        flow = parallel.ParallelFlow([switchboard, sfa_layer])
         data_iterables = [None,
-                          [n.random.random((50, 100*100)) for _ in range(3)]]
-        parallel_flow = parallel.make_flow_parallel(flow.copy())
+                          [n.random.random((10, 100*100)) for _ in range(3)]]
         scheduler = parallel.Scheduler()
-        parallel_flow.train(data_iterables, scheduler=scheduler)
-        flow.train(data_iterables)
-        reconstructed_flow = parallel.unmake_flow_parallel(parallel_flow)
-        x = mdp.numx.random.random((10, flow[0].input_dim))
-        y1 = abs(flow.execute(x))
-        y2 = abs(reconstructed_flow.execute(x))
-        testing_tools.assert_array_almost_equal(y1, y2)
+        flow.train(data_iterables, scheduler=scheduler)
         
-        
-class TestParallelLayer(unittest.TestCase):
-    """Tests for TestParallelLayer."""
-
     def test_layer(self):
         """Test Simple random test with three nodes."""
-        node1 = parallel.ParallelSFANode(input_dim=10, output_dim=5)
-        node2 = parallel.ParallelSFANode(input_dim=17, output_dim=3)
-        node3 = parallel.ParallelSFANode(input_dim=3, output_dim=1)
-        layer = parallel.ParallelLayer([node1, node2, node3])
+        node1 = mdp.nodes.SFANode(input_dim=10, output_dim=5)
+        node2 = mdp.nodes.SFANode(input_dim=17, output_dim=3)
+        node3 = mdp.nodes.SFANode(input_dim=3, output_dim=1)
+        layer = mdp.hinet.Layer([node1, node2, node3])
         flow = parallel.ParallelFlow([layer])
         data_iterables = [[n.random.random((10, 30)) for _ in range(3)]]
         scheduler = parallel.Scheduler()
@@ -100,8 +80,7 @@ def get_suite(testname=None):
     # this suite just ignores the testname argument
     # you can't select tests by name here!
     suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(TestParallelFlowNode))
-    suite.addTest(unittest.makeSuite(TestParallelLayer))
+    suite.addTest(unittest.makeSuite(TestParallelHinetNodes))
     return suite
             
 if __name__ == '__main__':

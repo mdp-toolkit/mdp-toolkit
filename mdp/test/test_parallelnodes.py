@@ -8,6 +8,7 @@ from testing_tools import assert_array_almost_equal, assert_almost_equal
 
 
 class TestParallelMDPNodes(unittest.TestCase):
+    """Test the parallel extension node classes."""
     
     def test_PCANode(self):
         """Test Parallel PCANode"""
@@ -36,33 +37,6 @@ class TestParallelMDPNodes(unittest.TestCase):
         y2 = parallel_pca_node.execute(x_test)
         assert_array_almost_equal(abs(y1), abs(y2), precision)
         
-    def test_WhiteningNode(self):
-        """Test Parallel WhiteningNode"""
-        precision = 6
-        x = numx_rand.random([100,10])
-        x_test = numx_rand.random([20,10])
-        # set different variances (avoid numerical errors)
-        x *= numx.arange(1,11)
-        x_test *= numx.arange(1,11)
-        pca_node = mdp.nodes.WhiteningNode()
-        parallel_pca_node = parallel.ParallelWhiteningNode()
-        chunksize = 25
-        chunks = [x[i*chunksize : (i+1)*chunksize] 
-                    for i in range(len(x)/chunksize)]
-        for chunk in chunks:
-            pca_node.train(chunk)
-            forked_node = parallel_pca_node.fork()
-            forked_node.train(chunk)
-            parallel_pca_node.join(forked_node)
-        assert_array_almost_equal(pca_node._cov_mtx._cov_mtx, 
-                                  parallel_pca_node._cov_mtx._cov_mtx, 
-                                  precision)
-        pca_node.stop_training()
-        y1 = pca_node.execute(x_test)
-        parallel_pca_node.stop_training()
-        y2 = parallel_pca_node.execute(x_test)
-        assert_array_almost_equal(abs(y1), abs(y2), precision)
-
     def test_SFANode(self):
         """Test Parallel SFANode"""
         precision = 6
@@ -88,33 +62,6 @@ class TestParallelMDPNodes(unittest.TestCase):
         y1 = sfa_node.execute(x_test)
         parallel_sfa_node.stop_training()
         y2 = parallel_sfa_node.execute(x_test)
-        assert_array_almost_equal(abs(y1), abs(y2), precision)
-        
-    def test_SFA2Node(self):
-        """Test Parallel SFA2Node"""
-        precision = 6
-        x = numx_rand.random([100,10])
-        x_test = numx_rand.random([20,10])
-        # set different variances (avoid numerical errors)
-        x *= numx.arange(1,11)
-        x_test *= numx.arange(1,11)
-        sfa2_node = mdp.nodes.SFA2Node()
-        parallel_sfa2_node = parallel.ParallelSFA2Node()
-        chunksize = 25
-        chunks = [x[i*chunksize : (i+1)*chunksize] 
-                    for i in range(len(x)/chunksize)]
-        for chunk in chunks:
-            sfa2_node.train(chunk)
-            forked_node = parallel_sfa2_node.fork()
-            forked_node.train(chunk)
-            parallel_sfa2_node.join(forked_node)
-        assert_array_almost_equal(sfa2_node._cov_mtx._cov_mtx, 
-                                  parallel_sfa2_node._cov_mtx._cov_mtx, 
-                                  precision)
-        sfa2_node.stop_training()
-        y1 = sfa2_node.execute(x_test)
-        parallel_sfa2_node.stop_training()
-        y2 = parallel_sfa2_node.execute(x_test)
         assert_array_almost_equal(abs(y1), abs(y2), precision)
         
     def test_FDANode(self):
@@ -183,11 +130,63 @@ class TestParallelMDPNodes(unittest.TestCase):
         self.assertTrue(len(node.data_hist) < 1000)
         
 
+class TestDerivedParallelMDPNodes(unittest.TestCase):
+    """Test derived nodes that use the parallel node classes."""
+    
+    def setUp(self):
+        if "parallel" in mdp.get_active_extensions():
+            self.set_parallel = False
+        else:
+            mdp.activate_extension("parallel")
+            self.set_parallel = True
+            
+    def tearDown(self):
+        if self.set_parallel:
+            mdp.deactivate_extension("parallel")
+    
+    def test_WhiteningNode(self):
+        """Test Parallel WhiteningNode"""
+        x = numx_rand.random([100,10])
+        x_test = numx_rand.random([20,10])
+        # set different variances (avoid numerical errors)
+        x *= numx.arange(1,11)
+        x_test *= numx.arange(1,11)
+        node = mdp.nodes.WhiteningNode()
+        chunksize = 25
+        chunks = [x[i*chunksize : (i+1)*chunksize] 
+                    for i in range(len(x)/chunksize)]
+        for chunk in chunks:
+            forked_node = node.fork()
+            forked_node.train(chunk)
+            node.join(forked_node)
+        node.stop_training()
+        node.execute(x_test)
+
+    def test_SFA2Node(self):
+        """Test Parallel SFA2Node"""
+        x = numx_rand.random([100,10])
+        x_test = numx_rand.random([20,10])
+        # set different variances (avoid numerical errors)
+        x *= numx.arange(1,11)
+        x_test *= numx.arange(1,11)
+        node = mdp.nodes.SFA2Node()
+        chunksize = 25
+        chunks = [x[i*chunksize : (i+1)*chunksize] 
+                    for i in range(len(x)/chunksize)]
+        for chunk in chunks:
+            forked_node = node.fork()
+            forked_node.train(chunk)
+            node.join(forked_node)
+        node.stop_training()
+        node.execute(x_test)
+        
+
 def get_suite(testname=None):
     # this suite just ignores the testname argument
     # you can't select tests by name here!
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(TestParallelMDPNodes))
+    suite.addTest(unittest.makeSuite(TestDerivedParallelMDPNodes))
     return suite
             
 if __name__ == '__main__':
