@@ -13,7 +13,7 @@ import inspect
 import mdp
 from mdp import numx, numx_rand
 from mdp import ClassifierNode
-from mdp.nodes import (SignumClassifier, PerceptronClassifier, NaiveBayesClassifier,
+from mdp.nodes import (SignumClassifier, PerceptronClassifier,
                        SimpleMarkovClassifier, DiscreteHopfieldClassifier,
                        KMeansClassifier)
 from mdp.utils import weighted_choice
@@ -95,34 +95,6 @@ class ClassifierTestSuite(unittest.TestSuite):
         res = xor_Classifier.label(mdp.numx.array([[0, 0], [0, 1], [1, 0], [1, 1]]))
         assert res.tolist() != [-1, 1, 1, -1], "Something must be wrong here. XOR is impossible in a single-layered perceptron."
         
-    def testNaiveBayesClassifier(self):
-        ## This example needs some database and data in order to work
-        # I did not want to include my spam mails with this code, so
-        # it is here as an exercise for the reader. 
-        pass
-        
-        #import string
-        #import re
-        #bc = NaiveBayesClassifier()
-        #
-        #regex = re.compile('[%s]' % re.escape(string.punctuation))
-        #
-        #SPAMTEXT_ = SPAMTEXT.split("\n\n")
-        #NOSPAMTEXT_ = NOSPAMTEXT.split("\n\n")
-        #
-        #for SPAM in SPAMTEXT_:
-        #    spam = regex.sub(' ', SPAM).lower().split()
-        #    spamvals = mdp.numx.array([[hash(s) for s in spam]])
-        #    bc.train(spamvals, -1)
-        #   
-        #for NOSPAM in NOSPAMTEXT_:
-        #    nospam = regex.sub(' ', NOSPAM).lower().split()
-        #    nospamvals = mdp.numx.array([[hash(s) for s in nospam]])
-        #    bc.train(nospamvals, 1)
-        #
-        #text = regex.sub(' ', NOSPAMTEXT_[0]).lower().split()
-        #textvals = mdp.numx.array([[hash(s) for s in text]])
-        #print bc.prob(textvals)
 
     def testSimpleMarkovClassifier(self):
         mc = SimpleMarkovClassifier(dtype="unicode")
