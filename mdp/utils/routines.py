@@ -135,21 +135,6 @@ def norm2(v):
     
     return numx.sqrt((v*v).sum())
 
-def ordered_uniq(alist):
-    """Return the elements in alist without repetitions.
-    The order in the list is preserved.
-    Implementation by Raymond Hettinger, 2002/03/17"""
-    set_ = {}
-    return [set_.setdefault(e, e) for e in alist if e not in set_]
-
-def uniq(alist):
-    """Return the elements in alist without repetitions.
-    The order in the list is not preserved.
-    Implementation by Raymond Hettinger, 2002/03/17"""
-    set_ = {}
-    map(set_.__setitem__, alist, [])
-    return set_.keys()
-
 def cov2(x, y):
     """Compute the covariance between 2D matrices x and y.
     Complies with the old scipy.cov function: different variables

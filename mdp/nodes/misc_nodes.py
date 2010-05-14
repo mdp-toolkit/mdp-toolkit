@@ -555,9 +555,10 @@ class GaussianClassifierNode(ClassifierNode):
         """
          # if labels is a number, all x's belong to the same class
         if isinstance(labels, (list, tuple, numx.ndarray)):
+            labels_ = numx.asarray(labels)
             # get all classes from cl
-            for lbl in utils.uniq(labels):
-                x_lbl = numx.compress(labels==lbl, x, axis=0)
+            for lbl in set(labels_):
+                x_lbl = numx.compress(labels_==lbl, x, axis=0)
                 self._update_covs(x_lbl, lbl)
         else:
             self._update_covs(x, labels)

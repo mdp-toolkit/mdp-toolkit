@@ -1383,6 +1383,12 @@ class NodesTestSuite(unittest.TestSuite):
                                       node.inv_covs[lbl_idx],
                                       self.decimal-2)
 
+    def testGaussianClassifier_labellistbug(self):
+        gc = mdp.nodes.GaussianClassifierNode()
+        # this was failing as of MDP-2.5-309-gefa0f9d!
+        gc.train(mdp.numx_rand.random((50, 3)), [+1] * 50)
+        
+
     def testGaussianClassifier_classify(self):
         mean1 = [0., 2.]
         mean2 = [0., -2.]

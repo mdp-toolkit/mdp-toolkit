@@ -444,6 +444,18 @@ try:
 finally:
     scheduler.shutdown()
 # ...
+gc = mdp.nodes.GaussianClassifierNode()
+gc.train(mdp.numx_rand.random((50, 3)), +1)
+gc.train(mdp.numx_rand.random((50, 3)) - 0.8, -1)
+gc.train(mdp.numx_rand.random((50, 3)), [+1] * 50)
+test_data = mdp.numx.array([[0.1, 0.2, 0.1], [-0.1, -0.2, -0.1]])
+gc.label(test_data)
+# [1, -1]
+gc.prob(test_data)
+# [{-1: 0.21013407927789607, 1: 0.78986592072210393},
+# {-1: 0.99911458988539714, 1: 0.00088541011460285866}]
+gc.rank(test_data)
+# [[1, -1], [-1, 1]]
 p2 = mdp.numx.pi*2
 t = mdp.numx.linspace(0,1,10000,endpoint=0) # time axis 1s, samplerate 10KHz
 dforce = mdp.numx.sin(p2*5*t) + mdp.numx.sin(p2*11*t) + mdp.numx.sin(p2*13*t)
