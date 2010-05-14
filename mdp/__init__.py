@@ -150,7 +150,7 @@ import parallel
 # import test functions:
 from test import test
 
-__version__ = '2.6'
+__version__ = '2.7'
 __revision__ = utils.get_git_revision()
 __authors__ = 'Pietro Berkes, Rike-Benjamin Schuppner, Niko Wilbert, and Tiziano Zito'
 __copyright__ = '(c) 2003-2010 Pietro Berkes, Rike-Benjamin Schuppner, Niko Wilbert, Tiziano Zito'
