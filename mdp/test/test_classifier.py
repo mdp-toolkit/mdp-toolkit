@@ -12,10 +12,24 @@ import inspect
 
 import mdp
 from mdp import numx, numx_rand
+from mdp import ClassifierNode
 from mdp.nodes import (SignumClassifier, PerceptronClassifier, NaiveBayesClassifier,
                        SimpleMarkovClassifier, DiscreteHopfieldClassifier,
                        KMeansClassifier)
 from mdp.utils import weighted_choice
+
+def _sigmoid(t):
+    return 1.0 / (1.0 + numx.exp(-t))
+
+class _BogusClassifier(ClassifierNode):
+    def is_trainable(self):
+        return False
+    def _label(self, x):
+        return [r[0] for r in self.rank(x)]
+    def _prob(self, x):
+        return [{-1: _sigmoid(sum(xi)), \
+                  1: 1 - _sigmoid(sum(xi))} for xi in x]
+
 
 class ClassifierTestSuite(unittest.TestSuite):
     def __init__(self, testname=None):
@@ -40,7 +54,17 @@ class ClassifierTestSuite(unittest.TestSuite):
                 descr = 'Test '+(meth.__name__[4:]).replace('_',' ')
                 self.addTest(unittest.FunctionTestCase(meth,
                              description=descr))
-                
+    
+    def testClassifierNode_ranking(self):
+        bc = _BogusClassifier()
+        test_data = numx_rand.random((30, 20)) - 0.5
+        for r, p in zip(bc.rank(test_data), bc.prob(test_data)):
+            # check that the ranking order is correct
+            assert p[r[0]] >= p[r[1]], "Rank returns labels in incorrect order"
+            # check that the probabilities sum up to 100
+            assert 0.999 < p[r[0]] + p[r[1]] < 1.001
+        
+    
     def testSignumClassifier(self):
         c = SignumClassifier()
         res = c.label(mdp.numx.array([[1, 2, -3, -4], [1, 2, 3, 4]]))

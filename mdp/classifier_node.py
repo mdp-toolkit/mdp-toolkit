@@ -52,7 +52,7 @@ class ClassifierNode(Node):
         prob = self.prob(x)
         for p in prob:
             ranking = [(k, v) for k, v in p.items() if v > threshold]
-            ranking.sort(key=operator.itemgetter(1))
+            ranking.sort(key=operator.itemgetter(1), reverse=True)
             ranking = map(operator.itemgetter(0), ranking)
             all_ranking.append(ranking)
         return all_ranking
