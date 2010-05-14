@@ -1,6 +1,6 @@
 import mdp
 import os
-from subprocess import Popen, PIPE
+from subprocess import Popen, PIPE, STDOUT
 
 def get_git_revision():
     """When mdp is run from inside a git repository, this function 
@@ -17,7 +17,11 @@ def get_git_revision():
         # --tags ensures that most revisions have a name even without
         # annotated tags
         command = ["git", "describe", "--tags"]
-        revision = Popen(command, stdout=PIPE, cwd=mdp_dir).communicate()[0].strip()
+        proc = Popen(command, stdout=PIPE, stderr=STDOUT, cwd=mdp_dir)
+        exit_status = proc.wait()
+        # only get the revision if command succeded
+        if exit_status == 0:
+            revision = proc.stdout.read().strip()
     except OSError:
         pass
     return revision
