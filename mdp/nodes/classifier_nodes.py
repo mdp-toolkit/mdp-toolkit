@@ -240,16 +240,19 @@ class DiscreteHopfieldClassifier(ClassifierNode):
 
 
 class KMeansClassifier(ClassifierNode):
-    def __init__(self, num_clusters, input_dim=None, dtype=None):
-        """Simple classifier for K-Means clustering.
+    def __init__(self, num_clusters, max_iter=10000, input_dim=None, dtype=None):
+        """Employs K-Means Clustering for a given number of centroids.
         
         num_clusters -- number of centroids to use = number of clusters
+        max_iter     -- if the algorithm does not reach convergence (for some
+                        numerical reason), stop after max_iter iterations
         """
         super(KMeansClassifier, self).__init__(input_dim, None, dtype)
         self._num_clusters = num_clusters
         self.data = []
         self.tlen = 0
         self._centroids = None
+        self.max_iter = max_iter
     
     def _train(self, x):
         # append all data
@@ -268,7 +271,7 @@ class KMeansClassifier(ClassifierNode):
         else:
             centroids = self._centroids
         
-        while True:
+        for step in xrange(self.max_iter):
             # list of (sum_position, num_clusters)
             new_centroids = [(0, 0)] * len(centroids)
             # cluster
