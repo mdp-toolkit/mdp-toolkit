@@ -26,7 +26,9 @@ During release:
 - short/long description should go: on SF.net description, tutorial,
   home page, modules __init__, software.incf.net.
 - generate installers and source packages and test them
-- tag release in git
+- create a release notes file
+- tag release in git (tag both mdp-toolkit and docs repos)
+- push the tag git push --tags
 - update on SF.net:
   release files: 
     - sftp username,mdp-toolkit@frs.sourceforge.net
@@ -34,9 +36,12 @@ During release:
     - create a new directory for the release, for example for release 2.6:
        mkdir 2.6
        cd 2.6
-    - upload the files there!
-       lcd XXX
-       put xxx
+    - upload the files there: 
+      file to upload are: .tar.gz, .zip, .exe, tutorial, release notes file
+    - login to sourceforge, go to "Project Admin/File Manager", select the 
+      new created directory, select the release notes file and tag it as "release note", 
+      associate it with the other files
+    - more info: https://sourceforge.net/apps/trac/sourceforge/wiki/Release%20files%20for%20download
   web: 
   cd mdp_html/html/
   rsync -av --delete-after . username,mdp-toolkit@web.sourceforge.net:/home/groups/m/md/mdp-toolkit/htdocs/
