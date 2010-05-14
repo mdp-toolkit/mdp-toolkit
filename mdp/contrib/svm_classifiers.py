@@ -9,8 +9,6 @@ from itertools import count
 """
 
 
-
-
 class _LabelNormalizer(object):
     """This class provides a transparent mapping from arbitrary labels
     to a set of well-defined integers.
@@ -22,6 +20,7 @@ class _LabelNormalizer(object):
         if mode is None:
             mode = "id"
         if mode == "id":
+            # don't do anything.
             self.normalize = self._id
             self.revert = self._id
             return

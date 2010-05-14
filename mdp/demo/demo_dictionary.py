@@ -28,7 +28,8 @@ def show_available_dicts():
             pass
 
     try:
-        possible_dicts = subprocess.Popen(["locate", ".dic"], stdout=subprocess.PIPE).stdout
+        possible_dicts = subprocess.Popen(["locate", ".dic"],
+                                          stdout=subprocess.PIPE).stdout
     except OSError:
         raise NotImplementedError("Sorry, you need to have ‘locate’ on your system.")
     
@@ -55,8 +56,8 @@ def show_available_dicts():
 
 
 class DictionaryDemo():
-    """This demo generates words from a selected dictionary by calculating the transition
-probabilities from two consecutive letters to the next.
+    """This demo generates words from a selected dictionary by calculating
+    the transition probabilities from two consecutive letters to the next.
     """
     def __init__(self, dictionary, correlation, verbose=False):
         self._correlation = correlation
@@ -85,7 +86,8 @@ probabilities from two consecutive letters to the next.
         
         if self._verbose:
             print "Start learning from ‘%s’." % self._dictionary
-        for num, word in mdp.utils.progressinfo(enumerate(dictfile), file_len(self._dictionary)):
+        for num, word in mdp.utils.progressinfo(enumerate(dictfile),
+                                                file_len(self._dictionary)):
             # transform input to our needs
             #if num == 100: break
             
@@ -112,7 +114,9 @@ probabilities from two consecutive letters to the next.
                 for p in prob:
                     for k, v in p.items():
                         if v:
-                            print "".join(feature).replace(" ", "_"), "->", k.replace(" ", "_"), "(", ("%7.3f %%" % (v * 100)), ")"
+                            print "".join(feature).replace(" ", "_"), \
+                                  "->", k.replace(" ", "_"), \
+                                  "(", ("%7.3f %%" % (v * 100)), ")"
     
     def get_words(self, num_words):
         for _ in range(num_words):
@@ -129,11 +133,13 @@ if __name__ == '__main__':
     parser = OptionParser("usage: %prog [options] dictionary")
     
     parser.add_option("-c", "--correlation",
-                      help="The amount of correlation between the letters.", default=2, type=int)
+                      help="The amount of correlation between the letters.",
+                      default=2, type=int)
     parser.add_option("-n", "--number", dest="num_words",
                       help="The number of examples.", default=20, type=int)
-    parser.add_option("-q", "--quiet", dest="verbose",
-                      action="store_false", help=u"Don’t give any statistical information.", default=True)
+    parser.add_option("-q", "--quiet", dest="verbose", action="store_false", 
+                      help=u"Don’t give any statistical information.",
+                      default=True)
     parser.epilog = "If no dictionary is given, a list of possible dictionaries is produced."
 
     (options, args) = parser.parse_args()

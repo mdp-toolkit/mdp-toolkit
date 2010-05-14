@@ -6,13 +6,21 @@ from svm_classifiers import _SVMClassifier, _LabelNormalizer
 import svm as libsvm
 
 class LibSVMClassifier(_SVMClassifier):
-
+    """
+    The LibSVMClassifier class acts as a wrapper around the LibSVM library
+    for support vector machines.
+        
+    Information to the parameters can be found on
+    http://www.csie.ntu.edu.tw/~cjlin/libsvm/
+    """
+    # The kernels and classifiers which LibSVM allows.
     kernels = ["RBF", "LINEAR", "POLY", "SIGMOID"]
     classifiers = ["C_SVC", "NU_SVC", "ONE_CLASS", "EPSILON_SVR", "NU_SVR"]
 
     def __init__(self, probability=True, input_dim=None, dtype=None):
         """
-        probability -- Must be set to True, if algorithms based on probability shall be used.
+        probability -- Must be set to True, if algorithms based on probability
+                       shall be used.
         """        
         self.kernel_type = libsvm.RBF
         self._probability = probability
@@ -20,6 +28,13 @@ class LibSVMClassifier(_SVMClassifier):
         super(LibSVMClassifier, self).__init__(input_dim=input_dim, dtype=dtype)
 
     def set_classifier(self, classifier):
+        """
+        Sets the classifier.
+        
+        classifier -- A string with the name of the classifier which 
+                      should be used. Possible values are in 
+                      self.classifiers
+        """
         if classifier.upper() in self.classifiers:
             self.classifier_type = getattr(libsvm, classifier.upper())
         else:
@@ -27,6 +42,13 @@ class LibSVMClassifier(_SVMClassifier):
             raise TypeError(msg)
 
     def set_kernel(self, kernel):
+        """
+        Sets the kernel.
+        
+        kernel     -- A string with the name of the classifier which 
+                      should be used. Possible values are in 
+                      self.kernels
+        """
         if kernel.upper() in self.kernels:
             self.kernel_type = getattr(libsvm, kernel.upper())
         else:

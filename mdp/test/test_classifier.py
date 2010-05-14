@@ -93,7 +93,8 @@ class ClassifierTestSuite(unittest.TestSuite):
             xor_Classifier.train(mdp.numx.array([[0, 0], [1, 1]]), -1)
             xor_Classifier.train(mdp.numx.array([[0, 1], [1, 0]]), 1)
         res = xor_Classifier.label(mdp.numx.array([[0, 0], [0, 1], [1, 0], [1, 1]]))
-        assert res.tolist() != [-1, 1, 1, -1], "Something must be wrong here. XOR is impossible in a single-layered perceptron."
+        assert res.tolist() != [-1, 1, 1, -1], \
+            "Something must be wrong here. XOR is impossible in a single-layered perceptron."
         
 
     def testSimpleMarkovClassifier(self):
@@ -121,11 +122,12 @@ class ClassifierTestSuite(unittest.TestSuite):
                         prob_sum += v
                         if v:
                             num_transitions += 1
-                            #print "".join(feature).replace(" ", "_"), "->", k, "(", v, ")"
+
                 assert abs(prob_sum - 1.0) < 1e-5
         
         # calculate the number of transitions (the negative set deletes the artefact of two spaces)
-        trans = len(set((zip("  ".join(text.split()) + " ", " " + "  ".join(text.split())))) - set([(' ', ' ')]))
+        trans = len(set((zip("  ".join(text.split()) + " ", \
+                             " " + "  ".join(text.split())))) - set([(' ', ' ')]))
         assert num_transitions == trans
         
         letters_following_e = [' ', 'r', 't', 'i']

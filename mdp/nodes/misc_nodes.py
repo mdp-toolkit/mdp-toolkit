@@ -534,11 +534,11 @@ class GaussianClassifierNode(ClassifierNode):
     def is_invertible(self):
         return False
 
-    def _check_train_args(self, x, cl):
-        if isinstance(cl, (list, tuple, numx.ndarray)) and (
-            len(cl) != x.shape[0]):
+    def _check_train_args(self, x, labels):
+        if isinstance(labels, (list, tuple, numx.ndarray)) and (
+            len(labels) != x.shape[0]):
             msg = ("The number of labels should be equal to the number of "
-                   "datapoints (%d != %d)" % (len(cl), x.shape[0]))
+                   "datapoints (%d != %d)" % (len(labels), x.shape[0]))
             raise mdp.TrainingException(msg)
 
     def _update_covs(self, x, lbl):
@@ -546,21 +546,21 @@ class GaussianClassifierNode(ClassifierNode):
             self.cov_objs[lbl] = utils.CovarianceMatrix(dtype=self.dtype)
         self.cov_objs[lbl].update(x)
 
-    def _train(self, x, cl):
+    def _train(self, x, labels):
         """
         Additional input arguments:
-        cl -- Can be a list, tuple or array of labels (one for each data point)
-              or a single label, in which case all input data is assigned to
-              the same class.
+        labels -- Can be a list, tuple or array of labels (one for each data point)
+                  or a single label, in which case all input data is assigned to
+                  the same class.
         """
-         # if cl is a number, all x's belong to the same class
-        if isinstance(cl, (list, tuple, numx.ndarray)):
+         # if labels is a number, all x's belong to the same class
+        if isinstance(labels, (list, tuple, numx.ndarray)):
             # get all classes from cl
-            for lbl in  utils.uniq(cl):
-                x_lbl = numx.compress(cl==lbl, x, axis=0)
+            for lbl in utils.uniq(labels):
+                x_lbl = numx.compress(labels==lbl, x, axis=0)
                 self._update_covs(x_lbl, lbl)
         else:
-            self._update_covs(x, cl)
+            self._update_covs(x, labels)
 
     def _stop_training(self):
         self.labels = self.cov_objs.keys()

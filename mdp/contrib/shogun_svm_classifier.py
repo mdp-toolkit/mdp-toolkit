@@ -7,8 +7,8 @@ import shogun.Kernel as sgKernel
 import shogun.Features as sgFeatures
 import shogun.Classifier as sgClassifier
 
-# We need to have at least shogun 0.9, as we rely on
-# shogun's CClassifier::classify() method.
+# We need to have at least SHOGUN 0.9, as we rely on
+# SHOGUN's CClassifier::classify() method.
 # (It makes our code much nicer, by the way.)
 #
 try:
@@ -17,13 +17,13 @@ except AttributeError:
     version = ""
 
 if not (version.startswith('v0.9') or version.startswith('v1.')):
-    msg = "We need at least shogun version 0.9."
+    msg = "We need at least SHOGUN version 0.9."
     raise ImportError(msg)
 
 
 # maybe integrate to the class
 def is_shogun_classifier(test_classifier):
-    """Check, if a class is a subclass of a shogun classifier."""
+    """Check, if a class is a subclass of a SHOGUN classifier."""
     try:
         return issubclass(test_classifier, sgClassifier.Classifier)
     except (TypeError, NameError):
@@ -84,15 +84,17 @@ class Classifier(object):
         self._instance = None
         
     def set_classifier(self, classifier, args=None):
-        """Sets and initialises the classifier. If a classifier is reset by the user, 
-        the parameters will have to be set again.
-        'classifier' can be a string, a subclass of shogun.Classifier or an instance of such
-        a class.
-        Note that some classifiers require initialisation arguments while others don't.
-        Also note that neither labels nor feature vectors should be given with 'args'. 
+        """Sets and initialises the classifier. If a classifier is reset
+        by the user, the parameters will have to be set again.
+        'classifier' can be a string, a subclass of shogun.Classifier
+        or an instance of such a class.
+        Note that some classifiers require initialisation arguments
+        while others don't. Also note that neither labels nor feature
+        vectors should be given with 'args'. 
         
-        classifier -- the shogun classifier to use
-        args -- the list of arguments needed for the shogun constructor method of the classifier
+        classifier -- the SHOGUN classifier to use
+        args       -- the list of arguments needed for the SHOGUN
+                      constructor method of the classifier
         """
         if args is None:
             args = []
@@ -148,7 +150,7 @@ class Classifier(object):
             
     
     def classifier_type(self):
-        """Returns the shogun classifier type as a string."""
+        """Returns the SHOGUN classifier type as a string."""
         return shogun_classifier_types[self._instance.get_classifier_type()]
     
     def set_param(self, param, *value):
@@ -186,7 +188,7 @@ class Classifier(object):
                 raise mdp.NodeException(msg)
             #self.svm.set_kernel(self.kernel)
         else:
-            msg = "Sorry, shogun classifiers of this type are not yet implemented"
+            msg = "Sorry, SHOGUN classifiers of this type are not yet implemented"
             raise mdp.NodeException(msg)
         
         self._instance.set_labels(labels)
@@ -230,12 +232,19 @@ class Classifier(object):
 
 
 class ShogunSVMClassifier(_SVMClassifier):
-    """The ShogunSVMClassifier works as a wrapper class for accessing the shogun library
-    for support vector machines.
+    """The ShogunSVMClassifier works as a wrapper class for accessing
+    the SHOGUN machine learning toolbox for support vector machines.
     
     Most kernel machines and linear classifier should work with this class.
     
-    Currently, distance machines such as the K-means classifier are not supported yet.
+    Currently, distance machines such as the K-means classifier
+    are not supported yet.
+    
+    Information to paramters and additional options can be found on
+    http://www.shogun-toolbox.org/
+    
+    Note that some parts in this classifier might receive some
+    refinement in the future.
     """
 
     default_parameters = {
@@ -250,7 +259,9 @@ class ShogunSVMClassifier(_SVMClassifier):
         'GaussianKernel': [('size', 10), ('width', 1.9)],
         'LinearKernel': [],
         'PolyKernel': [('size', 10), ('degree', 3), ('inhomogene', True)],
-        'PyramidChi2': [('size',), ('num_cells2',), ('weights_foreach_cell2',), ('width_computation_type2',), ('width2',)],
+        'PyramidChi2': [('size',), ('num_cells2',),
+                        ('weights_foreach_cell2',), ('width_computation_type2',),
+                        ('width2',)],
         'SigmoidKernel': [('size', 10), ('gamma', 1), ('coef0', 0)]
     }
 
@@ -258,13 +269,16 @@ class ShogunSVMClassifier(_SVMClassifier):
                  classifier_options=None,
                  num_threads="autodetect", input_dim=None, dtype=None):
         """
+        Initialises a new ShogunSVMClassifier.
+        
         Keyword arguments:
             
             classifier  -- The classifier to use
             classifier_arguments -- Arguments needed for the constructor of the classifier
             classifier_options -- Options for the classifier
-            num_threads -- The number of threads, shogun should use
-                           can be set to "autodetect", then shogun will use the number of cpu cores.
+            num_threads -- The number of threads, SHOGUN should use
+                           can be set to "autodetect", then SHOGUN will use
+                           the number of CPU cores.
                            Attention: this could crash on windows
         
         """
@@ -304,23 +318,28 @@ class ShogunSVMClassifier(_SVMClassifier):
 
     def set_kernel(self, kernel_name, kernel_options=None):
         """Sets the Kernel along with options.
-        'options' must be a tuple with the arguments of the kernel constructor in shogun.
-        Therefore, in case of error, you will have to consult the shogun documentation.
+        'options' must be a tuple with the arguments of the kernel constructor
+        in SHOGUN.
+        We try to guess it right in many cases but in general, you will have to
+        consult the SHOGUN documentation.
         
         kernel    --    The kernel to use. Default parameters are specified for
                             "PolyKernel"
                             "GaussianKernel"
                             "LinearKernel"
                             "SigmoidKernel"
-                        Further kernels are possible if they are included in shogun
-                        and if kernel_options provides the correct init arguments.
-        kernel_options -- For known kernels, a dict specifying the options is possible,
-                          options not included take a default value.
-                          Unknown kernels need an ordered list of constructor arguments.
+                        Further kernels are possible if they are included in
+                        SHOGUN and if kernel_options provides the correct init
+                        arguments.
+        kernel_options -- For known kernels, a dict specifying the options is
+                          possible. Options not included take a default value.
+                          Unknown kernels need an ordered list of constructor
+                          arguments.
         """
         if kernel_options is None:
             kernel_options = {}
-        if kernel_name in ShogunSVMClassifier.kernel_parameters and not isinstance(kernel_options, list):
+        if kernel_name in ShogunSVMClassifier.kernel_parameters \
+            and not isinstance(kernel_options, list):
             default_opts = _OrderedDict(ShogunSVMClassifier.kernel_parameters[kernel_name])
             default_opts.update(kernel_options)
             options = default_opts.values
@@ -330,8 +349,9 @@ class ShogunSVMClassifier(_SVMClassifier):
             kernel = kernel_meth(*options)
         except NotImplementedError, msg:
             msg = ("Tried to call %s with arguments %s\n" %
-                   (kernel_meth.__module__ + '.' + kernel_meth.__name__, tuple(options).__repr__()) +
-                  "Got the following error message:\n" + msg.__str__())
+                   (kernel_meth.__module__ + '.' + kernel_meth.__name__,
+                    tuple(options).__repr__()) +
+                   "Got the following error message:\n" + msg.__str__())
             raise mdp.NodeException(msg) 
         self.classifier.kernel = kernel
     
