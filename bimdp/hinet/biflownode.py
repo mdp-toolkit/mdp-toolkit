@@ -3,8 +3,8 @@ import mdp
 import mdp.hinet as hinet
 n = mdp.numx
 
-from ..binode import BiNode, BiNodeException
-from ..biflow import BiFlow, BiFlowException
+from bimdp import BiNode, BiNodeException
+from bimdp import BiFlow, BiFlowException
 
 # TODO: add derived BiFlowNode which allow specification message flag for
 #    BiFlowNode to specify the internal target? Or hardwired target?

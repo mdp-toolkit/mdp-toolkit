@@ -1,6 +1,4 @@
-from __future__ import absolute_import
-
-from ..binode import BiNode, MSG_ID_SEP
+from bimdp import BiNode, MSG_ID_SEP
 
 
 class IdentityBiNode(BiNode):

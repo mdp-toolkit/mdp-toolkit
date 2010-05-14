@@ -13,7 +13,7 @@ import mdp
 from mdp import hinet
 from mdp import numx
 
-from ..biflow import BiFlow
+from bimdp import BiFlow
 
 from bihinet_translator import BIHINET_STYLE
 from trace_inspection import (

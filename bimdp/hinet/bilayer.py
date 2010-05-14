@@ -3,7 +3,7 @@ import mdp
 import mdp.hinet as hinet
 n = mdp.numx
 
-from ..binode import BiNode, BiNodeException
+from bimdp import BiNode, BiNodeException
 
 
 class CloneBiLayerException(BiNodeException):

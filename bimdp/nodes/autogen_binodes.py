@@ -5,7 +5,7 @@ Edit and run autogen.py instead to overwrite this module.
 """
 
 import mdp.nodes
-from ..binode import BiNode
+from bimdp import BiNode
 
 class AdaptiveCutoffBiNode(BiNode, mdp.nodes.AdaptiveCutoffNode):
     """Automatically created BiNode version of AdaptiveCutoffNode."""

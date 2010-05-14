@@ -4,9 +4,9 @@ Parallel version of bihinet.
 
 import mdp
 
-from ..binode import BiNode, BiNodeException
-from ..biflow import BiFlow
-from ..hinet import BiFlowNode, CloneBiLayer
+from bimdp import BiNode, BiNodeException
+from bimdp import BiFlow
+from bimdp.hinet import BiFlowNode, CloneBiLayer
 
 from parallelbinode import ParallelExtensionBiNode
 

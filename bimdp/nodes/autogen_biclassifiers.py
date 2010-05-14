@@ -5,7 +5,7 @@ Edit and run autogen.py instead to overwrite this module.
 """
 
 import mdp.nodes
-from ..biclassifier import BiClassifier
+from bimdp import BiClassifier
 
 class SignumBiClassifier(BiClassifier, mdp.nodes.SignumClassifier):
     """Automatically created BiClassifier version of SignumClassifier."""

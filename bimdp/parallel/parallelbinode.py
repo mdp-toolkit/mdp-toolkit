@@ -1,7 +1,7 @@
 
 import mdp.parallel as parallel
 
-from ..binode import BiNode
+from bimdp import BiNode
 
 
 class ParallelExtensionBiNode(BiNode, parallel.ParallelExtensionNode):
