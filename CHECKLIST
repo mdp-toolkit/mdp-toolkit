@@ -21,15 +21,18 @@ During release:
 - update TODO and COPYRIGHT (date)
 - generate tutorial using mdp_html/tutorial_src/genhtml
 - generate API documentation
+- change homepage color
+- generate home page
+- short/long description should go: on SF.net description, tutorial,
+  home page, modules __init__, software.incf.net.
+- generate installers and source packages and test them
+- tag release in git
 - update on SF.net:
   release files: sftp username@frs.sourceforge.net /uploads
   web: 
   cd mdp_html/html/
   rsync -av --delete-after . username,mdp-toolkit@web.sourceforge.net:/home/groups/m/md/mdp-toolkit/htdocs/
   more info: http://alexandria.wiki.sourceforge.net/Project+Web,+Shell,+VHOST+and+Database+Services
-- short/long description should go: on SF.net description, tutorial,
-  home page, modules __init__, software.incf.net.
-- change homepage color
 - post news to sourceforge.
 
 After release:

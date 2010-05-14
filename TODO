@@ -15,6 +15,8 @@ blockers for MDP 3.0
   found in the testFlowWrongItarableException test in test_flows.py
 - fix damned LLENode test for 2D shape embedded in 3D!
 - fix Shogun tests
+- find a proper way to generate API docs. epydoc is dead. currently we don't have
+  API docs for bimdp and for SVM nodes.
 
 optional for MDP 3.0
 ====================
@@ -40,15 +42,13 @@ beyond the next release
 - migration to Python 3 when the dependencies are ready
 - parallel: provide adapters for more sophisticated schedulers
 
-
-
-
 old list
 ========
 
 MDP 2.5 30.06.2009:
 
 - solve the svn revision tracking problem (see log comment on rev 468)
+ [this problem has *not* been superseeded by the git migration!]
 
 MDP 2.4 17.10.2008:
 
