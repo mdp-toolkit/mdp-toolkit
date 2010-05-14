@@ -19,6 +19,17 @@ from slideshow import (BASIC_STYLE, SLIDESHOW_STYLE, HTMLSlideShow,
 import mdp as _mdp
 import inspect as _inspect
 
+# to support python2.4
+try:
+    all([])
+    all = all
+except NameError:
+    def all(iterable):
+        for element in iterable:
+            if not element:
+                return False
+        return True
+
 try:
     # check if scipy.linalg.eigh is the new version
     # if yes, just wrap it
@@ -89,7 +100,7 @@ del repo_revision
 
 __all__ = ['CovarianceMatrix', 'DelayCovarianceMatrix','CrossCovarianceMatrix',
            'MultipleCovarianceMatrices', 'QuadraticForm', 'SymeigException',
-           'comb', 'cov2', 'dig_node', 'get_dtypes', 'get_node_size',
+           'all', 'comb', 'cov2', 'dig_node', 'get_dtypes', 'get_node_size',
            'hermitian', 'inv', 'mult', 'mult_diag', 'nongeneral_svd',
            'norm2', 'permute', 'pinv', 'progressinfo',
            'random_rot', 'refcast', 'rotate', 'scast', 'solve', 'sqrtm',
