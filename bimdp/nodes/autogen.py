@@ -24,7 +24,7 @@ AUTOMATIC_MDP_NODES = [
 
 # TODO: use a special wrapper for classifier nodes, these are currently ignored
 AUTOMATIC_MDP_CLASSIFIERS = [
-     'SignumClassifier', 'PerceptronClassifier', 'NaiveBayesClassifier',
+     'SignumClassifier', 'PerceptronClassifier',
      'SimpleMarkovClassifier', 'DiscreteHopfieldClassifier',
      'KMeansClassifier',
      # 'LibSVMClassifier', 'ShogunSVMClassifier'
