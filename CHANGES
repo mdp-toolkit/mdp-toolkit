@@ -1,5 +1,16 @@
 MDP-2.6:
 
+2010-05-14: fix spurious shogun warning.
+2010-05-14: applied patch from Rike to re-enable some of the working Shogun
+            tests.
+2010-05-14: fixed bug when using most recent numpy (1.4.1). utils.get_dtype
+            was failing when called with 'All' argument. most of MDP unittests
+            were failing!
+2010-05-14: added stylesheet files to setup script. only *.py files are
+            installed by default.
+2010-05-14: modified mechanism to get git revision in order to properly handle
+            the case when git fails. added stylesheets to MANIFEST template
+2010-05-14: several additions to distribution files
 2010-05-14: removed NaiveBayesClassifer from automatically generated nodes in
             bimdp. regenerated node wrappers
 2010-05-14: fixed bug in GaussianClassifierNode and FDANode when training with
