@@ -3,7 +3,7 @@ import mdp
 import mdp.hinet as hinet
 n = mdp.numx
 
-from ..binode import BiNode
+from bimdp import BiNode
 
         
 class BiSwitchboard(BiNode, hinet.Switchboard):

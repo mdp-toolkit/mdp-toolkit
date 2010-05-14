@@ -93,7 +93,7 @@ def _write_single_node(fid, node_class, modulename, base_classname="BiNode",
 
 def _write_node_file(fid, node_classes, modulename="mdp.nodes",
                      base_classname="BiNode", old_classname="Node",
-                     base_import="from ..binode import BiNode"):
+                     base_import="from bimdp import BiNode"):
     """Write code for BiMDP versions of normal node classes into module file.
     
     fid -- File handle of the module file.
@@ -133,7 +133,7 @@ if __name__ == "__main__":
                  for node_name in AUTOMATIC_MDP_CLASSIFIERS),
                 base_classname="BiClassifier",
                 old_classname="Classifier",
-                base_import="from ..biclassifier import BiClassifier")
+                base_import="from bimdp import BiClassifier")
     finally:
         autogen_file.close()
     print "wrote auto-generated code into file %s" % filename

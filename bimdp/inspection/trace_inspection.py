@@ -19,9 +19,9 @@ import numpy as n
 
 import mdp.hinet as hinet
 
-from ..binode import BiNode
-from ..biflow import BiFlow
-from ..hinet import BiFlowNode, CloneBiLayer
+from bimdp import BiNode
+from bimdp import BiFlow
+from bimdp.hinet import BiFlowNode, CloneBiLayer
 
 from bihinet_translator import BiHTMLTranslator
 from utils import robust_pickle
