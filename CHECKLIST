@@ -28,7 +28,15 @@ During release:
 - generate installers and source packages and test them
 - tag release in git
 - update on SF.net:
-  release files: sftp username,mdp-toolkit@frs.sourceforge.net /uploads
+  release files: 
+    - sftp username,mdp-toolkit@frs.sourceforge.net
+    - cd to /home/pfs/project/m/md/mdp-toolkit/mdp-toolkit/
+    - create a new directory for the release, for example for release 2.6:
+       mkdir 2.6
+       cd 2.6
+    - upload the files there!
+       lcd XXX
+       put xxx
   web: 
   cd mdp_html/html/
   rsync -av --delete-after . username,mdp-toolkit@web.sourceforge.net:/home/groups/m/md/mdp-toolkit/htdocs/
