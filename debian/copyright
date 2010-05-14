@@ -6,14 +6,16 @@ It was downloaded from http://mdp-toolkit.sourceforge.net
 Upstream Authors:
 
     Pietro Berkes <berkes@gatsby.ucl.ac.uk>
+    Rike-Benjamin Schuppner <rike.schuppner@bccn-berlin.de>,
     Niko Wilbert <mail@nikowilbert.de>
     Tiziano Zito <tiziano.zito@bccn-berlin.de>
 
 Copyright:
 
- 2003-2008, Pietro Berkes <berkes@gatsby.ucl.ac.uk>,
+ 2003-2010, Pietro Berkes <berkes@gatsby.ucl.ac.uk>,
+            Rike-Benjamin Schuppner <rike.schuppner@bccn-berlin.de>,
             Niko Wilbert <mail@nikowilbert.de>, and
-	        Tiziano Zito  <tiziano.zito@bccn-berlin.de>
+            Tiziano Zito  <tiziano.zito@bccn-berlin.de>
 
 License:
 
@@ -35,5 +37,6 @@ License:
 On Debian systems, the complete text of the GNU Lesser General
 Public License can be found in `/usr/share/common-licenses/LGPL-3'.
 
-The Debian packaging is (C) 2008, Yaroslav Halchenko <debian@onerussian.com>
-and is licensed under the GPL, see `/usr/share/common-licenses/GPL'.
+The Debian packaging is (C) 2008-2010, Yaroslav Halchenko
+<debian@onerussian.com> and is licensed under the same license as
+upstream sources.

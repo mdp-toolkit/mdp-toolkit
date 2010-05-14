@@ -3,7 +3,7 @@ Section: python
 Priority: optional
 Maintainer: Yaroslav Halchenko <debian@onerussian.com>
 Build-Depends: cdbs (>=0.4.49), debhelper (>= 5.0.38), python-support (>= 0.6), python-all
-Standards-Version: 3.8.1
+Standards-Version: 3.8.4
 Vcs-Browser: http://git.onerussian.com/?p=deb/mdp.git
 Vcs-git: http://git.onerussian.com/vcs/deb/mdp.git
 Homepage: http://mdp-toolkit.sourceforge.net/
@@ -11,8 +11,9 @@ Homepage: http://mdp-toolkit.sourceforge.net/
 Package: python-mdp
 Architecture: all
 Depends: ${misc:Depends}, ${python:Depends}, python-numpy
-Recommends: python-scipy
+Recommends: python-scipy, python-shogun-modular, python-libsvm
 Suggests: python-pp
+Enhances: python-mvpa
 Description: Modular toolkit for Data Processing
  Python data processing framework. Implemented algorithms include:
  Principal Component Analysis (PCA), Independent Component Analysis

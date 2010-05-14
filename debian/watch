@@ -1,13 +1,7 @@
 # Compulsory line, this is a version 3 file
 version=3
 
-# Disabled since doesn't work as of 03/21/2008
-#http://sf.net/mdp-toolkit/ MDP-(.*)\.tar\.gz debian dh_wraporig
-
-# This one finds it fine but can't download
-#opts=pasv ftp://upload.sourceforge.net/pub/sourceforge/m/md/mdp-toolkit/  MDP-([\d\.]+)\.tar\.gz debian dh_wraporig
-
 # Rely on numerical ID of the project
-http://sourceforge.net/project/showfiles.php?group_id=116959&package_id=127225  .*MDP-([\d\.]+)\.tar\.gz.* debian dh_wraporig
+http://sourceforge.net/project/showfiles.php?group_id=116959&package_id=127225  .*MDP-([\d\.]+)\.tar\.gz.*
 
 

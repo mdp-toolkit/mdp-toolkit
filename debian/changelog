@@ -1,3 +1,17 @@
+mdp (2.6-1) unstable; urgency=low
+
+  * New upstream release -- thanks!
+  * Adding upstream's git as the source remote for upstream sources
+  * Switching license for Debian packaging to match upstream license
+    (was under GPL before whenever upstream is LGPL)
+  * Updated upstream's copyright (new member and new years)
+  * Recommends python-shogun-modular and python-libsvm,
+    and Enhances python-mvpa
+  * Boosted policy complience to 3.8.4 (no additional changes)
+  * Ship upstream's CHANGES as a changelog, NEW_DEVELOPER_INFO.txt in docs.
+
+ -- Yaroslav Halchenko <debian@onerussian.com>  Fri, 14 May 2010 17:26:53 -0400
+
 mdp (2.5-1) unstable; urgency=low
 
   * New Upstream Version: can use symeig accepted as a part of scipy package,
