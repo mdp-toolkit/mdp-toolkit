@@ -195,7 +195,14 @@ def get_dtypes(typecodes_key):
     typecodes defined in numpy.typecodes[typecodes_key].
     E.g., get_dtypes('Float') = [dtype('f'), dtype('d'), dtype('g')].
     """
-    return [numx.dtype(c) for c in numx.typecodes[typecodes_key]]
+    types = []
+    for c in numx.typecodes[typecodes_key]:
+        try:
+            type_ = numx.dtype(c)
+            types.append(type_)
+        except TypeError:
+            pass
+    return types
 
 # the following functions and classes were part of the scipy_emulation.py file
 
