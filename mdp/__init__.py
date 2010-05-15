@@ -82,6 +82,7 @@ else:
 
 # try to load in sequence: scipy, numpy
 numx_description = None
+numx_exceptions = {}
 for _label in _NUMX_LABELS:
     try:
         if _label == 'scipy':
@@ -104,12 +105,20 @@ for _label in _NUMX_LABELS:
             numx_version = numpy.version.version
             del numpy
             break
-    except ImportError:
+    except ImportError, exc:
+        # collect exceptions in case we don't find anything
+        # should help in debugging
+        numx_exceptions[_label] = exc
         pass
         
 if numx_description is None:
-    raise ImportError("Could not find any of the numeric modules "
-                      "scipy or numpy")
+    msg = ("Could not import any of the numeric modules.\n"
+           "Import errors:\n"+'\n'.join([label+': '+str(exc) for label, exc in
+                                         numx_exceptions.items()]))
+    raise ImportError(msg)
+else:
+    # we have numx, we don't need the exceptions anymore
+    del numx_exceptions
 
 del _os, _NUMX_LABELS, _USR_LABEL, _label
 
