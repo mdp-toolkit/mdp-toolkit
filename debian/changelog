@@ -1,6 +1,7 @@
 mdp (2.6-1) unstable; urgency=low
 
-  * New upstream release -- thanks!
+  * New upstream release -- thanks!  Absorbed 5 patches from upstream git which
+    were done post-release to address issues which came up during packaging
   * Adding upstream's git as the source remote for upstream sources
   * Switching license for Debian packaging to match upstream license
     (was under GPL before whenever upstream is LGPL)
