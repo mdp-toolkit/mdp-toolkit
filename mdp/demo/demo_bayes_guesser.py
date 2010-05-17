@@ -152,7 +152,7 @@ class NaiveBayesClassifier(ClassifierNode):
 
 
 
-class LanguageGuesserDemo():
+class LanguageGuesserDemo(object):
     def __init__(self, files):
         self.nbc = NaiveBayesClassifier(dtype="unicode")
         self.trainNaiveBayesClassifier(files)
