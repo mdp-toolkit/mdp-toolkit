@@ -28,15 +28,15 @@ import traceback
 import warnings
 
 if __name__ == "__main__":
-    # shut off warnings of any kinds
-    warnings.filterwarnings("ignore", ".*")
-    # try to make sure that mdp can be imported by adding to sys.path
+    # try to make sure that mdp can be imported by adding it to sys.path
     mdp_path = os.path.realpath(__file__)
     mdp_index = mdp_path.rfind("mdp")
     if mdp_index:
-        mdp_path =  mdp_path[:mdp_index-1]
+        mdp_path = mdp_path[:mdp_index-1]
         # mdp path goes after sys.path
-        sys.path =  sys.path + [mdp_path]
+        sys.path.append(mdp_path)
+    # shut off warnings of any kinds
+    warnings.filterwarnings("ignore", ".*")
     
 import mdp
 from scheduling import Scheduler, cpu_count
@@ -229,7 +229,6 @@ def _process_run(cache_callable=True):
             traceback.print_exc()
             sys.stdout.flush()
             sys.exit()
-        
                     
 if __name__ == "__main__":
     # first argument is cache_callable flag
@@ -244,6 +243,3 @@ if __name__ == "__main__":
                      if sys_arg not in sys.path]
         sys.path = new_paths + sys.path
     _process_run(cache_callable=cache_callable)
-    
-    
-    

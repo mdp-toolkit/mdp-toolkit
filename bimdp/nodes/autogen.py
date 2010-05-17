@@ -22,7 +22,6 @@ AUTOMATIC_MDP_NODES = [
     'TimeFramesNode', 'WhiteningNode', 'XSFANode',
 ]
 
-# TODO: use a special wrapper for classifier nodes, these are currently ignored
 AUTOMATIC_MDP_CLASSIFIERS = [
      'SignumClassifier', 'PerceptronClassifier',
      'SimpleMarkovClassifier', 'DiscreteHopfieldClassifier',

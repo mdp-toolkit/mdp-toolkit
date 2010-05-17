@@ -271,7 +271,7 @@ class TestBiClassifierNode(unittest.TestCase):
 class TestIdentityBiNode(unittest.TestCase):
     
     def test_idnode(self):
-        """Perform a basic test on the IdentityBiNode.
+        """Test the IdentityBiNode.
         
         Instantiation is tested and it should perform like an id node, but 
         accept msg arguments.
