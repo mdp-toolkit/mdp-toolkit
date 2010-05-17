@@ -55,7 +55,7 @@ def show_available_dicts():
 
 
 
-class DictionaryDemo():
+class DictionaryDemo(object):
     """This demo generates words from a selected dictionary by calculating
     the transition probabilities from two consecutive letters to the next.
     """
