@@ -104,14 +104,12 @@ html {
 class TraceDebugException(Exception):
     """Exception for return the information when debug is True."""
     
-    def __init__(self, result, exception):
+    def __init__(self, result):
         """Store the information necessary to finish the tracing.
         
         result -- The result that would otherwise be returned by the method.
-        exception -- The original caufght exception.
         """
         self.result = result
-        self.exception = exception
 
 
 class TraceHTMLInspector(hinet.HiNetTranslator):
@@ -185,14 +183,16 @@ class TraceHTMLInspector(hinet.HiNetTranslator):
             biflownode.train(x=x, msg=msg, **kwargs)
             # reset is important for the following stop_training
             biflownode.bi_reset()
-        except Exception, exception:
+        # Note: this also catches legacy string exceptions (which are still
+        #    used in numpy, e.g. np.core.multiarray.error)
+        except:
             if debug:
                 # insert the error slide and encapsulate the exception
                 traceback.print_exc()
                 self._write_error_frame()
                 result = (self._slide_filenames, self._slide_node_ids,
                           None, None)
-                raise TraceDebugException(result=result, exception=exception) 
+                raise TraceDebugException(result=result) 
             else:
                 raise
         train_filenames = self._slide_filenames
@@ -201,14 +201,14 @@ class TraceHTMLInspector(hinet.HiNetTranslator):
         self._trace_name = trace_name + "_s"
         try:
             biflownode.stop_training(stop_msg)
-        except Exception, exception:
+        except:
             if debug:
                 # insert the error slide and encapsulate the exception
                 traceback.print_exc()
                 self._write_error_frame()
                 result = (train_filenames, train_node_ids,
                           self._slide_filenames, self._slide_node_ids)
-                raise TraceDebugException(result=result, exception=exception) 
+                raise TraceDebugException(result=result) 
             else:
                 raise 
         stop_filenames = self._slide_filenames
@@ -246,7 +246,9 @@ class TraceHTMLInspector(hinet.HiNetTranslator):
                 y = self._flow.execute(x, **kwargs)
             else:
                 y = self._flow.execute(x, msg, target, **kwargs)
-        except Exception, exception:
+        # Note: this also catches legacy string exceptions (which are still
+        #    used in numpy, e.g. np.core.multiarray.error)
+        except:
             if debug:
                 # insert the error slide and encapsulate the exception
                 traceback.print_exc()
@@ -255,7 +257,7 @@ class TraceHTMLInspector(hinet.HiNetTranslator):
                     self._section_ids = None
                 result = (self._slide_filenames, self._slide_node_ids,
                           self._section_ids)
-                raise TraceDebugException(result=result, exception=exception) 
+                raise TraceDebugException(result=result) 
             else:
                 raise
         self._undecorate_mode = True
