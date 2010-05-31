@@ -131,7 +131,7 @@ var $slideshow_id = function () {
             current_slide -= 1;
             that.updateSlide();
         }
-        else {
+        else if (loop_slideshow) {
             that.last();
         }
     }
