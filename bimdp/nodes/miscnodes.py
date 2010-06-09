@@ -49,6 +49,5 @@ class SenderBiNode(IdentityBiNode):
             msg["msg_x"] = x
         if no_x:
             x = None
-        else:
-            return x, msg
+        return x, msg
     
