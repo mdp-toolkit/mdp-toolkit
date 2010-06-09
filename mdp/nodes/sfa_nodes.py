@@ -32,7 +32,10 @@ class SFANode(Node):
         
         # SFA eigenvalues and eigenvectors, will be set after training
         self.d = None
-        self.sf = None
+        self.sf = None  # second index for outputs
+        self.avg = None
+        self._bias = None  # avg multiplied with sf
+        self.tlen = None
     
     def _get_supported_dtypes(self):
         return ['float32', 'float64']
@@ -94,18 +97,12 @@ class SFANode(Node):
         # store bias
         self._bias = mult(self.avg, self.sf)
 
-    def _execute(self, x, range=None):
+    def _execute(self, x, n=None):
         """Compute the output of the slowest functions.
-        if 'range' is a number, then use the first 'range' functions.
-        if 'range' is the interval=(i,j), then use all functions
-                   between i and j."""
-        if range:
-            if isinstance(range, (list, tuple)):
-                sf = self.sf[:, range[0]:range[1]]
-                bias = self._bias[:, range[0]:range[1]]
-            else:
-                sf = self.sf[:, 0:range]
-                bias = self._bias[:, 0:range]
+        If 'n' is an integer, then use the first 'n' slowest components."""
+        if n:
+            sf = self.sf[:, :n]
+            bias = self._bias[:n]
         else:
             sf = self.sf
             bias = self._bias
@@ -189,12 +186,10 @@ class SFA2Node(SFANode):
         if self.output_dim is None:
             self.output_dim = self._expnode.output_dim
 
-    def _execute(self, x, range=None):
+    def _execute(self, x, n=None):
         """Compute the output of the slowest functions.
-        if 'range' is a number, then use the first 'range' functions.
-        if 'range' is the interval=(i,j), then use all functions
-                   between i and j."""
-        return super(SFA2Node, self)._execute(self._expnode(x))
+        If 'n' is an integer, then use the first 'n' slowest components."""
+        return super(SFA2Node, self)._execute(self._expnode(x), n)
 
     def get_quadratic_form(self, nr):
         """

@@ -245,7 +245,7 @@ class PCANode(Node):
             return self.v.T
         return self.v
 
-    def _execute(self, x, n = None):
+    def _execute(self, x, n=None):
         """Project the input on the first 'n' principal components.
         If 'n' is not set, use all available components."""
         if n is not None:

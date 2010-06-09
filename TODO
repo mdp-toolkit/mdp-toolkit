@@ -1,6 +1,10 @@
 
 blockers for MDP 3.0
 ====================
+- add _bias attribute to PCANode to make it more consistent with SFA node.
+  Maybe one could even create a new AffineNode node as a base class for PCA,
+  SFA and other affine transformations?
+  This might also be a good opportunity for some more PEP8 cleanup.
 - add more classifier stuff, like a ClassifierFlow
 - make FDANode compatible with ClassifierNode?
 - finish SVM integration and port my existing shogun bindings to newest version (rike)

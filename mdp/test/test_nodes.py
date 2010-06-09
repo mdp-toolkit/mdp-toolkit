@@ -761,7 +761,15 @@ class NodesTestSuite(unittest.TestSuite):
         assert pca.output_dim == 2
         assert out.shape[1] == 2
         # check that explained variance is > 0.8 and < 1
-        assert (pca.explained_variance > 0.8 and pca.explained_variance < 1)    
+        assert (pca.explained_variance > 0.8 and pca.explained_variance < 1)
+        
+    def testPCANode_range_argument(self):
+        node = mdp.nodes.PCANode()
+        x = numx.random.random((100,10))
+        node.train(x)
+        node.stop_training()
+        y = node.execute(x, n=5)
+        assert y.shape[1] == 5  
     
     def testPCANode_SVD(self):
         # it should pass atleast the same test as PCANode
@@ -949,7 +957,14 @@ class NodesTestSuite(unittest.TestSuite):
         assert_array_almost_equal(abs(correlation),
                                   numx.eye(1), self.decimal-3)
         
-
+    def testSFANode_range_argument(self):
+        node = mdp.nodes.SFANode()
+        x = numx.random.random((100,10))
+        node.train(x)
+        node.stop_training()
+        y = node.execute(x, n=5)
+        assert y.shape[1] == 5
+    
     def testSFA2Node(self):
         dim = 10000
         freqs = [2*numx.pi*100.,2*numx.pi*500.]
@@ -980,8 +995,15 @@ class NodesTestSuite(unittest.TestSuite):
         correlation = mult(des_mat[:-1,:1].T,out[:-1,:1])/(dim-2)
         assert_array_almost_equal(abs(correlation),
                                   numx.eye(1), self.decimal-3)
-
-
+        
+    def testSFA2Node_range_argument(self):
+        node = mdp.nodes.SFA2Node()
+        x = numx.random.random((100,10))
+        node.train(x)
+        node.stop_training()
+        y = node.execute(x, n=5)
+        assert y.shape[1] == 5
+        
     def testSFA2Node_input_dim_bug(self):
         dim = 10000
         freqs = [2*numx.pi*100.,2*numx.pi*500.]
