@@ -3,6 +3,7 @@ import unittest
 import sys, os
 
 import test_binode
+import test_codecorator
 import test_biflow
 import test_bihinet
 import test_parallelbiflow
@@ -10,6 +11,7 @@ import test_parallelbihinet
 
 test_suites = {
     "binode": test_binode.get_suite(),
+    "codecorator": test_codecorator.get_suite(),
     "biflow": test_biflow.get_suite(),
     "bihinet": test_bihinet.get_suite(),
     "parallelbiflow": test_parallelbiflow.get_suite(),
