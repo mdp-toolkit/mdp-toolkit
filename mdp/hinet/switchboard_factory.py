@@ -34,7 +34,7 @@ class FactoryExtensionChannelSwitchboard(mdp.ExtensionNode,
     """Extension node for the assembly of channel switchboards.
     
     data attributes:
-    free_parameters -- List of paramters that do not depend on the previous
+    free_parameters -- List of parameters that do not depend on the previous
         layer. Note that there might still be restrictions imposed by the
         switchboard.
         By convention parameters that end with '_xy' can either be a single
