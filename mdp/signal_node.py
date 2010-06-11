@@ -1,5 +1,5 @@
 import cPickle as _cPickle
-import inspect as _inspect
+import inspect
 
 import mdp
 from mdp import numx
@@ -48,7 +48,7 @@ class NodeMetaclass(type):
         priv_infos = []
         for privname in cls.DOC_METHODS:
             if privname in members:
-                priv_info = cls._get_infodict(members[privname])
+                priv_info = cls._function_infodict(members[privname])
                 # if the docstring is empty, don't overwrite it
                 if not priv_info['doc']:
                     continue
@@ -67,67 +67,77 @@ class NodeMetaclass(type):
         for wrapper_name, priv_info in zip(wrapper_names, priv_infos):
             # Note: super works because we never wrap in the defining class
             wrapped_method = getattr(super(new_cls, new_cls), wrapper_name)
-            wrapped_info = cls._get_infodict(wrapped_method)
+            wrapped_info = cls._function_infodict(wrapped_method)
             priv_info['name'] = wrapper_name
-            # Preserve the signature only if it does not end with kwargs
+            # Preserve the signature only if it does not include kwargs
             # (this is important for binodes).
-            # Note that this relies on the exact name 'kwargs', if this causes
-            # problems we could switch to looking for ** in the signature.
-            if not wrapped_info['argnames'][-1] == "kwargs":
-                priv_info['signature'] = wrapped_info['signature']
-                priv_info['argnames'] = wrapped_info['argnames']
-                priv_info['defaults'] = wrapped_info['defaults']
+            if not wrapped_info['argspec'][2]:
+                priv_info['argspec'] = wrapped_info['argspec']
             setattr(new_cls, wrapper_name,
                     cls._wrap_method(priv_info, new_cls))
         return new_cls
-         
-    # The next two functions (originally called get_info, wrapper)
-    # are adapted versions of functions in the
-    # decorator module by Michele Simionato
-    # Version: 2.3.1 (25 July 2008)
-    # Download page: http://pypi.python.org/pypi/decorator
-    # Note: Moving these functions to utils would cause circular import.
+
+    # The following helper functions are placed here so that they can be
+    # used in other parts of MDP, without having to add them directly to
+    # the mdp base namespace.         
+    # Moving these helper functions to utils would also cause a
+    # circular import.
     
     @staticmethod
-    def _get_infodict(func):
-        """
-        Returns an info dictionary containing:
-        - name (the name of the function : str)
-        - argnames (the names of the arguments : list)
-        - defaults (the values of the default arguments : tuple)
-        - signature (the signature : str)
-        - doc (the docstring : str)
-        - module (the module name : str)
-        - dict (the function __dict__ : str)
+    def _argspec_to_signature(argspec):
+        """Return the signature string for the argspec.
         
-        >>> def f(self, x=1, y=2, *args, **kw): pass
-    
-        >>> info = getinfo(f)
-    
-        >>> info["name"]
-        'f'
-        >>> info["argnames"]
-        ['self', 'x', 'y', 'args', 'kw']
-        
-        >>> info["defaults"]
-        (1, 2)
-    
-        >>> info["signature"]
-        'self, x, y, *args, **kw'
+        argspec is the output of 'inspect.getargspec', the result string
+        is returned without parenthereses (e.g., 'self, x, a=None, **kwargs').
         """
-        regargs, varargs, varkwargs, defaults = _inspect.getargspec(func)
-        argnames = list(regargs)
+        args, varargs, varkwargs, defaults = argspec
+        if defaults:
+            n_defaults = len(defaults)
+            n_non_defaults = len(args) - len(defaults)
+            signature = ", ".join(args[:-n_defaults])
+            signature += "".join([", %s=%s" %
+                                  (args[n_non_defaults+i], defaults[i])
+                                  for i in range(n_defaults)])
+        else:
+            signature = ", ".join(args)
         if varargs:
-            argnames.append(varargs)
+            signature += ", *%s" % varargs
         if varkwargs:
-            argnames.append(varkwargs)
-        signature = _inspect.formatargspec(regargs,
-                                           varargs,
-                                           varkwargs,
-                                           defaults,
-                                           formatvalue=lambda value: "")[1:-1]
-        return dict(name=func.__name__, argnames=argnames, signature=signature,
-                    defaults = func.func_defaults, doc=func.__doc__,
+            signature += ", **%s" % varkwargs
+        return signature
+    
+    @staticmethod
+    def _argspec_to_callstr(argspec):
+        """Return the argument string to call a function with the argspec.
+        
+        This is the counterpart to '_argspec_to_signature', a possible return
+        value would be 'self, x, a, **kwargs'.
+        """
+        args, varargs, varkwargs, _ = argspec
+        callstr = ", ".join(args)
+        if varargs:
+            callstr += ", *%s" % varargs
+        if varkwargs:
+            callstr += ", **%s" % varkwargs
+        return callstr
+    
+    # The following code was originally based on an earlier version of
+    # the decorator module by Michele Simionato
+    # http://pypi.python.org/pypi/decorator
+    
+    @staticmethod
+    def _function_infodict(func):
+        """Returns a dictionary with the function information.
+        
+        The dictionary contains the following keys:
+            name -- the name of the function
+            argspec -- as returned by inspect.getargspec
+            doc -- the docstring
+            module -- the module name
+            dict -- the function __dict__
+        """
+        argspec = inspect.getargspec(func)
+        return dict(name=func.__name__, argspec=argspec, doc=func.__doc__,
                     module=func.__module__, dict=func.__dict__,
                     globals=func.func_globals, closure=func.func_closure)
     
@@ -139,38 +149,44 @@ class NodeMetaclass(type):
         wrapper_infodict -- The infodict to be used for constructing the
             wrapper.
         """
-        src = ("lambda %(signature)s: _original_func_(%(signature)s)" %
-               wrapper_infodict)
+        argspec = wrapper_infodict["argspec"]
+        signature = NodeMetaclass._argspec_to_signature(argspec)
+        callstr = NodeMetaclass._argspec_to_callstr(argspec)
+        src = ("lambda %s: _original_func_(%s)" % (signature, callstr))
         wrapped_func = eval(src, dict(_original_func_=original_func))
         wrapped_func.__name__ = wrapper_infodict['name']
         wrapped_func.__doc__ = wrapper_infodict['doc']
         wrapped_func.__module__ = wrapper_infodict['module']
         wrapped_func.__dict__.update(wrapper_infodict['dict'])
-        wrapped_func.func_defaults = wrapper_infodict['defaults']
-        wrapped_func.undecorated = wrapper_infodict
+        wrapped_func.func_defaults = wrapper_infodict['argspec'][3]
         return wrapped_func
     
     @staticmethod
     def _wrap_method(wrapper_infodict, cls):
-        """Return a wrapped version of func.
+        """Return a wrapped version of a Node method.
+        
+        Internally super is used to call the method, so this is compatible
+        with replacing methods at runtime (without this trick the old
+        method reference would be used).
         
         wrapper_infodict -- The infodict to be used for constructing the
             wrapper.
         cls -- Class to which the wrapper method will be added, this is used
             for the super call.
         """
-        src = ("lambda %(signature)s: " % wrapper_infodict+
+        argspec = wrapper_infodict["argspec"]
+        signature = NodeMetaclass._argspec_to_signature(argspec)
+        callstr = NodeMetaclass._argspec_to_callstr(argspec)
+        src = ("lambda %s: " % signature +
                "super(_wrapper_class_, _wrapper_class_)." +
-               "%(name)s(%(signature)s)" % wrapper_infodict)
+               "%s(%s)" % (wrapper_infodict["name"], callstr))
         wrapped_func = eval(src, {"_wrapper_class_": cls})
         wrapped_func.__name__ = wrapper_infodict['name']
         wrapped_func.__doc__ = wrapper_infodict['doc']
         wrapped_func.__module__ = wrapper_infodict['module']
         wrapped_func.__dict__.update(wrapper_infodict['dict'])
-        wrapped_func.func_defaults = wrapper_infodict['defaults']
-        wrapped_func.undecorated = wrapper_infodict
+        wrapped_func.func_defaults = wrapper_infodict['argspec'][3]
         return wrapped_func
-
 
 
 class Node(object):

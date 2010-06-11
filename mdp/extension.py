@@ -348,7 +348,7 @@ def with_extension(extension_name):
                 deactivate_extension(extension_name)
             return result
         # now make sure that docstring and signature match the original
-        func_info = NodeMetaclass._get_infodict(func)
+        func_info = NodeMetaclass._function_infodict(func)
         return NodeMetaclass._wrap_function(wrapper, func_info)
     return decorator
         
