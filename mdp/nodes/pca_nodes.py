@@ -252,7 +252,7 @@ class PCANode(Node):
             return mult(x-self.avg, self.v[:, :n])
         return mult(x-self.avg, self.v)
 
-    def _inverse(self, y, n = None):
+    def _inverse(self, y, n=None):
         """Project 'y' to the input space using the first 'n' components.
         If 'n' is not set, use all available components."""
         if n is None:
@@ -263,7 +263,9 @@ class PCANode(Node):
             raise NodeException(error_str)
         
         v = self.get_recmatrix()
-        return mult(y, v[:n, :])+self.avg
+        if n is not None:
+            return mult(y, v[:n, :]) + self.avg
+        return mult(y, v) + self.avg
 
 
 class WhiteningNode(PCANode):
