@@ -55,6 +55,27 @@ class TestCodecorator(unittest.TestCase):
         self.assertEqual(msg["alpha"], 4)
         self.assertEqual(msg["beta"], 4)
         
+    def test_codecorator_defaults(self):
+        """Test codecorator argument default values."""
+        
+        class CoroutineBiNode(bimdp.nodes.CoroutineBiNodeMixin, bimdp.BiNode):
+        
+            def is_trainable(self):
+                return False
+            
+            @bimdp.nodes.binode_coroutine(["x", "alpha", "beta"],
+                                          defaults=(7,8))
+            def _execute(self, x):
+                x, alpha, beta = yield (x, None, self.node_id) 
+                raise StopIteration(x, {"alpha": alpha, "beta": beta})
+            
+        node = CoroutineBiNode(node_id="conode")
+        flow = bimdp.BiFlow([node])
+        x = np.random.random((3,2))
+        y, msg = flow.execute(x)
+        self.assertEqual(msg["alpha"], 7)
+        self.assertEqual(msg["beta"], 8)
+        
     def test_codecorator_stop_message(self):
         """Test codecorator functionality for stop_message phase."""
         

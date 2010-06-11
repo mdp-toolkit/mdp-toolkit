@@ -5,8 +5,11 @@ Coroutine decorator for BiNode methods.
 import mdp
 import bimdp
 
+# TODO: merge mixin class into BiNode base class,
+#    introduce _bi_reset and bi_reset base method
+
 # TODO: add option for default args in decorator
-#    either by adding a new argument 'defaults', taking a dict
+#    either by adding a new argument 'defaults', taking a list
 #    or by accepting a signature string, which is more convenient
 
 # TODO: add short description in the tutorial, mentioned the DBN example
@@ -14,27 +17,40 @@ import bimdp
 
 
 class CoroutineBiNodeMixin(bimdp.BiNode):
+    """Mixin class for using the binode_coroutine.
+    
+    This mixin takes care of correctly resetting the coroutines after
+    an inclomplete training or execution of the flow.
+    
+    The _coroutine_instances instance attribute stores the current coroutine
+    instances in a dictionary. It is initially set to None for efficiency
+    reasons.
+    """
     
     def __init__(self, **kwargs):
         super(CoroutineBiNodeMixin, self).__init__(**kwargs)
         # keys are the original method names
-        self._coroutine_instances = {}
+        self._coroutine_instances = None
         
     def bi_reset(self):
         # delete the instance dict entries to unshadow the init methods
-        for key in self._coroutine_instances:
-            delattr(self, key)
-        self._coroutine_instances = {}
+        if self._coroutine_instances is not None:
+            for key in self._coroutine_instances:
+                delattr(self, key)
+            self._coroutine_instances = None
         super(CoroutineBiNodeMixin, self).bi_reset()
 
    
-def binode_coroutine(args, stop_message=False):
+def binode_coroutine(args, defaults=(), stop_message=False):
     """Decorator for the convenient definition of BiNode couroutines.
     
     Note that this decorator should be used with the CoroutineMixin to
     guarantee correct reseting in case of an exception.
     
     args -- List of string names of the arguments.
+    defaults -- Tuple of default values for the arguments. If this tuple has
+        n elements, they correspond to the last n elements in 'args'
+        (following the convention of inspect.getargspec).
     stop_message -- Flag to signal if this coroutine is used during the
         stop_message phase. If this is False then the first value in 'args'
         must be 'x'. 
@@ -59,7 +75,7 @@ def binode_coroutine(args, stop_message=False):
     args = ["self"] + args
     def _binode_coroutine(coroutine):
         # the original coroutine is only stored in this closure
-        infodict = mdp.NodeMetaclass._get_infodict(coroutine)
+        infodict = mdp.NodeMetaclass._function_infodict(coroutine)
         original_name = infodict["name"]
         ## create the coroutine interface method        
         def _coroutine_interface(self, *args):
@@ -74,9 +90,7 @@ def binode_coroutine(args, stop_message=False):
                     return None
         # turn the signature into the one specified by the args
         interface_infodict = infodict.copy()
-        interface_infodict["argnames"] = args
-        interface_infodict["defaults"] = ()
-        interface_infodict["signature"] = ", ".join(args)
+        interface_infodict["argspec"] = args, None, None, defaults
         coroutine_interface = mdp.NodeMetaclass._wrap_function(
                                     _coroutine_interface, interface_infodict)
         ## create the initialization method
@@ -84,7 +98,9 @@ def binode_coroutine(args, stop_message=False):
             coroutine_instance = coroutine(self, *args)
             # better than using new.instancemethod
             bound_coroutine_interface = coroutine_interface.__get__(
-                                                        self, self.__class__) 
+                                                        self, self.__class__)
+            if self._coroutine_instances is None:
+                self._coroutine_instances = dict()
             self._coroutine_instances[original_name] = coroutine_instance
             setattr(self, original_name, bound_coroutine_interface)
             return coroutine_instance.next()
