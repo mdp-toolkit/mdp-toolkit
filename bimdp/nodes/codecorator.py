@@ -8,10 +8,6 @@ import bimdp
 # TODO: merge mixin class into BiNode base class,
 #    introduce _bi_reset and bi_reset base method
 
-# TODO: add option for default args in decorator
-#    either by adding a new argument 'defaults', taking a list
-#    or by accepting a signature string, which is more convenient
-
 # TODO: add short description in the tutorial, mentioned the DBN example
 #    and the unittests as simple examples
 
@@ -29,7 +25,9 @@ class CoroutineBiNodeMixin(bimdp.BiNode):
     
     def __init__(self, **kwargs):
         super(CoroutineBiNodeMixin, self).__init__(**kwargs)
-        # keys are the original method names
+        # _coroutine_instances keys are the original method names
+        # Initially this attribute is None for efficiency (note that every
+        # bi_reset would otherwise have to create new dict instances).
         self._coroutine_instances = None
         
     def bi_reset(self):
