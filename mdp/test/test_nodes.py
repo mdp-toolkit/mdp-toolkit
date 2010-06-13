@@ -2107,13 +2107,6 @@ class NodesTestSuite(unittest.TestSuite):
         rbf = mdp.nodes.RBFExpansionNode(centers, sizes)
         check_mn_cov(rbf, sizes)
         
-    def testNodeMetaclassHelpers(self):
-        def f(x, y, a=1, b=2, *args, **kw): pass
-        signature = mdp.NodeMetaclass._argspec_to_signature(
-                                                    inspect.getargspec(f))
-        assert  signature == "x, y, a=1, b=2, *args, **kw"
-        callstr = mdp.NodeMetaclass._argspec_to_callstr(inspect.getargspec(f))
-        assert callstr == "x, y, a, b, *args, **kw"
         
 def get_suite(testname=None):
     return NodesTestSuite(testname=testname)

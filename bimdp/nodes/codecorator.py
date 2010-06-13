@@ -88,7 +88,8 @@ def binode_coroutine(args, defaults=(), stop_message=False):
                     return None
         # turn the signature into the one specified by the args
         interface_infodict = infodict.copy()
-        interface_infodict["argspec"] = args, None, None, defaults
+        interface_infodict["signature"] = ", ".join(args)
+        interface_infodict["defaults"] = defaults
         coroutine_interface = mdp.NodeMetaclass._wrap_function(
                                     _coroutine_interface, interface_infodict)
         ## create the initialization method
