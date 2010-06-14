@@ -66,8 +66,8 @@ def binode_coroutine(args, defaults=(), stop_message=False):
           method shadows the initialization method in the class instance
           (using an instance attribute to shadow the class attribute).
     """
-    if not stop_message and args[0] != "x":
-        err = ("First argument must be 'x' unless 'stop_message' is set "
+    if not stop_message and (not args or args[0] != "x"):
+        err = ("First argument value must be 'x' unless 'stop_message' is set "
                "to True.")
         raise Exception(err)
     args = ["self"] + args
@@ -102,7 +102,13 @@ def binode_coroutine(args, defaults=(), stop_message=False):
                 self._coroutine_instances = dict()
             self._coroutine_instances[original_name] = coroutine_instance
             setattr(self, original_name, bound_coroutine_interface)
-            return coroutine_instance.next()
+            try:
+                return coroutine_instance.next()
+            except StopIteration, exception:
+                if len(exception.args):
+                    return exception.args
+                else:
+                    return None
         coroutine_initialization = mdp.NodeMetaclass._wrap_function(
                                     _coroutine_initialization, infodict)
         return coroutine_initialization

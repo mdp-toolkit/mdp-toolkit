@@ -108,6 +108,26 @@ class TestCodecorator(unittest.TestCase):
         flow.train([[x],[None]], stop_messages=[{"alpha": 3},None])
         self.assertEqual(node2.alpha, 4)
         self.assertEqual(node2.beta, 4)
+        
+    def test_codecorator_no_iteration(self):
+        """Test codecorator corner case with no iterations."""
+        
+        class CoroutineBiNode(bimdp.nodes.CoroutineBiNodeMixin, bimdp.BiNode):
+        
+            def is_trainable(self):
+                return False
+            
+            @bimdp.nodes.binode_coroutine(["x"])
+            def _execute(self, x):
+                # at least one yield must be in a coroutine
+                if False:
+                    yield None
+                raise StopIteration(None, {"a": 1}, self.node_id) 
+        
+        node1 = CoroutineBiNode()
+        x = np.random.random((3,2))
+        result = node1.execute(x)
+        self.assertEqual(result, (None, {"a": 1}, None))
  
 
 def get_suite():
