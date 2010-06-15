@@ -505,11 +505,6 @@ class PCABiNode(BiNode, mdp.nodes.PCANode):
         """
         super(PCABiNode, self).__init__(input_dim=input_dim, output_dim=output_dim, dtype=dtype, svd=svd, reduce=reduce, var_rel=var_rel, var_abs=var_abs, var_part=var_part, node_id=node_id, stop_result=stop_result)
 
-class PerceptronClassiBiNode(BiNode, mdp.nodes.PerceptronClassifier):
-    """Automatically created BiNode version of PerceptronClassifier."""
-    def __init__(self, input_dim=None, dtype=None, node_id=None, stop_result=None):
-        super(PerceptronClassiBiNode, self).__init__(input_dim=input_dim, dtype=dtype, node_id=node_id, stop_result=stop_result)
-
 class PolynomialExpansionBiNode(BiNode, mdp.nodes.PolynomialExpansionNode):
     """Automatically created BiNode version of PolynomialExpansionNode."""
     def __init__(self, degree, input_dim=None, dtype=None, node_id=None, stop_result=None):
@@ -567,26 +562,6 @@ class SFABiNode(BiNode, mdp.nodes.SFANode):
     """Automatically created BiNode version of SFANode."""
     def __init__(self, input_dim=None, output_dim=None, dtype=None, node_id=None, stop_result=None):
         super(SFABiNode, self).__init__(input_dim=input_dim, output_dim=output_dim, dtype=dtype, node_id=node_id, stop_result=stop_result)
-
-class SignumClassiBiNode(BiNode, mdp.nodes.SignumClassifier):
-    """Automatically created BiNode version of SignumClassifier."""
-    def __init__(self, input_dim=None, output_dim=None, dtype=None, node_id=None, stop_result=None):
-        """If the input dimension and the output dimension are
-        unspecified, they will be set when the 'train' or 'execute'
-        method is called for the first time.
-        If dtype is unspecified, it will be inherited from the data
-        it receives at the first call of 'train' or 'execute'.
-
-        Every subclass must take care of up- or down-casting the internal
-        structures to match this argument (use _refcast private
-        method when possible).
-        """
-        super(SignumClassiBiNode, self).__init__(input_dim=input_dim, output_dim=output_dim, dtype=dtype, node_id=node_id, stop_result=stop_result)
-
-class SimpleMarkovClassiBiNode(BiNode, mdp.nodes.SimpleMarkovClassifier):
-    """Automatically created BiNode version of SimpleMarkovClassifier."""
-    def __init__(self, input_dim=None, dtype=None, node_id=None, stop_result=None):
-        super(SimpleMarkovClassiBiNode, self).__init__(input_dim=input_dim, dtype=dtype, node_id=node_id, stop_result=stop_result)
 
 class TDSEPBiNode(BiNode, mdp.nodes.TDSEPNode):
     """Automatically created BiNode version of TDSEPNode."""

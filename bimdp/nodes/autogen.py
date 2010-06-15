@@ -15,10 +15,9 @@ AUTOMATIC_MDP_NODES = [
     'GrowingNeuralGasNode', 'HLLENode', 'HistogramNode', 'HitParadeNode',
     'ICANode', 'ISFANode', 'IdentityNode', 'JADENode', 'LLENode',
     'LinearRegressionNode', 'NIPALSNode', 'NormalNoiseNode',
-    'PCANode', 'PerceptronClassifier', 'PolynomialExpansionNode',
+    'PCANode', 'PolynomialExpansionNode',
     'QuadraticExpansionNode', 'RBFExpansionNode', 'RBMNode',
-    'RBMWithLabelsNode', 'SFA2Node', 'SFANode',
-    'SignumClassifier', 'SimpleMarkovClassifier', 'TDSEPNode',
+    'RBMWithLabelsNode', 'SFA2Node', 'SFANode', 'TDSEPNode',
     'TimeFramesNode', 'WhiteningNode', 'XSFANode',
 ]
 
