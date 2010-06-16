@@ -91,7 +91,7 @@ class JumpBiNode(IdentityBiNode):
             return None
         return self._stop_message_results[self.loop_counter-1]
     
-    def bi_reset(self):
+    def _bi_reset(self):
         """Reset the loop counter."""
         self.loop_counter = 0
 
@@ -147,11 +147,11 @@ class TraceJumpBiNode(JumpBiNode):
             print self._tracelog[-1]
         return super(TraceJumpBiNode, self).stop_message(msg)
         
-    def bi_reset(self):
+    def _bi_reset(self):
         self._tracelog.append((self._node_id, "bi_reset"))
         if self._verbose:
             print self._tracelog[-1]
-        return super(TraceJumpBiNode, self).bi_reset()
+        return super(TraceJumpBiNode, self)._bi_reset()
     
 
 class ParallelTraceJumpBiNode(TraceJumpBiNode):

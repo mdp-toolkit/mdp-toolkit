@@ -8,10 +8,8 @@ except:
     print "No autogen modules found."
     
 from miscnodes import IdentityBiNode, SenderBiNode
-from codecorator import CoroutineBiNodeMixin, binode_coroutine
 
 del miscnodes
-del codecorator
 
 
 

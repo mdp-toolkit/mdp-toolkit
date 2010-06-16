@@ -259,7 +259,7 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
         elif msg:
             return msg
         
-    def bi_reset(self):
+    def _bi_reset(self):
         """Call bi_reset on all the inner nodes."""
         if self.use_copies:
             for node in self.nodes:

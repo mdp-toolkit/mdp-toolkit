@@ -225,12 +225,11 @@ class BiFlowNode(BiNode, hinet.FlowNode):
         i_node = self._flow._target_to_index(target)
         return self._flow._stop_message_seq(msg=msg, i_node=i_node)
     
-    def bi_reset(self):
+    def _bi_reset(self):
         self._last_id_request = None
         for node in self._flow:
             if isinstance(node, BiNode):
                 node.bi_reset()
-        super(BiFlowNode, self).bi_reset()
     
     def is_bi_training(self):
         for node in self._flow:

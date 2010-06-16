@@ -98,12 +98,13 @@ class BiNodeException(mdp.NodeException):
 
     
 class BiNode(mdp.Node):
-    """Abstract base class for all bidirectional nodes.
+    """Abstract base class for nodes that use bimdp features.
     
-    This class is not non-functional, since the arguments of the inherited
-    _execute, _train and _stop_training methods are incompatible with the calls.
-    So these methods (or _get_train_sequence instead of the last two) have to
-    be overridden.
+    This class itself is not non-functional.
+    
+    Derived class should, if necessary, overwrite the following methods (in
+    addition to the normal mdp.Node methods):
+    _stop_message, _bi_reset, and is_bi_training 
     
     Note hat this class can also be used as an Adapter / Mixin for normal nodes.
     This can for example be useful for nodes which require additional data
@@ -126,6 +127,7 @@ class BiNode(mdp.Node):
         """
         self._node_id = node_id
         self._stop_result = stop_result
+        self._coroutine_instances = None
         super(BiNode, self).__init__(**kwargs)
         
     ### Modified template methods from mdp.Node. ###
@@ -345,6 +347,8 @@ class BiNode(mdp.Node):
     def bi_reset(self):
         """Reset the node for the next data chunck.
         
+        This template method calls the _bi_reset method.
+        
         This method is automatically called by BiFlow after the processing of
         a data chunk is completed (during both training and execution).
         
@@ -353,6 +357,16 @@ class BiNode(mdp.Node):
         node is called multiple times for a single chunk and an internal state
         keeps track of the actions to be performed for each call.
         """
+        if self._coroutine_instances is not None:
+            # delete the instance attributes to unshadow the coroutine
+            # initialization methods
+            for key in self._coroutine_instances:
+                delattr(self, key)
+            self._coroutine_instances = None
+        self._bi_reset()
+    
+    def _bi_reset(self):
+        """Hook method, overwrite when needed."""
         pass
     
     def is_bi_training(self):
@@ -564,5 +578,83 @@ class BiNode(mdp.Node):
         else:
             # can delegate old cases
             return super(BiNode, self).__add__(other)
+        
+
+### Helper Functions / Decorators ###
+
+def binode_coroutine(args, defaults=(), stop_message=False):
+    """Decorator for the convenient definition of BiNode couroutines.
+    
+    Note that this decorator should be used with the CoroutineMixin to
+    guarantee correct reseting in case of an exception.
+    
+    args -- List of string names of the arguments.
+    defaults -- Tuple of default values for the arguments. If this tuple has
+        n elements, they correspond to the last n elements in 'args'
+        (following the convention of inspect.getargspec).
+    stop_message -- Flag to signal if this coroutine is used during the
+        stop_message phase. If this is False then the first value in 'args'
+        must be 'x'. 
+    
+    Internally there are three methods/functions:
+        - The user defined function containing the original coroutine code.
+          This is only stored in the decorator closure.
+        - A new method ('_coroutine_initialization') with the name and
+          signature  of the decorated coroutine, which internally handles the
+          first initialization of the coroutine instance.
+          This method is returned by the decorator.
+        - A method with the signature specified by the 'args' for the
+          decorator.
+          After the coroutine has been initialized this
+          method shadows the initialization method in the class instance
+          (using an instance attribute to shadow the class attribute).
+    """
+    if not stop_message and (not args or args[0] != "x"):
+        err = ("First argument value must be 'x' unless 'stop_message' is set "
+               "to True.")
+        raise Exception(err)
+    args = ["self"] + args
+    def _binode_coroutine(coroutine):
+        # the original coroutine is only stored in this closure
+        infodict = mdp.NodeMetaclass._function_infodict(coroutine)
+        original_name = infodict["name"]
+        ## create the coroutine interface method        
+        def _coroutine_interface(self, *args):
+            try:
+                return self._coroutine_instances[original_name].send(args)
+            except StopIteration, exception:
+                delattr(self, original_name)
+                del self._coroutine_instances[original_name]
+                if len(exception.args):
+                    return exception.args
+                else:
+                    return None
+        # turn the signature into the one specified by the args
+        interface_infodict = infodict.copy()
+        interface_infodict["signature"] = ", ".join(args)
+        interface_infodict["defaults"] = defaults
+        coroutine_interface = mdp.NodeMetaclass._wrap_function(
+                                    _coroutine_interface, interface_infodict)
+        ## create the initialization method
+        def _coroutine_initialization(self, *args):
+            coroutine_instance = coroutine(self, *args)
+            # better than using new.instancemethod
+            bound_coroutine_interface = coroutine_interface.__get__(
+                                                        self, self.__class__)
+            if self._coroutine_instances is None:
+                self._coroutine_instances = dict()
+            self._coroutine_instances[original_name] = coroutine_instance
+            setattr(self, original_name, bound_coroutine_interface)
+            try:
+                return coroutine_instance.next()
+            except StopIteration, exception:
+                if len(exception.args):
+                    return exception.args
+                else:
+                    return None
+        coroutine_initialization = mdp.NodeMetaclass._wrap_function(
+                                    _coroutine_initialization, infodict)
+        return coroutine_initialization
+    return _binode_coroutine
         
         
