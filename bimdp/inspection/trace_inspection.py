@@ -530,22 +530,25 @@ class TraceHTMLTranslator(BiHTMLTranslator):
     def _dict_pretty_html(dic):
         """Return a nice HTML representation of the given numpy array."""
         # TODO: use an stringio buffer for efficency
-        dic_str = '{'
-        first = True
+        # TODO: use alphabetic sorting?
+        # TODO: highlight the keys (use color?) to make them easier to find?
+        dic_strs = []
+        # store the array keys here to put them last, because arrays are
+        # typically rather large
+        array_dic_strs = []
         for key, value in dic.items():
-            if first:
-                first = False
-            else:
-                dic_str += ',<br>\n'
-            dic_str += repr(key) + ': '
+            dic_str = repr(key) + ': '
             if isinstance(value, str):
                 dic_str += repr(value)
             elif isinstance(value, n.ndarray):
                 dic_str += TraceHTMLTranslator._array_pretty_html(value)
             else:
                 dic_str += str(value)
-        dic_str += '}'
-        return dic_str
+            if isinstance(value, n.ndarray):
+                array_dic_strs.append(dic_str)
+            else:
+                dic_strs.append(dic_str)
+        return '{' + ',<br>\n'.join(dic_strs + array_dic_strs) + '}'
     
     def reset(self):
         """Reset internal variables for a new trace.
