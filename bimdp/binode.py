@@ -648,6 +648,8 @@ def binode_coroutine(args, defaults=(), stop_message=False):
             try:
                 return coroutine_instance.next()
             except StopIteration, exception:
+                delattr(self, original_name)
+                del self._coroutine_instances[original_name]
                 if len(exception.args):
                     return exception.args
                 else:

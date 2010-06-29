@@ -232,6 +232,8 @@ class Rectangular2dSwitchboard(ChannelSwitchboard):
         y_field_channels -- Number of channels in each field in the y-direction.
         x_field_spacing -- Offset between two fields in the x-direction.
         y_field_spacing -- Offset between two fields in the y-direction.
+        x_out_channels, y_out_channels -- Number of output channels in the
+            x and y direction.
         ignore_cover -- Boolean value defines if an 
             Rectangular2dSwitchboardException is raised when the fields do not
             cover all input channels. Set this to True if you are willing to

@@ -463,6 +463,50 @@ class TestBiNodeCoroutine(unittest.TestCase):
         result = node1.execute(x)
         self.assertEqual(result, (None, {"a": 1}, None))
         
+    def test_codecorator_reset1(self):
+        """Test that codecorator correctly resets after termination."""
+        
+        class CoroutineBiNode(BiNode):
+        
+            def is_trainable(self):
+                return False
+            
+            @binode_coroutine(["x"])
+            def _execute(self, x, a, msg=None):
+                # note that the a argument is required, drop message
+                for _ in range(2):
+                    x = yield x
+                raise StopIteration(x) 
+        
+        node1 = CoroutineBiNode()
+        x = n.random.random((3,2))
+        # this inits the coroutine, a argument is needed
+        node1.execute(x, {"a": 2})
+        node1.execute(x)
+        node1.execute(x)
+        self.assert_(node1._coroutine_instances == {})
+        # couroutine should be reset, a argument is needed again
+        self.assertRaises(TypeError, lambda: node1.execute(x))
+        
+    def test_codecorator_reset2(self):
+        """Test that codecorator correctly resets without yields."""
+        
+        class CoroutineBiNode(BiNode):
+        
+            def is_trainable(self):
+                return False
+            
+            @binode_coroutine(["x"])
+            def _execute(self, x, a, msg=None):
+                if False:
+                    yield
+                raise StopIteration(x) 
+        
+        node1 = CoroutineBiNode()
+        x = n.random.random((3,2))
+        node1.execute(x, {"a": 2})
+        self.assert_(node1._coroutine_instances == {})
+        
 
 def get_suite():
     suite = unittest.TestSuite()
