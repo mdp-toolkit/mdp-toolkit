@@ -15,7 +15,8 @@ import fnmatch
 import copy
 import traceback
 
-import numpy as n
+import mdp
+n = mdp.numx
 
 import mdp.hinet as hinet
 
@@ -519,7 +520,7 @@ class TraceHTMLTranslator(BiHTMLTranslator):
     @staticmethod
     def _array_pretty_html(ar):
         """Return a nice HTML representation of the given numpy array."""
-        ar_str = 'shape: %s<br>\n' % str(ar.shape)
+        ar_str = 'array with shape %s<br>\n' % str(ar.shape)
         # TODO: use np.savetxt instead?
         ar_str += (str(ar).replace(' [', '<br>\n[').
                     replace(']\n ...', ']<br>\n...'))
@@ -539,6 +540,8 @@ class TraceHTMLTranslator(BiHTMLTranslator):
             dic_str += repr(key) + ': '
             if isinstance(value, str):
                 dic_str += repr(value)
+            elif isinstance(value, n.ndarray):
+                dic_str += TraceHTMLTranslator._array_pretty_html(value)
             else:
                 dic_str += str(value)
         dic_str += '}'
