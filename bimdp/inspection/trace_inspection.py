@@ -80,6 +80,10 @@ table.inspect_io_data pre {
     font-weight: bold;
 }
 
+span.keyword {
+    background-color: #E8E8E8;
+}
+
 span.inactive_section {
     color: #0000EE;
     cursor: pointer;
@@ -530,14 +534,19 @@ class TraceHTMLTranslator(BiHTMLTranslator):
     def _dict_pretty_html(dic):
         """Return a nice HTML representation of the given numpy array."""
         # TODO: use an stringio buffer for efficency
-        # TODO: use alphabetic sorting?
-        # TODO: highlight the keys (use color?) to make them easier to find?
-        dic_strs = []
-        # store the array keys here to put them last, because arrays are
-        # typically rather large
+        # put array keys last, because arrays are typically rather large
         array_dic_strs = []
-        for key, value in dic.items():
-            dic_str = repr(key) + ': '
+        keys = [key for key, value in dic.items()
+                if not isinstance(value, n.ndarray)]
+        keys.sort()
+        ar_keys = [key for key, value in dic.items()
+                   if isinstance(value, n.ndarray)]
+        ar_keys.sort()
+        keys += ar_keys
+        dic_strs = []
+        for key in keys:
+            value = dic[key]
+            dic_str = '<span class="keyword">' + repr(key) + '</span>: '
             if isinstance(value, str):
                 dic_str += repr(value)
             elif isinstance(value, n.ndarray):
