@@ -28,16 +28,12 @@ class IdentityBiNode(BiNode):
 class SenderBiNode(IdentityBiNode):
     """Sends the incoming x data to another node via bi_message."""
     
-    def __init__(self, recipient_id=None, node_id=None, input_dim=None,
-                 dtype=None):
+    def __init__(self, recipient_id=None, **kwargs):
         """Initialize the internal variables.
         
         recipient_id -- None or the id for the data recipient.
         """
-        super(SenderBiNode, self).__init__(node_id=node_id,
-                                           input_dim=input_dim,
-                                           output_dim=input_dim,
-                                           dtype=dtype)
+        super(SenderBiNode, self).__init__(**kwargs)
         self._recipient_id = recipient_id
         
     def _execute(self, x, no_x=None):
