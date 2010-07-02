@@ -41,7 +41,7 @@ class SenderBiNode(IdentityBiNode):
         self._recipient_id = recipient_id
         
     def _execute(self, x, no_x=None):
-        """Add x to the message (adressed to a specific target if defined)."""
+        """Add msg_x to the message (adressed to a target if defined)."""
         msg = dict()
         if self._recipient_id:
             msg[self._recipient_id + MSG_ID_SEP + "msg_x"] = x
