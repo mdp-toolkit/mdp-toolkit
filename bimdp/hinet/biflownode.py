@@ -179,7 +179,11 @@ class BiFlowNode(BiNode, hinet.FlowNode):
         nodenr -- the index of the node for which the training stops
         """
         def _stop_training(msg=None):
-            result = self._flow[nodenr].stop_training(msg)
+            if isinstance(self._flow[nodenr], BiNode):
+                result = self._flow[nodenr].stop_training(msg)
+            else:
+                # for a non-bi Node the msg is dropped
+                result = self._flow[nodenr].stop_training()
             ## process stop_training result
             if not result:
                 return None
