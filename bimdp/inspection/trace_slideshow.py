@@ -79,8 +79,14 @@ class ExecuteHTMLSlideShow(HTMLSlideShow):
     function makeNodesClickable() {
         var i;
         for (i = 0; i < unique_node_ids.length; i += 1) {
-            document.getElementById(unique_node_ids[i]).
-                addEventListener("click", nodeClickCallback, false);
+            try {
+                document.getElementById(unique_node_ids[i]).
+                    addEventListener("click", nodeClickCallback, false);
+            }
+            catch (e) {
+                // means that the requested node is added in a later training
+                // phase and is therefore not yet in the DOM 
+            }
         }
     }
     
@@ -202,7 +208,7 @@ class TrainHTMLSlideShow(SectionHTMLSlideShow, ExecuteHTMLSlideShow):
         train_table = [[None for _ in range(n_nodes + 1)]
                        for _ in range(n_phases + 1)]
         # create labels for table
-        train_table[0] = ['&nbsp;'] + ['layer %d' % (i+1)
+        train_table[0] = ['&nbsp;'] + ['node %d' % (i+1)
                                        for i in range(n_nodes)]
         for i_phase in range(n_phases):
             train_table[i_phase+1][0] = 'phase %d' % (i_phase + 1)
