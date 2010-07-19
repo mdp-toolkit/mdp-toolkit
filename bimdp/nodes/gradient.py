@@ -137,8 +137,10 @@ def _layer_grad(self, x):
                 node._get_grad(x[:,in_start:in_stop])
     return grad
 
+# TODO: cache this gradient, like for linear nodes
 @mdp.extension_method("gradient", mdp.hinet.Switchboard, "_get_grad")    
 def _switchboard_grad(self, x):
-    # the gradient is constant, but have to give it for each x point
-    return np.repeat(self.sf.T[np.newaxis,:,:], len(x), axis=0)
+    grad = np.zeros(self.input_dim)
+    grad[self.connections] = 1
+    return np.tile(grad, (len(x), self.output_dim, 1))
 

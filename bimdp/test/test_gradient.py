@@ -137,8 +137,8 @@ class TestGradientExtension(unittest.TestCase):
         try:
             x = np.random.random((7,10))
             result = layer._gradient(x)
-            gradient = result[1]["grad"]
-            self.assert_(gradient.shape == (7,5,10))
+            grad = result[1]["grad"]
+            self.assert_(grad.shape == (7,5,10))
         finally:
             mdp.deactivate_extension("gradient")
   
@@ -154,12 +154,24 @@ class TestGradientExtension(unittest.TestCase):
         try:
             x = np.random.random((7,15))
             result = layer._gradient(x)
-            gradient = result[1]["grad"]
-            self.assert_(gradient.shape == (7,6,15))
+            grad = result[1]["grad"]
+            self.assert_(grad.shape == (7,6,15))
         finally:
             mdp.deactivate_extension("gradient")
             
-    # TODO: add functional layer gradient tests
+    def test_switchboard_gradient(self):
+        """Test gradient for a simple switchboard."""
+        sboard = mdp.hinet.Switchboard(input_dim=5, connections=[2,0,4])
+        x = np.random.random((7,5))
+        mdp.activate_extension("gradient")
+        try:
+            result = sboard._gradient(x)
+            grad = result[1]["grad"]
+            self.assert_(grad.shape == (7,3,5))
+        finally:
+            mdp.deactivate_extension("gradient")
+            
+    # TODO: add functional layer and switchboard gradient tests
     
             
 def get_suite():
