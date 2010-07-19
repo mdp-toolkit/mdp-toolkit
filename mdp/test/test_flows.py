@@ -317,7 +317,7 @@ class FlowsTestSuite(unittest.TestSuite):
             flow.train(mdp.numx.zeros((1,2), 'd'))
         except Exception, e:
             assert isinstance(e,mdp.FlowExceptionCR)
-            fl = file(e.filename)
+            fl = open(e.filename, 'rb')
             pic_flow = pickle.load(fl)
             fl.close()
             os.remove(e.filename)
@@ -340,7 +340,7 @@ class FlowsTestSuite(unittest.TestSuite):
             assert isinstance(e.parent_exception, StandardError)
 
         for fname in [filename1,filename2]:
-            fl = file(fname)
+            fl = open(fname, 'rb')
             obj = pickle.load(fl)
             fl.close()
             os.remove(fname)
