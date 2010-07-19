@@ -389,7 +389,7 @@ flow.train([gen_data(10, 12), None, gen_data(10, 12)],
                                        protocol = 0)])
 # ...
 # PCA output dimensions = 7
-fl = file('dummy.pic')
+fl = open('dummy.pic')
 import cPickle
 sfa_reloaded = cPickle.load(fl)
 sfa_reloaded
