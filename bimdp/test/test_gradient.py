@@ -192,6 +192,34 @@ class TestGradientExtension(unittest.TestCase):
         finally:
             mdp.deactivate_extension("gradient")
 
+    def test_network_gradient(self):
+        """Test gradient for a small SFA network."""
+        sfa_node = bimdp.nodes.SFABiNode(input_dim=4*4, output_dim=5)
+        switchboard = bimdp.hinet.Rectangular2dBiSwitchboard(
+                                                  x_in_channels=8, 
+                                                  y_in_channels=8,
+                                                  x_field_channels=4, 
+                                                  y_field_channels=4,
+                                                  x_field_spacing=2, 
+                                                  y_field_spacing=2)
+        flownode = bimdp.hinet.BiFlowNode(bimdp.BiFlow([sfa_node]))
+        sfa_layer = bimdp.hinet.CloneBiLayer(flownode,
+                                             switchboard.output_channels)
+        flow = bimdp.BiFlow([switchboard, sfa_layer])
+        train_gen = [np.random.random((10, switchboard.input_dim))
+                     for _ in range(3)]
+        flow.train([None, train_gen])
+        # now can test the gradient
+        mdp.activate_extension("gradient")
+        try:
+            x = np.random.random((3, switchboard.input_dim))
+            result = flow(x, {"method": "gradient"})
+            grad = result[1]["grad"]
+            self.assert_(grad.shape == (3, sfa_layer.output_dim,
+                                        switchboard.input_dim))
+        finally:
+            mdp.deactivate_extension("gradient")
+
             
 def get_suite():
     suite = unittest.TestSuite()
