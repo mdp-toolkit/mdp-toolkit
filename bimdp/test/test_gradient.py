@@ -159,7 +159,21 @@ class TestGradientExtension(unittest.TestCase):
         finally:
             mdp.deactivate_extension("gradient")
             
-    def test_switchboard_gradient(self):
+    def test_switchboard_gradient1(self):
+        """Test that gradient is correct for a tiny switchboard."""
+        sboard = mdp.hinet.Switchboard(input_dim=4, connections=[2,0])
+        x = np.random.random((2,4))
+        mdp.activate_extension("gradient")
+        try:
+            result = sboard._gradient(x)
+            grad = result[1]["grad"]
+            ref_grad = np.array([[[0,0,1,0], [1,0,0,0]],
+                                 [[0,0,1,0], [1,0,0,0]]], dtype=grad.dtype)
+            self.assert_(np.all(grad == ref_grad))
+        finally:
+            mdp.deactivate_extension("gradient")
+
+    def test_switchboard_gradient2(self):
         """Test gradient for a simple switchboard."""
         sboard = mdp.hinet.Switchboard(input_dim=5, connections=[2,0,4])
         x = np.random.random((7,5))

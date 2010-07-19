@@ -80,6 +80,8 @@ class GradientExtensionNode(mdp.ExtensionNode, mdp.Node):
 # TODO: cache the gradient for linear nodes?
 #    If there was a linear base class one could integrate this?
 
+# TODO: at least at PCA implementation
+
 @mdp.extension_method("gradient", mdp.nodes.SFANode, "_get_grad")    
 def _sfa_grad(self, x):
     # the gradient is constant, but have to give it for each x point
@@ -140,7 +142,7 @@ def _layer_grad(self, x):
 # TODO: cache this gradient, like for linear nodes
 @mdp.extension_method("gradient", mdp.hinet.Switchboard, "_get_grad")    
 def _switchboard_grad(self, x):
-    grad = np.zeros(self.input_dim)
-    grad[self.connections] = 1
-    return np.tile(grad, (len(x), self.output_dim, 1))
+    grad = np.zeros((self.output_dim, self.input_dim))
+    grad[range(self.output_dim), self.connections] = 1
+    return np.tile(grad, (len(x), 1, 1))
 
