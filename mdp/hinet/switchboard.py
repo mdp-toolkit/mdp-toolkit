@@ -426,7 +426,7 @@ class DoubleRect2dSwitchboard(ChannelSwitchboard):
             err = ("Channel fields do not "
                    "cover all input channels in x-direction.")
             raise Rectangular2dSwitchboardException(err)
-        if (x_in_channels - xl * x_field_channels) >= (x_field_channels / 2):
+        if (x_in_channels - xl * x_field_channels) >= (x_field_channels // 2):
             err = ("x short rows have same length as long rows.")
             raise Rectangular2dSwitchboardException(err)
         # number of output channels in y-direction                       
@@ -441,7 +441,7 @@ class DoubleRect2dSwitchboard(ChannelSwitchboard):
             err = ("Channel fields do not "
                    "cover all input channels in y-direction.")
             raise Rectangular2dSwitchboardException(err)
-        if (y_in_channels - yl * y_field_channels) >= (y_field_channels / 2):
+        if (y_in_channels - yl * y_field_channels) >= (y_field_channels // 2):
             err = ("y short rows have same length as long rows.")
             raise Rectangular2dSwitchboardException(err)
         ## end of parameters checks
@@ -454,8 +454,8 @@ class DoubleRect2dSwitchboard(ChannelSwitchboard):
                                  dtype=numx.int32)
         first_out_con = 0
         ## first create the even connections
-        even_x_out_channels = x_in_channels / (2 * x_field_spacing)
-        even_y_out_channels = y_in_channels / (2 * y_field_spacing)
+        even_x_out_channels = x_in_channels // (2 * x_field_spacing)
+        even_y_out_channels = y_in_channels // (2 * y_field_spacing)
         for y_out_chan in range(even_y_out_channels):
             for x_out_chan in range(even_x_out_channels):
                 # inner loop over field
