@@ -128,8 +128,9 @@ class TestGradientExtension(unittest.TestCase):
 
     def test_layer_gradient(self):
         """Test gradient for a simple layer."""
-        layer = mdp.hinet.Layer([mdp.nodes.SFA2Node(input_dim=4, output_dim=3),
-                                 mdp.nodes.SFANode(input_dim=6, output_dim=2)])
+        node1 = mdp.nodes.SFA2Node(input_dim=4, output_dim=3)
+        node2 = mdp.nodes.SFANode(input_dim=6, output_dim=2)
+        layer = mdp.hinet.Layer([node1, node2])
         x = np.random.random((100,10))
         layer.train(x)
         layer.stop_training()
@@ -138,7 +139,13 @@ class TestGradientExtension(unittest.TestCase):
             x = np.random.random((7,10))
             result = layer._gradient(x)
             grad = result[1]["grad"]
-            self.assert_(grad.shape == (7,5,10))
+            # get reference result
+            grad1 = node1._gradient(x[:, :node1.input_dim])[1]["grad"]
+            grad2 = node2._gradient(x[:, node1.input_dim:])[1]["grad"]
+            ref_grad = np.zeros(((7,5,10)))
+            ref_grad[:, :node1.output_dim, :node1.input_dim] = grad1
+            ref_grad[:, node1.output_dim:, node1.input_dim:] = grad2
+            self.assert_(np.all(grad == ref_grad))
         finally:
             mdp.deactivate_extension("gradient")
   
@@ -184,9 +191,7 @@ class TestGradientExtension(unittest.TestCase):
             self.assert_(grad.shape == (7,3,5))
         finally:
             mdp.deactivate_extension("gradient")
-            
-    # TODO: add functional layer and switchboard gradient tests
-    
+
             
 def get_suite():
     suite = unittest.TestSuite()

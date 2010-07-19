@@ -80,7 +80,7 @@ class GradientExtensionNode(mdp.ExtensionNode, mdp.Node):
 # TODO: cache the gradient for linear nodes?
 #    If there was a linear base class one could integrate this?
 
-# TODO: at least at PCA implementation
+# TODO: add at least a PCA gradient implementation
 
 @mdp.extension_method("gradient", mdp.nodes.SFANode, "_get_grad")    
 def _sfa_grad(self, x):
@@ -128,15 +128,15 @@ def _layer_grad(self, x):
         in_start = in_stop
         in_stop += node.input_dim
         if grad is None:
-            node_grad = node._get_grad(x[:,in_start:in_stop])
+            node_grad = node._get_grad(x[:, in_start:in_stop])
             grad = np.zeros([node_grad.shape[0], self.output_dim,
                              self.input_dim],
                             dtype=node_grad.dtype)
             # note that the gradient is block-diagonal
-            grad[:,out_start:out_stop,in_start:in_stop] = node_grad
+            grad[:, out_start:out_stop, in_start:in_stop] = node_grad
         else:
-            grad[:,out_start:out_stop,in_start:in_stop] = \
-                node._get_grad(x[:,in_start:in_stop])
+            grad[:, out_start:out_stop, in_start:in_stop] = \
+                node._get_grad(x[:, in_start:in_stop])
     return grad
 
 # TODO: cache this gradient, like for linear nodes
