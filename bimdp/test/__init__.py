@@ -7,6 +7,7 @@ import test_biflow
 import test_bihinet
 import test_parallelbiflow
 import test_parallelbihinet
+import test_gradient
 
 test_suites = {
     "binode": test_binode.get_suite(),
@@ -14,6 +15,7 @@ test_suites = {
     "bihinet": test_bihinet.get_suite(),
     "parallelbiflow": test_parallelbiflow.get_suite(),
     "parallelbihinet": test_parallelbihinet.get_suite(),
+    "gradient": test_gradient.get_suite(),
 }
 
 def get_suite():

@@ -8,6 +8,7 @@ except:
     print "No autogen modules found."
     
 from miscnodes import IdentityBiNode, SenderBiNode
+from gradient import NotDifferentiableException, GradientExtensionNode
 
 del miscnodes
 
