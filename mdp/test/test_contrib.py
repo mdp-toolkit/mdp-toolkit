@@ -154,9 +154,9 @@ class ContribTestSuite(NodesTestSuite):
                 self._testICANode(ica, rand_func=numx_rand.exponential)
                 self._testICANodeMatrices(ica2)
                 return
-            except Exception, exc:
-                pass
-        raise exc
+            except Exception:
+                if i == trials - 1:
+                    raise
 
     def testNIPALSNode(self):
         line_x = numx.zeros((1000,2),"d")

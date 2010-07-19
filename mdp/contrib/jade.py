@@ -86,7 +86,7 @@ class JADENode(ICANode):
             print "jade -> Estimating cumulant matrices"
 
         # Dim. of the space of real symm matrices
-        dimsymm = (m*(m+1))/2
+        dimsymm = (m*(m+1)) // 2
         # number of cumulant matrices
         nbcm = dimsymm
         # Storage for cumulant matrices
@@ -104,7 +104,7 @@ class JADENode(ICANode):
         # will index the columns of CM where to store the cum. mats.
         Range = arange(m)
 
-        for im in range(m):
+        for im in xrange(m):
             Xim = X[:, im]
             Xijm = Xim*Xim
             # Note to myself: the -R on next line can be removed: it does not
@@ -112,14 +112,14 @@ class JADENode(ICANode):
             Qij = ( mult(Xijm*X.T, X) / float(T)
                     - R - 2 * numx.outer(R[:,im], R[:,im]) )
             CM[:, Range] = Qij
-            Range = Range  + m
-            for jm in range(im):
+            Range += m
+            for jm in xrange(im):
                 Xijm = Xim*X[:, jm]
-                Qij = ( sqrt(2) * mult(Xijm*X.T, X) / float(T)
+                Qij = ( sqrt(2) * mult(Xijm*X.T, X) / T
                         - numx.outer(R[:,im], R[:,jm]) - numx.outer(R[:,jm],
                                                                     R[:,im]) )
                 CM[:, Range]	= Qij
-                Range = Range + m
+                Range += m
 
         # Now we have nbcm = m(m+1)/2 cumulants matrices stored in a big
         # m x m*nbcm array.
@@ -132,10 +132,10 @@ class JADENode(ICANode):
         Diag = numx.zeros(m, dtype=dtype)
         On = 0.0
         Range = arange(m)
-        for im in range(nbcm):
+        for im in xrange(nbcm):
             Diag = numx.diag(CM[:, Range])
             On = On + (Diag*Diag).sum(axis=0)
-            Range = Range + m
+            Range += m
 
         Off = (CM*CM).sum(axis=0) - On
         # A statistically scaled threshold on `small" angles
@@ -167,12 +167,12 @@ class JADENode(ICANode):
             encore = False
             if verbose:
                 print "jade -> Sweep #%3d" % sweep ,
-            sweep = sweep + 1
+            sweep += 1
             upds  = 0
             Vkeep = V
 
-            for p in range(m-1):
-                for q in range(p+1, m):
+            for p in xrange(m-1):
+                for q in xrange(p+1, m):
 
                     Ip = arange(p, m*nbcm, m)
                     Iq = arange(q, m*nbcm, m)
@@ -206,7 +206,7 @@ class JADENode(ICANode):
 
             if verbose:
                 print "completed in %d rotations" % upds
-            updates = updates + upds
+            updates += upds
             if updates > max_it:
                 err_msg = 'No convergence after %d iterations.' % max_it
                 raise mdp.NodeException(err_msg)
