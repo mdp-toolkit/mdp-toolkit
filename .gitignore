@@ -23,3 +23,6 @@
 *.swp
 *.out
 
+# setuptools stuff
+build/
+_configtest.f
