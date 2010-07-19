@@ -25,7 +25,7 @@ class JADENode(ICANode):
 
     Original code contributed by:
     Gabriel Beckers (2008).
-    
+
     History:
     - May 2005    version 1.8 for MATLAB released by Jean-Francois Cardoso
     - Dec 2007    MATLAB version 1.8 ported to Python/NumPy by Gabriel Beckers
@@ -47,7 +47,7 @@ class JADENode(ICANode):
                       number of whitened components to keep during the
                       calculation (i.e., the input dimensions are reduced to
                       white_comp by keeping the components of largest variance).
-        
+
         white_parm -- a dictionary with additional parameters for whitening.
                       It is passed directly to the WhiteningNode constructor.
                       Ex: white_parm = { 'svd' : True }
@@ -57,16 +57,16 @@ class JADENode(ICANode):
         Specific for JADE:
 
         max_it -- maximum number of iterations
-        
+
         """
         super(JADENode, self).__init__(limit, False, verbose, whitened,
                                        white_comp, white_parm, input_dim,
                                        dtype)
-        
-        self.max_it = max_it 
-       
+
+        self.max_it = max_it
+
     def core(self, data):
-        # much of the code here is a more or less line by line translation of 
+        # much of the code here is a more or less line by line translation of
         # the original matlab code by Jean-Francois Cardoso.
         append = numx.append
         arange = numx.arange
@@ -99,20 +99,20 @@ class JADENode(ICANode):
         # Temp
         Xijm = numx.zeros(m, dtype=dtype)
 
-        # I am using a symmetry trick to save storage. I should write a short 
+        # I am using a symmetry trick to save storage. I should write a short
         # note one of these days explaining what is going on here.
         # will index the columns of CM where to store the cum. mats.
-        Range = arange(m) 
+        Range = arange(m)
 
         for im in range(m):
             Xim = X[:, im]
             Xijm = Xim*Xim
-            # Note to myself: the -R on next line can be removed: it does not 
+            # Note to myself: the -R on next line can be removed: it does not
             # affect the joint diagonalization criterion
             Qij = ( mult(Xijm*X.T, X) / float(T)
                     - R - 2 * numx.outer(R[:,im], R[:,im]) )
-            CM[:, Range] = Qij 
-            Range = Range  + m 
+            CM[:, Range] = Qij
+            Range = Range  + m
             for jm in range(im):
                 Xijm = Xim*X[:, jm]
                 Qij = ( sqrt(2) * mult(Xijm*X.T, X) / float(T)
@@ -121,7 +121,7 @@ class JADENode(ICANode):
                 CM[:, Range]	= Qij
                 Range = Range + m
 
-        # Now we have nbcm = m(m+1)/2 cumulants matrices stored in a big 
+        # Now we have nbcm = m(m+1)/2 cumulants matrices stored in a big
         # m x m*nbcm array.
 
         # Joint diagonalization of the cumulant matrices
@@ -141,7 +141,7 @@ class JADENode(ICANode):
         # A statistically scaled threshold on `small" angles
         seuil = (self.limit*self.limit) / sqrt(T)
         # sweep number
-        encore = True 
+        encore = True
         sweep = 0
         # Total number of rotations
         updates = 0
@@ -181,7 +181,7 @@ class JADENode(ICANode):
                     g = concatenate([numx.atleast_2d(CM[p, Ip] - CM[q, Iq]),
                                      numx.atleast_2d(CM[p, Iq] + CM[q, Ip])])
                     gg = mult(g, g.T)
-                    ton = gg[0, 0] - gg[1, 1] 
+                    ton = gg[0, 0] - gg[1, 1]
                     toff = gg[0, 1] + gg[1, 0]
                     theta = 0.5 * arctan2(toff, ton + sqrt(ton*ton+toff*toff))
                     Gain = (sqrt(ton * ton + toff * toff) - ton) / 4.0
@@ -190,7 +190,7 @@ class JADENode(ICANode):
                     if abs(theta) > seuil:
                         encore = True
                         upds = upds + 1
-                        c = cos(theta) 
+                        c = cos(theta)
                         s = sin(theta)
                         G = array([[c, -s] , [s, c] ])
                         pair = array([p, q])
@@ -221,7 +221,7 @@ class JADENode(ICANode):
         B = V.T
 
         # Permute the rows of the separating matrix B to get the most energetic
-        # components first. Here the **signals** are normalized to unit 
+        # components first. Here the **signals** are normalized to unit
         # variance. Therefore, the sort is according to the norm of the
         # columns of A = pinv(B)
 
@@ -230,7 +230,7 @@ class JADENode(ICANode):
 
         A = numx_linalg.pinv(B)
         B =  B[numx.argsort((A*A).sum(axis=0))[::-1], :]
-        
+
         if verbose:
             print "jade -> Fixing the signs"
         b = B[:, 0]
