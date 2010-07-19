@@ -125,6 +125,41 @@ class TestGradientExtension(unittest.TestCase):
             self.assert_(np.max(np.abs(grad1 - grad2)) < 1E-9)
         finally:
             mdp.deactivate_extension("gradient")
+
+    def test_layer_gradient(self):
+        """Test gradient for a simple layer."""
+        layer = mdp.hinet.Layer([mdp.nodes.SFA2Node(input_dim=4, output_dim=3),
+                                 mdp.nodes.SFANode(input_dim=6, output_dim=2)])
+        x = np.random.random((100,10))
+        layer.train(x)
+        layer.stop_training()
+        mdp.activate_extension("gradient")
+        try:
+            x = np.random.random((7,10))
+            result = layer._gradient(x)
+            gradient = result[1]["grad"]
+            self.assert_(gradient.shape == (7,5,10))
+        finally:
+            mdp.deactivate_extension("gradient")
+  
+    def test_clonebilayer_gradient(self):
+        """Test gradient for a simple layer."""
+        layer = bimdp.hinet.CloneBiLayer(
+                            bimdp.nodes.SFA2BiNode(input_dim=5, output_dim=2),
+                            n_nodes=3)
+        x = np.random.random((100,15))
+        layer.train(x)
+        layer.stop_training()
+        mdp.activate_extension("gradient")
+        try:
+            x = np.random.random((7,15))
+            result = layer._gradient(x)
+            gradient = result[1]["grad"]
+            self.assert_(gradient.shape == (7,6,15))
+        finally:
+            mdp.deactivate_extension("gradient")
+            
+    # TODO: add functional layer gradient tests
     
             
 def get_suite():

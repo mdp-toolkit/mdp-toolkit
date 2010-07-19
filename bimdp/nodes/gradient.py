@@ -2,9 +2,8 @@
 Extension to get the total derivative / gradient / Jacobian matrix.
 """
 
-import numpy as np
 import mdp
-
+np = mdp.numx
 
 class NotDifferentiableException(mdp.NodeException):
     """Exception if the total derivative does not exist."""
@@ -36,6 +35,8 @@ class GradientExtensionNode(mdp.ExtensionNode, mdp.Node):
         
         This is a template function, derived classes should override _get_grad.
         """
+        if self.is_training():
+            raise mdp.TrainingException("The training is not completed yet.")
         if grad is None:
             grad = np.zeros((len(x), self.input_dim, self.input_dim))
             diag_indices = np.arange(self.input_dim)
@@ -69,9 +70,15 @@ class GradientExtensionNode(mdp.ExtensionNode, mdp.Node):
     def _stop_gradient(self, x, grad=None):
         """Helper method to make gradient available for stop_message."""
         result = self._gradient(x, grad)
+        # FIXME: Is this really correct? x should be updated!
+        #    Could remove this once we have the new stop signature.
         return result[1], 1
-    
+
+
 ## Implementations for specific nodes. ##
+
+# TODO: cache the gradient for linear nodes?
+#    If there was a linear base class one could integrate this?
 
 @mdp.extension_method("gradient", mdp.nodes.SFANode, "_get_grad")    
 def _sfa_grad(self, x):
@@ -103,3 +110,35 @@ def _sfa2_grad(self, x):
     sfa_grad = _sfa_grad(self, x)
     return np.asarray([np.dot(sfa_grad[i], quadex_grad[i])
                        for i in range(len(sfa_grad))])
+
+## mdp.hinet nodes ##
+
+@mdp.extension_method("gradient", mdp.hinet.Layer, "_get_grad")    
+def _layer_grad(self, x):
+    in_start = 0
+    in_stop = 0
+    out_start = 0
+    out_stop = 0
+    grad = None
+    for node in self.nodes:
+        out_start = out_stop
+        out_stop += node.output_dim
+        in_start = in_stop
+        in_stop += node.input_dim
+        if grad is None:
+            node_grad = node._get_grad(x[:,in_start:in_stop])
+            grad = np.zeros([node_grad.shape[0], self.output_dim,
+                             self.input_dim],
+                            dtype=node_grad.dtype)
+            # note that the gradient is block-diagonal
+            grad[:,out_start:out_stop,in_start:in_stop] = node_grad
+        else:
+            grad[:,out_start:out_stop,in_start:in_stop] = \
+                node._get_grad(x[:,in_start:in_stop])
+    return grad
+
+@mdp.extension_method("gradient", mdp.hinet.Switchboard, "_get_grad")    
+def _switchboard_grad(self, x):
+    # the gradient is constant, but have to give it for each x point
+    return np.repeat(self.sf.T[np.newaxis,:,:], len(x), axis=0)
+
