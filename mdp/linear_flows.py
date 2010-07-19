@@ -34,7 +34,7 @@ class CrashRecoveryException(mdp.MDPException):
             (fd, filename)=_tempfile.mkstemp(suffix=".pic", prefix="MDPcrash_")
             fl = _os.fdopen(fd, 'w+b', -1)
         else:
-            fl = file(filename, 'w+b', -1)
+            fl = open(filename, 'w+b', -1)
         _cPickle.dump(self.crashing_obj, fl)
         fl.close()
         return filename
