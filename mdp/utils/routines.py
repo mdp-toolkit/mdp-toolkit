@@ -186,7 +186,7 @@ def comb(N, k):
     for mlt in xrange(N, N-k, -1):
         ret *= mlt
     for dv in xrange(1, k+1):
-        ret /= dv
+        ret //= dv
     return ret
 
 
