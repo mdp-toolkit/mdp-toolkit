@@ -2,6 +2,7 @@
 import unittest
 
 import mdp
+import sys
 
 
 class TestMDPExtensions(unittest.TestCase):
@@ -82,7 +83,10 @@ class TestMDPExtensions(unittest.TestCase):
             _testtest_attr = 1337
         class TestSFA2Node(TestSFANode, mdp.nodes.SFA2Node):
             def _testtest(self):
-                return TestSFANode._testtest.im_func(self)
+                if sys.version_info[0] < 3:
+                    return TestSFANode._testtest.__func__(self)
+                else:
+                    return TestSFANode._testtest(self)
         sfa2_node = mdp.nodes.SFA2Node()
         mdp.activate_extension("__test")
         self.assert_(sfa2_node._testtest() == 42)
