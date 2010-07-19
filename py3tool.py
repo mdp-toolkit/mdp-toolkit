@@ -1,14 +1,7 @@
 #!/usr/bin/env python3
 """
+Convert *py files with lib2to3.
 Taken from numpy. Adapted to our needs.
-
-Example usage:
-
-    python3 tools/py3tool.py testing distutils core
-
-This will copy files to _py3k/numpy, add a dummy __init__.py and
-version.py on the top level, and copy and 2to3 the files of the three
-submodules.
 """
 
 from optparse import OptionParser
@@ -26,34 +19,6 @@ EXTRA_2TO3_FLAGS = {}
 
 BASE = os.path.normpath(os.path.join(os.path.dirname(__file__), '..'))
 TEMP = os.path.normpath(os.path.join(BASE, '_py3k'))
-
-def main():
-    p = OptionParser(usage=__doc__.strip())
-    p.add_option("--clean", "-c", action="store_true",
-                 help="clean source directory")
-    options, args = p.parse_args()
-
-    if args:
-        p.error('This script does not take any arguments')
-
-    if not os.path.isdir(TEMP):
-        os.makedirs(TEMP)
-
-    # Environment
-    pp = [os.path.abspath(TEMP)]
-    def getenv():
-        env = dict(os.environ)
-        env.update({'PYTHONPATH': ':'.join(pp)})
-        return env
-    
-    # Copy
-    src = BASE
-    dst = TEMP
-
-    # Run 2to3
-    sync_2to3(dst=dst,
-              src=src,
-              clean=options.clean)
 
 def custom_mangling(filename):
     pass
@@ -159,5 +124,3 @@ def sync_2to3(src, dst, clean=False):
         # perform custom mangling
         custom_mangling(dst_fn)
 
-if __name__ == "__main__":
-    main()
