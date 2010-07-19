@@ -60,12 +60,13 @@ class GraphTestSuite(unittest.TestSuite):
         ed1 = g.add_edge(nds[0],nds[2])
         ed2 = g.add_edge(nds[1],nds[2])
         ed3 = g.add_edge(nds[2],nds[3])
-        assert nds[2].get_edges_in().sort()==[ed1, ed2].sort()
-        assert nds[2].get_edges().sort()==[ed1, ed2, ed3].sort()
-        assert nds[2].get_edges_in(from_=nds[1])==[ed2]
-        assert nds[2].get_edges_out(to_=nds[3])==[ed3]
+        assert set(nds[2].get_edges_in()) == set([ed1, ed2])
+        assert set(nds[2].get_edges_out()) == set([ed3])
+        assert set(nds[2].get_edges()) == set([ed1, ed2, ed3])
+        assert set(nds[2].get_edges_in(from_=nds[1])) == set([ed2])
+        assert set(nds[2].get_edges_out(to_=nds[3])) == set([ed3])
         ed4 = g.add_edge(nds[3],nds[2])
-        assert nds[2].get_edges(neighbor=nds[3]).sort()==[ed3,ed4].sort()
+        assert set(nds[2].get_edges(neighbor=nds[3])) == set([ed3,ed4])
 
     def testRemoveEdge(self):
         g = graph.Graph()
