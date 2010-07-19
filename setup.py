@@ -1,5 +1,6 @@
 from distutils.core import setup
 import os
+import sys
 
 short_description = "Modular toolkit for Data Processing (MDP) is a library of widely used data processing algorithms that can be combined according to a pipeline analogy to build more complex data processing software. Implemented algorithms include Principal Component Analysis (PCA), Independent Component Analysis (ICA), Slow Feature Analysis (SFA), and many more."
 
