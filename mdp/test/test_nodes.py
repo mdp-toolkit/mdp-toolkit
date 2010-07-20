@@ -94,9 +94,9 @@ def _cov(x,y=None):
     #return mult(numx.transpose(x),y)/(x.shape[0]-1)
     return mult(numx.transpose(x),y)/(x.shape[0])
 
-_spinner = itertools.cycle((' /\b\b', ' -\b\b', ' \\\b\b', ' |\b\b'))
-#_spinner = itertools.cycle((' .\b\b', ' o\b\b', ' 0\b\b', ' O\b\b',
-#                            ' 0\b\b', ' o\b\b'))
+#_spinner = itertools.cycle((' /\b\b', ' -\b\b', ' \\\b\b', ' |\b\b'))
+_spinner = itertools.cycle((' .\b\b', ' o\b\b', ' 0\b\b', ' O\b\b',
+                            ' 0\b\b', ' o\b\b'))
 #_spinner = itertools.cycle([" '\b\b"]*2 + [' !\b\b']*2 + [' .\b\b']*2 +
 #                           [' !\b\b']*2)
 
