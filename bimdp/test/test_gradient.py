@@ -7,7 +7,7 @@ import bimdp
 
 
 class TestGradientExtension(unittest.TestCase):
-    
+
     def test_sfa_gradient(self):
         """Test gradient for combination of SFA nodes."""
         sfa_node1 = bimdp.nodes.SFABiNode(output_dim=8)
@@ -22,7 +22,7 @@ class TestGradientExtension(unittest.TestCase):
             flow.execute(x, {"method": "gradient"})
         finally:
             mdp.deactivate_extension("gradient")
-            
+
     def test_gradient_product(self):
         """Test that the product of gradients is calculated correctly."""
         sfa_node1 = bimdp.nodes.SFABiNode(output_dim=5)
@@ -46,7 +46,7 @@ class TestGradientExtension(unittest.TestCase):
             self.assert_(np.max(np.abs(ref_grad - grad12)) < 1E-9)
         finally:
             mdp.deactivate_extension("gradient")
-            
+
     def test_quadexpan_gradient1(self):
         """Test validity of gradient for QuadraticExpansionBiNode."""
         node = mdp.nodes.QuadraticExpansionNode()
@@ -65,11 +65,11 @@ class TestGradientExtension(unittest.TestCase):
                   [ 4, 0, 1],   # x1x3
                   [ 0, 6, 0],   # x2x2
                   [ 0, 4, 3],   # x2x3
-                  [ 0, 0, 8]]]) # x3x3 
+                  [ 0, 0, 8]]]) # x3x3
             self.assert_(np.all(grad == reference))
         finally:
             mdp.deactivate_extension("gradient")
-            
+
     def test_quadexpan_gradient2(self):
         """Test gradient with multiple data points."""
         node = mdp.nodes.QuadraticExpansionNode()
@@ -82,7 +82,7 @@ class TestGradientExtension(unittest.TestCase):
             self.assert_(gradient.shape == (3,20,5))
         finally:
             mdp.deactivate_extension("gradient")
-            
+
     def test_sfa2_gradient(self):
         sfa2_node1 = bimdp.nodes.SFA2BiNode(output_dim=5)
         sfa2_node2 = bimdp.nodes.SFA2BiNode(output_dim=3)
@@ -95,7 +95,7 @@ class TestGradientExtension(unittest.TestCase):
             flow.execute(x, {"method": "gradient"})
         finally:
             mdp.deactivate_extension("gradient")
-            
+
     def test_sfa2_gradient2(self):
         def _alt_sfa2_grad(self, x):
             """Reference grad method based on quadratic forms."""
@@ -148,7 +148,7 @@ class TestGradientExtension(unittest.TestCase):
             self.assert_(np.all(grad == ref_grad))
         finally:
             mdp.deactivate_extension("gradient")
-  
+
     def test_clonebilayer_gradient(self):
         """Test gradient for a simple layer."""
         layer = bimdp.hinet.CloneBiLayer(
@@ -165,7 +165,7 @@ class TestGradientExtension(unittest.TestCase):
             self.assert_(grad.shape == (7,6,15))
         finally:
             mdp.deactivate_extension("gradient")
-            
+
     def test_switchboard_gradient1(self):
         """Test that gradient is correct for a tiny switchboard."""
         sboard = mdp.hinet.Switchboard(input_dim=4, connections=[2,0])
@@ -196,11 +196,11 @@ class TestGradientExtension(unittest.TestCase):
         """Test gradient for a small SFA network."""
         sfa_node = bimdp.nodes.SFABiNode(input_dim=4*4, output_dim=5)
         switchboard = bimdp.hinet.Rectangular2dBiSwitchboard(
-                                                  x_in_channels=8, 
+                                                  x_in_channels=8,
                                                   y_in_channels=8,
-                                                  x_field_channels=4, 
+                                                  x_field_channels=4,
                                                   y_field_channels=4,
-                                                  x_field_spacing=2, 
+                                                  x_field_spacing=2,
                                                   y_field_spacing=2)
         flownode = bimdp.hinet.BiFlowNode(bimdp.BiFlow([sfa_node]))
         sfa_layer = bimdp.hinet.CloneBiLayer(flownode,
@@ -220,11 +220,11 @@ class TestGradientExtension(unittest.TestCase):
         finally:
             mdp.deactivate_extension("gradient")
 
-            
+
 def get_suite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(TestGradientExtension))
     return suite
-            
+
 if __name__ == '__main__':
-    unittest.main() 
+    unittest.main()

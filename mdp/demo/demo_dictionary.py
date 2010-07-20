@@ -32,9 +32,9 @@ def show_available_dicts():
                                           stdout=subprocess.PIPE).stdout
     except OSError:
         raise NotImplementedError("Sorry, you need to have ‘locate’ on your system.")
-    
+
     filename = re.compile('.*\/\w{2,3}_\w{2,3}\.dic$')
-    
+
     for name in possible_dicts:
         match = filename.match(name)
         if match:
@@ -47,7 +47,7 @@ def show_available_dicts():
     for i, dict_ in enumerate(available_dicts):
         print (" %2i) %s [%i kB]" % (i + 1, dict_[0], dict_[1] / 1024))
     num = raw_input("Which dictionary do you want to use? ")
-    
+
     try:
         return available_dicts[int(num) - 1][0]
     except IndexError:
@@ -63,16 +63,16 @@ class DictionaryDemo(object):
         self._correlation = correlation
         self._dictionary = dictionary
         self._verbose = verbose
-        
+
         if self._verbose:
             print self.__doc__
-        
+
         self.mc = SimpleMarkovClassifier(dtype="unicode")
-        
+
         self.trainSimpleMarkovClassifier()
         if self._verbose:
             self.print_transition_probabilities()
-            
+
     def trainSimpleMarkovClassifier(self):
         regex = re.compile('[%s]' % re.escape(string.punctuation))
         dictfile = codecs.open(self._dictionary, "r", "latin-1")
@@ -83,14 +83,14 @@ class DictionaryDemo(object):
                 pass
             f.close()
             return i + 1
-        
+
         if self._verbose:
             print "Start learning from ‘%s’." % self._dictionary
         for num, word in mdp.utils.progressinfo(enumerate(dictfile),
                                                 file_len(self._dictionary)):
             # transform input to our needs
             #if num == 100: break
-            
+
             # remove punctuation
             word = regex.sub(' ', word).lower().strip().split()
             try:
@@ -102,9 +102,9 @@ class DictionaryDemo(object):
             words = zip(*shifted_words)
             labels = list(word + " ")
             self.mc.train(mdp.numx.array(words), labels)
-        
+
         dictfile.close()
-        
+
     def print_transition_probabilities(self):
         print "Transition probabilities:"
         features = self.mc.features
@@ -117,7 +117,7 @@ class DictionaryDemo(object):
                             print "".join(feature).replace(" ", "_"), \
                                   "->", k.replace(" ", "_"), \
                                   "(", ("%7.3f %%" % (v * 100)), ")"
-    
+
     def get_words(self, num_words):
         for _ in range(num_words):
             features = [" "] * (self._correlation)
@@ -131,30 +131,29 @@ class DictionaryDemo(object):
 
 if __name__ == '__main__':
     parser = OptionParser("usage: %prog [options] dictionary")
-    
+
     parser.add_option("-c", "--correlation",
                       help="The amount of correlation between the letters.",
                       default=2, type=int)
     parser.add_option("-n", "--number", dest="num_words",
                       help="The number of examples.", default=20, type=int)
-    parser.add_option("-q", "--quiet", dest="verbose", action="store_false", 
+    parser.add_option("-q", "--quiet", dest="verbose", action="store_false",
                       help=u"Don’t give any statistical information.",
                       default=True)
     parser.epilog = "If no dictionary is given, a list of possible dictionaries is produced."
 
     (options, args) = parser.parse_args()
-    
+
     if len(args) > 1:
         parser.error("Only one dictionary file is supported.")
-    
+
     if not args:
         dictionary = show_available_dicts()
     else:
         dictionary = args[0]
-    
+
     if dictionary is None:
         exit
-    
+
     demo = DictionaryDemo(dictionary, options.correlation, options.verbose)
     demo.get_words(options.num_words)
-

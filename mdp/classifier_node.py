@@ -105,5 +105,3 @@ class ClassifierCumulator(ClassifierNode):
         self.data.shape = (self.tlen, self.input_dim)
         self.labels = numx.array(self.labels, dtype = self.dtype)
         self.labels.shape = (self.tlen)
-
-

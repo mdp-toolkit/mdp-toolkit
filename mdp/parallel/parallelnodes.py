@@ -1,14 +1,14 @@
 """
 Module for MDP Nodes that support parallel training.
 
-This module contains both the parallel base class and some parallel 
-implementations of MDP nodes. Note that such ParallelNodes are only needed for 
+This module contains both the parallel base class and some parallel
+implementations of MDP nodes. Note that such ParallelNodes are only needed for
 training, parallel execution works with any Node that can be pickled.
 """
 
 # WARNING: There is a problem with unpickled arrays in NumPy < 1.1.x, see
 # http://projects.scipy.org/scipy/numpy/ticket/551
-# To circumvent this, you can use a copy() of all unpickled arrays. 
+# To circumvent this, you can use a copy() of all unpickled arrays.
 
 import inspect
 
@@ -18,10 +18,10 @@ from mdp import numx
 
 class TrainingPhaseNotParallelException(mdp.NodeException):
     """Exception for parallel nodes that do not support fork() in some phases.
-    
+
     This exception signals that training should be done locally for this
     training phase. Only when this exception, when raised by fork(), is caught
-    in ParallelFlow for local training. 
+    in ParallelFlow for local training.
     """
     pass
 
@@ -32,24 +32,24 @@ class JoinParallelNodeException(mdp.NodeException):
 
 class ParallelExtensionNode(mdp.ExtensionNode, mdp.Node):
     """Base class for parallel trainable MDP nodes.
-    
+
     With the fork method new node instances are created which can then be
     trained. With the join method the trained instances are then merged back
     into a single node instance.
-    
+
     This class defines default methods which raise a
     TrainingPhaseNotParallelException exception.
     """
-    
-    extension_name = "parallel" 
-    
+
+    extension_name = "parallel"
+
     def fork(self):
         """Return a new instance of this node class for remote training.
-        
+
         This is a template method, the actual forking should be implemented in
         _fork.
-        
-        The forked node should be a ParallelNode of the same class as well, 
+
+        The forked node should be a ParallelNode of the same class as well,
         thus allowing recursive forking and joining.
         """
         if not self.is_trainable():
@@ -58,11 +58,11 @@ class ParallelExtensionNode(mdp.ExtensionNode, mdp.Node):
             raise mdp.TrainingFinishedException, \
                   "The training phase has already finished."
         return self._fork()
-    
+
     # TODO: check that the dimensions match?
     def join(self, forked_node):
         """Absorb the trained node from a fork into this parent node.
-        
+
         This is a template method, the actual joining should be implemented in
         _join.
         """
@@ -80,12 +80,12 @@ class ParallelExtensionNode(mdp.ExtensionNode, mdp.Node):
         if not self._train_phase_started:
             self._train_phase_started = True
         self._join(forked_node)
-            
+
     ## hook methods, overwrite these ##
-    
+
     def _fork(self):
         """Hook method for forking with default implementation.
-        
+
         Overwrite this method for nodes that can be parallelized.
         You can use _default_fork, if that is compatible with your node class,
         typically the hard part is the joining.
@@ -93,22 +93,22 @@ class ParallelExtensionNode(mdp.ExtensionNode, mdp.Node):
         raise TrainingPhaseNotParallelException("fork is not implemented " +
                                                 "by this node (%s)" %
                                                 str(self.__class__))
-    
+
     def _join(self, forked_node):
         """Hook method for joining, to be overridden."""
         raise TrainingPhaseNotParallelException("join is not implemented " +
                                                 "by this node (%s)" %
                                                 str(self.__class__))
-    
+
     ## helper methods ##
-        
+
     def _default_fork(self):
         """Default implementation of _fork.
-        
+
         It uses introspection to determine the init kwargs and tries to fill
         them with public attributes. These kwargs are then used to instanciate
         self.__class__ to create the fork instance.
-        
+
         So you can use this method if all the required keys are also public
         attributes or have a single underscore in front.
         """
@@ -137,16 +137,16 @@ class ParallelExtensionNode(mdp.ExtensionNode, mdp.Node):
                 raise TrainingPhaseNotParallelException(err)
         # create new instance
         return self.__class__(**kwargs)
-    
+
 
 ## MDP parallel node implementations ##
 
 class ParallelPCANode(ParallelExtensionNode, mdp.nodes.PCANode):
     """Parallel version of MDP PCA node."""
-    
+
     def _fork(self):
         return self._default_fork()
-    
+
     def _join(self, forked_node):
         """Combine the covariance matrices."""
         if self._cov_mtx._cov_mtx is None:
@@ -156,14 +156,14 @@ class ParallelPCANode(ParallelExtensionNode, mdp.nodes.PCANode):
             self._cov_mtx._cov_mtx += forked_node._cov_mtx._cov_mtx
             self._cov_mtx._avg += forked_node._cov_mtx._avg
             self._cov_mtx._tlen += forked_node._cov_mtx._tlen
-            
-            
+
+
 class ParallelSFANode(ParallelExtensionNode, mdp.nodes.SFANode):
     """Parallel version of MDP SFA node."""
-    
+
     def _fork(self):
         return self._default_fork()
-    
+
     def _join(self, forked_node):
         """Combine the covariance matrices."""
         if self._cov_mtx._cov_mtx is None:
@@ -177,10 +177,10 @@ class ParallelSFANode(ParallelExtensionNode, mdp.nodes.SFANode):
             self._dcov_mtx._cov_mtx += forked_node._dcov_mtx._cov_mtx
             self._dcov_mtx._avg += forked_node._dcov_mtx._avg
             self._dcov_mtx._tlen += forked_node._dcov_mtx._tlen
-            
-            
+
+
 class ParallelFDANode(ParallelExtensionNode, mdp.nodes.FDANode):
-    
+
     def _fork(self):
         if self.get_current_train_phase() == 1:
             forked_node = self.copy()
@@ -190,7 +190,7 @@ class ParallelFDANode(ParallelExtensionNode, mdp.nodes.FDANode):
         else:
             forked_node = self._default_fork()
         return forked_node
-    
+
     def _join(self, forked_node):
         if self.get_current_train_phase() == 1:
             if forked_node.get_current_train_phase() != 1:
@@ -214,18 +214,17 @@ class ParallelFDANode(ParallelExtensionNode, mdp.nodes.FDANode):
                 else:
                     self.means[lbl] = forked_node.means[lbl]
                     self.tlens[lbl] = forked_node.tlens[lbl]
-            
-            
+
+
 class ParallelHistogramNode(ParallelExtensionNode, mdp.nodes.HistogramNode):
     """Parallel version of the HistogramNode."""
-    
+
     def _fork(self):
         return self._default_fork()
-    
+
     def _join(self, forked_node):
         if (self.data_hist is not None) and (forked_node.data_hist is not None):
-            self.data_hist = numx.concatenate([self.data_hist, 
+            self.data_hist = numx.concatenate([self.data_hist,
                                             forked_node.data_hist])
         elif forked_node.data_hist != None:
             self.data_hist = forked_node.data_hist
-    

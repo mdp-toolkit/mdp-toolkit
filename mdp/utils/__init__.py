@@ -63,7 +63,7 @@ if _mdp.numx_description == 'scipy':
             gemm,=_mdp.numx_linalg.get_blas_funcs(('gemm',),(a,b,c))
         else:
             gemm,=_mdp.numx_linalg.get_blas_funcs(('gemm',),(a,b))
-            
+
         return gemm(alpha, a, b, beta, c, trans_a, trans_b)
 
 # workaround to numpy issues with dtype behavior:
@@ -88,7 +88,7 @@ def svd(x, compute_uv = True):
             return refcast(s, tc)
     except _mdp.numx_linalg.LinAlgError, exc:
         raise SymeigException(str(exc))
-    
+
 # clean up namespace
 del routines
 del introspection

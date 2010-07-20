@@ -253,11 +253,11 @@ longflow = flow + dummyflow
 len(longflow)
 # 4
 class BogusExceptNode(mdp.Node):
-   def train(self,x):
-       self.bogus_attr = 1
-       raise Exception, "Bogus Exception"
-   def execute(self,x):
-       raise Exception, "Bogus Exception"
+    def train(self,x):
+        self.bogus_attr = 1
+        raise Exception, "Bogus Exception"
+    def execute(self,x):
+        raise Exception, "Bogus Exception"
 # ...
 flow = mdp.Flow([BogusExceptNode()])
 flow.set_crash_recovery(1)

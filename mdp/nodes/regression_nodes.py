@@ -37,7 +37,7 @@ class LinearRegressionNode(Node):
                     in some cases
         """
         super(LinearRegressionNode, self).__init__(input_dim, output_dim, dtype)
-        
+
         self.with_bias = with_bias
         self.use_pinv = use_pinv
 
@@ -102,7 +102,7 @@ class LinearRegressionNode(Node):
                 invfun = utils.inv
             inv_xTx = invfun(self._xTx)
         except numx_linalg.LinAlgError, exception:
-            errstr = (str(exception) + 
+            errstr = (str(exception) +
                       "\n Input data may be redundant (i.e., some of the " +
                       "variables may be linearly dependent).")
             raise NodeException(errstr)
@@ -124,5 +124,3 @@ class LinearRegressionNode(Node):
         """
         return numx.concatenate((numx.ones((x.shape[0], 1),
                                            dtype=self.dtype), x), axis=1)
-
-

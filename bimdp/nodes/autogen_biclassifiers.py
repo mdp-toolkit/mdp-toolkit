@@ -41,10 +41,9 @@ class KMeansBiClassifier(BiClassifier, mdp.nodes.KMeansClassifier):
     """Automatically created BiClassifier version of KMeansClassifier."""
     def __init__(self, num_clusters, max_iter=10000, input_dim=None, dtype=None, node_id=None, stop_result=None):
         """Employs K-Means Clustering for a given number of centroids.
-        
+
         num_clusters -- number of centroids to use = number of clusters
         max_iter     -- if the algorithm does not reach convergence (for some
                         numerical reason), stop after max_iter iterations
         """
         super(KMeansBiClassifier, self).__init__(num_clusters=num_clusters, max_iter=max_iter, input_dim=input_dim, dtype=dtype, node_id=node_id, stop_result=stop_result)
-

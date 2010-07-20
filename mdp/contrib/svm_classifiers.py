@@ -12,7 +12,7 @@ from itertools import count
 class _LabelNormalizer(object):
     """This class provides a transparent mapping from arbitrary labels
     to a set of well-defined integers.
-    
+
     TODO: This could actually be a node.
     TODO: Needs more refinement. E.g. could automatically round labels to +1, -1
     """
@@ -24,7 +24,7 @@ class _LabelNormalizer(object):
             self.normalize = self._id
             self.revert = self._id
             return
-        
+
         self._mode = mode
         self._labels = set(labels)
         self._mapping = {}
@@ -42,22 +42,22 @@ class _LabelNormalizer(object):
         else:
             msg = "Remapping mode not known"
             raise mdp.NodeException(msg)
-    
+
     def _set_label_dicts(self, t_label_norm):
         self._mapping = dict(t_label_norm)
         self._inverse = dict((norm, label) for label, norm in t_label_norm)
-        
+
         # check that neither original nor normalised labels have occured more than once
         if not (len(self._mapping) == len(t_label_norm) == len(self._inverse)):
             msg = "Error in label normalisation."
-            raise mdp.NodeException(msg) 
-    
+            raise mdp.NodeException(msg)
+
     def normalize(self, labels):
         return map(self._mapping.get, labels)
-    
+
     def revert(self, norm_labels):
         return map(self._inverse.get, norm_labels)
-    
+
     def _id(self, labels):
         return labels
 
@@ -80,4 +80,3 @@ class _SVMClassifier(ClassifierCumulator):
     def _set_output_dim(self, n):
         msg = "Output dim cannot be set explicitly!"
         raise mdp.NodeException(msg)
-

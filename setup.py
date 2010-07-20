@@ -88,7 +88,7 @@ def setup_package():
     old_path = os.getcwd()
     os.chdir(src_path)
     sys.path.insert(0, src_path)
-    
+
     setup(name = 'MDP', version = '2.6',
           author = 'Pietro Berkes, Niko Wilbert, and Tiziano Zito',
           author_email = 'berkes@brandeis.edu, mail@nikowilbert.de, tiziano.zito@bccn-berlin.de',
@@ -108,7 +108,7 @@ def setup_package():
           package_data = {'mdp.hinet': ['hinet.css'],
                           'mdp.utils': ['slideshow.css']}
           )
-    
+
 
 if __name__ == '__main__':
     setup_package()

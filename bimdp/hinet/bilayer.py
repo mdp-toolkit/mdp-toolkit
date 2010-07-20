@@ -13,12 +13,12 @@ class CloneBiLayerException(BiNodeException):
 
 class CloneBiLayer(BiNode, hinet.CloneLayer):
     """BiMDP version of CloneLayer.
-    
+
     Since all the nodes in the layer are identical, it is guaranteed that the
     target identities match. The outgoing data on the other hand is not checked.
     So if the notes return different kinds of results the overall result is very
     unpredictable.
-    
+
     The incoming data is split into len(self.nodes) parts, so the actual chunk
     size does not matter as long as it is compatible with this scheme.
     This also means that this class can deal with incoming data from a
@@ -28,42 +28,42 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
     into each node message. Arrays in the outgoing message are joined along
     the second axis (unless they are the same unsplit array), so if an array
     is accidently split no harm should be done (there is only some overhead).
-    
+
     Note that a msg is always passed to the internal nodes, even if the Layer
     itself was targeted. Additional target resolution can then happen in the
     internal node (e.g. like it is done in the standard BiFlowNode).
     """
-    
-    def __init__(self, node, n_nodes=1, use_copies=False, 
+
+    def __init__(self, node, n_nodes=1, use_copies=False,
                  node_id=None, dtype=None):
         """Initialize the internal variables.
-        
+
         node -- Node which makes up the layer.
         n_nodes -- Number of times the node is repeated in this layer.
         use_copies -- Determines if a single instance or copies of the node
             are used.
         """
-        super(CloneBiLayer, self).__init__(node_id=node_id, node=node, 
+        super(CloneBiLayer, self).__init__(node_id=node_id, node=node,
                                            n_nodes=n_nodes, dtype=dtype)
         # (self.node is None) is used as flag for self.use_copies
         self.use_copies = use_copies
-            
-    use_copies = property(fget=lambda self: self._get_use_copies(), 
+
+    use_copies = property(fget=lambda self: self._get_use_copies(),
                           fset=lambda self, flag: self._set_use_copies(flag))
-    
+
     def _get_use_copies(self):
         """Return the use_copies flag."""
         return self.node is None
-    
+
     def _set_use_copies(self, use_copies):
         """Switch internally between using a single node instance or copies.
-        
-        In a normal CloneLayer a single node instance is used to represent all 
-        the horizontally aligned nodes. But in a BiMDP where the nodes store 
-        temporary data this may not work. 
-        Via this method one can therefore create copies of the single node 
+
+        In a normal CloneLayer a single node instance is used to represent all
+        the horizontally aligned nodes. But in a BiMDP where the nodes store
+        temporary data this may not work.
+        Via this method one can therefore create copies of the single node
         instance.
-        
+
         This method can also be triggered by the use_copies msg key.
         """
         if use_copies and (self.node is not None):
@@ -81,25 +81,25 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
                        "probably result in lost learning data.")
                 raise CloneBiLayerException(err)
             self.node = self.nodes[0]
-            self.nodes = [self.node] * len(self.nodes) 
-            
+            self.nodes = [self.node] * len(self.nodes)
+
     def _get_method(self, method_name, default_method, target):
         """Return the default method and the unaltered target.
-        
+
         This method overrides the standard BiNode _get_method to delegate the
         method selection to the internal nodes.
         """
         return default_method, target
-         
+
     ## standard node methods ##
-    
+
     def _check_input(self, x):
         """Input check is disabled.
-        
+
         It will be checked by the targeted internal node.
-        """  
+        """
         pass
-    
+
     def _execute(self, x, msg=None):
         """Process the data through the internal nodes."""
         y_results = []
@@ -142,7 +142,7 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
             return (y, msg)
         else:
             return y
-        
+
     def _train(self, x, msg=None):
         """Perform single training step by training the internal nodes."""
         ## this code is mostly identical to the execute code,
@@ -187,10 +187,10 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
             return (y, msg)
         else:
             return y
-                
+
     def _stop_training(self, msg=None):
         """Call stop_training on the internal nodes.
-        
+
         The outgoing message is also searched for a use_copies key, which is
         then applied if found. If the message is then empty and is aimed at
         this node then the stop_message propagation is terminated.
@@ -203,7 +203,7 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
             else:
                 msg, target = node_result
         else:
-            ## complex case, call stop_training on all node copies 
+            ## complex case, call stop_training on all node copies
             msgs = []
             target = None
             for (node, node_msg) in zip(self.nodes,
@@ -228,12 +228,12 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
             if not msg and target == self.node_id:
                 return None
         return msg, target
-            
+
     ## BiNode methods ##
-        
+
     def _stop_message(self, use_copies=None, msg=None):
         """Call stop_message on the internal nodes.
-        
+
         The outgoing message is also searched for a use_copies key, which is
         then applied if found. It is not required to provide a target for this.
         """
@@ -258,7 +258,7 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
             return msg
         elif msg:
             return msg
-        
+
     def _bi_reset(self):
         """Call bi_reset on all the inner nodes."""
         if self.use_copies:
@@ -267,10 +267,10 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
         else:
             # note: reaching this code probably means that copies should be used
             self.node.bi_reset()
-    
+
     def is_bi_training(self):
         """Return true if is_bi_learning is True for at least one inner node.
-        
+
         But if copies are used it is still advisable that they return the same
         is_bi_learning value.
         """
@@ -284,10 +284,10 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
                 return True
             else:
                 return False
-    
+
     def _request_node_id(self, node_id):
         """Return an internal node if it matches the provided node id.
-        
+
         If the node_id matches that of the layer itself, then self is returned.
         """
         if self.node_id == node_id:
@@ -303,19 +303,19 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
                 if (not first_found_node) and found_node:
                     first_found_node = found_node
             return first_found_node
-    
+
     ## Helper methods for message handling ##
-    
+
     def _extract_message_copy_flag(self, msg):
         """Look for the the possible copy flag and modify the msg if needed.
-        
+
         If the copy flag is found the Node is switched accordingly.
         """
         msg_id_keys = self._get_msg_id_keys(msg)
         copy_flag = self._extract_message_key("use_copies", msg, msg_id_keys)
         if copy_flag is not None:
             self.use_copies = copy_flag
-    
+
     def _get_split_messages(self, msg):
         """Return messages for the individual nodes."""
         if not msg:
@@ -335,11 +335,11 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
                     # Note: the value is not copied, just referenced
                     node_msg[key] = value
         return msgs
-            
-    
+
+
     def _get_combined_message(self, msgs):
         """Return the combined message.
-        
+
         Only keys from the last entry in msgs are used. Only when the value
         is an array are all the msg values combined.
         """

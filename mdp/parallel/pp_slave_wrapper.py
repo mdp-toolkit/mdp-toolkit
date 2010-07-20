@@ -1,9 +1,9 @@
 """
 Script to be called to start a network server.
 
-It differs from calling ppserver.py mainly in that it allows to add paths to 
-sys.path. So it acts like a wrapper for the server initialization. 
-The paths are passed via sys.argv[5:]. The first four arguments are  
+It differs from calling ppserver.py mainly in that it allows to add paths to
+sys.path. So it acts like a wrapper for the server initialization.
+The paths are passed via sys.argv[5:]. The first four arguments are
 port, timeout, secret, n_workers.
 """
 
@@ -35,4 +35,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    

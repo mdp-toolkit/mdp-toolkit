@@ -17,7 +17,7 @@ class SFANode(Node):
               (See the docs of the 'get_eta_values' method for
               more information)
     """
-    
+
     def __init__(self, input_dim=None, output_dim=None, dtype=None):
         super(SFANode, self).__init__(input_dim, output_dim, dtype)
 
@@ -29,14 +29,14 @@ class SFANode(Node):
 
         # set routine for eigenproblem
         self._symeig = symeig
-        
+
         # SFA eigenvalues and eigenvectors, will be set after training
         self.d = None
         self.sf = None  # second index for outputs
         self.avg = None
         self._bias = None  # avg multiplied with sf
         self.tlen = None
-    
+
     def _get_supported_dtypes(self):
         return ['float32', 'float64']
 
@@ -72,7 +72,7 @@ class SFANode(Node):
         del self._dcov_mtx
 
         rng = self._set_range()
-        
+
         #### solve the generalized eigenvalue problem
         # the eigenvalues are already ordered in ascending order
         try:
@@ -115,19 +115,19 @@ class SFANode(Node):
         """Return the eta values of the slow components learned during
         the training phase. If the training phase has not been completed
         yet, call stop_training.
-        
+
         The delta value of a signal is a measure of its temporal
         variation, and is defined as the mean of the derivative squared,
         i.e. delta(x) = mean(dx/dt(t)^2).  delta(x) is zero if
         x is a constant signal, and increases if the temporal variation
         of the signal is bigger.
-        
+
         The eta value is a more intuitive measure of temporal variation,
         defined as
             eta(x) = t/(2*pi) * sqrt(delta(x))
         If x is a signal of length 't' which consists of a sine function
         that accomplishes exactly N oscillations, then eta(x)=N.
-        
+
         Input arguments:
         t -- Sampling frequency in Hz
              The original definition in (Wiskott and Sejnowski, 2002)
@@ -164,7 +164,7 @@ class SFA2Node(SFANode):
     def _set_input_dim(self, n):
         self._expnode.input_dim = n
         self._input_dim = n
-        
+
     def _train(self, x):
         # expand in the space of polynomials of degree 2
         super(SFA2Node, self)._train(self._expnode(x))
@@ -176,9 +176,9 @@ class SFA2Node(SFANode):
             rng = (1, self.output_dim)
         else:
             # otherwise, keep all output components
-            rng = None        
+            rng = None
         return rng
-    
+
     def _stop_training(self, debug=False):
         super(SFA2Node, self)._stop_training(debug)
 
@@ -199,7 +199,7 @@ class SFA2Node(SFANode):
         """
         if self.sf is None:
             self._if_training_stop_training()
-            
+
         sf = self.sf[:, nr]
         c = -mult(self.avg, sf)
         n = self.input_dim
@@ -219,7 +219,7 @@ class SFA2Node(SFANode):
 
         return QuadraticForm(h, f, c, dtype=self.dtype)
 
-               
+
 
 ### old weave inline code to perform the time derivative
 

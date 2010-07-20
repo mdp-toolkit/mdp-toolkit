@@ -40,7 +40,7 @@ class FANode(mdp.Node):
     Max Welling's classnotes:
     http://www.ics.uci.edu/~welling/classnotes/classnotes.html ,
     in the chapter 'Linear Models'.
-    """    
+    """
     def __init__(self, tol=1e-4, max_cycles=100, verbose=False,
                  input_dim=None, output_dim=None, dtype=None):
 
@@ -54,11 +54,11 @@ class FANode(mdp.Node):
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
         return ['float32', 'float64']
-    
+
     def _train(self, x):
         # update the covariance matrix
         self._cov_mtx.update(x)
-        
+
     def _stop_training(self):
         #### some definitions
         verbose = self.verbose
@@ -102,7 +102,7 @@ class FANode(mdp.Node):
             # B += diag(sigma), avoid computing diag(sigma) which is dxd
             B.ravel().put(idx_diag_d, B.ravel().take(idx_diag_d)+sigma)
             # this quantity is used later for the log-likelihood
-            # abs is there to avoid numerical errors when det < 0 
+            # abs is there to avoid numerical errors when det < 0
             log_det_B = numx.log(abs(det(B)))
             # end the computation of B
             B = inv(B)
@@ -110,13 +110,13 @@ class FANode(mdp.Node):
             ## other useful quantities
             trA_B = mult(A.T, B)
             trA_B_cov_mtx = mult(trA_B, cov_mtx)
-            
+
             ##### E-step
             ## E_yyT = E(y_n y_n^T | x_n)
             E_yyT = - mult(trA_B, A) + mult(trA_B_cov_mtx, trA_B.T)
             # E_yyT += numx.eye(k)
             E_yyT.ravel().put(idx_diag_k, E_yyT.ravel().take(idx_diag_k)+1.)
-            
+
             ##### M-step
             A = mult(trA_B_cov_mtx.T, inv(E_yyT))
             sigma = cov_diag - (mult(A, trA_B_cov_mtx)).diagonal()
@@ -147,14 +147,14 @@ class FANode(mdp.Node):
         self.A = A
         self.mu = mu.reshape(1, d)
         self.sigma = sigma
-        
+
         ## MAP matrix
         # compute B = (A A^T + Sigma)^-1
-        B = mult(A, A.T).copy() 
+        B = mult(A, A.T).copy()
         B.ravel().put(idx_diag_d, B.ravel().take(idx_diag_d)+sigma)
         B = inv(B)
         self.E_y_mtx = mult(B.T, A)
-        
+
         self.lhood = lhood_curve
 
     def _execute(self, x):
@@ -175,7 +175,7 @@ class FANode(mdp.Node):
                     of the latent variables
         noise -- if True, generation includes the estimated noise
         """
-        
+
         self._if_training_stop_training()
 
         # set the output dimension if necessary
@@ -193,12 +193,10 @@ class FANode(mdp.Node):
         else:
             y = self._refcast(len_or_y)
             self._check_output(y)
-        
+
         res = mult(y, self.A.T)+self.mu
         if noise:
             ns = mdp.numx_rand.normal(size=(y.shape[0], self.input_dim))
             ns *= numx.sqrt(self.sigma)
             res += self._refcast(ns)
         return res
-
-        

@@ -11,18 +11,18 @@ _train or _execute (or any other specified method) in the following way:
 
     normal key string -- Is copied if in signature and passed as a named
         argument.
-    
-    node_id->key -- Is extracted (i.e. removed in original message) and passed 
+
+    node_id->key -- Is extracted (i.e. removed in original message) and passed
         as a named argument. The separator '->' is also stored available
         as the constant MSG_ID_SEP. If the key is not an argument of the
         message then the whole key is simply erased.
-        
+
 The msg returned from the inner part of the method (e.g. _execute) is then used
 to update the original message (so values can be overwritten).
 
 If args without default value are missing in the message, this will result in
 the standard Python missing-arguments-exception (this is not checked by BiNode
-itself). 
+itself).
 
 
 BiNode Return Value Options:
@@ -30,19 +30,19 @@ BiNode Return Value Options:
 
  result for execute:
      x, (x, msg), (x, msg, target)
-     
+
  result for train:
     None -- terminates training
     x, (x, msg), (x, msg, target) -- Execution is continued and
         this node will be reached at a later time to terminate training.
         If the result has the form (None, msg) then the msg is dropped (so
         it is not required to 'clear' the message manually).
-     
+
  result for stop_training and stop_message:
     None -- terminates the stop_message propagation
     (msg, target) -- If no target is specified then the remaining msg is
         dropped (terminates the propagation).
-    
+
 
 Magic message keys:
 ===================
@@ -55,20 +55,20 @@ keywords are treated in a special way:
      message in the return value then completely replaces the original message
      (instead of only updating it). This way a node can completely control the
      message and for example remove keys.
-     
+
  'target' -- If any template method like execute finds a 'target' keyword in
      the message then this is used as the target value in the return value.
      However, if _execute then also returns a target value this overwrites the
      target value. In global_message calls 'target' has no special meaning and
      can be used like any other keyword.
-     
+
   'method' -- Specify the name of the method that should be used instead of
       the standard one (e.g. in execute the standard method is _execute).
       An underscore is automatically added in front, so to select _execute
       one would have to provide 'execute'.
       If 'inverse' is given then the inverse dimension check will be performed
       and if no target is provided it will be set to -1.
-      
+
   'method' in stop_message -- To make it possible to call 'execute' and
       'inverse' in 'stop_message' there is some magic going on if these are
       specified as message arguments: In addition to the normal automatic
@@ -77,7 +77,7 @@ keywords are treated in a special way:
       value). Additionally the target is given a default value of 1 or -1
       (so setting the 'method' value is sufficient for normal execution
       or inverse).
-     
+
 """
 
 import inspect
@@ -96,32 +96,32 @@ class BiNodeException(mdp.NodeException):
     """Exception for BiNode problems."""
     pass
 
-    
+
 class BiNode(mdp.Node):
     """Abstract base class for nodes that use bimdp features.
-    
+
     This class itself is not non-functional.
-    
+
     Derived class should, if necessary, overwrite the following methods (in
     addition to the normal mdp.Node methods):
-    _stop_message, _bi_reset, and is_bi_training 
-    
+    _stop_message, _bi_reset, and is_bi_training
+
     Note hat this class can also be used as an Adapter / Mixin for normal nodes.
     This can for example be useful for nodes which require additional data
     arguments during training or execution. These can then be encapsulated in a
     messsage. Note that BiNode has to come first in the MRO to make all this
     work.
     """
-    
+
     def __init__(self, node_id=None, stop_result=None, **kwargs):
         """Initialize BiNode.
-        
+
         node_id -- None or string which identifies the node.
         stop_result -- A (msg, target) tupple which is used as the result for
             stop_training (but can be overwritten by any actual results).
             If the node has multiple training phases then this must be None or
             an iterable with one entry for each training phase.
-        
+
         kwargs are forwarded via super to the next __init__ method
         in the MRO.
         """
@@ -129,22 +129,22 @@ class BiNode(mdp.Node):
         self._stop_result = stop_result
         self._coroutine_instances = None
         super(BiNode, self).__init__(**kwargs)
-        
+
     ### Modified template methods from mdp.Node. ###
-    
+
     def execute(self, x, msg=None):
         """Return single value y or a result tuple.
-        
+
         x can be None, then the usual checks are omitted.
 
         The possible return types are y, (y, msg), (y, msg, target)
-        The outgoing msg carries forward the incoming message content. 
-        The last entry in a result tuple must not be None. 
+        The outgoing msg carries forward the incoming message content.
+        The last entry in a result tuple must not be None.
         y can be None if the result is a tuple.
-        
+
         This template method normally calls the corresponding _execute method
         or another method as specified in the message (using the magic 'method'
-        key. 
+        key.
         """
         if msg is None:
             return super(BiNode, self).execute(x)
@@ -164,21 +164,21 @@ class BiNode(mdp.Node):
                 self._pre_inversion_checks(x)
         result = method(x, **arg_dict)
         return self._combine_execute_result(result, msg, target)
-    
+
     def is_trainable(self):
         """Return the return value from super."""
         return super(BiNode, self).is_trainable()
-    
+
     def train(self, x, msg=None):
         """Train and return None or more if the execution should continue.
-        
+
         The possible return types are None, y, (y, msg), (y, msg, target).
         The last entry in a result tuple must not be None.
         y can be None if the result is a tuple.
-        
+
         This template method normally calls the corresponding _train method
         or another method as specified in the message (using the magic 'method'
-        key. 
+        key.
 
         Note that the remaining msg and taret values are only used if _train
         (or the requested method) returns something different from None
@@ -193,7 +193,7 @@ class BiNode(mdp.Node):
         if msg is None:
             # no fall-back on Node.train because we might have a return value
             self._check_input(x)
-            self._check_train_args(x)        
+            self._check_train_args(x)
             self._train_phase_started = True
             x = self._refcast(x)
             return self._train_seq[self._train_phase][0](x)
@@ -207,7 +207,7 @@ class BiNode(mdp.Node):
         if x is not None:
             if (not method_name) or (method_name == "train"):
                 self._check_input(x)
-                self._check_train_args(x, **arg_dict)  
+                self._check_train_args(x, **arg_dict)
                 self._train_phase_started = True
                 x = self._refcast(x)
             elif method == self._inverse:
@@ -220,18 +220,18 @@ class BiNode(mdp.Node):
             result[0] is None):
             # drop the remaining msg, so that no maual clearing is required
             return None
-        return result 
-    
+        return result
+
     def stop_training(self, msg=None):
         """Stop training phase and return None or (msg, target).
-        
+
         The result tuple is then used to call stop_message on the target node.
         The outgoing msg carries forward the incoming message content.
-        
+
         This template method calls a _stop_training method from self._train_seq.
         Note that it is not possible to select other methods via the 'method'
         message key.
-        
+
         If a stop_result was given in __init__ then it is used but can be
         overwritten by the _stop_training result.
         """
@@ -275,15 +275,15 @@ class BiNode(mdp.Node):
             if target is None:
                 target = stored_stop_result[1]
         return self._combine_stop_message_result(result, msg, target)
-    
+
     ### New methods for node messaging. ###
-    
+
     def stop_message(self, msg=None):
         """Receive message and return None, msg or (msg, target).
-        
+
         If the return value is (msg, target) then stop_message(msg) is called
         on the target node.
-        
+
         This template method calls the _stop_message method or another method
         specified in the method. If the specified method is specified as
         'execute' or 'inverse' then the x/y return value is extracted and
@@ -327,31 +327,31 @@ class BiNode(mdp.Node):
                     # result must be single x value
                     result = {"x": result}
         return self._combine_stop_message_result(result, msg, target)
-    
+
     def _stop_message(self):
-        """Hook method, overwrite when needed. 
-        
+        """Hook method, overwrite when needed.
+
         This default implementation only raises an exception.
         """
         err = ("This node (%s) does not support calling stop_message." %
                str(self))
         raise BiNodeException(err)
-    
+
     ## Additional new methods. ##
-    
+
     @property
     def node_id(self):
         """Return the node id (should be string) or None."""
         return self._node_id
-        
+
     def bi_reset(self):
         """Reset the node for the next data chunck.
-        
+
         This template method calls the _bi_reset method.
-        
+
         This method is automatically called by BiFlow after the processing of
         a data chunk is completed (during both training and execution).
-        
+
         All temporary data should be deleted. The internal node structure can
         be reset for the next data chunk. This is especially important if this
         node is called multiple times for a single chunk and an internal state
@@ -364,34 +364,34 @@ class BiNode(mdp.Node):
                 delattr(self, key)
             self._coroutine_instances = None
         self._bi_reset()
-    
+
     def _bi_reset(self):
         """Hook method, overwrite when needed."""
         pass
-    
+
     def is_bi_training(self):
         """Return True if a node is currently in a data gathering state.
-        
+
         This method should return True if the node is gathering any data which
         is internally stored beyond the bi_reset() call. The typical example is
-        some kind of learning in execute or message calls. 
+        some kind of learning in execute or message calls.
         Changes to the node by stop_message alone do not fall into this
-        category. 
-        
+        category.
+
         This method is used by the parallel package to decide if a node has to
         to be forked or if a copy is used.
         Basically you should ask yourself if it is sufficient to perform
-        execute or message on a copy of this Node that is later discarded, or 
-        if any data gathered during the operation should be stored. 
+        execute or message on a copy of this Node that is later discarded, or
+        if any data gathered during the operation should be stored.
         """
         return False
-    
+
     def _request_node_id(self, node_id):
         """Return the node if it matches the provided node id.
-        
+
         Otherwise the return value is None. In this default implementation
         self is returned if node_id == self._node_id.
-        
+
         Use this method instead of directly accessing self._node_id.
         This allows a node to be associated with multiple node_ids. Otherwise
         node_ids would not work for container nodes like BiFlowNode.
@@ -400,12 +400,12 @@ class BiNode(mdp.Node):
             return self
         else:
             return None
-        
+
     ### Helper methods for msg handling. ###
-    
+
     def _get_msg_id_keys(self, msg):
         """Return the id specific message keys for this node.
-        
+
         The format is [(key, fullkey),...].
         """
         msg_id_keys = []
@@ -415,7 +415,7 @@ class BiNode(mdp.Node):
                 if node_id == self._node_id:
                     msg_id_keys.append((key, fullkey))
         return msg_id_keys
-                    
+
     @staticmethod
     def _extract_message_key(key, msg, msg_id_keys):
         """Extract and return the requested key from the message.
@@ -433,15 +433,15 @@ class BiNode(mdp.Node):
                 msg_id_keys.pop(i)
                 break
         return value
-    
+
     @staticmethod
     def _extract_method_args(method, msg, msg_id_keys):
         """Extract the method arguments form the message.
-        
+
         Return the new message and a dict with the keyword arguments (the
         return of the message is done because it can be set to None).
         """
-        arg_keys = inspect.getargspec(method)[0]   
+        arg_keys = inspect.getargspec(method)[0]
         arg_dict = dict((key, msg[key]) for key in msg if key in arg_keys)
         for key, fullkey in msg_id_keys:
             if key in arg_keys:
@@ -452,14 +452,14 @@ class BiNode(mdp.Node):
             arg_dict["msg"] = msg
             msg = None
         return msg, arg_dict
-      
+
     def _get_method(self, method_name, default_method, target=None):
         """Return the method to be called and the target return value.
-        
+
         method_name -- as provided in msg (without underscore)
         default_method -- bound method object
         target -- return target value as provided in message or None
-        
+
         If the chosen method is _inverse then the default target is -1.
         """
         if not method_name:
@@ -477,13 +477,13 @@ class BiNode(mdp.Node):
                        "there is no such method." % method_name)
                 raise BiNodeException(err)
         return method, target
-    
+
     @staticmethod
     def _combine_stop_message_result(result, msg, target):
         """Combine the message result with the provided values.
-        
+
         result -- None, msg or (msg, target)
-        
+
         The values in result always have priority.
         If not target is available then the remaining message is dropped.
         """
@@ -502,20 +502,20 @@ class BiNode(mdp.Node):
                 msg = result
             return (msg, target)
         else:
-            # result contains target value 
+            # result contains target value
             if msg:
                 if result[0]:
                     msg.update(result[0])
                 return msg, result[1]
             else:
                 return result
-                
+
     @staticmethod
     def _combine_execute_result(result, msg, target):
         """Combine the execution result with the provided values.
-        
+
         result -- x, (x, msg) or (x, msg, target)
-        
+
         The values in result always has priority.
         """
         # overwrite result values if necessary and return
@@ -537,11 +537,11 @@ class BiNode(mdp.Node):
                 return result, msg
             else:
                 return result, msg, target
-    
+
     ### Overwrite Special Methods ###
-        
+
     def __repr__(self):
-        """BiNode version of the Node representation, adding the node_id.""" 
+        """BiNode version of the Node representation, adding the node_id."""
         name = type(self).__name__
         inp = "input_dim=%s" % str(self.input_dim)
         out = "output_dim=%s" % str(self.output_dim)
@@ -556,10 +556,10 @@ class BiNode(mdp.Node):
             nid = 'node_id="%s"' % node_id
         args = ', '.join((inp, out, typ, nid))
         return name + '(' + args + ')'
-    
+
     def __add__(self, other):
         """Adding binodes returns a BiFlow.
-        
+
         If a normal Node or Flow is added to a BiNode then a BiFlow is
         returned.
         Note that if a flow is added then a deep copy is used (deep
@@ -578,24 +578,24 @@ class BiNode(mdp.Node):
         else:
             # can delegate old cases
             return super(BiNode, self).__add__(other)
-        
+
 
 ### Helper Functions / Decorators ###
 
 def binode_coroutine(args, defaults=(), stop_message=False):
     """Decorator for the convenient definition of BiNode couroutines.
-    
+
     Note that this decorator should be used with the CoroutineMixin to
     guarantee correct reseting in case of an exception.
-    
+
     args -- List of string names of the arguments.
     defaults -- Tuple of default values for the arguments. If this tuple has
         n elements, they correspond to the last n elements in 'args'
         (following the convention of inspect.getargspec).
     stop_message -- Flag to signal if this coroutine is used during the
         stop_message phase. If this is False then the first value in 'args'
-        must be 'x'. 
-    
+        must be 'x'.
+
     Internally there are three methods/functions:
         - The user defined function containing the original coroutine code.
           This is only stored in the decorator closure.
@@ -618,7 +618,7 @@ def binode_coroutine(args, defaults=(), stop_message=False):
         # the original coroutine is only stored in this closure
         infodict = mdp.NodeMetaclass._function_infodict(coroutine)
         original_name = infodict["name"]
-        ## create the coroutine interface method        
+        ## create the coroutine interface method
         def _coroutine_interface(self, *args):
             try:
                 return self._coroutine_instances[original_name].send(args)
@@ -658,5 +658,3 @@ def binode_coroutine(args, defaults=(), stop_message=False):
                                     _coroutine_initialization, infodict)
         return coroutine_initialization
     return _binode_coroutine
-        
-        

@@ -34,16 +34,16 @@ class _BogusNode(mdp.Node):
     def _inverse(self,x): return 0.5*x
 
 class _BogusNodeTrainable(mdp.Node):
-    def _train(self, x):        
+    def _train(self, x):
         pass
     def _stop_training(self):
         self.bogus_attr = 1
-    
+
 class _BogusExceptNode(mdp.Node):
     def _train(self,x):
         self.bogus_attr = 1
         raise Exception, "Bogus Exception"
-    
+
     def _execute(self,x):
         raise Exception, "Bogus Exception"
 
@@ -52,7 +52,7 @@ class _BogusMultiNode(mdp.Node):
     def __init__(self):
         super(_BogusMultiNode, self).__init__()
         self.visited = []
-    
+
     def _get_train_seq(self):
         return [(self.train1, self.stop1),
                 (self.train2, self.stop2)]
@@ -82,10 +82,10 @@ def _std(x):
     mx = mean(x, axis=0)
     mx2 = mean(x*x, axis=0)
     return numx.sqrt((mx2-mx)/(x.shape[0]-1))
-    
+
 def _cov(x,y=None):
     #return covariance matrix for x and y
-    if y is None: 
+    if y is None:
         y = x.copy()
     x = x - mean(x,0)
     x = x / _std(x)
@@ -109,7 +109,7 @@ class NodesTestSuite(unittest.TestSuite):
 
     def __init__(self, testname=None):
         unittest.TestSuite.__init__(self)
-        
+
         # constants
         self.mat_dim = (500,5)
         self.decimal = 7
@@ -205,7 +205,7 @@ class NodesTestSuite(unittest.TestSuite):
             # add to the suite
             self.addTest(unittest.FunctionTestCase(testfunc,
                                                    description=funcdesc))
-        
+
 
     def _fastica_test_factory(self):
         # generate FastICANode testcases
@@ -230,7 +230,7 @@ class NodesTestSuite(unittest.TestSuite):
             testfunc, funcdesc = self._get_testFastICA(parms)
             self.addTest(unittest.FunctionTestCase(testfunc,
                                                    description=funcdesc))
-            
+
 
     def _get_random_mix(self, mat_dim = None, type = "d", scale = 1,\
                         rand_func = uniform, avg = 0, \
@@ -270,13 +270,13 @@ class NodesTestSuite(unittest.TestSuite):
                     node.stop_training()
                 else:
                     break
-                
+
     def _stop_training_or_execute(self, node, inp):
         if node.is_trainable():
             node.stop_training()
         else:
             out = node(inp)
-    
+
     def _get_testinverse(self, node_class, args=[], sup_args_func=None):
         # generates testinverse_nodeclass test functions
         # only if invertible
@@ -337,7 +337,7 @@ class NodesTestSuite(unittest.TestSuite):
                     out = node.execute(inp, sup_args_func(inp))
                 else:
                     out = node.execute(inp)
-                assert_type_equal(out.dtype, dtype) 
+                assert_type_equal(out.dtype, dtype)
         return _testdtype
 
     def _get_testoutputdim(self, node_class, args=[], sup_args_func=None):
@@ -427,9 +427,9 @@ class NodesTestSuite(unittest.TestSuite):
             node.train(x)
             assert node._train_phase_started
             node.stop_training()
-            
+
         assert not node.is_training()
-        
+
     def testNode_execution_without_training(self):
         x = uniform(size=self.mat_dim)
         # try execution without training: single train phase
@@ -440,7 +440,7 @@ class NodesTestSuite(unittest.TestSuite):
         node = _BogusMultiNode()
         node.execute(x)
         assert node.visited == [1, 2, 3, 4]
-        
+
     def testCovarianceMatrix(self):
         mat,mix,inp = self._get_random_mix()
         des_cov = numx.cov(inp, rowvar=0)
@@ -452,7 +452,7 @@ class NodesTestSuite(unittest.TestSuite):
         assert_array_almost_equal(act_tlen,des_tlen,self.decimal)
         assert_array_almost_equal(act_avg,des_avg,self.decimal)
         assert_array_almost_equal(act_cov,des_cov,self.decimal)
-        
+
     def testDelayCovarianceMatrix(self):
         dt = 5
         mat,mix,inp = self._get_random_mix()
@@ -481,8 +481,8 @@ class NodesTestSuite(unittest.TestSuite):
         assert_almost_equal(act_tlen,des_tlen,self.decimal-1)
         assert_array_almost_equal(act_avg1,des_avg1,self.decimal-1)
         assert_array_almost_equal(act_avg2,des_avg2,self.decimal-1)
-        assert_array_almost_equal(act_cov,des_cov,self.decimal-1)     
-        
+        assert_array_almost_equal(act_cov,des_cov,self.decimal-1)
+
     def testdtypeCovarianceMatrix(self):
         for type in testtypes:
             mat,mix,inp = self._get_random_mix(type='d')
@@ -490,7 +490,7 @@ class NodesTestSuite(unittest.TestSuite):
             cov.update(inp)
             cov,avg,tlen = cov.fix()
             assert_type_equal(cov.dtype,type)
-            assert_type_equal(avg.dtype,type) 
+            assert_type_equal(avg.dtype,type)
 
     def testdtypeDelayCovarianceMatrix(self):
         for type in testtypes:
@@ -539,7 +539,7 @@ class NodesTestSuite(unittest.TestSuite):
 
     def _MultipleCovarianceMatrices_funcs(self,dtype,decimals):
         def assert_all(des,act, dec=decimals):
-            # check list of matrices equals multcov array 
+            # check list of matrices equals multcov array
             for x in xrange(nmat):
                 assert_array_almost_equal_diff(des[x],act.covs[:,:,x],dec)
 
@@ -552,7 +552,7 @@ class NodesTestSuite(unittest.TestSuite):
             mat_i, mat_j = mat[i,:].copy(), mat[j,:].copy()
             mat[i,:], mat[j,:] = c*mat_i-s*mat_j, s*mat_i+c*mat_j
             return mat.copy()
-        
+
         def permute(mat,indices):
             # permute rows and cols of a single matrix
             [i,j] = indices
@@ -599,7 +599,7 @@ class NodesTestSuite(unittest.TestSuite):
         # check that we didn't got a reference
         mult_cov[0][0,0] = 1000
         assert int(cp_mult_cov[0][0,0]) != 1000
-        # return dtype 
+        # return dtype
         return mult_cov.covs.dtype
 
     def testMultipleCovarianceMatricesTransformations(self):
@@ -630,7 +630,7 @@ class NodesTestSuite(unittest.TestSuite):
         mcov2.permute(idx)
         assert_array_almost_equal_diff(mcov.covs, mcov_rot.covs,self.decimal)
         assert_array_almost_equal_diff(mcov2.covs, mcov_per.covs,self.decimal)
-                     
+
     def testPolynomialExpansionNode(self):
         def hardcoded_expansion(x, degree):
             nvars = x.shape[1]
@@ -709,7 +709,7 @@ class NodesTestSuite(unittest.TestSuite):
 ##     def testPCANode_pickled(self):
 ##         for i in xrange(2,100):
 ##             mat, mix, inp = self._get_random_mix(mat_dim=(200, i))
-            
+
 ##             pca = mdp.nodes.PCANode()
 ##             pca.train(mat)
 ##             s = cPickle.dumps(pca)
@@ -723,7 +723,7 @@ class NodesTestSuite(unittest.TestSuite):
         pca.train(mat)
         out = pca.execute(mat)
         assert_almost_equal(des_var, pca.total_variance, self.decimal)
-        
+
     def testPCANode_desired_variance(self):
         mat, mix, inp = self._get_random_mix(mat_dim=(1000, 3))
         # first make them white
@@ -762,15 +762,15 @@ class NodesTestSuite(unittest.TestSuite):
         assert out.shape[1] == 2
         # check that explained variance is > 0.8 and < 1
         assert (pca.explained_variance > 0.8 and pca.explained_variance < 1)
-        
+
     def testPCANode_range_argument(self):
         node = mdp.nodes.PCANode()
         x = numx.random.random((100,10))
         node.train(x)
         node.stop_training()
         y = node.execute(x, n=5)
-        assert y.shape[1] == 5  
-    
+        assert y.shape[1] == 5
+
     def testPCANode_SVD(self):
         # it should pass atleast the same test as PCANode
         line_x = numx.zeros((1000,2),"d")
@@ -868,12 +868,12 @@ class NodesTestSuite(unittest.TestSuite):
         y[0] = -1
         y[-1] = 1
         return y, z
-    
+
     def testPCANode_negative_eigenvalues(self):
         # should throw an Exception if reduce=False and
         # svd = False and output_dim=None
         pca = mdp.nodes.PCANode(output_dim=None, svd=False, reduce=False)
-        pca._symeig = self._mock_symeig 
+        pca._symeig = self._mock_symeig
         pca.train(uniform((10,10)))
         try:
             pca.stop_training()
@@ -887,25 +887,25 @@ class NodesTestSuite(unittest.TestSuite):
         # if reduce=True, should not throw any Exception,
         # and return output_dim = 1
         pca = mdp.nodes.PCANode(output_dim=None, svd=False, reduce=True)
-        pca._symeig = self._mock_symeig 
+        pca._symeig = self._mock_symeig
         pca.train(uniform((10,10)))
         pca.stop_training()
         assert pca.output_dim == 1, 'PCA did not remove non-positive eigenvalues!'
         # if svd=True, should not throw any Exception,
         # and return output_dim = 10
         pca = mdp.nodes.PCANode(output_dim=None, svd=True, reduce=False)
-        pca._symeig = self._mock_symeig 
+        pca._symeig = self._mock_symeig
         pca.train(uniform((10,10)))
         pca.stop_training()
-        assert pca.output_dim == 10, 'PCA did not remove non-positive eigenvalues!'       
+        assert pca.output_dim == 10, 'PCA did not remove non-positive eigenvalues!'
         # if output_dim is set, should not throw any Exception,
         # and return the right output_dim
         pca = mdp.nodes.PCANode(output_dim=1, svd=False, reduce=False)
-        pca._symeig = self._mock_symeig 
+        pca._symeig = self._mock_symeig
         pca.train(uniform((10,10)))
         pca.stop_training()
         assert pca.output_dim == 1, 'PCA did not remove non-positive eigenvalues!'
-        
+
     def testWhiteningNode(self):
         vars = 5
         dim = (10000,vars)
@@ -927,7 +927,7 @@ class NodesTestSuite(unittest.TestSuite):
         w = mdp.nodes.WhiteningNode(svd=True)
         w.train(inp)
         out = w.execute(inp)
-        
+
         assert_array_almost_equal(mean(out,axis=0),\
                                   numx.zeros((dim[1])),self.decimal)
         assert_array_almost_equal(std(out,axis=0),\
@@ -956,7 +956,7 @@ class NodesTestSuite(unittest.TestSuite):
         correlation = mult(des_mat[:-1,:1].T,out[:-1,:])/(dim-2)
         assert_array_almost_equal(abs(correlation),
                                   numx.eye(1), self.decimal-3)
-        
+
     def testSFANode_range_argument(self):
         node = mdp.nodes.SFANode()
         x = numx.random.random((100,10))
@@ -964,7 +964,7 @@ class NodesTestSuite(unittest.TestSuite):
         node.stop_training()
         y = node.execute(x, n=5)
         assert y.shape[1] == 5
-    
+
     def testSFA2Node(self):
         dim = 10000
         freqs = [2*numx.pi*100.,2*numx.pi*500.]
@@ -978,7 +978,7 @@ class NodesTestSuite(unittest.TestSuite):
         sfa = mdp.nodes.SFA2Node()
         sfa.train(mat)
         out = sfa.execute(mat)
-        assert out.shape[1]==5, "Wrong output_dim" 
+        assert out.shape[1]==5, "Wrong output_dim"
         correlation = mult(des_mat[:-1,:].T,
                            numx.take(out[:-1,:], (0,2), axis=1))/(dim-2)
         assert_array_almost_equal(abs(correlation),
@@ -995,7 +995,7 @@ class NodesTestSuite(unittest.TestSuite):
         correlation = mult(des_mat[:-1,:1].T,out[:-1,:1])/(dim-2)
         assert_array_almost_equal(abs(correlation),
                                   numx.eye(1), self.decimal-3)
-        
+
     def testSFA2Node_range_argument(self):
         node = mdp.nodes.SFA2Node()
         x = numx.random.random((100,10))
@@ -1003,7 +1003,7 @@ class NodesTestSuite(unittest.TestSuite):
         node.stop_training()
         y = node.execute(x, n=5)
         assert y.shape[1] == 5
-        
+
     def testSFA2Node_input_dim_bug(self):
         dim = 10000
         freqs = [2*numx.pi*100.,2*numx.pi*500.]
@@ -1031,19 +1031,19 @@ class NodesTestSuite(unittest.TestSuite):
         sfa.train(mat)
         out = sfa.execute(mat)
         assert out.shape[1]==3, 'SFA2Node output has wrong output dimensions!'
-        
+
     def _testICANode(self,icanode, rand_func = uniform, vars = 3, N=8000,
                      prec = 3):
-        dim = (N,vars) 
+        dim = (N,vars)
         mat,mix,inp = self._get_random_mix(rand_func=rand_func,mat_dim=dim)
         icanode.train(inp)
         act_mat = icanode.execute(inp)
         cov = utils.cov2((mat-mean(mat,axis=0))/std(mat,axis=0), act_mat)
         maxima = numx.amax(abs(cov), axis=0)
-        assert_array_almost_equal(maxima,numx.ones(vars),prec)        
+        assert_array_almost_equal(maxima,numx.ones(vars),prec)
 
     def _testICANodeMatrices(self, icanode, rand_func = uniform, vars = 3, N=8000):
-        dim = (N,vars) 
+        dim = (N,vars)
         mat,mix,inp = self._get_random_mix(rand_func=rand_func,
                                            mat_dim=dim, avg = 0)
         icanode.train(inp)
@@ -1058,19 +1058,19 @@ class NodesTestSuite(unittest.TestSuite):
         B = icanode.get_recmatrix()
         exp_mat = mult(out, B)
         assert_array_almost_equal(act_mat,exp_mat,6)
-        
+
     def testCuBICANodeBatch(self):
         ica = mdp.nodes.CuBICANode(limit = 10**(-self.decimal))
         ica2 = ica.copy()
         self._testICANode(ica)
         self._testICANodeMatrices(ica2)
-        
+
     def testCuBICANodeTelescope(self):
         ica = mdp.nodes.CuBICANode(limit = 10**(-self.decimal), telescope = 1)
         ica2 = ica.copy()
         self._testICANode(ica)
         self._testICANodeMatrices(ica2)
-      
+
     def _get_testFastICA(self, parms):
         # create a function description
 ##         # old func description: verbose and with newlines
@@ -1109,13 +1109,13 @@ class NodesTestSuite(unittest.TestSuite):
         else:
             compact = compact +'STD'
         desc = ' '.join([header, app, nl, fine_nl, compact])
-        
+
         def _testFastICA(parms=parms):
             if parms['g'] == 'skew':
                 rand_func = numx_rand.exponential
             else:
                 rand_func = uniform
-                
+
             # try two times just to clear failures due to randomness
             try:
                 ica=mdp.nodes.FastICANode(limit=10**(-self.decimal),**parms)
@@ -1130,7 +1130,7 @@ class NodesTestSuite(unittest.TestSuite):
 
         return _testFastICA, desc
 
-    def _rand_with_timestruct(self, size=None):    
+    def _rand_with_timestruct(self, size=None):
         T, N = size
         # do something special only if T!=N, otherwise
         # we were asked to generate a mixing matrix
@@ -1144,14 +1144,14 @@ class NodesTestSuite(unittest.TestSuite):
             fsrc[(i+1)*(T//20):,i] = 0.
         src = numx_fft.irfft(fsrc,axis=0)
         return src
-        
-        
+
+
     def testTDSEPNode(self):
         ica = mdp.nodes.TDSEPNode(lags=20,limit = 1E-10)
         ica2 = ica.copy()
         self._testICANode(ica, rand_func=self._rand_with_timestruct,vars=2, N=2**14, prec=2)
         self._testICANodeMatrices(ica2, rand_func=self._rand_with_timestruct,vars=2,N=2**14)
-        
+
 
     def testOneDimensionalHitParade(self):
         signal = (uniform(300)-0.5)*2
@@ -1205,8 +1205,8 @@ class NodesTestSuite(unittest.TestSuite):
         assert_array_equal(max_ind,numx.array([[10,120,230]]))
         assert_array_equal(minima,numx.array([[-40,-30,-20]]))
         assert_array_equal(min_ind,numx.array([[11,121,231]]))
-        
-        
+
+
     def testTimeFramesNode(self):
         length = 14
         gap = 6
@@ -1230,7 +1230,7 @@ class NodesTestSuite(unittest.TestSuite):
 
     def testTimeFramesNodeBugInputDim(self):
         mdp.nodes.TimeFramesNode(time_frames=10, gap=1, input_dim=1)
-        
+
     def testEtaComputerNode(self):
         tlen = 1e5
         t = numx.linspace(0,2*numx.pi,tlen)
@@ -1302,7 +1302,7 @@ class NodesTestSuite(unittest.TestSuite):
         node = mdp.nodes.NoiseNode(bogus_noise, (1.,), 'multiplicative')
         out = node.execute(numx.zeros((100,10),'d'))
         assert_array_equal(out, numx.zeros((100,10),'d'))
-        
+
     def testNormalNoiseNode(self):
         node = mdp.nodes.NormalNoiseNode(noise_args=(2.1, 0.001))
         x = numx.array([range(100), range(100)])
@@ -1312,14 +1312,14 @@ class NodesTestSuite(unittest.TestSuite):
         node = mdp.nodes.NoiseNode()
         node.copy()
         dummy = node.save(None)
-        
+
     def testFDANode(self):
         mean1 = [0., 2.]
         mean2 = [0., -2.]
         std_ = numx.array([1., 0.2])
         npoints = 50000
         rot = 45
-        
+
         # input data: two distinct gaussians rotated by 45 deg
         def distr(size): return normal(0, 1., size=(size)) * std_
         x1 = distr((npoints,2)) + mean1
@@ -1327,7 +1327,7 @@ class NodesTestSuite(unittest.TestSuite):
         x2 = distr((npoints,2)) + mean2
         utils.rotate(x2, rot, units='degrees')
         x = numx.concatenate((x1, x2), axis=0)
-        
+
         # labels
         cl1 = numx.ones((x1.shape[0],), dtype='d')
         cl2 = 2.*numx.ones((x2.shape[0],), dtype='d')
@@ -1336,7 +1336,7 @@ class NodesTestSuite(unittest.TestSuite):
         # shuffle the data
         perm_idx = numx_rand.permutation(classes.shape[0])
         x = numx.take(x, perm_idx, axis=0)
-        
+
         classes = numx.take(classes, perm_idx)
 
         flow = mdp.Flow([mdp.nodes.FDANode()])
@@ -1356,7 +1356,7 @@ class NodesTestSuite(unittest.TestSuite):
         utils.rotate(m2, rot, units='degrees')
         assert_array_almost_equal(fda_node.means[1], m1, 2)
         assert_array_almost_equal(fda_node.means[2], m2, 2)
-       
+
         y = flow.execute(x)
         assert_array_almost_equal(mean(y, axis=0), [0., 0.], self.decimal-2)
         assert_array_almost_equal(std(y, axis=0), [1., 1.], self.decimal-2)
@@ -1382,7 +1382,7 @@ class NodesTestSuite(unittest.TestSuite):
             x = mult(x, utils.sqrtm(cov)) + mn
             x = utils.refcast(x, 'd')
             cl = numx.ones((npoints,))*i
-            
+
             mn_estimate = mean(x, axis=0)
             means.append(mn_estimate)
             covs.append(numx.cov(x, rowvar=0))
@@ -1409,7 +1409,7 @@ class NodesTestSuite(unittest.TestSuite):
         gc = mdp.nodes.GaussianClassifierNode()
         # this was failing as of MDP-2.5-309-gefa0f9d!
         gc.train(mdp.numx_rand.random((50, 3)), [+1] * 50)
-        
+
 
     def testGaussianClassifier_classify(self):
         mean1 = [0., 2.]
@@ -1417,7 +1417,7 @@ class NodesTestSuite(unittest.TestSuite):
         std_ = numx.array([1., 0.2])
         npoints = 100
         rot = 45
-        
+
         # input data: two distinct gaussians rotated by 45 deg
         def distr(size): return normal(0, 1., size=(size)) * std_
         x1 = distr((npoints,2)) + mean1
@@ -1435,7 +1435,7 @@ class NodesTestSuite(unittest.TestSuite):
         perm_idx = numx_rand.permutation(classes.shape[0])
         x = numx.take(x, perm_idx, axis=0)
         classes = numx.take(classes, perm_idx, axis=0)
-        
+
         node = mdp.nodes.GaussianClassifierNode()
         node.train(x, classes)
         classification = node.label(x)
@@ -1456,9 +1456,9 @@ class NodesTestSuite(unittest.TestSuite):
         y = numx_rand.normal(0., 1., size=(N, k))
         # observations
         noise = numx_rand.normal(0., 1., size=(N, d)) * sigma
-        
+
         x = mult(y, A) + mu + noise
-        
+
         fa = mdp.nodes.FANode(output_dim=k, dtype='d')
         fa.train(x)
         fa.stop_training()
@@ -1621,7 +1621,7 @@ class NodesTestSuite(unittest.TestSuite):
         #   - sort it in descending order (in absolute value)
         #     [large first]
         diag = numx.take(diag, numx.argsort(abs(diag)))[::-1]
-        #   - save larger elements [sfa solution] 
+        #   - save larger elements [sfa solution]
         sfa_solution = diag[:nsources].copy()
         #   - modify diagonal elements order to allow for a
         #     different solution for isfa:
@@ -1635,7 +1635,7 @@ class NodesTestSuite(unittest.TestSuite):
         #   - set the first matrix
         matrices[0] = matrices[0]*diag
         # build other matrices
-        diag_dim = nsources+ica_ambiguity 
+        diag_dim = nsources+ica_ambiguity
         for i in xrange(1,nmat):
             # get a random symmetric matrix
             matrices[i] = mdp.utils.symrand(dim)
@@ -1701,7 +1701,7 @@ class NodesTestSuite(unittest.TestSuite):
             if error < 1E-4:
                 break
         assert error < 1E-4, 'Not one out of %d trials succeded.'%trials
-            
+
     def testRBMSample_h(self):
         # number of visible and hidden units
         I, J = 2, 4
@@ -1850,7 +1850,7 @@ class NodesTestSuite(unittest.TestSuite):
     def testRBMLearning(self):
         # number of visible and hidden units
         I, J = 4, 2
-        
+
         bm = mdp.nodes.RBMNode(J, I)
         bm.w = mdp.utils.random_rot(max(I,J), dtype='d')[:I, :J]
 
@@ -1899,7 +1899,7 @@ class NodesTestSuite(unittest.TestSuite):
         x = numx.concatenate((v, l), axis=1)
         for k in xrange(2500):
             if k%5==0: spinner()
-            
+
             if k>200:
                 mom = 0.9
                 eps = 0.7
@@ -1924,16 +1924,16 @@ class NodesTestSuite(unittest.TestSuite):
         assert_array_almost_equal(pl[idxzeros], point5, 2)
 
     def testLinearRegressionNode(self):
-        
+
         def train_LRNode(inp, out, with_bias):
             lrnode = mdp.nodes.LinearRegressionNode(with_bias)
             for i in xrange(len(inp)):
                 lrnode.train(inp[i], out[i])
             lrnode.stop_training()
             return lrnode
-        
+
         indim, outdim, tlen = 5, 3, 10000
-        
+
         # 1. first, without noise
         # 1a   without bias term
         # regression coefficients
@@ -1993,14 +1993,14 @@ class NodesTestSuite(unittest.TestSuite):
                               "error for output of wrong size")
         except mdp.TrainingException:
             pass
-        
+
     def testCutoffNode(self):
         node = mdp.nodes.CutoffNode(-1.5, 1.2)
         x = numx.array([[0.1, 0, -2, 3, 1.2, -1.5, -3.33]])
         y_ref = numx.array([[0.1, 0, -1.5, 1.2, 1.2, -1.5, -1.5]])
         y = node.execute(x)
         assert numx.all(y==y_ref)
-        
+
     def testHistogramNode_nofraction(self):
         """Test HistogramNode with fraction set to 1.0."""
         node = mdp.nodes.HistogramNode()
@@ -2010,7 +2010,7 @@ class NodesTestSuite(unittest.TestSuite):
         node.train(x1)
         node.train(x2)
         assert numx.all(x == node.data_hist)
-        
+
     def testHistogramNode_fraction(self):
         """Test HistogramNode with fraction set to 0.5."""
         node = mdp.nodes.HistogramNode(hist_fraction=0.5)
@@ -2019,7 +2019,7 @@ class NodesTestSuite(unittest.TestSuite):
         node.train(x1)
         node.train(x2)
         assert len(node.data_hist) < 1000
-        
+
     def testAdaptiveCutoffNode_smalldata(self):
         """Test AdaptiveCutoffNode thoroughly on a small data set."""
         # values from 0.1 to 0.6 and 0.2 to 0.7
@@ -2040,7 +2040,7 @@ class NodesTestSuite(unittest.TestSuite):
         x_clip = node.execute(x_test)
         x_goal = numx.array([[0.2, 0.3], [0.3, 0.4], [0.4, 0.5]])
         assert numx.all(x_clip == x_goal)
-        
+
     def testAdaptiveCutoffNode_randomdata(self):
         """Test AdaptiveCutoffNode on a large random data."""
         node = mdp.nodes.AdaptiveCutoffNode(lower_cutoff_fraction= 0.2,
@@ -2106,12 +2106,11 @@ class NodesTestSuite(unittest.TestSuite):
                  for i in xrange(n)]
         rbf = mdp.nodes.RBFExpansionNode(centers, sizes)
         check_mn_cov(rbf, sizes)
-        
-        
+
+
 def get_suite(testname=None):
     return NodesTestSuite(testname=testname)
 
 if __name__ == '__main__':
     numx_rand.seed(1268049219)
     unittest.TextTestRunner(verbosity=2).run(get_suite())
-

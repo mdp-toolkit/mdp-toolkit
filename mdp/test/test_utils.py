@@ -23,7 +23,7 @@ testdecimals = {testtypes[0]: 12, testtypes[1]: 3,
 class BogusClass(object):
     def __init__(self):
         self.x = numx_rand.random((2,2))
-    
+
 class BogusNode(Node):
     x = numx_rand.random((2,2))
     y = BogusClass()
@@ -154,7 +154,7 @@ class UtilsTestSuite(unittest.TestSuite):
         d = numx_rand.random(size=(dim,))
         dd = numx.diag(d)
         mtx = numx_rand.random(size=(dim, dim))
-        
+
         res1 = utils.mult(dd, mtx)
         res2 = utils.mult_diag(d, mtx, left=True)
         assert_array_almost_equal(res1, res2, 10)
@@ -168,12 +168,12 @@ class UtilsTestSuite(unittest.TestSuite):
         self.eigenproblem('d',True)
         self.eigenproblem('f',True)
         # test wrap eigh if linked
-        if utils.symeig is utils.wrap_eigh: 
+        if utils.symeig is utils.wrap_eigh:
             self.eigenproblem('d',False, func=utils.wrap_eigh)
             self.eigenproblem('f',False, func=utils.wrap_eigh)
             self.eigenproblem('d',True, func=utils.wrap_eigh)
             self.eigenproblem('f',True, func=utils.wrap_eigh)
-           
+
 
     def testSVD_standard(self):
         func = utils.nongeneral_svd
@@ -188,7 +188,7 @@ class UtilsTestSuite(unittest.TestSuite):
         self.geneigenproblem('d',True)
         self.geneigenproblem('f',True)
         # test wrap eigh if linked
-        if utils.symeig is utils.wrap_eigh: 
+        if utils.symeig is utils.wrap_eigh:
             self.geneigenproblem('d',False, func=utils.wrap_eigh)
             self.geneigenproblem('f',False, func=utils.wrap_eigh)
             self.geneigenproblem('d',True, func=utils.wrap_eigh)
@@ -230,7 +230,7 @@ class UtilsTestSuite(unittest.TestSuite):
         H = numx.eye(10, dtype='d')
         f = x
         q = utils.QuadraticForm(H, f=f)
-        xmax, xmin = q.get_extrema(utils.norm2(x), tol=tol) 
+        xmax, xmin = q.get_extrema(utils.norm2(x), tol=tol)
         assert_array_almost_equal(f, xmax, 5)
 
     def testQuadraticFormsInvariances(self):
@@ -258,7 +258,7 @@ class UtilsTestSuite(unittest.TestSuite):
             else:
                 raise e
         raise Exception, 'Did not detect non symmetric H!'
-    
+
 def get_suite(testname=None):
     return UtilsTestSuite(testname=testname)
 

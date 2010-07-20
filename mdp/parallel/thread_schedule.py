@@ -12,7 +12,7 @@ SLEEP_TIME = 0.1  # time spend sleeping when waiting for a thread to finish
 
 class ThreadScheduler(Scheduler):
     """Thread based scheduler.
-    
+
     Because of the GIL this only makes sense if most of the time is spend in
     numpy calculations (or some other external non-blocking C code) or for IO,
     but can be more efficient than ProcessScheduler because of the
@@ -21,7 +21,7 @@ class ThreadScheduler(Scheduler):
 
     def __init__(self, result_container=None, verbose=False, n_threads=1):
         """Initialize the scheduler.
-        
+
         result_container -- ResultContainer used to store the results.
         verbose -- Set to True to get progress reports from the scheduler
             (default value is False).
@@ -36,10 +36,10 @@ class ThreadScheduler(Scheduler):
         else:
             self._n_threads = cpu_count()
         self._n_active_threads = 0
-        
+
     def _process_task(self, data, task_callable, task_index):
         """Add a task, if possible without blocking.
-        
+
         It blocks when the maximum number of threads is reached (given by
         n_threads) or when the system is not able to start a new thread.
         """
@@ -61,11 +61,11 @@ class ThreadScheduler(Scheduler):
                     task_started = True
                 except thread.error:
                     if self.verbose:
-                        print ("unable to create new thread," 
+                        print ("unable to create new thread,"
                                " waiting 2 seconds...")
                     time.sleep(2)
-                    
-    def _task_thread(self, data, task_callable, task_index): 
+
+    def _task_thread(self, data, task_callable, task_index):
         """Thread function which processes a single task."""
         result = task_callable(data)
         self._store_result(result, task_index)

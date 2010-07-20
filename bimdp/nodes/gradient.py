@@ -14,26 +14,26 @@ class NotDifferentiableException(mdp.NodeException):
 # Default implementation is needed to satisfy the "method" request.
 class GradientExtensionNode(mdp.ExtensionNode, mdp.Node):
     """Base node of the extension to calculate the gradient at a certain point.
-    
+
     To get the gradient simply put 'method': 'gradient' into the msg dict.
-    
+
     The grad array is three dimensional, with shape
     (len(x), self.output_dim, self.input_dim).
     The matrix formed by the last two indices is also called the Jacobian
     matrix.
-    
+
     Nodes which have no well defined total derivative should raise the
     NotDifferentiableException.
     """
-    
+
     extension_name = "gradient"
-    
+
     def _gradient(self, x, grad=None):
         """Calculate the contribution to the grad for this node at point x.
-        
+
         The contribution is then combined with the given gradient, to get
         the gradient for the original x.
-        
+
         This is a template function, derived classes should override _get_grad.
         """
         if self.is_training():
@@ -56,15 +56,15 @@ class GradientExtensionNode(mdp.ExtensionNode, mdp.Node):
             msg = {}
         msg.update({"grad": grad})
         return x, msg
-    
+
     def _get_grad(self, x):
         """Return the grad for the given points.
-        
+
         Override this method.
         """
         err = "Gradient not implemented for class %s." % str(self.__class__)
         raise NotImplementedError(err)
-    
+
     def _stop_gradient(self, x, grad=None):
         """Helper method to make gradient available for stop_message."""
         result = self._gradient(x, grad)
@@ -87,16 +87,16 @@ def _identity_grad(self, x):
     grad[:,diag_indices,diag_indices] = 1.0
     return grad
 
-@mdp.extension_method("gradient", mdp.nodes.SFANode, "_get_grad")    
+@mdp.extension_method("gradient", mdp.nodes.SFANode, "_get_grad")
 def _sfa_grad(self, x):
     # the gradient is constant, but have to give it for each x point
     return np.repeat(self.sf.T[np.newaxis,:,:], len(x), axis=0)
 
 @mdp.extension_method("gradient", mdp.nodes.QuadraticExpansionNode,
-                      "_get_grad")    
+                      "_get_grad")
 def _quadex_grad(self, x):
     # the exapansion is:
-    # [x1, x2, x3, x1x1, x1x2, x1x3, x2x2, x2x3, x3,x3] 
+    # [x1, x2, x3, x1x1, x1x2, x1x3, x2x2, x2x3, x3,x3]
     dim = self.input_dim
     grad = np.zeros((len(x), self.output_dim, dim))
     # constant part
@@ -111,7 +111,7 @@ def _quadex_grad(self, x):
         i_start += (dim - i)
     return grad
 
-@mdp.extension_method("gradient", mdp.nodes.SFA2Node, "_get_grad")    
+@mdp.extension_method("gradient", mdp.nodes.SFA2Node, "_get_grad")
 def _sfa2_grad(self, x):
     quadex_grad = self._expnode._get_grad(x)
     sfa_grad = _sfa_grad(self, x)
@@ -120,7 +120,7 @@ def _sfa2_grad(self, x):
 
 ## mdp.hinet nodes ##
 
-@mdp.extension_method("gradient", mdp.hinet.Layer, "_get_grad")    
+@mdp.extension_method("gradient", mdp.hinet.Layer, "_get_grad")
 def _layer_grad(self, x):
     in_start = 0
     in_stop = 0
@@ -145,9 +145,8 @@ def _layer_grad(self, x):
     return grad
 
 # TODO: cache this gradient, like for linear nodes
-@mdp.extension_method("gradient", mdp.hinet.Switchboard, "_get_grad")    
+@mdp.extension_method("gradient", mdp.hinet.Switchboard, "_get_grad")
 def _switchboard_grad(self, x):
     grad = np.zeros((self.output_dim, self.input_dim))
     grad[range(self.output_dim), self.connections] = 1
     return np.tile(grad, (len(x), 1, 1))
-

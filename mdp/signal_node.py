@@ -41,7 +41,7 @@ class NodeMetaclass(type):
     # methods that can overwrite docs:
     DOC_METHODS = ['_train', '_stop_training', '_execute', '_inverse',
                    '_label', '_prob']
-    
+
     def __new__(cls, classname, bases, members):
         # select private methods that can overwrite the docstring
         wrapper_names = []
@@ -80,14 +80,14 @@ class NodeMetaclass(type):
             setattr(new_cls, wrapper_name,
                     cls._wrap_method(priv_info, new_cls))
         return new_cls
-         
+
     # The next two functions (originally called get_info, wrapper)
     # are adapted versions of functions in the
     # decorator module by Michele Simionato
     # Version: 2.3.1 (25 July 2008)
     # Download page: http://pypi.python.org/pypi/decorator
     # Note: Moving these functions to utils would cause circular import.
-    
+
     @staticmethod
     def _function_infodict(func):
         """
@@ -99,19 +99,19 @@ class NodeMetaclass(type):
         - doc (the docstring : str)
         - module (the module name : str)
         - dict (the function __dict__ : str)
-        
+
         >>> def f(self, x=1, y=2, *args, **kw): pass
-    
+
         >>> info = getinfo(f)
-    
+
         >>> info["name"]
         'f'
         >>> info["argnames"]
         ['self', 'x', 'y', 'args', 'kw']
-        
+
         >>> info["defaults"]
         (1, 2)
-    
+
         >>> info["signature"]
         'self, x, y, *args, **kw'
         """
@@ -130,11 +130,11 @@ class NodeMetaclass(type):
                     defaults = func.func_defaults, doc=func.__doc__,
                     module=func.__module__, dict=func.__dict__,
                     globals=func.func_globals, closure=func.func_closure)
-    
+
     @staticmethod
     def _wrap_function(original_func, wrapper_infodict):
         """Return a wrapped version of func.
-        
+
         original_func -- The function to be wrapped.
         wrapper_infodict -- The infodict to be used for constructing the
             wrapper.
@@ -149,11 +149,11 @@ class NodeMetaclass(type):
         wrapped_func.func_defaults = wrapper_infodict['defaults']
         wrapped_func.undecorated = wrapper_infodict
         return wrapped_func
-    
+
     @staticmethod
     def _wrap_method(wrapper_infodict, cls):
         """Return a wrapped version of func.
-        
+
         wrapper_infodict -- The infodict to be used for constructing the
             wrapper.
         cls -- Class to which the wrapper method will be added, this is used
@@ -226,7 +226,7 @@ class Node(object):
         self.set_input_dim(input_dim)
         self.set_output_dim(output_dim)
         self.set_dtype(dtype)
- 
+
         # skip the training phase if the node is not trainable
         if not self.is_trainable():
             self._training = False
@@ -234,13 +234,13 @@ class Node(object):
             self._train_phase_started = False
         else:
             # this var stores at which point in the training sequence we are
-            self._train_phase = 0          
+            self._train_phase = 0
             # this var is False if the training of the current phase hasn't
             #  started yet, True otherwise
             self._train_phase_started = False
             # this var is False if the complete training is finished
             self._training = True
-            
+
     ### properties
 
     def get_input_dim(self):
@@ -249,7 +249,7 @@ class Node(object):
 
     def set_input_dim(self, n):
         """Set input dimensions.
-        
+
         Perform sanity checks and then calls self._set_input_dim(n), which
         is responsible for setting the internal attribute self._input_dim.
         Note that subclasses should overwrite self._set_input_dim
@@ -299,7 +299,7 @@ class Node(object):
     def get_dtype(self):
         """Return dtype."""
         return self._dtype
-    
+
     def set_dtype(self, t):
         """Set internal structures' dtype.
         Perform sanity checks and then calls self._set_dtype(n), which
@@ -311,7 +311,7 @@ class Node(object):
         t = numx.dtype(t)
         if (self._dtype is not None) and (self._dtype != t):
             errstr = ("dtype is already set to '%s' "
-                      "('%s' given)!" % (t, self.dtype.name)) 
+                      "('%s' given)!" % (t, self.dtype.name))
             raise NodeException(errstr)
         elif t not in self.get_supported_dtypes():
             errstr = ("\ndtype '%s' is not supported.\n"
@@ -324,7 +324,7 @@ class Node(object):
 
     def _set_dtype(self, t):
         self._dtype = t
-        
+
     dtype = property(get_dtype,
                      set_dtype,
                      doc = "dtype")
@@ -357,7 +357,7 @@ class Node(object):
     def has_multiple_training_phases(self):
         """Return True if the node has multiple training phases."""
         return len(self._train_seq) > 1
-    
+
     ### Node states
     def is_training(self):
         """Return True if the node is in the training phase,
@@ -371,7 +371,7 @@ class Node(object):
 
     def get_remaining_train_phase(self):
         """Return the number of training phases still to accomplish.
-        
+
         If the node is not trainable then the return value is 0.
         """
         if self.is_trainable():
@@ -412,7 +412,7 @@ class Node(object):
         if x.shape[0] == 0:
             error_str = "x must have at least one observation (zero given)"
             raise NodeException(error_str)
-        
+
     def _check_output(self, y):
         # check output rank
         if not y.ndim == 2:
@@ -446,9 +446,9 @@ class Node(object):
                     self.stop_training()
                 else:
                     break
-        
+
         self._if_training_stop_training()
-        
+
         # control the dimension x
         self._check_input(x)
 
@@ -459,7 +459,7 @@ class Node(object):
     def _pre_inversion_checks(self, y):
         """This method contains all pre-inversion checks.
         It can be used when a subclass defines multiple inversion methods."""
-        
+
         if not self.is_invertible():
             raise IsNotInvertibleException("This node is not invertible.")
 
@@ -473,7 +473,7 @@ class Node(object):
                           "not possible.")
                 raise NodeException(errstr)
             self.output_dim = self.input_dim
-        
+
         # control the dimension of y
         self._check_output(y)
 
@@ -482,12 +482,12 @@ class Node(object):
     def _refcast(self, x):
         """Helper function to cast arrays to the internal dtype."""
         return mdp.utils.refcast(x, self.dtype)
-    
+
     ### Methods to be implemented by the user
 
     # this are the methods the user has to overwrite
     # they receive the data already casted to the correct type
-    
+
     def _train(self, x):
         if self.is_trainable():
             raise NotImplementedError
@@ -497,7 +497,7 @@ class Node(object):
 
     def _execute(self, x):
         return x
-        
+
     def _inverse(self, x):
         if self.is_invertible():
             return x
@@ -507,10 +507,10 @@ class Node(object):
         pass
 
     ### User interface to the overwritten methods
-    
+
     def train(self, x, *args, **kwargs):
         """Update the internal structures according to the input data 'x'.
-        
+
         'x' is a matrix having different variables on different columns
         and observations on the rows.
 
@@ -532,8 +532,8 @@ class Node(object):
             raise TrainingFinishedException(err_str)
 
         self._check_input(x)
-        self._check_train_args(x, *args, **kwargs)        
-        
+        self._check_train_args(x, *args, **kwargs)
+
         self._train_phase_started = True
         self._train_seq[self._train_phase][0](self._refcast(x), *args, **kwargs)
 
@@ -546,7 +546,7 @@ class Node(object):
         """
         if self.is_training() and self._train_phase_started == False:
             raise TrainingException("The node has not been trained.")
-        
+
         if not self.is_training():
             err_str = "The training phase has already finished."
             raise TrainingFinishedException(err_str)
@@ -561,12 +561,12 @@ class Node(object):
 
     def execute(self, x, *args, **kwargs):
         """Process the data contained in 'x'.
-        
+
         If the object is still in the training phase, the function
         'stop_training' will be called.
         'x' is a matrix having different variables on different columns
         and observations on the rows.
-        
+
         By default, subclasses should overwrite _execute to implement
         their execution phase. The docstring of the '_execute' method
         overwrites this docstring.
@@ -576,10 +576,10 @@ class Node(object):
 
     def inverse(self, y, *args, **kwargs):
         """Invert 'y'.
-        
+
         If the node is invertible, compute the input x such that
         y = execute(x).
-        
+
         By default, subclasses should overwrite _inverse to implement
         their inverse function. The docstring of the '_inverse' method
         overwrites this docstring.
@@ -606,14 +606,14 @@ class Node(object):
             err_str = ('can only concatenate node'
                        ' (not \'%s\') to node' % (type(other).__name__) )
             raise TypeError(err_str)
-        
+
     ###### string representation
-    
+
     def __str__(self):
         return str(type(self).__name__)
-    
+
     def __repr__(self):
-        # print input_dim, output_dim, dtype 
+        # print input_dim, output_dim, dtype
         name = type(self).__name__
         inp = "input_dim=%s" % str(self.input_dim)
         out = "output_dim=%s" % str(self.output_dim)
@@ -673,4 +673,3 @@ class Cumulator(Node):
         """Transform the data list to an array object and reshape it."""
         self.data = numx.array(self.data, dtype = self.dtype)
         self.data.shape = (self.tlen, self.input_dim)
-        

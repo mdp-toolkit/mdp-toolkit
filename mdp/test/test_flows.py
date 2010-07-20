@@ -55,7 +55,7 @@ class FlowsTestSuite(unittest.TestSuite):
                 descr = 'Test '+(meth.__name__[4:]).replace('_',' ')
                 self.addTest(unittest.FunctionTestCase(meth,
                              description=descr))
-        
+
     def _get_random_mix(self,mat_dim = None, type = "d", scale = 1,
                         rand_func = numx_rand.random, avg = 0, std = 0):
         if mat_dim is None: mat_dim = self.mat_dim
@@ -70,7 +70,7 @@ class FlowsTestSuite(unittest.TestSuite):
     def _get_default_flow(self, flow_class=mdp.Flow, node_class=_BogusNode):
         flow = flow_class([node_class(),node_class(),node_class()])
         return flow
-    
+
     def testFlow(self):
         inp = numx.ones((100,3))
         flow = self._get_default_flow()
@@ -112,17 +112,17 @@ class FlowsTestSuite(unittest.TestSuite):
         flh = open(dummy_file, 'rb')
         copy_flow = cPickle.load(flh)
         flh.close()
-        os.remove(dummy_file)        
+        os.remove(dummy_file)
         assert flow[0].dummy_attr == copy_flow[0].dummy_attr, \
                'Flow save (file) method did not work'
         copy_flow[0].dummy_attr[0] = 10
         assert flow[0].dummy_attr != copy_flow[0].dummy_attr, \
-               'Flow save (file) method did not work'        
-        
+               'Flow save (file) method did not work'
+
     def testFlow_container_privmethods(self):
         mat,mix,inp = self._get_random_mix(mat_dim=(100,3))
         flow = self._get_default_flow()
-        # test __len__ 
+        # test __len__
         assert_equal(len(flow), len(flow.flow))
         # test __?etitem__, integer key
         for i in xrange(len(flow)):
@@ -169,17 +169,17 @@ class FlowsTestSuite(unittest.TestSuite):
         assert len(copy_flow) == len(flow)-2, \
                '__delitem__ did not del extended slice'
         assert copy_flow[0] == flow[2], \
-               '__delitem__ deleted wrong extended slice'        
+               '__delitem__ deleted wrong extended slice'
         # test __add__
         newflow = flow + flow
         assert len(newflow) == len(flow)*2, '__add__ did not work'
-        
+
     def testFlow_container_listmethods(self):
         # for all methods try using a node with right dimensionality
         # and one with wrong dimensionality
         flow = self._get_default_flow()
         length = len(flow)
-        # we test __contains__ and __iter__ with the for loop 
+        # we test __contains__ and __iter__ with the for loop
         for node in flow:
             node.input_dim = 10
             node.output_dim = 10
@@ -249,7 +249,7 @@ class FlowsTestSuite(unittest.TestSuite):
         flow = mdp.Flow([node1])
         flow += node2
         assert flow[0] is node1
-        
+
     def testFlow_as_sum_of_nodes(self):
         node1 = _BogusNode()
         node2 = _BogusNode()
@@ -273,7 +273,7 @@ class FlowsTestSuite(unittest.TestSuite):
             flow.train([[samples], [samples, labels]])
             # correct line would be (note the second iterable):
             #    flow.train([[[samples]], [[samples, labels]]])
-            # should trigger exception for missing train argument for FDANode 
+            # should trigger exception for missing train argument for FDANode
             err = "Flow did not raise FlowException for wrong iterable."
             raise Exception(err)
         except mdp.FlowException:
@@ -285,8 +285,8 @@ class FlowsTestSuite(unittest.TestSuite):
             raise Exception(err)
         except mdp.FlowException:
             pass
-        
-        
+
+
     def testCheckpointFlow(self):
         lst = []
         # checkpoint function, it collects a '1' for each call
@@ -299,7 +299,7 @@ class FlowsTestSuite(unittest.TestSuite):
         #
         assert len(lst)==len(flow), \
                'The checkpoint function has been called %d times instead of %d times.' % (len(lst), len(flow))
-        
+
     def testCheckpointFunction(self):
         cfunc = _CheckpointCollectFunction()
         mat,mix,inp = self._get_random_mix(mat_dim=(100,3))
@@ -378,4 +378,3 @@ def get_suite(testname=None):
 if __name__ == '__main__':
     numx_rand.seed(1268049219)
     unittest.TextTestRunner(verbosity=2).run(get_suite())
-

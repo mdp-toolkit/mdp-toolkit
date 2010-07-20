@@ -18,18 +18,18 @@ class BiLearningPhaseNotParallelException(BiNodeException):
 
 class DummyNode(mdp.Node):
     """Dummy node class for empty nodes."""
-     
+
     def is_trainable(self):
         return False
 
 
 class ParallelBiFlowNode(BiFlowNode, ParallelExtensionBiNode):
-    
+
     def _fork(self):
         """Fork the training nodes and assemble it with the rest of the flow.
-        
-        If the fork() of the current node fails the exception is not caught 
-        here (but will for example be caught in an encapsulating ParallelFlow). 
+
+        If the fork() of the current node fails the exception is not caught
+        here (but will for example be caught in an encapsulating ParallelFlow).
         """
         i_train_node = 0  # index of current training node
         while not self._flow[i_train_node].is_training():
@@ -46,12 +46,12 @@ class ParallelBiFlowNode(BiFlowNode, ParallelExtensionBiNode):
             else:
                 node_list.append(node)
         return ParallelBiFlowNode(BiFlow(node_list))
-    
+
     def _join(self, forked_node):
         """Join the forked node and all bi_forked nodes.
-        
-        This also works for purged ParallelBiFlowNodes, nodes entries which are 
-        None are ignored. 
+
+        This also works for purged ParallelBiFlowNodes, nodes entries which are
+        None are ignored.
         """
         i_train_node = 0  # index of current training node
         while not self._flow[i_train_node].is_training():
@@ -61,36 +61,36 @@ class ParallelBiFlowNode(BiFlowNode, ParallelExtensionBiNode):
                 self._flow[i_node].join(node)
             elif isinstance(node, BiNode) and node.is_bi_training():
                 self._flow[i_node].join(node)
-    
+
     def purge_nodes(self):
         """Replace nodes that are not training or bi-learning with None.
-        
-        While a purged flow cannot be used to process data any more, it can 
+
+        While a purged flow cannot be used to process data any more, it can
         still be joined and can thus save memory and bandwidth.
         """
         for i_node, node in enumerate(self._flow):
-            if not ((node._train_phase_started) or 
-                    (isinstance(node, BiNode) and 
+            if not ((node._train_phase_started) or
+                    (isinstance(node, BiNode) and
                      node.is_bi_training())):
                 self._flow[i_node] = DummyNode()
-                
-                
+
+
 class ParallelCloneBiLayer(CloneBiLayer, ParallelExtensionBiNode):
     """Parallel version of CloneBiLayer.
-    
+
     This class also adds support for calling switch_to_instance during training,
     using the join method of the internal nodes.
     """
-    
+
     def _set_use_copies(self, use_copies):
         """Switch internally between using a single node instance or copies.
-        
-        In a normal CloneLayer a single node instance is used to represent all 
-        the horizontally aligned nodes. But in a BiMDP where the nodes store 
-        temporary data this may not work. 
-        Via this method one can therefore create copies of the single node 
+
+        In a normal CloneLayer a single node instance is used to represent all
+        the horizontally aligned nodes. But in a BiMDP where the nodes store
+        temporary data this may not work.
+        Via this method one can therefore create copies of the single node
         instance.
-        
+
         This method can also be triggered by the use_copies msg key.
         """
         if use_copies and not self.use_copies:
@@ -107,15 +107,15 @@ class ParallelCloneBiLayer(CloneBiLayer, ParallelExtensionBiNode):
                 for forked_node in self.nodes[1:]:
                     self.nodes[0].bi_join(forked_node)
             self.node = self.nodes[0]
-            self.nodes = (self.node,) * len(self.nodes) 
-    
+            self.nodes = (self.node,) * len(self.nodes)
+
     def _fork(self):
         """Fork the nodes in the layer to fork the layer."""
-        forked_node = ParallelCloneBiLayer( 
-                                node=self.nodes[0].fork(), 
-                                n_nodes=len(self.nodes), 
-                                use_copies=False, 
-                                node_id=self._node_id, 
+        forked_node = ParallelCloneBiLayer(
+                                node=self.nodes[0].fork(),
+                                n_nodes=len(self.nodes),
+                                use_copies=False,
+                                node_id=self._node_id,
                                 dtype=self.get_dtype())
         if self.use_copies:
             # simulate switch_to_copies
@@ -124,7 +124,7 @@ class ParallelCloneBiLayer(CloneBiLayer, ParallelExtensionBiNode):
             return forked_node
         else:
             return forked_node
-        
+
     def _join(self, forked_node):
         """Join the trained nodes from the forked layer."""
         if self.use_copies:

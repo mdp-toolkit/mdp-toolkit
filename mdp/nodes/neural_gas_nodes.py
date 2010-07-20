@@ -21,12 +21,12 @@ class _GNGEdgeData(object):
 class GrowingNeuralGasNode(Node):
     """Learn the topological structure of the input data by building a
     corresponding graph approximation.
-    
+
     More information about the Growing Neural Gas algorithm can be found in
     B. Fritzke, A Growing Neural Gas Network Learns Topologies, in G. Tesauro,
     D. S. Touretzky, and T. K. Leen (editors), Advances in Neural Information
     Processing Systems 7, pages 625-632. MIT Press, Cambridge MA, 1995.
-    
+
     A java implementation is available at:
     http://www.neuroinformatik.ruhr-uni-bochum.de/ini/VDM/research/gsn/DemoGNG/GNG.html
 
@@ -48,7 +48,7 @@ class GrowingNeuralGasNode(Node):
         eps_b     -- coefficient of movement of the nearest node to a new
                      data point. Typical values are 0 < eps_b << 1 .
                      Default: 0.2
-                     
+
         eps_n     -- coefficient of movement of the neighbours of the nearest
                      node to a new data point. Typical values are
                      0 < eps_n << eps_b .
@@ -72,7 +72,7 @@ class GrowingNeuralGasNode(Node):
                      Default: 0.995
 
         max_nodes -- maximal number of nodes in the graph.
-                     Default: 2^31 - 1 
+                     Default: 2^31 - 1
         """
         self.graph = graph.Graph()
         self.tlen = 0
@@ -82,7 +82,7 @@ class GrowingNeuralGasNode(Node):
          self.d, self.max_nodes) = (eps_b, eps_n, max_age, lambda_, alpha,
                                     d, max_nodes)
 
-        
+
         super(GrowingNeuralGasNode, self).__init__(input_dim, None, dtype)
 
         if start_poss is not None:
@@ -103,7 +103,7 @@ class GrowingNeuralGasNode(Node):
     def _add_node(self, pos):
         node = self.graph.add_node(_GNGNodeData(pos))
         return node
-    
+
     def _add_edge(self, from_, to_):
         self.graph.add_edge(from_, to_, _GNGEdgeData())
 
@@ -183,28 +183,28 @@ class GrowingNeuralGasNode(Node):
                 normal(0.0, 1.0, self.input_dim)))
             node2 = self._add_node(self._refcast(
                 normal(0.0, 1.0, self.input_dim)))
-        
+
         # loop on single data points
         for x in input:
             self.tlen += 1
-            
+
             # step 2 - find the nearest nodes
             # dists are the squared distances of x from n0, n1
             (n0, n1), dists = self._get_nearest_nodes(x)
-            
+
             # step 3 - increase age of the emanating edges
             map(lambda e: e.data.inc_age(), n0.get_edges())
-            
+
             # step 4 - update error
             n0.data.cum_error += numx.sqrt(dists[0])
-            
+
             # step 5 - move nearest node and neighbours
             self._move_node(n0, x, self.eps_b)
             # neighbors undirected
             neighbors = n0.neighbors()
             for n in neighbors:
                 self._move_node(n, x, self.eps_n)
-                
+
             # step 6 - update n0<->n1 edge
             if n1 in neighbors:
                 # should be one edge only
@@ -212,7 +212,7 @@ class GrowingNeuralGasNode(Node):
                 edges[0].data.age = 0
             else:
                 self._add_edge(n0, n1)
-            
+
             # step 7 - remove old edges
             self._remove_old_edges(n0.get_edges())
 
@@ -240,4 +240,3 @@ class GrowingNeuralGasNode(Node):
             nodes.append(n0)
             dists.append(numx.sqrt(dist[0]))
         return nodes, dists
-    

@@ -12,7 +12,7 @@ def pca(x, **kwargs):
     This is equivalent to mdp.nodes.PCANode(**kwargs)(x)
     """
     return mdp.nodes.PCANode(**kwargs)(x)
-                              
+
 def whitening(x, **kwargs):
     """Filters multidimensional input data through its principal components,
     rescaling the output signals such that they have unit variance.
@@ -72,7 +72,7 @@ def get_eta(x, **kwargs):
 
     Input data are normalized to have unit variance, such that it is
     possible to compare the temporal variation of two signals
-    independently from their scaling.    
+    independently from their scaling.
 
     Observations of the same variable are stored on rows, different variables
     are stored on columns.
@@ -83,5 +83,3 @@ def get_eta(x, **kwargs):
     eta = mdp.nodes.EtaComputerNode()
     eta.train(x)
     return eta.get_eta(**kwargs)
-
-

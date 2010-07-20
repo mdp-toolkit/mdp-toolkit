@@ -34,7 +34,7 @@ def rotate(mat, angle, columns = (0, 1), units = 'radians'):
     for each data-point (unchanged elements omitted):
 
      [  cos(angle) -sin(angle)     [ x_i ]
-        sin(angle)  cos(angle) ] * [ x_j ] 
+        sin(angle)  cos(angle) ] * [ x_j ]
 
     If M=2, columns=[0,1].
     """
@@ -75,10 +75,10 @@ def hermitian(x):
 
 def symrand(dim_or_eigv, dtype="d"):
     """Return a random symmetric (Hermitian) matrix.
-    
+
     If 'dim_or_eigv' is an integer N, return a NxN matrix, with eigenvalues
         uniformly distributed on (-1,1).
-        
+
     If 'dim_or_eigv' is  1-D real array 'a', return a matrix whose
                       eigenvalues are 'a'.
     """
@@ -91,7 +91,7 @@ def symrand(dim_or_eigv, dtype="d"):
         d = dim_or_eigv
     else:
         raise mdp.MDPException("input type not supported.")
-    
+
     v = random_rot(dim)
     #h = mdp.utils.mult(mdp.utils.mult(hermitian(v), mdp.numx.diag(d)), v)
     h = mdp.utils.mult(mult_diag(d, hermitian(v), left=False), v)
@@ -132,7 +132,7 @@ def random_rot(dim, dtype='d'):
 def norm2(v):
     """Compute the 2-norm for 1D arrays.
     norm2(v) = sqrt(sum(v_i^2))"""
-    
+
     return numx.sqrt((v*v).sum())
 
 def cov2(x, y):
@@ -160,12 +160,12 @@ def cov_maxima(cov):
         return maxs
     else:
         return []
-    
+
 
 def mult_diag(d, mtx, left=True):
     """Multiply a full matrix by a diagonal matrix.
     This function should always be faster than dot.
-    
+
     Input:
       d -- 1D (N,) array (contains the diagonal elements)
       mtx -- 2D (N,N) array
@@ -237,7 +237,7 @@ def _assert_eigenvalues_real_and_positive(w, dtype):
     #if w.real.min() < 0:
     #    err = "Got negative eigenvalues: %s" % str(w)
     #    raise SymeigException(err)
-              
+
 def wrap_eigh(A, B = None, eigenvectors = True, turbo = "on", range = None,
               type = 1, overwrite = False):
     """Wrapper for scipy.linalg.eigh for scipy version > 0.7"""
@@ -282,7 +282,7 @@ numarray.linear_algebra.eigenvectors with an interface compatible with symeig.
 
     Syntax:
 
-      w,Z = symeig(A) 
+      w,Z = symeig(A)
       w = symeig(A,eigenvectors=0)
       w,Z = symeig(A,range=(lo,hi))
       w,Z = symeig(A,B,range=(lo,hi))
@@ -292,15 +292,15 @@ numarray.linear_algebra.eigenvectors with an interface compatible with symeig.
       A     -- An N x N matrix.
       B     -- An N x N matrix.
       eigenvectors -- if set return eigenvalues and eigenvectors, otherwise
-                      only eigenvalues 
+                      only eigenvalues
       turbo -- not implemented
       range -- the tuple (lo,hi) represent the indexes of the smallest and
                largest (in ascending order) eigenvalues to be returned.
                1 <= lo < hi <= N
-               if range = None, returns all eigenvalues and eigenvectors. 
+               if range = None, returns all eigenvalues and eigenvectors.
       type  -- not implemented, always solve A*x = (lambda)*B*x
       overwrite -- not implemented
-      
+
     Outputs:
 
       w     -- (selected) eigenvalues in ascending order.
@@ -334,11 +334,11 @@ numarray.linear_algebra.eigenvectors with an interface compatible with symeig.
     _assert_eigenvalues_real_and_positive(w, dtype)
     w = w.real
     Z = Z.real
-    
+
     idx = w.argsort()
     w = w.take(idx)
     Z = Z.take(idx, axis=1)
-    
+
     # sanitize range:
     n = A.shape[0]
     if range is not None:
@@ -351,7 +351,7 @@ numarray.linear_algebra.eigenvectors with an interface compatible with symeig.
             hi = n
         if lo > hi:
             lo, hi = hi, lo
-        
+
         Z = Z[:, lo-1:hi]
         w = w[lo-1:hi]
 
@@ -376,7 +376,7 @@ def nongeneral_svd(A, range=None, **kwargs):
     if range is not None:
         lo, hi = range
         Z = Z[:, lo-1:hi]
-        w = w[lo-1:hi]    
+        w = w[lo-1:hi]
     return w, Z
 
 def sqrtm(A):
@@ -424,13 +424,13 @@ def orthogonal_permutations(a_dict):
     """
     Takes a dictionary with lists as keys and returns all permutations
     of these list elements in new dicts.
-    
+
     This function is useful, when a method with several arguments
     shall be tested and all of the arguments can take several values.
-    
+
     The order is not defined, therefore the elements should be
     orthogonal to each other.
-    
+
     >>> for i in orthogonal_permutations({'a': [1,2,3], 'b': [4,5]}):
             print i
     {'a': 1, 'b': 4}
@@ -452,21 +452,21 @@ def orthogonal_permutations(a_dict):
 
 def izip_stretched(*iterables):
     """Same as izip, except that for convenience non-iterables are repeated ad infinitum.
-    
+
     This is useful when trying to zip input data with respective labels
     and allows for having a single label for all data, as well as for
     havning a list of labels for each data vector.
     Note that this will take strings as an iterable (of course), so
     strings acting as a single value need to be wrapped in a repeat
     statement of their own.
-    
+
     Thus,
     >>> for zipped in izip_stretched([1, 2, 3], -1):
             print zipped
     (1, -1)
     (2, -1)
     (3, -1)
-    
+
     is equivalent to
     >>> for zipped in izip([1, 2, 3], [-1] * 3):
             print zipped
@@ -479,7 +479,7 @@ def izip_stretched(*iterables):
             return iter(val)
         except TypeError:
             return itertools.repeat(val)
-    
+
     iterables= map(iter_or_repeat, iterables)
     while iterables:
         # need to care about python < 2.6
@@ -490,12 +490,12 @@ def weighted_choice(a_dict, normalize=True):
     """Returns a key from a dictionary based on the weight that the value suggests.
     If 'normalize' is False, it is assumed the weights sum up to unity. Otherwise,
     the algorithm will take care of normalising.
-    
+
     Example:
     >>> d = {'a': 0.1, 'b': 0.5, 'c': 0.4}
     >>> weighted_choice(d)
     # draws 'b':'c':'a' with 5:4:1 probability
-    
+
     TODO: It might be good to either shuffle the order or explicitely specify it,
     before walking through the items, to minimise possible degeneration.
     """
@@ -520,12 +520,10 @@ def bool_to_sign(an_array):
 
 def sign_to_bool(an_array, zero=True):
     """Return False for each negative value, else True.
-    
+
     The value for 0 is specified with 'zero'.
     """
     if zero:
         return numx.array(an_array) >= 0
     else:
         return numx.array(an_array) > 0
-
-

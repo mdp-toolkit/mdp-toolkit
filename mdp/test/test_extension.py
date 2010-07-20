@@ -7,14 +7,14 @@ import sys
 
 
 class TestMDPExtensions(unittest.TestCase):
-    
+
     def tearDown(self):
         """Deactivate all extensions and remove testing extensions."""
         mdp.deactivate_extensions(mdp.get_active_extensions())
         for key in mdp.get_extensions().copy():
             if key.startswith("__test"):
                 del mdp.get_extensions()[key]
-    
+
     def testSimpleExtension(self):
         """Test for a single new extension."""
         class TestExtensionNode(mdp.ExtensionNode):
@@ -28,14 +28,14 @@ class TestMDPExtensions(unittest.TestCase):
             _testtest_attr = 1338
         sfa_node = mdp.nodes.SFANode()
         mdp.activate_extension("__test")
-        self.assert_(sfa_node._testtest() == 42) 
-        self.assert_(sfa_node._testtest_attr == 1338) 
+        self.assert_(sfa_node._testtest() == 42)
+        self.assert_(sfa_node._testtest_attr == 1338)
         mdp.deactivate_extension("__test")
         self.assert_(not hasattr(mdp.nodes.SFANode, "_testtest"))
 
     def testContextManager(self):
         """Test that the context manager activates extensions."""
-        
+
         class Test1ExtensionNode(mdp.ExtensionNode):
             extension_name = "__test1"
             def _testtest(self):
@@ -55,7 +55,7 @@ class TestMDPExtensions(unittest.TestCase):
             self.assertTrue('__test1' in active)
             self.assertTrue('__test2' in active)
         self.assertEqual(mdp.get_active_extensions(), [])
-        
+
     def testDecoratorExtension(self):
         """Test extension decorator with a single new extension."""
         class TestExtensionNode(mdp.ExtensionNode):
@@ -71,12 +71,12 @@ class TestMDPExtensions(unittest.TestCase):
         sfa_node = mdp.nodes.SFANode()
         sfa2_node = mdp.nodes.SFA2Node()
         mdp.activate_extension("__test")
-        self.assert_(sfa_node._testtest() == 42) 
+        self.assert_(sfa_node._testtest() == 42)
         self.assert_(sfa2_node._testtest() == 84)
         mdp.deactivate_extension("__test")
-        self.assert_(not hasattr(mdp.nodes.SFANode, "_testtest")) 
-        self.assert_(not hasattr(mdp.nodes.SFA2Node, "_testtest")) 
-        
+        self.assert_(not hasattr(mdp.nodes.SFANode, "_testtest"))
+        self.assert_(not hasattr(mdp.nodes.SFA2Node, "_testtest"))
+
     def testDecoratorInheritance(self):
         """Test inhertiance with decorators for a single new extension."""
         class TestExtensionNode(mdp.ExtensionNode):
@@ -92,9 +92,9 @@ class TestMDPExtensions(unittest.TestCase):
         sfa_node = mdp.nodes.SFANode()
         sfa2_node = mdp.nodes.SFA2Node()
         mdp.activate_extension("__test")
-        self.assert_(sfa_node._testtest() == 42) 
+        self.assert_(sfa_node._testtest() == 42)
         self.assert_(sfa2_node._testtest() == 84)
-    
+
     def testExtensionInheritance(self):
         """Test inheritance of extension nodes."""
         class TestExtensionNode(mdp.ExtensionNode):
@@ -115,7 +115,7 @@ class TestMDPExtensions(unittest.TestCase):
         mdp.activate_extension("__test")
         self.assert_(sfa2_node._testtest() == 42)
         self.assert_(sfa2_node._testtest_attr == 1337)
-        
+
     def testExtensionInheritance2(self):
         """Test inheritance of extension nodes, using super."""
         class TestExtensionNode(mdp.ExtensionNode):
@@ -131,7 +131,7 @@ class TestMDPExtensions(unittest.TestCase):
         sfa2_node = mdp.nodes.SFA2Node()
         mdp.activate_extension("__test")
         self.assert_(sfa2_node._testtest() == 42)
-        
+
     def testExtensionInheritance3(self):
         """Test explicit use of extension nodes and inheritance."""
         class TestExtensionNode(mdp.ExtensionNode):
@@ -146,8 +146,8 @@ class TestMDPExtensions(unittest.TestCase):
             def _testtest(self):
                 return super(mdp.nodes.SFA2Node, self)._testtest()
         sfa2_node = TestSFA2Node()
-        self.assert_(sfa2_node._testtest() == 42) 
-        
+        self.assert_(sfa2_node._testtest() == 42)
+
     def testMultipleExtensions(self):
         """Test behavior of multiple extensions."""
         class Test1ExtensionNode(mdp.ExtensionNode, mdp.Node):
@@ -170,7 +170,7 @@ class TestMDPExtensions(unittest.TestCase):
         mdp.deactivate_extensions(["__test1", "__test2"])
         self.assert_(not hasattr(mdp.nodes.SFANode, "_testtest1"))
         self.assert_(not hasattr(mdp.nodes.SFANode, "_testtest2"))
-        
+
     def testExtCollision(self):
         """Test the check for method name collision."""
         class Test1ExtensionNode(mdp.ExtensionNode, mdp.Node):
@@ -190,7 +190,7 @@ class TestMDPExtensions(unittest.TestCase):
         """Test the injection of inherited methods"""
         class TestNode(object):
             def _test1(self):
-                return 0 
+                return 0
         class TestExtensionNode(mdp.ExtensionNode):
             extension_name = "__test"
             def _test1(self):
@@ -199,7 +199,7 @@ class TestMDPExtensions(unittest.TestCase):
                 return 2
             def _test3(self):
                 return 3
-        class TestNodeExt(TestExtensionNode, TestNode): 
+        class TestNodeExt(TestExtensionNode, TestNode):
             def _test2(self):
                 return "2b"
         @mdp.extension_method("__test", TestNode)
@@ -211,12 +211,12 @@ class TestMDPExtensions(unittest.TestCase):
         self.assert_(test_node._test2() == "2b")
         self.assert_(test_node._test3() == 3)
         self.assert_(test_node._test4() == 4)
-        mdp.deactivate_extension("__test") 
+        mdp.deactivate_extension("__test")
         self.assert_(test_node._test1() == 0)
         self.assert_(not hasattr(test_node, "_test2"))
         self.assert_(not hasattr(test_node, "_test3"))
         self.assert_(not hasattr(test_node, "_test4"))
- 
+
     def testExtensionInheritanceInjectionNonExtension(self):
         """Test non_extension method injection."""
         class TestExtensionNode(mdp.ExtensionNode):
@@ -236,7 +236,7 @@ class TestMDPExtensions(unittest.TestCase):
         self.assert_(not hasattr(test_node, "_extension_for__execute"))
         # test that the non-native _execute has been completely removed
         self.assert_("_execute" not in test_node.__class__.__dict__)
-        
+
     def testExtensionInheritanceInjectionNonExtension2(self):
         """Test non_extension method injection."""
         class TestExtensionNode(mdp.ExtensionNode):
@@ -257,7 +257,7 @@ class TestMDPExtensions(unittest.TestCase):
         self.assert_(not hasattr(test_node, "_extension_for__execute"))
         # test that the native _execute has been preserved
         self.assert_("_execute" in test_node.__class__.__dict__)
-        
+
     def testExtensionInheritanceTwoExtensions(self):
         """Test non_extension injection for multiple extensions."""
         class Test1ExtensionNode(mdp.ExtensionNode):
@@ -318,10 +318,10 @@ class TestCachingExtension(unittest.TestCase):
             def __init__(self):
                 super(SideEffectNode, self).__init__()
                 self.count = 0
-                
+
             def is_trainable(self):
                 return False
-            
+
             def _execute(self, x):
                 """The execute method has the side effect of increasing
                 an internal counter by one."""
@@ -345,7 +345,7 @@ class TestCachingExtension(unittest.TestCase):
         # the second time, x is already there
         node.execute(x)
         self.assertEqual(node.count, 2)
-        
+
         # after deactivation
         mdp.deactivate_extension('cache_execute')
         self.assertEqual(mdp.get_active_extensions(), [])
@@ -360,7 +360,6 @@ def get_suite(testname=None):
     suite.addTest(unittest.makeSuite(TestMDPExtensions))
     suite.addTest(unittest.makeSuite(TestCachingExtension))
     return suite
-            
-if __name__ == '__main__':
-    unittest.main() 
 
+if __name__ == '__main__':
+    unittest.main()

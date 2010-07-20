@@ -1,26 +1,26 @@
 """
 The BiMDP package is an extension of the pure feed-forward flow concept in MDP.
 
-It defines a framework for far more general flow sequences, involving 
+It defines a framework for far more general flow sequences, involving
 top-down processes (e.g. for error backpropagation) or even loops.
 So the 'bi' in BiMDP primarily stands for 'bidirectional'.
 
 BiMDP is implemented by extending both the Node and the Flow concept. Both the
 new BiNode and BiFlow classes are downward compatible with the classical
-Nodes and Flows, allowing them to be combined with BiMDP elements. 
+Nodes and Flows, allowing them to be combined with BiMDP elements.
 
 The first fundamental addition in BiMDP is that BiNodes can specify a target
-node for their output, to continue the flow execution at the specified target 
+node for their output, to continue the flow execution at the specified target
 node. The second new feature is that Nodes can use messages to propagate
 arbitrary information, in addition to the standard single array data.
 A BiFlow is needed to enable these features, and the BiNode class has adds
-convenience functionality to help with this. 
+convenience functionality to help with this.
 
 Another important addition are the inspection capapbilities (e.g.,
 bimdo.show_training), which create and interactive HTML representation of the
 data flow. This makes debugging much easier and can also be extended to
 visualize data (see the demos in the test folder).
- 
+
 BiMDP fully supports and extends the HiNet and the Parallel packages.
 
 
@@ -32,7 +32,7 @@ then compared to the optional node_id. The target number 0 refers to the node
 itself.
 During execution a node can also use the value of EXIT_TARGET (which is
 currently just 'exit') as target value to end the execution. The BiFlow
-will then return the last output as result.  
+will then return the last output as result.
 
 Messages are standard Python dictionaries to transport information
 that would not fit well into the standard x array. The dict keys also support

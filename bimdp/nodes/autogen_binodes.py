@@ -11,7 +11,7 @@ class AdaptiveCutoffBiNode(BiNode, mdp.nodes.AdaptiveCutoffNode):
     """Automatically created BiNode version of AdaptiveCutoffNode."""
     def __init__(self, lower_cutoff_fraction=None, upper_cutoff_fraction=None, hist_fraction=1.0, hist_filename=None, input_dim=None, dtype=None, node_id=None, stop_result=None):
         """Initialize the node.
-        
+
         lower_cutoff_fraction -- Fraction of data that will be cut off after
             the training phase (assuming the data distribution does not
             change). If set to None (default value) no cutoff is performed.
@@ -58,7 +58,7 @@ class CutoffBiNode(BiNode, mdp.nodes.CutoffNode):
     """Automatically created BiNode version of CutoffNode."""
     def __init__(self, lower_bound=None, upper_bound=None, input_dim=None, dtype=None, node_id=None, stop_result=None):
         """Initialize node.
-        
+
         lower_bound -- Data values below this are cut to the lower_bound value.
             If lower_bound is None no cutoff is performed.
         upper_bound -- Works like lower_bound.
@@ -95,13 +95,13 @@ class FastICABiNode(BiNode, mdp.nodes.FastICANode):
                       number of whitened components to keep during the
                       calculation (i.e., the input dimensions are reduced to
                       white_comp by keeping the components of largest variance).
-        
+
         white_parm -- a dictionary with additional parameters for whitening.
                       It is passed directly to the WhiteningNode constructor.
                       Ex: white_parm = { 'svd' : True }
 
         limit -- convergence threshold.
-        
+
         Specific for FastICA:
 
         approach  -- Approach to use. Possible values are:
@@ -129,18 +129,18 @@ class FastICABiNode(BiNode, mdp.nodes.FastICANode):
 
       sample_size -- Percentage of samples used in one iteration. If
                      sample_size < 1, samples are chosen in random order.
-                     
+
         fine_tanh -- parameter for 'tanh' nonlinearity
         fine_gaus -- parameter for 'gaus' nonlinearity
 
             guess -- initial guess for the mixing matrix (ignored if None)
-            
+
            max_it -- maximum number of iterations
 
       max_it_fine -- maximum number of iterations for fine tuning
 
          failures -- maximum number of failures to allow in deflation mode
-         
+
         """
         super(FastICABiNode, self).__init__(approach=approach, g=g, guess=guess, fine_g=fine_g, mu=mu, stabilization=stabilization, sample_size=sample_size, fine_tanh=fine_tanh, fine_gaus=fine_gaus, max_it=max_it, max_it_fine=max_it_fine, failures=failures, limit=limit, verbose=verbose, whitened=whitened, white_comp=white_comp, white_parm=white_parm, input_dim=input_dim, dtype=dtype, node_id=node_id, stop_result=stop_result)
 
@@ -173,7 +173,7 @@ class GrowingNeuralGasBiNode(BiNode, mdp.nodes.GrowingNeuralGasNode):
         eps_b     -- coefficient of movement of the nearest node to a new
                      data point. Typical values are 0 < eps_b << 1 .
                      Default: 0.2
-                     
+
         eps_n     -- coefficient of movement of the neighbours of the nearest
                      node to a new data point. Typical values are
                      0 < eps_n << eps_b .
@@ -197,7 +197,7 @@ class GrowingNeuralGasBiNode(BiNode, mdp.nodes.GrowingNeuralGasNode):
                      Default: 0.995
 
         max_nodes -- maximal number of nodes in the graph.
-                     Default: 2^31 - 1 
+                     Default: 2^31 - 1
         """
         super(GrowingNeuralGasBiNode, self).__init__(start_poss=start_poss, eps_b=eps_b, eps_n=eps_n, max_age=max_age, lambda_=lambda_, alpha=alpha, d=d, max_nodes=max_nodes, input_dim=input_dim, dtype=dtype, node_id=node_id, stop_result=stop_result)
 
@@ -227,7 +227,7 @@ class HLLEBiNode(BiNode, mdp.nodes.HLLENode):
                        dimensions is known at the end of training
                        (e.g., for 'output_dim=0.95' the algorithm will keep
                        as many dimensions as necessary in order to explain
-                       95% of the input variance)                       
+                       95% of the input variance)
         """
         super(HLLEBiNode, self).__init__(k=k, r=r, svd=svd, verbose=verbose, input_dim=input_dim, output_dim=output_dim, dtype=dtype, node_id=node_id, stop_result=stop_result)
 
@@ -235,7 +235,7 @@ class HistogramBiNode(BiNode, mdp.nodes.HistogramNode):
     """Automatically created BiNode version of HistogramNode."""
     def __init__(self, hist_fraction=1.0, hist_filename=None, input_dim=None, dtype=None, node_id=None, stop_result=None):
         """Initialize the node.
-        
+
         hist_fraction -- Defines the fraction of the data that is stored
             randomly.
         hist_filename -- Filename for the file to which the data history will
@@ -291,11 +291,11 @@ class ISFABiNode(BiNode, mdp.nodes.ISFANode):
         Perform Independent Slow Feature Analysis.
         The notation is the same used in the paper by Blaschke et al. Please
         refer to the paper for more information.
-        
+
         Keyword arguments:
-        
+
         lags    -- list of time-lags to generate the time-delayed covariance
-                   matrices (in the paper this is the set of 	au). If
+                   matrices (in the paper this is the set of au). If
                    lags is an integer, time-lags 1,2,...,'lags' are used.
                    Note that time-lag == 0 (instantaneous correlation) is
                    always implicitly used.
@@ -304,16 +304,16 @@ class ISFABiNode(BiNode, mdp.nodes.ISFANode):
                          weights of the SFA and ICA part of the
                          objective function. They are called b_{SFA} and
                          b_{ICA} in the paper.
-        
+
         sfaweights -- weighting factors for the covariance matrices relative
                       to the SFA part of the objective function (called
-                      \kappa_{SFA}^{	au} in the paper). Default is
+                      \kappa_{SFA}^{au} in the paper). Default is
                       [1., 0., ..., 0.]
                       For possible values see the description of icaweights.
 
         icaweights -- weighting factors for the cov matrices relative
                       to the ICA part of the objective function (called
-                      \kappa_{ICA}^{	au} in the paper). Default is 1.
+                      \kappa_{ICA}^{au} in the paper). Default is 1.
                       Possible values are:
                           an integer n: all matrices are weighted the same
                                         (note that it does not make sense to
@@ -322,7 +322,7 @@ class ISFABiNode(BiNode, mdp.nodes.ISFANode):
                                         element of the list is used for
                                         weighting the corresponding matrix
                           None: use the default values.
-                                        
+
         whitened   -- True if input data is already white, False otherwise (the
                       data will be whitened internally).
 
@@ -332,13 +332,13 @@ class ISFABiNode(BiNode, mdp.nodes.ISFANode):
                       white_comp by keeping the components of largest variance).
         white_parm -- a dictionary with additional parameters for whitening.
                       It is passed directly to the WhiteningNode constructor.
-                      Ex: white_parm = { 'svd' : True }        
-        
+                      Ex: white_parm = { 'svd' : True }
+
         eps_contrast -- Convergence is achieved when the relative
                         improvement in the contrast is below this threshold.
                         Values in the range [1E-4, 1E-10] are usually
                         reasonable.
-        
+
         max_iter     -- If the algorithms does not achieve convergence within
                         max_iter iterations raise an Exception. Should be
                         larger than 100.
@@ -353,7 +353,7 @@ class ISFABiNode(BiNode, mdp.nodes.ISFANode):
                    slow down the algorithm, but it's the only way to see
                    the rate of improvement and immediately spot if something
                    is going wrong.
-       
+
         output_dim -- sets the number of independent components that have to
                       be extracted. Note that if this is not smaller than
                       input_dim, the problem is solved linearly and SFA
@@ -391,7 +391,7 @@ class JADEBiNode(BiNode, mdp.nodes.JADENode):
                       number of whitened components to keep during the
                       calculation (i.e., the input dimensions are reduced to
                       white_comp by keeping the components of largest variance).
-        
+
         white_parm -- a dictionary with additional parameters for whitening.
                       It is passed directly to the WhiteningNode constructor.
                       Ex: white_parm = { 'svd' : True }
@@ -401,7 +401,7 @@ class JADEBiNode(BiNode, mdp.nodes.JADENode):
         Specific for JADE:
 
         max_it -- maximum number of iterations
-        
+
         """
         super(JADEBiNode, self).__init__(limit=limit, max_it=max_it, verbose=verbose, whitened=whitened, white_comp=white_comp, white_parm=white_parm, input_dim=input_dim, dtype=dtype, node_id=node_id, stop_result=stop_result)
 
@@ -430,7 +430,7 @@ class LLEBiNode(BiNode, mdp.nodes.LLENode):
                        dimensions is known at the end of training
                        (e.g., for 'output_dim=0.95' the algorithm will keep
                        as many dimensions as necessary in order to explain
-                       95% of the input variance)                       
+                       95% of the input variance)
         """
         super(LLEBiNode, self).__init__(k=k, r=r, svd=svd, verbose=verbose, input_dim=input_dim, output_dim=output_dim, dtype=dtype, node_id=node_id, stop_result=stop_result)
 
@@ -465,7 +465,7 @@ class NIPALSBiNode(BiNode, mdp.nodes.NIPALSNode):
         Other Arguments:
            conv   - convergence threshold for the residual error.
            max_it - maximum number of iterations
-           
+
         """
         super(NIPALSBiNode, self).__init__(input_dim=input_dim, output_dim=output_dim, dtype=dtype, conv=conv, max_it=max_it, node_id=node_id, stop_result=stop_result)
 
@@ -473,8 +473,8 @@ class NormalNoiseBiNode(BiNode, mdp.nodes.NormalNoiseNode):
     """Automatically created BiNode version of NormalNoiseNode."""
     def __init__(self, noise_args=(0, 1), input_dim=None, dtype=None, node_id=None, stop_result=None):
         """Set the noise parameters.
-        
-        noise_args -- Tuple of (mean, standard deviation) for the normal 
+
+        noise_args -- Tuple of (mean, standard deviation) for the normal
             distribution, default is (0,1).
         """
         super(NormalNoiseBiNode, self).__init__(noise_args=noise_args, input_dim=input_dim, dtype=dtype, node_id=node_id, stop_result=stop_result)
@@ -665,4 +665,3 @@ class XSFABiNode(BiNode, mdp.nodes.XSFANode):
              verbose -- show some progress during training.
         """
         super(XSFABiNode, self).__init__(basic_exp=basic_exp, intern_exp=intern_exp, svd=svd, verbose=verbose, input_dim=input_dim, output_dim=output_dim, dtype=dtype, node_id=node_id, stop_result=stop_result)
-

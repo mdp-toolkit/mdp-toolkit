@@ -122,4 +122,3 @@ def sync_2to3(src, dst, clean=False):
     for fn, dst_fn in to_convert:
         # perform custom mangling
         custom_mangling(dst_fn)
-

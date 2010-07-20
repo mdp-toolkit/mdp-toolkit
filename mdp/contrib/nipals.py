@@ -26,7 +26,7 @@ class NIPALSNode(Cumulator, PCANode):
     Nonlinear estimation by iterative least squares procedures
     in David, F. (Editor), Research Papers in Statistics, Wiley,
     New York, pp 411-444 (1966).
-    
+
     More information about Principal Component Analysis, a.k.a. discrete
     Karhunen-Loeve transform can be found among others in
     I.T. Jolliffe, Principal Component Analysis, Springer-Verlag (1986).
@@ -46,15 +46,15 @@ class NIPALSNode(Cumulator, PCANode):
         Other Arguments:
            conv   - convergence threshold for the residual error.
            max_it - maximum number of iterations
-           
+
         """
         super(NIPALSNode, self).__init__(input_dim, output_dim, dtype)
         self.conv = conv
         self.max_it = max_it
-        
+
     def _train(self, x):
         super(NIPALSNode, self)._train(x)
-        
+
     def _stop_training(self, debug=False):
         # debug argument is ignored but needed by the base class
         super(NIPALSNode, self)._stop_training()
@@ -63,7 +63,7 @@ class NIPALSNode(Cumulator, PCANode):
             des_var = True
         else:
             des_var = False
-        
+
         X = self.data
         conv = self.conv
         dtype = self.dtype
@@ -88,7 +88,7 @@ class NIPALSNode(Cumulator, PCANode):
             diff = conv + 1
             while diff > conv:
                 # increase iteration counter
-                it += 1 
+                it += 1
                 # Project X onto t to find corresponding loading p
                 # and normalize loading vector p to length 1
                 p = mult(X.T, t)/mult(t, t)
@@ -116,7 +116,7 @@ class NIPALSNode(Cumulator, PCANode):
             if des_var and (exp_var >= self.desired_variance):
                 self.output_dim = i + 1
                 break
-            
+
         self.d = d[:self.output_dim]
         self.v = eigenv[:self.output_dim, :].T
         self.explained_variance = exp_var

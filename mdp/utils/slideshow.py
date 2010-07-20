@@ -1,10 +1,10 @@
 """
 Module for HTML slideshows.
 
-It uses the templating library 'Templet'. 
+It uses the templating library 'Templet'.
 
 The slideshow base class HTMLSlideShow does not display anything, but can
-be used to derive custom slideshows like in BiMDP. 
+be used to derive custom slideshows like in BiMDP.
 
 The JavaScript slideshow code in this module was originally inspired by a
 slideshow script found at
@@ -51,15 +51,15 @@ _css_file.close()
 
 class HTMLSlideShow(templet.Template):
     """Abstract slideshow base class.
-    
+
     It does not display anything, but can be adapted by overriding
     some of the templating attributes. See ImageHTMLSlideShow for an example.
     """
-    
+
     def __init__(self, title=None, delay=100, delay_delta=20,
                  loop=True, slideshow_id=None, shortcuts=True, **kwargs):
         """Return the complete HTML code for the slideshow.
-        
+
         title -- Optional slideshow title (for defualt None not title is shown).
         delay - Delay between slides in ms (default 100).
         delay_delta - Step size for increasing or decreasing the delay.
@@ -84,12 +84,12 @@ class HTMLSlideShow(templet.Template):
         kwargs.update(vars())
         del kwargs["self"]
         super(HTMLSlideShow, self).__init__(**kwargs)
-    
+
     def _get_random_id(self):
         """Factory method for random slideshow id."""
         return "slideshow%d" % random.randint(10000, 99999)
-        
-   
+
+
     template = r'''
 <script language="JavaScript">
 <!-- Begin
@@ -98,34 +98,34 @@ class HTMLSlideShow(templet.Template):
 var $slideshow_id = function () {
 
     var that = {};
-    
+
     var current_slide = 0; // current slide index
     var show_delay = $delay; // delay in milliseconds
     var loop_slideshow = $loop; // loop in auto mode
     // shortcuts to form elements, initialized in onLoad
     var slideform;
     var slideselect;
-    
+
     $<js_controls_template>
     $<js_loadslide_template>
     $<js_update_template>
     $<js_onload_template>
-    
+
     that.onSelectorChange = function () {
         current_slide = slideselect.selectedIndex;
         that.updateSlide();
     }
-    
+
     that.next = function () {
         if (slideselect[current_slide+1]) {
             current_slide += 1;
-            that.updateSlide();        
+            that.updateSlide();
         }
         else if (loop_slideshow) {
             that.first();
         }
     }
-    
+
     that.previous = function () {
         if (current_slide-1 >= 0) {
             current_slide -= 1;
@@ -135,17 +135,17 @@ var $slideshow_id = function () {
             that.last();
         }
     }
-    
+
     that.first = function () {
         current_slide = 0;
         that.updateSlide();
     }
-    
+
     that.last = function () {
         current_slide = slideselect.length-1;
         that.updateSlide();
     }
-    
+
     // start or stop the slideshow
     that.startstop = function (text) {
         if (text === "Start") {
@@ -160,7 +160,7 @@ var $slideshow_id = function () {
             slideform.startbutton.value = "Start";
         }
     }
-    
+
     // continuously show the slideshow
     that.showAuto = function () {
         if (slideform.startbutton.value == "Stop") {
@@ -179,7 +179,7 @@ var $slideshow_id = function () {
         }
     }
 
-    // end of closure, return created object 
+    // end of closure, return created object
     return that;
 }();
 
@@ -235,16 +235,16 @@ $slideshow_id.onLoad();
 //  End -->
 </script>
 '''
-    
+
     js_controls_template = r'''
     // step size for in- or decreasing the delay
-    var delay_delta = $delay_delta; 
-    
+    var delay_delta = $delay_delta;
+
     that.slower = function () {
         show_delay += delay_delta;
         slideform.${slideshow_id}_delaytext.value = show_delay.toString();
     }
-    
+
     that.faster = function (text) {
         show_delay -= delay_delta;
         if (show_delay < 0) {
@@ -252,7 +252,7 @@ $slideshow_id.onLoad();
         }
         slideform.${slideshow_id}_delaytext.value = show_delay.toString();
     }
-    
+
     that.changeDelay = function () {
         var new_delay = parseInt(slideform.${slideshow_id}_delaytext.value, 10);
         if (new_delay < 0) {
@@ -262,20 +262,20 @@ $slideshow_id.onLoad();
         slideform.${slideshow_id}_delaytext.value = new_delay.toString();
     }
 '''
-    
+
     js_update_template = r'''
     that.updateSlide = function () {
         slideselect.selectedIndex = current_slide;
         that.loadSlide();
     }
 '''
-    
+
     # overwrite this to implement the actual slide change
     js_loadslide_template = r'''
     that.loadSlide = function () {
     }
 '''
-    
+
     js_onload_template = r'''
     that.onLoad = function () {
         slideform = document.${slideshow_id}_slideform;
@@ -310,7 +310,7 @@ document.onkeydown = function(e) {
     }
 }
 '''
-    
+
     html_buttons_template = r'''
 <input type=button onClick="$slideshow_id.first();"
     value="|<<" title="First" id="${slideshow_id}_firstButton">
@@ -326,7 +326,7 @@ document.onkeydown = function(e) {
 <input type=button onClick="$slideshow_id.last();" value=">>|" title="Last"
     id="${slideshow_id}_lastButton">
 '''
-    
+
     html_controls_template = r'''
 ${{
 if delay is not None:
@@ -335,33 +335,33 @@ if delay is not None:
     self.write('</td></tr>\n')
 }}
 '''
-    
+
     html_delay_template = r'''
 delay: <input type="text" name="${slideshow_id}_delaytext"
     onChange="$slideshow_id.changeDelay();" value="0" size="4"> ms
 <input type=button onClick="$slideshow_id.faster();" value="-" title="Faster">
 <input type=button onClick="$slideshow_id.slower();" value="+" title="Slower">
 '''
-    
+
     html_top_template = r'''
 '''
-    
+
     html_box_template = r'''
 '''
-    
+
     html_bottom_template = r'''
 '''
-    
-    
+
+
 class SectionHTMLSlideShow(HTMLSlideShow):
     """Astract slideshow with additional support for section markers."""
-    
+
     def __init__(self, section_ids, slideshow_id=None, **kwargs):
         """Return the complete HTML code for the slideshow.
-        
+
         section_ids -- List with the section id for each slide index. The id
             can be a string or a number.
-       
+
         For additional keyword arguments see the super class.
         """
         # we need the slideshow_id for the section names
@@ -381,20 +381,20 @@ class SectionHTMLSlideShow(HTMLSlideShow):
         # translate section_id_list into JavaScript list
         section_ids = [str(section_id) for section_id in section_ids]
         js_section_ids = "".join(['        "%s_section_id_%s",\n' %
-                                  (slideshow_id, section_id) 
+                                  (slideshow_id, section_id)
                                   for section_id in section_ids])
         js_section_ids = "\n" + js_section_ids[:-2]
         kwargs["js_section_ids"] = js_section_ids
         del kwargs["self"]
         super(SectionHTMLSlideShow, self).__init__(**kwargs)
-        
-        
+
+
     js_update_template = r'''
     // maps slide index to section slideshow_id
     var section_ids = new Array($js_section_ids);
     // currently highlighted section slideshow_id
     var current_section_id = section_ids[0];
-    
+
     that.updateSlide = function () {
         document.getElementById(current_section_id).className =
             "inactive_section";
@@ -404,14 +404,14 @@ class SectionHTMLSlideShow(HTMLSlideShow):
         slideselect.selectedIndex = current_slide;
         that.loadSlide();
     }
-    
+
     // use this function when a section is selected,
     // e.g. onClick="setSlide(42)"
     that.setSlide = function (index) {
         current_slide = index;
         that.updateSlide();
     }
-    
+
     that.previousSection = function () {
         if ($only_one_section) {
             return;
@@ -434,7 +434,7 @@ class SectionHTMLSlideShow(HTMLSlideShow):
         current_slide += 1;
         that.updateSlide();
     }
-    
+
     that.nextSection = function () {
         if ($only_one_section) {
             return;
@@ -448,10 +448,10 @@ class SectionHTMLSlideShow(HTMLSlideShow):
         }
         that.updateSlide();
     }
-    
+
     $<js_loadslide_template>
 '''
-    
+
     # define keyboard shortcuts,
     # note that these are also mentionend in the button hover-text
     js_keyboard_shortcuts_template = r'''
@@ -476,7 +476,7 @@ document.onkeydown = function(e) {
     }
 }
     '''
-    
+
     html_buttons_template = r'''
 <input type=button onClick="$slideshow_id.first();"
     value="|<<" title="First" id="${slideshow_id}_firstButton">
@@ -496,7 +496,7 @@ document.onkeydown = function(e) {
 <input type=button onClick="$slideshow_id.last();" value=">>|" title="Last"
     id="${slideshow_id}_lastButton">
 '''
-    
+
     html_controls_template = r'''
 ${{super(SectionHTMLSlideShow, self).html_controls_template(vars())}}
 
@@ -524,25 +524,25 @@ self.write(link + '\n')
 # Use nearest neighbour resampling in Firefox 3.6+ and IE.
 # TODO: Implement electric shock for people who actually use IE.
 # Webkit (Chrome, Safari) does not support this yet,
-# see http://code.google.com/p/chromium/issues/detail?id=1502 
+# see http://code.google.com/p/chromium/issues/detail?id=1502
 IMAGE_SLIDESHOW_STYLE = SLIDESHOW_STYLE + '''
 img.slideshow {
     image-rendering: -moz-crisp-edges;
     -ms-interpolation-mode: nearest-neighbor;
 }
-'''  
+'''
 
 class ImageHTMLSlideShow(HTMLSlideShow):
     """Slideshow for images.
-    
+
     This also serves as an example for implementing a slideshow based on
     HTMLSlideShow.
     """
-    
+
     def __init__(self, filenames, image_size,
                  magnification=1, mag_control=True, **kwargs):
         """Return the complete HTML code for a slideshow of the given images.
-        
+
         filenames -- sequence of strings, containing the path for each image
         image_size -- Tuple (x,y) with the original image size, or enter
             a different size to force scaling.
@@ -550,7 +550,7 @@ class ImageHTMLSlideShow(HTMLSlideShow):
             factor is applied on top of the provided image size.
         mag_control -- Set to True (default) to display a magnification control
             element.
-            
+
         For additional keyword arguments see the super class.
         """
         if len(filenames) == 0:
@@ -562,34 +562,34 @@ class ImageHTMLSlideShow(HTMLSlideShow):
         kwargs["height"] = image_size[1]
         del kwargs["self"]
         super(ImageHTMLSlideShow, self).__init__(**kwargs)
-        
+
     js_controls_template = r'''
     ${{super(ImageHTMLSlideShow, self).js_controls_template(vars())}}
-    
+
     var magnification = $magnification; // image magnification
     var original_width = $width; // original image width
     var original_height = $height; // original image height
-    
+
     that.smaller = function () {
         magnification = magnification / 2;
         slideform.${slideshow_id}_magtext.value = magnification.toString();
         that.resizeImage();
     }
-    
+
     that.larger = function (text) {
         magnification = magnification * 2;
         slideform.${slideshow_id}_magtext.value = magnification.toString();
         that.resizeImage();
     }
-    
+
     that.changeMag = function () {
         magnification = parseFloat(slideform.${slideshow_id}_magtext.value);
         that.resizeImage();
     }
-    
+
     $<js_controls_resize_template>
 '''
-    
+
     js_controls_resize_template = r'''
     that.resizeImage = function () {
         document.images.${slideshow_id}_image_display.width =
@@ -598,14 +598,14 @@ class ImageHTMLSlideShow(HTMLSlideShow):
             parseInt(magnification * original_height, 10);
     }
 '''
-        
+
     js_loadslide_template = r'''
     that.loadSlide = function () {
         document.images.${slideshow_id}_image_display.src =
             slideselect[current_slide].value;
     }
 '''
-    
+
     js_onload_template = r'''
     that.onLoad = function () {
         slideform = document.${slideshow_id}_slideform;
@@ -625,7 +625,7 @@ class ImageHTMLSlideShow(HTMLSlideShow):
         that.resizeImage();
     }
 '''
-    
+
     html_box_template = r'''
 <tr>
 <td style="padding: 20 20 20 20">
@@ -648,21 +648,21 @@ if mag_control or (delay is not None):
     self.write('</td></tr>\n')
 }}
 '''
-    
+
     html_mag_template = r'''
 magnification: <input type="text" name="${slideshow_id}_magtext"
     onChange="$slideshow_id.changeMag();" value="0" size="2">
 <input type=button onClick="$slideshow_id.smaller();" value="-" title="Smaller">
 <input type=button onClick="$slideshow_id.larger();" value="+" title="Larger">
 '''
-    
-    
+
+
 class SectionImageHTMLSlideShow(SectionHTMLSlideShow, ImageHTMLSlideShow):
     """Image slideshow with section markers."""
-    
+
     def __init__(self, filenames, section_ids, image_size, **kwargs):
         """Return the HTML code for a sectioned slideshow of the given images.
-        
+
         For keyword arguments see the super classes.
         """
         if len(section_ids) != len(filenames):
@@ -672,7 +672,7 @@ class SectionImageHTMLSlideShow(SectionHTMLSlideShow, ImageHTMLSlideShow):
         kwargs.update(vars())
         del kwargs["self"]
         super(SectionImageHTMLSlideShow, self).__init__(**kwargs)
-        
+
     js_controls_resize_template = r'''
     that.resizeImage = function () {
         document.images.${slideshow_id}_image_display.width =
@@ -688,7 +688,7 @@ class SectionImageHTMLSlideShow(SectionHTMLSlideShow, ImageHTMLSlideShow):
             parseInt(section_panel_width, 10) + "px";
     }
 '''
-    
+
 
 ### helper functions ###
 
@@ -699,10 +699,10 @@ def image_slideshow(filenames, image_size, title=None, section_ids=None,
                     delay=100, delay_delta=20, loop=True, slideshow_id=None,
                     magnification=1, mag_control=True, shortcuts=True):
     """Return a string with the JS and HTML code for an image slideshow.
-    
+
     Note that the CSS code for the slideshow is not included, so you should
     add SLIDESHOW_STYLE or a custom style to your CSS code.
-    
+
     filenames -- Sequence of the image filenames.
     image_size -- Tuple (x,y) with the original image size, or enter
         a different size to force scaling.
@@ -710,7 +710,7 @@ def image_slideshow(filenames, image_size, title=None, section_ids=None,
     section_ids -- List with the section id for each slide index. The id
             can be a string or a number. Default value None disables the
             section feature.
-   
+
     For additional keyword arguments see the ImageHTMLSlideShow class.
     """
     if section_ids:
@@ -725,7 +725,7 @@ def show_image_slideshow(filenames, image_size, filename=None, title=None,
                          magnification=1, mag_control=True, open_browser=True):
     """Write the slideshow into a HTML file, open it in the browser and
     return the file name.
-    
+
     filenames -- Sequence of the image filenames.
     image_size -- Tuple (x,y) with the original image size, or enter
         a different size to force scaling.
@@ -739,7 +739,7 @@ def show_image_slideshow(filenames, image_size, filename=None, title=None,
         automatically opened in a webbrowser. One can also use string value
         with the browser name (for webbrowser.get) to request a specific
         browser.
-    
+
     For additional keyword arguments see the ImageHTMLSlideShow class.
     """
     if filename is None:

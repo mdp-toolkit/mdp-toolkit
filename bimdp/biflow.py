@@ -12,13 +12,13 @@ n = mdp.numx
 
 from binode import BiNode
 
-# this target value tells the flow to abort and return the current values 
+# this target value tells the flow to abort and return the current values
 EXIT_TARGET = "exit"
 
 
 class NoneIterable(object):
     """Iterable for an infinite sequence of Nones."""
-    
+
     def __iter__(self):
         while True:
             yield None
@@ -31,19 +31,19 @@ class BiFlowException(mdp.FlowException):
 
 class MessageResultContainer(object):
     """Store and combine msg output chunks from a BiNode.
-    
+
     It is for example used when the flow execution yields msg output, which has
     to be joined for the end result.
     """
-    
+
     def __init__(self):
         """Initialize the internal storage variables."""
         self._msg_results = dict()  # all none array message results
         self._msg_array_results = dict()  # result dict for arrays
-        
+
     def add_message(self, msg):
         """Add a single msg result to the combined results.
-        
+
         msg must be either a dict of results or None. numpy arrays will be
         transformed to a single numpy array in the end. For all other types the
         addition operator will be used to combine results (i.e., lists will be
@@ -65,13 +65,13 @@ class MessageResultContainer(object):
                             err = ("Could not combine final msg results "
                                    "in BiFlow.")
                             raise BiFlowException(err)
-    
+
     def get_message(self):
         """Return the msg which combines all the msg results."""
         # move array results from _msg_array_results to _msg_results
         for key in self._msg_array_results:
             if key in self._msg_results:
-                err = ("A key in the msg results is used with " 
+                err = ("A key in the msg results is used with "
                        "different data types.")
                 raise BiFlowException(err)
             else:
@@ -81,7 +81,7 @@ class MessageResultContainer(object):
             return self._msg_results
         else:
             return None
-        
+
 
 # TODO: make sure that isinstance(str, target) is never used, so that in
 #    principle any object could be used (the might have to overwrite the
@@ -89,62 +89,62 @@ class MessageResultContainer(object):
 
 class BiFlow(mdp.Flow):
     """BiMDP version of a flow, which supports jumps between nodes.
-    
-    This capabilities can be used by classes derived from BiNode. 
-    
-    Normal nodes can also be used in this flow, the msg argument is skipped 
+
+    This capabilities can be used by classes derived from BiNode.
+
+    Normal nodes can also be used in this flow, the msg argument is skipped
     for these. Normal nodes can be also jump targets, but only when a relative
     target index is used (since they do not support node ids).
     """
-    
+
     def __init__(self, flow, verbose=False, **kwargs):
         kwargs["crash_recovery"] = False
         super(BiFlow, self).__init__(flow=flow, verbose=verbose, **kwargs)
-    
+
     ### Basic Methods from Flow. ###
-    
-    def train(self, data_iterables, msg_iterables=None, 
+
+    def train(self, data_iterables, msg_iterables=None,
               stop_messages=None):
         """Train the nodes in the flow.
-        
+
         The nodes will be trained according to their place in the flow.
-        
+
         data_iterables -- Sequence of iterables with the training data for each
             trainable node. Can also be a single array or None.
             Note that iterables yielding tuples for additonal node arguments
             (e.g. the class labels for an FDANode) are not supported in a
             BiFlow. Instead use the BiNode version of the node and provide
             the arguments in the message (via msg_iterables).
-        msg_iterables -- Sequence of iterables with the msg training data 
+        msg_iterables -- Sequence of iterables with the msg training data
             for each trainable node.
         stop_messages -- Sequence of messages for stop_training.
-        
-        Note that the type and iterator length of the data iterables is taken 
-        as reference, so the message iterables are assumed to have the 
+
+        Note that the type and iterator length of the data iterables is taken
+        as reference, so the message iterables are assumed to have the
         same length.
         """
         # Note: When this method is updated BiCheckpointFlow should be updated
         #    as well.
         self._bi_reset()  # normaly not required, just for safety
         data_iterables, msg_iterables = self._sanitize_training_iterables(
-                                            data_iterables=data_iterables, 
+                                            data_iterables=data_iterables,
                                             msg_iterables=msg_iterables)
         if stop_messages is None:
             stop_messages = [None] * len(data_iterables)
         # train each Node successively
         for i_node in range(len(self.flow)):
-            if self.verbose: 
-                print ("training node #%d (%s)" % 
+            if self.verbose:
+                print ("training node #%d (%s)" %
                        (i_node, str(self.flow[i_node])))
-            self._train_node(data_iterables[i_node], i_node, 
+            self._train_node(data_iterables[i_node], i_node,
                              msg_iterables[i_node], stop_messages[i_node])
-            if self.verbose: 
+            if self.verbose:
                 print "training finished"
-                
-    def _train_node(self, iterable, nodenr, msg_iterable=None, 
+
+    def _train_node(self, iterable, nodenr, msg_iterable=None,
                     stop_msg=None):
         """Train a particular node.
-        
+
         nodenr -- index of the node to be trained
         msg_iterable -- optional msg data for the training
             Note that the msg is only passed to the Node if it is an instance
@@ -152,7 +152,7 @@ class BiFlow(mdp.Flow):
         stop_msg -- optional msg data for stop_training
             Note that the message is only passed to the Node if the msg is not
             None, so for a normal node the msg has to be None.
-        
+
         Note: unlike the normal mdp.Flow we do no exception handling here.
         """
         if not self.flow[nodenr].is_trainable():
@@ -162,14 +162,14 @@ class BiFlow(mdp.Flow):
         while True:
             if not self.flow[nodenr].get_remaining_train_phase():
                 break
-            self._train_node_single_phase(iterable, nodenr, 
+            self._train_node_single_phase(iterable, nodenr,
                                           msg_iterable, stop_msg)
             self._bi_reset()
-            
-    def _train_node_single_phase(self, iterable, nodenr, 
+
+    def _train_node_single_phase(self, iterable, nodenr,
                                  msg_iterable, stop_msg=None):
         """Perform a single training phase for a given node.
-        
+
         This method should be only called internally in BiFlow.
         """
         empty_iterator = True
@@ -225,7 +225,7 @@ class BiFlow(mdp.Flow):
                     target = None
                 elif len(result) == 3:
                     x, msg, target = result
-                else:        
+                else:
                     err = ("Node produced invalid return value " +
                            "during training: " + str(result))
                     raise BiFlowException(err)
@@ -273,24 +273,24 @@ class BiFlow(mdp.Flow):
         # results without an explicit target are thrown away
         if isinstance(result, tuple) and not isinstance(result[1], int):
             err = ("Stop message target node not found in flow " +
-                   "during training, last result: " + 
+                   "during training, last result: " +
                    str(result))
             raise BiFlowException(err)
-        
-        
+
+
     def execute(self, iterable, msg_iterable=None, target_iterable=None):
         """Execute the flow and return y or (y, msg).
-        
-        iterable -- Can be an iterable or iterator for arrays, a single array 
+
+        iterable -- Can be an iterable or iterator for arrays, a single array
             or None. In the last two cases it is assumed that msg is a single
             message as well.
         msg_iterable -- Can be an iterable or iterator or a single message
             (but only if iterable is a single array or None).
         target_iterable -- Like msg_iterable, but for target.
-        
-        Note that the type and iteration length of iterable is taken as 
+
+        Note that the type and iteration length of iterable is taken as
         reference, so msg is assumed to have the same length.
-        
+
         If msg results are found and if iteration is used then the BiFlow
         tries to join the msg results (and concatenate in the case of arrays).
         """
@@ -317,13 +317,13 @@ class BiFlow(mdp.Flow):
                 # target -1 is allowed for easier inverse handling
                 y, msg = result[:2]
             elif len(result) == 3:
-                err = ("Target node not found in flow during execute," + 
+                err = ("Target node not found in flow during execute," +
                        " last result: " + str(result))
                 raise BiFlowException(err)
             else:
-                err = ("BiNode execution returned invalid result type: " + 
+                err = ("BiNode execution returned invalid result type: " +
                        result)
-                raise BiFlowException(err)    
+                raise BiFlowException(err)
             self._bi_reset()
             if msg:
                 msg_results.add_message(msg)
@@ -354,23 +354,23 @@ class BiFlow(mdp.Flow):
             return (y_results, result_msg)
         else:
             return y_results
-    
+
     def __call__(self, iterable, msg_iterable=None):
         """Calling an instance is equivalent to call its 'execute' method."""
         return self.execute(iterable, msg_iterable=msg_iterable)
-        
+
     ### New Methods for BiMDP. ###
-    
+
     def _bi_reset(self):
         """Reset the nodes and internal flow variables."""
         self._global_message_emitter = None
         for node in self.flow:
             if isinstance(node, BiNode):
                 node.bi_reset()
-    
+
     def _request_node_id(self, node_id):
         """Return first hit of _request_node_id on internal nodes.
-        
+
         So _request_node_id is called for all nodes in the flow until a return
         value is not None. If no such node is found the return value is None.
         """
@@ -382,7 +382,7 @@ class BiFlow(mdp.Flow):
         return None
 
     ## container special methods to support node_id
-    
+
     def __getitem__(self, key):
         if isinstance(key, str):
             item = self._request_node_id(key)
@@ -393,21 +393,21 @@ class BiFlow(mdp.Flow):
             return item
         else:
             return super(BiFlow, self).__getitem__(key)
-        
+
     def __setitem__(self, key, value):
         if isinstance(key, str):
             err = "Setting nodes by node_id is not supported."
             raise BiFlowException(err)
         else:
             super(BiFlow, self).__setitem__(key, value)
-    
+
     def __delitem__(self, key):
         if isinstance(key, str):
             err = "Deleting nodes by node_id is not supported."
             raise BiFlowException(err)
         else:
             super(BiFlow, self).__delitem__(key)
-    
+
     def __contains__(self, key):
         if isinstance(key, str):
             if self._request_node_id(key) is not None:
@@ -416,9 +416,9 @@ class BiFlow(mdp.Flow):
                 return False
         else:
             return super(BiFlow, self).__contains__(key)
-        
+
     ### Flow Implementation Methods ###
-    
+
     def _sanitize_training_iterables(self, data_iterables, msg_iterables):
         """Check and adjust the training iterable list."""
         if data_iterables is None:
@@ -432,14 +432,14 @@ class BiFlow(mdp.Flow):
             data_iterables = [[data_iterables]] * len(self.flow)
             # the form of msg_iterables follows that of data_iterables
             msg_iterables = [[msg_iterables]] * len(data_iterables)
-        else:   
+        else:
             data_iterables = self._train_check_iterables(data_iterables)
             if msg_iterables is None:
                 msg_iterables = [None] * len(self.flow)
             else:
                 msg_iterables = self._train_check_iterables(msg_iterables)
         return data_iterables, msg_iterables
-    
+
     def _sanitize_iterables(self, iterable, msg_iterable, target_iterable=None):
         """Check and adjust a data, message and target iterable."""
         # TODO: maybe add additional checks
@@ -462,20 +462,20 @@ class BiFlow(mdp.Flow):
             if target_iterable is None:
                 target_iterable = NoneIterable()
         return iterable, msg_iterable, target_iterable
-    
+
     def _target_to_index(self, target, current_node=0):
         """Return the absolute node index of the target code.
-        
+
         If the string id target node is not found in this flow then the string
         is returned without alteration.
-        
-        When a relative index is given it is translated to the absolute index 
+
+        When a relative index is given it is translated to the absolute index
         and it is checked if it is in the allowed range.
-        
+
         target -- Can be a string node id, a relative index or None (which
             is interpreted as 1).
         current_node -- If target is specified as a relative index then this
-            node index is used to translate the target to the absolute node 
+            node index is used to translate the target to the absolute node
             index (otherwise it has no effect).
         check_bounds -- If False then it is not checked wether the node index
             is in range(len(flow)).
@@ -501,24 +501,24 @@ class BiFlow(mdp.Flow):
                        ", current node " + str(current_node) + ").")
                 raise BiFlowException(err)
             return absolute_index
-    
+
     # TODO: update docstring for case when target is not found
-    
+
     def _execute_seq(self, x, msg=None, i_node=0, stop_at_node=None):
         """Execute the whole flow as far as possible.
-        
+
         i_node -- Can specify a node index where the excecution is supposed to
             start.
         stop_at_node -- Node index where the execution should stop. The input
             values for this node are returned in this case in the form
             (x, msg, target) with target being set to True.
-        
+
         If the end of the flow is reached then the return value is y
         or (y, msg).
         If the an execution target node is not found then (x, msg, target) is
         returned (target values of 1 and -1 are also possible).
         If a normal Node (not derived from BiNode) is encountered then the
-        current msg is simply carried forward around it. 
+        current msg is simply carried forward around it.
         """
         ## this method is also used by other classes, like BiFlowNode
         while i_node != stop_at_node:
@@ -535,7 +535,7 @@ class BiFlow(mdp.Flow):
                 elif len(result) == 3:
                     x, msg, target = result
                 else:
-                    err = ("BiNode execution returned invalid result type: " + 
+                    err = ("BiNode execution returned invalid result type: " +
                            result)
                     raise BiFlowException(err)
             else:
@@ -562,12 +562,12 @@ class BiFlow(mdp.Flow):
                     return x, msg, target
         # reached stop_at_node, signal this by returning target value True
         return x, msg, True
-            
+
     def _stop_message_seq(self, msg, i_node):
         """Propagate a stop_message through the flow.
-        
+
         i_node -- Index of the node that is called first.
-        
+
         If the bi_stop_message terminated there is no return value. If a target
         node was not found along the way the return value is msg or
         (msg, target).
@@ -605,24 +605,24 @@ class BiFlow(mdp.Flow):
                     # target not found in this flow
                     # this is also the exit point when EXIT_TARGET is given
                     return msg, target
-            
-      
+
+
 ### Some useful flow classes. ###
 
 class BiCheckpointFlow(BiFlow, mdp.CheckpointFlow):
     """Similar to normal checkpoint flow.
-    
-    The main difference is that even the last training phase of a 
-    node is already closed before the checkpoint function is called (otherwise 
+
+    The main difference is that even the last training phase of a
+    node is already closed before the checkpoint function is called (otherwise
     it would be difficult to propagate bi_stop_message).
     """
-    
+
     def train(self, data_iterables, checkpoints, msg_iterables=None,
               stop_messages=None):
         """Train the nodes in the flow.
-        
+
         The nodes will be trained according to their place in the flow.
-        
+
         Additionally calls the checkpoint function 'checkpoint[i]'
         when the training phase of node #i is over.
         A checkpoint function takes as its only argument the trained node.
@@ -633,22 +633,21 @@ class BiCheckpointFlow(BiFlow, mdp.CheckpointFlow):
         """
         self._bi_reset()  # normaly not required, just for safety
         data_iterables, msg_iterables = self._sanitize_training_iterables(
-                                                 data_iterables=data_iterables, 
+                                                 data_iterables=data_iterables,
                                                  msg_iterables=msg_iterables)
         if stop_messages is None:
             stop_messages = [None] * len(data_iterables)
         checkpoints = self._train_check_checkpoints(checkpoints)
         # train each Node successively
         for i_node in range(len(self.flow)):
-            if self.verbose: 
-                print ("training node #%d (%s)" % 
+            if self.verbose:
+                print ("training node #%d (%s)" %
                        (i_node, str(self.flow[i_node])))
-            self._train_node(data_iterables[i_node], i_node, 
+            self._train_node(data_iterables[i_node], i_node,
                              msg_iterables[i_node], stop_messages[i_node])
             if i_node <= len(checkpoints) and checkpoints[i_node] is not None:
                 checkpoint_dict = checkpoints[i_node](self.flow[i_node])
-                if dict: 
+                if dict:
                     self.__dict__.update(checkpoint_dict)
-            if self.verbose: 
+            if self.verbose:
                 print "training finished"
-

@@ -19,14 +19,14 @@ def assert_array_almost_equal_diff(x,y,digits,err_msg=''):
                msg + ' (shapes %s, %s mismatch):\n\t' \
                % (numx.shape(x),numx.shape(y)) + err_msg
     maxdiff = max(numx.ravel(abs(x-y)))/\
-              max(max(abs(numx.ravel(x))),max(abs(numx.ravel(y)))) 
+              max(max(abs(numx.ravel(x))),max(abs(numx.ravel(y))))
     if numx.iscomplexobj(x) or numx.iscomplexobj(y): maxdiff = maxdiff/2
     cond =  maxdiff< 10**(-digits)
     msg = msg+'\n\t Relative maximum difference: %e'%(maxdiff)+'\n\t'+\
           'Array1: '+str(x)+'\n\t'+\
           'Array2: '+str(y)+'\n\t'+\
           'Absolute Difference: '+str(abs(y-x))
-    assert cond, msg 
+    assert cond, msg
 
 def assert_type_equal(act, des):
     assert act == numx.dtype(des), \

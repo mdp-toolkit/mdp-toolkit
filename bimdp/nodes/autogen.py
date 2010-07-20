@@ -43,7 +43,7 @@ def _get_node_subclasses(node_class=mdp.Node, module=mdp.nodes):
 def _write_single_node(fid, node_class, modulename, base_classname="BiNode",
                        old_classname="Node"):
     """Write code for BiMDP versions of normal node classes into module file.
-    
+
     fid -- File handle of the module file.
     node_class -- Node class for which the new node class will be created.
     modulename -- Name of the module where the node is from.
@@ -93,7 +93,7 @@ def _write_node_file(fid, node_classes, modulename="mdp.nodes",
                      base_classname="BiNode", old_classname="Node",
                      base_import="from bimdp import BiNode"):
     """Write code for BiMDP versions of normal node classes into module file.
-    
+
     fid -- File handle of the module file.
     node_classes -- List of node classes for which binodes are created.
     modulename -- Name of the module where the node is from.

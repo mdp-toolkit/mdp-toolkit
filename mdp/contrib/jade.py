@@ -118,7 +118,7 @@ class JADENode(ICANode):
                 Qij = ( sqrt(2) * mult(Xijm*X.T, X) / T
                         - numx.outer(R[:,im], R[:,jm]) - numx.outer(R[:,jm],
                                                                     R[:,im]) )
-                CM[:, Range]	= Qij
+                CM[:, Range] = Qij
                 Range += m
 
         # Now we have nbcm = m(m+1)/2 cumulants matrices stored in a big
@@ -152,7 +152,7 @@ class JADENode(ICANode):
         G = numx.zeros((2, 2), dtype=dtype)
         c = 0
         s = 0
-        ton	= 0
+        ton = 0
         toff = 0
         theta = 0
         Gain = 0

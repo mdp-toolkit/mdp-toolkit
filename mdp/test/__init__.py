@@ -46,7 +46,7 @@ test_suites = {'flows': (test_flows.get_suite, 0),
                'process_schedule': (test_process_schedule.get_suite, 10),
                'contrib': (test_contrib.get_suite, 11),
                'classifier': (test_classifier.get_suite, 12)}
-                           
+
 
 def test(suitename = 'all', verbosity = 2, seed = None, testname = None):
     if seed is None:
@@ -67,4 +67,3 @@ def test(suitename = 'all', verbosity = 2, seed = None, testname = None):
         sys.stderr.write(_err_str)
     mdp.info()
     sys.stderr.write("\nRandom Seed was: " + str(seed)+'\n')
-    

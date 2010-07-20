@@ -9,7 +9,7 @@ class LibSVMClassifier(_SVMClassifier):
     """
     The LibSVMClassifier class acts as a wrapper around the LibSVM library
     for support vector machines.
-        
+
     Information to the parameters can be found on
     http://www.csie.ntu.edu.tw/~cjlin/libsvm/
     """
@@ -21,7 +21,7 @@ class LibSVMClassifier(_SVMClassifier):
         """
         probability -- Must be set to True, if algorithms based on probability
                        shall be used.
-        """        
+        """
         self.kernel_type = libsvm.RBF
         self._probability = probability
         self._classification_type = "multi"
@@ -30,9 +30,9 @@ class LibSVMClassifier(_SVMClassifier):
     def set_classifier(self, classifier):
         """
         Sets the classifier.
-        
-        classifier -- A string with the name of the classifier which 
-                      should be used. Possible values are in 
+
+        classifier -- A string with the name of the classifier which
+                      should be used. Possible values are in
                       self.classifiers
         """
         if classifier.upper() in self.classifiers:
@@ -44,9 +44,9 @@ class LibSVMClassifier(_SVMClassifier):
     def set_kernel(self, kernel):
         """
         Sets the kernel.
-        
-        kernel     -- A string with the name of the classifier which 
-                      should be used. Possible values are in 
+
+        kernel     -- A string with the name of the classifier which
+                      should be used. Possible values are in
                       self.kernels
         """
         if kernel.upper() in self.kernels:
@@ -70,7 +70,7 @@ class LibSVMClassifier(_SVMClassifier):
     def _stop_training(self):
         super(LibSVMClassifier, self)._stop_training()
         self.normalizer = _LabelNormalizer(self.labels)
-        
+
         if self._probability:
             prob = 1
         else:
@@ -87,7 +87,7 @@ class LibSVMClassifier(_SVMClassifier):
 
     def _label(self, x):
         if isinstance(x, (list, tuple, numx.ndarray)):
-            return numx.array([self.model.predict(xi) for xi in x]) 
+            return numx.array([self.model.predict(xi) for xi in x])
         else:
             msg = "Data must be a sequence of vectors"
             raise mdp.NodeException(msg)
@@ -104,4 +104,3 @@ class LibSVMClassifier(_SVMClassifier):
 
     def _train(self, x, labels):
         super(LibSVMClassifier, self)._train(x, labels)
-

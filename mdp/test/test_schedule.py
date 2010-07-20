@@ -19,13 +19,13 @@ class TestScheduler(unittest.TestCase):
         # check result
         results = n.array(results)
         self.assertTrue(n.all(results == n.array([0,1,4,9,16,25])))
-        
+
     def test_cpu_count(self):
         """Test the cpu_count helper function."""
         n_cpus = parallel.cpu_count()
         self.assertTrue(isinstance(n_cpus, int))
-    
-        
+
+
 class TestThreadScheduler(unittest.TestCase):
 
     def test_scheduler_flow(self):
@@ -36,13 +36,13 @@ class TestThreadScheduler(unittest.TestCase):
         node3 = mdp.nodes.SFANode(output_dim=10)
         flow = mdp.parallel.ParallelFlow([node1, node2, node3])
         parallel_flow = mdp.parallel.ParallelFlow(flow.copy()[:])
-        scheduler = parallel.ThreadScheduler(verbose=False, 
+        scheduler = parallel.ThreadScheduler(verbose=False,
                                              n_threads=3)
         input_dim = 30
         scales = n.linspace(1, 100, num=input_dim)
         scale_matrix = mdp.numx.diag(scales)
         train_iterables = [n.dot(mdp.numx_rand.random((5, 100, input_dim)),
-                                 scale_matrix) 
+                                 scale_matrix)
                            for _ in xrange(3)]
         parallel_flow.train(train_iterables, scheduler=scheduler)
         x = mdp.numx.random.random((10, input_dim))
@@ -56,7 +56,7 @@ class TestThreadScheduler(unittest.TestCase):
         y1 = flow.execute(x)
         y2 = parallel_flow.execute(x)
         testing_tools.assert_array_almost_equal(abs(y1), abs(y2), precision)
-        
+
 
 def get_suite(testname=None):
     # this suite just ignores the testname argument
@@ -65,6 +65,6 @@ def get_suite(testname=None):
     suite.addTest(unittest.makeSuite(TestScheduler))
     suite.addTest(unittest.makeSuite(TestThreadScheduler))
     return suite
-            
+
 if __name__ == '__main__':
-    unittest.main() 
+    unittest.main()

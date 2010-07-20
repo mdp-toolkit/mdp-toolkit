@@ -11,7 +11,7 @@ class TestProcessScheduler(unittest.TestCase):
 
     def test_scheduler_order(self):
         """Test the correct result order in process scheduler."""
-        scheduler = parallel.ProcessScheduler(verbose=False, 
+        scheduler = parallel.ProcessScheduler(verbose=False,
                                               n_processes=3,
                                               source_paths=None)
         max_i = 8
@@ -25,10 +25,10 @@ class TestProcessScheduler(unittest.TestCase):
         self.assertTrue(n.all(results ==
                               n.concatenate([n.arange(0,i+1)**2
                                              for i in xrange(max_i)])))
-        
+
     def test_scheduler_no_cache(self):
         """Test process scheduler with caching turned off."""
-        scheduler = parallel.ProcessScheduler(verbose=False, 
+        scheduler = parallel.ProcessScheduler(verbose=False,
                                               n_processes=2,
                                               source_paths=None,
                                               cache_callable=False)
@@ -39,7 +39,7 @@ class TestProcessScheduler(unittest.TestCase):
         # check result
         results = n.array(results)
         self.assertTrue(n.all(results == n.array([0,1,4,9,16,25,36,49])))
-    
+
     def test_scheduler_flow(self):
         """Test process scheduler with real Nodes."""
         precision = 6
@@ -48,14 +48,14 @@ class TestProcessScheduler(unittest.TestCase):
         node3 = mdp.nodes.SFANode(output_dim=10)
         flow = mdp.parallel.ParallelFlow([node1, node2, node3])
         parallel_flow = mdp.parallel.ParallelFlow(flow.copy()[:])
-        scheduler = parallel.ProcessScheduler(verbose=False, 
+        scheduler = parallel.ProcessScheduler(verbose=False,
                                               n_processes=3,
                                               source_paths=None)
         input_dim = 30
         scales = n.linspace(1, 100, num=input_dim)
         scale_matrix = mdp.numx.diag(scales)
         train_iterables = [n.dot(mdp.numx_rand.random((5, 100, input_dim)),
-                                 scale_matrix) 
+                                 scale_matrix)
                            for _ in xrange(3)]
         parallel_flow.train(train_iterables, scheduler=scheduler)
         x = mdp.numx.random.random((10, input_dim))
@@ -101,4 +101,4 @@ def get_suite(testname=None):
     return suite
 
 if __name__ == '__main__':
-    unittest.main() 
+    unittest.main()

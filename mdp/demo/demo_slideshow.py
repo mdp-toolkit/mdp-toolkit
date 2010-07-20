@@ -17,7 +17,7 @@ except Exception:
 # create the animation images
 filenames = []
 section_ids = []
-points = [] 
+points = []
 for i in range(n_frames):
     points.append((i, math.sin(1.0*i/n_frames * 2*math.pi)))
     if i <= n_frames/2:

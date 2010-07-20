@@ -24,11 +24,11 @@ python_executable = "/home/wilbert/bin/python"
 sys_paths = ["/home/wilbert/develop/workspace/MDP",
              "/home/wilbert/develop/workspace/parallelpython/src/pp"]
 
-ssh_proc, remote_pid = pp_support.start_slave(address=slave_id, port=port, 
-                                            ncpus=n_workers, 
-                                            secret=secret, timeout=20, 
-                                            nice=nice, 
-                                            script_path=script_path, 
+ssh_proc, remote_pid = pp_support.start_slave(address=slave_id, port=port,
+                                            ncpus=n_workers,
+                                            secret=secret, timeout=20,
+                                            nice=nice,
+                                            script_path=script_path,
                                             source_paths=sys_paths,
                                             python_executable=python_executable)
 
@@ -43,4 +43,3 @@ ssh_proc.stdin.flush()
 time.sleep(0.2)
 os.kill(ssh_proc.pid, signal.SIGKILL)
 print "all killed"
-

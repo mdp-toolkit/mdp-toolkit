@@ -103,7 +103,7 @@ class OneDimensionalHitParade(object):
         M = self.M
         sort = M.argsort()
         return M[sort[::-1]], iM[sort[::-1]]
-        
+
     def get_minima(self):
         """
         Return the tuple (minima, time-indices).
@@ -113,8 +113,8 @@ class OneDimensionalHitParade(object):
         m = self.m
         sort = m.argsort()
         return m[sort], im[sort]
-    
-    
+
+
 class HitParadeNode(Node):
     """Collect the first 'n' local maxima and minima of the training signal
     which are separated by a minimum gap 'd'.
@@ -122,8 +122,8 @@ class HitParadeNode(Node):
     This is an analysis node, i.e. the data is analyzed during training
     and the results are stored internally. Use the
     'get_maxima' and 'get_minima' methods to access them.
-    """    
-    
+    """
+
     def __init__(self, n, d=1, input_dim=None, dtype=None):
         """
         Input arguments:
@@ -158,7 +158,7 @@ class HitParadeNode(Node):
             hit[c].update((x[:, c], indices))
         self.hit = hit
         self.tlen = tlen
-    
+
     def get_maxima(self):
         """
         Return the tuple (maxima, indices).
@@ -176,7 +176,7 @@ class HitParadeNode(Node):
         for c in range(cols):
             M[:, c], iM[:, c] = hit[c].get_maxima()
         return M, iM
-    
+
     def get_minima(self):
         """
         Return the tuple (minima, indices).
@@ -198,8 +198,8 @@ class HitParadeNode(Node):
 class TimeFramesNode(Node):
     """Copy delayed version of the input signal on the space dimensions.
 
-    For example, for time_frames=3 and gap=2: 
-    
+    For example, for time_frames=3 and gap=2:
+
     [ X(1) Y(1)        [ X(1) Y(1) X(3) Y(3) X(5) Y(5)
       X(2) Y(2)          X(2) Y(2) X(4) Y(4) X(6) Y(6)
       X(3) Y(3)   -->    X(3) Y(3) X(5) Y(5) X(7) Y(7)
@@ -214,7 +214,7 @@ class TimeFramesNode(Node):
     transformation is not surjective. However, the 'pseudo_inverse'
     method does the correct thing when it is indeed possible.
     """
-    
+
     def __init__(self, time_frames, gap=1, input_dim=None, dtype=None):
         """
         Input arguments:
@@ -228,7 +228,7 @@ class TimeFramesNode(Node):
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
         return ['int8', 'int16', 'int32', 'int64', 'float32', 'float64']
-    
+
     def is_trainable(self):
         return False
 
@@ -238,11 +238,11 @@ class TimeFramesNode(Node):
     def _set_input_dim(self, n):
         self._input_dim = n
         self._output_dim = n*self.time_frames
-        
+
     def _set_output_dim(self, n):
         msg = 'Output dim can not be explicitly set!'
         raise NodeException(msg)
-            
+
     def _execute(self, x):
         gap = self.gap
         tf = x.shape[0] - (self.time_frames-1)*gap
@@ -259,7 +259,7 @@ class TimeFramesNode(Node):
         has been computed with a sufficently large x.
         If gap > 1 some of the last rows will be filled with zeros.
         """
-        
+
         self._if_training_stop_training()
 
         # set the output dimension if necessary
@@ -270,12 +270,12 @@ class TimeFramesNode(Node):
                           "not possible.")
                 raise NodeException(errstr)
             self.outputdim = self.input_dim
-        
+
         # control the dimension of y
         self._check_output(y)
         # cast
         y = self._refcast(y)
-        
+
         gap = self.gap
         exp_length = y.shape[0]
         cols = self.input_dim
@@ -325,7 +325,7 @@ class EtaComputerNode(Node):
     and the results are stored internally.  Use the functions
     'get_eta' to access them.
     """
-    
+
     def __init__(self, input_dim=None, dtype=None):
         super(EtaComputerNode, self).__init__(input_dim, None, dtype)
         self._initialized = 0
@@ -350,7 +350,7 @@ class EtaComputerNode(Node):
         # here SignalNode.train makes an automatic refcast
         if not self._initialized:
             self._init_internals()
-            
+
         rdata = data[:-1]
         self._mean += rdata.sum(axis=0)
         self._var += (rdata*rdata).sum(axis=0)
@@ -392,12 +392,12 @@ class EtaComputerNode(Node):
 
 class NoiseNode(Node):
     """Inject multiplicative or additive noise into the input data.
-    
+
     Original code contributed by Mathias Franzius.
-    
+
     Note that due to the noise_func attribute this node cannot be pickled.
     """
-    
+
     def __init__(self, noise_func = mdp.numx_rand.normal, noise_args = (0, 1),
                  noise_type = 'additive', input_dim = None, dtype = None):
         """
@@ -407,7 +407,7 @@ class NoiseNode(Node):
         'noise_func' -- A function that generates noise. It must
                         take a 'size' keyword argument and return
                         a random array of that size. Default is normal noise.
-          
+
         'noise_args' -- Tuple of additional arguments passed to noise_func.
                         Default is (0,1) for (mean, standard deviation)
                         of the normal distribution.
@@ -433,7 +433,7 @@ class NoiseNode(Node):
         """Return the list of dtypes supported by this node."""
         return (mdp.utils.get_dtypes('AllFloat') +
                 mdp.utils.get_dtypes('AllInteger'))
-            
+
     def is_trainable(self):
         return False
 
@@ -465,7 +465,7 @@ class NoiseNode(Node):
             flh = open(filename, mode)
             real_pickle.dump(self, flh, protocol)
             flh.close()
-        
+
 
     def copy(self, protocol = -1):
         """Return a deep copy of the node.
@@ -473,19 +473,19 @@ class NoiseNode(Node):
         as_str = real_pickle.dumps(self, protocol)
         return real_pickle.loads(as_str)
 
-        
+
 class NormalNoiseNode(mdp.Node):
     """Special version of NoiseNode for Gaussian additive noise.
-    
+
     Unlike NoiseNode it does not store a noise function reference but simply
-    uses numx_rand.normal. This has the advantage that the node can be pickled 
+    uses numx_rand.normal. This has the advantage that the node can be pickled
     (which does not work for a normal NoiseNode).
     """
 
     def __init__(self, noise_args=(0, 1), input_dim=None, dtype=None):
         """Set the noise parameters.
-        
-        noise_args -- Tuple of (mean, standard deviation) for the normal 
+
+        noise_args -- Tuple of (mean, standard deviation) for the normal
             distribution, default is (0,1).
         """
         super(NormalNoiseNode, self).__init__(input_dim=input_dim,
@@ -498,10 +498,10 @@ class NormalNoiseNode(mdp.Node):
 
     def is_invertible(self):
         return False
-            
+
     def _execute(self, x):
         noise = (mdp.numx_rand.normal(x.shape[-1]) * self.noise_args[1]
-                 + self.noise_args[0]) 
+                 + self.noise_args[0])
         return x + noise
 
 
@@ -530,7 +530,7 @@ class GaussianClassifierNode(ClassifierNode):
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
         return ['float32', 'float64']
-    
+
     def is_invertible(self):
         return False
 
@@ -576,7 +576,7 @@ class GaussianClassifierNode(ClassifierNode):
         # corresponding covariance matrix
         self._sqrt_def_covs = []
         nitems = 0
-        
+
         for lbl in self.labels:
             cov, mean, p = self.cov_objs[lbl].fix()
             nitems += p
@@ -623,13 +623,13 @@ class GaussianClassifierNode(ClassifierNode):
         for i in range(len(self.labels)):
             tmp_prob[:, i] = self._gaussian_prob(x, i)
             tmp_prob[:, i] *= self.p[i]
-            
+
         # normalize to probability 1
         # (not necessary, but sometimes useful)
         tmp_tot = tmp_prob.sum(axis=1)
         tmp_tot = tmp_tot[:, numx.newaxis]
         return tmp_prob/tmp_tot
- 
+
     def _prob(self, x):
         """Return the posterior probability of each class given the input in a dict."""
 
@@ -642,25 +642,25 @@ class GaussianClassifierNode(ClassifierNode):
         class_prob = self.class_probabilities(x)
         winner = class_prob.argmax(axis=-1)
         return [self.labels[winner[i]] for i in range(len(winner))]
-    
+
 
 class CutoffNode(mdp.Node):
     """Node to cut off values at specified bounds.
-    
+
     Works similar to numpy.clip, but also works when only a lower or upper
     bound is specified.
     """
 
-    def __init__(self, lower_bound=None, upper_bound=None, 
+    def __init__(self, lower_bound=None, upper_bound=None,
                  input_dim=None, dtype=None):
         """Initialize node.
-        
+
         lower_bound -- Data values below this are cut to the lower_bound value.
             If lower_bound is None no cutoff is performed.
         upper_bound -- Works like lower_bound.
         """
-        super(CutoffNode, self).__init__(input_dim=input_dim, 
-                                         output_dim=input_dim, 
+        super(CutoffNode, self).__init__(input_dim=input_dim,
+                                         output_dim=input_dim,
                                          dtype=dtype)
         self.lower_bound = lower_bound
         self.upper_bound = upper_bound
@@ -670,7 +670,7 @@ class CutoffNode(mdp.Node):
 
     def is_invertible(self):
         return False
-            
+
     def _execute(self, x):
         """Return the clipped data."""
         # n.clip() does not work, since it does not accept None for one bound
@@ -683,17 +683,17 @@ class CutoffNode(mdp.Node):
 
 class HistogramNode(mdp.Node):
     """Node which stores a history of the data during its training phase.
-    
+
     The data history is stored in self.data_hist and can also be deleted to
     free memory. Alternatively it can be automatically pickled to disk.
-    
+
     Note that data is only stored during training.
     """
-    
+
     def __init__(self, hist_fraction=1.0, hist_filename=None,
                  input_dim=None, dtype=None):
         """Initialize the node.
-        
+
         hist_fraction -- Defines the fraction of the data that is stored
             randomly.
         hist_filename -- Filename for the file to which the data history will
@@ -702,13 +702,13 @@ class HistogramNode(mdp.Node):
             If filename is None (default value) then data_hist is not cleared
             and can be directly used after training.
         """
-        super(HistogramNode, self).__init__(input_dim=input_dim, 
-                                            output_dim=input_dim, 
+        super(HistogramNode, self).__init__(input_dim=input_dim,
+                                            output_dim=input_dim,
                                             dtype=dtype)
         self._hist_filename = hist_filename
         self.hist_fraction = hist_fraction
-        self.data_hist = None  # stores the data history  
-        
+        self.data_hist = None  # stores the data history
+
     def _train(self, x):
         """Store the history data."""
         if self.hist_fraction < 1.0:
@@ -728,27 +728,27 @@ class HistogramNode(mdp.Node):
             finally:
                 pickle_file.close( )
             self.data_hist = None
-    
+
 
 class AdaptiveCutoffNode(HistogramNode):
     """Node which uses the data history during training to learn cutoff values.
-    
+
     As opposed to the simple CutoffNode, a different cutoff value is learned
     for each data coordinate. For example if an upper cutoff fraction of
     0.05 is specified, then the upper cutoff bound is set so that the upper
     5% of the training data would have been clipped (in each dimension).
     The cutoff bounds are then applied during execution.
-    This Node also works as a HistogramNode, so the histogram data is stored. 
-    
+    This Node also works as a HistogramNode, so the histogram data is stored.
+
     When stop_training is called the cutoff values for each coordinate are
     calculated based on the collected histogram data.
     """
-    
-    def __init__(self, lower_cutoff_fraction=None, upper_cutoff_fraction=None, 
+
+    def __init__(self, lower_cutoff_fraction=None, upper_cutoff_fraction=None,
                  hist_fraction=1.0, hist_filename=None,
                  input_dim=None, dtype=None):
         """Initialize the node.
-        
+
         lower_cutoff_fraction -- Fraction of data that will be cut off after
             the training phase (assuming the data distribution does not
             change). If set to None (default value) no cutoff is performed.
@@ -763,13 +763,13 @@ class AdaptiveCutoffNode(HistogramNode):
         """
         super(AdaptiveCutoffNode, self).__init__(hist_fraction=hist_fraction,
                                                  hist_filename=hist_filename,
-                                                 input_dim=input_dim, 
+                                                 input_dim=input_dim,
                                                  dtype=dtype)
         self.lower_cutoff_fraction = lower_cutoff_fraction
         self.upper_cutoff_fraction = upper_cutoff_fraction
         self.lower_bounds = None
         self.upper_bounds = None
-        
+
     def _stop_training(self):
         """Calculate the cutoff bounds based on collected histogram data."""
         if self.lower_cutoff_fraction or self.upper_cutoff_fraction:
@@ -779,11 +779,11 @@ class AdaptiveCutoffNode(HistogramNode):
                 index = self.lower_cutoff_fraction * len(sorted_data)
                 self.lower_bounds = sorted_data[index]
             if self.upper_cutoff_fraction:
-                index = (len(sorted_data) - 
+                index = (len(sorted_data) -
                          self.upper_cutoff_fraction * len(sorted_data))
                 self.upper_bounds = sorted_data[index]
         super(AdaptiveCutoffNode, self)._stop_training()
-                
+
     def _execute(self, x):
         """Return the clipped data."""
         if self.lower_bounds is not None:
@@ -791,4 +791,3 @@ class AdaptiveCutoffNode(HistogramNode):
         if self.upper_bounds is not None:
             x = numx.where(x <= self.upper_bounds, x, self.upper_bounds)
         return x
-

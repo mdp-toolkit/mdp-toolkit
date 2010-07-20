@@ -19,7 +19,7 @@ class LLENode(Cumulator):
                                  (defined when training finishes)
       self.desired_variance -- variance limit used to compute
                                intrinsic dimensionality
-                             
+
     Based on the algorithm outlined in 'An Introduction to Locally
     Linear Embedding' by L. Saul and S. Roweis, using improvements
     suggested in 'Locally Linear Embedding for Classification' by
@@ -33,7 +33,7 @@ class LLENode(Cumulator):
       Jake VanderPlas, University of Washington
       vanderplas@astro.washington.edu
     """
-    
+
     def __init__(self, k, r=0.001, svd=False, verbose=False,
                  input_dim=None, output_dim=None, dtype=None):
         """
@@ -58,7 +58,7 @@ class LLENode(Cumulator):
                        dimensions is known at the end of training
                        (e.g., for 'output_dim=0.95' the algorithm will keep
                        as many dimensions as necessary in order to explain
-                       95% of the input variance)                       
+                       95% of the input variance)
         """
 
         if isinstance(output_dim, float) and output_dim <= 1:
@@ -66,14 +66,14 @@ class LLENode(Cumulator):
             output_dim = None
         else:
             self.desired_variance = None
-         
+
         super(LLENode, self).__init__(input_dim, output_dim, dtype)
 
         self.k = k
         self.r = r
         self.svd = svd
         self.verbose = verbose
- 
+
     def _get_supported_dtypes(self):
         return ['float32', 'float64']
 
@@ -81,7 +81,7 @@ class LLENode(Cumulator):
         Cumulator._stop_training(self)
 
         if self.verbose:
-            msg = ('training LLE on %i points' 
+            msg = ('training LLE on %i points'
                    ' in %i dimensions...' % (self.data.shape[0],
                                              self.data.shape[1]))
             print msg
@@ -97,10 +97,10 @@ class LLENode(Cumulator):
         Q_diag_idx = numx.arange(k)
 
         if k > N:
-            err = ('k=%i must be less than or ' 
+            err = ('k=%i must be less than or '
                    'equal to number of training points N=%i' % (k, N))
             raise TrainingException(err)
- 
+
         # determines number of output dimensions: if desired_variance
         # is specified, we need to learn it from the data. Otherwise,
         # it's easy
@@ -125,7 +125,7 @@ class LLENode(Cumulator):
 
         if self.verbose:
             print ' - constructing [%i x %i] weight matrix...' % W.shape
-    
+
         for row in range(N):
             if learn_outdim:
                 Q = Qs[row, :, :]
@@ -139,7 +139,7 @@ class LLENode(Cumulator):
                 M_Mi = M_Mi[nbrs]
                 # compute covariance matrix of distances
                 Q = mult(M_Mi, M_Mi.T)
-                
+
             # -----------------------------------------------
             #  compute weight vector based on neighbors
             # -----------------------------------------------
@@ -157,12 +157,12 @@ class LLENode(Cumulator):
                 r = numx.sum(sig2[self.output_dim:])
                 Q[Q_diag_idx, Q_diag_idx] += r
             else:
-                # Roweis et al instead use "a correction that 
+                # Roweis et al instead use "a correction that
                 #   is small compared to the trace" e.g.:
                 # r = 0.001 * float(Q.trace())
                 # this is equivalent to assuming 0.1% of the variance is unused
                 Q[Q_diag_idx, Q_diag_idx] += r*Q.trace()
-                
+
             #solve for weight
             # weight is w such that sum(Q_ij * w_j) = 1 for all i
             # XXX refcast is due to numpy bug: floats become double
@@ -218,7 +218,7 @@ class LLENode(Cumulator):
         Qs = numx.zeros((N, k, k))
         sig2s = numx.zeros((N, d_in))
         nbrss = numx.zeros((N, k), dtype='i')
-        
+
         for row in range(N):
             #-----------------------------------------------
             #  find k nearest neighbors
@@ -262,7 +262,7 @@ class LLENode(Cumulator):
             print msg
 
         return Qs, sig2s, nbrss
-    
+
     def _execute(self, x):
         #----------------------------------------------------
         # similar algorithm to that within self.stop_training()
@@ -275,7 +275,7 @@ class LLENode(Cumulator):
         k, r = self.k, self.r
         d_out = self.output_dim
         Q_diag_idx = numx.arange(k)
-        
+
         for row in range(Nx):
             #find nearest neighbors of x in M
             M_xi = self.data-x[row]
@@ -298,7 +298,7 @@ class LLENode(Cumulator):
 
         #multiply weights by result of SVD from training
         return numx.dot(W, self.training_projection)
-    
+
     def is_trainable(self):
         return True
 
@@ -327,17 +327,17 @@ def _mgs(a):
 
 class HLLENode(LLENode):
     """Perform a Hessian Locally Linear Embedding analysis on the data.
-    
+
     Internal variables of interest:
       self.training_projection -- the HLLE projection of the training data
                                  (defined when training finishes)
       self.desired_variance -- variance limit used to compute
                                intrinsic dimensionality
-                            
+
     Implementation based on algorithm outlined in
     Donoho, D. L., and Grimes, C., Hessian Eigenmaps: new locally linear
     embedding techniques for high-dimensional data, Proceedings of the
-    National Academy of Sciences 100(10): 5591-5596, 2003. 
+    National Academy of Sciences 100(10): 5591-5596, 2003.
 
     Original code contributed by:
       Jake Vanderplas, University of Washington
@@ -353,7 +353,7 @@ class HLLENode(LLENode):
     #  much less computationally intensive) to determine
     #  projections for new points using the LLE framework.
     #----------------------------------------------------
-    
+
     def __init__(self, k, r=0.001, svd=False, verbose=False,
                  input_dim=None, output_dim=None, dtype=None):
         """
@@ -379,23 +379,23 @@ class HLLENode(LLENode):
                        dimensions is known at the end of training
                        (e.g., for 'output_dim=0.95' the algorithm will keep
                        as many dimensions as necessary in order to explain
-                       95% of the input variance)                       
+                       95% of the input variance)
         """
         LLENode.__init__(self, k, r, svd, verbose,
                          input_dim, output_dim, dtype)
 
     def _stop_training(self):
         Cumulator._stop_training(self)
-        
+
         k = self.k
         M = self.data
         N = M.shape[0]
-        
+
         if k > N:
             err = ('k=%i must be less than'
                    ' or equal to number of training points N=%i' % (k, N))
             raise TrainingException(err)
-        
+
         if self.verbose:
             print 'performing HLLE on %i points in %i dimensions...' % M.shape
 
@@ -423,7 +423,7 @@ class HLLENode(LLENode):
             err = ('k=%i and n=%i (number of input data points) must be'
                    ' larger than output_dim=%i' % (k, N, d_out))
             raise TrainingException(err)
-        
+
         if k < 1+d_out+dp:
             wrn = ('The number of neighbours, k=%i, is smaller than'
                    ' 1 + output_dim + output_dim*(output_dim+1)/2 = %i,'
@@ -461,7 +461,7 @@ class HLLENode(LLENode):
             U, sig, VT = svd(nbrhd)
             nbrhd = U.T[:d_out]
             del VT
-            
+
             #-----------------------------------------------
             #  build Hessian estimator
             #-----------------------------------------------
@@ -472,7 +472,7 @@ class HLLENode(LLENode):
                 ct += d_out-i
             Yi = numx.concatenate([numx.ones((1, k), dtype=self.dtype),
                                    nbrhd, Yi], 0)
-            
+
             #-----------------------------------------------
             #  orthogonalize linear and quadratic forms
             #   with QR factorization
@@ -484,7 +484,7 @@ class HLLENode(LLENode):
             else:
                 q, r = _mgs(Yi.T)
                 w = q[:, -dp:]
-            
+
             S = w.sum(0) #sum along columns
             #if S[i] is too small, set it equal to 1.0
             # this prevents weights from blowing up
@@ -498,9 +498,9 @@ class HLLENode(LLENode):
         #  first d+1 eigenvectors of W.T*W
         # Compute this using an svd of W
         #-----------------------------------------------
-        
+
         if self.verbose:
-            msg = (' - finding [%i x %i] ' 
+            msg = (' - finding [%i x %i] '
                    'null space of weight matrix...' % (d_out, N))
             print msg
 
@@ -508,10 +508,10 @@ class HLLENode(LLENode):
         #XXX  use of upcoming ARPACK interface for bottom few eigenvectors
         #XXX   of a sparse matrix will significantly increase the speed
         #XXX   of the next step
-        
+
         if self.svd:
             sig, U = nongeneral_svd(W.T, range=(2, d_out+1))
-            Y = U*numx.sqrt(N)         
+            Y = U*numx.sqrt(N)
         else:
             WW = mult(W, W.T)
             # regularizes the eigenvalues, does not change the eigenvectors:

@@ -45,16 +45,16 @@ class FlowException(mdp.MDPException):
 
 class FlowExceptionCR(CrashRecoveryException, FlowException):
     """Class to handle flow-crash recovery """
-    
+
     def __init__(self, *args):
         """Allow crash recovery.
-        
+
         Arguments: (error_string, flow_instance, parent_exception)
         The triggering parent exception is kept in self.parent_exception.
         If flow_instance._crash_recovery is set, save a crash dump of
         flow_instance on the file self.filename"""
         CrashRecoveryException.__init__(self, *args)
-        rec = self.crashing_obj._crash_recovery 
+        rec = self.crashing_obj._crash_recovery
         errstr = args[0]
         if rec:
             if isinstance(rec, str):
@@ -64,7 +64,7 @@ class FlowExceptionCR(CrashRecoveryException, FlowException):
             name = CrashRecoveryException.dump(self, name)
             dumpinfo = '\nA crash dump is available on: "%s"' % name
             self.filename = name
-            errstr = errstr+dumpinfo    
+            errstr = errstr+dumpinfo
 
         Exception.__init__(self, errstr)
 
@@ -73,12 +73,12 @@ class Flow(object):
     together to form a more complex algorithm.  Input data is sent to the
     first node and is successively processed by the subsequent nodes along
     the sequence.
-    
+
     Using a flow as opposed to handling manually a set of nodes has a
     clear advantage: The general flow implementation automatizes the
     training (including supervised training and multiple training phases),
     execution, and inverse execution (if defined) of the whole sequence.
-    
+
     Crash recovery is optionally available: in case of failure the current
     state of the flow is saved for later inspection. A subclass of the
     basic flow class ('CheckpointFlow') allows user-supplied checkpoint
@@ -117,7 +117,7 @@ class Flow(object):
 
     def _train_node(self, data_iterable, nodenr):
         """Train a single node in the flow.
-        
+
         nodenr -- index of the node in the flow
         """
         node = self.flow[nodenr]
@@ -137,7 +137,7 @@ class Flow(object):
         elif (data_iterable is None) and (not node.is_trainable()):
             # skip training if node is not trainable
             return
-            
+
         try:
             train_arg_keys = self._get_required_train_args(node)
             train_args_needed = bool(len(train_arg_keys))
@@ -194,7 +194,7 @@ class Flow(object):
         except mdp.TrainingFinishedException, e:
             # attempted to train a node although its training phase is already
             # finished. raise a warning and continue with the next node.
-            wrnstr = ("\n! Node %d training phase already finished" 
+            wrnstr = ("\n! Node %d training phase already finished"
                       " Continuing anyway." % nodenr)
             _warnings.warn(wrnstr, mdp.MDPWarning)
         except FlowExceptionCR, e:
@@ -210,15 +210,15 @@ class Flow(object):
         except Exception, e:
             # capture any other exception occured during training.
             self._propagate_exception(e, nodenr)
-            
+
     def _stop_training_hook(self):
         """Hook method that is called before stop_training is called."""
         pass
-    
+
     @staticmethod
     def _get_required_train_args(node):
         """Return arguments in addition to self and x for node.train.
-        
+
         Argumentes that have a default value are ignored.
         """
         train_arg_spec = _inspect.getargspec(node.train)
@@ -227,41 +227,41 @@ class Flow(object):
             # subtract arguments with a default value
             train_arg_keys = train_arg_keys[:-len(train_arg_spec[3])]
         return train_arg_keys
-            
+
     def _train_check_iterables(self, data_iterables):
         """Return the data iterables after some checks and sanitizing.
-        
+
         Note that this method does not distinguish between iterables and
         iterators, so this must be taken care of later.
         """
         # verifies that the number of iterables matches that of
         # the signal nodes and multiplies them if needed.
         flow = self.flow
-        
+
         # if a single array is given wrap it in a list of lists,
         # note that a list of 2d arrays is not valid
         if isinstance(data_iterables, numx.ndarray):
             data_iterables = [[data_iterables]] * len(flow)
 
         if not isinstance(data_iterables, list):
-            err_str = ("'data_iterables' must be either a list of " 
+            err_str = ("'data_iterables' must be either a list of "
                        "iterables or an array, but got %s" %
                        str(type(data_iterables)))
             raise FlowException(err_str)
-        
+
         # check that all elements are iterable
         for i, iterable in enumerate(data_iterables):
             if (iterable is not None) and (not hasattr(iterable, '__iter__')):
-                err = ("Element number %d in the data_iterables" 
+                err = ("Element number %d in the data_iterables"
                        " list is not an iterable." % i)
                 raise FlowException(err)
 
         # check that the number of data_iterables is correct
         if len(data_iterables) != len(flow):
-            err_str = ("%d data iterables specified," 
+            err_str = ("%d data iterables specified,"
                        " %d needed" % (len(data_iterables), len(flow)))
             raise FlowException(err_str)
-        
+
         return data_iterables
 
     def _close_last_node(self):
@@ -276,14 +276,14 @@ class Flow(object):
 
     def set_crash_recovery(self, state = True):
         """Set crash recovery capabilities.
-        
+
         When a node raises an Exception during training, execution, or
         inverse execution that the flow is unable to handle, a FlowExceptionCR
         is raised. If crash recovery is set, a crash dump of the flow
         instance is saved for later inspection. The original exception
         can be found as the 'parent_exception' attribute of the
         FlowExceptionCR instance.
-        
+
         - If 'state' = False, disable crash recovery.
         - If 'state' is a string, the crash dump is saved on a file
           with that name.
@@ -294,31 +294,31 @@ class Flow(object):
 
     def train(self, data_iterables):
         """Train all trainable nodes in the flow.
-        
+
         'data_iterables' is a list of iterables, one for each node in the flow.
         The iterators returned by the iterables must return data arrays that
         are then used for the node training (so the data arrays are the 'x' for
         the nodes). Note that the data arrays are processed by the nodes
         which are in front of the node that gets trained, so the data dimension
         must match the input dimension of the first node.
-        
+
         If a node has only a single training phase then instead of an iterable
         you can alternatively provide an iterator (including generator-type
         iterators). For nodes with multiple training phases this is not
         possible, since the iterator cannot be restarted after the first
         iteration. For more information on iterators and iterables see
         http://docs.python.org/library/stdtypes.html#iterator-types .
-        
+
         In the special case that 'data_iterables' is one single array,
         it is used as the data array 'x' for all nodes and training phases.
-        
+
         Instead of a data array 'x' the iterators can also return a list or
         tuple, where the first entry is 'x' and the following are args for the
         training of the node (e.g. for supervised training).
         """
 
         data_iterables = self._train_check_iterables(data_iterables)
-        
+
         # train each Node successively
         for i in range(len(self.flow)):
             if self.verbose:
@@ -343,11 +343,11 @@ class Flow(object):
 
     def execute(self, iterable, nodenr = None):
         """Process the data through all nodes in the flow.
-        
+
         'iterable' is an iterable or iterator (note that a list is also an
         iterable), which returns data arrays that are used as input to the flow.
         Alternatively, one can specify one data array as input.
-        
+
         If 'nodenr' is specified, the flow is executed only up to
         node nr. 'nodenr'. This is equivalent to 'flow[:nodenr+1](iterable)'.
         """
@@ -374,19 +374,19 @@ class Flow(object):
         return x
 
     def inverse(self, iterable):
-        """Process the data through all nodes in the flow backwards        
+        """Process the data through all nodes in the flow backwards
         (starting from the last node up to the first node) by calling the
         inverse function of each node. Of course, all nodes in the
         flow must be invertible.
-        
+
         'iterable' is an iterable or iterator  (note that a list is also an
         iterable), which returns data arrays that are used as input to the flow.
         Alternatively, one can specify one data array as input.
-        
+
         Note that this is _not_ equivalent to 'flow[::-1](iterable)',
         which also executes the flow backwards but calls the 'execute'
         function of each node."""
-        
+
         if isinstance(iterable, numx.ndarray):
             return self._inverse_seq(iterable)
         res = []
@@ -408,7 +408,7 @@ class Flow(object):
     def save(self, filename, protocol=-1):
         """Save a pickled serialization of the flow to 'filename'.
         If 'filename' is None, return a string.
-        
+
         Note: the pickled Flow is not guaranteed to be upward or
         backward compatible."""
         if filename is None:
@@ -427,7 +427,7 @@ class Flow(object):
         return self.execute(iterable, nodenr=nodenr)
 
     ###### string representation
-    
+
     def __str__(self):
         nodes = ', '.join([str(x) for x in self.flow])
         return '['+nodes+']'
@@ -500,10 +500,10 @@ class Flow(object):
 
     def __contains__(self, item):
         return self.flow.__contains__(item)
-    
+
     def __iter__(self):
         return self.flow.__iter__()
-    
+
     def __add__(self, other):
         # append other to self
         if isinstance(other, Flow):
@@ -554,13 +554,13 @@ class CheckpointFlow(Flow):
     """Subclass of Flow class that allows user-supplied checkpoint functions
     to be executed at the end of each phase, for example to
     save the internal structures of a node for later analysis."""
-    
+
     def _train_check_checkpoints(self, checkpoints):
         if not isinstance(checkpoints, list):
             checkpoints = [checkpoints]*len(self.flow)
-        
+
         if len(checkpoints) != len(self.flow):
-            error_str = ("%d checkpoints specified," 
+            error_str = ("%d checkpoints specified,"
                          " %d needed" % (len(checkpoints), len(self.flow)))
             raise FlowException(error_str)
 
@@ -573,11 +573,11 @@ class CheckpointFlow(Flow):
         In addition to the basic behavior (see 'Node.train'), calls the
         checkpoint function 'checkpoint[i]' when the training phase of node #i
         is over.
-        
+
         A checkpoint function takes as its only argument the trained node.
         If the checkpoint function returns a dictionary, its content is
         added to the instance dictionary.
-        
+
         The class CheckpointFunction can be used to define user-supplied
         checkpoint functions.
         """
@@ -602,7 +602,7 @@ class CheckpointFlow(Flow):
 
 class CheckpointFunction(object):
     """Base class for checkpoint functions.
-    
+
     This class can be subclassed to build objects to be used as a checkpoint
     function in a CheckpointFlow. Such objects would allow to define parameters
     for the function and save informations for later use."""
@@ -624,7 +624,7 @@ class CheckpointSaveFunction(CheckpointFunction):
 
     def __init__(self, filename, stop_training=0, binary=1, protocol=2):
         """CheckpointSaveFunction constructor.
-        
+
         'filename'      -- the name of the pickle dump file.
         'stop_training' -- if set to 0 the pickle dump is done before
                            closing the training phase
@@ -632,7 +632,7 @@ class CheckpointSaveFunction(CheckpointFunction):
                            the node is dumped
         'binary'        -- sets binary mode for opening the file.
                            When using a protocol higher than 0, make sure
-                           the file is opened in binary mode. 
+                           the file is opened in binary mode.
         'protocol'      -- is the 'protocol' argument for the pickle dump
                            (see Pickle documentation for details)
         """

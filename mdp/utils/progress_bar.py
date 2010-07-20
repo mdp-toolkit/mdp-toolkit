@@ -52,14 +52,14 @@ def _progress(percent, last, style, layout):
             box = ''.join(['\r', layout['indent'],
                            box[0:percent_idx],
                            percent_s,
-                           box[percent_idx+len(percent_s):]]) 
+                           box[percent_idx+len(percent_s):]])
     else:
         now = time.time()
         if percent == 0:
             # write the time box directly
             tbox = ''.join(['?', layout['separator'], '?'])
         else:
-            # Elapsed 
+            # Elapsed
             elapsed = now - layout['t_start']
             # Estimated total time
             if layout['speed'] == 'mean':
@@ -94,9 +94,9 @@ def _progress(percent, last, style, layout):
         sys.stdout.write(box)
         sys.stdout.flush()
     return box
-    
+
 def progressinfo(sequence, length = None, style = 'bar', custom = None):
-    """A fully configurable text-mode progress info box tailored to the 
+    """A fully configurable text-mode progress info box tailored to the
        command-line die-hards.
 
        To get a progress info box for your loops use it like this:
@@ -121,8 +121,8 @@ def progressinfo(sequence, length = None, style = 'bar', custom = None):
           ...     time.sleep(1)
           ...     if download_process_has_finished():
           ...         break
-          
-       
+
+
      Arguments:
 
      sequence    - if it is a Python container object (list,
@@ -130,7 +130,7 @@ def progressinfo(sequence, length = None, style = 'bar', custom = None):
                    __len__ method call, the length argument can
                    be omitted. If it is an iterator (generators,
                    file objects, etc...) the length argument must
-                   be specified. 
+                   be specified.
 
      Keyword arguments:
 
@@ -140,7 +140,7 @@ def progressinfo(sequence, length = None, style = 'bar', custom = None):
 
      style      - If style == 'bar', display a progress bar. The
                   default layout is:
-                  
+
                   [===========60%===>.........]
 
                   If style == 'timer', display a time elapsed / time
@@ -149,7 +149,7 @@ def progressinfo(sequence, length = None, style = 'bar', custom = None):
                   23% [02:01:28] - [00:12:37]
 
                   where fields have the following meaning:
-       
+
                   percent_done% [time_elapsed] - [time_remaining]
 
      custom     - a dictionary for customizing the layout.
@@ -177,8 +177,8 @@ def progressinfo(sequence, length = None, style = 'bar', custom = None):
                     indent = string used for indenting the progress info box
                     position = position of the percent done string,
                                must be one out of ['left', 'middle', 'right']
-        
-     
+
+
      Note 1: by default sys.stdout is flushed each time a new box is drawn.
              If you need to rely on buffered stdout you'd better not use this
              (any?) progress info box.
@@ -232,7 +232,7 @@ def progressinfo(sequence, length = None, style = 'bar', custom = None):
     last = None
     for count, value in enumerate(sequence):
         # generate progress info
-        if iterate_on_items: 
+        if iterate_on_items:
             last = _progress(value/length, last, style, layout)
         else:
             last = _progress(count/length, last, style, layout)
@@ -279,7 +279,7 @@ if __name__ == '__main__':
                    'delimiters': '()'},
                   {'position':'right'}]
     for cust in cust_list:
-        out_list = [] 
+        out_list = []
         for i in progressinfo(string, style = 'timer', custom = cust):
             time.sleep(0.02)
             out_list.append(i)
@@ -314,4 +314,3 @@ if __name__ == '__main__':
                              custom={'speed':'last'}):
         time.sleep(1)
     print 'Done.'
-

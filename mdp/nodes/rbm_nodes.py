@@ -61,7 +61,7 @@ class RBMNode(mdp.Node):
         # break the simmetry that might lead to degenerate solutions during
         # learning
         self._initialized = True
-        
+
         # weights
         self.w = self._refcast(randn(self.input_dim, self.output_dim)*0.1)
         # bias on the visibile (input) units
@@ -95,7 +95,7 @@ class RBMNode(mdp.Node):
         epsilon -- learning rate. Default value: 0.1
         decay -- weight decay term. Default value: 0.
         momentum -- momentum term. Default value: 0.
-        """        
+        """
         if not self._initialized:
             self._init_weights()
 
@@ -105,7 +105,7 @@ class RBMNode(mdp.Node):
 
         # old gradients for momentum term
         dw, dbv, dbh = self._delta
-        
+
         # first update of the hidden units for the data term
         ph_data, h_data = self._sample_h(v)
         # n updates of both v and h for the model term
@@ -113,13 +113,13 @@ class RBMNode(mdp.Node):
         for i in range(n_updates):
             pv_model, v_model = self._sample_v(h_model)
             ph_model, h_model = self._sample_h(v_model)
-        
+
         # update w
         data_term = mult(v.T, ph_data)
         model_term = mult(v_model.T, ph_model)
         dw = momentum*dw + epsilon*((data_term - model_term)/n - decay*w)
         w += dw
-        
+
         # update bv
         data_term = v.sum(axis=0)
         model_term = v_model.sum(axis=0)
@@ -146,7 +146,7 @@ class RBMNode(mdp.Node):
         pass
 
     # execution methods
-        
+
     def is_invertible(self):
         return False
 
@@ -222,16 +222,16 @@ class RBMWithLabelsNode(RBMNode):
     self.bh -- bias vector of the hidden variables
 
     For more information on RBMs with labels, see
-    
+
     Geoffrey E. Hinton (2007) Boltzmann machine. Scholarpedia, 2(5):1668
-    
+
     Hinton, G. E, Osindero, S., and Teh, Y. W. (2006). A fast learning
-    algorithm for deep belief nets. Neural Computation, 18:1527-1554. 
+    algorithm for deep belief nets. Neural Computation, 18:1527-1554.
     """
 
     def __init__(self, hidden_dim, labels_dim, visible_dim=None, dtype=None):
         super(RBMWithLabelsNode, self).__init__(None, None, dtype)
-        
+
         self._labels_dim = labels_dim
         if visible_dim is not None:
             self.input_dim = visible_dim+labels_dim
@@ -243,7 +243,7 @@ class RBMWithLabelsNode(RBMNode):
         return ['float32', 'float64']
 
     def _set_input_dim(self, n):
-        self._input_dim = n 
+        self._input_dim = n
         self._visible_dim = n - self._labels_dim
 
     def _sample_v(self, h, sample_l=False, concatenate=True):
@@ -255,11 +255,11 @@ class RBMWithLabelsNode(RBMNode):
         # activation
         a = self.bv + mult(h, self.w.T)
         av, al = a[:, :vdim], a[:, vdim:]
-        
+
         # ## visible units: logistic activation
         probs_v = 1./(1. + exp(-av))
         v = (probs_v > random(probs_v.shape)).astype('d')
-        
+
         # ## label units: softmax activation
         # subtract maximum to regularize exponent
         exponent = al - rrep(al.max(axis=1), ldim)
@@ -280,7 +280,7 @@ class RBMWithLabelsNode(RBMNode):
             return probs, x
         else:
             return probs_v, probs_l, v, l
-    
+
     # execution methods
 
     def sample_h(self, v, l):
@@ -307,7 +307,7 @@ class RBMWithLabelsNode(RBMNode):
         can be active at any time."""
 
         self._pre_inversion_checks(h)
-        
+
         probs_v, probs_l, v, l = self._sample_v(h, sample_l=True,
                                                 concatenate=False)
         return probs_v, probs_l, v, l
@@ -315,7 +315,7 @@ class RBMWithLabelsNode(RBMNode):
     def energy(self, v, h, l):
         """Compute the energy of the RBM given observed variables state 'v'
         and 'l', and hidden variables state 'h'."""
-        
+
         x = numx.concatenate((v, l), axis=1)
         return self._energy(x, h)
 
@@ -327,7 +327,7 @@ class RBMWithLabelsNode(RBMNode):
         """
         x = numx.concatenate((v, l), axis=1)
         self._pre_execution_checks(x)
-        
+
         probs, h = self._sample_h(self._refcast(x))
         if return_probs:
             return probs

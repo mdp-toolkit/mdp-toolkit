@@ -25,7 +25,7 @@ class NaiveBayesClassifier(ClassifierNode):
     """A naive Bayes Classificator.
     In order to be usable for spam filtering, the words must be transformed
     with a hash function.
-    
+
     Right now, it is only a two-class model. If needed, it can be possible to
     allow for multiple class training and classification.
     """
@@ -35,14 +35,14 @@ class NaiveBayesClassifier(ClassifierNode):
         self.spam = {}
         self.num_nospam = 0
         self.num_spam = 0
-    
+
     def _check_train_args(self, x, labels):
         if (isinstance(labels, (list, tuple, numx.ndarray)) and
             len(labels) != x.shape[0]):
             msg = ("The number of labels should be equal to the number of "
                    "datapoints (%d != %d)" % (len(labels), x.shape[0]))
             raise mdp.TrainingException(msg)
-        
+
         if (not isinstance(labels, (list, tuple, numx.ndarray))):
             labels = [labels]
 
@@ -52,7 +52,7 @@ class NaiveBayesClassifier(ClassifierNode):
 
     def _train(self, x, labels):
         """Update the internal structures according to the input data 'x'.
-        
+
         x -- a matrix having different variables on different columns
              and observations on the rows.
         labels -- can be a list, tuple or array of labels (one for each data point)
@@ -61,7 +61,7 @@ class NaiveBayesClassifier(ClassifierNode):
         """
         for xi, labeli in mdp.utils.izip_stretched(x, labels):
             self._learn(xi, labeli)
-            
+
         # clear input dim hack
         self._set_input_dim(None)
 
@@ -83,13 +83,13 @@ class NaiveBayesClassifier(ClassifierNode):
                     self.nospam[word] += 1
                 else:
                     self.nospam[word] = 1
-                    
+
     def _prob(self, words):
         # TODO: What happens when values are twice in prob_sort
-        
+
         # clear input dim hack
         self._set_input_dim(None)
-        
+
         prob_spam = [] # P(W|Spam)
         prob_nospam = []
         for word in words[0,:]: # FIXME
@@ -98,7 +98,7 @@ class NaiveBayesClassifier(ClassifierNode):
             else:
                 # take a minimum value to avoid multiplication with 0 on unknown words
                 prob_spam.append(0.5 / self.num_spam)
-                
+
             if word in self.nospam:
                 prob_nospam.append(float(self.nospam[word]) / self.num_nospam)
             else:
@@ -106,41 +106,41 @@ class NaiveBayesClassifier(ClassifierNode):
 
         num_classifiers_spam = 5 # take the n best values of spam
         num_classifiers_nospam = 5 # and of nospam
-        
+
         prob = zip(prob_nospam, prob_spam)
-        
+
         prob.sort(key = operator.itemgetter(1), reverse=True) # investigate the pre-sorting
         prob.sort(key = operator.itemgetter(0), reverse=True)
 
         all_prob = prob[0:num_classifiers_nospam]
-        
+
         prob.sort(key = operator.itemgetter(0), reverse=True)
         prob.sort(key = operator.itemgetter(1), reverse=True)
         all_prob += prob[0:num_classifiers_spam]
-        
+
         p_spam = float(self.num_spam) / (self.num_nospam + self.num_spam)
         p_nospam = float(self.num_nospam) / (self.num_nospam + self.num_spam)
-        
+
         p_spam_W = p_spam
         p_nospam_W = p_nospam
 
         for t in all_prob:
             p_nospam_W *= t[0]
             p_spam_W *= t[1]
-            
+
         # all_prob are not independent, so normalise it
         p_sum = p_spam_W + p_nospam_W
         p_spam_W = p_spam_W / p_sum
         p_nospam_W = p_nospam_W / p_sum
-        
+
         return { -1: p_spam_W, 1: p_nospam_W }
-                    
+
     def _label(self, words):
         """Classifies the words.
         """
         # clear input dim hack
         self._set_input_dim(None)
-        
+
         p = self._prob(words)
         p_spam_W = p[-1]
         p_nospam_W = p[1]
@@ -167,7 +167,7 @@ class LanguageGuesserDemo(object):
                 pass
             f.close()
             return i + 1
-        
+
         dictfile = codecs.open(files[0], "r", "latin-1")
         print "Start learning from ‘%s’." % files[0]
         paragraph = []
@@ -183,7 +183,7 @@ class LanguageGuesserDemo(object):
         if not line and paragraph:
             self.nbc.train(mdp.numx.array([paragraph]), 1)
         dictfile.close()
-        
+
         dictfile = codecs.open(files[1], "r", "latin-1")
         print "Start learning from ‘%s’." % files[1]
         paragraph = []
@@ -199,14 +199,14 @@ class LanguageGuesserDemo(object):
         if not line and paragraph:
             self.nbc.train(mdp.numx.array([paragraph]), -1)
         dictfile.close()
-        
+
     def check_string(self, text):
         regex = re.compile('[%s]' % re.escape(string.punctuation))
         text = regex.sub(' ', text).lower().split()
         textvals = mdp.numx.array([text])
         prob = self.nbc.prob(textvals)
         return {"first": prob[1], "second": prob[-1]}
-        
+
 if __name__ == '__main__':
 
     parser = OptionParser("usage: %prog --first=FILE --second=FILE [options] arg")
@@ -219,6 +219,5 @@ if __name__ == '__main__':
 
     if not (options.first and options.second):
         parser.error("You have to supply two files.")
-    
-    demo = LanguageGuesserDemo((options.first, options.second))
 
+    demo = LanguageGuesserDemo((options.first, options.second))

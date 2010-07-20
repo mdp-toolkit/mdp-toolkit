@@ -14,13 +14,13 @@ def expanded_dim(degree, nvariables):
     return int(mdp.utils.comb(nvariables+degree, degree))-1
 
 class _ExpansionNode(mdp.Node):
-    
+
     def __init__(self, input_dim = None, dtype = None):
         super(_ExpansionNode, self).__init__(input_dim, None, dtype)
 
     def expanded_dim(self, dim):
         return dim
-        
+
     def is_trainable(self):
         return False
 
@@ -50,17 +50,17 @@ class PolynomialExpansionNode(_ExpansionNode):
         """Return the list of dtypes supported by this node."""
         return (mdp.utils.get_dtypes('AllFloat') +
                 mdp.utils.get_dtypes('AllInteger'))
-    
+
     def expanded_dim(self, dim):
         """Return the size of a vector of dimension 'dim' after
         a polynomial expansion of degree 'self._degree'."""
         return expanded_dim(self._degree, dim)
-    
+
     def _execute(self, x):
         degree = self._degree
         dim = self.input_dim
         n = x.shape[1]
-        
+
         # preallocate memory
         dexp = numx.zeros((self.output_dim, x.shape[0]), dtype=self.dtype)
         # copy monomials of degree 1
@@ -85,7 +85,7 @@ class PolynomialExpansionNode(_ExpansionNode):
                 k = k+len_
 
         return dexp.T
-        
+
 class QuadraticExpansionNode(PolynomialExpansionNode):
     """Perform expansion in the space formed by all linear and quadratic
     monomials.
@@ -100,13 +100,13 @@ class RBFExpansionNode(mdp.Node):
 
     The input data is filtered through a set of unnormalized Gaussian
     filters, i.e.,
-    
+
        y_j = exp(-0.5/s_j * ||x - c_j||^2)
-    
+
     for isotropic RBFs, or more in general
-    
+
        y_j = exp(-0.5 * (x-c_j)^T S^-1 (x-c_j))
-    
+
     for anisotropic RBFs.
     """
 
@@ -126,11 +126,11 @@ class RBFExpansionNode(mdp.Node):
         """
         super(RBFExpansionNode, self).__init__(None, None, dtype)
         self._init_RBF(centers, sizes)
-        
+
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
         return mdp.utils.get_dtypes('AllFloat')
-                
+
     def is_trainable(self):
         return False
 
@@ -161,7 +161,7 @@ class RBFExpansionNode(mdp.Node):
         else:
             # anisotropic RBFs
             self._isotropic = False
-            
+
             # check size
             if (sizes.shape[1] != self._input_dim or
                 sizes.shape[2] != self._input_dim):
@@ -169,11 +169,11 @@ class RBFExpansionNode(mdp.Node):
                        "as input dimensionality (%d != %d)"
                        % (sizes.shape[1], self._input_dim))
                 raise mdp.NodeException, msg
-            
+
             # compute inverse covariance matrix
             for i in range(sizes.shape[0]):
                 sizes[i,:,:] = mdp.utils.inv(sizes[i,:,:])
-                
+
         self._centers = centers
         self._sizes = sizes
 
@@ -195,7 +195,7 @@ class GrowingNeuralGasExpansionNode(GrowingNeuralGasNode):
     Perform a trainable radial basis expansion, where the centers and
     sizes of the basis functions are learned through a growing neural
     gas.
-    
+
     positions of RBFs - position of the nodes of the neural gas
     sizes of the RBFs - mean distance to the neighbouring nodes.
 
@@ -237,7 +237,7 @@ class GrowingNeuralGasExpansionNode(GrowingNeuralGasNode):
     def _set_output_dim(self, n):
         msg = "Output dim cannot be set explicitly!"
         raise mdp.NodeException(msg)
-        
+
     def is_trainable(self):
         return True
 
@@ -245,15 +245,15 @@ class GrowingNeuralGasExpansionNode(GrowingNeuralGasNode):
         return False
 
     def _stop_training(self):
-        
+
         super(GrowingNeuralGasExpansionNode, self)._stop_training()
 
         # set the output dimension to the number of nodes of the neural gas
         self._output_dim = self.get_nodes_position().shape[0]
-        
+
         # use the nodes of the learned neural gas as centers for a radial basis function expansion.
         centers = self.get_nodes_position()
-        
+
         # use the mean distances to the neighbours as size of the RBF expansion
         sizes = []
 
@@ -267,11 +267,11 @@ class GrowingNeuralGasExpansionNode(GrowingNeuralGasNode):
         self.rbf_expansion = mdp.nodes.RBFExpansionNode(centers = centers, sizes = sizes)
 
     def _execute(self,x):
-        
+
         return self.rbf_expansion(x)
 
 
-        
+
 ### old weave inline code to perform a quadratic expansion
 
 # weave C code executed in the function QuadraticExpansionNode.execute
@@ -308,6 +308,5 @@ class GrowingNeuralGasExpansionNode(GrowingNeuralGasNode):
 ##         weave.inline(_EXPANSION_POL2_CCODE,['rows','columns','dexp','x'],
 ##                  type_factories = weave.blitz_tools.blitz_type_factories,
 ##                  compiler='gcc',extra_compile_args=['-O3']);
-        
+
 ##         return dexp
-        

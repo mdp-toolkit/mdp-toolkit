@@ -198,4 +198,3 @@ def get_suite(testname=None):
 if __name__ == '__main__':
     numx_rand.seed(1268049219)
     unittest.TextTestRunner(verbosity=2).run(get_suite())
-

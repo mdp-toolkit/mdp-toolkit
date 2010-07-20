@@ -11,7 +11,7 @@ from bimdp.nodes import SFABiNode, IdentityBiNode
 
 class TestBiFlowNode(unittest.TestCase):
     """Test the behavior of the BiFlowNode."""
-    
+
     def test_two_nodes1(self):
         """Test a TestBiFlowNode with two normal nodes."""
         sfa_node = mdp.nodes.SFANode(input_dim=10, output_dim=8)
@@ -23,7 +23,7 @@ class TestBiFlowNode(unittest.TestCase):
             flownode.stop_training()
         x = n.random.random([100,10])
         flownode.execute(x)
-    
+
     def test_two_nodes2(self):
         """Test a TestBiFlowNode with two normal nodes using a normal Flow."""
         sfa_node = mdp.nodes.SFANode(input_dim=10, output_dim=8)
@@ -34,7 +34,7 @@ class TestBiFlowNode(unittest.TestCase):
         flow.train(data_iterables)
         x = n.random.random([100,10])
         flow.execute(x)
-        
+
     def test_pretrained_nodes(self):
         """Test a TestBiFlowNode with two normal pretrained nodes."""
         sfa_node = mdp.nodes.SFANode(input_dim=10, output_dim=8)
@@ -47,11 +47,11 @@ class TestBiFlowNode(unittest.TestCase):
         biflownode = BiFlowNode(pretrained_flow)
         x = n.random.random([100,10])
         biflownode.execute(x)
-        
+
 
 class DummyBiNode(IdentityBiNode):
     """Dummy class for CloneBiLayer tests."""
-    
+
     def _execute(self, x, data1, data2):
         self.data1 = data1
         self.data2 = data2
@@ -63,7 +63,7 @@ class DummyBiNode(IdentityBiNode):
 
 class TestCloneBiLayer(unittest.TestCase):
     """Test the behavior of the BiCloneLayer."""
-    
+
     def test_clonelayer(self):
         """Test a simple clonelayer with three SFA Nodes."""
         sfa_node = SFABiNode(input_dim=3, output_dim=2)
@@ -71,22 +71,22 @@ class TestCloneBiLayer(unittest.TestCase):
         x = n.random.random((100,9))
         clonelayer.train(x)
         clonelayer.stop_training()
-        clonelayer.execute(x) 
+        clonelayer.execute(x)
 
     def test_use_copies_msg(self):
         """Test the correct reaction to an outgoing use_copies message."""
         stop_result = ({"clonelayer" + MSG_ID_SEP + "use_copies": True}, 1)
         stop_sfa_node = SFABiNode(stop_result=stop_result,
                                   input_dim=10, output_dim=3)
-        clonelayer = CloneBiLayer(node=stop_sfa_node, 
-                                  n_nodes=3, 
-                                  use_copies=False, 
+        clonelayer = CloneBiLayer(node=stop_sfa_node,
+                                  n_nodes=3,
+                                  use_copies=False,
                                   node_id="clonelayer")
         x = n.random.random((100,30))
         clonelayer.train(x)
         clonelayer.stop_training()
         assert(clonelayer.use_copies is True)
-        
+
     def test_use_copies_msg_flownode(self):
         """Test the correct reaction to an outgoing use_copies message."""
         stop_result = ({"clonelayer" + MSG_ID_SEP + "use_copies": True},
@@ -94,15 +94,15 @@ class TestCloneBiLayer(unittest.TestCase):
         stop_sfa_node = SFABiNode(stop_result=stop_result,
                                   input_dim=10, output_dim=3)
         biflownode = BiFlowNode(BiFlow([stop_sfa_node]))
-        clonelayer = CloneBiLayer(node=biflownode, 
-                                  n_nodes=3, 
-                                  use_copies=False, 
+        clonelayer = CloneBiLayer(node=biflownode,
+                                  n_nodes=3,
+                                  use_copies=False,
                                   node_id="clonelayer")
         x = n.random.random((100,30))
         clonelayer.train(x)
         clonelayer.stop_training()
         assert(clonelayer.use_copies is True)
-        
+
     def test_message_splitting(self):
         """Test message array splitting and combination."""
         node = DummyBiNode(input_dim=3)
@@ -131,7 +131,7 @@ class TestCloneBiLayer(unittest.TestCase):
 
 class TestBiSwitchboardNode(unittest.TestCase):
     """Test the behavior of the BiSwitchboardNode."""
-    
+
     def test_execute_routing(self):
         """Test the standard routing for messages."""
         sboard = BiSwitchboard(input_dim=3, connections=[2,0,1])
@@ -151,7 +151,7 @@ class TestBiSwitchboardNode(unittest.TestCase):
         self.assertTrue(n.all(out_msg["data"] == reference_y))
         self.assertTrue(out_msg["data2"].shape == (3,))
         self.assertTrue(out_msg["data3"].shape == (3,4))
-    
+
     def test_inverse_message_routing(self):
         """Test the inverse routing for messages."""
         sboard = BiSwitchboard(input_dim=3, connections=[2,0,1])
@@ -174,7 +174,7 @@ class TestBiSwitchboardNode(unittest.TestCase):
         self.assertTrue(n.all(out_msg["data"] == reference_y))
         self.assertTrue(out_msg["data2"].shape == (3,))
         self.assertTrue(out_msg["data3"].shape == (3,4))
-    
+
     def test_stop_message(self):
         """Test the inverse routing for messages."""
         sboard = BiSwitchboard(input_dim=3, connections=[2,0,1])
@@ -203,6 +203,6 @@ def get_suite():
     suite.addTest(unittest.makeSuite(TestCloneBiLayer))
     suite.addTest(unittest.makeSuite(TestBiSwitchboardNode))
     return suite
-            
+
 if __name__ == '__main__':
-    unittest.main() 
+    unittest.main()

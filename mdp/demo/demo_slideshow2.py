@@ -20,8 +20,8 @@ filenames1 = []
 filenames2 = []
 section_ids1 = []
 section_ids2 = []
-points1 = [] 
-points2 = [] 
+points1 = []
+points2 = []
 for i in range(n_frames):
     # first animation
     points1.append((i, math.sin(1.0*i/n_frames * 2*math.pi)))

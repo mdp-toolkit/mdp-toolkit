@@ -28,5 +28,3 @@ for demo in os.listdir(demodir):
             print >> err, e
             print >> err, 'Failed!'
         print >> err, '--------'
-
-

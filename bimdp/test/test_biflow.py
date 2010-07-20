@@ -12,7 +12,7 @@ from testnodes import TraceJumpBiNode, IdNode
 
 class TestMessageResultContainer(unittest.TestCase):
     """Test the behavior of the BetaResultContainer."""
-    
+
     def test_mixed_dict(self):
         """Test msg being a dict containing an array."""
         rescont = MessageResultContainer()
@@ -38,7 +38,7 @@ class TestMessageResultContainer(unittest.TestCase):
         combined_msg.pop("a")
         reference_msg.pop("a")
         self.assertTrue(combined_msg == reference_msg)
-        
+
     def test_none_msg(self):
         """Test with one message being None."""
         rescont = MessageResultContainer()
@@ -47,7 +47,7 @@ class TestMessageResultContainer(unittest.TestCase):
             rescont.add_message(msg)
         msg = rescont.get_message()
         self.assertTrue(msg == {"a": 3, "b": 1})
-        
+
     def test_incompatible_arrays(self):
         """Test with incompatible arrays."""
         rescont = MessageResultContainer()
@@ -55,7 +55,7 @@ class TestMessageResultContainer(unittest.TestCase):
         for msg in msgs:
             rescont.add_message(msg)
         self.assertRaises(ValueError, lambda: rescont.get_message())
-        
+
 
 class TestBiFlow(unittest.TestCase):
 
@@ -64,17 +64,17 @@ class TestBiFlow(unittest.TestCase):
         flow = BiFlow([mdp.nodes.SFANode(output_dim=5),
                        mdp.nodes.PolynomialExpansionNode(degree=3),
                        mdp.nodes.SFANode(output_dim=20)])
-        data_iterables = [[np.random.random((20,10)) for _ in range(6)], 
-                          None, 
+        data_iterables = [[np.random.random((20,10)) for _ in range(6)],
+                          None,
                           [np.random.random((20,10)) for _ in range(6)]]
         flow.train(data_iterables)
         x = np.random.random([100,10])
         flow.execute(x)
-        
+
     def test_normal_multiphase(self):
         """Test training and execution with multiple training phases.
-        
-        The node with multiple training phases is a hinet.FlowNode. 
+
+        The node with multiple training phases is a hinet.FlowNode.
         """
         sfa_node = mdp.nodes.SFANode(input_dim=10, output_dim=8)
         sfa2_node = mdp.nodes.SFA2Node(input_dim=8, output_dim=6)
@@ -82,13 +82,13 @@ class TestBiFlow(unittest.TestCase):
         flow = BiFlow([flownode,
                        mdp.nodes.PolynomialExpansionNode(degree=2),
                        mdp.nodes.SFANode(output_dim=5)])
-        data_iterables = [[np.random.random((30,10)) for _ in range(6)], 
-                          None, 
+        data_iterables = [[np.random.random((30,10)) for _ in range(6)],
+                          None,
                           [np.random.random((30,10)) for _ in range(6)]]
         flow.train(data_iterables)
         x = np.random.random([100,10])
         flow.execute(x)
-        
+
     def test_fda_binode(self):
         """Test using the FDABiNode in a BiFlow."""
         samples = mdp.numx_rand.random((100,10))
@@ -100,7 +100,7 @@ class TestBiFlow(unittest.TestCase):
         """Test correct error for additional arguments in Node instance."""
         samples = mdp.numx_rand.random((100,10))
         labels = mdp.numx.arange(100)
-        # cl argument of FDANode is not supported in biflow     
+        # cl argument of FDANode is not supported in biflow
         flow = BiFlow([mdp.nodes.PCANode(), mdp.nodes.FDANode()])
         # the iterables are passed as if this were a normal Flow
         self.assertRaises(BiFlowException,
@@ -110,7 +110,7 @@ class TestBiFlow(unittest.TestCase):
         # since argument iterables are not supported by BiFlow
         self.assertRaises(BiFlowException,
                     lambda: flow.train([[samples], [samples, labels, labels]]))
-        
+
     def test_training_targets(self):
         """Test targeting during training and stop_training."""
         tracelog = []
@@ -140,8 +140,8 @@ class TestBiFlow(unittest.TestCase):
                     stop_train_results=[({"a": 1}, "node_2")],
                     verbose=verbose)
         biflow = BiFlow([node1, node2, node3])
-        data_iterables = [[np.random.random((1,1)) for _ in range(2)], 
-                          [np.random.random((1,1)) for _ in range(2)], 
+        data_iterables = [[np.random.random((1,1)) for _ in range(2)],
+                          [np.random.random((1,1)) for _ in range(2)],
                           [np.random.random((1,1)) for _ in range(2)]]
         biflow.train(data_iterables)
         # bimdp.show_training(biflow, data_iterables, debug=True)
@@ -178,7 +178,7 @@ class TestBiFlow(unittest.TestCase):
             ('node_2', 'bi_reset'),
             ('node_3', 'bi_reset'),
             ('node_1', 'execute'),
-            ('node_2', 'execute'), 
+            ('node_2', 'execute'),
             ('node_3', 'train'),
             ('node_2', 'execute'),
             ('node_1', 'execute'),
@@ -268,7 +268,7 @@ class TestBiFlow(unittest.TestCase):
            (None, 'bi_reset'), (None, 'execute'), (None, 'bi_reset')
         ]
         self.assertEqual(tracelog, reference)
-        
+
     def test_append_node_copy(self):
         """Test that appending a node does not perform a deept copy."""
         node1 = nodes.IdentityBiNode()
@@ -277,13 +277,13 @@ class TestBiFlow(unittest.TestCase):
         flow += node2
         self.assert_(flow[0] is node1)
         self.assert_(type(flow) is BiFlow)
-    
+
 
 def get_suite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(TestMessageResultContainer))
     suite.addTest(unittest.makeSuite(TestBiFlow))
     return suite
-            
+
 if __name__ == '__main__':
-    unittest.main() 
+    unittest.main()

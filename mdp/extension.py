@@ -13,7 +13,7 @@ which is fine unless one wants to use multiple inheritance at the same time
 to use). The extension mechanism does not depend on inheritance, instead it
 adds the methods to the node classes dynamically at runtime. This makes it
 possible to activate extensions just when they are needed, reducing the risk
-of interference between different extensions.  
+of interference between different extensions.
 
 However, since the extension mechanism provides a special Metaclass it is
 still possible to define the extension nodes as classes derived from nodes.
@@ -39,7 +39,7 @@ all = utils.all
 
 # name prefix used for the original attributes when they are shadowed
 ORIGINAL_ATTR_PREFIX = "_non_extension_"
-# prefix used to store the current extension name for an attribute 
+# prefix used to store the current extension name for an attribute
 EXTENSION_ATTR_PREFIX = "_extension_for_"
 # list of attribute names that are not affected by extensions,
 NON_EXTENSION_ATTRIBUTES = ["__module__", "__doc__", "extension_name"]
@@ -60,22 +60,22 @@ class ExtensionException(MDPException):
 
 def _register_attribute(ext_name, node_cls, attr_name, attr_value):
     """Register an attribute as an extension attribute.
-    
+
     ext_name -- String with the name of the extension.
     node_cls -- Node class for which the method should be registered.
     """
     _extensions[ext_name][node_cls][attr_name] = attr_value
-    
+
 def extension_method(ext_name, node_cls, method_name=None):
     """Returns a function to register a function as extension method.
-    
+
     This function is intended to be used with the decorator syntax.
-    
+
     ext_name -- String with the name of the extension.
     node_cls -- Node class for which the method should be registered.
     method_name -- Name of the extension method (default value is None).
         If no value is provided then the name of the function is used.
-        
+
     Note that it is possible to directly call other extension functions, call
     extension methods in other node classes or to use super in the normal way
     (the function will be called as a method of the node class).
@@ -98,14 +98,14 @@ def extension_method(ext_name, node_cls, method_name=None):
 
 class ExtensionNodeMetaclass(NodeMetaclass):
     """This is the metaclass for node extension superclasses.
-    
+
     It takes care of registering extensions and the attributes in the
     extension.
     """
-    
+
     def __new__(cls, classname, bases, members):
         """Create new node classes and register extensions.
-        
+
         If a concrete extension node is created then a corresponding mixin
         class is automatically created and registered.
         """
@@ -177,17 +177,17 @@ class ExtensionNodeMetaclass(NodeMetaclass):
             if base == ExtensionNode:
                 extension_subtree = True
         return ext_node_cls
-                                                     
+
 
 class ExtensionNode(object):
     """Base class for extensions nodes.
-    
+
     A new extension node class should override the _extension_name.
     The concrete node implementations are then derived from this extension
     node class.
-    
+
     To call an instance method from a parent class you have multiple options:
-    
+
     - use super, but with the normal node class, e.g.:
         super(mdp.nodes.SFA2Node, self).method()
       Here SFA2Node was given instead of the extension node class for the
@@ -195,7 +195,7 @@ class ExtensionNode(object):
       If the extensions node class is used directly (without the extension
       mechanism) this may lead to problems. In this case you have to be
       careful about the inheritance order and the effect on the MRO.
-      
+
     - call it explicitly using the __func__ attribute [python version < 3]:
         parent_class.method.__func__(self)
       or [python version >=3]:
@@ -211,7 +211,7 @@ class ExtensionNode(object):
 
 def get_extensions():
     """Return a dictionary currently registered extensions.
-    
+
     Note that this is not a copy, so if you change anything in this dict
     the whole extension mechanism will be affected. If you just want the
     names of the available extensions use get_extensions().keys().
@@ -223,7 +223,7 @@ def get_active_extensions():
     # use copy to protect the original set, also important if the return
     # value is used in a for-loop (see deactivate_extensions function)
     return list(_active_extensions)
-    
+
 def activate_extension(extension_name, verbose=False):
     """Activate the extension by injecting the extension methods."""
     if extension_name not in _extensions.keys():
@@ -245,7 +245,7 @@ def activate_extension(extension_name, verbose=False):
                 if attr_name in dir(node_cls):
                     if ext_attr_name in node_cls.__dict__:
                         # two extensions override the same attribute
-                        err = ("Name collision for attribute '" + 
+                        err = ("Name collision for attribute '" +
                                attr_name + "' between extension '" +
                                getattr(node_cls, ext_attr_name)
                                + "' and newly activated extension '" +
@@ -314,7 +314,7 @@ def deactivate_extension(extension_name, verbose=False):
 
 def activate_extensions(extension_names, verbose=False):
     """Activate all the extensions for the given names.
-    
+
     extension_names -- Sequence of extension names.
     """
     try:
@@ -329,7 +329,7 @@ def activate_extensions(extension_names, verbose=False):
 
 def deactivate_extensions(extension_names, verbose=False):
     """Deactivate all the extensions for the given names.
-    
+
     extension_names -- Sequence of extension names.
     """
     for extension_name in extension_names:
@@ -337,7 +337,7 @@ def deactivate_extensions(extension_names, verbose=False):
 
 def with_extension(extension_name):
     """Return a wrapper function to activate and deactivate the extension.
-    
+
     This function is intended to be used with the decorator syntax.
     """
     def decorator(func):
@@ -373,7 +373,7 @@ class extension(object):
         if isinstance(ext_names, str):
             ext_names = [ext_names]
         self.ext_names = ext_names
-        
+
     def __enter__(self):
         for name in self.ext_names:
             activate_extension(name)
@@ -418,7 +418,3 @@ class CacheExecuteExtensionNode(ExtensionNode, Node):
             self._execute_cache[h] = self._non_extension_execute(x)
 
         return self._execute_cache[h]
-
-
-
-

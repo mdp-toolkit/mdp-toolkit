@@ -76,7 +76,7 @@ if _USR_LABEL in _NUMX_LABELS:
 elif _USR_LABEL is None:
     pass
 else:
-    err = ("\nExtension '%s' not supported. " 
+    err = ("\nExtension '%s' not supported. "
            "Supported extensions:\n %s" % (_USR_LABEL,str(_NUMX_LABELS)))
     raise ImportError(err)
 
@@ -110,7 +110,7 @@ for _label in _NUMX_LABELS:
         # should help in debugging
         numx_exceptions[_label] = exc
         pass
-        
+
 if numx_description is None:
     msg = ("Could not import any of the numeric modules.\n"
            "Import errors:\n"+'\n'.join([label+': '+str(exc) for label, exc in
@@ -226,7 +226,7 @@ __all__ = ['CheckpointFlow', 'CheckpointFunction', 'CheckpointSaveFunction',
            'FlowExceptionCR', 'IsNotInvertibleException',
            'IsNotTrainableException', 'MDPException', 'MDPWarning', 'Node',
            'NodeException', 'TrainingException', 'TrainingFinishedException',
-           'contrib', 'get_eta', 'graph', 'helper_funcs', 'hinet', 'nodes', 
+           'contrib', 'get_eta', 'graph', 'helper_funcs', 'hinet', 'nodes',
            'numx_description', 'pca', 'sfa', 'test', 'utils', 'whitening',
            'parallel', 'numx_version',
            'extension_method', 'ExtensionNodeMetaclass', 'ExtensionNode',

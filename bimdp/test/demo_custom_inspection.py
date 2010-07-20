@@ -15,21 +15,21 @@ import bimdp
 
 class CustomTraceHTMLTranslator(bimdp.TraceHTMLTranslator):
     """Custom TraceHTMLTranslator to visualize the SFA node output.
-    
+
     This class also demonstrates how to use custom section_id values, and how
     to correctly reset internal variables via the reset method.
     """
-    
+
     def __init__(self, show_size=False):
         self._sect_counter = None
         super(CustomTraceHTMLTranslator, self).__init__(show_size=show_size)
-        
+
     def reset(self):
         """Reset the section counter."""
         super(CustomTraceHTMLTranslator, self).reset()
         self._sect_counter = 0
-        
-    def _write_right_side(self, path, html_file, flow, node, method_name, 
+
+    def _write_right_side(self, path, html_file, flow, node, method_name,
                           method_result, method_args, method_kwargs):
         """Write the result part of the translation."""
         # check if we have reached the right node
@@ -62,16 +62,16 @@ class CustomTraceHTMLTranslator(bimdp.TraceHTMLTranslator):
 
 
 ## Create the flow.
-noisenode = mdp.nodes.NormalNoiseNode(input_dim=20*20, 
+noisenode = mdp.nodes.NormalNoiseNode(input_dim=20*20,
                                       noise_args=(0, 0.0001))
 sfa_node = bimdp.nodes.SFABiNode(input_dim=20*20, output_dim=10, dtype='f',
                                  node_id="sfa")
 switchboard = mdp.hinet.Rectangular2dSwitchboard(
-                                          x_in_channels=100, 
+                                          x_in_channels=100,
                                           y_in_channels=100,
-                                          x_field_channels=20, 
+                                          x_field_channels=20,
                                           y_field_channels=20,
-                                          x_field_spacing=10, 
+                                          x_field_spacing=10,
                                           y_field_spacing=10)
 flownode = mdp.hinet.FlowNode(mdp.Flow([noisenode, sfa_node]))
 sfa_layer = mdp.hinet.CloneLayer(flownode, switchboard.output_channels)
@@ -88,4 +88,3 @@ filename, out = bimdp.show_execution(flow, x=train_data[0],
                                      trace_inspector=trace_inspector)
 
 print "done."
-

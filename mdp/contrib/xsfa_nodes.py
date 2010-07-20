@@ -25,7 +25,7 @@ class XSFANode(mdp.Node):
     If the number of training samples is large, you may run into
     memory problems: use data iterators and chunk training to reduce
     memory usage.
-    
+
     If you need to debug training and/or execution of this node, the
     suggested approach is to use the capabilities of BiMDP. For example:
 
@@ -36,7 +36,7 @@ class XSFANode(mdp.Node):
     this will run training and execution with bimdp inspection. Snapshots
     of the internal flow state for each training phase and execution step
     will be opened in a web brower and presented as a slideshow.
-    
+
     References:
     Sprekeler, H., Zito, T., and Wiskott, L. (2009).
     An Extension of Slow Feature Analysis for Nonlinear Blind Source Separation
@@ -75,7 +75,7 @@ class XSFANode(mdp.Node):
 
              verbose -- show some progress during training.
         """
-        
+
         # set up basic expansion
         if basic_exp is None:
             self.basic_exp = mdp.nodes.PolynomialExpansionNode
@@ -95,7 +95,7 @@ class XSFANode(mdp.Node):
             self.exp = intern_exp[0]
             self.exp_args = intern_exp[1]
             self.exp_kwargs = intern_exp[2]
-            
+
         # number of sources already extracted
         self.n_extracted_src = 0
         # internal network
@@ -104,12 +104,12 @@ class XSFANode(mdp.Node):
         self.svd = svd
         super(XSFANode, self).__init__(input_dim=input_dim,
                                        output_dim=output_dim, dtype=dtype)
-        
+
     @property
     def flow(self):
         """Read-only internal flow property."""
         return self._flow
-        
+
     def _get_train_seq(self):
         #XXX: this is a  hack
         # In order to enable the output_dim to be set automatically
@@ -154,32 +154,32 @@ class XSFANode(mdp.Node):
         self.basic_exp_kwargs['input_dim'] = self.input_dim
         exp = self.basic_exp(*self.basic_exp_args, **self.basic_exp_kwargs)
         # first element of the flow is the basic expansion node
-        # after that the first source extractor module is appended 
+        # after that the first source extractor module is appended
         self._flow = (exp + self._get_source_extractor(exp.output_dim, 0))
 
         # set the training phases
         # set the total number of training phases
-        training_phases = [] 
+        training_phases = []
         for S in range(self.output_dim):
             # get the number of training phases of every single
             # source extractor module
             mod = self._get_source_extractor(S+1, S)
             training_phases.append(len(mod._train_seq))
-        
+
         self._training_phases = training_phases
-        
+
         # this is a list of the training phases the correspond to
         # completed training of a source extractor module
         self._training_phases_mods = [sum(training_phases[:i+1]) for i in
                                       range(len(training_phases[:-1]))]
-        
+
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
         return ('float32', 'float64')
-    
+
     def is_invertible(self):
         return False
-    
+
     def _train(self, x):
         # train the last source extractor module in the flow
         self._flow[-1].train(self._flow[:-1](x))
@@ -194,14 +194,14 @@ class XSFANode(mdp.Node):
         # append a new source extractor module
         if (cur_tr_ph in self._training_phases_mods and
             self.n_extracted_src != (self.output_dim - 1)):
-            
+
             self.n_extracted_src += 1
             mod = self._get_source_extractor(self._flow[-1].output_dim,
                                              self.n_extracted_src)
             self._flow.append(mod)
             if self.verbose:
                 print "Extracting source %d..." % (self.n_extracted_src+1)
-            
+
     def _execute(self, x):
         return self._flow(x)[:,:self.output_dim]
 
@@ -213,7 +213,7 @@ class XSFANode(mdp.Node):
 
         # sfa - extracts the next source
         sfa = mdp.nodes.SFANode(input_dim=L, output_dim=L)
-        
+
         # identity - copies the new sources
         idn_new1 = mdp.nodes.IdentityNode(input_dim=S+1)
         # source expansion
@@ -221,7 +221,7 @@ class XSFANode(mdp.Node):
         # N2
         src_exp = mdp.hinet.FlowNode(self.exp(*self.exp_args,
                                               **self.exp_kwargs) +
-                                     NormalizeNode() + 
+                                     NormalizeNode() +
                                      mdp.nodes.WhiteningNode(svd=self.svd,
                                                              reduce=True))
         N2Layer = mdp.hinet.SameInputLayer((src_exp, idn_new1))
@@ -255,9 +255,9 @@ class XSFANode(mdp.Node):
                                         mdp.nodes.WhiteningNode(input_dim=L-1,
                                                                 svd=self.svd,
                                                                 reduce=True)))
-        # actual source removal flow 
+        # actual source removal flow
         src_rem = mdp.hinet.FlowNode( proj + reg_and_copy )
-        # return the actual source extraction module 
+        # return the actual source extraction module
         return mdp.hinet.FlowNode(N1 + src_rem)
 
 
@@ -281,8 +281,8 @@ class ProjectionNode(mdp.Node):
 
     def _stop_training(self):
         self.proj_mtx, avgx, avgy, self.tlen = self._cov_mtx.fix()
-        
-        
+
+
     def _execute(self, x):
         src = x[:, -self.output_dim:-self.L]
         exp = x[:, :-self.output_dim]
@@ -303,7 +303,7 @@ class NormalizeNode(mdp.Node):
 
     def _train(self, x):
         self._cov_mtx.update(x)
-        
+
     def _stop_training(self):
         cov_mtx, avg, tlen = self._cov_mtx.fix()
         self.m = avg

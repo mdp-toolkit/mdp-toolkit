@@ -108,7 +108,7 @@ class GraphTestSuite(unittest.TestSuite):
         assert len(g.edges)==5*10
         assert map(lambda x: x.out_degree(), layer0)==[5]*10
         assert map(lambda x: x.in_degree(), layer1)==[10]*5
-        
+
     def testTopologicalSort(self):
         g = graph.Graph()
         # the values correspond to the number of in-edges
@@ -168,7 +168,7 @@ class GraphTestSuite(unittest.TestSuite):
         assert not g.is_weakly_connected()
         # connect graph
         g.add_edge(nds0[0], nds1[0])
-        assert g.is_weakly_connected()        
+        assert g.is_weakly_connected()
 
 def get_suite(testname=None):
     return GraphTestSuite(testname=testname)

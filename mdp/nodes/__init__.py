@@ -8,7 +8,7 @@ from fda_nodes import FDANode
 from em_nodes import FANode
 from misc_nodes import (IdentityNode, HitParadeNode, TimeFramesNode,
                         EtaComputerNode, NoiseNode, NormalNoiseNode,
-                        GaussianClassifierNode,                    
+                        GaussianClassifierNode,
                         CutoffNode, HistogramNode, AdaptiveCutoffNode)
 from isfa_nodes import ISFANode
 from rbm_nodes import RBMNode, RBMWithLabelsNode
