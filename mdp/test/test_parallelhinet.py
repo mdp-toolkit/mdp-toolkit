@@ -30,7 +30,7 @@ class TestParallelHinetNodes(unittest.TestCase):
         x = n.random.random([100,50])
         chunksize = 25
         chunks = [x[i*chunksize : (i+1)*chunksize] 
-                    for i in xrange(len(x)/chunksize)]
+                    for i in xrange(len(x)//chunksize)]
         while flownode.get_remaining_train_phase() > 0:
             for chunk in chunks:
                 forked_node = flownode.fork()
