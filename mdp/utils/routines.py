@@ -151,7 +151,7 @@ def cov_maxima(cov):
     maxs = []
     if dim >= 1:
         cov=abs(cov)
-        glob_max_idx = (cov.argmax()/dim, cov.argmax()%dim)
+        glob_max_idx = (cov.argmax()//dim, cov.argmax()%dim)
         maxs.append(cov[glob_max_idx[0], glob_max_idx[1]])
         cov_reduce = cov.copy()
         cov_reduce = cov_reduce[numx.arange(dim) != glob_max_idx[0], :]
