@@ -24,8 +24,6 @@ import test_parallelhinet
 import test_process_schedule
 import test_classifier
 
-import test_shutdown
-
 numx = mdp.numx
 numx_rand = mdp.numx_rand
 
