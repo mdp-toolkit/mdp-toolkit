@@ -4,7 +4,6 @@ Convert *py files with lib2to3.
 Taken from numpy. Adapted to our needs.
 """
 
-from optparse import OptionParser
 import shutil
 import os
 import sys
