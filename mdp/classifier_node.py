@@ -8,42 +8,42 @@ class ClassifierNode(Node):
     labels used for classification are not in the normal feature space but in
     label space.
     """
-    
+
     ### Methods to be implemented by the subclasses
-    
+
     def _label(self, x, *args, **kargs):
         raise NotImplementedError
-    
+
     def _prob(self, x, *args, **kargs):
         raise NotImplementedError
-    
+
     ### User interface to the overwritten methods
-    
+
     def label(self, x, *args, **kwargs):
         """Returns an array with best class labels.
-        
+
         By default, subclasses should overwrite _label to implement
         their label. The docstring of the '_label' method
         overwrites this docstring.
         """
         self._pre_execution_checks(x)
         return self._label(self._refcast(x), *args, **kwargs)
-  
+
     def prob(self, x, *args, **kwargs):
         """Returns the probability for each datapoint and label
         (e.g., [{1:0.1, 2:0.0, 3:0.9}, {1:1.0, 2:0.0, 3:0.0}, ...])
 
         By default, subclasses should overwrite _prob to implement
         their prob. The docstring of the '_prob' method
-        overwrites this docstring.        
+        overwrites this docstring.
         """
         self._pre_execution_checks(x)
         return self._prob(self._refcast(x), *args, **kwargs)
-    
+
     def rank(self, x, threshold=None):
         """Returns ordered list with all labels ordered according to prob(x)
         (e.g., [[3 1 2], [2 1 3], ...]).
-        
+
         The optional threshold parameter is used to exclude labels having equal
         or less probability. E.g. threshold=0 excludes all labels with zero
         probability.
@@ -102,5 +102,5 @@ class ClassifierCumulator(ClassifierNode):
         self.data.shape = (self.tlen, self.input_dim)
         self.labels = numx.array(self.labels, dtype = self.dtype)
         self.labels.shape = (self.tlen)
-        
+
 

@@ -54,7 +54,7 @@ class ClassifierTestSuite(unittest.TestSuite):
                 descr = 'Test '+(meth.__name__[4:]).replace('_',' ')
                 self.addTest(unittest.FunctionTestCase(meth,
                              description=descr))
-    
+
     def testClassifierNode_ranking(self):
         bc = _BogusClassifier()
         test_data = numx_rand.random((30, 20)) - 0.5
@@ -63,31 +63,31 @@ class ClassifierTestSuite(unittest.TestSuite):
             assert p[r[0]] >= p[r[1]], "Rank returns labels in incorrect order"
             # check that the probabilities sum up to 100
             assert 0.999 < p[r[0]] + p[r[1]] < 1.001
-        
-    
+
+
     def testSignumClassifier(self):
         c = SignumClassifier()
         res = c.label(mdp.numx.array([[1, 2, -3, -4], [1, 2, 3, 4]]))
         assert c.input_dim == 4
         assert res.tolist() == [-1, 1]
-        
+
     def testPerceptronClassifier(self):
         or_Classifier = PerceptronClassifier()
         for i in xrange(100):
             or_Classifier.train(mdp.numx.array([[0, 0]]), -1)
             or_Classifier.train(mdp.numx.array([[0, 1], [1, 0], [1, 1]]), 1)
         assert or_Classifier.input_dim == 2
-        
+
         res = or_Classifier.label(mdp.numx.array([[0, 0], [0, 1], [1, 0], [1, 1]]))
         assert res.tolist() == [-1, 1, 1, 1]
-                            
+
         and_Classifier = PerceptronClassifier()
         for i in xrange(100):
             and_Classifier.train(mdp.numx.array([[0, 0], [0, 1], [1, 0]]), -1)
             and_Classifier.train(mdp.numx.array([[1, 1]]), 1)
         res = and_Classifier.label(mdp.numx.array([[0, 0], [0, 1], [1, 0], [1, 1]]))
         assert res.tolist() == [-1, -1, -1, 1]
-                            
+
         xor_Classifier = PerceptronClassifier()
         for i in xrange(100):
             xor_Classifier.train(mdp.numx.array([[0, 0], [1, 1]]), -1)
@@ -95,12 +95,12 @@ class ClassifierTestSuite(unittest.TestSuite):
         res = xor_Classifier.label(mdp.numx.array([[0, 0], [0, 1], [1, 0], [1, 1]]))
         assert res.tolist() != [-1, 1, 1, -1], \
             "Something must be wrong here. XOR is impossible in a single-layered perceptron."
-        
+
 
     def testSimpleMarkovClassifier(self):
         mc = SimpleMarkovClassifier(dtype="unicode")
         text = "after the letter e follows either space or the letters r t or i"
-        
+
         for word in text.split():
             word = word.lower()
 
@@ -108,9 +108,9 @@ class ClassifierTestSuite(unittest.TestSuite):
             labels = list(word + " ")
 
             mc.train(mdp.numx.array(features), labels)
-        
+
         assert mc.input_dim == 1
-        
+
         num_transitions = 0
         features = mc.features
         for feature, count in features.items():
@@ -124,12 +124,12 @@ class ClassifierTestSuite(unittest.TestSuite):
                             num_transitions += 1
 
                 assert abs(prob_sum - 1.0) < 1e-5
-        
+
         # calculate the number of transitions (the negative set deletes the artefact of two spaces)
         trans = len(set((zip("  ".join(text.split()) + " ", \
                              " " + "  ".join(text.split())))) - set([(' ', ' ')]))
         assert num_transitions == trans
-        
+
         letters_following_e = [' ', 'r', 't', 'i']
         letters_prob = mc.prob(mdp.numx.array([['e']]))[0]
         prob_sum = 0
@@ -137,12 +137,12 @@ class ClassifierTestSuite(unittest.TestSuite):
             prob_sum += prob
             if prob > 1e-5:
                 assert letter in letters_following_e
-        
+
         assert abs(prob_sum - 1.0) < 1e-5
-    
+
     def testDiscreteHopfieldClassifier(self):
         h = DiscreteHopfieldClassifier()
-        
+
         memory_size = 100
         patterns = numx.array(
                    [numx.sin(numx.linspace(0, 100 * numx.pi, memory_size)) > 0,
@@ -155,11 +155,11 @@ class ClassifierTestSuite(unittest.TestSuite):
                     ])
         h.train(patterns)
         h.input_dim = memory_size
-        
+
         for p in patterns:
             # check if patterns are fixpoints
             assert numx.all(p == h.label(numx.array([p])))
-        
+
         for p in patterns:
             # check, if a noisy pattern is recreated
             noisy = numx.array(p)
@@ -169,17 +169,17 @@ class ClassifierTestSuite(unittest.TestSuite):
             retrieved = h.label(numx.array([noisy]))
             # Hopfield nets are blind for inversion, need to check either case
             assert numx.all(retrieved == p) or numx.all(retrieved != p)
-    
+
     def testKMeansClassifier(self):
         num_centroids = 3
         k = KMeansClassifier(num_centroids)
         a = numx.random.rand(50, 2)
         k.train(a)
         res = k.label(a)
-        
+
         # check that the number of centroids is correct
         assert len(set(res)) == num_centroids
-        
+
         k = KMeansClassifier(2)
         a1 = numx.random.rand(50, 2) - 1
         a2 = numx.random.rand(50, 2) + 1
@@ -190,7 +190,7 @@ class ClassifierTestSuite(unittest.TestSuite):
         # check that both clusters are completely identified and different
         assert len(set(res1)) == 1 and len(set(res2)) == 1 and set(res1) != set(res2), \
             "Error in K-Means classifier. This might be a bug or just a local minimum."
-        
+
 
 def get_suite(testname=None):
     return ClassifierTestSuite(testname=testname)
