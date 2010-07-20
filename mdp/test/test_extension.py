@@ -1,3 +1,4 @@
+from __future__ import with_statement
 
 import unittest
 
@@ -29,7 +30,30 @@ class TestMDPExtensions(unittest.TestCase):
         self.assert_(sfa_node._testtest() == 42) 
         self.assert_(sfa_node._testtest_attr == 1338) 
         mdp.deactivate_extension("__test")
-        self.assert_(not hasattr(mdp.nodes.SFANode, "_testtest")) 
+        self.assert_(not hasattr(mdp.nodes.SFANode, "_testtest"))
+
+    def testContextManager(self):
+        """Test that the context manager activates extensions."""
+        
+        class Test1ExtensionNode(mdp.ExtensionNode):
+            extension_name = "__test1"
+            def _testtest(self):
+                pass
+        class Test2ExtensionNode(mdp.ExtensionNode):
+            extension_name = "__test2"
+            def _testtest(self):
+                pass
+
+        self.assertEqual(mdp.get_active_extensions(), [])
+        with mdp.extension('__test1'):
+            self.assertEqual(mdp.get_active_extensions(), ['__test1'])
+        self.assertEqual(mdp.get_active_extensions(), [])
+        # with multiple extensions
+        with mdp.extension(['__test1', '__test2']):
+            active = mdp.get_active_extensions()
+            self.assertTrue('__test1' in active)
+            self.assertTrue('__test2' in active)
+        self.assertEqual(mdp.get_active_extensions(), [])
         
     def testDecoratorExtension(self):
         """Test extension decorator with a single new extension."""

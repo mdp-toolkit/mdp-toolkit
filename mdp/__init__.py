@@ -146,7 +146,8 @@ from extension import (ExtensionException, extension_method,
                        ExtensionNode, get_extensions,
                        get_active_extensions, with_extension,
                        activate_extension, deactivate_extension,
-                       activate_extensions, deactivate_extensions)
+                       activate_extensions, deactivate_extensions,
+                       extension)
 
 # import classifier node
 from classifier_node import (ClassifierNode, ClassifierCumulator)
@@ -217,7 +218,6 @@ def info():
 # clean up namespace
 del signal_node
 del linear_flows
-del extension
 del classifier_node
 
 # explicitly set __all__, mainly needed for epydoc

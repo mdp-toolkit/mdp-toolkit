@@ -351,7 +351,35 @@ def with_extension(extension_name):
         func_info = NodeMetaclass._function_infodict(func)
         return NodeMetaclass._wrap_function(wrapper, func_info)
     return decorator
+
+class extension(object):
+    """Context manager for the 'cache_execute' extension.
+
+    This allows you to use extensions using a 'with' statement, as in:
+
+    with mdp.extension('extension_name'):
+        # 'node' is executed with the extension activated
+        node.execute()
+
+    It is also possible to activate multiple extensions at once:
+
+    with mdp.extension(['ext1', 'ext2']):
+        # 'node' is executed with the two extensions activated
+        node.execute()
+    """
+
+    def __init__(self, ext_names):
+        if isinstance(ext_names, str):
+            ext_names = [ext_names]
+        self.ext_names = ext_names
         
+    def __enter__(self):
+        for name in self.ext_names:
+            activate_extension(name)
+
+    def __exit__(self, type, value, traceback):
+        for name in self.ext_names:
+            deactivate_extension(name)
 
 
 # Memoize extension
@@ -360,6 +388,8 @@ import hashlib
 # TODO: replace array hashing with better solution (see joblib)
 
 # TODO: allow caching on disk
+
+# TODO: move _hasharray to utils
 
 def _hasharray(x):
     """Returns an hash value for a numpy array."""
