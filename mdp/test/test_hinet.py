@@ -331,7 +331,7 @@ class HinetTestSuite(NodesTestSuite):
         y = sboard.execute(x)
         # routing layer
         nodes = [sboard.get_out_channel_node(index) 
-                 for index in range(sboard.output_channels)]
+                 for index in xrange(sboard.output_channels)]
         layer = mh.SameInputLayer(nodes)
         layer_y = layer.execute(x)
         assert numx.all(y==layer_y)

@@ -74,7 +74,7 @@ class FlowsTestSuite(unittest.TestSuite):
     def testFlow(self):
         inp = numx.ones((100,3))
         flow = self._get_default_flow()
-        for i in range(len(flow)):
+        for i in xrange(len(flow)):
             assert not flow.flow[i].is_training(), \
                    'Training of node #%d has not been closed.' % i
 
@@ -125,7 +125,7 @@ class FlowsTestSuite(unittest.TestSuite):
         # test __len__ 
         assert_equal(len(flow), len(flow.flow))
         # test __?etitem__, integer key
-        for i in range(len(flow)):
+        for i in xrange(len(flow)):
             assert flow[i]==flow.flow[i], \
                    '__getitem__  returned wrong node %d' % i
             new_node = _BogusNode()
@@ -154,7 +154,7 @@ class FlowsTestSuite(unittest.TestSuite):
         copy_flow = mdp.Flow(flow[:])
         del copy_flow[0]
         assert len(copy_flow) == len(flow)-1, '__delitem__ did not del'
-        for i in range(len(copy_flow)):
+        for i in xrange(len(copy_flow)):
             assert copy_flow[i] == flow[i+1], '__delitem__ deleted wrong node'
         # test __delitem__, normal slice
         copy_flow = mdp.Flow(flow[:])
@@ -201,7 +201,7 @@ class FlowsTestSuite(unittest.TestSuite):
         length = len(flow)
         try:
             newflow = self._get_default_flow()
-            for idx in range(len(newflow)):
+            for idx in xrange(len(newflow)):
                 if idx == 0:
                     newflow[idx].input_dim = 11
                 else:
@@ -307,7 +307,7 @@ class FlowsTestSuite(unittest.TestSuite):
                                       node_class = _BogusNodeTrainable)
         flow.train(inp, cfunc)
         #
-        for i in range(len(flow)):
+        for i in xrange(len(flow)):
             assert flow[i].__class__==cfunc.classes[i], 'Wrong class collected'
 
     def testCrashRecovery(self):

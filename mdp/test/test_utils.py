@@ -34,7 +34,7 @@ class UtilsTestSuite(unittest.TestSuite):
 ##     def testProgressBar(self):
 ##         print
 ##         p = utils.ProgressBar(minimum=0,maximum=1000)
-##         for i in range(1000):
+##         for i in xrange(1000):
 ##             p.update(i+1)
 ##             for j in xrange(10000): pass
 ##         print
@@ -126,7 +126,7 @@ class UtilsTestSuite(unittest.TestSuite):
     def testRandomRot(self):
         dim = 20
         tlen = 10
-        for i in range(tlen):
+        for i in xrange(tlen):
             x = utils.random_rot(dim, dtype='f')
             assert x.dtype.char=='f', 'Wrong dtype'
             y = utils.mult(x.T, x)
@@ -210,7 +210,7 @@ class UtilsTestSuite(unittest.TestSuite):
         # Note: this is a LAPACK bug.
         y = numx_rand.random((4,4))*1E-16
         y = (y+y.T)/2
-        for i in range(4):
+        for i in xrange(4):
             y[i,i]=1
         val, vec = utils._symeig_fake(y)
         assert_almost_equal(abs(numx_linalg.det(vec)), 1., 12)

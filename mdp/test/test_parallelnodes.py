@@ -22,7 +22,7 @@ class TestParallelMDPNodes(unittest.TestCase):
         parallel_pca_node = parallel.ParallelPCANode()
         chunksize = 25
         chunks = [x[i*chunksize : (i+1)*chunksize] 
-                    for i in range(len(x)/chunksize)]
+                    for i in xrange(len(x)/chunksize)]
         for chunk in chunks:
             pca_node.train(chunk)
             forked_node = parallel_pca_node.fork()
@@ -49,7 +49,7 @@ class TestParallelMDPNodes(unittest.TestCase):
         parallel_sfa_node = parallel.ParallelSFANode()
         chunksize = 25
         chunks = [x[i*chunksize : (i+1)*chunksize] 
-                    for i in range(len(x)/chunksize)]
+                    for i in xrange(len(x)/chunksize)]
         for chunk in chunks:
             sfa_node.train(chunk)
             forked_node = parallel_sfa_node.fork()
@@ -154,7 +154,7 @@ class TestDerivedParallelMDPNodes(unittest.TestCase):
         node = mdp.nodes.WhiteningNode()
         chunksize = 25
         chunks = [x[i*chunksize : (i+1)*chunksize] 
-                    for i in range(len(x)/chunksize)]
+                    for i in xrange(len(x)/chunksize)]
         for chunk in chunks:
             forked_node = node.fork()
             forked_node.train(chunk)
@@ -172,7 +172,7 @@ class TestDerivedParallelMDPNodes(unittest.TestCase):
         node = mdp.nodes.SFA2Node()
         chunksize = 25
         chunks = [x[i*chunksize : (i+1)*chunksize] 
-                    for i in range(len(x)/chunksize)]
+                    for i in xrange(len(x)/chunksize)]
         for chunk in chunks:
             forked_node = node.fork()
             forked_node.train(chunk)

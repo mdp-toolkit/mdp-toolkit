@@ -18,14 +18,14 @@ class TestParallelFlows(unittest.TestCase):
                             mdp.nodes.PolynomialExpansionNode(degree=3),
                             mdp.nodes.SFANode(output_dim=20)])
         data_iterables = [[n.random.random((30,10))*n.arange(1,11)
-                           for _ in range(6)], 
+                           for _ in xrange(6)],
                           None, 
                           [n.random.random((30,10))*n.arange(1,11)
-                           for _ in range(6)]]
+                           for _ in xrange(6)]]
         scheduler = parallel.Scheduler()
         flow.train(data_iterables, scheduler=scheduler)
         # parallel execution
-        iterable = [n.random.random((20,10)) for _ in range(6)]
+        iterable = [n.random.random((20,10)) for _ in xrange(6)]
         flow.execute(iterable, scheduler=scheduler)
         
     def test_non_iterator(self):
@@ -48,14 +48,14 @@ class TestParallelFlows(unittest.TestCase):
                             mdp.nodes.PolynomialExpansionNode(degree=3),
                             mdp.nodes.SFANode(output_dim=20)])
         data_iterables = [[n.random.random((30,10))*n.arange(1,11)
-                           for _ in range(6)], 
+                           for _ in xrange(6)],
                           None, 
                           [n.random.random((30,10))*n.arange(1,11)
-                           for _ in range(6)]]
+                           for _ in xrange(6)]]
         schedulers = [parallel.Scheduler(), None, parallel.Scheduler()]
         flow.train(data_iterables, scheduler=schedulers)
         # parallel execution
-        iterable = [n.random.random((20,10)) for _ in range(6)]
+        iterable = [n.random.random((20,10)) for _ in xrange(6)]
         flow.execute(iterable, scheduler=parallel.Scheduler())
         
     def test_multiple_schedulers2(self):
@@ -68,14 +68,14 @@ class TestParallelFlows(unittest.TestCase):
                             mdp.nodes.SFANode(output_dim=20)])
         data_iterables = [None,
                           [n.random.random((30,10))*n.arange(1,11)
-                           for _ in range(6)], 
+                           for _ in xrange(6)],
                           None, 
                           [n.random.random((30,10))*n.arange(1,11)
-                           for _ in range(6)]]
+                           for _ in xrange(6)]]
         schedulers = [None, parallel.Scheduler(), None, parallel.Scheduler()]
         flow.train(data_iterables, scheduler=schedulers)
         # parallel execution
-        iterable = [n.random.random((20,10)) for _ in range(6)]
+        iterable = [n.random.random((20,10)) for _ in xrange(6)]
         flow.execute(iterable, scheduler=parallel.Scheduler())
         
     def test_multiphase(self):
@@ -90,17 +90,17 @@ class TestParallelFlows(unittest.TestCase):
                             mdp.nodes.PolynomialExpansionNode(degree=2),
                             mdp.nodes.SFANode(output_dim=5)])
         data_iterables = [[n.random.random((30,10))*n.arange(1,11)
-                           for _ in range(6)], 
+                           for _ in xrange(6)],
                           None, 
                           [n.random.random((30,10))*n.arange(1,11)
-                           for _ in range(6)]]
+                           for _ in xrange(6)]]
         scheduler = parallel.Scheduler()
         flow.train(data_iterables, scheduler=scheduler)
         # test normal execution
         x = n.random.random([100,10])
         flow.execute(x)
         # parallel execution
-        iterable = [n.random.random((20,10)) for _ in range(6)]
+        iterable = [n.random.random((20,10)) for _ in xrange(6)]
         flow.execute(iterable, scheduler=scheduler)
     
     def test_firstnode(self):
@@ -125,9 +125,9 @@ class TestParallelFlows(unittest.TestCase):
                             flownode,
                             mdp.nodes.PolynomialExpansionNode(degree=2),
                             mdp.nodes.SFANode(output_dim=5)])
-        data_iterables = [[n.random.random((30,10)) for _ in range(6)], 
+        data_iterables = [[n.random.random((30,10)) for _ in xrange(6)],
                           None, 
-                          [n.random.random((30,10)) for _ in range(6)]]
+                          [n.random.random((30,10)) for _ in xrange(6)]]
         checkpoint = mdp.CheckpointFunction()
         scheduler = parallel.Scheduler()
         flow.train(data_iterables, scheduler=scheduler, checkpoints=checkpoint)
@@ -143,10 +143,10 @@ class TestParallelFlows(unittest.TestCase):
                             mdp.nodes.PolynomialExpansionNode(degree=2),
                             mdp.nodes.SFANode(output_dim=5)])
         data_iterables = [[n.random.random((30,10))*n.arange(1,11)
-                           for _ in range(6)], 
+                           for _ in xrange(6)],
                           None, 
                           [n.random.random((30,10))*n.arange(1,11)
-                           for _ in range(6)]]
+                           for _ in xrange(6)]]
         scheduler = parallel.Scheduler()
         flow.train(data_iterables, scheduler=scheduler)
         # test execution
@@ -164,10 +164,10 @@ class TestParallelFlows(unittest.TestCase):
                             mdp.nodes.PolynomialExpansionNode(degree=2),
                             mdp.nodes.SFANode(output_dim=5)])
         data_iterables = [[n.random.random((30,10))*n.arange(1,11)
-                           for _ in range(6)], 
+                           for _ in xrange(6)],
                           None, 
                           [n.random.random((30,10))*n.arange(1,11)
-                           for _ in range(6)]]
+                           for _ in xrange(6)]]
         scheduler = parallel.Scheduler()
         flow.train(data_iterables, scheduler=scheduler)
         # test execution
@@ -182,9 +182,9 @@ class TestParallelFlows(unittest.TestCase):
         sfa2_node = mdp.nodes.SFA2Node(input_dim=8, output_dim=6)
         flow = parallel.ParallelFlow([sfa_node, sfa2_node])
         data_iterables = [[n.random.random((30,10))*n.arange(1,11)
-                           for _ in range(6)], 
+                           for _ in xrange(6)],
                           [n.random.random((30,10))*n.arange(1,11)
-                           for _ in range(6)]]
+                           for _ in xrange(6)]]
         scheduler = parallel.Scheduler()
         flow.train(data_iterables, scheduler=scheduler)
         while flow.is_parallel_training:

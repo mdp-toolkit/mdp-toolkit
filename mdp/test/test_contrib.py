@@ -44,7 +44,7 @@ def _compare_neighbors(orig, proj, k):
     n = orig.shape[0]
     err = numx.zeros((n,))
     # compare neighbors indices
-    for i in range(n):
+    for i in xrange(n):
         # neighbors in original space
         dist = orig - orig[i,:]
         orig_nbrs = numx.argsort((dist**2).sum(1))[1:k+1]
@@ -147,7 +147,7 @@ class ContribTestSuite(NodesTestSuite):
 
     def testJADENode(self):
         trials = 3
-        for i in range(trials):
+        for i in xrange(trials):
             try:
                 ica = mdp.nodes.JADENode(limit = 10**(-self.decimal))
                 ica2 = ica.copy()
@@ -296,7 +296,7 @@ class ContribTestSuite(NodesTestSuite):
         # create three souces with different speeds
         fsrc = numx_fft.rfft(src, axis=0)
 
-        for i in range(N):
+        for i in xrange(N):
             fsrc[(i+1)*(T/10):, i] = 0.
 
         src = numx_fft.irfft(fsrc,axis=0)
