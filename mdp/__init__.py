@@ -122,6 +122,135 @@ else:
 
 del _os, _NUMX_LABELS, _USR_LABEL, _label
 
+def lazyattrcls(cls):
+    cls._features = {}
+    for methodname in cls.__dict__:
+        method=cls.__dict__[methodname]
+        if hasattr(method,'_attr'):
+            cls._features[getattr(method,'_attr')]=methodname
+    return cls
+
+def feature(key):
+    def wrapper(func):
+        class Property(object):
+            def __get__(self, inst, instcls):
+                
+                # print "Checking for %s" % self._attr
+
+                value = func(inst)
+
+                if hasattr(value, 'module'):
+                    value.module = self._attr
+
+                setattr(inst, func.__name__, value)
+                return value
+            def __init__(self):
+                self._attr=key
+        return Property()
+    return wrapper
+
+
+class ExternalDep(object):
+    def __init__(self, version=None, failmsg=None):
+        self.available = None
+        self.version = version
+        self.failmsg = failmsg
+        self.module = "unknown"
+
+    def __repr__(self):
+        if self.available:
+            return "%s" % self.version
+        else:
+            return "FAILED: %s" % self.failmsg
+
+class ExternalDepFail(ExternalDep):
+    def __init__(self, failmsg):
+        super(ExternalDepFail, self).__init__(version=None, failmsg=failmsg)
+        self.available = False
+
+class ExternalDepFound(ExternalDep):
+    def __init__(self, version="unknown version"):
+        super(ExternalDepFound, self).__init__(version=version, failmsg=None)
+        self.available = True
+
+@lazyattrcls
+class Requirements(object):
+    def __getitem__(self,key):
+        if key in self._features:
+            return getattr(self,self._features[key])
+        raise KeyError("'%s'" % key)
+
+    @feature("Parallel Python")
+    def has_parallel_python(self):
+        try:
+            import pp as __pp
+        except ImportError as msg:
+            return ExternalDepFail(msg)
+        return ExternalDepFound()
+
+    @feature("shogun")
+    def has_shogun(self):
+        try:
+            import shogun.Kernel as _sgKernel
+            import shogun.Classifier as _sgClassifier
+        except ImportError as msg:
+            return ExternalDepFail(msg)
+        # We need to have at least SHOGUN 0.9, as we rely on
+        # SHOGUN's CClassifier::classify() method.
+        # (It makes our code much nicer, by the way.)
+        #
+        if not hasattr(_sgClassifier.Classifier, 'classify'):
+            return ExternalDepFail("CClassifier::classify not found")
+        try:
+            version = _sgKernel._Kernel.Version_get_version_release()
+        except AttributeError:
+            version = ""
+
+        if not (version.startswith('v0.9') or version.startswith('v1.')):
+            return ExternalDepFail("We need at least SHOGUN version 0.9.")
+        return ExternalDepFound(version)
+    
+    @feature("LibSVM")
+    def has_libsvm(self):
+        try:
+            import svm as libsvm
+        except ImportError as msg:
+            return ExternalDepFail(msg)
+        return ExternalDepFound()
+    
+    @feature("Numerical Backend")
+    def numerical_backend(self):
+        return numx_description + numx_version
+
+    @feature("Symeig Backend")
+    def symeig(self):
+        import utils
+        # check what symeig are we using
+        if utils.symeig is utils.wrap_eigh:
+            SYMEIG = 'scipy.linalg.eigh'
+        else:
+            try:
+                import symeig
+                if utils.symeig is symeig.symeig:
+                    SYMEIG = 'symeig'
+                elif utils.symeig is utils._symeig_fake:
+                    SYMEIG = 'symeig_fake'
+                else:
+                    SYMEIG = 'unknown'
+            except ImportError:
+                if utils.symeig is utils._symeig_fake:
+                    SYMEIG = 'symeig_fake'
+                else:
+                    SYMEIG = 'unknown'
+        return SYMEIG
+    
+    def info(self):
+        """Return nicely formatted info about MDP."""
+        return ''.join([feature+': ' + str(self[feature])+'\n' for feature in self._features])
+
+req = Requirements()
+
+
 # import the utils module (used by other modules)
 # here we set scipy_emulation if needed.
 import utils
@@ -172,6 +301,7 @@ __features__ = ('MDP Version', 'MDP Revision', 'Numerical Backend',
                 'Symeig Backend', 'Parallel Python Support',
                 'LibSVM', 'Shogun')
 
+
 # gather information about us
 def _info():
     """Return dictionary containing info about MDP."""
@@ -213,6 +343,7 @@ def info():
     info = _info()
     for feature in __features__:
         sys.stderr.write(feature+': '+info[feature]+'\n')
+    sys.stderr.write(req.info())
 
 
 # clean up namespace
@@ -233,4 +364,6 @@ __all__ = ['CheckpointFlow', 'CheckpointFunction', 'CheckpointSaveFunction',
            'get_extensions', 'get_active_extension_names', 'with_extension',
            'activate_extension', 'deactivate_extension', 'activate_extensions',
            'deactivate_extensions',
-           'ClassifierNode']
+           'ClassifierNode',
+           'req',
+           ]

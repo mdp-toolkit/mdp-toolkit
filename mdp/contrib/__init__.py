@@ -5,21 +5,21 @@ from xsfa_nodes import XSFANode
 
 __all__ = ['JADENode', 'NIPALSNode', 'LLENode', 'HLLENode', 'XSFANode']
 
-try:
+from mdp import req
+
+if req['shogun'].available:
     from shogun_svm_classifier import ShogunSVMClassifier
     __all__ += ['ShogunSVMClassifier']
     del shogun_svm_classifier
-except ImportError:
-    pass
 
-try:
+
+if req['LibSVM'].available:
     from libsvm_classifier import LibSVMClassifier
     __all__ += ['LibSVMClassifier']
     del libsvm_classifier
-except ImportError:
-    pass
 
 del jade
 del nipals
 del lle_nodes
 del xsfa_nodes
+
