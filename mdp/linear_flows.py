@@ -478,7 +478,8 @@ class Flow(object):
 
     def __setitem__(self, key, value):
         if isinstance(key, slice):
-            map(self._check_value_type_isnode, value)
+            for item in value:
+                self._check_value_type_isnode(value)
         else:
             self._check_value_type_isnode(value)
 
