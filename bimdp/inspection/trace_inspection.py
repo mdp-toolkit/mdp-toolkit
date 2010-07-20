@@ -15,7 +15,7 @@ import copy
 import traceback
 
 import mdp
-import mdp.numx as n
+n = mdp.numx
 import mdp.hinet as hinet
 
 from bimdp import BiNode
