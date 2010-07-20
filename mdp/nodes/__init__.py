@@ -16,6 +16,7 @@ from regression_nodes import LinearRegressionNode
 from classifier_nodes import (SignumClassifier, PerceptronClassifier,
                               SimpleMarkovClassifier, DiscreteHopfieldClassifier,
                               KMeansClassifier)
+from convolution_nodes import Convolution2DNode
 
 # import internals for use in test_suites
 from misc_nodes import OneDimensionalHitParade as _OneDimensionalHitParade
@@ -38,6 +39,7 @@ del isfa_nodes
 del rbm_nodes
 del regression_nodes
 del classifier_nodes
+del convolution_nodes
 #del mdp.contrib
 del mdp
 
@@ -54,4 +56,4 @@ __all__ = ['CuBICANode', 'EtaComputerNode', 'FANode', 'FDANode', 'FastICANode',
            'CutoffNode', 'HistogramNode', 'AdaptiveCutoffNode',
            'SignumClassifier', 'PerceptronClassifier',
            'SimpleMarkovClassifier', 'DiscreteHopfieldClassifier',
-           'KMeansClassifier']
+           'KMeansClassifier', 'Convolution2DNode']
