@@ -281,6 +281,7 @@ class ParallelFlow(mdp.Flow):
                         self.use_results(results)
                     # check if we have to switch to next scheduler
                     if ((schedulers is not None) and
+                        (self._i_train_node is not None) and
                         (self._i_train_node > last_trained_node)):
                         # dispose unused schedulers
                         for _ in range(self._i_train_node - last_trained_node):
