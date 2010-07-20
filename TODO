@@ -40,6 +40,8 @@ optional for MDP 3.0
 - add cross-correlation tools, maybe support the use of a parallel scheduler
 - add execute memoize extension?
 - drop python 2.4 and use/advertise 'with' statement syntax?
+- check problem with LLENode tutorial demo when using matplotlib 
+0.99.1.2, see Olivier Grisel's email
 
 beyond the next release
 =======================

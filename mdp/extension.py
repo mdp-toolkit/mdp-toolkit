@@ -21,7 +21,7 @@ This keeps the code readable and is compatible with automatic code checkers
 (like the background pylint checks in the Eclipse IDE with PyDev).
 """
 
-from mdp import MDPException, NodeMetaclass, utils
+from mdp import MDPException, NodeMetaclass, utils, Node
 all = utils.all
 
 # TODO: note the ParllelBiFlowNode purge_nodes method, which is not part
@@ -352,3 +352,42 @@ def with_extension(extension_name):
         return NodeMetaclass._wrap_function(wrapper, func_info)
     return decorator
         
+
+
+# Memoize extension
+import hashlib
+
+# TODO: replace array hashing with better solution (see joblib)
+
+# TODO: allow caching on disk
+
+def _hasharray(x):
+    """Returns an hash value for a numpy array."""
+    m = hashlib.md5()
+    m.update(x)
+    return m.digest()
+
+class CacheExecuteExtensionNode(ExtensionNode, Node):
+    """MDP Extension for caching execution results.
+
+    Activating this extension results in all nodes caching the return
+    values of the 'execute' methods.
+
+    Warning: this extension might brake the algorithms if nodes rely
+    on side effects.
+    """
+
+    extension_name = 'cache_execute'
+
+    def execute(self, x, *args, **kwargs):
+        if not hasattr(self, '_execute_cache'):
+            self._execute_cache = {}
+        h = _hasharray(x)
+        if h not in self._execute_cache:
+            self._execute_cache[h] = self._non_extension_execute(x)
+
+        return self._execute_cache[h]
+
+
+
+

@@ -283,11 +283,54 @@ class TestMDPExtensions(unittest.TestCase):
         self.assert_(test_node._execute() == 1)
         mdp.deactivate_extensions(['__test2', '__test1'])
 
+class TestCachingExtension(unittest.TestCase):
+    def test_caching_extension(self):
+        """Test that the caching extension is working."""
+        class SideEffectNode(mdp.Node):
+            def __init__(self):
+                super(SideEffectNode, self).__init__()
+                self.count = 0
+                
+            def is_trainable(self):
+                return False
+            
+            def _execute(self, x):
+                """The execute method has the side effect of increasing
+                an internal counter by one."""
+                self.count += 1
+                return x
+
+        node = SideEffectNode()
+        x = mdp.numx.array([[1.]])
+
+        # before activating the extension
+        self.assertEqual(mdp.get_active_extensions(), [])
+        node.execute(x)
+        self.assertEqual(node.count, 1)
+
+        # activate the extension
+        mdp.activate_extension('cache_execute')
+        self.assertEqual(mdp.get_active_extensions(), ['cache_execute'])
+        # the first time, x gets cached
+        node.execute(x)
+        self.assertEqual(node.count, 2)
+        # the second time, x is already there
+        node.execute(x)
+        self.assertEqual(node.count, 2)
+        
+        # after deactivation
+        mdp.deactivate_extension('cache_execute')
+        self.assertEqual(mdp.get_active_extensions(), [])
+        node.execute(x)
+        self.assertEqual(node.count, 3)
+
+
 def get_suite(testname=None):
     # this suite just ignores the testname argument
     # you can't select tests by name here!
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(TestMDPExtensions))
+    suite.addTest(unittest.makeSuite(TestCachingExtension))
     return suite
             
 if __name__ == '__main__':
