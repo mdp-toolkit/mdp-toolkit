@@ -3,6 +3,7 @@ Extension to get the total derivative / gradient / Jacobian matrix.
 """
 
 import mdp
+import bimdp
 np = mdp.numx
 
 class NotDifferentiableException(mdp.NodeException):
@@ -61,11 +62,8 @@ class GradientExtensionNode(mdp.ExtensionNode, mdp.Node):
         
         Override this method.
         """
-        # return gradient for identity
-        grad = np.zeros((len(x), self.output_dim, self.input_dim))
-        diag_indices = np.arange(self.input_dim)
-        grad[:,diag_indices,diag_indices] = 1.0
-        return grad
+        err = "Gradient not implemented for class %s." % str(self.__class__)
+        raise NotImplementedError(err)
     
     def _stop_gradient(self, x, grad=None):
         """Helper method to make gradient available for stop_message."""
@@ -81,6 +79,13 @@ class GradientExtensionNode(mdp.ExtensionNode, mdp.Node):
 #    If there was a linear base class one could integrate this?
 
 # TODO: add at least a PCA gradient implementation
+
+@mdp.extension_method("gradient", mdp.nodes.IdentityNode, "_get_grad")
+def _identity_grad(self, x):
+    grad = np.zeros((len(x), self.output_dim, self.input_dim))
+    diag_indices = np.arange(self.input_dim)
+    grad[:,diag_indices,diag_indices] = 1.0
+    return grad
 
 @mdp.extension_method("gradient", mdp.nodes.SFANode, "_get_grad")    
 def _sfa_grad(self, x):
