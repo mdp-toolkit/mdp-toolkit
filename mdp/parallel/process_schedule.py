@@ -39,7 +39,7 @@ if __name__ == "__main__":
     warnings.filterwarnings("ignore", ".*")
     
 import mdp
-from scheduling import Scheduler, cpu_count
+from mdp.parallel import Scheduler, cpu_count
 
 SLEEP_TIME = 0.1  # time spend sleeping when waiting for a free process
 
