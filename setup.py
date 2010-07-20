@@ -1,4 +1,6 @@
 from distutils.core import setup
+import os
+import sys
 
 short_description = "Modular toolkit for Data Processing (MDP) is a library of widely used data processing algorithms that can be combined according to a pipeline analogy to build more complex data processing software. Implemented algorithms include Principal Component Analysis (PCA), Independent Component Analysis (ICA), Slow Feature Analysis (SFA), and many more."
 
@@ -69,22 +71,44 @@ classifiers = ["Development Status :: 5 - Production/Stable",
                "Topic :: Scientific/Engineering :: Mathematics"]
 
 
-setup(name = 'MDP', version = '2.6',
-      author = 'Pietro Berkes, Niko Wilbert, and Tiziano Zito',
-      author_email = 'berkes@brandeis.edu, mail@nikowilbert.de, tiziano.zito@bccn-berlin.de',
-      maintainer = 'Pietro Berkes, Rike-Benjamin Schuppner, Niko Wilbert, and Tiziano Zito',
-      maintainer_email = 'berkes@brandeis.edu, rike.schuppner@bccn-berlin.de, mail@nikowilbert.de, tiziano.zito@bccn-berlin.de',
-      license = "http://www.gnu.org/licenses/lgpl.html",
-      platforms = ["Any"],
-      url = 'http://mdp-toolkit.sourceforge.net',
-      download_url = 'http://sourceforge.net/projects/mdp-toolkit/files',
-      description = short_description,
-      long_description = long_description,
-      classifiers = classifiers,
-      packages = ['mdp', 'mdp.nodes', 'mdp.utils', 'mdp.hinet',
-                  'mdp.test', 'mdp.demo', 'mdp.graph', 'mdp.contrib',
-                  'mdp.parallel', 'bimdp', 'bimdp.hinet', 'bimdp.inspection',
-                  'bimdp.nodes', 'bimdp.parallel', 'bimdp.test'],
-      package_data = {'mdp.hinet': ['hinet.css'],
-                      'mdp.utils': ['slideshow.css']}
-      )
+def setup_package():
+
+    # Perform 2to3 if needed
+    local_path = os.path.dirname(os.path.abspath(sys.argv[0]))
+    src_path = local_path
+
+    if sys.version_info[0] == 3:
+        src_path = os.path.join(local_path, 'build', 'py3k')
+        import py3tool
+        print("Converting to Python3 via 2to3...")
+        py3tool.sync_2to3('mdp', os.path.join(src_path, 'mdp'))
+        py3tool.sync_2to3('bimdp', os.path.join(src_path, 'bimdp'))
+
+    # Run build
+    old_path = os.getcwd()
+    os.chdir(src_path)
+    sys.path.insert(0, src_path)
+    
+    setup(name = 'MDP', version = '2.6',
+          author = 'Pietro Berkes, Niko Wilbert, and Tiziano Zito',
+          author_email = 'berkes@brandeis.edu, mail@nikowilbert.de, tiziano.zito@bccn-berlin.de',
+          maintainer = 'Pietro Berkes, Rike-Benjamin Schuppner, Niko Wilbert, and Tiziano Zito',
+          maintainer_email = 'berkes@brandeis.edu, rike.schuppner@bccn-berlin.de, mail@nikowilbert.de, tiziano.zito@bccn-berlin.de',
+          license = "http://www.gnu.org/licenses/lgpl.html",
+          platforms = ["Any"],
+          url = 'http://mdp-toolkit.sourceforge.net',
+          download_url = 'http://sourceforge.net/projects/mdp-toolkit/files',
+          description = short_description,
+          long_description = long_description,
+          classifiers = classifiers,
+          packages = ['mdp', 'mdp.nodes', 'mdp.utils', 'mdp.hinet',
+                      'mdp.test', 'mdp.demo', 'mdp.graph', 'mdp.contrib',
+                      'mdp.parallel', 'bimdp', 'bimdp.hinet', 'bimdp.inspection',
+                      'bimdp.nodes', 'bimdp.parallel', 'bimdp.test'],
+          package_data = {'mdp.hinet': ['hinet.css'],
+                          'mdp.utils': ['slideshow.css']}
+          )
+    
+
+if __name__ == '__main__':
+    setup_package()

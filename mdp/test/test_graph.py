@@ -32,7 +32,7 @@ class GraphTestSuite(unittest.TestSuite):
         # add_node
         g = graph.Graph()
         nnodes = 5
-        nds = [g.add_node() for i in range(nnodes)]
+        nds = [g.add_node() for i in xrange(nnodes)]
         assert len(g.nodes)==nnodes, "Wrong number of nodes, expected: %d, got :%d" % (nnodes, len(g.nodes))
         # add nodes
         g = graph.Graph()
@@ -45,12 +45,12 @@ class GraphTestSuite(unittest.TestSuite):
     def testAddEdge(self):
         g = graph.Graph()
         nnodes = 5
-        nds = [g.add_node() for i in range(nnodes)]
-        eds = [g.add_edge(nds[i], nds[i+1]) for i in range(nnodes-1)]
+        nds = [g.add_node() for i in xrange(nnodes)]
+        eds = [g.add_edge(nds[i], nds[i+1]) for i in xrange(nnodes-1)]
         assert len(g.edges)==nnodes-1, "Wrong number of edges, expected: %d, got :%d" % (nnodes-1, len(g.edges))
         # the last nnodes-1 nodes should have in_degree==1,
         # and the first nnodes-1 out_degree==1
-        for i in range(nnodes):
+        for i in xrange(nnodes):
             if i>0: assert nds[i].in_degree()==1, "Wrong in_degree, expected: 1, got: %d." % nds[i].in_degree()
             if i<nnodes-1: assert nds[i].out_degree()==1, "Wrong out_degree, expected: 1, got: %d." % nds[i].out_degree()
 
@@ -60,12 +60,13 @@ class GraphTestSuite(unittest.TestSuite):
         ed1 = g.add_edge(nds[0],nds[2])
         ed2 = g.add_edge(nds[1],nds[2])
         ed3 = g.add_edge(nds[2],nds[3])
-        assert nds[2].get_edges_in().sort()==[ed1, ed2].sort()
-        assert nds[2].get_edges().sort()==[ed1, ed2, ed3].sort()
-        assert nds[2].get_edges_in(from_=nds[1])==[ed2]
-        assert nds[2].get_edges_out(to_=nds[3])==[ed3]
+        assert set(nds[2].get_edges_in()) == set([ed1, ed2])
+        assert set(nds[2].get_edges_out()) == set([ed3])
+        assert set(nds[2].get_edges()) == set([ed1, ed2, ed3])
+        assert set(nds[2].get_edges_in(from_=nds[1])) == set([ed2])
+        assert set(nds[2].get_edges_out(to_=nds[3])) == set([ed3])
         ed4 = g.add_edge(nds[3],nds[2])
-        assert nds[2].get_edges(neighbor=nds[3]).sort()==[ed3,ed4].sort()
+        assert set(nds[2].get_edges(neighbor=nds[3])) == set([ed3,ed4])
 
     def testRemoveEdge(self):
         g = graph.Graph()

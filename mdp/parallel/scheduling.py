@@ -69,10 +69,8 @@ class OrderedResultContainer(ListResultContainer):
         """Sort the results into the original order and return them in list."""
         results = self._results
         self._results = []
-        def compare_marker(x, y):
-            return x[1] - y[1]
-        results.sort(compare_marker)
-        return zip(*results)[0]
+        results.sort(key=lambda x: x[1])
+        return list(zip(*results))[0]
     
     
 class TaskCallable(object):
@@ -133,9 +131,9 @@ class TaskCallableWrapper(TaskCallable):
     This wrapper is applied internally in Scheduler.
     """
     
-    def __init__(self, callable):
+    def __init__(self, callable_):
         """Store and wrap the callable."""
-        self._callable = callable
+        self._callable = callable_
         
     def __call__(self, data):
         """Call the internal callable with the data and return the result."""

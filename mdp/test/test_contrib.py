@@ -44,7 +44,7 @@ def _compare_neighbors(orig, proj, k):
     n = orig.shape[0]
     err = numx.zeros((n,))
     # compare neighbors indices
-    for i in range(n):
+    for i in xrange(n):
         # neighbors in original space
         dist = orig - orig[i,:]
         orig_nbrs = numx.argsort((dist**2).sum(1))[1:k+1]
@@ -96,7 +96,7 @@ def _linear_separable_data(positions, labels, radius=1, num_elem=1000, shuffled=
     num_elem - the number of elements in each
     """
     assert len(positions) == len(labels)
-    
+
     data = numx.vstack( _random_clusters(positions, radius, num_elem) )
     #data = numx.vstack( (numx.random.random( (num_elem,2) ) - dist,
     #                     numx.random.random( (num_elem,2) ) + dist) )
@@ -147,17 +147,17 @@ class ContribTestSuite(NodesTestSuite):
 
     def testJADENode(self):
         trials = 3
-        for i in range(trials):
-            try: 
+        for i in xrange(trials):
+            try:
                 ica = mdp.nodes.JADENode(limit = 10**(-self.decimal))
                 ica2 = ica.copy()
                 self._testICANode(ica, rand_func=numx_rand.exponential)
                 self._testICANodeMatrices(ica2)
                 return
-            except Exception, exc:
-                pass
-        raise exc
-    
+            except Exception:
+                if i == trials - 1:
+                    raise
+
     def testNIPALSNode(self):
         line_x = numx.zeros((1000,2),"d")
         line_y = numx.zeros((1000,2),"d")
@@ -181,7 +181,7 @@ class ContribTestSuite(NodesTestSuite):
         pca2.train(mat)
         pca2.stop_training()
         assert_array_almost_equal(pca2.d, pca.d, self.decimal)
-        
+
     def testNIPALSNode_desired_variance(self):
         mat, mix, inp = self._get_random_mix(mat_dim=(1000, 3))
         # first make them white
@@ -216,7 +216,7 @@ class ContribTestSuite(NodesTestSuite):
         err = _compare_neighbors(data, res, k)
         assert err.max() == 0
         return
-    
+
         #TODO: fix this test!
         # 2D S-shape in 3D
         nt, ny = 40, 15
@@ -267,7 +267,7 @@ class ContribTestSuite(NodesTestSuite):
         res = mdp.nodes.HLLENode(k, r=0.001, output_dim=1, svd=True)(data)
         err = _compare_neighbors(data, res, k)
         assert err.max() == 0
-        
+
         # 2D S-shape in 3D
         nt, ny = 40, 15
         n, k = nt*ny, 8
@@ -296,7 +296,7 @@ class ContribTestSuite(NodesTestSuite):
         # create three souces with different speeds
         fsrc = numx_fft.rfft(src, axis=0)
 
-        for i in range(N):
+        for i in xrange(N):
             fsrc[(i+1)*(T/10):, i] = 0.
 
         src = numx_fft.irfft(fsrc,axis=0)
@@ -309,7 +309,7 @@ class ContribTestSuite(NodesTestSuite):
         flow = mdp.Flow([mc.XSFANode()])
         # let's test also chunk-mode training
         flow.train([[mix[:T/2, :], mix[T/2:, :]]])
-        
+
         out = flow(mix)
         #import bimdp
         #tr_filename = bimdp.show_training(flow=flow,
@@ -351,17 +351,17 @@ class ContribTestSuite(NodesTestSuite):
                                                               radius, num_train)
             testdata_real, testlab = _linear_separable_data(positions, labels,
                                                             radius, num_test)
-            
-            
+
+
             classifiers = ['GMNPSVM', 'GNPPSVM', 'GPBTSVM', 'KernelPerceptron',
-                           'LDA', 'LibSVM', # 'LibSVMOneClass',# 'MPDSVM', 
+                           'LDA', 'LibSVM', # 'LibSVMOneClass',# 'MPDSVM',
                            'Perceptron', 'SVMLin']
             kernels = ['PolyKernel', 'LinearKernel', 'SigmoidKernel', 'GaussianKernel']
-            
+
             #kernels = list(mdp.nodes.ShogunSVMClassifier.kernel_parameters.keys())
             combinations = {'classifier': classifiers,
                             'kernel': kernels}
-            
+
             for comb in utils.orthogonal_permutations(combinations):
                 # this is redundant but makes it clear,
                 # what has been taken out deliberately
@@ -375,30 +375,30 @@ class ContribTestSuite(NodesTestSuite):
                                           'SubGradientSVM']:
                     # We don't have good init arguments for these and/or they work differently
                     continue
-                
+
                 # something does not work here: skipping
                 if comb['classifier'] == 'GPBTSVM' and comb['kernel'] == 'LinearKernel':
                     continue
-                
+
                 sg_node = mdp.nodes.ShogunSVMClassifier(classifier=comb['classifier'])
-                
+
                 if sg_node.classifier.takes_kernel:
                     sg_node.set_kernel(comb['kernel'])
-                    
+
                 # train in two chunks to check update mechanism
                 sg_node.train( traindata_real[:num_train], trainlab[:num_train] )
                 sg_node.train( traindata_real[num_train:], trainlab[num_train:] )
-                
+
                 assert sg_node.input_dim == len(traindata_real.T)
-                
+
                 out = sg_node.label(testdata_real)
-                
+
                 if sg_node.classifier.takes_kernel:
                     # check that the kernel has stored all our training vectors
                     assert sg_node.classifier.kernel.get_num_vec_lhs() == num_train * len(positions)
                     # check that the kernel has also stored the latest classification vectors in rhs
                     assert sg_node.classifier.kernel.get_num_vec_rhs() == num_test * len(positions)
-                
+
                 # Test also for inverse
                 worked = numx.all(numx.sign(out) == testlab) or \
                          numx.all(numx.sign(out) == -testlab)
@@ -412,7 +412,7 @@ class ContribTestSuite(NodesTestSuite):
                     if comb['classifier'] == 'GPBTSVM' and \
                        comb['kernel'] in ['LinearKernel']:
                         should_fail = True
-                
+
                 # xor problem
                 if len(positions) == 4:
                     if comb['classifier'] in ['LibSVMOneClass', 'SVMLin', 'Perceptron',
@@ -427,14 +427,14 @@ class ContribTestSuite(NodesTestSuite):
                     if comb['classifier'] == 'GNPPSVM' and \
                        comb['kernel'] in ['LinearKernel', 'SigmoidKernel']:
                         should_fail = True
-                
+
                 if should_fail:
                     msg = ("Classification should fail but did not in %s. Positions %s." %
                           (sg_node.classifier, positions))
                 else:
                     msg = ("Classification should not fail but failed in %s. Positions %s." %
                           (sg_node.classifier, positions))
-                
+
                 assert should_fail == failed, msg
 
     def testLibSVMClassifier(self):
@@ -457,37 +457,37 @@ class ContribTestSuite(NodesTestSuite):
                                                               radius, num_train, True)
             testdata_real, testlab = _linear_separable_data(positions, (-1, 1),
                                                             radius, num_test, True)
-        
+
             combinations = {'kernel': mdp.nodes.LibSVMClassifier.kernels,
                             'classifier': mdp.nodes.LibSVMClassifier.classifiers}
-        
+
             for comb in utils.orthogonal_permutations(combinations):
                 # Take out non-working cases
                 if comb['classifier'] in ["ONE_CLASS"]:
                     continue
                 if comb['kernel'] in ["SIGMOID"]:
                     continue
-                
+
                 svm_node = mdp.nodes.LibSVMClassifier()
                 svm_node.set_kernel(comb['kernel'])
                 svm_node.set_classifier(comb['classifier'])
-                
+
                 # train in two chunks to check update mechanism
                 svm_node.train(traindata_real[:num_train], trainlab[:num_train])
                 svm_node.train(traindata_real[num_train:], trainlab[num_train:])
-                
+
                 assert svm_node.input_dim == len(traindata_real.T)
 
                 out = svm_node.label(testdata_real)
 
                 testerr = numx.all(numx.sign(out) == testlab)
                 assert testerr, ('classification error for ', comb)
-                
+
                 # we don't have ranks in our regression models
                 if not comb['classifier'].endswith("SVR"):
                     pos1_rank = numx.array(svm_node.rank(numx.array([positions[0]])))
                     pos2_rank = numx.array(svm_node.rank(numx.array([positions[1]])))
-                    
+
                     assert numx.all(pos1_rank == -pos2_rank)
                     assert numx.all(abs(pos1_rank) == 1)
                     assert numx.all(abs(pos2_rank) == 1)

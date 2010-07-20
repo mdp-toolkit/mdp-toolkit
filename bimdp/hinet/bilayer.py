@@ -108,7 +108,7 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
         node_msgs = self._get_split_messages(msg)
         if x is not None:
             # use the dimension of x, because this also works for inverse
-            node_dim = x.shape[1] / len(self.nodes)
+            node_dim = x.shape[1] // len(self.nodes)
         else:
             node_dim = None
         for i_node, node in enumerate(self.nodes):
@@ -153,7 +153,7 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
         node_msgs = self._get_split_messages(msg)
         if x is not None:
             # use the dimension of x, because this also works for inverse
-            node_dim = x.shape[1] / len(self.nodes)
+            node_dim = x.shape[1] // len(self.nodes)
         else:
             node_dim = None
         for i_node, node in enumerate(self.nodes):

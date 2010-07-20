@@ -9,15 +9,13 @@ inject the tracing code into the Flow.
 """
 
 import os
-import new
 import cPickle as pickle
 import fnmatch
 import copy
 import traceback
 
 import mdp
-n = mdp.numx
-
+import mdp.numx as n
 import mdp.hinet as hinet
 
 from bimdp import BiNode
@@ -417,11 +415,12 @@ class TraceHTMLInspector(hinet.HiNetTranslator):
                     # but use a (decorated) deep copy for first node
                     clonelayer._original_set_use_copies(use_copies)
                     clonelayer.node = clonelayer.nodes[0].copy()
-                    clonelayer.nodes = (clonelayer.node,) + clonelayer.nodes[1:]
+                    clonelayer.nodes = ((clonelayer.node,) +
+                                        clonelayer.nodes[1:])
                 trace_inspector._translate_node(clonelayer.nodes[0])
-            clonelayer._set_use_copies = new.instancemethod(wrapped_use_copies, 
-                                                            clonelayer)
-            # modify getstate to enable pickling (get rid of the instance methods)
+            clonelayer._set_use_copies = wrapped_use_copies.__get__(clonelayer)
+            # modify getstate to enable pickling
+            # (get rid of the instance methods)
             def wrapped_getstate(self):
                 result = self.__dict__.copy()
                 # delete instance methods
@@ -429,8 +428,7 @@ class TraceHTMLInspector(hinet.HiNetTranslator):
                 del result["_set_use_copies"]
                 del result["__getstate__"]
                 return result
-            clonelayer.__getstate__ = new.instancemethod(wrapped_getstate,
-                                                         clonelayer)
+            clonelayer.__getstate__ = wrapped_getstate.__get__(clonelayer)
         
     def _translate_standard_node(self, node):
         """Wrap the node."""
@@ -464,8 +462,8 @@ class TraceHTMLInspector(hinet.HiNetTranslator):
                     return result
                 return wrapper
             # hide the original method in this instance behind the wrapper
-            setattr(node, method_name, 
-                    new.instancemethod(get_wrapper(method_name, self), node))
+            setattr(node, method_name,
+                    get_wrapper(method_name, self).__get__(node))
         # modify getstate to enable pickling (get rid of the instance methods)
         def wrapped_getstate(self):
             result = self.__dict__.copy()
@@ -482,7 +480,7 @@ class TraceHTMLInspector(hinet.HiNetTranslator):
                 del result[old_method_name]
             del result["__getstate__"]
             return result
-        node.__getstate__ = new.instancemethod(wrapped_getstate, node)
+        node.__getstate__ = wrapped_getstate.__get__(node)
     
     def _standard_tracer_undecorate(self, node):
         """Remove a tracer wrapper from the node."""
@@ -750,7 +748,7 @@ def prepare_training_inspection(flow, path):
         # create a reference to the original method
         setattr(_flow, new_method_name, getattr(_flow, _method_name))
         # hide the original method in this instance behind the wrapper
-        setattr(_flow, _method_name, new.instancemethod(wrapper, _flow))
+        setattr(_flow, _method_name, wrapper.__get__(_flow))
         _flow._snapshot_instance_methods_.append(_method_name)
         _flow._snapshot_instance_methods_.append(new_method_name)
     pickle_wrap_method(flow, "_stop_training_hook")
@@ -778,7 +776,7 @@ def prepare_training_inspection(flow, path):
         result.pop("_exec_msg_iterator", None)
         result.pop("_exec_target_iterator", None)
         return result
-    flow.__getstate__ = new.instancemethod(wrapped_biflow_getstate, flow)
+    flow.__getstate__ = wrapped_biflow_getstate.__get__(flow)
     flow._snapshot_instance_methods_.append("__getstate__")
     
 def remove_inspection_residues(flow):

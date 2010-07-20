@@ -34,7 +34,7 @@ class CrashRecoveryException(mdp.MDPException):
             (fd, filename)=_tempfile.mkstemp(suffix=".pic", prefix="MDPcrash_")
             fl = _os.fdopen(fd, 'w+b', -1)
         else:
-            fl = file(filename, 'w+b', -1)
+            fl = open(filename, 'w+b', -1)
         _cPickle.dump(self.crashing_obj, fl)
         fl.close()
         return filename
@@ -419,9 +419,8 @@ class Flow(object):
                 mode = 'wb'
             else:
                 mode = 'w'
-            flh = open(filename, mode)
-            _cPickle.dump(self, flh, protocol)
-            flh.close()
+            with open(filename, mode) as flh:
+                _cPickle.dump(self, flh, protocol)
 
     def __call__(self, iterable, nodenr = None):
         """Calling an instance is equivalent to call its 'execute' method."""
@@ -478,7 +477,7 @@ class Flow(object):
 
     def __setitem__(self, key, value):
         if isinstance(key, slice):
-            map(self._check_value_type_isnode, value)
+            [self._check_value_type_isnode(item) for item in value]
         else:
             self._check_value_type_isnode(value)
 
@@ -646,8 +645,7 @@ class CheckpointSaveFunction(CheckpointFunction):
             self.mode = 'w'
 
     def __call__(self, node):
-        fid = open(self.filename, self.mode)
-        if self.stop_training:
-            node.stop_training()
-        _cPickle.dump(node, fid, self.proto)
-        fid.close()
+        with open(self.filename, self.mode) as fid:
+            if self.stop_training:
+                node.stop_training()
+            _cPickle.dump(node, fid, self.proto)

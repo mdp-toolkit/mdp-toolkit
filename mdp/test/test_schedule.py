@@ -12,7 +12,7 @@ class TestScheduler(unittest.TestCase):
     def test_scheduler(self):
         """Test scheduler with 6 tasks."""
         scheduler = parallel.Scheduler()
-        for i in range(6):
+        for i in xrange(6):
             scheduler.add_task(i, lambda x: x**2)
         results = scheduler.get_results()
         scheduler.shutdown()
@@ -43,12 +43,12 @@ class TestThreadScheduler(unittest.TestCase):
         scale_matrix = mdp.numx.diag(scales)
         train_iterables = [n.dot(mdp.numx_rand.random((5, 100, input_dim)),
                                  scale_matrix) 
-                           for _ in range(3)]
+                           for _ in xrange(3)]
         parallel_flow.train(train_iterables, scheduler=scheduler)
         x = mdp.numx.random.random((10, input_dim))
         # test that parallel execution works as well
         # note that we need more chungs then processes to test caching
-        parallel_flow.execute([x for _ in range(8)], scheduler=scheduler)
+        parallel_flow.execute([x for _ in xrange(8)], scheduler=scheduler)
         scheduler.shutdown()
         # compare to normal flow
         flow.train(train_iterables)

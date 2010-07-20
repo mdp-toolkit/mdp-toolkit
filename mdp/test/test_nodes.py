@@ -94,9 +94,9 @@ def _cov(x,y=None):
     #return mult(numx.transpose(x),y)/(x.shape[0]-1)
     return mult(numx.transpose(x),y)/(x.shape[0])
 
-_spinner = itertools.cycle((' /\b\b', ' -\b\b', ' \\\b\b', ' |\b\b'))
-#_spinner = itertools.cycle((' .\b\b', ' o\b\b', ' 0\b\b', ' O\b\b',
-#                            ' 0\b\b', ' o\b\b'))
+#_spinner = itertools.cycle((' /\b\b', ' -\b\b', ' \\\b\b', ' |\b\b'))
+_spinner = itertools.cycle((' .\b\b', ' o\b\b', ' 0\b\b', ' O\b\b',
+                            ' 0\b\b', ' o\b\b'))
 #_spinner = itertools.cycle([" '\b\b"]*2 + [' !\b\b']*2 + [' .\b\b']*2 +
 #                           [' !\b\b']*2)
 
@@ -421,7 +421,7 @@ class NodesTestSuite(unittest.TestSuite):
         x = uniform(size=self.mat_dim)
         node = _BogusMultiNode()
         phases = node.get_remaining_train_phase()
-        for i in range(phases):
+        for i in xrange(phases):
             assert node.get_current_train_phase() == i
             assert not node._train_phase_started
             node.train(x)
@@ -540,7 +540,7 @@ class NodesTestSuite(unittest.TestSuite):
     def _MultipleCovarianceMatrices_funcs(self,dtype,decimals):
         def assert_all(des,act, dec=decimals):
             # check list of matrices equals multcov array 
-            for x in range(nmat):
+            for x in xrange(nmat):
                 assert_array_almost_equal_diff(des[x],act.covs[:,:,x],dec)
 
         def rotate(mat,angle,indices):
@@ -565,7 +565,7 @@ class NodesTestSuite(unittest.TestSuite):
         dim = 7
         nmat = 13
         # create mult cov mat
-        covs = [uniform((dim,dim)).astype(dtype) for x in range(nmat)]
+        covs = [uniform((dim,dim)).astype(dtype) for x in xrange(nmat)]
         mult_cov = mdp.utils.MultipleCovarianceMatrices(covs)
         assert_equal(nmat,mult_cov.ncovs)
         # test symmetrize
@@ -574,7 +574,7 @@ class NodesTestSuite(unittest.TestSuite):
         assert_all(sym_covs,mult_cov)
         # test weight
         weights = uniform(nmat)
-        w_covs = [weights[x]*sym_covs[x] for x in range(nmat)]
+        w_covs = [weights[x]*sym_covs[x] for x in xrange(nmat)]
         mult_cov.weight(weights)
         assert_all(w_covs,mult_cov)
         # test rotate
@@ -606,7 +606,7 @@ class NodesTestSuite(unittest.TestSuite):
         def get_mult_covs(inp,nmat):
             # return delayed covariance matrices
             covs = []
-            for delay in range(nmat):
+            for delay in xrange(nmat):
                 tmp = mdp.utils.DelayCovarianceMatrix(delay)
                 tmp.update(inp)
                 cov,avg,avg_dt,tlen = tmp.fix()
@@ -641,39 +641,39 @@ class NodesTestSuite(unittest.TestSuite):
             # degree 2
             k = nvars
             if degree>=2:
-                for i in range(nvars):
-                    for j in range(i,nvars):
+                for i in xrange(nvars):
+                    for j in xrange(i,nvars):
                         exp[:,k] = x[:,i]*x[:,j]
                         k += 1
             # degree 3
             if degree>=3:
-                for i in range(nvars):
-                    for j in range(i,nvars):
-                        for l in range(j,nvars):
+                for i in xrange(nvars):
+                    for j in xrange(i,nvars):
+                        for l in xrange(j,nvars):
                             exp[:,k] = x[:,i]*x[:,j]*x[:,l]
                             k += 1
             # degree 4
             if degree>=4:
-                for i in range(nvars):
-                    for j in range(i,nvars):
-                        for l in range(j,nvars):
-                            for m in range(l,nvars):
+                for i in xrange(nvars):
+                    for j in xrange(i,nvars):
+                        for l in xrange(j,nvars):
+                            for m in xrange(l,nvars):
                                 exp[:,k] = x[:,i]*x[:,j]*x[:,l]*x[:,m]
                                 k += 1
             # degree 5
             if degree>=5:
-                for i in range(nvars):
-                    for j in range(i,nvars):
-                        for l in range(j,nvars):
-                            for m in range(l,nvars):
-                                for n in range(m,nvars):
+                for i in xrange(nvars):
+                    for j in xrange(i,nvars):
+                        for l in xrange(j,nvars):
+                            for m in xrange(l,nvars):
+                                for n in xrange(m,nvars):
                                     exp[:,k] = \
                                              x[:,i]*x[:,j]*x[:,l]*x[:,m]*x[:,n]
                                     k += 1
             return exp
 
-        for degree in range(1,6):
-            for dim in range(1,5):
+        for degree in xrange(1,6):
+            for dim in xrange(1,5):
                 expand = mdp.nodes.PolynomialExpansionNode(degree=degree)
                 mat,mix,inp = self._get_random_mix((10,dim))
                 des = hardcoded_expansion(inp, degree)
@@ -707,7 +707,7 @@ class NodesTestSuite(unittest.TestSuite):
 ##     # test segmentation fault with symeig, see
 ##     # http://projects.scipy.org/scipy/numpy/ticket/551
 ##     def testPCANode_pickled(self):
-##         for i in range(2,100):
+##         for i in xrange(2,100):
 ##             mat, mix, inp = self._get_random_mix(mat_dim=(200, i))
             
 ##             pca = mdp.nodes.PCANode()
@@ -792,7 +792,7 @@ class NodesTestSuite(unittest.TestSuite):
         # and test that PCANode crashes whereas PCASVDNode doesn't
         mat, mix, inp = self._get_random_mix(mat_dim=(1000, 100), avg=1E+8)
         # now create a degenerate input
-        for i in range(1,100):
+        for i in xrange(1,100):
             inp[:,i] = inp[:,1].copy()
         # check that standard PCA fails
         pca = mdp.nodes.PCANode()
@@ -983,7 +983,7 @@ class NodesTestSuite(unittest.TestSuite):
                            numx.take(out[:-1,:], (0,2), axis=1))/(dim-2)
         assert_array_almost_equal(abs(correlation),
                                   numx.eye(2), self.decimal-3)
-        for nr in range(sfa.output_dim):
+        for nr in xrange(sfa.output_dim):
             qform = sfa.get_quadratic_form(nr)
             outq = qform.apply(mat)
             assert_array_almost_equal(outq, out[:,nr], self.decimal)
@@ -1140,7 +1140,7 @@ class NodesTestSuite(unittest.TestSuite):
         src = uniform((T,N))*2-1
         fsrc = numx_fft.rfft(src,axis=0)
         # enforce different speeds
-        for i in range(N):
+        for i in xrange(N):
             fsrc[(i+1)*(T//20):,i] = 0.
         src = numx_fft.irfft(fsrc,axis=0)
         return src
@@ -1218,14 +1218,14 @@ class NodesTestSuite(unittest.TestSuite):
         # check last element
         assert_equal(out[-1,-1], -length+1)
         # check horizontal sequence
-        for i in range(1,time_frames):
+        for i in xrange(1,time_frames):
             assert_array_equal(out[:,2*i],out[:,0]+i*gap)
             assert_array_equal(out[:,2*i+1],out[:,1]-i*gap)
         # check pseudo-inverse
         rec = tf.pseudo_inverse(out)
         assert_equal(rec.shape[1], inp.shape[1])
         block_size = min(out.shape[0], gap)
-        for i in range(0,length,gap):
+        for i in xrange(0,length,gap):
             assert_array_equal(rec[i:i+block_size], inp[i:i+block_size])
 
     def testTimeFramesNodeBugInputDim(self):
@@ -1269,7 +1269,7 @@ class NodesTestSuite(unittest.TestSuite):
         topolist = gng.graph.topological_sort()
         deg = map(lambda n: n.degree(), topolist)
         assert_equal(deg[:2],[1,1])
-        assert_array_equal(deg[2:], [2 for i in range(len(deg)-2)])
+        assert_array_equal(deg[2:], [2 for i in xrange(len(deg)-2)])
         # check the distribution of the nodes' position is uniform
         # this node is at one of the extrema of the graph
         x0 = numx.outer(numx.amin(x, axis=0), dir)+const
@@ -1375,7 +1375,7 @@ class NodesTestSuite(unittest.TestSuite):
         means = []
 
         node = mdp.nodes.GaussianClassifierNode()
-        for i in range(nclasses):
+        for i in xrange(nclasses):
             cov = utils.symrand(uniform((dim,))*dim+1)
             mn = uniform((dim,))*10.
             x = normal(0., 1., size=(npoints, dim))
@@ -1396,7 +1396,7 @@ class NodesTestSuite(unittest.TestSuite):
 
         node.stop_training()
 
-        for i in range(nclasses):
+        for i in xrange(nclasses):
             lbl_idx = node.labels.index(i)
             assert_array_almost_equal_diff(means[i],
                                       node.means[lbl_idx],
@@ -1494,7 +1494,7 @@ class NodesTestSuite(unittest.TestSuite):
         ncovs = 5
         dim = 7
         ratio = uniform(2).tolist()
-        covs = [uniform((dim,dim)) for j in range(ncovs)]
+        covs = [uniform((dim,dim)) for j in xrange(ncovs)]
         covs= mdp.utils.MultipleCovarianceMatrices(covs)
         covs.symmetrize()
         i = mdp.nodes.ISFANode(range(1, ncovs+1),sfa_ica_coeff=ratio,
@@ -1532,7 +1532,7 @@ class NodesTestSuite(unittest.TestSuite):
         mat = uniform((100000,3))*2-1
         fmat = numx_fft.rfft(mat,axis=0)
         # enforce different speeds
-        for i in range(3):
+        for i in xrange(3):
             fmat[(i+1)*5000:,i] = 0.
         mat = numx_fft.irfft(fmat,axis=0)
         src = mdp.sfa(mat)
@@ -1555,7 +1555,7 @@ class NodesTestSuite(unittest.TestSuite):
         src = uniform((100000,3))*2-1
         fsrc = numx_fft.rfft(src,axis=0)
         # enforce different speeds
-        for i in range(3):
+        for i in xrange(3):
             fsrc[(i+1)*5000:,i] = 0.
         src = numx_fft.irfft(fsrc,axis=0)
         # enforce time-lag-1-independence
@@ -1579,7 +1579,7 @@ class NodesTestSuite(unittest.TestSuite):
         lag = 25
         src = numx.zeros((1001,3),"d")
         idx = [(2,4),(80,1),(2+lag,6)]
-        for i in range(len(idx)):
+        for i in xrange(len(idx)):
             i0, il = idx[i]
             src[i0:i0+il,i] = 1.
             src[i0+il:i0+2*il,i] = -1.
@@ -1636,7 +1636,7 @@ class NodesTestSuite(unittest.TestSuite):
         matrices[0] = matrices[0]*diag
         # build other matrices
         diag_dim = nsources+ica_ambiguity 
-        for i in range(1,nmat):
+        for i in xrange(1,nmat):
             # get a random symmetric matrix
             matrices[i] = mdp.utils.symrand(dim)
             # diagonalize the subspace diag_dim
@@ -1667,7 +1667,7 @@ class NodesTestSuite(unittest.TestSuite):
         dim = mdp.nodes._expanded_dim(deg, nsources)
         assert (nsources+ica_ambiguity) < dim, 'Too much ica ambiguity.'
         trials = 20
-        for trial in range(trials):
+        for trial in xrange(trials):
             # get analytical solution:
             # prepared matrices, solution for sfa, solution for isf
             covs,sfa_solution,isfa_solution=self._ISFA_analytical_solution(
@@ -1720,7 +1720,7 @@ class NodesTestSuite(unittest.TestSuite):
         # ### test 1
         v = numx.array([[0,0],[1,0],[0,1],[1,1.]])
         h = []
-        for n in range(1000):
+        for n in xrange(1000):
             prob, sample = bm.sample_h(v)
             h.append(sample)
 
@@ -1733,14 +1733,14 @@ class NodesTestSuite(unittest.TestSuite):
 
         # check sampled units
         h = numx.array(h)
-        for n in range(4):
+        for n in xrange(4):
             distr = h[:,n,:].mean(axis=0)
             assert_array_almost_equal(distr, expected_probs[n,:], 1)
 
         # ### test 2, with bias
         bm.bh -= 1e2
         h = []
-        for n in range(100):
+        for n in xrange(100):
             prob, sample = bm.sample_h(v)
             h.append(sample)
 
@@ -1753,7 +1753,7 @@ class NodesTestSuite(unittest.TestSuite):
 
         # check sampled units
         h = numx.array(h)
-        for n in range(4):
+        for n in xrange(4):
             distr = h[:,n,:].mean(axis=0)
             assert_array_almost_equal(distr, expected_probs[n,:], 1)
 
@@ -1775,7 +1775,7 @@ class NodesTestSuite(unittest.TestSuite):
         # test 1
         h = numx.array([[0,0],[1,0],[0,1],[1,1.]])
         v = []
-        for n in range(1000):
+        for n in xrange(1000):
             prob, sample = bm.sample_v(h)
             v.append(sample)
 
@@ -1788,14 +1788,14 @@ class NodesTestSuite(unittest.TestSuite):
 
         # check sampled units
         v = numx.array(v)
-        for n in range(4):
+        for n in xrange(4):
             distr = v[:,n,:].mean(axis=0)
             assert_array_almost_equal(distr, expected_probs[n,:], 1)
 
         # test 2, with bias
         bm.bv -= 1e2
         v = []
-        for n in range(1000):
+        for n in xrange(1000):
             prob, sample = bm.sample_v(h)
             v.append(sample)
 
@@ -1808,7 +1808,7 @@ class NodesTestSuite(unittest.TestSuite):
 
         # check sampled units
         v = numx.array(v)
-        for n in range(4):
+        for n in xrange(4):
             distr = v[:,n,:].mean(axis=0)
             assert_array_almost_equal(distr, expected_probs[n,:], 1)
 
@@ -1832,13 +1832,13 @@ class NodesTestSuite(unittest.TestSuite):
         # Gibbs sample to reach the equilibrium distribution
         N = 1e4
         v = numx_rand.randint(0,2,(N,I)).astype('d')
-        for k in range(100):
+        for k in xrange(100):
             if k%5==0: spinner()
             p, h = bm._sample_h(v)
             p, v = bm._sample_v(h)
 
         # see that w remains stable after learning
-        for k in range(100):
+        for k in xrange(100):
             if k%5==0: spinner()
             err = bm.train(v)
         bm.stop_training()
@@ -1858,12 +1858,12 @@ class NodesTestSuite(unittest.TestSuite):
         # never appear together
         N = 1e4
         v = numx.zeros((N,I))
-        for n in range(int(N)):
+        for n in xrange(int(N)):
             r = numx_rand.random()
             if r>0.666: v[n,:] = [0,1,0,1]
             elif r>0.333: v[n,:] = [1,0,1,0]
 
-        for k in range(1500):
+        for k in xrange(1500):
             if k%5==0: spinner()
 
             if k>5:
@@ -1885,19 +1885,19 @@ class NodesTestSuite(unittest.TestSuite):
         N = 2500
         v = numx.zeros((2*N,I))
         l = numx.zeros((2*N,L))
-        for n in range(N):
+        for n in xrange(N):
             r = numx_rand.random()
             if r>0.1:
                 v[n,:] = [1,0,1,0]
                 l[n,:] = [1,0]
-        for n in range(N):
+        for n in xrange(N):
             r = numx_rand.random()
             if r>0.1:
                 v[n,:] = [0,1,0,1]
                 l[n,:] = [1,0]
 
         x = numx.concatenate((v, l), axis=1)
-        for k in range(2500):
+        for k in xrange(2500):
             if k%5==0: spinner()
             
             if k>200:
@@ -1927,7 +1927,7 @@ class NodesTestSuite(unittest.TestSuite):
         
         def train_LRNode(inp, out, with_bias):
             lrnode = mdp.nodes.LinearRegressionNode(with_bias)
-            for i in range(len(inp)):
+            for i in xrange(len(inp)):
                 lrnode.train(inp[i], out[i])
             lrnode.stop_training()
             return lrnode
@@ -1961,7 +1961,7 @@ class NodesTestSuite(unittest.TestSuite):
         # 2. with noise, multiple sets of input
         beta = numx_rand.uniform(-10., 10., size=(indim+1, outdim))
         inp = [numx_rand.uniform(-20., 20., size=(tlen, indim))
-               for i in range(5)]
+               for i in xrange(5)]
         out = [mult(x, beta[1:,:]) + beta[0,:] +
                numx_rand.normal(size=y.shape)*0.1 for x in inp]
         lrnode = train_LRNode(inp, out, True)
@@ -2064,14 +2064,14 @@ class NodesTestSuite(unittest.TestSuite):
         grid = numx.array([grid[0].flatten(), grid[1].flatten()]).T
         # compute covariance for each point of the grid
         grid_cov = numx.zeros((grid.shape[0], dim, dim))
-        for i in range(dim):
-            for j in range(dim):
+        for i in xrange(dim):
+            for j in xrange(dim):
                 grid_cov[:,i,j] = grid[:,i]*grid[:,j]
 
         def check_mn_cov(rbf, real_covs):
             y = rbf(grid)
             # verify means, sizes
-            for i in range(n):
+            for i in xrange(n):
                 p = y[:,i]/y[:,i].sum()
                 # check mean
                 mn = (rrep(p,dim)*grid).sum(0)
@@ -2084,7 +2084,7 @@ class NodesTestSuite(unittest.TestSuite):
         def scalar_to_covs(x, n):
             if numx.isscalar(x):
                 x = [x]*n
-            return [numx.array([[x[i],0],[0,x[i]]]) for i in range(n)]
+            return [numx.array([[x[i],0],[0,x[i]]]) for i in xrange(n)]
 
         # 1: sizes is a scalar
         sizes = 0.32
@@ -2103,7 +2103,7 @@ class NodesTestSuite(unittest.TestSuite):
 
         # 4: sizes is many covariances
         sizes = [mdp.utils.symrand(numx.array([0.2, 0.4]))
-                 for i in range(n)]
+                 for i in xrange(n)]
         rbf = mdp.nodes.RBFExpansionNode(centers, sizes)
         check_mn_cov(rbf, sizes)
         

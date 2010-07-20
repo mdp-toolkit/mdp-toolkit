@@ -30,7 +30,7 @@ class TestParallelHinetNodes(unittest.TestCase):
         x = n.random.random([100,50])
         chunksize = 25
         chunks = [x[i*chunksize : (i+1)*chunksize] 
-                    for i in range(len(x)/chunksize)]
+                    for i in xrange(len(x)//chunksize)]
         while flownode.get_remaining_train_phase() > 0:
             for chunk in chunks:
                 forked_node = flownode.fork()
@@ -60,7 +60,7 @@ class TestParallelHinetNodes(unittest.TestCase):
                                                 switchboard.output_channels)
         flow = parallel.ParallelFlow([switchboard, sfa_layer])
         data_iterables = [None,
-                          [n.random.random((10, 100*100)) for _ in range(3)]]
+                          [n.random.random((10, 100*100)) for _ in xrange(3)]]
         scheduler = parallel.Scheduler()
         flow.train(data_iterables, scheduler=scheduler)
         
@@ -71,7 +71,7 @@ class TestParallelHinetNodes(unittest.TestCase):
         node3 = mdp.nodes.SFANode(input_dim=3, output_dim=1)
         layer = mdp.hinet.Layer([node1, node2, node3])
         flow = parallel.ParallelFlow([layer])
-        data_iterables = [[n.random.random((10, 30)) for _ in range(3)]]
+        data_iterables = [[n.random.random((10, 30)) for _ in xrange(3)]]
         scheduler = parallel.Scheduler()
         flow.train(data_iterables, scheduler=scheduler)
 

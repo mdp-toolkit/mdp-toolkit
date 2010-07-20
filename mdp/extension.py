@@ -196,9 +196,10 @@ class ExtensionNode(object):
       mechanism) this may lead to problems. In this case you have to be
       careful about the inheritance order and the effect on the MRO.
       
-    - call it explicitly using the im_func attribute:
-        parent_class.method.im_func(self)
-        
+    - call it explicitly using the __func__ attribute [python version < 3]:
+        parent_class.method.__func__(self)
+      or [python version >=3]:
+        parent_class.method(self)
     To call the original (pre-extension) method in the same class use you
     simply prefix the method name with '_non_extension_' (this is the value
     of the ORIGINAL_ATTR_PREFIX constant in this module).
@@ -291,7 +292,7 @@ def deactivate_extension(extension_name, verbose=False):
                 # Check if the attribute is defined by one of the super
                 # classes and test if the overwritten method is not that
                 # method, otherwise we would inject unwanted methods.
-                # Note: '==' tests identity for .im_func and .im_self,
+                # Note: '==' tests identity for .__func__ and .__self__,
                 #    but .im_class does not matter in Python 2.6.
                 if all(map(lambda x:getattr(x, attr_name, None) !=
                            original_attr, node_cls.__mro__[1:])):

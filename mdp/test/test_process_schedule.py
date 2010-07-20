@@ -15,7 +15,7 @@ class TestProcessScheduler(unittest.TestCase):
                                               n_processes=3,
                                               source_paths=None)
         max_i = 8
-        for i in range(max_i):
+        for i in xrange(max_i):
             scheduler.add_task((n.arange(0,i+1), (max_i-1-i)*1.0/4),
                                parallel.SleepSqrTestCallable())
         results = scheduler.get_results()
@@ -24,7 +24,7 @@ class TestProcessScheduler(unittest.TestCase):
         results = n.concatenate(results)
         self.assertTrue(n.all(results ==
                               n.concatenate([n.arange(0,i+1)**2
-                                             for i in range(max_i)])))
+                                             for i in xrange(max_i)])))
         
     def test_scheduler_no_cache(self):
         """Test process scheduler with caching turned off."""
@@ -32,7 +32,7 @@ class TestProcessScheduler(unittest.TestCase):
                                               n_processes=2,
                                               source_paths=None,
                                               cache_callable=False)
-        for i in range(8):
+        for i in xrange(8):
             scheduler.add_task(i, parallel.SqrTestCallable())
         results = scheduler.get_results()
         scheduler.shutdown()
@@ -56,12 +56,12 @@ class TestProcessScheduler(unittest.TestCase):
         scale_matrix = mdp.numx.diag(scales)
         train_iterables = [n.dot(mdp.numx_rand.random((5, 100, input_dim)),
                                  scale_matrix) 
-                           for _ in range(3)]
+                           for _ in xrange(3)]
         parallel_flow.train(train_iterables, scheduler=scheduler)
         x = mdp.numx.random.random((10, input_dim))
         # test that parallel execution works as well
         # note that we need more chungs then processes to test caching
-        parallel_flow.execute([x for _ in range(8)], scheduler=scheduler)
+        parallel_flow.execute([x for _ in xrange(8)], scheduler=scheduler)
         scheduler.shutdown()
         # compare to normal flow
         flow.train(train_iterables)
@@ -76,7 +76,7 @@ class TestProcessScheduler(unittest.TestCase):
                                               n_processes=2,
                                               source_paths=None,
                                               cache_callable=False)
-        for i in range(2):
+        for i in xrange(2):
             scheduler.add_task(i, parallel.MDPVersionCallable())
         out = scheduler.get_results()
         scheduler.shutdown()
@@ -85,12 +85,20 @@ class TestProcessScheduler(unittest.TestCase):
                         'the same MDP as the parent:\n%s\n--\n%s'%(out[0],
                                                                    out[1]))
 
+    def test_scheduler_shutdown(self):
+        """Test that we can properly shutdown the subprocesses"""
+        scheduler = parallel.ProcessScheduler(verbose=False,
+                                              n_processes=1,
+                                              source_paths=None,
+                                              cache_callable=False)
+        scheduler.shutdown()
+
 def get_suite(testname=None):
     # this suite just ignores the testname argument
     # you can't select tests by name here!
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(TestProcessScheduler))
     return suite
-            
+
 if __name__ == '__main__':
     unittest.main() 
