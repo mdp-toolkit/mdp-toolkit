@@ -419,9 +419,8 @@ class Flow(object):
                 mode = 'wb'
             else:
                 mode = 'w'
-            flh = open(filename, mode)
-            _cPickle.dump(self, flh, protocol)
-            flh.close()
+            with open(filename, mode) as flh:
+                _cPickle.dump(self, flh, protocol)
 
     def __call__(self, iterable, nodenr = None):
         """Calling an instance is equivalent to call its 'execute' method."""
@@ -647,8 +646,7 @@ class CheckpointSaveFunction(CheckpointFunction):
             self.mode = 'w'
 
     def __call__(self, node):
-        fid = open(self.filename, self.mode)
-        if self.stop_training:
-            node.stop_training()
-        _cPickle.dump(node, fid, self.proto)
-        fid.close()
+        with open(self.filename, self.mode) as fid:
+            if self.stop_training:
+                node.stop_training()
+            _cPickle.dump(node, fid, self.proto)
