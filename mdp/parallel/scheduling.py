@@ -131,9 +131,9 @@ class TaskCallableWrapper(TaskCallable):
     This wrapper is applied internally in Scheduler.
     """
     
-    def __init__(self, callable):
+    def __init__(self, callable_):
         """Store and wrap the callable."""
-        self._callable = callable
+        self._callable = callable_
         
     def __call__(self, data):
         """Call the internal callable with the data and return the result."""

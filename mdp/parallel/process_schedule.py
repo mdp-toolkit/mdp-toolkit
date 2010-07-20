@@ -122,7 +122,8 @@ class ProcessScheduler(Scheduler):
         if len(self._free_processes) < self._n_processes:
             raise Exception("some slave process is still working")
         for process in self._free_processes:
-            pickle.dump("EXIT", process.stdin)
+            pickle.dump(b"EXIT", process.stdin)
+            process.stdin.flush()
         self._lock.release()
         if self.verbose:
             print "scheduler shutdown"
@@ -208,25 +209,25 @@ def _process_run(cache_callable=True):
         try:
             # wait for task to arrive
             task = pickle.load(pickle_in)
-            if task == "EXIT":
+            if task == b"EXIT":
                 exit_loop = True
             else:
-                data, callable, task_index = task
-                if callable is None:
+                data, callable_, task_index = task
+                if callable_ is None:
                     if last_callable is None:
                         err = ("No callable was provided and no cached "
                                "callable is available.")
                         raise Exception(err)
-                    callable = last_callable.fork()
+                    callable_ = last_callable.fork()
                 elif cache_callable:
                     # store callable in cache
-                    last_callable = callable
-                    callable.setup_environment()
-                    callable = callable.fork()
+                    last_callable = callable_
+                    callable_.setup_environment()
+                    callable_ = callable_.fork()
                 else:
-                    callable.setup_environment()
-                result = callable(data)
-                del callable  # free memory
+                    callable_.setup_environment()
+                result = callable_(data)
+                del callable_  # free memory
                 pickle.dump(result, pickle_out, protocol=-1)
                 pickle_out.flush()
         except Exception, exception:

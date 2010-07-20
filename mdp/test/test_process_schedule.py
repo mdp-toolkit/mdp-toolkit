@@ -85,12 +85,20 @@ class TestProcessScheduler(unittest.TestCase):
                         'the same MDP as the parent:\n%s\n--\n%s'%(out[0],
                                                                    out[1]))
 
+    def test_scheduler_shutdown(self):
+        """Test that we can properly shutdown the subprocesses"""
+        scheduler = parallel.ProcessScheduler(verbose=False,
+                                              n_processes=1,
+                                              source_paths=None,
+                                              cache_callable=False)
+        scheduler.shutdown()
+
 def get_suite(testname=None):
     # this suite just ignores the testname argument
     # you can't select tests by name here!
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(TestProcessScheduler))
     return suite
-            
+
 if __name__ == '__main__':
     unittest.main() 
