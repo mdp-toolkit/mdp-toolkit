@@ -23,7 +23,22 @@ from expansion_nodes import expanded_dim as _expanded_dim
 
 # import contributed nodes
 import mdp
+
+import mdp.contrib
 from mdp.contrib import *
+
+__all__ = ['CuBICANode', 'EtaComputerNode', 'FANode', 'FDANode', 'FastICANode',
+           'GaussianClassifierNode', 'GrowingNeuralGasNode', 'HitParadeNode',
+           'ICANode', 'ISFANode', 'NoiseNode', 'NormalNoiseNode', 'IdentityNode',
+           'PCANode', 'PolynomialExpansionNode', 'QuadraticExpansionNode',
+           'RBFExpansionNode', 'RBMNode', 'RBMWithLabelsNode', 'SFA2Node',
+           'SFANode', 'TDSEPNode', 'TimeFramesNode','WhiteningNode',
+           'LinearRegressionNode', '_OneDimensionalHitParade', '_expanded_dim',
+           'CutoffNode', 'HistogramNode', 'AdaptiveCutoffNode',
+           'SignumClassifier', 'PerceptronClassifier',
+           'SimpleMarkovClassifier', 'DiscreteHopfieldClassifier',
+           'KMeansClassifier'] + mdp.contrib.__all__
+
 
 # clean up namespace
 del expansion_nodes
@@ -38,20 +53,6 @@ del isfa_nodes
 del rbm_nodes
 del regression_nodes
 del classifier_nodes
-#del mdp.contrib
+del mdp.contrib
 del mdp
 
-__all__ = ['CuBICANode', 'EtaComputerNode', 'FANode', 'FDANode', 'FastICANode',
-           'GaussianClassifierNode', 'GrowingNeuralGasNode', 'HitParadeNode',
-           'ICANode', 'ISFANode', 'JADENode', 'LLENode', 'LibSVMClassifier', 'NIPALSNode',
-           'NoiseNode', 'NormalNoiseNode', 'HLLENode', 'IdentityNode',
-           'PCANode', 'PolynomialExpansionNode', 'QuadraticExpansionNode',
-           'RBFExpansionNode',
-           'RBMNode', 'RBMWithLabelsNode', 'SFA2Node', 'SFANode', 'ShogunSVMClassifier'
-           'TDSEPNode', 'TimeFramesNode','WhiteningNode', 'XSFANode',
-           'LinearRegressionNode',
-           '_OneDimensionalHitParade', '_expanded_dim',
-           'CutoffNode', 'HistogramNode', 'AdaptiveCutoffNode',
-           'SignumClassifier', 'PerceptronClassifier',
-           'SimpleMarkovClassifier', 'DiscreteHopfieldClassifier',
-           'KMeansClassifier']
