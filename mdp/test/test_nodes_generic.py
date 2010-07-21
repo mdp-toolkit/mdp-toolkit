@@ -1,3 +1,4 @@
+import inspect
 from mdp import nodes, numx, numx_rand
 from _tools import *
 uniform = numx_rand.random
@@ -65,6 +66,33 @@ def test_dtype_consistency(klass, init_args, inp_arg_gen,
         assert out.dtype == dtype
 
 
+@id_format("{klass.__name__}")
+def test_outputdim_consistency(klass, init_args, inp_arg_gen,
+                               sup_arg_gen, execute_arg_gen):
+    inp = inp_arg_gen()
+    output_dim = inp.shape[1] // 2
+    extra = [execute_arg_gen(inp)] if execute_arg_gen else []
+
+    def _test(node):
+        _train_if_necessary(inp, node, sup_arg_gen)
+        out = node.execute(inp, *extra)
+        assert out.shape[1] == output_dim
+        assert node._output_dim == output_dim
+
+    if 'output_dim' in inspect.getargspec(klass.__init__)[0]:
+        # case 1: output dim set in the constructor
+        node = klass(*init_args, output_dim=output_dim)
+        _test(node)
+
+        # case 2: output_dim set explicitly
+        node = klass(*init_args)
+        node.output_dim = output_dim
+        _test(node)
+    else:
+        node = klass(*init_args)
+        _train_if_necessary(inp, node, sup_arg_gen)
+        out = node.execute(inp, *extra)
+        assert out.shape[1] == node.output_dim
 
 
 def SFA2Node_inp_arg_gen():
