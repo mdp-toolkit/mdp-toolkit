@@ -55,10 +55,6 @@ class BiSwitchboard(BiNode, hinet.Switchboard):
         else:
             return y, msg
 
-    def _stop_message(self, msg=None):
-        """Return the message data routed like during execution."""
-        return self._execute_msg(msg)
-
     def is_bi_training(self):
         return False
 

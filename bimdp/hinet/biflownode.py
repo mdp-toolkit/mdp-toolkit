@@ -191,7 +191,7 @@ class BiFlowNode(BiNode, hinet.FlowNode):
             if result is None:
                 return None
             # prepare execution phase
-            if isinstance(result, tuple):
+            if not isinstance(result, tuple):
                 x = result
                 msg = None
                 target = None

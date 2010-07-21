@@ -4,7 +4,7 @@ import numpy as n
 
 import mdp
 
-from bimdp import BiFlow, MSG_ID_SEP
+from bimdp import BiFlow, MSG_ID_SEP, EXIT_TARGET
 from bimdp.hinet import BiFlowNode, CloneBiLayer, BiSwitchboard
 from bimdp.nodes import SFABiNode, IdentityBiNode
 
@@ -90,7 +90,7 @@ class TestCloneBiLayer(unittest.TestCase):
     def test_use_copies_msg_flownode(self):
         """Test the correct reaction to an outgoing use_copies message."""
         stop_result = ({"clonelayer" + MSG_ID_SEP + "use_copies": True},
-                       "clonelayer")
+                       EXIT_TARGET)
         stop_sfa_node = SFABiNode(stop_result=stop_result,
                                   input_dim=10, output_dim=3)
         biflownode = BiFlowNode(BiFlow([stop_sfa_node]))
@@ -169,27 +169,6 @@ class TestBiSwitchboardNode(unittest.TestCase):
         self.assertTrue(y is None)
         self.assertTrue(target == "test")
         reference_y = n.array([[2,3,1],[5,6,4]])
-        self.assertTrue(out_msg["string"] == msg["string"])
-        self.assertTrue(out_msg["list"] == msg["list"])
-        self.assertTrue(n.all(out_msg["data"] == reference_y))
-        self.assertTrue(out_msg["data2"].shape == (3,))
-        self.assertTrue(out_msg["data3"].shape == (3,4))
-
-    def test_stop_message(self):
-        """Test the inverse routing for messages."""
-        sboard = BiSwitchboard(input_dim=3, connections=[2,0,1])
-        x = n.array([[1,2,3],[4,5,6]])
-        msg = {
-            "string": "blabla",
-            "list": [1,2],
-            "data": x,  # should be mapped by switchboard
-            "data2": n.zeros(3),  # should not be modified
-            "data3": n.zeros((3,4)),  # should not be modified
-            "target": "node123"
-        }
-        out_msg, _ = sboard.stop_message(msg)
-        reference_y = n.array([[3,1,2],[6,4,5]])
-        self.assertTrue(n.all(out_msg["data"] == reference_y))
         self.assertTrue(out_msg["string"] == msg["string"])
         self.assertTrue(out_msg["list"] == msg["list"])
         self.assertTrue(n.all(out_msg["data"] == reference_y))
