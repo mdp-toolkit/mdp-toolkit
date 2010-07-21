@@ -122,33 +122,6 @@ else:
 
 del _os, _NUMX_LABELS, _USR_LABEL, _label
 
-def lazyattrcls(cls):
-    cls._features = {}
-    for methodname in cls.__dict__:
-        method=cls.__dict__[methodname]
-        if hasattr(method,'_attr'):
-            cls._features[getattr(method,'_attr')]=methodname
-    return cls
-
-def feature(key):
-    def wrapper(func):
-        class Property(object):
-            def __get__(self, inst, instcls):
-                
-                # print "Checking for %s" % self._attr
-
-                value = func(inst)
-
-                if hasattr(value, 'module'):
-                    value.module = self._attr
-
-                setattr(inst, func.__name__, value)
-                return value
-            def __init__(self):
-                self._attr=key
-        return Property()
-    return wrapper
-
 
 class ExternalDep(object):
     def __init__(self, version=None, failmsg=None):
@@ -173,14 +146,43 @@ class ExternalDepFound(ExternalDep):
         super(ExternalDepFound, self).__init__(version=version, failmsg=None)
         self.available = True
 
-@lazyattrcls
+
+import utils
+
+__version__ = '2.6'
+__revision__ = utils.get_git_revision()
+__authors__ = 'Pietro Berkes, Rike-Benjamin Schuppner, Niko Wilbert, and Tiziano Zito'
+__copyright__ = '(c) 2003-2010 Pietro Berkes, Rike-Benjamin Schuppner, Niko Wilbert, Tiziano Zito'
+__license__ = 'LGPL v3, http://www.gnu.org/licenses/lgpl.html'
+__contact__ = 'mdp-toolkit-users@lists.sourceforge.net'
+
+
+from utils.routines import OrderedDict
+
 class Requirements(object):
-    def __getitem__(self,key):
+    def __getitem__(self, key):
+
         if key in self._features:
-            return getattr(self,self._features[key])
+            return self._features[key]
         raise KeyError("'%s'" % key)
 
-    @feature("Parallel Python")
+    def check_feature(self, feature, prop):
+        self._features[feature] = prop()
+
+    def add_info(self, feature, val):
+        self._features[feature] = val
+
+    def __init__(self):
+        self._features = OrderedDict()
+
+        self.add_info('MDP Version', __version__)
+        self.add_info('MDP Revision', __revision__)
+        self.check_feature("Numerical Backend", self.numerical_backend)
+        self.check_feature("Parallel Python", self.has_parallel_python)
+        self.check_feature("shogun", self.has_shogun)
+        self.check_feature("LibSVM", self.has_libsvm)
+        self.check_feature("Symeig Backend", self.symeig)
+    
     def has_parallel_python(self):
         try:
             import pp as __pp
@@ -188,7 +190,6 @@ class Requirements(object):
             return ExternalDepFail(msg)
         return ExternalDepFound()
 
-    @feature("shogun")
     def has_shogun(self):
         try:
             import shogun.Kernel as _sgKernel
@@ -209,20 +210,17 @@ class Requirements(object):
         if not (version.startswith('v0.9') or version.startswith('v1.')):
             return ExternalDepFail("We need at least SHOGUN version 0.9.")
         return ExternalDepFound(version)
-    
-    @feature("LibSVM")
+
     def has_libsvm(self):
         try:
             import svm as libsvm
         except ImportError as msg:
             return ExternalDepFail(msg)
         return ExternalDepFound()
-    
-    @feature("Numerical Backend")
+
     def numerical_backend(self):
         return numx_description + numx_version
 
-    @feature("Symeig Backend")
     def symeig(self):
         import utils
         # check what symeig are we using
@@ -249,7 +247,7 @@ class Requirements(object):
         return ''.join([feature+': ' + str(self[feature])+'\n' for feature in self._features])
 
 req = Requirements()
-
+print req.info()
 
 # import the utils module (used by other modules)
 # here we set scipy_emulation if needed.
@@ -289,60 +287,10 @@ import parallel
 # import test functions:
 from test import test
 
-__version__ = '2.6'
-__revision__ = utils.get_git_revision()
-__authors__ = 'Pietro Berkes, Rike-Benjamin Schuppner, Niko Wilbert, and Tiziano Zito'
-__copyright__ = '(c) 2003-2010 Pietro Berkes, Rike-Benjamin Schuppner, Niko Wilbert, Tiziano Zito'
-__license__ = 'LGPL v3, http://www.gnu.org/licenses/lgpl.html'
-__contact__ = 'mdp-toolkit-users@lists.sourceforge.net'
-
-# list of features
-__features__ = ('MDP Version', 'MDP Revision', 'Numerical Backend',
-                'Symeig Backend', 'Parallel Python Support',
-                'LibSVM', 'Shogun')
-
-
-# gather information about us
-def _info():
-    """Return dictionary containing info about MDP."""
-    # keep stuff in a dictionary
-    # as soon as odict becomes a builtin, we can keep features and
-    # info in the same ordered dictionary!
-    info = {}
-    info['MDP Version'] = __version__
-    info['MDP Revision'] = __revision__
-    # parallel python support
-    info['Parallel Python Support'] = str(hasattr(parallel, 'pp'))
-    info['LibSVM'] = str(hasattr(nodes, 'LibSVMClassifier'))
-    info ['Shogun'] = str(hasattr(nodes, 'ShogunSVMClassifier'))
-    info['Numerical Backend'] = numx_description + numx_version
-    # check what symeig are we using
-    if utils.symeig is utils.wrap_eigh:
-        SYMEIG = 'scipy.linalg.eigh'
-    else:
-        try:
-            import symeig
-            if utils.symeig is symeig.symeig:
-                SYMEIG = 'symeig'
-            elif utils.symeig is utils._symeig_fake:
-                SYMEIG = 'symeig_fake'
-            else:
-                SYMEIG = 'unknown'
-        except ImportError:
-            if utils.symeig is utils._symeig_fake:
-                SYMEIG = 'symeig_fake'
-            else:
-                SYMEIG = 'unknown'
-    info['Symeig Backend'] = SYMEIG
-    return info
-
 
 def info():
     """Return nicely formatted info about MDP."""
     import sys
-    info = _info()
-    for feature in __features__:
-        sys.stderr.write(feature+': '+info[feature]+'\n')
     sys.stderr.write(req.info())
 
 
