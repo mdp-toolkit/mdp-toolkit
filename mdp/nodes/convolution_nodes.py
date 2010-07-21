@@ -11,36 +11,58 @@ import scipy.signal as signal
 # TODO look into Theano, define TheanoConvolutionNode
 
 class Convolution2DNode(mdp.Node):
+    """Convolve input data with filter banks.
+    
+    The 'filters' argument specifies a set of 2D filters that are
+    convolved with the input data during execution. Convolution can
+    be selected to be executed by linear filtering of the data, or
+    in the frequency domain using a Discrete Fourier Transform.
+    
+    Input data can be given as 3D data, each row being a 2D array
+    to be convolved with the filters, or as 2D data, in which case
+    the 'input_shape' argument must be specified.
+    
+    This node depends on 'scipy'.
+    """
+        
     def __init__(self, filters, input_shape = None,
                  approach = 'fft',
                  mode = 'full', boundary = 'fill', fillvalue = 0,
                  output_2d = True,
                  input_dim = None, dtype = None):
-        """Convolve input data with filter banks.
-
-        Input data to execute can be given as 3D data, each row being a 2D array
-        that is convolved with the filters, or as 2D data, in which case the
-        'input_shape' argument must be specified.
-        
+        """
         Input arguments:
-
+        
+        input_shape -- Is a tuple (h,w) that corresponds to the height and
+                       width of the input 2D data. If the input data is given
+                       in a flattened format, it is first reshaped before
+                       convolution
+                       
         approach -- 'approach' is one of ['linear', 'fft']
-                    Default is 'fft'.
-                    If approach is 'fft', the 'boundary' and 'fillvalue' arguments
-                    are ignored, and are assumed to be 'fill' and 0, respectively
+                    'linear': convolution is done by linear filtering; 
+                    'fft': convoltion is done using the Fourier Transform
+                    If 'approach' is 'fft', the 'boundary' and 'fillvalue' arguments
+                    are ignored, and are assumed to be 'fill' and 0, respectively.
+                    (*Default* = 'fft')
                     
-        mode -- convolution mode, as defined in scipy.signal.convolve2d
+        mode -- Convolution mode, as defined in scipy.signal.convolve2d
                 'mode' is one of ['valid', 'same', 'full']
-                Default is 'full'
+                (*Default* = 'full')
                 
-        boundary -- 'boundary' is one of ['fill', 'wrap', 'symm']
+        boundary -- Boundary condition, as defined in scipy.signal.convolve2d
+                     'boundary' is one of ['fill', 'wrap', 'symm']
+                     (*Default* = 'fill')
+
+        fillvalue -- Value to fill pad input arrays with
+                     (*Default* = 0)
+        
         output_2d -- If True, the output array is 2D; the first index
                      corresponds to data points; every output data point
                      is the result of flattened convolution results, with
                      the output of each filter concatenated together.
                      
                      If False, the output array is 4D; the format is
-                     data[idx,filter_nr,x,y]
+                     data[idx,filter_nr,x,y], with
                      filter_nr: index of convolution filter
                      idx: data point index
                      x, y: 2D coordinates
