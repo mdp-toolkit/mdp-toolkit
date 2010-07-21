@@ -527,3 +527,47 @@ def sign_to_bool(an_array, zero=True):
         return numx.array(an_array) >= 0
     else:
         return numx.array(an_array) > 0
+
+def gabor(size, alpha, phi, freq, sgm, x0 = None, res = 1, ampl = 1.):
+    """Return a 2D array containing a Gabor wavelet.
+
+    Input arguments:
+    size -- (height, width) (pixels)
+    alpha -- orientation (rad)
+    phi -- phase (rad)
+    freq -- frequency (cycles/deg)
+    sgm -- (sigma_x, sigma_y) standard deviation along the axis
+           of the gaussian ellipse (pixel)
+    x0 -- (x,y) coordinates of the center of the wavelet (pixel)
+          Default: None, meaning the center of the array
+    res -- spatial resolution (deg/pixel)
+           Default: 1, so that 'freq' is measured in cycles/pixel
+    ampl -- constant multiplying the result
+            Default: 1.
+    """
+
+    # init
+    w, h = size
+    if x0 is None: x0 = (w//2, h//2)
+    y0, x0 = x0
+    
+    # some useful quantities
+    freq *= res
+    sinalpha = numx.sin(alpha)
+    cosalpha = numx.cos(alpha)
+    v0, u0 = freq*cosalpha, freq*sinalpha
+
+    # coordinates
+    #x = numx.mgrid[-x0:w-x0, -y0:h-y0]
+    x = numx.meshgrid(numx.arange(w)-x0, numx.arange(h)-y0)
+    x = (x[0].T, x[1].T)
+    xr = x[0]*cosalpha - x[1]*sinalpha
+    yr = x[0]*sinalpha + x[1]*cosalpha
+
+    # gabor
+    im = ampl*numx.exp(-0.5*(xr*xr/(sgm[0]*sgm[0]) + yr*yr/(sgm[1]*sgm[1]))) \
+             *numx.cos(-2.*numx.pi*(u0*x[0]+v0*x[1]) - phi)
+
+    return im
+
+

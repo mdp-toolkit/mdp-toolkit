@@ -111,7 +111,7 @@ class NodesTestSuite(unittest.TestSuite):
         unittest.TestSuite.__init__(self)
 
         # constants
-        self.mat_dim = (500,5)
+        self.mat_dim = (500,6)
         self.decimal = 7
 
         # set nodes to be tested
@@ -129,6 +129,7 @@ class NodesTestSuite(unittest.TestSuite):
 
     def _set_nodes(self):
         mn = mdp.nodes
+        # triple is (class, init_argument, random_data_function)
         self._nodes = [mn.PCANode,
                        mn.WhiteningNode,
                        mn.SFANode,
@@ -138,7 +139,8 @@ class NodesTestSuite(unittest.TestSuite):
                        mn.FastICANode,
                        mn.QuadraticExpansionNode,
                        (mn.PolynomialExpansionNode, [3], None),
-                       (mn.RBFExpansionNode, [[[0.]*5, [0.]*5], [1., 1.]], None),
+                       (mn.RBFExpansionNode,
+                        [[[0.]*self.mat_dim[1], [0.]*self.mat_dim[1]], [1., 1.]], None),
                        mn.GrowingNeuralGasExpansionNode,
                        (mn.HitParadeNode, [2, 5], None),
                        (mn.TimeFramesNode, [3, 4], None),
@@ -151,7 +153,9 @@ class NodesTestSuite(unittest.TestSuite):
                        mn.ISFANode,
                        (mn.RBMNode, [5], None),
                        (mn.RBMWithLabelsNode, [5, 1], _rand_labels_array),
-                       (mn.LinearRegressionNode, [], _rand_array_halfdim)]
+                       (mn.LinearRegressionNode, [], _rand_array_halfdim),
+                       (mn.Convolution2DNode, [numx.array([[[1.]]]),
+                                               (self.mat_dim[1]//2, 2)], None)]
 
     def _nodes_test_factory(self, methods_list=None):
         if methods_list is None:
@@ -2107,7 +2111,47 @@ class NodesTestSuite(unittest.TestSuite):
         rbf = mdp.nodes.RBFExpansionNode(centers, sizes)
         check_mn_cov(rbf, sizes)
 
+    def testConvolution2DNodeFunctionality(self):
+        filters = numx.empty((3,1,1))
+        filters[:,0,0] = [1.,2.,3.]
+        x = numx.random.random((10,3,4))
 
+        for mode in ['valid', 'same', 'full']:
+            for boundary in ['fill', 'wrap', 'symm']:
+                node = mdp.nodes.Convolution2DNode(filters, approach='linear', mode=mode,
+                                                   boundary=boundary, output_2d=False)
+                y = node.execute(x)
+                
+                assert_equal(y.shape, (x.shape[0], 3, x.shape[1], x.shape[2]))
+                for n_flt in range(3):
+                    assert_array_equal(x*(n_flt+1.), y[:,n_flt,:,:])
+
+    def testConvolution2DNode_2D3Dinput(self):
+        filters = numx.empty((3,1,1))
+        filters[:,0,0] = [1.,2.,3.]
+
+        # 1) input 2D/3D
+        x = numx.random.random((10,12))        
+        node = mdp.nodes.Convolution2DNode(filters, approach='linear',
+                                           input_shape=(3,4), output_2d=False)
+        y = node.execute(x)
+        assert_equal(y.shape, (x.shape[0], 3, 3, 4))
+        
+        x = numx.random.random((10,3,4)) 
+        node = mdp.nodes.Convolution2DNode(filters, output_2d=False)
+        y = node.execute(x)
+        assert_equal(y.shape, (x.shape[0], 3, 3, 4))
+        
+        # 2) output 2D/3D
+        x = numx.random.random((10,12))        
+        node = mdp.nodes.Convolution2DNode(filters, approach='linear',
+                                           input_shape=(3,4), output_2d=True)
+        y = node.execute(x)
+        assert_equal(y.shape, (x.shape[0], 3*3*4))
+        for i in range(3):
+            assert_array_equal(x*(i+1.), y[:,i*12:(i+1)*12])
+
+        
 def get_suite(testname=None):
     return NodesTestSuite(testname=testname)
 
