@@ -113,7 +113,8 @@ class BiFlowNode(BiNode, hinet.FlowNode):
 
         nodenr -- the index of the node to be trained
         """
-        # This method is similar to BiFlow._train_node_single_phase.
+        # This method is similar to the first part of
+        # BiFlow._train_node_single_phase.
         def _train(x, msg=None):
             target = self._get_target()
             i_node = self._flow._target_to_index(target)
@@ -178,37 +179,45 @@ class BiFlowNode(BiNode, hinet.FlowNode):
 
         nodenr -- the index of the node for which the training stops
         """
+        # This method is similar to the second part of
+        # BiFlow._train_node_single_phase.
         def _stop_training(msg=None):
             if isinstance(self._flow[nodenr], BiNode):
                 result = self._flow[nodenr].stop_training(msg)
             else:
                 # for a non-bi Node the msg is dropped
                 result = self._flow[nodenr].stop_training()
-            ## process stop_training result
-            if not result:
+            # process stop_training result
+            if result is None:
                 return None
-            elif not isinstance(result, tuple):
-                return None  # a message without target is dropped
+            # prepare execution phase
+            if isinstance(result, tuple):
+                x = result
+                msg = None
+                target = None
             elif len(result) == 2:
-                msg, target = result
-                if isinstance(target, int):
-                    i_node = nodenr + target
-                    # values of +1 and -1 beyond this flow are allowed
-                    if i_node == len(self._flow):
-                        return msg, 1
-                    elif i_node == -1:
-                        return msg, -1
-                else:
-                    i_node = self._flow._target_to_index(target, nodenr)
-                    if not isinstance(i_node, int):
-                        # target not found in this flow
-                        # this is also the exit point when EXIT_TARGET is given
-                        return msg, target
-                return self._flow._stop_message_seq(msg=msg, i_node=i_node)
+                x, msg = result
+                target = None
+            elif len(result) == 3:
+                x, msg, target = result
             else:
-                err = ("Node stop_message produced invalid return value " +
-                       "during training: " + str(result))
+                err = ("Node produced invalid return value " +
+                       "for stop_training: " + str(result))
                 raise BiFlowException(err)
+            if isinstance(target, int):
+                i_node = nodenr + target
+                # values of +1 and -1 beyond this flow are allowed
+                if i_node == len(self._flow):
+                    return x, msg, 1
+                elif i_node == -1:
+                    return x, msg, -1
+            else:
+                i_node = self._flow._target_to_index(target, nodenr)
+                if not isinstance(i_node, int):
+                    # target not found in this flow
+                    # this is also the exit point when EXIT_TARGET is given
+                    return x, msg, target
+            return self._flow._execute_seq(x, msg, i_node=i_node)
         # return the custom _stop_training function
         return _stop_training
 
@@ -223,11 +232,6 @@ class BiFlowNode(BiNode, hinet.FlowNode):
         return _stop_training_wrapper
 
     ### Special BiNode methods ###
-
-    def _stop_message(self, msg=None):
-        target = self._get_target()
-        i_node = self._flow._target_to_index(target)
-        return self._flow._stop_message_seq(msg=msg, i_node=i_node)
 
     def _bi_reset(self):
         self._last_id_request = None

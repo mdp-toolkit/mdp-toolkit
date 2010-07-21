@@ -266,7 +266,7 @@ class BiFlow(mdp.Flow):
             x, msg, target = result
         else:
             err = ("Node produced invalid return value " +
-                   "during training: " + str(result))
+                   "for stop_training: " + str(result))
             raise BiFlowException(err)
         i_node = self._target_to_index(target, nodenr)
         result = self._execute_seq(x, msg, i_node=i_node)
