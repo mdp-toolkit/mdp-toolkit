@@ -39,9 +39,10 @@ BiNode Return Value Options:
         it is not required to 'clear' the message manually).
 
  result for stop_training:
-    None -- terminates the stop_message propagation
-    (x, msg, target) -- Causes an execute like phase, which terminates if no
-        target value is available.
+    None -- Simply terminates the training, like for a normal node.
+    x, (x, msg), (x, msg, target) -- Causes an execute like phase, which
+        terminates when the end of the flow is reached or when EXIT_TARGET
+        is given as target value (just like during a normal execute phase).
 
 
 Magic message keys:
@@ -215,9 +216,9 @@ class BiNode(mdp.Node):
         """Stop training phase and start an execute phase with a target.
 
         The possible return types are None, y, (y, msg), (y, msg, target).
-        If a target value is available (either given explicitly or through
-        some magic) then this starts an execute phase that stops once no
-        target is available any more.
+        For None nothing more happens, the training phase ends like for a
+        standard MDP node.
+        If a return value is given then an excute phase is started.
 
         This template method normally calls a _stop_training method from
         self._train_seq.
@@ -490,10 +491,7 @@ def binode_coroutine(args, defaults=(), stop_message=False):
     defaults -- Tuple of default values for the arguments. If this tuple has
         n elements, they correspond to the last n elements in 'args'
         (following the convention of inspect.getargspec).
-    stop_message -- Flag to signal if this coroutine is used during the
-        stop_message phase. If this is False then the first value in 'args'
-        must be 'x'.
-
+    
     Internally there are three methods/functions:
         - The user defined function containing the original coroutine code.
           This is only stored in the decorator closure.

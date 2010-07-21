@@ -55,6 +55,9 @@ This is described in more detail in the BiNode module.
 
 # TODO: support dictionary methods like 'keys' in BiFlow? 
 
+# TODO: maybe also allow target==EXIT_TARGET during training
+#     would have to modify _train_node_single_phase
+
 # TODO: add workaround for Google Chrome issue once a solution for
 #    http://code.google.com/p/chromium/issues/detail?id=47416
 #    is in place.
