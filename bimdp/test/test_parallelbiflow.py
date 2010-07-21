@@ -22,14 +22,14 @@ class TestParallelBiNode(unittest.TestCase):
             node2 = node.fork()
             node2.train(x)
             forked_result = node2.stop_training()
-            self.assert_(forked_result == stop_result)
+            self.assert_(forked_result == (None,) + stop_result)
             # same with derived sfa2 node
             node = SFA2BiNode(stop_result=stop_result)
             mdp.activate_extension("parallel")
             node2 = node.fork()
             node2.train(x)
             forked_result = node2.stop_training()
-            self.assert_(forked_result == stop_result)
+            self.assert_(forked_result == (None,) + stop_result)
         finally:
             mdp.deactivate_extension("parallel")
 
