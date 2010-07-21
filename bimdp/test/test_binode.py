@@ -148,7 +148,7 @@ class TestBiNode(unittest.TestCase):
         self.assertTrue(train_result == None)
         self.assertTrue(bi_sfa_node.is_training())
         result = bi_sfa_node.stop_training()
-        self.assertTrue(result == stop_result)
+        self.assertTrue(result == (None,) + stop_result)
         self.assertTrue(bi_sfa_node.input_dim == 10)
         self.assertTrue(bi_sfa_node.output_dim == 10)
         self.assertTrue(bi_sfa_node.dtype == "float64")
@@ -162,52 +162,55 @@ class TestBiNode(unittest.TestCase):
         msg = {"cl": n.zeros(len(x))}
         binode.train(x, msg)
         result = binode.stop_training()
-        self.assertTrue(result == stop_result[0])
+        self.assertTrue(result == (None,) + stop_result[0])
         binode.train(x, msg)
         result = binode.stop_training()
-        self.assertTrue(result == stop_result[1])
+        self.assertTrue(result == (None,) + stop_result[1])
 
-    def test_stop_message_execute(self):
-        """Test the magic execute method argument for stop_message."""
+    def test_stop_training_execute(self):
+        """Test the magic execute method argument for stop_training."""
         class TestBiNode(BiNode):
+            def _train(self, x): pass
             def _execute(self, x, a):
                 self.a = a
                 self.x = x
                 y = n.zeros((len(x), self.output_dim))
                 return y
-            def is_trainable(self): return False
+            def is_trainable(self): return True
         binode = TestBiNode(input_dim=20, output_dim=10)
         x = n.ones((5, binode.input_dim))
+        binode.train(x)
         msg = {"x": x, "a": 13, "method": "execute"}
-        result = binode.stop_message(msg)
+        result = binode.stop_training(msg)
         self.assert_(n.all(binode.x == x))
         self.assert_(binode.x.shape == (5, binode.input_dim))
         self.assert_(binode.a == 13)
         self.assert_(len(result) == 2)
-        self.assert_(result[1] == 1)
-        self.assert_(result[0]["x"].shape == (5, binode.output_dim))
-        self.assertFalse(n.any(result[0]["x"]))
+        self.assert_(result[0].shape == (5, binode.output_dim))
+        self.assertFalse(n.any(result[0]))
 
-    def test_stop_message_inverse(self):
-        """Test the magic inverse method argument for stop_message."""
+    def test_stop_training_inverse(self):
+        """Test the magic inverse method argument for stop_training."""
         class TestBiNode(BiNode):
+            def _train(self, x): pass
             def _inverse(self, x, a):
                 self.a = a
                 self.x = x
                 y = n.zeros((len(x), self.input_dim))
                 return y
-            def is_trainable(self): return False
+            def is_trainable(self): return True
         binode = TestBiNode(input_dim=20, output_dim=10)
+        binode.train(n.ones((5, binode.input_dim)))
         x = n.ones((5, binode.output_dim))
         msg = {"x": x, "a": 13, "method": "inverse"}
-        result = binode.stop_message(msg)
+        result = binode.stop_training(msg)
         self.assert_(n.all(binode.x == x))
         self.assert_(binode.x.shape == (5, binode.output_dim))
         self.assert_(binode.a == 13)
-        self.assert_(len(result) == 2)
-        self.assert_(result[1] == -1)
-        self.assert_(result[0]["x"].shape == (5, binode.input_dim))
-        self.assertFalse(n.any(result[0]["x"]))
+        self.assert_(len(result) == 3)
+        self.assert_(result[2] == -1)
+        self.assert_(result[0].shape == (5, binode.input_dim))
+        self.assertFalse(n.any(result[0]))
 
     def test_flow_from_sum(self):
         """Test the special addition method for BiNode."""
@@ -319,24 +322,6 @@ class TestJumpBiNode(unittest.TestCase):
         self.assertTrue((rec_execute_results == execute_results))
         self.assertTrue(jumpnode.loop_counter == 4)
 
-    def test_node_bi(self):
-        """Test the message and stop_message of JumpBiNode."""
-        tmsg = {"test value": n.zeros((10))}  # test msg
-        execute_results = [(tmsg, "test", tmsg, "test"), None,
-                           (tmsg, "e3", tmsg, "e4")]
-        stop_message_results = [(tmsg, "test"), None]
-        jumpnode = JumpBiNode(
-                        execute_results=execute_results,
-                        stop_message_results=stop_message_results)
-        x = n.random.random((10,5))
-        self.assertTrue(not jumpnode.is_trainable())
-        # stop_message results
-        result = jumpnode.stop_message()
-        self.assertTrue(result == stop_message_results[0])
-        result = jumpnode.stop_message(tmsg)
-        self.assertTrue(result is None)
-        jumpnode.bi_reset()
-
 
 class TestBiNodeCoroutine(unittest.TestCase):
     """Test the coroutine decorator and the related BiNode functionality."""
@@ -349,7 +334,7 @@ class TestBiNodeCoroutine(unittest.TestCase):
             def is_trainable(self):
                 return False
 
-            @binode_coroutine(["x", "alpha", "beta"])
+            @binode_coroutine(["alpha", "beta"])
             def _execute(self, x, alpha):
                 """Blabla."""
                 x, alpha, beta = yield (x, {"alpha": alpha, "beta": 2},
@@ -374,7 +359,7 @@ class TestBiNodeCoroutine(unittest.TestCase):
             def is_trainable(self):
                 return False
 
-            @binode_coroutine(["x", "alpha", "beta"])
+            @binode_coroutine(["alpha", "beta"])
             def _execute(self, x, alpha):
                 x, alpha, beta = yield (x, {"alpha": alpha, "beta": 2},
                                         self.node_id)
@@ -397,8 +382,7 @@ class TestBiNodeCoroutine(unittest.TestCase):
             def is_trainable(self):
                 return False
 
-            @binode_coroutine(["x", "alpha", "beta"],
-                                          defaults=(7,8))
+            @binode_coroutine(["alpha", "beta"], defaults=(7,8))
             def _execute(self, x):
                 x, alpha, beta = yield (x, None, self.node_id)
                 raise StopIteration(x, {"alpha": alpha, "beta": beta})
@@ -410,39 +394,6 @@ class TestBiNodeCoroutine(unittest.TestCase):
         self.assertEqual(msg["alpha"], 7)
         self.assertEqual(msg["beta"], 8)
 
-    def test_codecorator_stop_message(self):
-        """Test codecorator functionality for stop_message phase."""
-
-        # use this class to initialize the stop_messsage phase
-        class DummyNode(BiNode):
-            def _train(self, x):
-                return None
-            def _stop_training(self, alpha):
-                return {"alpha": alpha}, 1
-
-        class CoroutineBiNode(BiNode):
-
-            def is_trainable(self):
-                return False
-
-            @binode_coroutine(["alpha", "beta"], stop_message=True)
-            def _stop_message(self, alpha):
-                alpha, beta = yield ({"alpha": alpha, "beta": 2}, self.node_id)
-                alpha, beta = yield ({"alpha": alpha+1, "beta": beta+2},
-                                     self.node_id)
-                # this data should be ignored, since no target is given
-                self.alpha = alpha
-                self.beta = beta
-                raise StopIteration()
-
-        node1 = DummyNode()
-        node2 = CoroutineBiNode(node_id="conode")
-        flow = node1 + node2
-        x = n.random.random((3,2))
-        flow.train([[x],[None]], stop_messages=[{"alpha": 3},None])
-        self.assertEqual(node2.alpha, 4)
-        self.assertEqual(node2.beta, 4)
-
     def test_codecorator_no_iteration(self):
         """Test codecorator corner case with no iterations."""
 
@@ -451,7 +402,7 @@ class TestBiNodeCoroutine(unittest.TestCase):
             def is_trainable(self):
                 return False
 
-            @binode_coroutine(["x"])
+            @binode_coroutine()
             def _execute(self, x):
                 # at least one yield must be in a coroutine
                 if False:
@@ -471,7 +422,7 @@ class TestBiNodeCoroutine(unittest.TestCase):
             def is_trainable(self):
                 return False
 
-            @binode_coroutine(["x"])
+            @binode_coroutine()
             def _execute(self, x, a, msg=None):
                 # note that the a argument is required, drop message
                 for _ in range(2):
@@ -496,7 +447,7 @@ class TestBiNodeCoroutine(unittest.TestCase):
             def is_trainable(self):
                 return False
 
-            @binode_coroutine(["x"])
+            @binode_coroutine()
             def _execute(self, x, a, msg=None):
                 if False:
                     yield

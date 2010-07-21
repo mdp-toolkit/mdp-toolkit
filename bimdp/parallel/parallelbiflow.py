@@ -8,12 +8,13 @@ encapsulate the BiFlow in the tasks.
 import itertools
 
 import mdp
+from hotshot.log import EXIT
 n = mdp.numx
 
 import mdp.parallel as parallel
 
 from bimdp import (BiFlow, BiFlowException, MessageResultContainer,
-                   BiCheckpointFlow)
+                   BiCheckpointFlow, EXIT_TARGET)
 
 from parallelbihinet import BiFlowNode
 
@@ -624,9 +625,9 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
                                     self._stop_messages[self._i_train_node])
             self._post_stop_training_hook()
             if (result is not None):
-                target = result[1]
-                # values of +1 and -1 are tolerated
-                if isinstance(target, int) and (target == 1 or target == -1):
+                target = result[2]
+                # values of +1, -1 and EXIT_TARGET are tolerated
+                if target in [1, -1, EXIT_TARGET]:
                     pass
                 else:
                     err = ("Target node not found in flow during " +

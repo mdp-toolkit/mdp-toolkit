@@ -4,7 +4,7 @@ import numpy as n
 
 import mdp
 
-from bimdp import BiFlow, MSG_ID_SEP
+from bimdp import BiFlow, MSG_ID_SEP, EXIT_TARGET
 from bimdp.parallel import (
     ParallelBiFlow, ParallelBiFlowNode, ParallelCloneBiLayer
 )
@@ -17,7 +17,7 @@ class TestCloneBiLayer(unittest.TestCase):
     def test_use_copies_msg(self):
         """Test the correct reaction to an outgoing use_copies message."""
         stop_result = ({"clonelayer" + MSG_ID_SEP + "use_copies": True},
-                       "clonelayer")
+                       EXIT_TARGET)
         stop_sfa_node = SFABiNode(stop_result=stop_result,
                                   input_dim=10, output_dim=3)
         biflownode = ParallelBiFlowNode(BiFlow([stop_sfa_node]))

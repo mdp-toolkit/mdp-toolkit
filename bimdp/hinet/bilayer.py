@@ -191,73 +191,54 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
     def _stop_training(self, msg=None):
         """Call stop_training on the internal nodes.
 
-        The outgoing message is also searched for a use_copies key, which is
-        then applied if found. If the message is then empty and is aimed at
-        this node then the stop_message propagation is terminated.
+        The outgoing result message is also searched for a use_copies key,
+        which is then applied if found.
         """
-        if not self.use_copies:
+        if self.use_copies:
+            ## have to call stop_training for each node
+            y_results = []
+            msg_results = []
+            target = None
+            node_msgs = self._get_split_messages(msg)
+            for i_node, node in enumerate(self.nodes):
+                node_msg = node_msgs[i_node]
+                if node_msg:
+                    node_result = node.stop_training(node_msg)
+                else:
+                    node_result = node.stop_training()
+                ## store result
+                if not isinstance(node_result, tuple):
+                    y_results.append(node_result)
+                else:
+                    y_results.append(node_result[0])
+                    msg_results.append(node_result[1])
+                    if len(node_result) == 3:
+                        target = node_result[2]
+            ## combine message results
+            msg = self._get_combined_message(msg_results)
+            if (not y_results) or (y_results[-1] is None):
+                y = None
+            else:
+                y = n.hstack(y_results)
+        else:  
             ## simple case of a single instance
             node_result = self.node.stop_training(msg)
             if node_result is None:
                 return None
             else:
-                msg, target = node_result
-        else:
-            ## complex case, call stop_training on all node copies
-            msgs = []
-            target = None
-            for (node, node_msg) in zip(self.nodes,
-                                        self._get_split_messages(msg)):
-                if node_msg:
-                    node_result = node.stop_training(node_msg)
-                else:
-                    node_result = node.stop_training()
-                if node_result is None:
-                    continue
-                elif isinstance(node_result, dict):
-                    msgs.append(node_result)
-                elif len(node_result) == 2:
-                    msgs.append(node_result[0])
-                    target = node_result[1]
-            msg = self._get_combined_message(msgs)
+                y, msg, target = node_result
         # check outgoing message for use_copies key
         if msg is not None:
             self._extract_message_copy_flag(msg)
-            # if the msg is now empty and if the msg was aimed at this note
-            # then abort the stop_message processing, for convenience
-            if not msg and target == self.node_id:
-                return None
-        return msg, target
+        # return result
+        if target is not None:
+            return (y, msg, target)
+        elif msg:
+            return (y, msg)
+        else:
+            return y
 
     ## BiNode methods ##
-
-    def _stop_message(self, use_copies=None, msg=None):
-        """Call stop_message on the internal nodes.
-
-        The outgoing message is also searched for a use_copies key, which is
-        then applied if found. It is not required to provide a target for this.
-        """
-        if use_copies is not None:
-            self.use_copies = use_copies
-        msgs = []
-        target = None
-        for (node, node_msg) in zip(self.nodes, self._get_split_messages(msg)):
-            node_result = node.stop_message(node_msg)
-            ## store result
-            if isinstance(node_result, dict):
-                msgs.append(node_result)
-            else:
-                msgs.append(node_result[0])
-                target = node_result[1]
-        ## combine message results
-        msg = self._get_combined_message(msgs)
-        # check outgoing message for use_copies key
-        if msg is not None:
-            self._extract_message_copy_flag(msg)
-        if target is None:
-            return msg
-        elif msg:
-            return msg
 
     def _bi_reset(self):
         """Call bi_reset on all the inner nodes."""
@@ -335,7 +316,6 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
                     # Note: the value is not copied, just referenced
                     node_msg[key] = value
         return msgs
-
 
     def _get_combined_message(self, msgs):
         """Return the combined message.

@@ -120,31 +120,33 @@ class TestBiFlow(unittest.TestCase):
                     tracelog=tracelog,
                     node_id="node_1",
                     train_results=[[None]],
-                    stop_train_results=[[None]],
-                    execute_results=[None, (None, None, "node_3")],
+                    stop_train_results=[None],
+                    execute_results=[None, (None, {"b": 2}, "node_3"),
+                                     (None, {"b": 2}, EXIT_TARGET),],
                     verbose=verbose)
         node2 = TraceJumpBiNode(
                     output_dim=1,
                     tracelog=tracelog,
                     node_id="node_2",
                     train_results=[[None]],
-                    stop_train_results=[(None, "node_1")],
-                    execute_results=[None, (None, None, "node_1")],
-                    stop_message_results=[(None, "node_1")],
+                    stop_train_results=[(None, {"b": 2}, "node_1")],
+                    execute_results=[None, (None, None, "node_1"),
+                                     (None, None, "node_1")],
                     verbose=verbose)
         node3 = TraceJumpBiNode(
                     output_dim=1,
                     tracelog=tracelog,
                     node_id="node_3",
                     train_results=[[(None, {"a": 1}, "node_2"), None]],
-                    stop_train_results=[({"a": 1}, "node_2")],
+                    stop_train_results=[(None, {"a": 1}, "node_2")],
+                    execute_results=[(None, {"b": 2}, EXIT_TARGET)],
                     verbose=verbose)
         biflow = BiFlow([node1, node2, node3])
         data_iterables = [[np.random.random((1,1)) for _ in range(2)],
                           [np.random.random((1,1)) for _ in range(2)],
                           [np.random.random((1,1)) for _ in range(2)]]
         biflow.train(data_iterables)
-        # bimdp.show_training(biflow, data_iterables, debug=True)
+        # print ",\n".join(str(log) for log in tracelog)
         # tracelog reference
         reference = [
             ('node_1', 'bi_reset'),
@@ -173,7 +175,9 @@ class TestBiFlow(unittest.TestCase):
             ('node_2', 'bi_reset'),
             ('node_3', 'bi_reset'),
             ('node_2', 'stop_training'),
-            ('node_1', 'stop_message'),
+            ('node_1', 'execute'),
+            ('node_2', 'execute'),
+            ('node_3', 'execute'),
             ('node_1', 'bi_reset'),
             ('node_2', 'bi_reset'),
             ('node_3', 'bi_reset'),
@@ -196,8 +200,8 @@ class TestBiFlow(unittest.TestCase):
             ('node_2', 'bi_reset'),
             ('node_3', 'bi_reset'),
             ('node_3', 'stop_training'),
-            ('node_2', 'stop_message'),
-            ('node_1', 'stop_message'),
+            ('node_2', 'execute'),
+            ('node_3', 'execute'),
             ('node_1', 'bi_reset'),
             ('node_2', 'bi_reset'),
             ('node_3', 'bi_reset')
