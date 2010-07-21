@@ -142,7 +142,7 @@ class ExternalDepFail(ExternalDep):
         self.available = False
 
 class ExternalDepFound(ExternalDep):
-    def __init__(self, version="unknown version"):
+    def __init__(self, version="(unknown version)"):
         super(ExternalDepFound, self).__init__(version=version, failmsg=None)
         self.available = True
 
@@ -244,7 +244,9 @@ class Requirements(object):
     
     def info(self):
         """Return nicely formatted info about MDP."""
-        return ''.join([feature+': ' + str(self[feature])+'\n' for feature in self._features])
+        maxlen = max(len(f) for f in self._features)
+        return "\n".join(["{feature:{maxlen}}: {desc!s}".format(feature=feature, desc=self[feature], maxlen=maxlen+1)
+                            for feature in self._features])
 
 req = Requirements()
 print req.info()
