@@ -25,7 +25,12 @@ def _train_if_necessary(inp, node, sup_arg_gen):
             else:
                 break
 
-# ./test_example.py
+def _stop_training_or_execute(node, inp):
+    if node.is_trainable():
+        node.stop_training()
+    else:
+        node.execute(inp)
+
 def pytest_generate_tests(metafunc):
     _generic_test_factory(NODES, metafunc)
 
@@ -93,6 +98,17 @@ def test_outputdim_consistency(klass, init_args, inp_arg_gen,
         _train_if_necessary(inp, node, sup_arg_gen)
         out = node.execute(inp, *extra)
         assert out.shape[1] == node.output_dim
+
+@id_format("{klass.__name__}")
+def test_dimdtypeset(klass, init_args, inp_arg_gen,
+                     sup_arg_gen, execute_arg_gen):
+    inp = inp_arg_gen()
+    node = klass(*init_args)
+    _train_if_necessary(inp, node, sup_arg_gen)
+    _stop_training_or_execute(node, inp)
+    assert node.output_dim is not None
+    assert node.dtype is not None
+    assert node.input_dim is not None
 
 
 def SFA2Node_inp_arg_gen():
