@@ -21,10 +21,18 @@ MIN_NUM = {numx.dtype('b'): -128,
 
 class IdentityNode(Node):
     """Return input data (useful in complex network layouts)"""
+    
     def is_trainable(self):
         False
 
     def _set_input_dim(self, n):
+        self._input_dim = n
+        self._output_dim = n
+        
+    def _set_output_dim(self, n):
+        if (self._input_dim is not None) and (self._input_dim != n):
+            err = "output_dim must be equal to input_dim for indentity nodes"
+            raise NodeException(err)
         self._input_dim = n
         self._output_dim = n
 
