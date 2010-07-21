@@ -16,7 +16,7 @@ uniform = mdp.numx_rand.random
 testtypes = [numx.dtype('d'), numx.dtype('f')]
 testtypeschar = [t.char for t in testtypes]
 testdecimals = {testtypes[0]: 12, testtypes[1]: 6}
-
+decimal = 7
 
 #### test tools
 def assert_array_almost_equal_diff(x,y,digits,err_msg=''):

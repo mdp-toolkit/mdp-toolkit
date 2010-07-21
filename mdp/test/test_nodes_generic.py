@@ -1,3 +1,4 @@
+import py.test
 import inspect
 from mdp import nodes, numx, numx_rand
 from _tools import *
@@ -47,12 +48,34 @@ def _generic_test_factory(big_nodes, metafunc):
             sup_arg_gen=None,
             execute_arg_gen=None)
         funcargs.update(nodetype)
+
+        if hasattr(metafunc.function, 'only_if_node_condition'):
+            # A TypeError can be thrown by the condition checking
+            # function (e.g. when nodetype.is_trainable() is not a staticmethod).
+            condition = metafunc.function.only_if_node_condition
+            try:
+                if not condition(nodetype['klass']):
+                    continue
+            except TypeError:
+                continue
+
         theid = metafunc.function.id_format.format(**funcargs)
         metafunc.addcall(funcargs, id=theid)
 
 def id_format(format):
+    """Specify the name of the test"""
     def f(func):
         func.id_format = format
+        return func
+    return f
+
+def only_if_node(condition):
+    """Execute the test only if condition(nodetype) is True.
+
+    If condition(nodetype) throws TypeError, just assume False.
+    """
+    def f(func):
+        func.only_if_node_condition = condition
         return func
     return f
 
@@ -110,6 +133,23 @@ def test_dimdtypeset(klass, init_args, inp_arg_gen,
     assert node.dtype is not None
     assert node.input_dim is not None
 
+@id_format("{klass.__name__}")
+@only_if_node(lambda nodetype: nodetype.is_invertible())
+def test_invertible(klass, init_args, inp_arg_gen,
+                    sup_arg_gen, execute_arg_gen):
+    inp = inp_arg_gen()
+        # take the first available dtype for the test
+    dtype = klass(*init_args).get_supported_dtypes()[0]
+    node = klass(dtype=dtype, *init_args)
+    _train_if_necessary(inp, node, sup_arg_gen)
+    extra = [execute_arg_gen(inp)] if execute_arg_gen else []
+    out = node.execute(inp, *extra)
+    # compute the inverse
+    rec = node.inverse(out)
+    # cast inp for comparison!
+    inp = inp.astype(dtype)
+    assert_array_almost_equal_diff(rec, inp, decimal-3)
+    assert rec.dtype == dtype
 
 def SFA2Node_inp_arg_gen():
     freqs = [2*numx.pi*100.,2*numx.pi*200.]
