@@ -1,23 +1,20 @@
+from _tools import *
 
-import unittest
-
-import mdp
-from mdp import numx as n
 import mdp.parallel as parallel
 import mdp.hinet as hinet
+n = numx
 
-
-class TestParallelHinetNodes(unittest.TestCase):
+class TestParallelHinetNodes():
     """Tests for ParallelFlowNode."""
 
-    def setUp(self):
+    def setup_method(self, method):
         if "parallel" in mdp.get_active_extensions():
             self.set_parallel = False
         else:
             mdp.activate_extension("parallel")
             self.set_parallel = True
 
-    def tearDown(self):
+    def teardown_method(self, method):
         if self.set_parallel:
             mdp.deactivate_extension("parallel")
 
@@ -76,12 +73,3 @@ class TestParallelHinetNodes(unittest.TestCase):
         flow.train(data_iterables, scheduler=scheduler)
 
 
-def get_suite(testname=None):
-    # this suite just ignores the testname argument
-    # you can't select tests by name here!
-    suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(TestParallelHinetNodes))
-    return suite
-
-if __name__ == '__main__':
-    unittest.main()
