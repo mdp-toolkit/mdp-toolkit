@@ -481,13 +481,15 @@ class BiNode(mdp.Node):
 
 ### Helper Functions / Decorators ###
 
-def binode_coroutine(args, defaults=(), stop_message=False):
+def binode_coroutine(args=None, defaults=(), stop_message=False):
     """Decorator for the convenient definition of BiNode couroutines.
 
     Note that this decorator should be used with the CoroutineMixin to
     guarantee correct reseting in case of an exception.
 
-    args -- List of string names of the arguments.
+    args -- List of string names of the additional arguments. Note that the
+        standard 'x' array is always given as the first value. So if n args
+        are requested the yield will return n+1 values.
     defaults -- Tuple of default values for the arguments. If this tuple has
         n elements, they correspond to the last n elements in 'args'
         (following the convention of inspect.getargspec).
@@ -505,11 +507,10 @@ def binode_coroutine(args, defaults=(), stop_message=False):
           method shadows the initialization method in the class instance
           (using an instance attribute to shadow the class attribute).
     """
-    if not stop_message and (not args or args[0] != "x"):
-        err = ("First argument value must be 'x' unless 'stop_message' is set "
-               "to True.")
-        raise Exception(err)
-    args = ["self"] + args
+    if args is None:
+        args = ["self", "x"]
+    else:
+        args = ["self", "x"] + args
     def _binode_coroutine(coroutine):
         # the original coroutine is only stored in this closure
         infodict = mdp.NodeMetaclass._function_infodict(coroutine)

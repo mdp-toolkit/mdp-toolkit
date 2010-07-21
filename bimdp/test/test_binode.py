@@ -334,7 +334,7 @@ class TestBiNodeCoroutine(unittest.TestCase):
             def is_trainable(self):
                 return False
 
-            @binode_coroutine(["x", "alpha", "beta"])
+            @binode_coroutine(["alpha", "beta"])
             def _execute(self, x, alpha):
                 """Blabla."""
                 x, alpha, beta = yield (x, {"alpha": alpha, "beta": 2},
@@ -359,7 +359,7 @@ class TestBiNodeCoroutine(unittest.TestCase):
             def is_trainable(self):
                 return False
 
-            @binode_coroutine(["x", "alpha", "beta"])
+            @binode_coroutine(["alpha", "beta"])
             def _execute(self, x, alpha):
                 x, alpha, beta = yield (x, {"alpha": alpha, "beta": 2},
                                         self.node_id)
@@ -382,8 +382,7 @@ class TestBiNodeCoroutine(unittest.TestCase):
             def is_trainable(self):
                 return False
 
-            @binode_coroutine(["x", "alpha", "beta"],
-                                          defaults=(7,8))
+            @binode_coroutine(["alpha", "beta"], defaults=(7,8))
             def _execute(self, x):
                 x, alpha, beta = yield (x, None, self.node_id)
                 raise StopIteration(x, {"alpha": alpha, "beta": beta})
@@ -395,39 +394,6 @@ class TestBiNodeCoroutine(unittest.TestCase):
         self.assertEqual(msg["alpha"], 7)
         self.assertEqual(msg["beta"], 8)
 
-    def test_codecorator_stop_message(self):
-        """Test codecorator functionality for stop_message phase."""
-
-        # use this class to initialize the stop_messsage phase
-        class DummyNode(BiNode):
-            def _train(self, x):
-                return None
-            def _stop_training(self, alpha):
-                return {"alpha": alpha}, 1
-
-        class CoroutineBiNode(BiNode):
-
-            def is_trainable(self):
-                return False
-
-            @binode_coroutine(["alpha", "beta"], stop_message=True)
-            def _stop_message(self, alpha):
-                alpha, beta = yield ({"alpha": alpha, "beta": 2}, self.node_id)
-                alpha, beta = yield ({"alpha": alpha+1, "beta": beta+2},
-                                     self.node_id)
-                # this data should be ignored, since no target is given
-                self.alpha = alpha
-                self.beta = beta
-                raise StopIteration()
-
-        node1 = DummyNode()
-        node2 = CoroutineBiNode(node_id="conode")
-        flow = node1 + node2
-        x = n.random.random((3,2))
-        flow.train([[x],[None]], stop_messages=[{"alpha": 3},None])
-        self.assertEqual(node2.alpha, 4)
-        self.assertEqual(node2.beta, 4)
-
     def test_codecorator_no_iteration(self):
         """Test codecorator corner case with no iterations."""
 
@@ -436,7 +402,7 @@ class TestBiNodeCoroutine(unittest.TestCase):
             def is_trainable(self):
                 return False
 
-            @binode_coroutine(["x"])
+            @binode_coroutine()
             def _execute(self, x):
                 # at least one yield must be in a coroutine
                 if False:
@@ -456,7 +422,7 @@ class TestBiNodeCoroutine(unittest.TestCase):
             def is_trainable(self):
                 return False
 
-            @binode_coroutine(["x"])
+            @binode_coroutine()
             def _execute(self, x, a, msg=None):
                 # note that the a argument is required, drop message
                 for _ in range(2):
@@ -481,7 +447,7 @@ class TestBiNodeCoroutine(unittest.TestCase):
             def is_trainable(self):
                 return False
 
-            @binode_coroutine(["x"])
+            @binode_coroutine()
             def _execute(self, x, a, msg=None):
                 if False:
                     yield
