@@ -18,7 +18,6 @@ from testing_tools import assert_array_almost_equal, assert_array_equal, \
      assert_almost_equal, assert_equal, assert_array_almost_equal_diff, \
      assert_type_equal
 
-mult = utils.mult
 mean = numx.mean
 std = numx.std
 normal = numx_rand.normal
@@ -1488,7 +1487,7 @@ class NodesTestSuite(unittest.TestSuite):
 
         est = fa.generate_input(100000)
         assert_array_almost_equal_diff(numx.cov(est, rowvar=0),
-                                       utils.mult(fa.A, fa.A.T), 1)
+                                       mdp.utils.mult(fa.A, fa.A.T), 1)
 
     def testISFANodeGivensRotations(self):
         ncovs = 5
