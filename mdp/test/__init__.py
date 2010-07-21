@@ -33,19 +33,21 @@ To rule this out, please run the tests more than once.
 If you get reproducible failures please report a bug!
 """
 
-test_suites = {'flows': (test_flows.get_suite, 0),
-               'utils': (test_utils.get_suite, 1),
-               'graph': (test_graph.get_suite, 2),
-               'nodes': (test_nodes.get_suite, 3),
-               'extension': (test_extension.get_suite, 4),
-               'hinet':   (test_hinet.get_suite, 5),
-               'schedule': (test_schedule.get_suite, 6),
-               'parallelnodes': (test_parallelnodes.get_suite, 7),
-               'parallelflows': (test_parallelflows.get_suite, 8),
-               'parallelhinet': (test_parallelhinet.get_suite, 9),
-               'process_schedule': (test_process_schedule.get_suite, 10),
-               'contrib': (test_contrib.get_suite, 11),
-               'classifier': (test_classifier.get_suite, 12)}
+test_suites = {}
+
+## {'flows': (test_flows.get_suite, 0),
+##                'utils': (test_utils.get_suite, 1),
+##                'graph': (test_graph.get_suite, 2),
+##                'nodes': (test_nodes.get_suite, 3),
+##                'extension': (test_extension.get_suite, 4),
+##                'hinet':   (test_hinet.get_suite, 5),
+##                'schedule': (test_schedule.get_suite, 6),
+##                'parallelnodes': (test_parallelnodes.get_suite, 7),
+##                'parallelflows': (test_parallelflows.get_suite, 8),
+##                'parallelhinet': (test_parallelhinet.get_suite, 9),
+##                'process_schedule': (test_process_schedule.get_suite, 10),
+##                'contrib': (test_contrib.get_suite, 11),
+##                'classifier': (test_classifier.get_suite, 12)}
 
 
 def test(suitename = 'all', verbosity = 2, seed = None, testname = None):
