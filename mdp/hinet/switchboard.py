@@ -64,7 +64,8 @@ class Switchboard(mdp.Node):
     def _execute(self, x):
         return x[:, self.connections]
 
-    def is_trainable(self):
+    @staticmethod
+    def is_trainable():
         return False
 
     @staticmethod

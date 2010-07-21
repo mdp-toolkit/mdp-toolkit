@@ -121,8 +121,7 @@ class Layer(mdp.Node):
                 return True
         return False
 
-    @staticmethod
-    def is_invertible():
+    def is_invertible(self):
         for node in self.nodes:
             if not node.is_invertible():
                 return False

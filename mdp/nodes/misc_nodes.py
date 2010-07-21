@@ -21,7 +21,8 @@ MIN_NUM = {numx.dtype('b'): -128,
 
 class IdentityNode(Node):
     """Return input data (useful in complex network layouts)"""
-    def is_trainable(self):
+    @staticmethod
+    def is_trainable():
         False
 
     def _set_input_dim(self, n):
@@ -229,7 +230,8 @@ class TimeFramesNode(Node):
         """Return the list of dtypes supported by this node."""
         return ['int8', 'int16', 'int32', 'int64', 'float32', 'float64']
 
-    def is_trainable(self):
+    @staticmethod
+    def is_trainable():
         return False
 
     @staticmethod
@@ -435,7 +437,8 @@ class NoiseNode(Node):
         return (mdp.utils.get_dtypes('AllFloat') +
                 mdp.utils.get_dtypes('AllInteger'))
 
-    def is_trainable(self):
+    @staticmethod
+    def is_trainable():
         return False
 
     @staticmethod
@@ -495,7 +498,8 @@ class NormalNoiseNode(mdp.Node):
                                               dtype=dtype)
         self.noise_args = noise_args
 
-    def is_trainable(self):
+    @staticmethod
+    def is_trainable():
         return False
 
     @staticmethod
@@ -669,7 +673,8 @@ class CutoffNode(mdp.Node):
         self.lower_bound = lower_bound
         self.upper_bound = upper_bound
 
-    def is_trainable(self):
+    @staticmethod
+    def is_trainable():
         return False
 
     @staticmethod

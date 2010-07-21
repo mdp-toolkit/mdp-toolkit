@@ -165,9 +165,9 @@ class BiNode(mdp.Node):
         result = method(x, **arg_dict)
         return self._combine_execute_result(result, msg, target)
 
-    def is_trainable(self):
-        """Return the return value from super."""
-        return super(BiNode, self).is_trainable()
+    @staticmethod
+    def is_trainable():
+        return super(BiNode).is_trainable()
 
     def train(self, x, msg=None):
         """Train and return None or more if the execution should continue.

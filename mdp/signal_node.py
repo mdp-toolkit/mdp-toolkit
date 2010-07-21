@@ -380,7 +380,8 @@ class Node(object):
             return 0
 
     ### Node capabilities
-    def is_trainable(self):
+    @staticmethod
+    def is_trainable():
         """Return True if the node can be trained, False otherwise."""
         return True
 

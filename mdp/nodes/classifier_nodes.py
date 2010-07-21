@@ -8,7 +8,8 @@ import itertools
 class SignumClassifier(ClassifierNode):
     """This classifier node classifies as 1, if the sum of the data points is
     positive and as -1, if the data point is negative"""
-    def is_trainable(self):
+    @staticmethod
+    def is_trainable():
         return False
 
     def _label(self, x):

@@ -21,7 +21,8 @@ def _sigmoid(t):
     return 1.0 / (1.0 + numx.exp(-t))
 
 class _BogusClassifier(ClassifierNode):
-    def is_trainable(self):
+    @staticmethod
+    def is_trainable():
         return False
     def _label(self, x):
         return [r[0] for r in self.rank(x)]

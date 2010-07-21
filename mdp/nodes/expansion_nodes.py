@@ -21,7 +21,8 @@ class _ExpansionNode(mdp.Node):
     def expanded_dim(self, dim):
         return dim
 
-    def is_trainable(self):
+    @staticmethod
+    def is_trainable():
         return False
 
     @staticmethod
@@ -132,7 +133,8 @@ class RBFExpansionNode(mdp.Node):
         """Return the list of dtypes supported by this node."""
         return mdp.utils.get_dtypes('AllFloat')
 
-    def is_trainable(self):
+    @staticmethod
+    def is_trainable():
         return False
 
     @staticmethod
@@ -240,7 +242,8 @@ class GrowingNeuralGasExpansionNode(GrowingNeuralGasNode):
         msg = "Output dim cannot be set explicitly!"
         raise mdp.NodeException(msg)
 
-    def is_trainable(self):
+    @staticmethod
+    def is_trainable():
         return True
 
     @staticmethod

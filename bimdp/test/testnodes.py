@@ -36,7 +36,7 @@ class JumpBiNode(IdentityBiNode):
         self._stop_message_results = stop_message_results
         super(JumpBiNode, self).__init__(*args, **kwargs)
 
-    def is_trainable(self):
+    def is_trainable():
         if self._train_results:
             return True
         else:
@@ -167,5 +167,6 @@ class ParallelTraceJumpBiNode(TraceJumpBiNode):
 class IdNode(mdp.Node):
     """Non-bi identity node for testing."""
 
-    def is_trainable(self):
+    @staticmethod
+    def is_trainable():
         return False

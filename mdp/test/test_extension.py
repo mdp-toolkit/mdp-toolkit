@@ -317,6 +317,7 @@ def test_caching_extension():
             super(SideEffectNode, self).__init__()
             self.count = 0
 
+        @staticmethod
         def is_trainable(self):
             return False
 

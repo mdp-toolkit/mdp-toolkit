@@ -28,7 +28,8 @@ testdecimals = {testtypes[0]: 12, testtypes[1]: 6}
 
 
 class _BogusNode(mdp.Node):
-    def is_trainable(self): return 0
+    @staticmethod
+    def is_trainable(): return False
     def _execute(self,x): return 2*x
     def _inverse(self,x): return 0.5*x
 
