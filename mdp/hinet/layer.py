@@ -116,16 +116,10 @@ class Layer(mdp.Node):
         return list(types)
 
     def is_trainable(self):
-        for node in self.nodes:
-            if node.is_trainable():
-                return True
-        return False
+        return any(node.is_trainable() for node in self.nodes)
 
     def is_invertible(self):
-        for node in self.nodes:
-            if not node.is_invertible():
-                return False
-        return True
+        return all(node.is_invertible() for node in self.nodes)
 
     def _get_train_seq(self):
         """Return the train sequence.
