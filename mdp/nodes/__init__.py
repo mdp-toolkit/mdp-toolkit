@@ -3,7 +3,8 @@ from sfa_nodes import SFANode, SFA2Node
 from ica_nodes import ICANode, CuBICANode, FastICANode, TDSEPNode
 from neural_gas_nodes import GrowingNeuralGasNode
 from expansion_nodes import (QuadraticExpansionNode, PolynomialExpansionNode,
-                             RBFExpansionNode, GrowingNeuralGasExpansionNode)
+                             RBFExpansionNode, GrowingNeuralGasExpansionNode,
+                             ConstantExpansionNode)
 from fda_nodes import FDANode
 from em_nodes import FANode
 from misc_nodes import (IdentityNode, HitParadeNode, TimeFramesNode,
@@ -54,4 +55,4 @@ __all__ = ['CuBICANode', 'EtaComputerNode', 'FANode', 'FDANode', 'FastICANode',
            'CutoffNode', 'HistogramNode', 'AdaptiveCutoffNode',
            'SignumClassifier', 'PerceptronClassifier',
            'SimpleMarkovClassifier', 'DiscreteHopfieldClassifier',
-           'KMeansClassifier']
+           'KMeansClassifier', 'ConstantExpansionNode']
