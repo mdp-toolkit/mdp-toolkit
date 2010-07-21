@@ -147,10 +147,10 @@ class ExternalDepFound(ExternalDep):
         self.available = True
 
 
-import utils
+from utils import get_git_revision
 
 __version__ = '2.6'
-__revision__ = utils.get_git_revision()
+__revision__ = get_git_revision()
 __authors__ = 'Pietro Berkes, Rike-Benjamin Schuppner, Niko Wilbert, and Tiziano Zito'
 __copyright__ = '(c) 2003-2010 Pietro Berkes, Rike-Benjamin Schuppner, Niko Wilbert, Tiziano Zito'
 __license__ = 'LGPL v3, http://www.gnu.org/licenses/lgpl.html'
@@ -316,3 +316,4 @@ __all__ = ['CheckpointFlow', 'CheckpointFunction', 'CheckpointSaveFunction',
            'ClassifierNode',
            'req',
            ]
+
