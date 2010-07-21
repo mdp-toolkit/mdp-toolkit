@@ -4,25 +4,35 @@ import scipy.signal as signal
 
 # TODO dependency on scipy.signal
 
-# TODO mode is read-only
-
-# TODO FFT convolution
-
 # TODO automatic selection of convolution
 
 # TODO provide generators for standard filters
 
+# TODO look into Theano, define TheanoConvolutionNode
+
 class Convolution2DNode(mdp.Node):
     def __init__(self, filters, input_shape = None,
+                 approach = 'fft',
                  mode = 'full', boundary = 'fill', fillvalue = 0,
                  output_2d = True,
                  input_dim = None, dtype = None):
-        """
+        """Convolve input data with filter banks.
+
+        Input data to execute can be given as 3D data, each row being a 2D array
+        that is convolved with the filters, or as 2D data, in which case the
+        'input_shape' argument must be specified.
+        
         Input arguments:
 
+        approach -- 'approach' is one of ['linear', 'fft']
+                    Default is 'fft'.
+                    If approach is 'fft', the 'boundary' and 'fillvalue' arguments
+                    are ignored, and are assumed to be 'fill' and 0, respectively
+                    
         mode -- convolution mode, as defined in scipy.signal.convolve2d
                 'mode' is one of ['valid', 'same', 'full']
                 Default is 'full'
+                
         boundary -- 'boundary' is one of ['fill', 'wrap', 'symm']
         output_2d -- If True, the output array is 2D; the first index
                      corresponds to data points; every output data point
@@ -37,14 +47,65 @@ class Convolution2DNode(mdp.Node):
         """
         super(Convolution2DNode, self).__init__(input_dim=input_dim,
                                               dtype=dtype)
-        # TODO: check dtype of filters, 2D shape
+        
         self.filters = filters
-        self.input_shape = input_shape
-        self.mode = mode
+        
+        self._input_shape = input_shape
+        
+        if approach not in ['linear', 'fft']:
+            raise NodeException("'approach' argument must be one of ['linear', 'fft']")
+        self._approach = approach
+
+        if mode not in ['valid', 'same', 'full']:
+            raise NodeException("'mode' argument must be one of ['valid', 'same', 'full']")
+        self._mode = mode
+        
         self.boundary = boundary
         self.fillvalue = fillvalue
         self.output_2d = output_2d
-        self.output_shape = None
+        self._output_shape = None
+
+    # ------- class properties
+    def get_filters(self):
+        return self._filters
+
+    def set_filters(self, filters):
+        if not isinstance(filters, numx.ndarray):
+            raise NodeException("'filters' argument must be a numpy array")
+        if filters.ndim != 3:
+            raise NodeException('Filters must be specified in a 3-dim array, with each '+
+                                'filter on a different row')
+        self._filters = filters
+
+    filters = property(get_filters, set_filters)
+
+    def get_boundary(self):
+        return self._boundary
+
+    def set_boundary(self, boundary):
+        if boundary not in ['fill', 'wrap', 'symm']:
+            raise NodeException(
+                "'boundary' argument must be one of ['fill', 'wrap', 'symm']")
+        self._boundary = boundary
+
+    boundary = property(get_boundary, set_boundary)
+
+    @property
+    def input_shape(self):
+        return self._input_shape
+
+    @property
+    def approach(self):
+        return self._approach
+
+    @property
+    def mode(self):
+        return self._mode
+
+    @property
+    def output_shape(self):
+        return self._output_shape
+    # ------- /class properties
 
     def is_trainable(self):
         return False
@@ -63,29 +124,23 @@ class Convolution2DNode(mdp.Node):
         convolution we use (padding, full, ...). Also, we want to
         to be able to accept 3D arrays.
         """
-
-        self._check_input(x)
-        
-        # TODO set output_dim automatically
-
-    def _check_input(self, x):
         # check input rank
         if not x.ndim in [2,3]:
             error_str = "x has rank %d, should be 2 or 3" % (x.ndim)
             raise NodeException(error_str)
 
         # set 2D shape if necessary
-        if self.input_shape is None:
+        if self._input_shape is None:
             if x.ndim == 2:
                 error_str = "Cannot infer 2D shape from 1D data points. " + \
                             "Data must have rank 3, or shape argument given."
                 raise NodeException(error_str)
             else:
-                self.input_shape = x.shape[1:]
+                self._input_shape = x.shape[1:]
 
         # set the input dimension if necessary
         if self.input_dim is None:
-            self.input_dim = numx.prod(self.input_shape)
+            self.input_dim = numx.prod(self._input_shape)
 
         # set the dtype if necessary
         if self.dtype is None:
@@ -102,23 +157,22 @@ class Convolution2DNode(mdp.Node):
             input_shape = self.input_shape
             filters_shape = self.filters.shape
             if self.mode == 'same':
-                self.output_shape = input_shape
+                self._output_shape = input_shape
             elif self.mode == 'full':
-                self.output_shape = (input_shape[0]+filters_shape[1]-1,
-                                     input_shape[1]+filters_shape[2]-1)
+                self._output_shape = (input_shape[0]+filters_shape[1]-1,
+                                      input_shape[1]+filters_shape[2]-1)
             else: # mode == 'valid'
-                self.output_shape = (input_shape[0]-filters_shape[1]+1,
-                                     input_shape[1]-filters_shape[2]+1)
-            self.output_dim = self.filters.shape[0]*numx.prod(self.output_shape)
+                self._output_shape = (input_shape[0]-filters_shape[1]+1,
+                                      input_shape[1]-filters_shape[2]+1)
+            self.output_dim = self.filters.shape[0]*numx.prod(self._output_shape)
 
         if x.shape[0] == 0:
             error_str = "x must have at least one observation (zero given)"
             raise NodeException(error_str)
 
-
     def _execute(self, x):
         is_2d = x.ndim==2
-        output_shape, input_shape = self.output_shape, self.input_shape
+        output_shape, input_shape = self._output_shape, self._input_shape
         filters = self.filters
         nfilters = filters.shape[0]
 
@@ -129,10 +183,13 @@ class Convolution2DNode(mdp.Node):
             if is_2d:
                 im = im.reshape(input_shape)
             for n_flt, flt in enumerate(filters):
-                y[n_im,n_flt,:,:] = signal.convolve2d(im, flt,
-                                                      mode=self.mode,
-                                                      boundary=self.boundary,
-                                                      fillvalue=self.fillvalue)
+                if self.approach == 'fft':
+                    y[n_im,n_flt,:,:] = signal.fftconvolve(im, flt, mode=self.mode)
+                elif self.approach == 'linear':
+                    y[n_im,n_flt,:,:] = signal.convolve2d(im, flt,
+                                                          mode=self.mode,
+                                                          boundary=self.boundary,
+                                                          fillvalue=self.fillvalue)
                 
         # reshape if necessary
         if self.output_2d:

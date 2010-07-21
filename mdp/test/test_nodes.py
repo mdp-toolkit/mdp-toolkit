@@ -2118,7 +2118,7 @@ class NodesTestSuite(unittest.TestSuite):
 
         for mode in ['valid', 'same', 'full']:
             for boundary in ['fill', 'wrap', 'symm']:
-                node = mdp.nodes.Convolution2DNode(filters, mode=mode,
+                node = mdp.nodes.Convolution2DNode(filters, approach='linear', mode=mode,
                                                    boundary=boundary, output_2d=False)
                 y = node.execute(x)
                 
@@ -2132,7 +2132,8 @@ class NodesTestSuite(unittest.TestSuite):
 
         # 1) input 2D/3D
         x = numx.random.random((10,12))        
-        node = mdp.nodes.Convolution2DNode(filters, input_shape=(3,4), output_2d=False)
+        node = mdp.nodes.Convolution2DNode(filters, approach='linear',
+                                           input_shape=(3,4), output_2d=False)
         y = node.execute(x)
         assert_equal(y.shape, (x.shape[0], 3, 3, 4))
         
@@ -2143,7 +2144,8 @@ class NodesTestSuite(unittest.TestSuite):
         
         # 2) output 2D/3D
         x = numx.random.random((10,12))        
-        node = mdp.nodes.Convolution2DNode(filters, input_shape=(3,4), output_2d=True)
+        node = mdp.nodes.Convolution2DNode(filters, approach='linear',
+                                           input_shape=(3,4), output_2d=True)
         y = node.execute(x)
         assert_equal(y.shape, (x.shape[0], 3*3*4))
         for i in range(3):
