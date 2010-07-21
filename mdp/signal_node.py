@@ -384,7 +384,8 @@ class Node(object):
         """Return True if the node can be trained, False otherwise."""
         return True
 
-    def is_invertible(self):
+    @staticmethod
+    def is_invertible():
         """Return True if the node can be inverted, False otherwise."""
         return True
 

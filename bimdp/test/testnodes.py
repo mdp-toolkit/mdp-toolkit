@@ -42,7 +42,8 @@ class JumpBiNode(IdentityBiNode):
         else:
             return False
 
-    def is_invertible(self):
+    @staticmethod
+    def is_invertible():
         return False
 
     def _get_train_seq(self):

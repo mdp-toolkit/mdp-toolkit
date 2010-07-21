@@ -302,7 +302,8 @@ class LLENode(Cumulator):
     def is_trainable(self):
         return True
 
-    def is_invertible(self):
+    @staticmethod
+    def is_invertible():
         return False
 
 

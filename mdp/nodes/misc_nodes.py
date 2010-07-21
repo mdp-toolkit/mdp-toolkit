@@ -232,7 +232,8 @@ class TimeFramesNode(Node):
     def is_trainable(self):
         return False
 
-    def is_invertible(self):
+    @staticmethod
+    def is_invertible():
         return False
 
     def _set_input_dim(self, n):
@@ -437,7 +438,8 @@ class NoiseNode(Node):
     def is_trainable(self):
         return False
 
-    def is_invertible(self):
+    @staticmethod
+    def is_invertible():
         return False
 
     def _execute(self, x):
@@ -496,7 +498,8 @@ class NormalNoiseNode(mdp.Node):
     def is_trainable(self):
         return False
 
-    def is_invertible(self):
+    @staticmethod
+    def is_invertible():
         return False
 
     def _execute(self, x):
@@ -531,7 +534,8 @@ class GaussianClassifierNode(ClassifierNode):
         """Return the list of dtypes supported by this node."""
         return ['float32', 'float64']
 
-    def is_invertible(self):
+    @staticmethod
+    def is_invertible():
         return False
 
     def _check_train_args(self, x, labels):
@@ -668,7 +672,8 @@ class CutoffNode(mdp.Node):
     def is_trainable(self):
         return False
 
-    def is_invertible(self):
+    @staticmethod
+    def is_invertible():
         return False
 
     def _execute(self, x):

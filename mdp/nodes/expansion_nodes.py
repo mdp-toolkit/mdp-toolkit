@@ -24,7 +24,8 @@ class _ExpansionNode(mdp.Node):
     def is_trainable(self):
         return False
 
-    def is_invertible(self):
+    @staticmethod
+    def is_invertible():
         return False
 
     def _set_input_dim(self, n):
@@ -134,7 +135,8 @@ class RBFExpansionNode(mdp.Node):
     def is_trainable(self):
         return False
 
-    def is_invertible(self):
+    @staticmethod
+    def is_invertible():
         return False
 
     def _init_RBF(self, centers, sizes):
@@ -241,7 +243,8 @@ class GrowingNeuralGasExpansionNode(GrowingNeuralGasNode):
     def is_trainable(self):
         return True
 
-    def is_invertible(self):
+    @staticmethod
+    def is_invertible():
         return False
 
     def _stop_training(self):

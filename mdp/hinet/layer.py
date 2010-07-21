@@ -121,7 +121,8 @@ class Layer(mdp.Node):
                 return True
         return False
 
-    def is_invertible(self):
+    @staticmethod
+    def is_invertible():
         for node in self.nodes:
             if not node.is_invertible():
                 return False
@@ -294,7 +295,8 @@ class SameInputLayer(Layer):
                                     output_dim=output_dim,
                                     dtype=dtype)
 
-    def is_invertible(self):
+    @staticmethod
+    def is_invertible():
         return False
 
     def _train(self, x, *args, **kwargs):

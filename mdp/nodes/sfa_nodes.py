@@ -157,7 +157,8 @@ class SFA2Node(SFANode):
                                                          dtype=dtype)
         super(SFA2Node, self).__init__(input_dim, output_dim, dtype)
 
-    def is_invertible(self):
+    @staticmethod
+    def is_invertible():
         """Return True if the node can be inverted, False otherwise."""
         return False
 
