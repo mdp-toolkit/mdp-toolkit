@@ -38,10 +38,10 @@ BiNode Return Value Options:
         If the result has the form (None, msg) then the msg is dropped (so
         it is not required to 'clear' the message manually).
 
- result for stop_training and stop_message:
+ result for stop_training:
     None -- terminates the stop_message propagation
-    (msg, target) -- If no target is specified then the remaining msg is
-        dropped (terminates the propagation).
+    (x, msg, target) -- Causes an execute like phase, which terminates if no
+        target value is available.
 
 
 Magic message keys:
@@ -69,15 +69,6 @@ keywords are treated in a special way:
       If 'inverse' is given then the inverse dimension check will be performed
       and if no target is provided it will be set to -1.
 
-  'method' in stop_message -- To make it possible to call 'execute' and
-      'inverse' in 'stop_message' there is some magic going on if these are
-      specified as message arguments: In addition to the normal automatic
-      extraction of an 'x' key from the message the array output of the node
-      is also stored back as 'x' in the message (overwriting the previous
-      value). Additionally the target is given a default value of 1 or -1
-      (so setting the 'method' value is sufficient for normal execution
-      or inverse).
-
 """
 
 import inspect
@@ -86,10 +77,6 @@ import mdp
 
 # separator for node_id in message keys
 MSG_ID_SEP = "->"
-
-# methods that can overwrite docs:
-if '_stop_message' not in mdp.NodeMetaclass.DOC_METHODS:
-    mdp.NodeMetaclass.DOC_METHODS.append('_stop_message')
 
 
 class BiNodeException(mdp.NodeException):
@@ -117,10 +104,12 @@ class BiNode(mdp.Node):
         """Initialize BiNode.
 
         node_id -- None or string which identifies the node.
-        stop_result -- A (msg, target) tupple which is used as the result for
-            stop_training (but can be overwritten by any actual results).
-            If the node has multiple training phases then this must be None or
-            an iterable with one entry for each training phase.
+        stop_result -- A (msg, target) tupple which is used by stop_training.
+            If _stop_training returns a result as well then is updates /
+            overwrites the stop_result, otherwise simply stop_result is
+            returned (with x set to None).
+            If the node has multiple training phases then stop_result must be
+            None or an iterable with one entry for each training phase.
 
         kwargs are forwarded via super to the next __init__ method
         in the MRO.
@@ -163,7 +152,7 @@ class BiNode(mdp.Node):
             elif method == self._inverse:
                 self._pre_inversion_checks(x)
         result = method(x, **arg_dict)
-        return self._combine_execute_result(result, msg, target)
+        return self._combine_result(result, msg, target)
 
     def is_trainable(self):
         """Return the return value from super."""
@@ -215,7 +204,7 @@ class BiNode(mdp.Node):
         result = method(x, **arg_dict)
         if result is None:
             return None
-        result = self._combine_execute_result(result, msg, target)
+        result = self._combine_result(result, msg, target)
         if (isinstance(result, tuple) and len(result) == 2 and
             result[0] is None):
             # drop the remaining msg, so that no maual clearing is required
@@ -223,17 +212,19 @@ class BiNode(mdp.Node):
         return result
 
     def stop_training(self, msg=None):
-        """Stop training phase and return None or (msg, target).
+        """Stop training phase and start an execute phase with a target.
 
-        The result tuple is then used to call stop_message on the target node.
-        The outgoing msg carries forward the incoming message content.
+        The possible return types are None, y, (y, msg), (y, msg, target).
+        If a target value is available (either given explicitly or through
+        some magic) then this starts an execute phase that stops once no
+        target is available any more.
 
-        This template method calls a _stop_training method from self._train_seq.
-        Note that it is not possible to select other methods via the 'method'
-        message key.
+        This template method normally calls a _stop_training method from
+        self._train_seq.
 
         If a stop_result was given in __init__ then it is used but can be
-        overwritten by the _stop_training result.
+        overwritten by the returned _stop_training result or by the 
+        msg argument provided by the BiFlow.
         """
         # basic checks
         if self.is_training() and self._train_phase_started == False:
@@ -274,68 +265,7 @@ class BiNode(mdp.Node):
             msg = stored_msg
             if target is None:
                 target = stored_stop_result[1]
-        return self._combine_stop_message_result(result, msg, target)
-
-    ### New methods for node messaging. ###
-
-    def stop_message(self, msg=None):
-        """Receive message and return None, msg or (msg, target).
-
-        If the return value is (msg, target) then stop_message(msg) is called
-        on the target node.
-
-        This template method calls the _stop_message method or another method
-        specified in the method. If the specified method is specified as
-        'execute' or 'inverse' then the x/y return value is extracted and
-        stored in the message under the key 'x' and the target defaults to
-        1 or -1 (so setting the 'method' value is sufficient for normal
-        execution or inverse).
-        """
-        if not msg:
-            return self._stop_message()
-        msg_id_keys = self._get_msg_id_keys(msg)
-        target = self._extract_message_key("target", msg, msg_id_keys)
-        method_name = self._extract_message_key("method", msg, msg_id_keys)
-        method, target = self._get_method(method_name, self._stop_message,
-                                          target)
-        if method_name == "execute" and target is None:
-            # use 1 as default target for execution, note that in order to
-            # terminate the execution one therefore has to call another method,
-            # for inverse the -1 target is already provided by _get_method
-            target = 1
-        # TODO: perform dimensionality checks for execute/inverse?
-        msg, arg_dict = self._extract_method_args(method, msg, msg_id_keys)
-        result = method(**arg_dict)
-        if method_name == "execute" or method_name == "inverse":
-            ## magic to add array result back to message
-            if result is not None:
-                if isinstance(result, tuple):
-                    x = result[0]
-                    if result[1] is not None:
-                        # result[1] must be dict
-                        result[1]["x"] = x
-                        if len(result) > 2:
-                            result = result[1:]
-                        else:
-                            result = result[1]
-                    else:
-                        if len(result) > 2:
-                            result = ({"x": x}, result[2])
-                        else:
-                            result = {"x": x}
-                else:
-                    # result must be single x value
-                    result = {"x": result}
-        return self._combine_stop_message_result(result, msg, target)
-
-    def _stop_message(self):
-        """Hook method, overwrite when needed.
-
-        This default implementation only raises an exception.
-        """
-        err = ("This node (%s) does not support calling stop_message." %
-               str(self))
-        raise BiNodeException(err)
+        return self._combine_result(result, msg, target)
 
     ## Additional new methods. ##
 
@@ -479,39 +409,7 @@ class BiNode(mdp.Node):
         return method, target
 
     @staticmethod
-    def _combine_stop_message_result(result, msg, target):
-        """Combine the message result with the provided values.
-
-        result -- None, msg or (msg, target)
-
-        The values in result always have priority.
-        If not target is available then the remaining message is dropped.
-        """
-        if not result:
-            if target is not None:
-                return (msg, target)
-            else:
-                return None
-        elif not isinstance(result, tuple):
-            # result has not target, terminate stop_message propagation
-            if target is None:
-                return None
-            if msg:
-                msg.update(result)
-            else:
-                msg = result
-            return (msg, target)
-        else:
-            # result contains target value
-            if msg:
-                if result[0]:
-                    msg.update(result[0])
-                return msg, result[1]
-            else:
-                return result
-
-    @staticmethod
-    def _combine_execute_result(result, msg, target):
+    def _combine_result(result, msg, target):
         """Combine the execution result with the provided values.
 
         result -- x, (x, msg) or (x, msg, target)

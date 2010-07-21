@@ -14,8 +14,7 @@ class JumpBiNode(IdentityBiNode):
     """
 
     def __init__(self, train_results=None, stop_train_results=None,
-                 execute_results=None, stop_message_results=None,
-                 *args, **kwargs):
+                 execute_results=None, *args, **kwargs):
         """Initialize this BiNode.
 
         Note that this node has an internal variable self.loop_counter which is
@@ -33,7 +32,6 @@ class JumpBiNode(IdentityBiNode):
         self._train_results = train_results
         self._stop_train_results = stop_train_results
         self._execute_results = execute_results
-        self._stop_message_results = stop_message_results
         super(JumpBiNode, self).__init__(*args, **kwargs)
 
     def is_trainable(self):
@@ -82,15 +80,6 @@ class JumpBiNode(IdentityBiNode):
         else:
             return result
 
-    def _stop_message(self):
-        """Return the predefined values for the current loop count value."""
-        self.loop_counter += 1
-        if not self._stop_message_results:
-            return None
-        if self.loop_counter-1 >= len(self._stop_message_results):
-            return None
-        return self._stop_message_results[self.loop_counter-1]
-
     def _bi_reset(self):
         """Reset the loop counter."""
         self.loop_counter = 0
@@ -137,15 +126,6 @@ class TraceJumpBiNode(JumpBiNode):
         if self._verbose:
             print self._tracelog[-1]
         return super(TraceJumpBiNode, self).stop_training()
-
-    def stop_message(self, msg=None):
-        if self._log_data:
-            self._tracelog.append((self._node_id, "stop_message", msg))
-        else:
-            self._tracelog.append((self._node_id, "stop_message"))
-        if self._verbose:
-            print self._tracelog[-1]
-        return super(TraceJumpBiNode, self).stop_message(msg)
 
     def _bi_reset(self):
         self._tracelog.append((self._node_id, "bi_reset"))
