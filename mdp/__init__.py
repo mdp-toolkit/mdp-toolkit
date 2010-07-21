@@ -249,7 +249,6 @@ class Requirements(object):
                             for feature in self._features])
 
 req = Requirements()
-print req.info()
 
 # import the utils module (used by other modules)
 # here we set scipy_emulation if needed.
