@@ -318,7 +318,7 @@ def test_caching_extension():
             self.count = 0
 
         @staticmethod
-        def is_trainable(self):
+        def is_trainable():
             return False
 
         def _execute(self, x):
