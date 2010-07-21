@@ -112,7 +112,7 @@ class TraceJumpBiNode(JumpBiNode):
             print self._tracelog[-1]
         return super(TraceJumpBiNode, self).train(x, msg)
 
-    def execute(self, x, msg):
+    def execute(self, x, msg=None):
         if self._log_data:
             self._tracelog.append((self._node_id, "execute", x, msg))
         else:
@@ -121,11 +121,11 @@ class TraceJumpBiNode(JumpBiNode):
             print self._tracelog[-1]
         return super(TraceJumpBiNode, self).execute(x, msg)
 
-    def stop_training(self):
+    def stop_training(self, msg=None):
         self._tracelog.append((self._node_id, "stop_training"))
         if self._verbose:
             print self._tracelog[-1]
-        return super(TraceJumpBiNode, self).stop_training()
+        return super(TraceJumpBiNode, self).stop_training(msg)
 
     def _bi_reset(self):
         self._tracelog.append((self._node_id, "bi_reset"))
