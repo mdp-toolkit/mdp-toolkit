@@ -24,7 +24,7 @@ This keeps the code readable and is compatible with automatic code checkers
 from mdp import MDPException, NodeMetaclass, utils, Node, numx
 all = utils.all
 
-# TODO: note the ParllelBiFlowNode purge_nodes method, which is not part
+# TODO: note the ParallelBiFlowNode purge_nodes method, which is not part
 #    of the ParallelNode interface. Allow this?
 
 # TODO: Register the node instances as well?
@@ -383,25 +383,11 @@ class extension(object):
             deactivate_extension(name)
 
 
-# Memoize extension
-import hashlib
+# cache extension
 
-# TODO: replace array hashing with better solution (see joblib)
+import joblib
 
-# TODO: allow caching on disk
-
-# TODO: move _hasharray to utils
-
-def _hasharray(x):
-    """Returns an hash value for a numpy array."""
-    m = hashlib.md5()
-    try:
-        m.update(numx.getbuffer(x))
-    except TypeError:
-        # Cater for non-single-segment arrays: this creates a
-        # copy, and thus aleviates this issue.
-        m.update(numx.getbuffer(x.flatten()))
-    return m.digest()
+CACHEDIR = 'c:/sys/cygwin/home/berkes/del/joblibcache/'
 
 class CacheExecuteExtensionNode(ExtensionNode, Node):
     """MDP Extension for caching execution results.
@@ -416,10 +402,8 @@ class CacheExecuteExtensionNode(ExtensionNode, Node):
     extension_name = 'cache_execute'
 
     def execute(self, x, *args, **kwargs):
-        if not hasattr(self, '_execute_cache'):
-            self._execute_cache = {}
-        h = _hasharray(x)
-        if h not in self._execute_cache:
-            self._execute_cache[h] = self._non_extension_execute(x)
-
-        return self._execute_cache[h]
+        if not hasattr(self, '_memory'):
+            self._memory = joblib.Memory(CACHEDIR)
+            self._cached_execute = self._memory.cache(
+                self._non_extension_execute)
+        return self._cached_execute(x)
