@@ -65,3 +65,28 @@ def get_random_mix(mat_dim = None, type = "d", scale = 1,\
         d2 = min(mdp.utils.symeig(mdp.utils.mult(matmix_n.T,matmix_n),eigenvectors=0))
         d = min(d1, d2)
     return mat, mix, matmix
+
+def verify_ICANode(icanode, rand_func = uniform, vars=3, N=8000, prec=3):
+    dim = (N, vars)
+    mat,mix,inp = get_random_mix(rand_func=rand_func,mat_dim=dim)
+    icanode.train(inp)
+    act_mat = icanode.execute(inp)
+    cov = mdp.utils.cov2((mat-mean(mat,axis=0))/std(mat,axis=0), act_mat)
+    maxima = numx.amax(abs(cov), axis=0)
+    assert_array_almost_equal(maxima,numx.ones(vars), prec)
+
+def verify_ICANodeMatrices(icanode, rand_func=uniform, vars=3, N=8000):
+    dim = (N, vars)
+    mat,mix,inp = get_random_mix(rand_func=rand_func, mat_dim=dim, avg=0)
+    icanode.train(inp)
+    # test projection matrix
+    act_mat = icanode.execute(inp)
+    T = icanode.get_projmatrix()
+    exp_mat = mdp.utils.mult(inp, T)
+    assert_array_almost_equal(act_mat,exp_mat,6)
+    # test reconstruction matrix
+    out = act_mat.copy()
+    act_mat = icanode.inverse(out)
+    B = icanode.get_recmatrix()
+    exp_mat = mdp.utils.mult(out, B)
+    assert_array_almost_equal(act_mat,exp_mat,6)
