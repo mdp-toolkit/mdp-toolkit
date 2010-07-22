@@ -322,6 +322,7 @@ class ConstantExpansionNode(_ExpansionNode):
         return self.approximate_inverse
 
     def _inverse(self, x, use_hint=None):
+        """ The use_hint argument overrides the argument given to __init__, if it is not None"""
         if self.approximate_inverse is False:
             ex = "Approximate inversion disabled"
             raise mdp.NodeException(ex)
