@@ -1,12 +1,9 @@
-
-
-import unittest
-import numpy as np
 import mdp
 import bimdp
 
+from mdp import numx as np
 
-class TestGradientExtension(unittest.TestCase):
+class TestGradientExtension(object):
 
     def test_sfa_gradient(self):
         """Test gradient for combination of SFA nodes."""
@@ -43,7 +40,7 @@ class TestGradientExtension(unittest.TestCase):
             ref_grad = np.sum(grad2[:,:,np.newaxis,:] *
                              np.transpose(grad1[:,np.newaxis,:,:], (0,1,3,2)),
                              axis=3)
-            self.assert_(np.max(np.abs(ref_grad - grad12)) < 1E-9)
+            assert np.max(np.abs(ref_grad - grad12)) < 1E-9
         finally:
             mdp.deactivate_extension("gradient")
 
@@ -66,7 +63,7 @@ class TestGradientExtension(unittest.TestCase):
                   [ 0, 6, 0],   # x2x2
                   [ 0, 4, 3],   # x2x3
                   [ 0, 0, 8]]]) # x3x3
-            self.assert_(np.all(grad == reference))
+            assert np.all(grad == reference)
         finally:
             mdp.deactivate_extension("gradient")
 
@@ -79,7 +76,7 @@ class TestGradientExtension(unittest.TestCase):
         try:
             result = node._gradient(x)
             gradient = result[1]["grad"]
-            self.assert_(gradient.shape == (3,20,5))
+            assert gradient.shape == (3,20,5)
         finally:
             mdp.deactivate_extension("gradient")
 
@@ -122,7 +119,7 @@ class TestGradientExtension(unittest.TestCase):
             result1 = sfa2_node.execute(x, {"method": "gradient"})
             grad1 = result1[1]["grad"]
             grad2 = _alt_sfa2_grad(sfa2_node, x)
-            self.assert_(np.max(np.abs(grad1 - grad2)) < 1E-9)
+            assert np.max(np.abs(grad1 - grad2)) < 1E-9
         finally:
             mdp.deactivate_extension("gradient")
 
@@ -145,7 +142,7 @@ class TestGradientExtension(unittest.TestCase):
             ref_grad = np.zeros(((7,5,10)))
             ref_grad[:, :node1.output_dim, :node1.input_dim] = grad1
             ref_grad[:, node1.output_dim:, node1.input_dim:] = grad2
-            self.assert_(np.all(grad == ref_grad))
+            assert np.all(grad == ref_grad)
         finally:
             mdp.deactivate_extension("gradient")
 
@@ -162,7 +159,7 @@ class TestGradientExtension(unittest.TestCase):
             x = np.random.random((7,15))
             result = layer._gradient(x)
             grad = result[1]["grad"]
-            self.assert_(grad.shape == (7,6,15))
+            assert grad.shape == (7,6,15)
         finally:
             mdp.deactivate_extension("gradient")
 
@@ -176,7 +173,7 @@ class TestGradientExtension(unittest.TestCase):
             grad = result[1]["grad"]
             ref_grad = np.array([[[0,0,1,0], [1,0,0,0]],
                                  [[0,0,1,0], [1,0,0,0]]], dtype=grad.dtype)
-            self.assert_(np.all(grad == ref_grad))
+            assert np.all(grad == ref_grad)
         finally:
             mdp.deactivate_extension("gradient")
 
@@ -188,7 +185,7 @@ class TestGradientExtension(unittest.TestCase):
         try:
             result = sboard._gradient(x)
             grad = result[1]["grad"]
-            self.assert_(grad.shape == (7,3,5))
+            assert grad.shape == (7,3,5)
         finally:
             mdp.deactivate_extension("gradient")
 
@@ -215,16 +212,7 @@ class TestGradientExtension(unittest.TestCase):
             x = np.random.random((3, switchboard.input_dim))
             result = flow(x, {"method": "gradient"})
             grad = result[1]["grad"]
-            self.assert_(grad.shape == (3, sfa_layer.output_dim,
-                                        switchboard.input_dim))
+            assert grad.shape == (3, sfa_layer.output_dim,
+                                  switchboard.input_dim)
         finally:
             mdp.deactivate_extension("gradient")
-
-
-def get_suite():
-    suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(TestGradientExtension))
-    return suite
-
-if __name__ == '__main__':
-    unittest.main()

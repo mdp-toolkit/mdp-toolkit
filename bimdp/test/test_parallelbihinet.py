@@ -1,17 +1,13 @@
-
-import unittest
-import numpy as n
-
 import mdp
-
+from mdp import numx as n
 from bimdp import BiFlow, MSG_ID_SEP, EXIT_TARGET
 from bimdp.parallel import (
     ParallelBiFlow, ParallelBiFlowNode, ParallelCloneBiLayer
-)
+    )
 from bimdp.nodes import SFABiNode
 
 
-class TestCloneBiLayer(unittest.TestCase):
+class TestCloneBiLayer(object):
     """Test the behavior of the BiCloneLayer."""
 
     def test_use_copies_msg(self):
@@ -28,13 +24,5 @@ class TestCloneBiLayer(unittest.TestCase):
         data = [[n.random.random((100,30)) for _ in range(5)]]
         biflow = ParallelBiFlow([clonelayer])
         biflow.train(data, scheduler=mdp.parallel.Scheduler())
-        assert(clonelayer.use_copies is True)
+        assert clonelayer.use_copies is True
 
-
-def get_suite():
-    suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(TestCloneBiLayer))
-    return suite
-
-if __name__ == '__main__':
-    unittest.main()

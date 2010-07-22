@@ -1,15 +1,12 @@
-
-import unittest
-import numpy as n
-
 import mdp
+from mdp import numx as n
 
 from bimdp import BiFlow, MSG_ID_SEP, EXIT_TARGET
 from bimdp.hinet import BiFlowNode, CloneBiLayer, BiSwitchboard
 from bimdp.nodes import SFABiNode, IdentityBiNode
 
 
-class TestBiFlowNode(unittest.TestCase):
+class TestBiFlowNode(object):
     """Test the behavior of the BiFlowNode."""
 
     def test_two_nodes1(self):
@@ -62,7 +59,7 @@ class DummyBiNode(IdentityBiNode):
         return False
 
 
-class TestCloneBiLayer(unittest.TestCase):
+class TestCloneBiLayer(object):
     """Test the behavior of the BiCloneLayer."""
 
     def test_clonelayer(self):
@@ -86,7 +83,7 @@ class TestCloneBiLayer(unittest.TestCase):
         x = n.random.random((100,30))
         clonelayer.train(x)
         clonelayer.stop_training()
-        assert(clonelayer.use_copies is True)
+        assert clonelayer.use_copies is True
 
     def test_use_copies_msg_flownode(self):
         """Test the correct reaction to an outgoing use_copies message."""
@@ -102,7 +99,7 @@ class TestCloneBiLayer(unittest.TestCase):
         x = n.random.random((100,30))
         clonelayer.train(x)
         clonelayer.stop_training()
-        assert(clonelayer.use_copies is True)
+        assert clonelayer.use_copies is True
 
     def test_message_splitting(self):
         """Test message array splitting and combination."""
@@ -119,18 +116,18 @@ class TestCloneBiLayer(unittest.TestCase):
         }
         y, out_msg = clonelayer.execute(x, msg)
         node1, node2 = clonelayer.nodes
-        self.assertTrue(n.all(x == y))
-        self.assertTrue(out_msg["string"] == msg["string"])
-        self.assertTrue(out_msg["list"] == msg["list"])
-        self.assertTrue(n.all(out_msg["data1"] == data1))
-        self.assertTrue(n.all(node1.data1 == data1[:,:2]))
-        self.assertTrue(n.all(node2.data1 == data1[:,2:]))
-        self.assertTrue(out_msg["data2"] is data2)
-        self.assertTrue(n.all(node1.data2 is data2))
-        self.assertTrue(n.all(node2.data2 is data2))
+        assert n.all(x == y)
+        assert out_msg["string"] == msg["string"]
+        assert out_msg["list"] == msg["list"]
+        assert n.all(out_msg["data1"] == data1)
+        assert n.all(node1.data1 == data1[:,:2])
+        assert n.all(node2.data1 == data1[:,2:])
+        assert out_msg["data2"] is data2
+        assert n.all(node1.data2 is data2)
+        assert n.all(node2.data2 is data2)
 
 
-class TestBiSwitchboardNode(unittest.TestCase):
+class TestBiSwitchboardNode(object):
     """Test the behavior of the BiSwitchboardNode."""
 
     def test_execute_routing(self):
@@ -146,12 +143,12 @@ class TestBiSwitchboardNode(unittest.TestCase):
         }
         y, out_msg = sboard.execute(x, msg)
         reference_y = n.array([[3,1,2],[6,4,5]])
-        self.assertTrue(n.all(y == reference_y))
-        self.assertTrue(out_msg["string"] == msg["string"])
-        self.assertTrue(out_msg["list"] == msg["list"])
-        self.assertTrue(n.all(out_msg["data"] == reference_y))
-        self.assertTrue(out_msg["data2"].shape == (3,))
-        self.assertTrue(out_msg["data3"].shape == (3,4))
+        assert (y == reference_y).all()
+        assert out_msg["string"] == msg["string"]
+        assert out_msg["list"] == msg["list"]
+        assert n.all(out_msg["data"] == reference_y)
+        assert out_msg["data2"].shape == (3,)
+        assert out_msg["data3"].shape == (3,4)
 
     def test_inverse_message_routing(self):
         """Test the inverse routing for messages."""
@@ -167,22 +164,11 @@ class TestBiSwitchboardNode(unittest.TestCase):
             "target": "test"
         }
         y, out_msg, target = sboard.execute(None, msg)
-        self.assertTrue(y is None)
-        self.assertTrue(target == "test")
+        assert y is None
+        assert target == "test"
         reference_y = n.array([[2,3,1],[5,6,4]])
-        self.assertTrue(out_msg["string"] == msg["string"])
-        self.assertTrue(out_msg["list"] == msg["list"])
-        self.assertTrue(n.all(out_msg["data"] == reference_y))
-        self.assertTrue(out_msg["data2"].shape == (3,))
-        self.assertTrue(out_msg["data3"].shape == (3,4))
-
-
-def get_suite():
-    suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(TestBiFlowNode))
-    suite.addTest(unittest.makeSuite(TestCloneBiLayer))
-    suite.addTest(unittest.makeSuite(TestBiSwitchboardNode))
-    return suite
-
-if __name__ == '__main__':
-    unittest.main()
+        assert out_msg["string"] == msg["string"]
+        assert out_msg["list"] == msg["list"]
+        assert (out_msg["data"] == reference_y).all()
+        assert out_msg["data2"].shape == (3,)
+        assert out_msg["data3"].shape == (3,4)

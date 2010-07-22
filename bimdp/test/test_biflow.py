@@ -1,16 +1,15 @@
-
-import unittest
-import numpy as np
+import py.test
 
 import mdp
+from mdp import numx as np
 
 from bimdp import (
     MessageResultContainer, BiFlow, BiFlowException, EXIT_TARGET, nodes
 )
-from testnodes import TraceJumpBiNode, IdNode
+from _tools import TraceJumpBiNode, IdNode
 
 
-class TestMessageResultContainer(unittest.TestCase):
+class TestMessageResultContainer(object):
     """Test the behavior of the BetaResultContainer."""
 
     def test_mixed_dict(self):
@@ -34,10 +33,10 @@ class TestMessageResultContainer(unittest.TestCase):
         a = np.zeros((25,3), 'int')
         a[10:] = 1
         reference_msg = {"a": a, "c": 4, "b": "aaabbb", "d": 1, "f": 2}
-        self.assertTrue(np.all(reference_msg["a"] == reference_msg["a"]))
+        assert np.all(reference_msg["a"] == reference_msg["a"])
         combined_msg.pop("a")
         reference_msg.pop("a")
-        self.assertTrue(combined_msg == reference_msg)
+        assert combined_msg == reference_msg
 
     def test_none_msg(self):
         """Test with one message being None."""
@@ -46,7 +45,7 @@ class TestMessageResultContainer(unittest.TestCase):
         for msg in msgs:
             rescont.add_message(msg)
         msg = rescont.get_message()
-        self.assertTrue(msg == {"a": 3, "b": 1})
+        assert msg == {"a": 3, "b": 1}
 
     def test_incompatible_arrays(self):
         """Test with incompatible arrays."""
@@ -54,10 +53,10 @@ class TestMessageResultContainer(unittest.TestCase):
         msgs = [{"a":  np.zeros((10,3))}, {"a":  np.zeros((10,4))}]
         for msg in msgs:
             rescont.add_message(msg)
-        self.assertRaises(ValueError, lambda: rescont.get_message())
+        py.test.raises(ValueError, rescont.get_message)
 
 
-class TestBiFlow(unittest.TestCase):
+class TestBiFlow(object):
 
     def test_normal_flow(self):
         """Test a BiFlow with normal nodes."""
@@ -103,13 +102,13 @@ class TestBiFlow(unittest.TestCase):
         # cl argument of FDANode is not supported in biflow
         flow = BiFlow([mdp.nodes.PCANode(), mdp.nodes.FDANode()])
         # the iterables are passed as if this were a normal Flow
-        self.assertRaises(BiFlowException,
-                          lambda: flow.train([[samples], [samples, labels]]))
+        py.test.raises(BiFlowException,
+                       flow.train, [[samples], [samples, labels]])
         # messing up the data iterables further doesn't matter, this is
         # actually interpreted as three data chunks for the FDANode training,
         # since argument iterables are not supported by BiFlow
-        self.assertRaises(BiFlowException,
-                    lambda: flow.train([[samples], [samples, labels, labels]]))
+        py.test.raises(BiFlowException,
+                       flow.train, [[samples], [samples, labels, labels]])
 
     def test_training_targets(self):
         """Test targeting during training and stop_training."""
@@ -206,7 +205,7 @@ class TestBiFlow(unittest.TestCase):
             ('node_2', 'bi_reset'),
             ('node_3', 'bi_reset')
         ]
-        self.assertEqual(tracelog, reference)
+        assert tracelog == reference
 
     def test_execute_jump(self):
         """Test jumping around during execution."""
@@ -247,7 +246,7 @@ class TestBiFlow(unittest.TestCase):
             ('node_2', 'bi_reset'),
             ('node_3', 'bi_reset'),
         ]
-        self.assertEqual(tracelog, reference)
+        assert tracelog == reference
 
     def test_msg_normal_node(self):
         """Test that the msg is passed over a normal node."""
@@ -255,7 +254,7 @@ class TestBiFlow(unittest.TestCase):
         biflow = BiFlow([node])
         msg = {"a": 1}
         result = biflow.execute(np.random.random((1,1)), msg)
-        self.assertTrue(msg == result[1])
+        assert msg == result[1]
 
     def test_exit_target(self):
         """Test that the magic exit target works."""
@@ -271,7 +270,7 @@ class TestBiFlow(unittest.TestCase):
         reference = [
            (None, 'bi_reset'), (None, 'execute'), (None, 'bi_reset')
         ]
-        self.assertEqual(tracelog, reference)
+        assert tracelog == reference
 
     def test_append_node_copy(self):
         """Test that appending a node does not perform a deept copy."""
@@ -279,15 +278,7 @@ class TestBiFlow(unittest.TestCase):
         node2 = nodes.IdentityBiNode()
         flow = BiFlow([node1])
         flow += node2
-        self.assert_(flow[0] is node1)
-        self.assert_(type(flow) is BiFlow)
+        assert flow[0] is node1
+        assert type(flow) is BiFlow
 
 
-def get_suite():
-    suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(TestMessageResultContainer))
-    suite.addTest(unittest.makeSuite(TestBiFlow))
-    return suite
-
-if __name__ == '__main__':
-    unittest.main()

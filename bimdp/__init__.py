@@ -101,7 +101,6 @@ from inspection import *
 import nodes
 import hinet
 import parallel
-from test import test
 
 del binode
 del biflow

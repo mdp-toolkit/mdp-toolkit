@@ -1,16 +1,12 @@
-
-import unittest
-import numpy as n
-
 import mdp
-
+from mdp import numx as n
 from bimdp.nodes import SFABiNode, SFA2BiNode
 from bimdp import BiFlow
 from bimdp.parallel import ParallelBiFlow, ParallelBiFlowNode
 
 # TODO: maybe test the helper classes as well, e.g. the new callable
 
-class TestParallelBiNode(unittest.TestCase):
+class TestParallelBiNode(object):
 
     def test_stop_message_attribute(self):
         """Test that the stop_result attribute is present in forked node."""
@@ -22,19 +18,19 @@ class TestParallelBiNode(unittest.TestCase):
             node2 = node.fork()
             node2.train(x)
             forked_result = node2.stop_training()
-            self.assert_(forked_result == (None,) + stop_result)
+            assert forked_result == (None,) + stop_result
             # same with derived sfa2 node
             node = SFA2BiNode(stop_result=stop_result)
             mdp.activate_extension("parallel")
             node2 = node.fork()
             node2.train(x)
             forked_result = node2.stop_training()
-            self.assert_(forked_result == (None,) + stop_result)
+            assert forked_result == (None,) + stop_result
         finally:
             mdp.deactivate_extension("parallel")
 
 
-class TestParallelBiFlow(unittest.TestCase):
+class TestParallelBiFlow(object):
 
     def test_nonparallel_flow(self):
         """Test a ParallelBiFlow with standard nodes."""
@@ -108,12 +104,3 @@ class TestParallelBiFlow(unittest.TestCase):
         flow.execute(iterator, scheduler=scheduler)
         scheduler.shutdown()
 
-
-def get_suite():
-    suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(TestParallelBiNode))
-    suite.addTest(unittest.makeSuite(TestParallelBiFlow))
-    return suite
-
-if __name__ == '__main__':
-    unittest.main()

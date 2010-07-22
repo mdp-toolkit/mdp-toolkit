@@ -34,7 +34,7 @@ class JumpBiNode(IdentityBiNode):
         self._execute_results = execute_results
         super(JumpBiNode, self).__init__(*args, **kwargs)
 
-    def is_trainable():
+    def is_trainable(self):
         if self._train_results:
             return True
         else:

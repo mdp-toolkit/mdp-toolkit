@@ -1,17 +1,16 @@
-
-import unittest
-
 import mdp
 n = mdp.numx
+
+import py.test
 
 from bimdp import BiNode, MSG_ID_SEP, BiFlow, BiClassifier, binode_coroutine
 from bimdp.nodes import (
     IdentityBiNode, SFABiNode, FDABiNode, SignumBiClassifier
 )
-from testnodes import JumpBiNode
+from _tools import JumpBiNode
 
 
-class TestBiNode(unittest.TestCase):
+class TestBiNode(object):
 
     def test_msg_parsing1(self):
         """Test the message parsing and recombination."""
@@ -28,15 +27,15 @@ class TestBiNode(unittest.TestCase):
         d_key = "test" + MSG_ID_SEP + "d"
         msg = {"c": 12, b_key: 42, "a": 13, d_key: "bla"}
         _, msg = binode.execute(None, msg)
-        self.assert_("a" in msg)
-        self.assert_(b_key not in msg)
-        self.assert_(d_key not in msg)
-        self.assert_(binode.a == 13)
-        self.assert_(binode.b == 42)
-        self.assert_(binode.d == "bla")
+        assert "a" in msg
+        assert b_key not in msg
+        assert d_key not in msg
+        assert binode.a == 13
+        assert binode.b == 42
+        assert binode.d == "bla"
         # test the message combination
-        self.assert_(msg["g"] == 15)
-        self.assert_(msg["z"] == 3)
+        assert msg["g"] == 15
+        assert msg["z"] == 3
 
     def test_msg_parsing2(self):
         """Test that an adressed argument is not found."""
@@ -52,7 +51,7 @@ class TestBiNode(unittest.TestCase):
         d_key = "test" + MSG_ID_SEP + "d"
         msg = {"c": 12, b_key: 42, "a": 13, d_key: "bla"}
         _, out_msg = binode.execute(None, msg)
-        self.assert_(d_key not in out_msg)
+        assert d_key not in out_msg
 
     def test_msg_magic(self):
         """Test that the magic msg argument works."""
@@ -69,12 +68,12 @@ class TestBiNode(unittest.TestCase):
         b_key = "test" + MSG_ID_SEP + "b"
         msg = {"c": 12, b_key: 42, "a": 13}
         _, msg = binode.execute(None, msg)
-        self.assert_("a" in msg)
-        self.assert_("c" not in msg)  # was deleted in _execute
-        self.assert_(msg["f"] == 1)
-        self.assert_(b_key not in msg)
-        self.assert_(binode.a == 13)
-        self.assert_(binode.b == 42)
+        assert "a" in msg
+        assert "c" not in msg  # was deleted in _execute
+        assert msg["f"] == 1
+        assert b_key not in msg
+        assert binode.a == 13
+        assert binode.b == 42
 
     def test_method_magic(self):
         """Test the magic method message key."""
@@ -88,9 +87,9 @@ class TestBiNode(unittest.TestCase):
         b_key = "test" + MSG_ID_SEP + "b"
         msg = {"c": 12, "a": 13, b_key: 42, "method": "test"}
         binode.execute(None, msg)
-        self.assert_("a" in msg)
-        self.assert_(b_key not in msg)
-        self.assert_(binode.b == 42)
+        assert "a" in msg
+        assert b_key not in msg
+        assert binode.b == 42
 
     def test_target_magic(self):
         """Test the magic target message key."""
@@ -105,8 +104,8 @@ class TestBiNode(unittest.TestCase):
         target_key = "test" + MSG_ID_SEP + "target"
         msg = {"c": 12, b_key: 42, "a": 13, target_key: "test2"}
         result = binode.execute(None, msg)
-        self.assert_(len(result) == 3)
-        self.assert_(result[2] == "test2")
+        assert len(result) == 3
+        assert result[2] == "test2"
 
     def test_inverse_magic1(self):
         """Test the magic inverse method argument."""
@@ -123,9 +122,9 @@ class TestBiNode(unittest.TestCase):
         msg = {"c": 12, "a": 13, b_key: 42, "method": "inverse"}
         x = n.zeros((5, binode.output_dim))
         result = binode.execute(x, msg)
-        self.assert_(len(result) == 3)
-        self.assert_(result[2] == -1)
-        self.assert_(result[0].shape == (5, 20))
+        assert len(result) == 3
+        assert result[2] == -1
+        assert result[0].shape == (5, 20)
 
     def test_inverse_magic2(self):
         """Test overriding the magic inverse target."""
@@ -142,23 +141,23 @@ class TestBiNode(unittest.TestCase):
         msg = {"c": 12, "a": 13, b_key: 42, "method": "inverse"}
         x = n.zeros((5, binode.output_dim))
         result = binode.execute(x, msg)
-        self.assert_(result[2] == "test2")
+        assert result[2] == "test2"
 
     def test_stoptrain_result1(self):
         """Test that stop_result is handled correctly."""
         stop_result = ({"test": 0}, 1)
         bi_sfa_node = SFABiNode(stop_result=stop_result,
                                 node_id="testing binode")
-        self.assertTrue(bi_sfa_node.is_trainable())
+        assert bi_sfa_node.is_trainable()
         x = n.random.random((100,10))
         train_result = bi_sfa_node.train(x)
-        self.assertTrue(train_result == None)
-        self.assertTrue(bi_sfa_node.is_training())
+        assert train_result == None
+        assert bi_sfa_node.is_training()
         result = bi_sfa_node.stop_training()
-        self.assertTrue(result == (None,) + stop_result)
-        self.assertTrue(bi_sfa_node.input_dim == 10)
-        self.assertTrue(bi_sfa_node.output_dim == 10)
-        self.assertTrue(bi_sfa_node.dtype == "float64")
+        assert result == (None,) + stop_result
+        assert bi_sfa_node.input_dim == 10
+        assert bi_sfa_node.output_dim == 10
+        assert bi_sfa_node.dtype == "float64"
 
     def test_stoptrain_result2(self):
         """Test that stop_result is handled correctly for multiple phases."""
@@ -169,10 +168,10 @@ class TestBiNode(unittest.TestCase):
         msg = {"cl": n.zeros(len(x))}
         binode.train(x, msg)
         result = binode.stop_training()
-        self.assertTrue(result == (None,) + stop_result[0])
+        assert result == (None,) + stop_result[0]
         binode.train(x, msg)
         result = binode.stop_training()
-        self.assertTrue(result == (None,) + stop_result[1])
+        assert result == (None,) + stop_result[1]
 
     def test_stop_training_execute(self):
         """Test the magic execute method argument for stop_training."""
@@ -184,20 +183,17 @@ class TestBiNode(unittest.TestCase):
                 y = n.zeros((len(x), self.output_dim))
                 return y
 
-            @staticmethod
-            def is_trainable(): return False
-
         binode = TestBiNode(input_dim=20, output_dim=10)
         x = n.ones((5, binode.input_dim))
         binode.train(x)
         msg = {"x": x, "a": 13, "method": "execute"}
         result = binode.stop_training(msg)
-        self.assert_(n.all(binode.x == x))
-        self.assert_(binode.x.shape == (5, binode.input_dim))
-        self.assert_(binode.a == 13)
-        self.assert_(len(result) == 2)
-        self.assert_(result[0].shape == (5, binode.output_dim))
-        self.assertFalse(n.any(result[0]))
+        assert n.all(binode.x == x)
+        assert binode.x.shape == (5, binode.input_dim)
+        assert binode.a == 13
+        assert len(result) == 2
+        assert result[0].shape == (5, binode.output_dim)
+        assert not n.any(result[0])
 
     def test_stop_training_inverse(self):
         """Test the magic inverse method argument for stop_training."""
@@ -209,43 +205,40 @@ class TestBiNode(unittest.TestCase):
                 y = n.zeros((len(x), self.input_dim))
                 return y
 
-            @staticmethod
-            def is_trainable(): return False
-
         binode = TestBiNode(input_dim=20, output_dim=10)
         binode.train(n.ones((5, binode.input_dim)))
         x = n.ones((5, binode.output_dim))
         msg = {"x": x, "a": 13, "method": "inverse"}
         result = binode.stop_training(msg)
-        self.assert_(n.all(binode.x == x))
-        self.assert_(binode.x.shape == (5, binode.output_dim))
-        self.assert_(binode.a == 13)
-        self.assert_(len(result) == 3)
-        self.assert_(result[2] == -1)
-        self.assert_(result[0].shape == (5, binode.input_dim))
-        self.assertFalse(n.any(result[0]))
+        assert n.all(binode.x == x)
+        assert binode.x.shape == (5, binode.output_dim)
+        assert binode.a == 13
+        assert len(result) == 3
+        assert result[2] == -1
+        assert result[0].shape == (5, binode.input_dim)
+        assert not n.any(result[0])
 
     def test_flow_from_sum(self):
         """Test the special addition method for BiNode."""
         node1 = IdentityBiNode()
         node2 = mdp.Node()
         flow = node1 + node2
-        self.assert_(type(flow) is BiFlow)
+        assert type(flow) is BiFlow
         node2 = IdentityBiNode()
         flow = node1 + node2
-        self.assert_(type(flow) is BiFlow)
-        self.assert_(len(flow) == 2)
+        assert type(flow) is BiFlow
+        assert len(flow) == 2
         node3 = IdentityBiNode()
         flow = node1 + node2 + node3
-        self.assert_(type(flow) is BiFlow)
-        self.assert_(len(flow) == 3)
+        assert type(flow) is BiFlow
+        assert len(flow) == 3
         node4 = IdentityBiNode()
         flow = node4 + flow
-        self.assert_(type(flow) is BiFlow)
-        self.assert_(len(flow) == 4)
+        assert type(flow) is BiFlow
+        assert len(flow) == 4
 
 
-class TestBiClassifierNode(unittest.TestCase):
+class TestBiClassifierNode(object):
 
     def test_biclassifier(self):
         """Test the BiClassifier base class."""
@@ -262,17 +255,17 @@ class TestBiClassifierNode(unittest.TestCase):
         msg = {"return_labels": "test->",
                "return_probs": True}
         result = node.execute(x, msg)
-        self.assert_(result[0] is x)
-        self.assert_("labels" not in result[1])
-        self.assert_(result[1]["probs"] == "PROPS")
-        self.assert_(result[1][msg["return_labels"] + "labels"] == "LABELS")
-        self.assert_("rank" not in result[1])
+        assert result[0] is x
+        assert "labels" not in result[1]
+        assert result[1]["probs"] == "PROPS"
+        assert result[1][msg["return_labels"] + "labels"] == "LABELS"
+        assert "rank" not in result[1]
         msg = {"return_labels": None}
         result = node.execute(x,msg)
-        self.assert_(result[0] is x)
-        self.assert_("labels" not in result[1])
-        self.assert_("prop" not in result[1])
-        self.assert_("rank" not in result[1])
+        assert result[0] is x
+        assert "labels" not in result[1]
+        assert "prop" not in result[1]
+        assert "rank" not in result[1]
 
     def test_autogen_biclassifier(self):
         """Test that the autogenerated classifiers work."""
@@ -281,11 +274,11 @@ class TestBiClassifierNode(unittest.TestCase):
         # taken from the SignumClassifier unittest
         x = n.array([[1, 2, -3, -4], [1, 2, 3, 4]])
         result = node.execute(x, msg)
-        self.assert_(result[0] is x)
-        self.assert_(result[1]["labels"].tolist() == [-1, 1])
+        assert result[0] is x
+        assert result[1]["labels"].tolist() == [-1, 1]
 
 
-class TestIdentityBiNode(unittest.TestCase):
+class TestIdentityBiNode(object):
 
     def test_idnode(self):
         """Test the IdentityBiNode.
@@ -298,13 +291,13 @@ class TestIdentityBiNode(unittest.TestCase):
         msg = {"some array": n.random.random((10,3))}
         # see if msg causes no problem
         y, msg = binode.execute(x, msg)
-        self.assertTrue(n.all(x==y))
+        assert n.all(x==y)
         # see if missing msg causes problem
         y = binode.execute(x)
-        self.assertTrue(n.all(x==y))
+        assert n.all(x==y)
 
 
-class TestJumpBiNode(unittest.TestCase):
+class TestJumpBiNode(object):
 
     def test_node(self):
         """Test the JumpBiNode."""
@@ -315,7 +308,7 @@ class TestJumpBiNode(unittest.TestCase):
                               stop_train_results=stop_train_results,
                               execute_results=execute_results)
         x = n.random.random((2,2))
-        self.assertTrue(jumpnode.is_trainable())
+        assert jumpnode.is_trainable()
         # training
         rec_train_results = []
         rec_stop_train_results = []
@@ -324,20 +317,20 @@ class TestJumpBiNode(unittest.TestCase):
             jumpnode.bi_reset()
             rec_stop_train_results.append(jumpnode.stop_training())
             jumpnode.bi_reset()
-        self.assertTrue(not jumpnode.is_training())
-        self.assertTrue(rec_train_results == train_results)
-        self.assertTrue(rec_stop_train_results == rec_stop_train_results)
+        assert not jumpnode.is_training()
+        assert rec_train_results == train_results
+        assert rec_stop_train_results == rec_stop_train_results
         # execution
         rec_execute_results = []
         for _ in range(4):  # note that this is more then the execute_targets
             rec_execute_results.append(jumpnode.execute(x))
         execute_results[1] = x
         execute_results.append(x)
-        self.assertTrue((rec_execute_results == execute_results))
-        self.assertTrue(jumpnode.loop_counter == 4)
+        assert (rec_execute_results == execute_results)
+        assert jumpnode.loop_counter == 4
 
 
-class TestBiNodeCoroutine(unittest.TestCase):
+class TestBiNodeCoroutine(object):
     """Test the coroutine decorator and the related BiNode functionality."""
 
     def test_codecorator(self):
@@ -362,9 +355,9 @@ class TestBiNodeCoroutine(unittest.TestCase):
         flow = BiFlow([node])
         x = n.random.random((3,2))
         y, msg = flow.execute(x, {"alpha": 3})
-        self.assertEqual(msg["alpha"], 4)
-        self.assertEqual(msg["beta"], 4)
-        self.assertEqual(node.execute.__doc__, """Blabla.""")
+        assert msg["alpha"] == 4
+        assert msg["beta"] == 4
+        assert node.execute.__doc__ == """Blabla."""
 
     def test_codecorator2(self):
         """Test codecorator functionality with StopIteration."""
@@ -387,8 +380,8 @@ class TestBiNodeCoroutine(unittest.TestCase):
         flow = BiFlow([node])
         x = n.random.random((3,2))
         y, msg = flow.execute(x, {"alpha": 3})
-        self.assertEqual(msg["alpha"], 4)
-        self.assertEqual(msg["beta"], 4)
+        assert msg["alpha"] == 4
+        assert msg["beta"] == 4
 
     def test_codecorator_defaults(self):
         """Test codecorator argument default values."""
@@ -408,8 +401,8 @@ class TestBiNodeCoroutine(unittest.TestCase):
         flow = BiFlow([node])
         x = n.random.random((3,2))
         y, msg = flow.execute(x)
-        self.assertEqual(msg["alpha"], 7)
-        self.assertEqual(msg["beta"], 8)
+        assert msg["alpha"] == 7
+        assert msg["beta"] == 8
 
     def test_codecorator_no_iteration(self):
         """Test codecorator corner case with no iterations."""
@@ -430,7 +423,7 @@ class TestBiNodeCoroutine(unittest.TestCase):
         node1 = CoroutineBiNode()
         x = n.random.random((3,2))
         result = node1.execute(x)
-        self.assertEqual(result, (None, {"a": 1}, None))
+        assert result == (None, {"a": 1}, None)
 
     def test_codecorator_reset1(self):
         """Test that codecorator correctly resets after termination."""
@@ -454,9 +447,9 @@ class TestBiNodeCoroutine(unittest.TestCase):
         node1.execute(x, {"a": 2})
         node1.execute(x)
         node1.execute(x)
-        self.assert_(node1._coroutine_instances == {})
+        assert node1._coroutine_instances == {}
         # couroutine should be reset, a argument is needed again
-        self.assertRaises(TypeError, lambda: node1.execute(x))
+        py.test.raises(TypeError, node1.execute, x)
 
     def test_codecorator_reset2(self):
         """Test that codecorator correctly resets without yields."""
@@ -476,7 +469,7 @@ class TestBiNodeCoroutine(unittest.TestCase):
         node1 = CoroutineBiNode()
         x = n.random.random((3,2))
         node1.execute(x, {"a": 2})
-        self.assert_(node1._coroutine_instances == {})
+        assert node1._coroutine_instances == {}
 
 
 def get_suite():
