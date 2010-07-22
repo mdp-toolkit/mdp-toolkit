@@ -72,3 +72,26 @@ def activate_caching(cachedir=None, verbose=False):
 def deactivate_caching(cachedir=None):
     """De-activate caching extension."""
     deactivate_extension('cache_execute')
+
+class caching(object):
+    """Context manager for the 'cache_execute' extension.
+
+    This allows you to use the caching extension using a 'with'
+    statement, as in:
+
+    with mdp.caching(CACHEDIR):
+        # 'node' is executed caching the results in CACHEDIR
+        node.execute(x)
+
+    If the argument to the context manager is not specified, caching is
+    done in a temporary directory.
+    """
+
+    def __init__(self, cachedir=None):
+        self.cachedir = cachedir
+
+    def __enter__(self):
+        activate_caching(self.cachedir)
+
+    def __exit__(self, type, value, traceback):
+        deactivate_caching()
