@@ -108,11 +108,11 @@ def test_FlowNode_copy2():
         assert False, 'Did not raise expected exception.'
 
 def _pca_nodes(input_dims, output_dims):
-    for ind, outd in zip(input_dims, output_dims):
-        yield mdp.nodes.PCANode(input_dim=ind, output_dim=outd)
+    return [mdp.nodes.PCANode(input_dim=ind, output_dim=outd)
+            for ind, outd in zip(input_dims, output_dims)]
 
-def test_Layer(pca_nodes_10_17_3):
-    layer = mh.Layer(*_pca_nodes([10, 17, 3], [5, 3, 1]))
+def test_Layer():
+    layer = mh.Layer(_pca_nodes([10, 17, 3], [5, 3, 1]))
     x = numx_rand.random([100,30]).astype('f')
     layer.train(x)
     y = layer.execute(x)
@@ -120,7 +120,7 @@ def test_Layer(pca_nodes_10_17_3):
     assert y.dtype == layer.dtype
 
 def test_Layer_invertibility():
-    layer = mh.Layer(*_pca_nodes([10, 17, 3], [10, 17, 3]))
+    layer = mh.Layer(_pca_nodes([10, 17, 3], [10, 17, 3]))
     x = numx_rand.random([100,30]).astype('f')
     layer.train(x)
     y = layer.execute(x)
@@ -129,14 +129,14 @@ def test_Layer_invertibility():
 
 def test_Layer_invertibility2():
     # reduce the dimensions, so input_dim != output_dim
-    layer = mh.Layer(*_pca_nodes([10, 17, 3], [8, 12, 3]))
+    layer = mh.Layer(_pca_nodes([10, 17, 3], [8, 12, 3]))
     x = numx_rand.random([100,30]).astype('f')
     layer.train(x)
     y = layer.execute(x)
     layer.inverse(y)
 
 def test_SameInputLayer():
-    layer = mh.SameInputLayer(*_pca_nodes([10, 10, 10], [5, 3, 1]))
+    layer = mh.SameInputLayer(_pca_nodes([10, 10, 10], [5, 3, 1]))
     x = numx_rand.random([100,10]).astype('f')
     layer.train(x)
     y = layer.execute(x)
