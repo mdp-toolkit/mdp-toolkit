@@ -53,7 +53,7 @@ def _randomly_filled_hypercube(widths, num_elem=1000):
     """
     p = []
     for i in xrange(num_elem):
-        rand_data = numx.random.random(len(widths))
+        rand_data = numx_rand.random(len(widths))
         rand_data = [w*(d - 0.5) for d, w in zip(rand_data, widths)]
         p.append(tuple(rand_data))
     return p
@@ -61,8 +61,8 @@ def _randomly_filled_hypercube(widths, num_elem=1000):
 def _randomly_filled_hyperball(dim, radius, num_elem=1000):
     """Fills a hyperball with a number of random elements.
     """
-    r = numx.random.random(num_elem)
-    points = numx.random.random((num_elem, dim))
+    r = numx_rand.random(num_elem)
+    points = numx_rand.random((num_elem, dim))
     for i in xrange(len(points)):
         norm = numx.linalg.norm(points[i])
         scale = pow(r[i], 1./dim)
@@ -88,12 +88,12 @@ def _linear_separable_data(positions, labels, radius=1, num_elem=1000, shuffled=
     assert len(positions) == len(labels)
 
     data = numx.vstack( _random_clusters(positions, radius, num_elem) )
-    #data = numx.vstack( (numx.random.random( (num_elem,2) ) - dist,
-    #                     numx.random.random( (num_elem,2) ) + dist) )
+    #data = numx.vstack( (numx_rand.random( (num_elem,2) ) - dist,
+    #                     numx_rand.random( (num_elem,2) ) + dist) )
     a_labels = numx.hstack(map(lambda x: [x] * num_elem, labels))
     if shuffled:
         ind = range(len(data))
-        random.shuffle(ind)
+        numx_rand.shuffle(ind)
         return data[ind], a_labels[ind]
     return data, a_labels
 
