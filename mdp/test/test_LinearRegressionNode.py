@@ -54,11 +54,11 @@ def test_LinearRegressionNode_with_noise():
     res = lrnode(inp[0])
     assert_array_almost_equal_diff(res, out[0], 2)
 
-# FIXME: fails every once in a while
 def test_LinearRegressionNode_raises_on_linearly_dependent_input():
     # 3. test error for linearly dependent input
     beta = numx_rand.uniform(-10., 10., size=(INDIM, OUTDIM))
-    x = numx_rand.uniform(-20., 20., size=(TLEN, INDIM))
+    x = numx.linspace(-20,20,TLEN)
+    x = mdp.utils.rrep(x, INDIM)
     x[:,-1] = 2.*x[:,0]
     y = mult(x, beta)
     py.test.raises(mdp.NodeException, train_LRNode, [x], [y], False)
