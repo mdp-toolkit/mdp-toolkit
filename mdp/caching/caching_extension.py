@@ -31,7 +31,7 @@ def set_cachedir(cachedir=None):
 set_cachedir()
 
 class CacheExecuteExtensionNode(ExtensionNode, Node):
-    """MDP Extension for caching execution results.
+    """MDP extension for caching execution results.
 
     Activating this extension results in all nodes caching the return
     values of the 'execute' methods.

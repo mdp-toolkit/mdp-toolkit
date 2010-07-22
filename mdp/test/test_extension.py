@@ -2,7 +2,7 @@ import unittest
 
 import mdp
 import sys
-
+import mdp.caching as caching
 
 class TestMDPExtensions(unittest.TestCase):
 
@@ -345,7 +345,7 @@ class TestCachingExtension(unittest.TestCase):
         # reset counter
         _counter = 0
         # activate the extension
-        mdp.activate_caching()
+        caching.activate_caching()
         self.assertEqual(mdp.get_active_extensions(), ['cache_execute'])
 
         # after decoration the global counter is incremented for each new 'x'
@@ -356,7 +356,7 @@ class TestCachingExtension(unittest.TestCase):
                 assert _counter == i+1
 
         # after deactivation
-        mdp.deactivate_caching()
+        caching.deactivate_caching()
         self.assertEqual(mdp.get_active_extensions(), [])
         # reset counter
         _counter = 0
@@ -373,7 +373,7 @@ class TestCachingExtension(unittest.TestCase):
         global _counter
         x = mdp.numx.array([[100.]], dtype='d')
 
-        mdp.activate_caching()
+        caching.activate_caching()
         node = _CounterNode()
         # make one fake execution to avoid that automatic setting of
         # attributes (e.g. dtype interferes with cache)
@@ -399,7 +399,7 @@ class TestCachingExtension(unittest.TestCase):
         node.execute(x)
         assert _counter == 1
         
-        mdp.deactivate_caching()
+        caching.deactivate_caching()
 
     def test_caching_context_manager(self):
         global _counter
@@ -410,7 +410,7 @@ class TestCachingExtension(unittest.TestCase):
         _counter = 0
 
         self.assertEqual(mdp.get_active_extensions(), [])
-        with mdp.caching():
+        with caching.cache():
             self.assertEqual(mdp.get_active_extensions(), ['cache_execute'])
             
             for i in range(3):
