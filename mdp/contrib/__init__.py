@@ -5,15 +5,15 @@ from xsfa_nodes import XSFANode
 
 __all__ = ['JADENode', 'NIPALSNode', 'LLENode', 'HLLENode', 'XSFANode']
 
-from mdp import req
+from mdp import config
 
-if req['shogun'].available:
+if config.has('shogun'):
     from shogun_svm_classifier import ShogunSVMClassifier
     __all__ += ['ShogunSVMClassifier']
     del shogun_svm_classifier
 
 
-if req['LibSVM'].available:
+if config.has('LibSVM'):
     from libsvm_classifier import LibSVMClassifier
     __all__ += ['LibSVMClassifier']
     del libsvm_classifier

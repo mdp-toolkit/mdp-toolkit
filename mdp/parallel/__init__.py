@@ -38,9 +38,9 @@ from parallelhinet import (
     ParallelFlowNode, ParallelLayer, ParallelCloneLayer
 )
 
-from mdp import req
+from mdp import config
 
-if req['Parallel Python'].available:
+if config.has('Parallel Python'):
     import pp_support
 
 del scheduling

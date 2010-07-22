@@ -159,7 +159,11 @@ __contact__ = 'mdp-toolkit-users@lists.sourceforge.net'
 
 from utils.routines import OrderedDict
 
-class Requirements(object):
+class MDPConfiguration(object):
+    """MDPConfiguration() does checks on the available libraries
+    and auto-generates a list of featues for inclusion in debug output.
+    """
+    # TODO: Needs more love with version checking.
     def __getitem__(self, key):
 
         if key in self._features:
@@ -182,7 +186,11 @@ class Requirements(object):
         self.check_feature("shogun", self.has_shogun)
         self.check_feature("LibSVM", self.has_libsvm)
         self.check_feature("Symeig Backend", self.symeig)
-    
+
+    def has(self, dep):
+        """Checks if a dependency is available."""
+        return self[dep].available
+
     def has_parallel_python(self):
         try:
             import pp as __pp
@@ -248,7 +256,7 @@ class Requirements(object):
         return "\n".join(["{feature:{maxlen}}: {desc!s}".format(feature=feature, desc=self[feature], maxlen=maxlen+1)
                             for feature in self._features])
 
-req = Requirements()
+config = MDPConfiguration()
 
 # import the utils module (used by other modules)
 # here we set scipy_emulation if needed.
@@ -292,7 +300,7 @@ from test import test
 def info():
     """Return nicely formatted info about MDP."""
     import sys
-    sys.stderr.write(req.info())
+    sys.stderr.write(config.info())
 
 
 # clean up namespace
@@ -314,6 +322,6 @@ __all__ = ['CheckpointFlow', 'CheckpointFunction', 'CheckpointSaveFunction',
            'activate_extension', 'deactivate_extension', 'activate_extensions',
            'deactivate_extensions',
            'ClassifierNode',
-           'req',
+           'config',
            ]
 

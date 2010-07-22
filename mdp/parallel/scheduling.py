@@ -127,7 +127,7 @@ class MDPVersionCallable(TaskCallable):
     def __call__(self, data):
         """Ignore input data and return mdp.info()"""
         import mdp
-        return mdp.req.info()
+        return mdp.config.info()
 
 class TaskCallableWrapper(TaskCallable):
     """Wrapper to provide a fork method for simple callables like a function.
