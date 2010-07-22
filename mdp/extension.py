@@ -360,13 +360,13 @@ class extension(object):
 
     with mdp.extension('extension_name'):
         # 'node' is executed with the extension activated
-        node.execute()
+        node.execute(x)
 
     It is also possible to activate multiple extensions at once:
 
     with mdp.extension(['ext1', 'ext2']):
         # 'node' is executed with the two extensions activated
-        node.execute()
+        node.execute(x)
     """
 
     def __init__(self, ext_names):
@@ -375,8 +375,8 @@ class extension(object):
         self.ext_names = ext_names
 
     def __enter__(self):
-        activate_extensions(name)
+        activate_extensions(self.ext_names)
 
     def __exit__(self, type, value, traceback):
-        deactivate_extensions(name)
+        deactivate_extensions(self.ext_names)
 
