@@ -664,7 +664,7 @@ def VariadicCumulator(*fields):
             self._cumulator_fields = fields
             for arg in self._cumulator_fields:
                 if hasattr(self, arg):
-                    raise MDPException("Cumulator Error: Property %s already taken" % arg)
+                    raise mdp.MDPException("Cumulator Error: Property %s already taken" % arg)
                 setattr(self, arg, [])
             self.tlen = 0
 
