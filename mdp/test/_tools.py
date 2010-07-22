@@ -46,7 +46,8 @@ def assert_type_equal(act, des):
 def get_random_mix(mat_dim = None, type = "d", scale = 1,\
                     rand_func = uniform, avg = 0, \
                     std_dev = 1):
-    if mat_dim is None: mat_dim = (500, 5)
+    if mat_dim is None:
+        mat_dim = (500, 5)
     T = mat_dim[0]
     N = mat_dim[1]
     d = 0

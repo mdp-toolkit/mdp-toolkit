@@ -79,14 +79,19 @@ def only_if_node(condition):
         return func
     return f
 
+def call_init_args(init_args):
+    return [item() if hasattr(item, '__call__') else item
+            for item in init_args]
+
 @id_format("{klass.__name__}")
 def test_dtype_consistency(klass, init_args, inp_arg_gen,
                            sup_arg_gen, execute_arg_gen):
-    #init_args = self._set_node_args(init_args)
-    supported_types = klass(*init_args).get_supported_dtypes()
+    args = call_init_args(init_args)
+    supported_types = klass(*args).get_supported_dtypes()
     for dtype in supported_types:
         inp = inp_arg_gen()
-        node = klass(*init_args, dtype=dtype)
+        args = call_init_args(init_args)
+        node = klass(*args, dtype=dtype)
         _train_if_necessary(inp, node, sup_arg_gen)
 
         extra = [execute_arg_gen(inp)] if execute_arg_gen else []
@@ -97,6 +102,7 @@ def test_dtype_consistency(klass, init_args, inp_arg_gen,
 @id_format("{klass.__name__}")
 def test_outputdim_consistency(klass, init_args, inp_arg_gen,
                                sup_arg_gen, execute_arg_gen):
+    args = call_init_args(init_args)
     inp = inp_arg_gen()
     output_dim = inp.shape[1] // 2
     extra = [execute_arg_gen(inp)] if execute_arg_gen else []
@@ -109,15 +115,15 @@ def test_outputdim_consistency(klass, init_args, inp_arg_gen,
 
     if 'output_dim' in inspect.getargspec(klass.__init__)[0]:
         # case 1: output dim set in the constructor
-        node = klass(*init_args, output_dim=output_dim)
+        node = klass(*args, output_dim=output_dim)
         _test(node)
 
         # case 2: output_dim set explicitly
-        node = klass(*init_args)
+        node = klass(*args)
         node.output_dim = output_dim
         _test(node)
     else:
-        node = klass(*init_args)
+        node = klass(*args)
         _train_if_necessary(inp, node, sup_arg_gen)
         out = node.execute(inp, *extra)
         assert out.shape[1] == node.output_dim
@@ -125,6 +131,7 @@ def test_outputdim_consistency(klass, init_args, inp_arg_gen,
 @id_format("{klass.__name__}")
 def test_dimdtypeset(klass, init_args, inp_arg_gen,
                      sup_arg_gen, execute_arg_gen):
+    init_args = call_init_args(init_args)
     inp = inp_arg_gen()
     node = klass(*init_args)
     _train_if_necessary(inp, node, sup_arg_gen)
@@ -137,10 +144,12 @@ def test_dimdtypeset(klass, init_args, inp_arg_gen,
 @only_if_node(lambda nodetype: nodetype.is_invertible())
 def test_invertible(klass, init_args, inp_arg_gen,
                     sup_arg_gen, execute_arg_gen):
+    args = call_init_args(init_args)
     inp = inp_arg_gen()
         # take the first available dtype for the test
-    dtype = klass(*init_args).get_supported_dtypes()[0]
-    node = klass(dtype=dtype, *init_args)
+    dtype = klass(*args).get_supported_dtypes()[0]
+    args = call_init_args(init_args)
+    node = klass(dtype=dtype, *args)
     _train_if_necessary(inp, node, sup_arg_gen)
     extra = [execute_arg_gen(inp)] if execute_arg_gen else []
     out = node.execute(inp, *extra)
