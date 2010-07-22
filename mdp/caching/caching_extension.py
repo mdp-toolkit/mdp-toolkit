@@ -7,8 +7,8 @@ import joblib
 from copy import deepcopy
 from tempfile import mkdtemp
 
-from .extension import ExtensionNode, activate_extension, deactivate_extension
-from .signal_node import Node
+from ..extension import ExtensionNode, activate_extension, deactivate_extension
+from ..signal_node import Node
 
 _cachedir = None
 _memory = None
@@ -73,7 +73,7 @@ def deactivate_caching(cachedir=None):
     """De-activate caching extension."""
     deactivate_extension('cache_execute')
 
-class caching(object):
+class cache(object):
     """Context manager for the 'cache_execute' extension.
 
     This allows you to use the caching extension using a 'with'
