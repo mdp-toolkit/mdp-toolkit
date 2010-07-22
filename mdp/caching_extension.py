@@ -5,12 +5,33 @@
 
 import joblib
 from copy import deepcopy
+from tempfile import mkdtemp
+
 from .extension import ExtensionNode
 from .signal_node import Node
 
-CACHEDIR = 'c:/sys/cygwin/home/berkes/del/joblibcache/'
+_cachedir = None
+_memory = None
 
-def activate_caching():
+def set_cachedir(cachedir=None):
+    """Set root directory for the joblib cache.
+
+    If the input argument is None, a temporary directory is created using
+    tempfile.mkdtemp()."""
+
+    global _cachedir
+    global _memory
+    
+    if cachedir is None:
+        cachedir = mkdtemp()
+    _cachedir = cachedir
+    _memory = joblib.Memory(cachedir)
+
+# initialize cache with temporary variable
+set_cachedir()
+
+def activate_caching(cachedir=None):
+    """Activate"""
     pass
 
 class CacheExecuteExtensionNode(ExtensionNode, Node):
@@ -36,7 +57,7 @@ class CacheExecuteExtensionNode(ExtensionNode, Node):
 
     def execute(self, x, *args, **kwargs):
         if not hasattr(self, '_memory'):
-            self._memory = joblib.Memory(CACHEDIR)
-            self._cached_execute = self._memory.cache(
+            global _memory
+            self._cached_execute = _memory.cache(
                 self._non_extension_execute.im_func)
         return self._cached_execute(self, x)

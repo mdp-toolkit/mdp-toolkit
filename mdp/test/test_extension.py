@@ -329,6 +329,8 @@ class TestCachingExtension(unittest.TestCase):
     def _test_caching_extension(self):
         """Test that the caching extension is working."""
 
+        mdp.set_cachedir()
+
         global _counter
         _counter = 0
         node = _CounterNode()
@@ -370,6 +372,8 @@ class TestCachingExtension(unittest.TestCase):
                 assert _counter == k
 
     def test_different_instances_same_content(self):
+        mdp.set_cachedir()
+        
         global _counter
         x = mdp.numx.array([[100.]], dtype='d')
 
