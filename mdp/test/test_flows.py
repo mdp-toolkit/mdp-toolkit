@@ -4,14 +4,12 @@ import cPickle
 import os
 import inspect
 from _tools import *
-from test_nodes import (_BogusNode, _BogusNodeTrainable, _BogusExceptNode,
-                        _BogusMultiNode)
 
 mult = mdp.utils.mult
 numx_rand = mdp.numx_rand
 uniform = numx_rand.random
 
-def _get_default_flow(flow_class=mdp.Flow, node_class=_BogusNode):
+def _get_default_flow(flow_class=mdp.Flow, node_class=BogusNode):
     flow = flow_class([node_class(),node_class(),node_class()])
     return flow
 
@@ -82,7 +80,7 @@ def testFlow_container_privmethods():
     for i in xrange(len(flow)):
         assert flow[i]==flow.flow[i], \
                '__getitem__  returned wrong node %d' % i
-        new_node = _BogusNode()
+        new_node = BogusNode()
         flow[i] = new_node
         assert flow[i]==new_node, '__setitem__ did not set node %d' % i
     # test __?etitem__, normal slice -> this fails for python < 2.2 and
@@ -91,7 +89,7 @@ def testFlow_container_privmethods():
     assert isinstance(flowslice,mdp.Flow), \
            '__getitem__ slice is not a Flow instance'
     assert len(flowslice) == 2, '__getitem__ returned wrong slice size'
-    new_nodes_list = [_BogusNode(), _BogusNode()]
+    new_nodes_list = [BogusNode(), BogusNode()]
     flow[:2] = new_nodes_list
     assert (flow[0] == new_nodes_list[0]) and \
            (flow[1] == new_nodes_list[1]), '__setitem__ did not set slice'
@@ -100,7 +98,7 @@ def testFlow_container_privmethods():
     assert isinstance(flowslice,mdp.Flow), \
            '__getitem__ slice is not a Flow instance'
     assert len(flowslice) == 2, '__getitem__ returned wrong slice size'
-    new_nodes_list = [_BogusNode(), _BogusNode()]
+    new_nodes_list = [BogusNode(), BogusNode()]
     flow[:2:1] = new_nodes_list
     assert (flow[0] == new_nodes_list[0]) and \
            (flow[1] == new_nodes_list[1]), '__setitem__ did not set slice'
@@ -138,12 +136,12 @@ def testFlow_container_listmethods():
         node.input_dim = 10
         node.output_dim = 10
     # append
-    newnode = _BogusNode(input_dim=10, output_dim=10)
+    newnode = BogusNode(input_dim=10, output_dim=10)
     flow.append(newnode)
     assert_equal(len(flow), length+1)
     length = len(flow)
     try:
-        newnode = _BogusNode(input_dim=11)
+        newnode = BogusNode(input_dim=11)
         flow.append(newnode)
         raise Exception, 'flow.append appended inconsistent node'
     except ValueError:
@@ -166,12 +164,12 @@ def testFlow_container_listmethods():
     except ValueError:
         assert_equal(len(flow), length)
     # insert
-    newnode = _BogusNode(input_dim=10, output_dim=None)
+    newnode = BogusNode(input_dim=10, output_dim=None)
     flow.insert(2, newnode)
     assert_equal(len(flow), length+1)
     length = len(flow)
     try:
-        newnode = _BogusNode(output_dim=11)
+        newnode = BogusNode(output_dim=11)
         flow.insert(2, newnode)
         raise Exception, 'flow.insert inserted inconsistent node'
     except ValueError:
@@ -198,23 +196,23 @@ def testFlow_container_listmethods():
 def testFlow_append_node_copy():
     # when appending a node to a flow,
     # we don't want the flow to be a copy!
-    node1 = _BogusNode()
-    node2 = _BogusNode()
+    node1 = BogusNode()
+    node2 = BogusNode()
     flow = mdp.Flow([node1])
     flow += node2
     assert flow[0] is node1
 
 def testFlow_as_sum_of_nodes():
-    node1 = _BogusNode()
-    node2 = _BogusNode()
+    node1 = BogusNode()
+    node2 = BogusNode()
     flow = node1+node2
     assert type(flow) is mdp.Flow
     assert len(flow) == 2
-    node3 = _BogusNode()
+    node3 = BogusNode()
     flow = node1+node2+node3
     assert type(flow) is mdp.Flow
     assert len(flow) == 3
-    node4 = _BogusNode()
+    node4 = BogusNode()
     flow = node4 + flow
     assert type(flow) is mdp.Flow
     assert len(flow) == 4
@@ -248,7 +246,7 @@ def testCheckpointFlow():
         lst.append(1)
     mat,mix,inp = get_random_mix(mat_dim=(100,3))
     flow = _get_default_flow(flow_class = mdp.CheckpointFlow,
-                                  node_class = _BogusNodeTrainable)
+                                  node_class = BogusNodeTrainable)
     flow.train(inp, cfunc)
     #
     assert len(lst)==len(flow), \
@@ -258,14 +256,14 @@ def testCheckpointFunction():
     cfunc = _CheckpointCollectFunction()
     mat,mix,inp = get_random_mix(mat_dim=(100,3))
     flow = _get_default_flow(flow_class = mdp.CheckpointFlow,
-                                  node_class = _BogusNodeTrainable)
+                                  node_class = BogusNodeTrainable)
     flow.train(inp, cfunc)
     #
     for i in xrange(len(flow)):
         assert flow[i].__class__==cfunc.classes[i], 'Wrong class collected'
 
 def testCrashRecovery():
-    flow = mdp.Flow([_BogusExceptNode()])
+    flow = mdp.Flow([BogusExceptNode()])
     flow.set_crash_recovery(1)
     try:
         flow.train(mdp.numx.zeros((1,2), 'd'))
@@ -302,7 +300,7 @@ def testCrashRecoveryException():
 
 def testMultiplePhases():
     # test basic multiple phase sequence
-    flow = mdp.Flow([_BogusMultiNode()])
+    flow = mdp.Flow([BogusMultiNode()])
     flow.train(mdp.numx.zeros((1,2), 'd'))
     assert flow[0].visited == [1,2,3,4]
     # try to use an iterable to train it, check for rewinds
@@ -312,14 +310,14 @@ def testMultiplePhases():
         def __iter__(self):
             self.used += 1
             yield mdp.numx.zeros((1,2), 'd')
-    flow = mdp.Flow([_BogusMultiNode()])
+    flow = mdp.Flow([BogusMultiNode()])
     iterable = TestIterable()
     flow.train([iterable])
     assert iterable.used == 2
     # should not work with an iterator
     def testgenerator():
         yield mdp.numx.zeros((1,2), 'd')
-    flow = mdp.Flow([_BogusMultiNode()])
+    flow = mdp.Flow([BogusMultiNode()])
     try:
         flow.train([testgenerator()])
         raise Exception('Expected mdp.FlowException')

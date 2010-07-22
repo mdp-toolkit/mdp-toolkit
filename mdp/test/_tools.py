@@ -90,3 +90,42 @@ def verify_ICANodeMatrices(icanode, rand_func=uniform, vars=3, N=8000):
     B = icanode.get_recmatrix()
     exp_mat = mdp.utils.mult(out, B)
     assert_array_almost_equal(act_mat,exp_mat,6)
+
+class BogusNode(mdp.Node):
+    @staticmethod
+    def is_trainable(): return False
+    def _execute(self,x): return 2*x
+    def _inverse(self,x): return 0.5*x
+
+class BogusNodeTrainable(mdp.Node):
+    def _train(self, x):
+        pass
+    def _stop_training(self):
+        self.bogus_attr = 1
+
+class BogusExceptNode(mdp.Node):
+    def _train(self,x):
+        self.bogus_attr = 1
+        raise Exception, "Bogus Exception"
+
+    def _execute(self,x):
+        raise Exception, "Bogus Exception"
+
+class BogusMultiNode(mdp.Node):
+
+    def __init__(self):
+        super(BogusMultiNode, self).__init__()
+        self.visited = []
+
+    def _get_train_seq(self):
+        return [(self.train1, self.stop1),
+                (self.train2, self.stop2)]
+
+    def train1(self, x):
+        self.visited.append(1)
+    def stop1(self):
+        self.visited.append(2)
+    def train2(self, x):
+        self.visited.append(3)
+    def stop2(self):
+        self.visited.append(4)

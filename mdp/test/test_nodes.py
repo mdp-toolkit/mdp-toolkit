@@ -26,46 +26,8 @@ testtypes = [numx.dtype('d'), numx.dtype('f')]
 testtypeschar = [t.char for t in testtypes]
 testdecimals = {testtypes[0]: 12, testtypes[1]: 6}
 
-
-class _BogusNode(mdp.Node):
-    @staticmethod
-    def is_trainable(): return False
-    def _execute(self,x): return 2*x
-    def _inverse(self,x): return 0.5*x
-
-class _BogusNodeTrainable(mdp.Node):
-    def _train(self, x):
-        pass
-    def _stop_training(self):
-        self.bogus_attr = 1
-
-class _BogusExceptNode(mdp.Node):
-    def _train(self,x):
-        self.bogus_attr = 1
-        raise Exception, "Bogus Exception"
-
-    def _execute(self,x):
-        raise Exception, "Bogus Exception"
-
-class _BogusMultiNode(mdp.Node):
-
-    def __init__(self):
-        super(_BogusMultiNode, self).__init__()
-        self.visited = []
-
-    def _get_train_seq(self):
-        return [(self.train1, self.stop1),
-                (self.train2, self.stop2)]
-
-    def train1(self, x):
-        self.visited.append(1)
-    def stop1(self):
-        self.visited.append(2)
-    def train2(self, x):
-        self.visited.append(3)
-    def stop2(self):
-        self.visited.append(4)
-
+from _tools import (BogusNode, BogusNodeTrainable,
+                    BogusExceptNode, BogusMultiNode)
 
 def _rand_labels(x):
     return numx.around(uniform(x.shape[0]))
