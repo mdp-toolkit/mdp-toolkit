@@ -648,28 +648,43 @@ class Node(object):
             _cPickle.dump(self, flh, protocol)
             flh.close()
 
-
-class Cumulator(Node):
-    """A Cumulator is a Node whose training phase simply collects
+def VariadicCumulator(*fields):
+    """A VariadicCumulator is a Node whose training phase simply collects
     all input data. In this way it is possible to easily implement
     batch-mode learning.
 
-    The data is accessible in the attribute 'self.data' after
-    the beginning of the '_stop_training' phase. 'self.tlen' contains
-    the number of data points collected.
+    The data is accessible in the attributes given with the VariadicCumulator’s
+    constructor after the beginning of the '_stop_training' phase.
+    'self.tlen' contains the number of data points collected.
     """
 
-    def __init__(self, input_dim = None, output_dim = None, dtype = None):
-        super(Cumulator, self).__init__(input_dim, output_dim, dtype)
-        self.data = []
-        self.tlen = 0
+    class Cumulator(Node):
+        def __init__(self, *args, **kwargs):
+            super(Cumulator, self).__init__(*args, **kwargs)
+            self._cumulator_fields = fields
+            for arg in self._cumulator_fields:
+                if hasattr(self, arg):
+                    raise MDPException("Cumulator Error: Property %s already taken" % arg)
+                setattr(self, arg, [])
+            self.tlen = 0
 
-    def _train(self, x):
-        """Cumulate all input data in a one dimensional list."""
-        self.tlen += x.shape[0]
-        self.data.extend(x.ravel().tolist())
+        def _train(self, *args):
+            """Cumulate all input data in a one dimensional list."""
+            self.tlen += args[0].shape[0]
+            for field, data in zip(self._cumulator_fields, args):
+                getattr(self, field).extend(data.ravel().tolist())
 
-    def _stop_training(self, *args, **kwargs):
-        """Transform the data list to an array object and reshape it."""
-        self.data = numx.array(self.data, dtype = self.dtype)
-        self.data.shape = (self.tlen, self.input_dim)
+        def _stop_training(self, *args, **kwargs):
+            """Transform the data list to an array object and reshape it."""
+            
+            for field in self._cumulator_fields:
+                data = getattr(self, field)
+                setattr(self, field, numx.array(data, dtype = self.dtype))
+                getattr(self, field).shape = (self.tlen, self.input_dim)
+
+    return Cumulator
+
+Cumulator = VariadicCumulator('data')
+"""A Cumulator is a specialised version of a VariadicCumulator which only
+fills the field 'self.data'."""
+

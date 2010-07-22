@@ -133,7 +133,8 @@ from signal_node import (NodeException, TrainingException,
 from linear_flows import CrashRecoveryException, FlowException, FlowExceptionCR
 
 # import base node and flow classes
-from signal_node import NodeMetaclass, Node, Cumulator
+from signal_node import NodeMetaclass, Node, Cumulator, VariadicCumulator
+
 from linear_flows import (Flow, CheckpointFlow,
                           CheckpointFunction, CheckpointSaveFunction)
 
