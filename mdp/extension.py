@@ -354,7 +354,7 @@ def with_extension(extension_name):
     return decorator
 
 class extension(object):
-    """Context manager for the 'cache_execute' extension.
+    """Context manager for MDP extension.
 
     This allows you to use extensions using a 'with' statement, as in:
 
