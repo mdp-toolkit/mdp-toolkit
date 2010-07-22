@@ -149,7 +149,8 @@ from extension import (ExtensionException, extension_method,
                        activate_extensions, deactivate_extensions,
                        extension)
 
-from caching_extension import activate_caching, set_cachedir
+from caching_extension import (activate_caching, deactivate_caching,
+                               set_cachedir)
 
 # import classifier node
 from classifier_node import (ClassifierNode, ClassifierCumulator)
