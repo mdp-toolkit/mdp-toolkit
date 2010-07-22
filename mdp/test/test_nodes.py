@@ -370,45 +370,6 @@ class NodesTestSuite(unittest.TestSuite):
         assert node.visited == [1, 2, 3, 4]
 
 
-    def _testICANode(self,icanode, rand_func = uniform, vars = 3, N=8000,
-                     prec = 3):
-        dim = (N,vars)
-        mat,mix,inp = self._get_random_mix(rand_func=rand_func,mat_dim=dim)
-        icanode.train(inp)
-        act_mat = icanode.execute(inp)
-        cov = utils.cov2((mat-mean(mat,axis=0))/std(mat,axis=0), act_mat)
-        maxima = numx.amax(abs(cov), axis=0)
-        assert_array_almost_equal(maxima,numx.ones(vars),prec)
-
-    def _testICANodeMatrices(self, icanode, rand_func = uniform, vars = 3, N=8000):
-        dim = (N,vars)
-        mat,mix,inp = self._get_random_mix(rand_func=rand_func,
-                                           mat_dim=dim, avg = 0)
-        icanode.train(inp)
-        # test projection matrix
-        act_mat = icanode.execute(inp)
-        T = icanode.get_projmatrix()
-        exp_mat = mult(inp, T)
-        assert_array_almost_equal(act_mat,exp_mat,6)
-        # test reconstruction matrix
-        out = act_mat.copy()
-        act_mat = icanode.inverse(out)
-        B = icanode.get_recmatrix()
-        exp_mat = mult(out, B)
-        assert_array_almost_equal(act_mat,exp_mat,6)
-
-    def testCuBICANodeBatch(self):
-        ica = mdp.nodes.CuBICANode(limit = 10**(-self.decimal))
-        ica2 = ica.copy()
-        self._testICANode(ica)
-        self._testICANodeMatrices(ica2)
-
-    def testCuBICANodeTelescope(self):
-        ica = mdp.nodes.CuBICANode(limit = 10**(-self.decimal), telescope = 1)
-        ica2 = ica.copy()
-        self._testICANode(ica)
-        self._testICANodeMatrices(ica2)
-
     def _get_testFastICA(self, parms):
         # create a function description
 ##         # old func description: verbose and with newlines
@@ -467,29 +428,6 @@ class NodesTestSuite(unittest.TestSuite):
                 self._testICANodeMatrices(ica2, rand_func=rand_func, vars=2)
 
         return _testFastICA, desc
-
-    def _rand_with_timestruct(self, size=None):
-        T, N = size
-        # do something special only if T!=N, otherwise
-        # we were asked to generate a mixing matrix
-        if T == N:
-            return uniform(size=size)
-        # create independent sources
-        src = uniform((T,N))*2-1
-        fsrc = numx_fft.rfft(src,axis=0)
-        # enforce different speeds
-        for i in xrange(N):
-            fsrc[(i+1)*(T//20):,i] = 0.
-        src = numx_fft.irfft(fsrc,axis=0)
-        return src
-
-
-    def testTDSEPNode(self):
-        ica = mdp.nodes.TDSEPNode(lags=20,limit = 1E-10)
-        ica2 = ica.copy()
-        self._testICANode(ica, rand_func=self._rand_with_timestruct,vars=2, N=2**14, prec=2)
-        self._testICANodeMatrices(ica2, rand_func=self._rand_with_timestruct,vars=2,N=2**14)
-
 
 def get_suite(testname=None):
     return NodesTestSuite(testname=testname)
