@@ -11,8 +11,6 @@ import mdp
 import cPickle
 import tempfile
 import os
-import itertools
-import sys
 from mdp import utils, numx, numx_rand, numx_linalg, numx_fft
 from testing_tools import assert_array_almost_equal, assert_array_equal, \
      assert_almost_equal, assert_equal, assert_array_almost_equal_diff, \
@@ -55,17 +53,6 @@ def _cov(x,y=None):
     y = y  / _std(y)
     #return mult(numx.transpose(x),y)/(x.shape[0]-1)
     return mult(numx.transpose(x),y)/(x.shape[0])
-
-#_spinner = itertools.cycle((' /\b\b', ' -\b\b', ' \\\b\b', ' |\b\b'))
-_spinner = itertools.cycle((' .\b\b', ' o\b\b', ' 0\b\b', ' O\b\b',
-                            ' 0\b\b', ' o\b\b'))
-#_spinner = itertools.cycle([" '\b\b"]*2 + [' !\b\b']*2 + [' .\b\b']*2 +
-#                           [' !\b\b']*2)
-
-# create spinner
-def spinner():
-    sys.stderr.write(_spinner.next())
-    sys.stderr.flush()
 
 class NodesTestSuite(unittest.TestSuite):
 

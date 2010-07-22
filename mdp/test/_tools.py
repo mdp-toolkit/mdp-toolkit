@@ -1,6 +1,8 @@
 """Tools for the test- and benchmark functions."""
 
+import sys
 import time
+import itertools
 import mdp
 numx = mdp.numx
 import numpy.testing as testing
@@ -129,3 +131,13 @@ class BogusMultiNode(mdp.Node):
         self.visited.append(3)
     def stop2(self):
         self.visited.append(4)
+
+#_spinner = itertools.cycle((' /\b\b', ' -\b\b', ' \\\b\b', ' |\b\b'))
+_spinner = itertools.cycle((' .\b\b', ' o\b\b', ' 0\b\b', ' O\b\b',
+                            ' 0\b\b', ' o\b\b'))
+#_spinner = itertools.cycle([" '\b\b"]*2 + [' !\b\b']*2 + [' .\b\b']*2 +
+#                           [' !\b\b']*2)
+
+def spinner():
+    sys.stderr.write(_spinner.next())
+    sys.stderr.flush()
