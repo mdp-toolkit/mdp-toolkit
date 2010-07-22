@@ -21,7 +21,7 @@ This keeps the code readable and is compatible with automatic code checkers
 (like the background pylint checks in the Eclipse IDE with PyDev).
 """
 
-from mdp import MDPException, NodeMetaclass, Node
+from mdp import MDPException, NodeMetaclass, utils, Node, numx
 
 # TODO: note the ParllelBiFlowNode purge_nodes method, which is not part
 #    of the ParallelNode interface. Allow this?
@@ -394,7 +394,12 @@ import hashlib
 def _hasharray(x):
     """Returns an hash value for a numpy array."""
     m = hashlib.md5()
-    m.update(x)
+    try:
+        m.update(numx.getbuffer(x))
+    except TypeError:
+        # Cater for non-single-segment arrays: this creates a
+        # copy, and thus aleviates this issue.
+        m.update(numx.getbuffer(x.flatten()))
     return m.digest()
 
 class CacheExecuteExtensionNode(ExtensionNode, Node):

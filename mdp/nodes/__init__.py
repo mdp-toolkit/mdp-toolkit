@@ -16,6 +16,7 @@ from regression_nodes import LinearRegressionNode
 from classifier_nodes import (SignumClassifier, PerceptronClassifier,
                               SimpleMarkovClassifier, DiscreteHopfieldClassifier,
                               KMeansClassifier)
+from convolution_nodes import Convolution2DNode
 
 # import internals for use in test_suites
 from misc_nodes import OneDimensionalHitParade as _OneDimensionalHitParade
@@ -55,4 +56,20 @@ del regression_nodes
 del classifier_nodes
 del mdp.contrib
 del mdp
+del convolution_nodes
+
+__all__ = ['CuBICANode', 'EtaComputerNode', 'FANode', 'FDANode', 'FastICANode',
+           'GaussianClassifierNode', 'GrowingNeuralGasNode', 'HitParadeNode',
+           'ICANode', 'ISFANode', 'JADENode', 'LLENode', 'LibSVMClassifier', 'NIPALSNode',
+           'NoiseNode', 'NormalNoiseNode', 'HLLENode', 'IdentityNode',
+           'PCANode', 'PolynomialExpansionNode', 'QuadraticExpansionNode',
+           'RBFExpansionNode',
+           'RBMNode', 'RBMWithLabelsNode', 'SFA2Node', 'SFANode', 'ShogunSVMClassifier'
+           'TDSEPNode', 'TimeFramesNode','WhiteningNode', 'XSFANode',
+           'LinearRegressionNode',
+           '_OneDimensionalHitParade', '_expanded_dim',
+           'CutoffNode', 'HistogramNode', 'AdaptiveCutoffNode',
+           'SignumClassifier', 'PerceptronClassifier',
+           'SimpleMarkovClassifier', 'DiscreteHopfieldClassifier',
+           'KMeansClassifier', 'Convolution2DNode']
 

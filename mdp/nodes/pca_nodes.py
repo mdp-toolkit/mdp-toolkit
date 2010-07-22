@@ -81,7 +81,7 @@ class PCANode(Node):
         if not y.ndim == 2:
             error_str = "y has rank %d, should be 2" % (y.ndim)
             raise NodeException(error_str)
-
+        
         if y.shape[1] == 0 or y.shape[1] > self.output_dim:
             error_str = ("y has dimension %d"
                          ", should be 0<y<=%d" % (y.shape[1], self.output_dim))
