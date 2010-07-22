@@ -160,7 +160,8 @@ class FANode(mdp.Node):
     def _execute(self, x):
         return mult(x-self.mu, self.E_y_mtx)
 
-    def is_invertible(self):
+    @staticmethod
+    def is_invertible():
         return False
 
     def generate_input(self, len_or_y=1, noise=False):

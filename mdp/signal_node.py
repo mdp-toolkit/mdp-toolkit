@@ -380,11 +380,13 @@ class Node(object):
             return 0
 
     ### Node capabilities
-    def is_trainable(self):
+    @staticmethod
+    def is_trainable():
         """Return True if the node can be trained, False otherwise."""
         return True
 
-    def is_invertible(self):
+    @staticmethod
+    def is_invertible():
         """Return True if the node can be inverted, False otherwise."""
         return True
 

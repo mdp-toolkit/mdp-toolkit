@@ -21,7 +21,8 @@ class TestBiNode(unittest.TestCase):
                 self.b = b
                 self.d = d
                 return x, {"g": 15, "z": 3}
-            def is_trainable(self): return False
+            @staticmethod
+            def is_trainable(): return False
         binode = TestBiNode(node_id="test")
         b_key = "test" + MSG_ID_SEP + "b"
         d_key = "test" + MSG_ID_SEP + "d"
@@ -43,7 +44,8 @@ class TestBiNode(unittest.TestCase):
             def _execute(self, x, a, b):
                 self.a = a
                 self.b = b
-            def is_trainable(self): return False
+            @staticmethod
+            def is_trainable(): return False
         binode = TestBiNode(node_id="test")
         b_key = "test" + MSG_ID_SEP + "b"
         # check that the 'd' key which is not an arg gets removed
@@ -61,7 +63,8 @@ class TestBiNode(unittest.TestCase):
                 del msg["c"]
                 msg["f"] = 1
                 return x, msg
-            def is_trainable(self): return False
+            @staticmethod
+            def is_trainable(): return False
         binode = TestBiNode(node_id="test")
         b_key = "test" + MSG_ID_SEP + "b"
         msg = {"c": 12, b_key: 42, "a": 13}
@@ -79,7 +82,8 @@ class TestBiNode(unittest.TestCase):
             def _test(self, x, a, b):
                 self.a = a
                 self.b = b
-            def is_trainable(self): return False
+            @staticmethod
+            def is_trainable(): return False
         binode = TestBiNode(node_id="test")
         b_key = "test" + MSG_ID_SEP + "b"
         msg = {"c": 12, "a": 13, b_key: 42, "method": "test"}
@@ -94,7 +98,8 @@ class TestBiNode(unittest.TestCase):
             def _execute(self, x, a, b):
                 self.a = a
                 self.b = b
-            def is_trainable(self): return False
+            @staticmethod
+            def is_trainable(): return False
         binode = TestBiNode(node_id="test")
         b_key = "test" + MSG_ID_SEP + "b"
         target_key = "test" + MSG_ID_SEP + "target"
@@ -111,7 +116,8 @@ class TestBiNode(unittest.TestCase):
                 self.b = b
                 y = n.zeros((len(x), self.input_dim))
                 return y
-            def is_trainable(self): return False
+            @staticmethod
+            def is_trainable(): return False
         binode = TestBiNode(node_id="test", input_dim=20, output_dim=10)
         b_key = "test" + MSG_ID_SEP + "b"
         msg = {"c": 12, "a": 13, b_key: 42, "method": "inverse"}
@@ -129,7 +135,8 @@ class TestBiNode(unittest.TestCase):
                 self.b = b
                 y = n.zeros((len(x), self.input_dim))
                 return y, None, "test2"
-            def is_trainable(self): return False
+            @staticmethod
+            def is_trainable(): return False
         binode = TestBiNode(node_id="test", input_dim=20, output_dim=10)
         b_key = "test" + MSG_ID_SEP + "b"
         msg = {"c": 12, "a": 13, b_key: 42, "method": "inverse"}
@@ -176,7 +183,10 @@ class TestBiNode(unittest.TestCase):
                 self.x = x
                 y = n.zeros((len(x), self.output_dim))
                 return y
-            def is_trainable(self): return True
+
+            @staticmethod
+            def is_trainable(): return False
+
         binode = TestBiNode(input_dim=20, output_dim=10)
         x = n.ones((5, binode.input_dim))
         binode.train(x)
@@ -198,7 +208,10 @@ class TestBiNode(unittest.TestCase):
                 self.x = x
                 y = n.zeros((len(x), self.input_dim))
                 return y
-            def is_trainable(self): return True
+
+            @staticmethod
+            def is_trainable(): return False
+
         binode = TestBiNode(input_dim=20, output_dim=10)
         binode.train(n.ones((5, binode.input_dim)))
         x = n.ones((5, binode.output_dim))
@@ -241,7 +254,8 @@ class TestBiClassifierNode(unittest.TestCase):
                 return "LABELS"
             def _prob(self, x):
                 return "PROPS"
-            def is_trainable(self):
+            @staticmethod
+            def is_trainable():
                 return False
         node = TestBiClassifier()
         x = n.empty((5,2))
@@ -331,7 +345,8 @@ class TestBiNodeCoroutine(unittest.TestCase):
 
         class CoroutineBiNode(BiNode):
 
-            def is_trainable(self):
+            @staticmethod
+            def is_trainable():
                 return False
 
             @binode_coroutine(["alpha", "beta"])
@@ -356,7 +371,8 @@ class TestBiNodeCoroutine(unittest.TestCase):
 
         class CoroutineBiNode(BiNode):
 
-            def is_trainable(self):
+            @staticmethod
+            def is_trainable():
                 return False
 
             @binode_coroutine(["alpha", "beta"])
@@ -379,7 +395,8 @@ class TestBiNodeCoroutine(unittest.TestCase):
 
         class CoroutineBiNode(BiNode):
 
-            def is_trainable(self):
+            @staticmethod
+            def is_trainable():
                 return False
 
             @binode_coroutine(["alpha", "beta"], defaults=(7,8))
@@ -399,7 +416,8 @@ class TestBiNodeCoroutine(unittest.TestCase):
 
         class CoroutineBiNode(BiNode):
 
-            def is_trainable(self):
+            @staticmethod
+            def is_trainable():
                 return False
 
             @binode_coroutine()
@@ -419,7 +437,8 @@ class TestBiNodeCoroutine(unittest.TestCase):
 
         class CoroutineBiNode(BiNode):
 
-            def is_trainable(self):
+            @staticmethod
+            def is_trainable():
                 return False
 
             @binode_coroutine()
@@ -444,7 +463,8 @@ class TestBiNodeCoroutine(unittest.TestCase):
 
         class CoroutineBiNode(BiNode):
 
-            def is_trainable(self):
+            @staticmethod
+            def is_trainable():
                 return False
 
             @binode_coroutine()

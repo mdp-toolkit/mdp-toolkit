@@ -147,7 +147,8 @@ class RBMNode(mdp.Node):
 
     # execution methods
 
-    def is_invertible(self):
+    @staticmethod
+    def is_invertible():
         return False
 
     def _pre_inversion_checks(self, y):
@@ -334,7 +335,8 @@ class RBMWithLabelsNode(RBMNode):
         else:
             return h
 
-    def is_invertible(self):
+    @staticmethod
+    def is_invertible():
         return False
 
     def train(self, v, l, n_updates=1, epsilon=0.1, decay=0., momentum=0.,

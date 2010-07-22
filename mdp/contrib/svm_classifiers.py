@@ -70,7 +70,8 @@ class _SVMClassifier(ClassifierCumulator):
 
         super(_SVMClassifier, self).__init__(input_dim, None, dtype)
 
-    def is_invertible(self):
+    @staticmethod
+    def is_invertible():
         return False
 
     def _set_input_dim(self, n):

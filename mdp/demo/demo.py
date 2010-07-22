@@ -56,7 +56,8 @@ x = pcanode1.inverse(y_pca)
 expnode.is_invertible()
 # False
 class TimesTwoNode(mdp.Node):
-    def is_trainable(self):
+    @staticmethod
+    def is_trainable():
         return False
     def _execute(self, x):
         return 2*x
@@ -75,9 +76,11 @@ class PowerNode(mdp.Node):
     def __init__(self, power, input_dim=None, dtype=None):
         super(PowerNode, self).__init__(input_dim=input_dim, dtype=dtype)
         self.power = power
-    def is_trainable(self):
+    @staticmethod
+    def is_trainable():
         return False
-    def is_invertible(self):
+    @staticmethod
+    def is_invertible():
         return False
     def _get_supported_dtypes(self):
         return ['float32', 'float64']
@@ -167,8 +170,10 @@ y = node(x)
 print 'Standard deviation of y (should be one): ', mdp.numx.std(y, axis=0)
 # Standard deviation of y (should be one):  [ 1.  1.  1.  1.]
 class TwiceNode(mdp.Node):
-    def is_trainable(self): return False
-    def is_invertible(self): return False
+    @staticmethod
+    def is_trainable(): return False
+    @staticmethod
+    def is_invertible(): return False
     def _set_input_dim(self, n):
         self._input_dim = n
         self._output_dim = 2*n
@@ -270,8 +275,10 @@ class BogusNode(mdp.Node):
 class BogusNode2(mdp.Node):
     """This node does nothing. But it's not trainable nor invertible.
     """
-    def is_trainable(self): return False
-    def is_invertible(self): return False
+    @staticmethod
+    def is_trainable(): return False
+    @staticmethod
+    def is_invertible(): return False
 # ...
 # >>>
 def gen_data(blocks):

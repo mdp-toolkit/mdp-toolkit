@@ -292,9 +292,7 @@ from classifier_node import (ClassifierNode, ClassifierCumulator)
 import nodes
 import hinet
 import parallel
-
-# import test functions:
-from test import test
+import contrib
 
 
 def info():

@@ -177,7 +177,8 @@ class XSFANode(mdp.Node):
         """Return the list of dtypes supported by this node."""
         return ('float32', 'float64')
 
-    def is_invertible(self):
+    @staticmethod
+    def is_invertible():
         return False
 
     def _train(self, x):

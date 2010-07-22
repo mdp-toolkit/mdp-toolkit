@@ -34,13 +34,14 @@ class JumpBiNode(IdentityBiNode):
         self._execute_results = execute_results
         super(JumpBiNode, self).__init__(*args, **kwargs)
 
-    def is_trainable(self):
+    def is_trainable():
         if self._train_results:
             return True
         else:
             return False
 
-    def is_invertible(self):
+    @staticmethod
+    def is_invertible():
         return False
 
     def _get_train_seq(self):
@@ -146,5 +147,6 @@ class ParallelTraceJumpBiNode(TraceJumpBiNode):
 class IdNode(mdp.Node):
     """Non-bi identity node for testing."""
 
-    def is_trainable(self):
+    @staticmethod
+    def is_trainable():
         return False

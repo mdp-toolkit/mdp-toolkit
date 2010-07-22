@@ -103,10 +103,7 @@ class FlowNode(mdp.Node):
         return self._is_trainable
 
     def is_invertible(self):
-        for node in self._flow:
-            if not node.is_invertible():
-                return False
-        return True
+        return all(node.is_invertible() for node in self._flow)
 
     def _get_train_seq(self):
         """Return a training sequence containing all training phases."""

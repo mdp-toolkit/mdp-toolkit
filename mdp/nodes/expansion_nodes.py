@@ -21,10 +21,12 @@ class _ExpansionNode(mdp.Node):
     def expanded_dim(self, dim):
         return dim
 
-    def is_trainable(self):
+    @staticmethod
+    def is_trainable():
         return False
 
-    def is_invertible(self):
+    @staticmethod
+    def is_invertible():
         return False
 
     def _set_input_dim(self, n):
@@ -131,10 +133,12 @@ class RBFExpansionNode(mdp.Node):
         """Return the list of dtypes supported by this node."""
         return mdp.utils.get_dtypes('AllFloat')
 
-    def is_trainable(self):
+    @staticmethod
+    def is_trainable():
         return False
 
-    def is_invertible(self):
+    @staticmethod
+    def is_invertible():
         return False
 
     def _init_RBF(self, centers, sizes):
@@ -238,10 +242,12 @@ class GrowingNeuralGasExpansionNode(GrowingNeuralGasNode):
         msg = "Output dim cannot be set explicitly!"
         raise mdp.NodeException(msg)
 
-    def is_trainable(self):
+    @staticmethod
+    def is_trainable():
         return True
 
-    def is_invertible(self):
+    @staticmethod
+    def is_invertible():
         return False
 
     def _stop_training(self):

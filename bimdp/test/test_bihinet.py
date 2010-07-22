@@ -57,7 +57,8 @@ class DummyBiNode(IdentityBiNode):
         self.data2 = data2
         return x
 
-    def is_trainable(self):
+    @staticmethod
+    def is_trainable():
         return False
 
 

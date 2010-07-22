@@ -19,7 +19,8 @@ class BiLearningPhaseNotParallelException(BiNodeException):
 class DummyNode(mdp.Node):
     """Dummy node class for empty nodes."""
 
-    def is_trainable(self):
+    @staticmethod
+    def is_trainable():
         return False
 
 

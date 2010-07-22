@@ -64,7 +64,8 @@ class Switchboard(mdp.Node):
     def _execute(self, x):
         return x[:, self.connections]
 
-    def is_trainable(self):
+    @staticmethod
+    def is_trainable():
         return False
 
     def is_invertible(self):
@@ -109,7 +110,8 @@ class MeanInverseSwitchboard(Switchboard):
             i_y += 1
         return y
 
-    def is_invertible(self):
+    @staticmethod
+    def is_invertible():
         return True
 
 

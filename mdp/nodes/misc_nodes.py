@@ -21,14 +21,15 @@ MIN_NUM = {numx.dtype('b'): -128,
 
 class IdentityNode(Node):
     """Return input data (useful in complex network layouts)"""
-    
-    def is_trainable(self):
+
+    @staticmethod
+    def is_trainable():
         False
 
     def _set_input_dim(self, n):
         self._input_dim = n
         self._output_dim = n
-        
+
     def _set_output_dim(self, n):
         if (self._input_dim is not None) and (self._input_dim != n):
             err = "output_dim must be equal to input_dim for indentity nodes"
@@ -237,10 +238,12 @@ class TimeFramesNode(Node):
         """Return the list of dtypes supported by this node."""
         return ['int8', 'int16', 'int32', 'int64', 'float32', 'float64']
 
-    def is_trainable(self):
+    @staticmethod
+    def is_trainable():
         return False
 
-    def is_invertible(self):
+    @staticmethod
+    def is_invertible():
         return False
 
     def _set_input_dim(self, n):
@@ -442,10 +445,12 @@ class NoiseNode(Node):
         return (mdp.utils.get_dtypes('AllFloat') +
                 mdp.utils.get_dtypes('AllInteger'))
 
-    def is_trainable(self):
+    @staticmethod
+    def is_trainable():
         return False
 
-    def is_invertible(self):
+    @staticmethod
+    def is_invertible():
         return False
 
     def _execute(self, x):
@@ -501,10 +506,12 @@ class NormalNoiseNode(mdp.Node):
                                               dtype=dtype)
         self.noise_args = noise_args
 
-    def is_trainable(self):
+    @staticmethod
+    def is_trainable():
         return False
 
-    def is_invertible(self):
+    @staticmethod
+    def is_invertible():
         return False
 
     def _execute(self, x):
@@ -539,7 +546,8 @@ class GaussianClassifierNode(ClassifierNode):
         """Return the list of dtypes supported by this node."""
         return ['float32', 'float64']
 
-    def is_invertible(self):
+    @staticmethod
+    def is_invertible():
         return False
 
     def _check_train_args(self, x, labels):
@@ -673,10 +681,12 @@ class CutoffNode(mdp.Node):
         self.lower_bound = lower_bound
         self.upper_bound = upper_bound
 
-    def is_trainable(self):
+    @staticmethod
+    def is_trainable():
         return False
 
-    def is_invertible(self):
+    @staticmethod
+    def is_invertible():
         return False
 
     def _execute(self, x):

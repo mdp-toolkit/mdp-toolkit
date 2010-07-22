@@ -299,10 +299,12 @@ class LLENode(Cumulator):
         #multiply weights by result of SVD from training
         return numx.dot(W, self.training_projection)
 
-    def is_trainable(self):
+    @staticmethod
+    def is_trainable():
         return True
 
-    def is_invertible(self):
+    @staticmethod
+    def is_invertible():
         return False
 
 

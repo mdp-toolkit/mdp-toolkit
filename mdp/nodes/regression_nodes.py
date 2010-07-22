@@ -57,7 +57,8 @@ class LinearRegressionNode(Node):
     def _get_supported_dtypes(self):
         return ['float32', 'float64']
 
-    def is_invertible(self):
+    @staticmethod
+    def is_invertible():
         return False
 
     def _check_train_args(self, x, y):
