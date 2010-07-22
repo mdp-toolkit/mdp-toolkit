@@ -100,12 +100,7 @@ def test_FlowNode_copy2():
             raise CopyFailException()
     flow = mdp.Flow([mdp.Node(), CopyFailNode()])
     flownode = mh.FlowNode(flow)
-    try:
-        flownode.copy()
-    except CopyFailException:
-        pass
-    else:
-        assert False, 'Did not raise expected exception.'
+    py.test.raises(CopyFailException, flownode.copy)
 
 def _pca_nodes(input_dims, output_dims):
     return [mdp.nodes.PCANode(input_dim=ind, output_dim=outd)
