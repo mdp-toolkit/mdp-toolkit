@@ -9,7 +9,6 @@ class TestMDPExtensions(object):
     def teardown_method(self, method):
         """Deactivate all extensions and remove testing extensions."""
         mdp.deactivate_extensions(mdp.get_active_extensions())
-        print "deactivated extensions"
         for key in mdp.get_extensions().copy():
             if key.startswith("__test"):
                 del mdp.get_extensions()[key]
