@@ -142,8 +142,8 @@ def test_dimdtypeset(klass, init_args, inp_arg_gen,
 
 @id_format("{klass.__name__}")
 @only_if_node(lambda nodetype: nodetype.is_invertible())
-def test_invertible(klass, init_args, inp_arg_gen,
-                    sup_arg_gen, execute_arg_gen):
+def test_inverse(klass, init_args, inp_arg_gen,
+                 sup_arg_gen, execute_arg_gen):
     args = call_init_args(init_args)
     inp = inp_arg_gen()
         # take the first available dtype for the test
