@@ -375,10 +375,8 @@ class extension(object):
         self.ext_names = ext_names
 
     def __enter__(self):
-        for name in self.ext_names:
-            activate_extension(name)
+        activate_extensions(name)
 
     def __exit__(self, type, value, traceback):
-        for name in self.ext_names:
-            deactivate_extension(name)
+        deactivate_extensions(name)
 
