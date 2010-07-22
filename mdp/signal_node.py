@@ -653,7 +653,7 @@ def VariadicCumulator(*fields):
     all input data. In this way it is possible to easily implement
     batch-mode learning.
 
-    The data is accessible in the attributes given with the VariadicCumulator’s
+    The data is accessible in the attributes given with the VariadicCumulator's
     constructor after the beginning of the '_stop_training' phase.
     'self.tlen' contains the number of data points collected.
     """
