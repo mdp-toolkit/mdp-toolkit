@@ -1,14 +1,15 @@
-
-# TODO: decorator per le singole istanze
-
-# TODO: docs
-
 import joblib
 from copy import deepcopy
 from tempfile import mkdtemp
 
 from ..extension import ExtensionNode, activate_extension, deactivate_extension
 from ..signal_node import Node
+
+# TODO: decorator per le singole istanze
+
+# FIXME: if cachedir is modified after an instance has been cached,
+# the extension does not notice and keeps caching in the old one
+
 
 _cachedir = None
 _memory = None
@@ -43,6 +44,9 @@ class CacheExecuteExtensionNode(ExtensionNode, Node):
     extension_name = 'cache_execute'
 
     def __getstate__(self):
+        # This function is used by Pickler to decide what to
+        # pickle. We hide self._cached_execute to avoid it complaining
+        # when computing the joblib hash number
         dct = self.__dict__
         if not dct.has_key('_cached_execute'):
             return dct
@@ -52,7 +56,7 @@ class CacheExecuteExtensionNode(ExtensionNode, Node):
             return dct
 
     def execute(self, x, *args, **kwargs):
-        if not hasattr(self, '_memory'):
+        if not hasattr(self, '_cached_execute'):
             global _memory
             self._cached_execute = _memory.cache(
                 self._non_extension_execute.im_func)
