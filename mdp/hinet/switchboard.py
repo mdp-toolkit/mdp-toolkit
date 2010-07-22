@@ -68,8 +68,7 @@ class Switchboard(mdp.Node):
     def is_trainable():
         return False
 
-    @staticmethod
-    def is_invertible():
+    def is_invertible(self):
         if self.inverse_connections is None:
             return False
         else:
