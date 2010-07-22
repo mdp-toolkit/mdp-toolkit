@@ -122,6 +122,142 @@ else:
 
 del _os, _NUMX_LABELS, _USR_LABEL, _label
 
+
+class ExternalDep(object):
+    def __init__(self, version=None, failmsg=None):
+        self.available = None
+        self.version = version
+        self.failmsg = failmsg
+        self.module = "unknown"
+
+    def __repr__(self):
+        if self.available:
+            return "%s" % self.version
+        else:
+            return "FAILED: %s" % self.failmsg
+
+class ExternalDepFail(ExternalDep):
+    def __init__(self, failmsg):
+        super(ExternalDepFail, self).__init__(version=None, failmsg=failmsg)
+        self.available = False
+
+class ExternalDepFound(ExternalDep):
+    def __init__(self, version="(unknown version)"):
+        super(ExternalDepFound, self).__init__(version=version, failmsg=None)
+        self.available = True
+
+
+from utils import get_git_revision
+
+__version__ = '2.6'
+__revision__ = get_git_revision()
+__authors__ = 'Pietro Berkes, Rike-Benjamin Schuppner, Niko Wilbert, and Tiziano Zito'
+__copyright__ = '(c) 2003-2010 Pietro Berkes, Rike-Benjamin Schuppner, Niko Wilbert, Tiziano Zito'
+__license__ = 'LGPL v3, http://www.gnu.org/licenses/lgpl.html'
+__contact__ = 'mdp-toolkit-users@lists.sourceforge.net'
+
+
+from utils.routines import OrderedDict
+
+class MDPConfiguration(object):
+    """MDPConfiguration() does checks on the available libraries
+    and auto-generates a list of featues for inclusion in debug output.
+    """
+    # TODO: Needs more love with version checking.
+    def __getitem__(self, key):
+
+        if key in self._features:
+            return self._features[key]
+        raise KeyError("'%s'" % key)
+
+    def check_feature(self, feature, prop):
+        self._features[feature] = prop()
+
+    def add_info(self, feature, val):
+        self._features[feature] = val
+
+    def __init__(self):
+        self._features = OrderedDict()
+
+        self.add_info('MDP Version', __version__)
+        self.add_info('MDP Revision', __revision__)
+        self.check_feature("Numerical Backend", self.numerical_backend)
+        self.check_feature("Parallel Python", self.has_parallel_python)
+        self.check_feature("shogun", self.has_shogun)
+        self.check_feature("LibSVM", self.has_libsvm)
+        self.check_feature("Symeig Backend", self.symeig)
+
+    def has(self, dep):
+        """Checks if a dependency is available."""
+        return self[dep].available
+
+    def has_parallel_python(self):
+        try:
+            import pp as __pp
+        except ImportError as msg:
+            return ExternalDepFail(msg)
+        return ExternalDepFound()
+
+    def has_shogun(self):
+        try:
+            import shogun.Kernel as _sgKernel
+            import shogun.Classifier as _sgClassifier
+        except ImportError as msg:
+            return ExternalDepFail(msg)
+        # We need to have at least SHOGUN 0.9, as we rely on
+        # SHOGUN's CClassifier::classify() method.
+        # (It makes our code much nicer, by the way.)
+        #
+        if not hasattr(_sgClassifier.Classifier, 'classify'):
+            return ExternalDepFail("CClassifier::classify not found")
+        try:
+            version = _sgKernel._Kernel.Version_get_version_release()
+        except AttributeError:
+            version = ""
+
+        if not (version.startswith('v0.9') or version.startswith('v1.')):
+            return ExternalDepFail("We need at least SHOGUN version 0.9.")
+        return ExternalDepFound(version)
+
+    def has_libsvm(self):
+        try:
+            import svm as libsvm
+        except ImportError as msg:
+            return ExternalDepFail(msg)
+        return ExternalDepFound()
+
+    def numerical_backend(self):
+        return numx_description + numx_version
+
+    def symeig(self):
+        import utils
+        # check what symeig are we using
+        if utils.symeig is utils.wrap_eigh:
+            SYMEIG = 'scipy.linalg.eigh'
+        else:
+            try:
+                import symeig
+                if utils.symeig is symeig.symeig:
+                    SYMEIG = 'symeig'
+                elif utils.symeig is utils._symeig_fake:
+                    SYMEIG = 'symeig_fake'
+                else:
+                    SYMEIG = 'unknown'
+            except ImportError:
+                if utils.symeig is utils._symeig_fake:
+                    SYMEIG = 'symeig_fake'
+                else:
+                    SYMEIG = 'unknown'
+        return SYMEIG
+    
+    def info(self):
+        """Return nicely formatted info about MDP."""
+        maxlen = max(len(f) for f in self._features)
+        return "\n".join(["{feature:{maxlen}}: {desc!s}".format(feature=feature, desc=self[feature], maxlen=maxlen+1)
+                            for feature in self._features])
+
+config = MDPConfiguration()
+
 # import the utils module (used by other modules)
 # here we set scipy_emulation if needed.
 import utils
@@ -160,59 +296,11 @@ import parallel
 # import test functions:
 from test import test
 
-__version__ = '2.6'
-__revision__ = utils.get_git_revision()
-__authors__ = 'Pietro Berkes, Rike-Benjamin Schuppner, Niko Wilbert, and Tiziano Zito'
-__copyright__ = '(c) 2003-2010 Pietro Berkes, Rike-Benjamin Schuppner, Niko Wilbert, Tiziano Zito'
-__license__ = 'LGPL v3, http://www.gnu.org/licenses/lgpl.html'
-__contact__ = 'mdp-toolkit-users@lists.sourceforge.net'
-
-# list of features
-__features__ = ('MDP Version', 'MDP Revision', 'Numerical Backend',
-                'Symeig Backend', 'Parallel Python Support',
-                'LibSVM', 'Shogun')
-
-# gather information about us
-def _info():
-    """Return dictionary containing info about MDP."""
-    # keep stuff in a dictionary
-    # as soon as odict becomes a builtin, we can keep features and
-    # info in the same ordered dictionary!
-    info = {}
-    info['MDP Version'] = __version__
-    info['MDP Revision'] = __revision__
-    # parallel python support
-    info['Parallel Python Support'] = str(hasattr(parallel, 'pp'))
-    info['LibSVM'] = str(hasattr(nodes, 'LibSVMClassifier'))
-    info ['Shogun'] = str(hasattr(nodes, 'ShogunSVMClassifier'))
-    info['Numerical Backend'] = numx_description + numx_version
-    # check what symeig are we using
-    if utils.symeig is utils.wrap_eigh:
-        SYMEIG = 'scipy.linalg.eigh'
-    else:
-        try:
-            import symeig
-            if utils.symeig is symeig.symeig:
-                SYMEIG = 'symeig'
-            elif utils.symeig is utils._symeig_fake:
-                SYMEIG = 'symeig_fake'
-            else:
-                SYMEIG = 'unknown'
-        except ImportError:
-            if utils.symeig is utils._symeig_fake:
-                SYMEIG = 'symeig_fake'
-            else:
-                SYMEIG = 'unknown'
-    info['Symeig Backend'] = SYMEIG
-    return info
-
 
 def info():
     """Return nicely formatted info about MDP."""
     import sys
-    info = _info()
-    for feature in __features__:
-        sys.stderr.write(feature+': '+info[feature]+'\n')
+    sys.stderr.write(config.info())
 
 
 # clean up namespace
@@ -233,4 +321,7 @@ __all__ = ['CheckpointFlow', 'CheckpointFunction', 'CheckpointSaveFunction',
            'get_extensions', 'get_active_extension_names', 'with_extension',
            'activate_extension', 'deactivate_extension', 'activate_extensions',
            'deactivate_extensions',
-           'ClassifierNode']
+           'ClassifierNode',
+           'config',
+           ]
+

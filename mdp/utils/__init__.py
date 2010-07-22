@@ -3,7 +3,7 @@ from routines import (timediff, refcast, scast, rotate, random_rot, wrap_eigh,
                       mult_diag, comb, sqrtm, get_dtypes, nongeneral_svd,
                       SymeigException, hermitian, _symeig_fake, cov_maxima,
                       lrep, rrep, irep, orthogonal_permutations, izip_stretched,
-                      weighted_choice, bool_to_sign, sign_to_bool)
+                      weighted_choice, bool_to_sign, sign_to_bool, OrderedDict)
 from introspection import dig_node, get_node_size, get_node_size_str
 from quad_forms import QuadraticForm
 from covariance import (CovarianceMatrix, DelayCovarianceMatrix,
@@ -100,4 +100,5 @@ __all__ = ['CovarianceMatrix', 'DelayCovarianceMatrix','CrossCovarianceMatrix',
            'SectionImageHTMLSlideShow', 'image_slideshow',
            'lrep', 'rrep', 'irep',
            'orthogonal_permutations', 'izip_stretched',
-           'weighted_choice', 'bool_to_sign', 'sign_to_bool']
+           'weighted_choice', 'bool_to_sign', 'sign_to_bool',
+           'OrderedDict']

@@ -38,11 +38,10 @@ from parallelhinet import (
     ParallelFlowNode, ParallelLayer, ParallelCloneLayer
 )
 
-try:
-    import pp
+from mdp import config
+
+if config.has('Parallel Python'):
     import pp_support
-except ImportError:
-    pass
 
 del scheduling
 del process_schedule
