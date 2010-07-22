@@ -9,7 +9,8 @@ Before release:
 - update date in __copyright__ in __init__
 - make sure tutorial has right version
 - make sure tutorial PDF has right version
-- make sure homepage links to tutorial have right version
+- make sure homepage links to tutorial have right version (links in index.rst
+  and tutorial_src/tutorial.rst)
 - try mdp tests with MDPNUMX=scipy, MDNUMX=numpy, and with parallel
   python
 
