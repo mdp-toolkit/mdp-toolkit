@@ -108,7 +108,7 @@ class TestMDPExtensions(unittest.TestCase):
         class TestSFA2Node(TestSFANode, mdp.nodes.SFA2Node):
             def _testtest(self):
                 if sys.version_info[0] < 3:
-                    return TestSFANode._testtest.__func__(self)
+                    return TestSFANode._testtest.im_func(self)
                 else:
                     return TestSFANode._testtest(self)
         sfa2_node = mdp.nodes.SFA2Node()

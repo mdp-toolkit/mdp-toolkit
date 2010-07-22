@@ -1,3 +1,4 @@
+from __future__ import with_statement
 import mdp
 import sys as _sys
 import os as _os

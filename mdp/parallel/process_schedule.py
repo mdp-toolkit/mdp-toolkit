@@ -122,7 +122,7 @@ class ProcessScheduler(Scheduler):
         if len(self._free_processes) < self._n_processes:
             raise Exception("some slave process is still working")
         for process in self._free_processes:
-            pickle.dump(b"EXIT", process.stdin)
+            pickle.dump("EXIT", process.stdin)
             process.stdin.flush()
         self._lock.release()
         if self.verbose:
@@ -209,7 +209,7 @@ def _process_run(cache_callable=True):
         try:
             # wait for task to arrive
             task = pickle.load(pickle_in)
-            if task == b"EXIT":
+            if task == "EXIT":
                 exit_loop = True
             else:
                 data, callable_, task_index = task
