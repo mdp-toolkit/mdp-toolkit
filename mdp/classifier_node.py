@@ -1,4 +1,4 @@
-from mdp import Node, numx
+from mdp import Node, numx, VariadicCumulator
 import operator
 
 
@@ -61,7 +61,7 @@ class ClassifierNode(Node):
         return all_ranking
 
 
-class ClassifierCumulator(ClassifierNode):
+class ClassifierCumulator(VariadicCumulator('data', 'labels'), ClassifierNode):
     """A ClassifierCumulator is a Node whose training phase simply collects
     all input data and labels. In this way it is possible to easily implement
     batch-mode learning.
@@ -74,9 +74,6 @@ class ClassifierCumulator(ClassifierNode):
 
     def __init__(self, input_dim = None, output_dim = None, dtype = None):
         super(ClassifierCumulator, self).__init__(input_dim, output_dim, dtype)
-        self.data = []
-        self.labels = []
-        self.tlen = 0
 
     def _check_train_args(self, x, labels):
         super(ClassifierCumulator, self)._check_train_args(x, labels)
@@ -105,3 +102,4 @@ class ClassifierCumulator(ClassifierNode):
         self.data.shape = (self.tlen, self.input_dim)
         self.labels = numx.array(self.labels, dtype = self.dtype)
         self.labels.shape = (self.tlen)
+
