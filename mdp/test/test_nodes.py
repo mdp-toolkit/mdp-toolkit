@@ -405,33 +405,6 @@ class NodesTestSuite(unittest.TestSuite):
 
 
 
-    def testWhiteningNode(self):
-        vars = 5
-        dim = (10000,vars)
-        mat,mix,inp = self._get_random_mix(mat_dim=dim,
-                                           avg=uniform(vars))
-        w = mdp.nodes.WhiteningNode()
-        w.train(inp)
-        out = w.execute(inp)
-        assert_array_almost_equal(mean(out,axis=0),\
-                                  numx.zeros((dim[1])),self.decimal)
-        assert_array_almost_equal(std(out,axis=0),\
-                                  numx.ones((dim[1])),self.decimal-3)
-
-    def testWhiteningNode_SVD(self):
-        vars = 5
-        dim = (10000,vars)
-        mat,mix,inp = self._get_random_mix(mat_dim=dim,
-                                           avg=uniform(vars))
-        w = mdp.nodes.WhiteningNode(svd=True)
-        w.train(inp)
-        out = w.execute(inp)
-
-        assert_array_almost_equal(mean(out,axis=0),\
-                                  numx.zeros((dim[1])),self.decimal)
-        assert_array_almost_equal(std(out,axis=0),\
-                                  numx.ones((dim[1])),self.decimal-3)
-
     def testSFANode(self):
         dim=10000
         freqs = [2*numx.pi*1, 2*numx.pi*5]
