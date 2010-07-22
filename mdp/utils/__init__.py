@@ -90,7 +90,7 @@ del repo_revision
 
 __all__ = ['CovarianceMatrix', 'DelayCovarianceMatrix','CrossCovarianceMatrix',
            'MultipleCovarianceMatrices', 'QuadraticForm', 'SymeigException',
-           'all', 'comb', 'cov2', 'dig_node', 'get_dtypes', 'get_node_size',
+           'comb', 'cov2', 'dig_node', 'get_dtypes', 'get_node_size',
            'hermitian', 'inv', 'mult', 'mult_diag', 'nongeneral_svd',
            'norm2', 'permute', 'pinv', 'progressinfo',
            'random_rot', 'refcast', 'rotate', 'scast', 'solve', 'sqrtm',
