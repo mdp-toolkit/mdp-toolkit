@@ -274,27 +274,40 @@ class GrowingNeuralGasExpansionNode(GrowingNeuralGasNode):
 class ConstantExpansionNode(_ExpansionNode):
     """Expands the input signal x according to a list [f_0, ... f_k] 
     of functions.
-    Each function f_i takes the whole bidimensional array x as input and 
-    should output another bidimensional array. The output of the node is  
-    [f_0[x], ... f_k[x]], that is, the concatenation of each one of 
+    
+    Each function f_i should take the whole two-dimensional array x as input and 
+    output another two-dimensional array. Moreover the output dimension should depend 
+    only on the input dimension.
+    The output of the node is [f_0[x], ... f_k[x]], that is, the concatenation of each one of 
     the outputs f_i[x]."""
         
     def __init__(self, funcs, input_dim = None, dtype = None, \
                  approximate_inverse=True, use_hint=False):
+        """
+        Short argument description:
+            
+        funcs: list of functions f_i that realize the expansion
+        
+        approximate_inverse: this argument enables the inverse method, which then returns
+                            an approximation of an inverse computed with scipy.optimize.leastsq 
+        
+        use_hint: if approximate_inverse is enabled, the hint determines the starting point for the
+                  approximation
+
+        For more details on approximate_inverse and use_hint see invert_exp_funcs2"""
         self.funcs = funcs
         self.approximate_inverse = approximate_inverse
         self.use_hint = use_hint
         super(_ExpansionNode, self).__init__(input_dim, dtype)
 
     def expanded_dim(self, n):
-        exp_dim=0
-        x = numx.zeros((1,n))
-        for func in self.funcs:
-            outx = func(x)
-            exp_dim += outx.shape[1]
-        return exp_dim
+        """The expanded dim is computed by directly applying the expansion functions f_i to
+        a zero input of dimension n.
+        """
+        return self.output_sizes(n).sum()
 
     def output_sizes(self, n):
+        """ Returns the individual output sizes of each expansion function when the input has lenght n"""
         sizes = numx.zeros(len(self.funcs))
         x = numx.zeros((1,n))
         for i, func in enumerate(self.funcs):
@@ -338,14 +351,10 @@ class ConstantExpansionNode(_ExpansionNode):
         return out
 
 def residuals(app_x, y_noisy, exp_funcs, x_orig, k=0.0):
-    """Computes error signals as the concatenation of the reconstruction error 
-    (y_noisy - exp_funcs(app_x)) and the distance from the original (x_orig - app_x)
-    using a weighting factor k.
-    Used to approximate inverses in ConstantExpansionNode. 
-    """
+    """Function used internally by invert_exp_funcs2 to approximate 
+    inverses in ConstantExpansionNode. """
     app_x = app_x.reshape((1,len(app_x)))
     app_exp_x =  numx.concatenate([func(app_x) for func in exp_funcs],axis=1)
-
    
     div_y = numx.sqrt(len(y_noisy))
     div_x = numx.sqrt(len(x_orig))
@@ -364,9 +373,9 @@ def invert_exp_funcs2(exp_x_noisy, dim_x, exp_funcs, use_hint=False, k=0.0):
               otherwise: use the parameter use_hint itself as the first approximation
     k: weighting factor in [0, 1] to balance between approximation error and 
        closeness to the starting point. For instance:
-       k==0: objective is to minimize |exp_funcs(app_x) - exp_x_noisy|
-       k==1: objective is to minimize |app_x - starting point|    
-    """
+       objective function is to minimize:
+           (1-k) * |exp_funcs(app_x) - exp_x_noisy|/output_dim + 
+               k * |app_x - starting point|/input_dim """
     
     num_samples = exp_x_noisy.shape[0]
 
@@ -385,9 +394,7 @@ def invert_exp_funcs2(exp_x_noisy, dim_x, exp_funcs, use_hint=False, k=0.0):
     app_exp_x = numx.concatenate([func(app_x) for func in exp_funcs],axis=1)
     return app_x, app_exp_x
 
-        
 ### old weave inline code to perform a quadratic expansion
-
 # weave C code executed in the function QuadraticExpansionNode.execute
 ## _EXPANSION_POL2_CCODE = """
 ##   // first of all, copy the linear part
