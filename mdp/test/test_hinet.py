@@ -107,23 +107,21 @@ def test_FlowNode_copy2():
     else:
         assert False, 'Did not raise expected exception.'
 
-def test_Layer():
-    node1 = mdp.nodes.PCANode(input_dim=10, output_dim=5)
-    node2 = mdp.nodes.PCANode(input_dim=17, output_dim=3)
-    node3 = mdp.nodes.PCANode(input_dim=3, output_dim=1)
+def _pca_nodes(input_dims, output_dims):
+    for ind, outd in zip(input_dims, output_dims):
+        yield mdp.nodes.PCANode(input_dim=ind, output_dim=outd)
+
+def test_Layer(pca_nodes_10_17_3):
+    layer = mh.Layer(*_pca_nodes([10, 17, 3], [5, 3, 1]))
     x = numx_rand.random([100,30]).astype('f')
-    layer = mh.Layer([node1, node2, node3])
     layer.train(x)
     y = layer.execute(x)
     assert layer.dtype == numx.dtype('f')
     assert y.dtype == layer.dtype
 
 def test_Layer_invertibility():
-    node1 = mdp.nodes.PCANode(input_dim=10, output_dim=10)
-    node2 = mdp.nodes.PCANode(input_dim=17, output_dim=17)
-    node3 = mdp.nodes.PCANode(input_dim=3, output_dim=3)
+    layer = mh.Layer(*_pca_nodes([10, 17, 3], [10, 17, 3]))
     x = numx_rand.random([100,30]).astype('f')
-    layer = mh.Layer([node1, node2, node3])
     layer.train(x)
     y = layer.execute(x)
     x_inverse = layer.inverse(y)
@@ -131,21 +129,15 @@ def test_Layer_invertibility():
 
 def test_Layer_invertibility2():
     # reduce the dimensions, so input_dim != output_dim
-    node1 = mdp.nodes.PCANode(input_dim=10, output_dim=8)
-    node2 = mdp.nodes.PCANode(input_dim=17, output_dim=12)
-    node3 = mdp.nodes.PCANode(input_dim=3, output_dim=3)
+    layer = mh.Layer(*_pca_nodes([10, 17, 3], [8, 12, 3]))
     x = numx_rand.random([100,30]).astype('f')
-    layer = mh.Layer([node1, node2, node3])
     layer.train(x)
     y = layer.execute(x)
     layer.inverse(y)
 
 def test_SameInputLayer():
-    node1 = mdp.nodes.PCANode(input_dim=10, output_dim=5)
-    node2 = mdp.nodes.PCANode(input_dim=10, output_dim=3)
-    node3 = mdp.nodes.PCANode(input_dim=10, output_dim=1)
+    layer = mh.SameInputLayer(*_pca_nodes([10, 10, 10], [5, 3, 1]))
     x = numx_rand.random([100,10]).astype('f')
-    layer = mh.SameInputLayer([node1, node2, node3])
     layer.train(x)
     y = layer.execute(x)
     assert layer.dtype == numx.dtype('f')
