@@ -161,7 +161,7 @@ from utils.routines import OrderedDict
 
 class MDPConfiguration(object):
     """MDPConfiguration() does checks on the available libraries
-    and auto-generates a list of featues for inclusion in debug output.
+    and auto-generates a list of features for inclusion in debug output.
     """
     # TODO: Needs more love with version checking.
     def __getitem__(self, key):
@@ -170,17 +170,31 @@ class MDPConfiguration(object):
             return self._features[key]
         raise KeyError("'%s'" % key)
 
-    def check_feature(self, feature, prop):
-        self._features[feature] = prop()
+    def add_feature(self, feature, is_available, doc=True):
+        self._features[feature] = is_available
+        if doc:
+            self._doc.add(feature)
 
-    def add_info(self, feature, val):
+    def check_feature(self, feature, prop, doc=True):
+        self._features[feature] = prop()
+        if doc:
+            self._doc.add(feature)
+
+    def add_info(self, feature, val, doc=True):
         self._features[feature] = val
+        if doc:
+            self._doc.add(feature)
 
     def __init__(self):
         self._features = OrderedDict()
+        self._doc = set()
 
         self.add_info('MDP Version', __version__)
         self.add_info('MDP Revision', __revision__)
+
+        self.add_feature("numpy", numx_description=='numpy', doc=False)
+        self.add_feature("scipy", numx_description=='scipy', doc=False)
+
         self.check_feature("Numerical Backend", self.numerical_backend)
         self.check_feature("Parallel Python", self.has_parallel_python)
         self.check_feature("shogun", self.has_shogun)
@@ -252,9 +266,9 @@ class MDPConfiguration(object):
     
     def info(self):
         """Return nicely formatted info about MDP."""
-        maxlen = max(len(f) for f in self._features)
+        maxlen = max(len(f) for f in self._features if f in self._doc)
         return "\n".join(["{feature:{maxlen}}: {desc!s}".format(feature=feature, desc=self[feature], maxlen=maxlen+1)
-                            for feature in self._features])
+                            for feature in self._features if feature in self._doc])
 
 config = MDPConfiguration()
 
