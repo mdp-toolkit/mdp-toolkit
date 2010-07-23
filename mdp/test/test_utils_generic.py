@@ -1,6 +1,12 @@
 from mdp import utils
 from _tools import *
 
+TESTDECIMALS = {numx.dtype('d'): 12,
+                numx.dtype('f'): 3,
+                numx.dtype('D'): 12,
+                numx.dtype('F'): 3,
+                }
+
 def test_eigenproblem(dtype, range, func):
     """Solve a standard eigenvalue problem."""
     dtype = numx.dtype(dtype)
@@ -16,7 +22,7 @@ def test_eigenproblem(dtype, range, func):
     w = w.astype(dtype)
     diag = numx.diagonal(utils.mult(utils.hermitian(z),
                                     utils.mult(a, z))).real
-    assert_array_almost_equal(diag, w, testdecimals[dtype])
+    assert_array_almost_equal(diag, w, TESTDECIMALS[dtype])
 
 def test_geneigenproblem(dtype, range, func):
     """Solve a generalized eigenvalue problem."""
@@ -34,11 +40,11 @@ def test_geneigenproblem(dtype, range, func):
     w = w.astype(dtype)
     diag1 = numx.diagonal(utils.mult(utils.hermitian(z),
                                      utils.mult(a, z))).real
-    assert_array_almost_equal(diag1, w, testdecimals[dtype])
+    assert_array_almost_equal(diag1, w, TESTDECIMALS[dtype])
     diag2 = numx.diagonal(utils.mult(utils.hermitian(z),
                                      utils.mult(b, z))).real
     assert_array_almost_equal(diag2, numx.ones(diag2.shape[0]),
-                              testdecimals[dtype])
+                              TESTDECIMALS[dtype])
 
 test_geneigenproblem.funcs = [utils._symeig_fake]
 if utils.symeig is utils.wrap_eigh:
