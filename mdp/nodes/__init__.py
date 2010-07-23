@@ -1,4 +1,5 @@
 from pca_nodes import WhiteningNode, PCANode
+from sparse_pca_nodes import SparsePCANode
 from sfa_nodes import SFANode, SFA2Node
 from ica_nodes import ICANode, CuBICANode, FastICANode, TDSEPNode
 from neural_gas_nodes import GrowingNeuralGasNode
@@ -51,6 +52,7 @@ if config.module_exists('scipy.signal'):
 # clean up namespace
 del expansion_nodes
 del pca_nodes
+del sparse_pca_nodes
 del sfa_nodes
 del ica_nodes
 del neural_gas_nodes
@@ -64,3 +66,5 @@ del classifier_nodes
 del mdp
 del config
 del convolution_nodes
+
+
