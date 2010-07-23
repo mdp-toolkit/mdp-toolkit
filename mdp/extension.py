@@ -353,19 +353,19 @@ def with_extension(extension_name):
     return decorator
 
 class extension(object):
-    """Context manager for the 'cache_execute' extension.
+    """Context manager for MDP extension.
 
     This allows you to use extensions using a 'with' statement, as in:
 
     with mdp.extension('extension_name'):
         # 'node' is executed with the extension activated
-        node.execute()
+        node.execute(x)
 
     It is also possible to activate multiple extensions at once:
 
     with mdp.extension(['ext1', 'ext2']):
         # 'node' is executed with the two extensions activated
-        node.execute()
+        node.execute(x)
     """
 
     def __init__(self, ext_names):
@@ -374,51 +374,7 @@ class extension(object):
         self.ext_names = ext_names
 
     def __enter__(self):
-        for name in self.ext_names:
-            activate_extension(name)
+        activate_extensions(self.ext_names)
 
     def __exit__(self, type, value, traceback):
-        for name in self.ext_names:
-            deactivate_extension(name)
-
-
-# Memoize extension
-import hashlib
-
-# TODO: replace array hashing with better solution (see joblib)
-
-# TODO: allow caching on disk
-
-# TODO: move _hasharray to utils
-
-def _hasharray(x):
-    """Returns an hash value for a numpy array."""
-    m = hashlib.md5()
-    try:
-        m.update(numx.getbuffer(x))
-    except TypeError:
-        # Cater for non-single-segment arrays: this creates a
-        # copy, and thus aleviates this issue.
-        m.update(numx.getbuffer(x.flatten()))
-    return m.digest()
-
-class CacheExecuteExtensionNode(ExtensionNode, Node):
-    """MDP Extension for caching execution results.
-
-    Activating this extension results in all nodes caching the return
-    values of the 'execute' methods.
-
-    Warning: this extension might brake the algorithms if nodes rely
-    on side effects.
-    """
-
-    extension_name = 'cache_execute'
-
-    def execute(self, x, *args, **kwargs):
-        if not hasattr(self, '_execute_cache'):
-            self._execute_cache = {}
-        h = _hasharray(x)
-        if h not in self._execute_cache:
-            self._execute_cache[h] = self._non_extension_execute(x)
-
-        return self._execute_cache[h]
+        deactivate_extensions(self.ext_names)

@@ -2,7 +2,8 @@ from routines import (timediff, refcast, scast, rotate, random_rot, wrap_eigh,
                       permute, symrand, norm2, cov2,
                       mult_diag, comb, sqrtm, get_dtypes, nongeneral_svd,
                       SymeigException, hermitian, _symeig_fake, cov_maxima,
-                      lrep, rrep, irep, orthogonal_permutations, izip_stretched,
+                      lrep, rrep, irep, orthogonal_permutations,
+                      izip_stretched,
                       weighted_choice, bool_to_sign, sign_to_bool, OrderedDict,
                       gabor)
 from introspection import dig_node, get_node_size, get_node_size_str
@@ -103,4 +104,3 @@ __all__ = ['CovarianceMatrix', 'DelayCovarianceMatrix','CrossCovarianceMatrix',
            'orthogonal_permutations', 'izip_stretched',
            'weighted_choice', 'bool_to_sign', 'sign_to_bool',
            'OrderedDict', 'gabor']
-

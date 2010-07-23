@@ -324,12 +324,7 @@ import hinet
 import parallel
 import contrib
 from test import test
-
-def info():
-    """Return nicely formatted info about MDP."""
-    import sys
-    sys.stderr.write(config.info())
-
+import caching
 
 # clean up namespace
 del signal_node

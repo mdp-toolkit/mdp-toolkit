@@ -14,7 +14,8 @@ from isfa_nodes import ISFANode
 from rbm_nodes import RBMNode, RBMWithLabelsNode
 from regression_nodes import LinearRegressionNode
 from classifier_nodes import (SignumClassifier, PerceptronClassifier,
-                              SimpleMarkovClassifier, DiscreteHopfieldClassifier,
+                              SimpleMarkovClassifier,
+                              DiscreteHopfieldClassifier,
                               KMeansClassifier)
 from convolution_nodes import Convolution2DNode
 
@@ -25,7 +26,6 @@ from expansion_nodes import expanded_dim as _expanded_dim
 # import contributed nodes
 import mdp
 
-import mdp.contrib
 from mdp.contrib import *
 
 __all__ = ['CuBICANode', 'EtaComputerNode', 'FANode', 'FDANode', 'FastICANode',
@@ -63,3 +63,4 @@ del regression_nodes
 del classifier_nodes
 del mdp
 del config
+del convolution_nodes
