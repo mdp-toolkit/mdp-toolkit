@@ -102,7 +102,7 @@ def setup_package():
           long_description = long_description,
           classifiers = classifiers,
           packages = ['mdp', 'mdp.nodes', 'mdp.utils', 'mdp.hinet',
-                      'mdp.test', 'mdp.demo', 'mdp.graph', 'mdp.contrib',
+                      'mdp.test', 'mdp.graph',
                       'mdp.parallel', 'bimdp', 'bimdp.hinet', 'bimdp.inspection',
                       'bimdp.nodes', 'bimdp.parallel', 'bimdp.test'],
           package_data = {'mdp.hinet': ['hinet.css'],
