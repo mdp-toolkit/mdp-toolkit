@@ -22,4 +22,4 @@ del jade
 del nipals
 del lle_nodes
 del xsfa_nodes
-
+del config

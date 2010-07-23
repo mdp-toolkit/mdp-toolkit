@@ -201,6 +201,14 @@ class MDPConfiguration(object):
         self.check_feature("LibSVM", self.has_libsvm)
         self.check_feature("Symeig Backend", self.symeig)
 
+    def module_exists(self, module_name):
+        """Returns True if a given module exists."""
+        try:
+            __import__(module_name)
+            return True
+        except ImportError:
+            return False
+
     def has(self, dep):
         """Checks if a dependency is available."""
         return self[dep].available
@@ -241,7 +249,7 @@ class MDPConfiguration(object):
         return ExternalDepFound()
 
     def numerical_backend(self):
-        return numx_description + numx_version
+        return (numx_description, numx_version)
 
     def symeig(self):
         import utils
