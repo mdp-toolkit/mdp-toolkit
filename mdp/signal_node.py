@@ -682,7 +682,12 @@ def VariadicCumulator(*fields):
 
         def _stop_training(self, *args, **kwargs):
             """Transform the data list to an array object and reshape it."""
-            
+            # This complicated transformation from array to list and
+            # back is to avoid having to use numpy.concatenate, that
+            # for multiple arrays makes pairwise concatenation, each
+            # time copying the the arrays it needs to
+            # concatenate. This is much less efficient than our
+            # baroque solution.
             for field in self._cumulator_fields:
                 data = getattr(self, field)
                 setattr(self, field, numx.array(data, dtype = self.dtype))
