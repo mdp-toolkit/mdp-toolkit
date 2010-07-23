@@ -1,5 +1,4 @@
 collect_ignore = ['build', 'cover', 'html',
-                  'mdp/parallel/pp_test',
                   ]
 
 def pytest_addoption(parser):
