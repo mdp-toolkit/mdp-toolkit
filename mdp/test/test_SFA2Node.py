@@ -1,5 +1,4 @@
 from _tools import *
-mult = mdp.utils.mult
 
 def test_basic_training():
     dim = 10000

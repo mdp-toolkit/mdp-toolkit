@@ -4,12 +4,9 @@ import sys
 import time
 import itertools
 import mdp
-numx = mdp.numx
-import numpy.testing as testing
-assert_array_equal, assert_array_almost_equal, \
-     assert_equal, assert_almost_equal = \
-     testing.assert_array_equal, testing.assert_array_almost_equal, \
-     testing.assert_equal, testing.assert_almost_equal
+from mdp import numx, numx_rand, numx_fft, utils
+from numpy.testing import (assert_array_equal, assert_array_almost_equal,
+                           assert_equal, assert_almost_equal)
 
 mean = numx.mean
 std = numx.std
@@ -19,6 +16,7 @@ testtypes = [numx.dtype('d'), numx.dtype('f')]
 testtypeschar = [t.char for t in testtypes]
 testdecimals = {testtypes[0]: 12, testtypes[1]: 6}
 decimal = 7
+mult = mdp.utils.mult
 
 #### test tools
 def assert_array_almost_equal_diff(x,y,digits,err_msg=''):

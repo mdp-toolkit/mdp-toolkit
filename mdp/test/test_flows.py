@@ -5,8 +5,6 @@ import os
 import inspect
 from _tools import *
 
-mult = mdp.utils.mult
-numx_rand = mdp.numx_rand
 uniform = numx_rand.random
 
 def _get_default_flow(flow_class=mdp.Flow, node_class=BogusNode):

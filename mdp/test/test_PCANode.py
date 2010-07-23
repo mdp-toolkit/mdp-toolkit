@@ -1,5 +1,4 @@
 from _tools import *
-from mdp import utils
 
 def testPCANode():
     line_x = numx.zeros((1000,2),"d")

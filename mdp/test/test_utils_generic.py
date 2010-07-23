@@ -1,4 +1,3 @@
-from mdp import utils
 from _tools import *
 
 TESTDECIMALS = {numx.dtype('d'): 12,

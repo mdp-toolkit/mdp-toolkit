@@ -1,8 +1,6 @@
 from _tools import *
-from mdp import numx_rand, utils
-mult = mdp.utils.mult
 
-def testFANode():
+def test_FANode():
     d = 10
     N = 5000
     k = 4

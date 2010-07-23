@@ -1,5 +1,5 @@
-import mdp
-from mdp import numx, numx_rand
+from _tools import *
+
 
 def test_AdaptiveCutoffNode_smalldata():
     """Test AdaptiveCutoffNode thoroughly on a small data set."""
@@ -20,7 +20,7 @@ def test_AdaptiveCutoffNode_smalldata():
     x_test = (numx.array([[0.1, 0.2], [0.3, 0.4], [0.5, 0.6]]))
     x_clip = node.execute(x_test)
     x_goal = numx.array([[0.2, 0.3], [0.3, 0.4], [0.4, 0.5]])
-    assert numx.all(x_clip == x_goal)
+    assert (x_clip == x_goal).all()
 
 def test_AdaptiveCutoffNode_randomdata():
     """Test AdaptiveCutoffNode on a large random data."""

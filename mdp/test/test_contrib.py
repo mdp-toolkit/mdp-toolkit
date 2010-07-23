@@ -2,7 +2,6 @@
 """
 
 from _tools import *
-from mdp import numx_rand, numx_fft, utils
 from test_ICANode import verify_ICANode, verify_ICANodeMatrices
 
 def _s_shape(theta):

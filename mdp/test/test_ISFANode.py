@@ -1,7 +1,4 @@
-import mdp
-from mdp import numx, numx_rand, numx_fft
 from _tools import *
-mult = mdp.utils.mult
 
 def _std(x):
     return x.std(axis=0)

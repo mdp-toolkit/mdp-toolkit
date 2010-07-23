@@ -1,7 +1,5 @@
-from _tools import *
-
 import mdp.parallel as parallel
-from mdp import utils, numx, numx_rand
+from _tools import *
 
 def test_PCANode():
     """Test Parallel PCANode"""
