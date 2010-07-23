@@ -316,7 +316,7 @@ import nodes
 import hinet
 import parallel
 import contrib
-
+from test import test
 
 def info():
     """Return nicely formatted info about MDP."""
