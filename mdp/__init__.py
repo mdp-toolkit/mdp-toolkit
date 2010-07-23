@@ -280,6 +280,11 @@ class MDPConfiguration(object):
 
 config = MDPConfiguration()
 
+def info():
+    """Return nicely formatted info about MDP."""
+    import sys
+    sys.stderr.write(config.info())
+
 # import the utils module (used by other modules)
 # here we set scipy_emulation if needed.
 import utils
@@ -316,13 +321,7 @@ import nodes
 import hinet
 import parallel
 import contrib
-
-
-def info():
-    """Return nicely formatted info about MDP."""
-    import sys
-    sys.stderr.write(config.info())
-
+import caching
 
 # clean up namespace
 del signal_node

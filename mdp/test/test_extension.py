@@ -309,43 +309,114 @@ class TestMDPExtensions(object):
         assert test_node._execute() == 1
         mdp.deactivate_extensions(['__test2', '__test1'])
 
-def test_caching_extension():
-    """Test that the caching extension is working."""
-    class SideEffectNode(mdp.Node):
-        def __init__(self):
-            super(SideEffectNode, self).__init__()
-            self.count = 0
+# TODO: Move to own file
 
-        @staticmethod
-        def is_trainable():
-            return False
+_counter = 0
+class _CounterNode(mdp.Node):
+    def __init__(self):
+        super(_CounterNode, self).__init__()
 
-        def _execute(self, x):
-            """The execute method has the side effect of increasing
-            an internal counter by one."""
-            self.count += 1
-            return x
+    def is_trainable(self):
+        return False
 
-    node = SideEffectNode()
-    x = mdp.numx.array([[1.]])
+    def _execute(self, x):
+        """The execute method has the side effect of increasing
+        a global counter by one."""
+        global _counter
+        _counter += 1
+        return x
 
-    # before activating the extension
-    assert mdp.get_active_extensions() == []
-    node.execute(x)
-    assert node.count == 1
+class TestCachingExtension(unittest.TestCase):
+    def _test_caching_extension(self):
+        """Test that the caching extension is working."""
 
-    # activate the extension
-    mdp.activate_extension('cache_execute')
-    assert mdp.get_active_extensions() == ['cache_execute']
-    # the first time, x gets cached
-    node.execute(x)
-    assert node.count == 2
-    # the second time, x is already there
-    node.execute(x)
-    assert node.count == 2
+        global _counter
+        _counter = 0
+        node = _CounterNode()
 
-    # after deactivation
-    mdp.deactivate_extension('cache_execute')
-    assert mdp.get_active_extensions() == []
-    node.execute(x)
-    assert node.count == 3
+        # before decoration the global counter is incremented at every call
+        k = 0
+        for i in range(3):
+            x = mdp.numx.array([[i]], dtype='d')
+            for j in range(2):
+                k += 1
+                assert mdp.numx.all(node.execute(x) == x)
+                assert _counter == k
+
+        # reset counter
+        _counter = 0
+        # activate the extension
+        caching.activate_caching()
+        self.assertEqual(mdp.get_active_extensions(), ['cache_execute'])
+
+        # after decoration the global counter is incremented for each new 'x'
+        for i in range(3):
+            x = mdp.numx.array([[i]], dtype='d')
+            for _ in range(2):
+                assert mdp.numx.all(node.execute(x) == x)
+                assert _counter == i+1
+
+        # after deactivation
+        caching.deactivate_caching()
+        self.assertEqual(mdp.get_active_extensions(), [])
+        # reset counter
+        _counter = 0
+
+        k = 0
+        for i in range(3):
+            x = mdp.numx.array([[i]], dtype='d')
+            for j in range(2):
+                k += 1
+                assert mdp.numx.all(node.execute(x) == x)
+                assert _counter == k
+
+    def test_different_instances_same_content(self):
+        global _counter
+        x = mdp.numx.array([[100.]], dtype='d')
+
+        caching.activate_caching()
+        node = _CounterNode()
+        # make one fake execution to avoid that automatic setting of
+        # attributes (e.g. dtype interferes with cache)
+        node.execute(mdp.numx.array([[0.]], dtype='d'))
+        _counter = 0
+
+        # add attribute to make instance unique
+        node.attr = 'unique'
+
+        # cache x
+        node.execute(x)
+        assert _counter == 1
+        # should be cached now
+        node.execute(x)
+        print _counter
+        assert _counter == 1
+
+        # create new instance, make is also unique and check that
+        # result is still cached
+        _counter = 0
+        node = _CounterNode()
+        node.attr = 'unique'
+        node.execute(x)
+        assert _counter == 1
+
+        caching.deactivate_caching()
+
+    def test_caching_context_manager(self):
+        global _counter
+        node = _CounterNode()
+        # make one fake execution to avoid that automatic setting of
+        # attributes (e.g. dtype interferes with cache)
+        node.execute(mdp.numx.array([[0.]], dtype='d'))
+        _counter = 0
+
+        self.assertEqual(mdp.get_active_extensions(), [])
+        with caching.cache():
+            self.assertEqual(mdp.get_active_extensions(), ['cache_execute'])
+
+            for i in range(3):
+                x = mdp.numx.array([[i]], dtype='d')
+                for _ in range(2):
+                    assert mdp.numx.all(node.execute(x) == x)
+                    assert _counter == i+1
+        self.assertEqual(mdp.get_active_extensions(), [])

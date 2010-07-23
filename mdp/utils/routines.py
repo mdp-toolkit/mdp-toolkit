@@ -657,7 +657,7 @@ def gabor(size, alpha, phi, freq, sgm, x0 = None, res = 1, ampl = 1.):
     w, h = size
     if x0 is None: x0 = (w//2, h//2)
     y0, x0 = x0
-    
+
     # some useful quantities
     freq *= res
     sinalpha = numx.sin(alpha)
@@ -676,5 +676,3 @@ def gabor(size, alpha, phi, freq, sgm, x0 = None, res = 1, ampl = 1.):
              *numx.cos(-2.*numx.pi*(u0*x[0]+v0*x[1]) - phi)
 
     return im
-
-
