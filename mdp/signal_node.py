@@ -207,7 +207,7 @@ class Node(object):
 
     __metaclass__ = NodeMetaclass
 
-    def __init__(self, input_dim = None, output_dim = None, dtype = None):
+    def __init__(self, input_dim=None, output_dim=None, dtype=None):
         """If the input dimension and the output dimension are
         unspecified, they will be set when the 'train' or 'execute'
         method is called for the first time.
@@ -630,13 +630,13 @@ class Node(object):
         args = ', '.join((inp, out, typ))
         return name+'('+args+')'
 
-    def copy(self, protocol = -1):
+    def copy(self, protocol=-1):
         """Return a deep copy of the node.
         Protocol is the pickle protocol."""
         as_str = _cPickle.dumps(self, protocol)
         return _cPickle.loads(as_str)
 
-    def save(self, filename, protocol = -1):
+    def save(self, filename, protocol=-1):
         """Save a pickled serialization of the node to 'filename'.
         If 'filename' is None, return a string.
 
@@ -690,7 +690,7 @@ def VariadicCumulator(*fields):
             # baroque solution.
             for field in self._cumulator_fields:
                 data = getattr(self, field)
-                setattr(self, field, numx.array(data, dtype = self.dtype))
+                setattr(self, field, numx.array(data, dtype=self.dtype))
                 getattr(self, field).shape = (self.tlen, self.input_dim)
 
     return Cumulator

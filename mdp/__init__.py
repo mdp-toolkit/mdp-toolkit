@@ -192,8 +192,8 @@ class MDPConfiguration(object):
         self.add_info('MDP Version', __version__)
         self.add_info('MDP Revision', __revision__)
 
-        self.add_feature("numpy", numx_description=='numpy', doc=False)
-        self.add_feature("scipy", numx_description=='scipy', doc=False)
+        self.add_feature("numpy", numx_description == 'numpy', doc=False)
+        self.add_feature("scipy", numx_description == 'scipy', doc=False)
 
         self.check_feature("Numerical Backend", self.numerical_backend)
         self.check_feature("Parallel Python", self.has_parallel_python)
@@ -275,14 +275,14 @@ class MDPConfiguration(object):
     
     def info(self):
         """Return nicely formatted info about MDP."""
-        maxlen = max(len(f) for f in self._features if f in self._doc)
+        listable_features = [f for f in self._features if f in self._doc]
+        maxlen = max(len(f) for f in listable_features)
         l = []
-        for feature in self._features:
-            if feature in self._doc:
-                s = "{feature:{maxlen}}: {desc!s}".format(feature=feature,
-                                                          desc=self[feature],
-                                                          maxlen=maxlen+1)
-                l.append(s)
+        for feature in listable_features:
+            s = "{feature:{maxlen}}: {desc!s}".format(feature=feature,
+                                                      desc=self[feature],
+                                                      maxlen=maxlen+1)
+            l.append(s)
         return "\n".join(l)
 
 config = MDPConfiguration()

@@ -291,7 +291,7 @@ class KMeansClassifier(ClassifierNode):
         self.data.extend(x.ravel().tolist())
 
     def _stop_training(self):
-        self.data = numx.array(self.data, dtype = self.dtype)
+        self.data = numx.array(self.data, dtype=self.dtype)
         self.data.shape = (self.tlen, self.input_dim)
 
         # choose initial centroids unless they are already given
@@ -333,3 +333,4 @@ class KMeansClassifier(ClassifierNode):
         a list of centroids.
         """
         return [self._nearest_centroid_idx(xi, self._centroids) for xi in x]
+

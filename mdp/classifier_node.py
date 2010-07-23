@@ -80,7 +80,7 @@ class ClassifierCumulator(VariadicCumulator('data', 'labels'), ClassifierNode):
     'self.labels' contains the assigned label to each data point.
     """
 
-    def __init__(self, input_dim = None, output_dim = None, dtype = None):
+    def __init__(self, input_dim=None, output_dim=None, dtype=None):
         super(ClassifierCumulator, self).__init__(input_dim, output_dim, dtype)
 
     def _check_train_args(self, x, labels):
@@ -106,8 +106,8 @@ class ClassifierCumulator(VariadicCumulator('data', 'labels'), ClassifierNode):
 
     def _stop_training(self, *args, **kwargs):
         """Transform the data and labels lists to array objects and reshape them."""
-        self.data = numx.array(self.data, dtype = self.dtype)
+        self.data = numx.array(self.data, dtype=self.dtype)
         self.data.shape = (self.tlen, self.input_dim)
-        self.labels = numx.array(self.labels, dtype = self.dtype)
+        self.labels = numx.array(self.labels, dtype=self.dtype)
         self.labels.shape = (self.tlen)
 
