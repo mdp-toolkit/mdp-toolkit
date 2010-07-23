@@ -262,7 +262,7 @@ def test_XSFANode():
     #mix = sigmoid(numx.dot(src, mdp.utils.random_rot(3)))
     mix = src
 
-    flow = mdp.Flow([mdp.contrib.XSFANode()])
+    flow = mdp.Flow([mdp.nodes.XSFANode()])
     # let's test also chunk-mode training
     flow.train([[mix[:T/2, :], mix[T/2:, :]]])
 

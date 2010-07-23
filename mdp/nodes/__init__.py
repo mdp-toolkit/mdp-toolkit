@@ -18,15 +18,14 @@ from classifier_nodes import (SignumClassifier, PerceptronClassifier,
                               DiscreteHopfieldClassifier,
                               KMeansClassifier)
 from convolution_nodes import Convolution2DNode
+from jade import JADENode
+from nipals import NIPALSNode
+from lle_nodes import LLENode, HLLENode
+from xsfa_nodes import XSFANode
 
 # import internals for use in test_suites
 from misc_nodes import OneDimensionalHitParade as _OneDimensionalHitParade
 from expansion_nodes import expanded_dim as _expanded_dim
-
-# import contributed nodes
-import mdp
-
-from mdp.contrib import *
 
 __all__ = ['CuBICANode', 'EtaComputerNode', 'FANode', 'FDANode', 'FastICANode',
            'GaussianClassifierNode', 'GrowingNeuralGasNode', 'HitParadeNode',
@@ -39,14 +38,27 @@ __all__ = ['CuBICANode', 'EtaComputerNode', 'FANode', 'FDANode', 'FastICANode',
            'CutoffNode', 'HistogramNode', 'AdaptiveCutoffNode',
            'SignumClassifier', 'PerceptronClassifier',
            'SimpleMarkovClassifier', 'DiscreteHopfieldClassifier',
-           'KMeansClassifier'] + mdp.contrib.__all__
+           'KMeansClassifier', 'JADENode', 'NIPALSNode', 'LLENode', 'HLLENode',
+           'XSFANode']
 
 # nodes with external dependencies
 from mdp import config
 
+
 if config.module_exists('scipy.signal'):
     from convolution_nodes import Convolution2DNode
     __all__ += ['Convolution2DNode']
+
+if config.has('shogun'):
+    from shogun_svm_classifier import ShogunSVMClassifier
+    __all__ += ['ShogunSVMClassifier']
+    del shogun_svm_classifier
+
+
+if config.has('LibSVM'):
+    from libsvm_classifier import LibSVMClassifier
+    __all__ += ['LibSVMClassifier']
+    del libsvm_classifier
 
 # clean up namespace
 del expansion_nodes
@@ -61,6 +73,9 @@ del isfa_nodes
 del rbm_nodes
 del regression_nodes
 del classifier_nodes
-del mdp
+del jade
+del nipals
+del lle_nodes
+del xsfa_nodes
 del config
 del convolution_nodes

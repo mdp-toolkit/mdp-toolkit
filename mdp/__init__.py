@@ -322,7 +322,6 @@ from classifier_node import (ClassifierNode, ClassifierCumulator)
 import nodes
 import hinet
 import parallel
-import contrib
 from test import test
 
 # clean up namespace
@@ -338,7 +337,7 @@ __all__ = ['CheckpointFlow', 'CheckpointFunction', 'CheckpointSaveFunction',
            'IsNotTrainableException', 'MDPException', 'MDPWarning', 'Node',
            'NodeException', 'TrainingException', 'TrainingFinishedException',
            'ClassifierNode', 'ClassifierCumulator',
-           'contrib', 'get_eta', 'graph', 'helper_funcs', 'hinet', 'nodes',
+           'get_eta', 'graph', 'helper_funcs', 'hinet', 'nodes',
            'numx_description', 'pca', 'sfa', 'utils', 'whitening',
            'parallel', 'numx_version',
            'extension_method', 'ExtensionNodeMetaclass', 'ExtensionNode',
