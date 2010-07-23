@@ -52,11 +52,13 @@ if config.has('shogun'):
     from shogun_svm_classifier import ShogunSVMClassifier
     __all__ += ['ShogunSVMClassifier']
     del shogun_svm_classifier
+    del svm_classifiers
 
 if config.has('LibSVM'):
     from libsvm_classifier import LibSVMClassifier
     __all__ += ['LibSVMClassifier']
     del libsvm_classifier
+    del svm_classifiers
 
 # clean up namespace
 del expansion_nodes

@@ -3,9 +3,6 @@ from mdp import numx
 
 from svm_classifiers import _SVMClassifier, _LabelNormalizer
 
-import pdb;
-#pdb.set_trace()
-
 import shogun.Kernel as sgKernel
 import shogun.Features as sgFeatures
 import shogun.Classifier as sgClassifier
