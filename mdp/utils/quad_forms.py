@@ -6,6 +6,9 @@ numx_linalg = mdp.numx_linalg
 # 10 times machine eps
 epsilon = 10*numx.finfo(numx.double).eps
 
+class QuadraticFormException(mdp.MDPException):
+    pass
+
 class QuadraticForm(object):
     """
     Define an inhomogeneous quadratic form as 1/2 x'Hx + f'x + c .
@@ -25,7 +28,7 @@ class QuadraticForm(object):
         local_eps = 10*numx.finfo(numx.dtype(dtype)).eps
         # check that H is almost symmetric
         if not numx.allclose(H, H.T, rtol=100*local_eps, atol=local_eps):
-            raise mdp.MDPException('H does not seem to be symmetric')
+            raise QuadraticFormException('H does not seem to be symmetric')
 
         self.H = refcast(H, dtype)
         if f is None:

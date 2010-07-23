@@ -6,7 +6,7 @@ from routines import (timediff, refcast, scast, rotate, random_rot, wrap_eigh,
                       weighted_choice, bool_to_sign, sign_to_bool, OrderedDict,
                       gabor)
 from introspection import dig_node, get_node_size, get_node_size_str
-from quad_forms import QuadraticForm
+from quad_forms import QuadraticForm, QuadraticFormException
 from covariance import (CovarianceMatrix, DelayCovarianceMatrix,
                         MultipleCovarianceMatrices,CrossCovarianceMatrix)
 from progress_bar import progressinfo
@@ -89,7 +89,8 @@ del slideshow
 del repo_revision
 
 __all__ = ['CovarianceMatrix', 'DelayCovarianceMatrix','CrossCovarianceMatrix',
-           'MultipleCovarianceMatrices', 'QuadraticForm', 'SymeigException',
+           'MultipleCovarianceMatrices', 'QuadraticForm',
+           'QuadraticFormException', 'SymeigException',
            'comb', 'cov2', 'dig_node', 'get_dtypes', 'get_node_size',
            'hermitian', 'inv', 'mult', 'mult_diag', 'nongeneral_svd',
            'norm2', 'permute', 'pinv', 'progressinfo',
