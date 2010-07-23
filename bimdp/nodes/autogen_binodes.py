@@ -295,7 +295,7 @@ class ISFABiNode(BiNode, mdp.nodes.ISFANode):
         Keyword arguments:
 
         lags    -- list of time-lags to generate the time-delayed covariance
-                   matrices (in the paper this is the set of au). If
+                   matrices (in the paper this is the set of 	au). If
                    lags is an integer, time-lags 1,2,...,'lags' are used.
                    Note that time-lag == 0 (instantaneous correlation) is
                    always implicitly used.
@@ -307,13 +307,13 @@ class ISFABiNode(BiNode, mdp.nodes.ISFANode):
 
         sfaweights -- weighting factors for the covariance matrices relative
                       to the SFA part of the objective function (called
-                      \kappa_{SFA}^{au} in the paper). Default is
+                      \kappa_{SFA}^{	au} in the paper). Default is
                       [1., 0., ..., 0.]
                       For possible values see the description of icaweights.
 
         icaweights -- weighting factors for the cov matrices relative
                       to the ICA part of the objective function (called
-                      \kappa_{ICA}^{au} in the paper). Default is 1.
+                      \kappa_{ICA}^{	au} in the paper). Default is 1.
                       Possible values are:
                           an integer n: all matrices are weighted the same
                                         (note that it does not make sense to
@@ -665,3 +665,4 @@ class XSFABiNode(BiNode, mdp.nodes.XSFANode):
              verbose -- show some progress during training.
         """
         super(XSFABiNode, self).__init__(basic_exp=basic_exp, intern_exp=intern_exp, svd=svd, verbose=verbose, input_dim=input_dim, output_dim=output_dim, dtype=dtype, node_id=node_id, stop_result=stop_result)
+
