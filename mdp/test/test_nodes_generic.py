@@ -10,8 +10,16 @@ def _rand_labels(x):
 def _rand_labels_array(x):
     return numx.around(uniform(x.shape[0])).reshape((x.shape[0],1))
 
+def _rand_classification_labels_array(x):
+    labels = numx_rand.randint(0., 2., size=(x.shape[0],))
+    labels[labels==0.] = -1.
+    return labels
+
 def _rand_array_halfdim(x):
     return uniform(size=(x.shape[0], x.shape[1]//2))
+
+def _contrib_get_random_mix():
+    return get_random_mix(type='d', mat_dim=(100, 3))[2]
 
 def _train_if_necessary(inp, node, sup_arg_gen):
     if node.is_trainable():
@@ -205,39 +213,75 @@ def LinearRegressionNode_inp_arg_gen():
     return uniform(size=(1000, 5))
 
 NODES = [
-    nodes.PCANode,
-    nodes.WhiteningNode,
-    nodes.SFANode,
-    dict(klass=nodes.SFA2Node,
+    dict(klass='SFA2Node',
          inp_arg_gen=SFA2Node_inp_arg_gen),
-    nodes.TDSEPNode,
-    nodes.CuBICANode,
-    nodes.FastICANode,
-    nodes.QuadraticExpansionNode,
-    dict(klass=nodes.PolynomialExpansionNode,
+    dict(klass='PolynomialExpansionNode',
          init_args=[3]),
-    dict(klass=nodes.RBFExpansionNode,
+    dict(klass='RBFExpansionNode',
          init_args=[[[0.]*5, [0.]*5], [1., 1.]]),
-    nodes.GrowingNeuralGasExpansionNode,
-    dict(klass=nodes.HitParadeNode,
+    dict(klass='HitParadeNode',
          init_args=[2, 5]),
-    dict(klass=nodes.TimeFramesNode,
+    dict(klass='TimeFramesNode',
          init_args=[3, 4]),
-    nodes.EtaComputerNode,
-    nodes.GrowingNeuralGasNode,
-    nodes.NoiseNode,
-    dict(klass=nodes.FDANode,
+    dict(klass='FDANode',
          sup_arg_gen=_rand_labels),
-    dict(klass=nodes.GaussianClassifierNode,
+    dict(klass='GaussianClassifierNode',
          sup_arg_gen=_rand_labels),
-    nodes.FANode,
-    nodes.ISFANode,
-    dict(klass=nodes.RBMNode,
+    dict(klass='RBMNode',
          init_args=[5]),
-    dict(klass=nodes.RBMWithLabelsNode,
+    dict(klass='RBMWithLabelsNode',
          init_args=[5, 1],
          sup_arg_gen=_rand_labels_array,
          execute_arg_gen=_rand_labels_array),
-    dict(klass=nodes.LinearRegressionNode,
+    dict(klass='LinearRegressionNode',
          sup_arg_gen=_rand_array_halfdim),
+    dict(klass='Convolution2DNode',
+         init_args=[mdp.numx.array([[[1.]]]), (5,1)]),
+    dict(klass='JADENode',
+         inp_arg_gen=_contrib_get_random_mix),
+    dict(klass='NIPALSNode',
+         inp_arg_gen=_contrib_get_random_mix),
+    dict(klass='XSFANode',
+         inp_arg_gen=_contrib_get_random_mix,
+         init_args=[(nodes.PolynomialExpansionNode, (1,), {}),
+                    (nodes.PolynomialExpansionNode, (1,), {}),
+                    True]),
+    dict(klass='LLENode',
+         inp_arg_gen=_contrib_get_random_mix,
+         init_args=[3, 0.001, True]),
+    dict(klass='HLLENode',
+         inp_arg_gen=_contrib_get_random_mix,
+         init_args=[10, 0.001, True]),
+    dict(klass='KMeansClassifier',
+         init_args=[2, 3]),
+    dict(klass='PerceptronClassifier',
+         sup_arg_gen=_rand_classification_labels_array),
+    dict(klass='SimpleMarkovClassifier',
+         sup_arg_gen=_rand_classification_labels_array)
     ]
+
+EXCLUDE_NODES = [nodes.ICANode, nodes.IdentityNode]
+
+def generate_nodes_list(nodes_dicts):
+    nodes_list = []
+    # append nodes with additional arguments or supervised if they exist
+    visited = []
+    for dct in nodes_dicts:
+        klass_name = dct['klass']
+        if hasattr(nodes, klass_name):
+            # transform class name into class (needed by automatic tests)
+            klass_class = getattr(nodes, klass_name)
+            dct['klass'] = klass_class
+            nodes_list.append(dct)
+            visited.append(klass_class)
+    # append all other nodes in mdp.nodes
+    for attr in dir(nodes):
+        if attr[0] == '_':
+            continue
+        attr = getattr(nodes, attr)
+        if (issubclass(attr, mdp.Node) and attr not in visited
+            and attr not in EXCLUDE_NODES):
+            nodes_list.append(attr)
+    return nodes_list
+
+NODES = generate_nodes_list(NODES)

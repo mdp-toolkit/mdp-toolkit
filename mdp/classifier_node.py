@@ -9,6 +9,14 @@ class ClassifierNode(Node):
     label space.
     """
 
+    def _set_input_dim(self, n):
+        self._input_dim = n
+        self._output_dim = n
+
+    def _set_output_dim(self, n):
+        msg = "Output dim cannot be set explicitly!"
+        raise mdp.NodeException(msg)
+
     ### Methods to be implemented by the subclasses
 
     def _label(self, x, *args, **kargs):

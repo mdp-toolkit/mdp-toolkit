@@ -69,7 +69,7 @@ def testPerceptronClassifier():
 
 
 def testSimpleMarkovClassifier():
-    mc = SimpleMarkovClassifier(dtype="unicode")
+    mc = SimpleMarkovClassifier(dtype="c")
     text = "after the letter e follows either space or the letters r t or i"
 
     for word in text.split():

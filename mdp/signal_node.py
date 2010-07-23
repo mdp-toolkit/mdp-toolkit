@@ -323,6 +323,10 @@ class Node(object):
             self._set_dtype(t)
 
     def _set_dtype(self, t):
+        t = numx.dtype(t)
+        if t not in self.get_supported_dtypes():
+            raise NodeException('dtype %s not among supported dtypes (%s)'
+                                % (str(t), self.get_supported_dtypes()))
         self._dtype = t
 
     dtype = property(get_dtype,

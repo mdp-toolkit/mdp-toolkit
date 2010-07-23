@@ -7,6 +7,17 @@ import itertools
 class SignumClassifier(ClassifierNode):
     """This classifier node classifies as 1, if the sum of the data points is
     positive and as -1, if the data point is negative"""
+
+    def __init__(self, input_dim=None, dtype=None):
+        super(SignumClassifier, self).__init__(input_dim=input_dim,
+                                               output_dim=None,
+                                               dtype=dtype)
+
+    def _get_supported_dtypes(self):
+        """Return the list of dtypes supported by this node."""
+        return (mdp.utils.get_dtypes('AllFloat') +
+                mdp.utils.get_dtypes('AllInteger'))
+
     @staticmethod
     def is_trainable():
         return False
@@ -23,6 +34,11 @@ class PerceptronClassifier(ClassifierNode):
         self.weights = []
         self.offset_weight = 0
         self.learning_rate = 0.1
+
+    def _get_supported_dtypes(self):
+        """Return the list of dtypes supported by this node."""
+        return (mdp.utils.get_dtypes('AllFloat') +
+                mdp.utils.get_dtypes('AllInteger'))
 
     def _check_train_args(self, x, labels):
         if (isinstance(labels, (list, tuple, numx.ndarray)) and
@@ -84,6 +100,12 @@ class SimpleMarkovClassifier(ClassifierNode):
         self.features = {}
         self.labels = {}
         self.connections = {}
+        
+    def _get_supported_dtypes(self):
+        """Return the list of dtypes supported by this node."""
+        return (mdp.utils.get_dtypes('AllFloat') +
+                mdp.utils.get_dtypes('AllInteger') +
+                mdp.utils.get_dtypes('Character'))
 
     def _check_train_args(self, x, labels):
         if (isinstance(labels, (list, tuple, numx.ndarray)) and

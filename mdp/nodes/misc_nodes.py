@@ -179,7 +179,9 @@ class HitParadeNode(Node):
         Return the tuple (maxima, indices).
         Maxima are sorted in descending order.
 
-        If the training phase has not been completed yet, call
+        If the training pha    dict(klass='PerceptronClassifier',
+         sup_arg_gen=_rand_classification_labels_array)
+se has not been completed yet, call
         stop_training.
         """
         self._if_training_stop_training()
@@ -734,11 +736,19 @@ class HistogramNode(mdp.Node):
             and can be directly used after training.
         """
         super(HistogramNode, self).__init__(input_dim=input_dim,
-                                            output_dim=input_dim,
+                                            output_dim=None,
                                             dtype=dtype)
         self._hist_filename = hist_filename
         self.hist_fraction = hist_fraction
         self.data_hist = None  # stores the data history
+
+    def _set_input_dim(self, n):
+        self._input_dim = n
+        self._output_dim = n
+
+    def _set_output_dim(self, n):
+        msg = "Output dim cannot be set explicitly!"
+        raise mdp.NodeException(msg)
 
     def _get_supported_dtypes(self):
         return (mdp.utils.get_dtypes('AllFloat') +
