@@ -31,10 +31,11 @@ def test(filename=None, keyword=None, seed=None):
     return _worker(args)
 
 def subtest(script, args):
-        # run the auto-generated script in a subprocess
-        import subprocess
-        import sys
-        subprocess.Popen([script]+args, stdout = sys.stdout, stderr = sys.stderr)
+    # run the auto-generated script in a subprocess"
+    import subprocess
+    import sys
+    subprocess.Popen([sys.executable,script]+args, stdout = sys.stdout,
+                     stderr = sys.stderr)
 
 def get_worker():
     try:
