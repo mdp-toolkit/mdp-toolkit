@@ -1,10 +1,9 @@
 """Test caching extension."""
 import mdp
-from mdp import caching
 import _tools
 
 requires_joblib = _tools.skip_on_condition(
-    "not mdp.config.module_exists('joblib')",
+    "not hasattr(mdp, 'caching')",
     "This test requires the 'joblib' module.")
 
 
@@ -43,7 +42,7 @@ def test_caching_extension():
     # reset counter
     _counter = 0
     # activate the extension
-    caching.activate_caching()
+    mdp.caching.activate_caching()
     assert mdp.get_active_extensions() == ['cache_execute']
 
     # after decoration the global counter is incremented for each new 'x'
@@ -54,7 +53,7 @@ def test_caching_extension():
             assert _counter == i+1
 
     # after deactivation
-    caching.deactivate_caching()
+    mdp.caching.deactivate_caching()
     assert mdp.get_active_extensions() == []
     # reset counter
     _counter = 0
@@ -72,7 +71,7 @@ def test_different_instances_same_content():
     global _counter
     x = mdp.numx.array([[100.]], dtype='d')
 
-    caching.activate_caching()
+    mdp.caching.activate_caching()
     node = _CounterNode()
     # make one fake execution to avoid that automatic setting of
     # attributes (e.g. dtype interferes with cache)
@@ -98,7 +97,7 @@ def test_different_instances_same_content():
     node.execute(x)
     assert _counter == 1
 
-    caching.deactivate_caching()
+    mdp.caching.deactivate_caching()
 
 @requires_joblib
 def test_caching_context_manager():
@@ -110,7 +109,7 @@ def test_caching_context_manager():
     _counter = 0
 
     assert mdp.get_active_extensions() == []
-    with caching.cache():
+    with mdp.caching.cache():
         assert mdp.get_active_extensions() == ['cache_execute']
 
         for i in range(3):

@@ -351,3 +351,4 @@ __all__ = ['CheckpointFlow', 'CheckpointFunction', 'CheckpointSaveFunction',
 
 if config.module_exists('joblib'):
     import caching
+    __all__ += ['caching']
