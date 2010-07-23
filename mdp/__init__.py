@@ -338,10 +338,11 @@ del classifier_node
 
 # explicitly set __all__, mainly needed for epydoc
 __all__ = ['CheckpointFlow', 'CheckpointFunction', 'CheckpointSaveFunction',
-           'CrashRecoveryException', 'Cumulator', 'Flow', 'FlowException',
+           'CrashRecoveryException', 'Cumulator', 'VariadicCumulator', 'Flow', 'FlowException',
            'FlowExceptionCR', 'IsNotInvertibleException',
            'IsNotTrainableException', 'MDPException', 'MDPWarning', 'Node',
            'NodeException', 'TrainingException', 'TrainingFinishedException',
+           'ClassifierNode', 'ClassifierCumulator',
            'contrib', 'get_eta', 'graph', 'helper_funcs', 'hinet', 'nodes',
            'numx_description', 'pca', 'sfa', 'utils', 'whitening',
            'parallel', 'numx_version',
