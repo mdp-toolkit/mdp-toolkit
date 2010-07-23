@@ -1,8 +1,7 @@
 import mdp
 from mdp import ClassifierNode
-from mdp import numx as numx
+from mdp import numx, numx_rand
 import operator
-import random
 import itertools
 
 class SignumClassifier(ClassifierNode):
@@ -169,12 +168,14 @@ class DiscreteHopfieldClassifier(ClassifierNode):
     """Node for simulating a simple discrete Hopfield model"""
     # TODO: It is unclear if this belongs to classifiers or is a general node
     # because label space is a subset of feature space
-    def __init__(self, input_dim=None):
-        dtype = bool
+    def __init__(self, input_dim=None, dtype='b'):
         super(DiscreteHopfieldClassifier, self).__init__(input_dim, input_dim, dtype)
         self._weight_matrix = 0 # assigning zero to ease addition
         self._num_patterns = 0
         self._shuffled_update = True
+
+    def _get_supported_dtypes(self):
+        return ['b']
 
     def _train(self, x):
         """Provide the hopfield net with the possible states.
@@ -223,7 +224,7 @@ class DiscreteHopfieldClassifier(ClassifierNode):
             has_converged = True
             iter_order = range(len(self._weight_matrix))
             if self._shuffled_update:
-                numx.random.shuffle(iter_order)
+                numx_rand.shuffle(iter_order)
             for row in iter_order:
                 w_row = self._weight_matrix[row]
 
@@ -239,6 +240,7 @@ class DiscreteHopfieldClassifier(ClassifierNode):
                     pattern[row] = new_pattern_row
         return mdp.utils.sign_to_bool(pattern)
 
+# TODO: Make it more efficient
 
 class KMeansClassifier(ClassifierNode):
     def __init__(self, num_clusters, max_iter=10000, input_dim=None, dtype=None):
@@ -254,6 +256,11 @@ class KMeansClassifier(ClassifierNode):
         self.tlen = 0
         self._centroids = None
         self.max_iter = max_iter
+        
+    def _get_supported_dtypes(self):
+        """Return the list of dtypes supported by this node."""
+        return (mdp.utils.get_dtypes('AllFloat') +
+                mdp.utils.get_dtypes('AllInteger'))
 
     def _train(self, x):
         # append all data
@@ -267,23 +274,27 @@ class KMeansClassifier(ClassifierNode):
 
         # choose initial centroids unless they are already given
         if not self._centroids:
+            import random
             centr_idx = random.sample(xrange(self.tlen), self._num_clusters)
+            #numx_rand.permutation(self.tlen)[:self._num_clusters]
             centroids = self.data[centr_idx]
         else:
             centroids = self._centroids
 
         for step in xrange(self.max_iter):
             # list of (sum_position, num_clusters)
-            new_centroids = [(0, 0)] * len(centroids)
+            new_centroids = [(0., 0.)] * len(centroids)
             # cluster
             for x in self.data:
                 idx = self._nearest_centroid_idx(x, centroids)
                 # update position and count
-                pos_count = (new_centroids[idx][0] + x, new_centroids[idx][1] + 1)
+                pos_count = (new_centroids[idx][0] + x,
+                             new_centroids[idx][1] + 1.)
                 new_centroids[idx] = pos_count
 
             # get new centroid position
-            new_centroids = numx.array([c[0] / c[1] for c in new_centroids])
+            new_centroids = numx.array([c[0] / c[1] if c[1]>0. else centroids[idx]
+                                        for idx, c in enumerate(new_centroids)])
             # check if we are stable
             if numx.all(new_centroids == centroids):
                 self._centroids = centroids
@@ -291,9 +302,9 @@ class KMeansClassifier(ClassifierNode):
             centroids = new_centroids
 
     def _nearest_centroid_idx(self, data, centroids):
-        dists = [numx.linalg.norm(data - c) for c in centroids]
-        # return index
-        return min(zip(dists, itertools.count()))[1]
+        dists = numx.array([numx.linalg.norm(data - c) for c in centroids])
+        return dists.argmin()
+
 
     def _label(self, x):
         """For a set of feature vectors x, this classifier returns
