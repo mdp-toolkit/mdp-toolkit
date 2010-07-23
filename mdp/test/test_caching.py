@@ -1,8 +1,7 @@
 """Test caching extension."""
-import mdp
-import _tools
+from _tools import *
 
-requires_joblib = _tools.skip_on_condition(
+requires_joblib = skip_on_condition(
     "not hasattr(mdp, 'caching')",
     "This test requires the 'joblib' module.")
 

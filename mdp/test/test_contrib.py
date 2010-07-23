@@ -4,6 +4,10 @@
 from _tools import *
 from test_ICANode import verify_ICANode, verify_ICANodeMatrices
 
+requires_joblib = skip_on_condition(
+    "not hasattr(mdp, 'caching')",
+    "This test requires the 'joblib' module.")
+
 def _s_shape(theta):
     """
     returns x,y
@@ -272,10 +276,10 @@ def test_XSFANode():
     assert min(corrs) > 0.8, ('source/estimate minimal'
                               ' covariance: %g' % min(corrs))
 
+@skip_on_condition(
+    "not hasattr(mdp.nodes, 'ShogunSVMClassifier')",
+    "This test requires the 'shogun' module.")
 def test_ShogunSVMClassifier():
-    # XXX: use the new logic here
-    if not hasattr(mdp.nodes,'ShogunSVMClassifier'):
-        return
     # TODO: Implement parameter ranges
     num_train = 100
     num_test = 50
@@ -390,10 +394,10 @@ def test_ShogunSVMClassifier():
 
             assert should_fail == failed, msg
 
+@skip_on_condition(
+    "not hasattr(mdp.nodes, 'LibSVMClassifier')",
+    "This test requires the 'libsvm' module.")
 def test_LibSVMClassifier():
-    # XXX: use the new logic here
-    if not hasattr(mdp.nodes, 'LibSVMClassifier'):
-        return
     num_train = 100
     num_test = 50
     dist = 0.4

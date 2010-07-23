@@ -1,7 +1,10 @@
 from _tools import *
-import mdp
 
+requires_signal = skip_on_condition(
+    "not hasattr(mdp.nodes, 'Convolution2DNode')",
+    "This test requires the 'scipy.signal' module.")
 
+@requires_signal
 def testConvolution2DNodeFunctionality():
     filters = numx.empty((3,1,1))
     filters[:,0,0] = [1.,2.,3.]
@@ -17,6 +20,7 @@ def testConvolution2DNodeFunctionality():
             for n_flt in range(3):
                 assert_array_equal(x*(n_flt+1.), y[:,n_flt,:,:])
 
+@requires_signal
 def testConvolution2DNode_2D3Dinput():
     filters = numx.empty((3,1,1))
     filters[:,0,0] = [1.,2.,3.]
