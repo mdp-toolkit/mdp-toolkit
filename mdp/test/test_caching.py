@@ -1,6 +1,12 @@
 """Test caching extension."""
 import mdp
 from mdp import caching
+import _tools
+
+requires_joblib = _tools.skip_on_condition(
+    "not mdp.config.module_exists('joblib')",
+    "This test requires the 'joblib' module.")
+
 
 _counter = 0
 class _CounterNode(mdp.Node):
@@ -17,7 +23,8 @@ class _CounterNode(mdp.Node):
         _counter += 1
         return x
 
-def _test_caching_extension():
+@requires_joblib
+def test_caching_extension():
     """Test that the caching extension is working."""
 
     global _counter
@@ -60,6 +67,7 @@ def _test_caching_extension():
             assert mdp.numx.all(node.execute(x) == x)
             assert _counter == k
 
+@requires_joblib
 def test_different_instances_same_content():
     global _counter
     x = mdp.numx.array([[100.]], dtype='d')
@@ -92,6 +100,7 @@ def test_different_instances_same_content():
 
     caching.deactivate_caching()
 
+@requires_joblib
 def test_caching_context_manager():
     global _counter
     node = _CounterNode()

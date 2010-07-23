@@ -10,6 +10,9 @@ assert_array_equal, assert_array_almost_equal, \
      assert_equal, assert_almost_equal = \
      testing.assert_array_equal, testing.assert_array_almost_equal, \
      testing.assert_equal, testing.assert_almost_equal
+import py
+from functools import wraps
+
 
 mean = numx.mean
 std = numx.std
@@ -142,3 +145,28 @@ _spinner = itertools.cycle((' .\b\b', ' o\b\b', ' 0\b\b', ' O\b\b',
 def spinner():
     sys.stderr.write(_spinner.next())
     sys.stderr.flush()
+
+class skip_on_condition(object):
+    """Skip a test if the eval(condition_str, namespace) returns True.
+
+    namespace contains sys, os, and the mdp module.
+    """
+    def __init__(self, condition_str, skipping_msg=None):
+        self.condition_str = condition_str
+        if skipping_msg is None:
+            self.skipping_msg = "Condition %s not met." % condition_str
+        else:
+            self.skipping_msg = skipping_msg
+
+    def __call__(self, f):
+        import sys, os
+        @wraps(f)
+        def wrapped_f(*args, **kwargs):
+            namespace = {'sys': sys,
+                         'os': os,
+                         'mdp': mdp}
+            if eval(self.condition_str, namespace):
+                py.test.skip(self.skipping_msg)
+            f(*args, **kwargs)
+        return wrapped_f
+ 
