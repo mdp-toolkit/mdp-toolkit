@@ -2,6 +2,12 @@
 import mdp
 import py.test
 
+###################################################################
+### After changing this file, please copy it to
+### ../../bimdp/test/conftest.py. Those two files should
+### be identical.
+###################################################################
+
 _err_str = """
 IMPORTANT: some tests use random numbers. This could
 occasionally lead to failures due to numerical degeneracies.
