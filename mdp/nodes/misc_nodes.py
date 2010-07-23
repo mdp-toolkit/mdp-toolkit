@@ -26,6 +26,12 @@ class IdentityNode(Node):
     def is_trainable():
         False
 
+    def _get_supported_dtypes(self):
+        """Return the list of dtypes supported by this node."""
+        return (mdp.utils.get_dtypes('AllFloat') +
+                mdp.utils.get_dtypes('AllInteger') +
+                mdp.utils.get_dtypes('Complex'))
+
     def _set_input_dim(self, n):
         self._input_dim = n
         self._output_dim = n
@@ -514,9 +520,12 @@ class NormalNoiseNode(mdp.Node):
     def is_invertible():
         return False
 
+    def _get_supported_dtypes(self):
+        return mdp.utils.get_dtypes('AllFloat')
+
     def _execute(self, x):
-        noise = (mdp.numx_rand.normal(x.shape[-1]) * self.noise_args[1]
-                 + self.noise_args[0])
+        noise = self._refcast(mdp.numx_rand.normal(size=x.shape) * self.noise_args[1]
+                              + self.noise_args[0])
         return x + noise
 
 
@@ -689,6 +698,10 @@ class CutoffNode(mdp.Node):
     def is_invertible():
         return False
 
+    def _get_supported_dtypes(self):
+        return (mdp.utils.get_dtypes('AllFloat') +
+                mdp.utils.get_dtypes('AllInteger'))
+
     def _execute(self, x):
         """Return the clipped data."""
         # n.clip() does not work, since it does not accept None for one bound
@@ -726,6 +739,10 @@ class HistogramNode(mdp.Node):
         self._hist_filename = hist_filename
         self.hist_fraction = hist_fraction
         self.data_hist = None  # stores the data history
+
+    def _get_supported_dtypes(self):
+        return (mdp.utils.get_dtypes('AllFloat') +
+                mdp.utils.get_dtypes('AllInteger'))
 
     def _train(self, x):
         """Store the history data."""

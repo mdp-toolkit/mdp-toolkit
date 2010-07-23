@@ -13,9 +13,11 @@ def testNoiseNode():
     assert_array_equal(out, numx.zeros((100,10),'d'))
 
 def testNormalNoiseNode():
-    node = mdp.nodes.NormalNoiseNode(noise_args=(2.1, 0.001))
-    x = numx.array([range(100), range(100)])
-    node.execute(x)
+    node = mdp.nodes.NormalNoiseNode(noise_args=(2.1, 0.1))
+    x = numx.zeros((20000, 10))
+    y = node.execute(x)
+    assert numx.allclose(y.mean(0), 2.1, atol=1e-02)
+    assert numx.allclose(y.std(0), 0.1, atol=1e-02)
 
 def testNoiseNodePickling():
     node = mdp.nodes.NoiseNode()
