@@ -2,8 +2,6 @@ from mdp import numx, numx_linalg, utils, NodeException
 import mdp
 import scipy.signal as signal
 
-# TODO dependency on scipy.signal
-
 # TODO automatic selection of convolution
 
 # TODO provide generators for standard filters
@@ -12,19 +10,19 @@ import scipy.signal as signal
 
 class Convolution2DNode(mdp.Node):
     """Convolve input data with filter banks.
-    
+
     The 'filters' argument specifies a set of 2D filters that are
     convolved with the input data during execution. Convolution can
     be selected to be executed by linear filtering of the data, or
     in the frequency domain using a Discrete Fourier Transform.
-    
+
     Input data can be given as 3D data, each row being a 2D array
     to be convolved with the filters, or as 2D data, in which case
     the 'input_shape' argument must be specified.
-    
+
     This node depends on 'scipy'.
     """
-        
+
     def __init__(self, filters, input_shape = None,
                  approach = 'fft',
                  mode = 'full', boundary = 'fill', fillvalue = 0,
@@ -32,35 +30,35 @@ class Convolution2DNode(mdp.Node):
                  input_dim = None, dtype = None):
         """
         Input arguments:
-        
+
         input_shape -- Is a tuple (h,w) that corresponds to the height and
                        width of the input 2D data. If the input data is given
                        in a flattened format, it is first reshaped before
                        convolution
-                       
+
         approach -- 'approach' is one of ['linear', 'fft']
-                    'linear': convolution is done by linear filtering; 
+                    'linear': convolution is done by linear filtering;
                     'fft': convoltion is done using the Fourier Transform
                     If 'approach' is 'fft', the 'boundary' and 'fillvalue' arguments
                     are ignored, and are assumed to be 'fill' and 0, respectively.
                     (*Default* = 'fft')
-                    
+
         mode -- Convolution mode, as defined in scipy.signal.convolve2d
                 'mode' is one of ['valid', 'same', 'full']
                 (*Default* = 'full')
-                
+
         boundary -- Boundary condition, as defined in scipy.signal.convolve2d
                      'boundary' is one of ['fill', 'wrap', 'symm']
                      (*Default* = 'fill')
 
         fillvalue -- Value to fill pad input arrays with
                      (*Default* = 0)
-        
+
         output_2d -- If True, the output array is 2D; the first index
                      corresponds to data points; every output data point
                      is the result of flattened convolution results, with
                      the output of each filter concatenated together.
-                     
+
                      If False, the output array is 4D; the format is
                      data[idx,filter_nr,x,y], with
                      filter_nr: index of convolution filter
@@ -69,11 +67,11 @@ class Convolution2DNode(mdp.Node):
         """
         super(Convolution2DNode, self).__init__(input_dim=input_dim,
                                               dtype=dtype)
-        
+
         self.filters = filters
-        
+
         self._input_shape = input_shape
-        
+
         if approach not in ['linear', 'fft']:
             raise NodeException("'approach' argument must be one of ['linear', 'fft']")
         self._approach = approach
@@ -81,7 +79,7 @@ class Convolution2DNode(mdp.Node):
         if mode not in ['valid', 'same', 'full']:
             raise NodeException("'mode' argument must be one of ['valid', 'same', 'full']")
         self._mode = mode
-        
+
         self.boundary = boundary
         self.fillvalue = fillvalue
         self.output_2d = output_2d
@@ -146,12 +144,14 @@ class Convolution2DNode(mdp.Node):
         convolution we use (padding, full, ...). Also, we want to
         to be able to accept 3D arrays.
         """
+
         # check input rank
         if not x.ndim in [2,3]:
             error_str = "x has rank %d, should be 2 or 3" % (x.ndim)
             raise NodeException(error_str)
 
         # set 2D shape if necessary
+
         if self._input_shape is None:
             if x.ndim == 2:
                 error_str = "Cannot infer 2D shape from 1D data points. " + \
@@ -212,16 +212,15 @@ class Convolution2DNode(mdp.Node):
                                                           mode=self.mode,
                                                           boundary=self.boundary,
                                                           fillvalue=self.fillvalue)
-                
+
         # reshape if necessary
         if self.output_2d:
             y.resize((y.shape[0], self.output_dim))
-        
+
         return y
-    
+
 if __name__=='__main__':
     import numpy, mdp
     im = numpy.random.rand(4, 3,3)
     node = mdp.nodes.Convolution2DNode(numpy.array([[[1.]]]))
     node.execute(im)
-    
