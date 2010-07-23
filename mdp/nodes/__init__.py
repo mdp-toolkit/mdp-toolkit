@@ -17,7 +17,6 @@ from classifier_nodes import (SignumClassifier, PerceptronClassifier,
                               SimpleMarkovClassifier,
                               DiscreteHopfieldClassifier,
                               KMeansClassifier)
-from convolution_nodes import Convolution2DNode
 from jade import JADENode
 from nipals import NIPALSNode
 from lle_nodes import LLENode, HLLENode
@@ -44,16 +43,15 @@ __all__ = ['CuBICANode', 'EtaComputerNode', 'FANode', 'FDANode', 'FastICANode',
 # nodes with external dependencies
 from mdp import config
 
-
 if config.module_exists('scipy.signal'):
     from convolution_nodes import Convolution2DNode
     __all__ += ['Convolution2DNode']
+    del convolution_nodes
 
 if config.has('shogun'):
     from shogun_svm_classifier import ShogunSVMClassifier
     __all__ += ['ShogunSVMClassifier']
     del shogun_svm_classifier
-
 
 if config.has('LibSVM'):
     from libsvm_classifier import LibSVMClassifier
@@ -78,4 +76,3 @@ del nipals
 del lle_nodes
 del xsfa_nodes
 del config
-del convolution_nodes
