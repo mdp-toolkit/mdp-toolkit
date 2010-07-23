@@ -9,9 +9,6 @@ blockers for MDP 3.0
 - make FDANode compatible with ClassifierNode?
 - finish SVM integration and port my existing shogun bindings to newest version (rike)
 - switch to a more permissive license (like BSD)
-- refactor tests for nodes using optional libraries
-- offer interface to query available optional libraries (remove try excepts)
-  use this in the automatically generated BiClassifier code
 - add an example of training a node with multiple training phases using a flow,
   where the training is done first using lists and then using a custom iterators.
   special care should be taken on explaining how to pass additional arguments to
@@ -21,9 +18,11 @@ blockers for MDP 3.0
 - fix Shogun tests
 - find a proper way to generate API docs. epydoc is dead. currently we don't have
   API docs for bimdp and for SVM nodes.
+- contect manager for scheduler
 
 optional for MDP 3.0
 ====================
+- check that SparsePCA works on machine with scipy 0.9.0, add it to MDP if so
 - create a Flow metaclass to enable Flow extensions (think of ParallelFlow!)
 - implement an extension context manager with additional parameters and 
   exception handling. E.g.:
@@ -35,11 +34,7 @@ optional for MDP 3.0
   extension(string, args=tuple, kwargs=dictionary)
 - add example section on the homepage
 - bimdp: add deep belief network flow and nodes to the core bimdp
-- refactor unitests
-- check if sphinx could be used as an alternative for automatic API docs
 - add cross-correlation tools, maybe support the use of a parallel scheduler
-- add execute memoize extension?
-- drop python 2.4 and use/advertise 'with' statement syntax?
 - check problem with LLENode tutorial demo when using matplotlib 
 0.99.1.2, see Olivier Grisel's email
 
