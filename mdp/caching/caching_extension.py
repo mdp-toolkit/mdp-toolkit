@@ -22,7 +22,7 @@ def set_cachedir(cachedir=None):
 
     global _cachedir
     global _memory
-    
+
     if cachedir is None:
         cachedir = mkdtemp()
     _cachedir = cachedir

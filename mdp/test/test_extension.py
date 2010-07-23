@@ -314,7 +314,7 @@ _counter = 0
 class _CounterNode(mdp.Node):
     def __init__(self):
         super(_CounterNode, self).__init__()
-        
+
     def is_trainable(self):
         return False
 
@@ -398,7 +398,7 @@ class TestCachingExtension(unittest.TestCase):
         node.attr = 'unique'
         node.execute(x)
         assert _counter == 1
-        
+
         caching.deactivate_caching()
 
     def test_caching_context_manager(self):
@@ -412,14 +412,14 @@ class TestCachingExtension(unittest.TestCase):
         self.assertEqual(mdp.get_active_extensions(), [])
         with caching.cache():
             self.assertEqual(mdp.get_active_extensions(), ['cache_execute'])
-            
+
             for i in range(3):
                 x = mdp.numx.array([[i]], dtype='d')
                 for _ in range(2):
                     assert mdp.numx.all(node.execute(x) == x)
                     assert _counter == i+1
         self.assertEqual(mdp.get_active_extensions(), [])
-       
+
 
 def get_suite(testname=None):
     # this suite just ignores the testname argument
