@@ -81,3 +81,4 @@ class _SVMClassifier(ClassifierCumulator):
     def _set_output_dim(self, n):
         msg = "Output dim cannot be set explicitly!"
         raise mdp.NodeException(msg)
+

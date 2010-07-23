@@ -79,3 +79,5 @@ del lle_nodes
 del xsfa_nodes
 del config
 del convolution_nodes
+del svm_classifiers
+

@@ -257,7 +257,13 @@ NODES = [
     dict(klass='PerceptronClassifier',
          sup_arg_gen=_rand_classification_labels_array),
     dict(klass='SimpleMarkovClassifier',
-         sup_arg_gen=_rand_classification_labels_array)
+         sup_arg_gen=_rand_classification_labels_array),
+    dict(klass='ShogunSVMClassifier',
+        sup_arg_gen=_rand_labels_array,
+        init_args=["libsvmmulticlass", (), None, "GaussianKernel"]),
+    dict(klass='LibSVMClassifier',
+        sup_arg_gen=_rand_labels_array,
+        init_args=["LINEAR","C_SVC"])
     ]
 
 EXCLUDE_NODES = [nodes.ICANode, nodes.IdentityNode]

@@ -274,7 +274,7 @@ class ShogunSVMClassifier(_SVMClassifier):
     }
 
     def __init__(self, classifier="libsvmmulticlass", classifier_arguments=(),
-                 classifier_options=None,
+                 classifier_options=None, kernel_name=None, kernel_options=None,
                  num_threads="autodetect", input_dim=None, dtype=None):
         """
         Initialises a new ShogunSVMClassifier.
@@ -308,6 +308,14 @@ class ShogunSVMClassifier(_SVMClassifier):
 
         self._num_threads = num_threads
         self._set_num_threads()
+
+        if kernel_name:
+            self.set_kernel(kernel_name, kernel_options)
+
+    
+    def _get_supported_dtypes(self):
+        """Return the list of dtypes supported by this node."""
+        return ('float64',)
 
     def _set_num_threads(self):
         # init number of threads

@@ -17,7 +17,7 @@ class LibSVMClassifier(_SVMClassifier):
     kernels = ["RBF", "LINEAR", "POLY", "SIGMOID"]
     classifiers = ["C_SVC", "NU_SVC", "ONE_CLASS", "EPSILON_SVR", "NU_SVR"]
 
-    def __init__(self, probability=True, input_dim=None, dtype=None):
+    def __init__(self, kernel=None, classifier=None, probability=True, input_dim=None, dtype=None):
         """
         probability -- Must be set to True, if algorithms based on probability
                        shall be used.
@@ -26,6 +26,14 @@ class LibSVMClassifier(_SVMClassifier):
         self._probability = probability
         self._classification_type = "multi"
         super(LibSVMClassifier, self).__init__(input_dim=input_dim, dtype=dtype)
+        if kernel:
+            self.set_kernel(kernel)
+        if classifier:
+            self.set_classifier(classifier)
+
+    def _get_supported_dtypes(self):
+        """Return the list of dtypes supported by this node."""
+        return ('float64',)
 
     def set_classifier(self, classifier):
         """
