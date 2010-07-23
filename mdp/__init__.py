@@ -134,7 +134,7 @@ class ExternalDep(object):
         if self.available:
             return "%s" % self.version
         else:
-            return "FAILED: %s" % self.failmsg
+            return "NOT AVAILABLE: %s" % self.failmsg
 
 class ExternalDepFail(ExternalDep):
     def __init__(self, failmsg):
@@ -271,12 +271,19 @@ class MDPConfiguration(object):
                 else:
                     SYMEIG = 'unknown'
         return SYMEIG
+
     
     def info(self):
         """Return nicely formatted info about MDP."""
         maxlen = max(len(f) for f in self._features if f in self._doc)
-        return "\n".join(["{feature:{maxlen}}: {desc!s}".format(feature=feature, desc=self[feature], maxlen=maxlen+1)
-                            for feature in self._features if feature in self._doc])
+        l = []
+        for feature in self._features:
+            if feature in self._doc:
+                s = "{feature:{maxlen}}: {desc!s}".format(feature=feature,
+                                                          desc=self[feature],
+                                                          maxlen=maxlen+1)
+                l.append(s)
+        return "\n".join(l)
 
 config = MDPConfiguration()
 
