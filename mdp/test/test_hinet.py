@@ -5,7 +5,7 @@ import py.test
 import StringIO
 import mdp.hinet as mh
 from _tools import *
-from mdp import numx_rand
+
 
 _get_new_flow = lambda: mdp.Flow([
         mdp.nodes.NoiseNode(),

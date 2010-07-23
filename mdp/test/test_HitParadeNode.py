@@ -1,5 +1,4 @@
 import mdp
-from mdp import numx, numx_rand
 from _tools import *
 
 def testHitParadeNode():

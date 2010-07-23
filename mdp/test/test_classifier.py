@@ -1,16 +1,11 @@
 # -*- coding: utf-8 -*-
 
 """These are test functions for MDP classifiers.
-
-Run them with:
->>> import mdp
->>> mdp.test("classifier")
-
 """
 import inspect
 
-import mdp
-from mdp import numx, numx_rand
+from _tools import *
+
 from mdp import ClassifierNode
 from mdp.nodes import (SignumClassifier, PerceptronClassifier,
                        SimpleMarkovClassifier, DiscreteHopfieldClassifier,

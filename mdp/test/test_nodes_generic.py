@@ -33,11 +33,44 @@ def _stop_training_or_execute(node, inp):
         node.execute(inp)
 
 def pytest_generate_tests(metafunc):
-    _generic_test_factory(NODES, metafunc)
+    generic_test_factory(NODES, metafunc)
 
-def _generic_test_factory(big_nodes, metafunc):
+def generic_test_factory(big_nodes, metafunc):
     """Generator creating a test for each of the nodes
-    based upon arguments passwd in the tuple.
+    based upon arguments in a list of nodes in big_nodes.
+
+    Format of big_nodes:
+    each item in the list can be either a
+    - class name, in this case the class instances are initialized
+      without arguments and default arguments are used during
+      the training and execution phases.
+    - dict containing items which can override the initialization
+      arguments, provide extra arguments for training and/or
+      execution.
+
+    Available keys in the configuration dict:
+    `klass`
+      Mandatory.
+      The type of Node.
+
+    `init_args=()`
+      A sequence used to provide the initialization arguments to node
+      constructor. Before being used, the items in this sequence are
+      executed if they are callable. This allows one to create fresh
+      instances of nodes before each Node initalization.
+
+    `inp_arg_gen=...a call to get_random_mix('d')`
+      Used to construct the `inp` data argument used for training and
+      execution.
+
+    `sup_arg_gen=None`
+      A function taking a single argument (`inp`)
+      Used to contruct extra arguments passed to `train`.
+
+    `execute_arg_gen=None`
+      A function similar to `sup_arg_gen` but used during execution.
+      The return value is unpacked and used as additional arguments to
+      `execute`.
     """
     for nodetype in big_nodes:
         if not isinstance(nodetype, dict):

@@ -1,9 +1,7 @@
 import py.test
 from _tools import *
-from mdp import numx, numx_rand, utils
-mult = mdp.utils.mult
 
-def testFDANode():
+def test_FDANode():
     mean1 = [0., 2.]
     mean2 = [0., -2.]
     std_ = numx.array([1., 0.2])

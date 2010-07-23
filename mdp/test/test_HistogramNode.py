@@ -1,5 +1,4 @@
-import mdp
-from mdp import numx, numx_rand
+from _tools import *
 
 def testHistogramNode_nofraction():
     """Test HistogramNode with fraction set to 1.0."""

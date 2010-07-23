@@ -1,6 +1,4 @@
 from _tools import *
-from mdp import numx_rand, utils
-mult = mdp.utils.mult
 
 def testGaussianClassifier_train():
     nclasses = 10

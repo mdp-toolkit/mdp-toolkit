@@ -1,5 +1,5 @@
 from _tools import *
-from mdp import numx, utils
+
 
 def _uniform(min_, max_, dims):
     return uniform(dims)*(max_-min_)+min_

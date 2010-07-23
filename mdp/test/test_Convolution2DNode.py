@@ -1,6 +1,6 @@
 from _tools import *
 import mdp
-from mdp import numx, numx_rand
+
 
 def testConvolution2DNodeFunctionality():
     filters = numx.empty((3,1,1))

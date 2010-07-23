@@ -1,6 +1,4 @@
-from mdp import utils, numx_rand
 from _tools import *
-mult = mdp.utils.mult
 
 TESTYPES = [numx.dtype('d'), numx.dtype('f')]
 

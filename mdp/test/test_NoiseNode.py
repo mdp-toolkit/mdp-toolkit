@@ -1,5 +1,5 @@
 from _tools import *
-from mdp import numx
+
 
 def testNoiseNode():
     def bogus_noise(mean, size=None):

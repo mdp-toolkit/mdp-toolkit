@@ -1,5 +1,4 @@
-import mdp
-from mdp import numx, numx_rand
+from _tools import *
 
 def test_CutoffNode():
     node = mdp.nodes.CutoffNode(-1.5, 1.2)

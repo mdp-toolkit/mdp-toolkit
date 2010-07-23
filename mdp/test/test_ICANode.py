@@ -1,7 +1,4 @@
-import mdp
-from mdp import numx, numx_rand, numx_fft, utils
 from _tools import *
-mult = mdp.utils.mult
 
 def verify_ICANode(icanode, rand_func = uniform, vars = 3, N=8000,
                  prec = 3):
@@ -30,7 +27,7 @@ def verify_ICANodeMatrices(icanode, rand_func = uniform, vars = 3, N=8000):
     exp_mat = mult(out, B)
     assert_array_almost_equal(act_mat,exp_mat,6)
 
-def rand_with_timestruct( size=None):
+def rand_with_timestruct(size=None):
     T, N = size
     # do something special only if T!=N, otherwise
     # we were asked to generate a mixing matrix
@@ -58,7 +55,7 @@ def test_CuBICANode_telescope():
     verify_ICANodeMatrices(ica2)
 
 
-def testTDSEPNode():
+def test_TDSEPNode():
     ica = mdp.nodes.TDSEPNode(lags=20, limit=1e-10)
     ica2 = ica.copy()
     verify_ICANode(ica, rand_func=rand_with_timestruct, vars=2, N=2**14, prec=2)

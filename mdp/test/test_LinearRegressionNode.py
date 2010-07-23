@@ -1,8 +1,7 @@
 import py.test
-import mdp
-from mdp import numx, numx_rand
 from _tools import *
-mult = mdp.utils.mult
+
+INDIM, OUTDIM, TLEN = 5, 3, 10000
 
 def train_LRNode(inp, out, with_bias):
     lrnode = mdp.nodes.LinearRegressionNode(with_bias)
@@ -10,8 +9,6 @@ def train_LRNode(inp, out, with_bias):
         lrnode.train(inp[i], out[i])
     lrnode.stop_training()
     return lrnode
-
-INDIM, OUTDIM, TLEN = 5, 3, 10000
 
 def test_LinearRegressionNode():
     # 1. first, without noise
