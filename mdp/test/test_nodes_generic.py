@@ -33,9 +33,9 @@ def _stop_training_or_execute(node, inp):
         node.execute(inp)
 
 def pytest_generate_tests(metafunc):
-    _generic_test_factory(NODES, metafunc)
+    generic_test_factory(NODES, metafunc)
 
-def _generic_test_factory(big_nodes, metafunc):
+def generic_test_factory(big_nodes, metafunc):
     """Generator creating a test for each of the nodes
     based upon arguments in a list of nodes in big_nodes.
 

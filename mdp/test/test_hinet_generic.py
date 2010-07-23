@@ -1,6 +1,6 @@
 import mdp.hinet as mh
 from _tools import *
-from test_nodes_generic import (_generic_test_factory,
+from test_nodes_generic import (generic_test_factory,
                                 test_dtype_consistency,
                                 test_outputdim_consistency,
                                 test_dimdtypeset,
@@ -38,4 +38,4 @@ NODES = [dict(klass=mh.FlowNode,
          ]
 
 def pytest_generate_tests(metafunc):
-    _generic_test_factory(NODES, metafunc)
+    generic_test_factory(NODES, metafunc)
