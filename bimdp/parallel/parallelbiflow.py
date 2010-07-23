@@ -8,7 +8,6 @@ encapsulate the BiFlow in the tasks.
 import itertools
 
 import mdp
-from hotshot.log import EXIT
 n = mdp.numx
 
 import mdp.parallel as parallel
