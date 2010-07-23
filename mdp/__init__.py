@@ -324,7 +324,6 @@ import hinet
 import parallel
 import contrib
 from test import test
-import caching
 
 # clean up namespace
 del signal_node
@@ -333,7 +332,8 @@ del classifier_node
 
 # explicitly set __all__, mainly needed for epydoc
 __all__ = ['CheckpointFlow', 'CheckpointFunction', 'CheckpointSaveFunction',
-           'CrashRecoveryException', 'Cumulator', 'VariadicCumulator', 'Flow', 'FlowException',
+           'CrashRecoveryException', 'Cumulator', 'VariadicCumulator', 'Flow',
+           'FlowException',
            'FlowExceptionCR', 'IsNotInvertibleException',
            'IsNotTrainableException', 'MDPException', 'MDPWarning', 'Node',
            'NodeException', 'TrainingException', 'TrainingFinishedException',
@@ -346,6 +346,8 @@ __all__ = ['CheckpointFlow', 'CheckpointFunction', 'CheckpointSaveFunction',
            'activate_extension', 'deactivate_extension', 'activate_extensions',
            'deactivate_extensions',
            'ClassifierNode',
-           'config',
+           'config'
            ]
 
+if config.module_exists('joblib'):
+    import caching
