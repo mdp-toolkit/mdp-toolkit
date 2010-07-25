@@ -63,6 +63,7 @@ class MDPWarning(UserWarning):
     pass
 
 import os as _os
+import sys as _sys
 
 # list of supported numerical extensions
 _NUMX_LABELS = ['scipy', 'numpy']

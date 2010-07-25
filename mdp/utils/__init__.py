@@ -20,6 +20,7 @@ from slideshow import (BASIC_STYLE, SLIDESHOW_STYLE, HTMLSlideShow,
 
 import mdp as _mdp
 import inspect as _inspect
+import sys as _sys
 
 try:
     # check if scipy.linalg.eigh is the new version
@@ -104,4 +105,25 @@ __all__ = ['CovarianceMatrix', 'DelayCovarianceMatrix','CrossCovarianceMatrix',
            'lrep', 'rrep', 'irep',
            'orthogonal_permutations', 'izip_stretched',
            'weighted_choice', 'bool_to_sign', 'sign_to_bool',
-           'OrderedDict', 'gabor']
+           'OrderedDict', 'gabor', 'fixup_namespace']
+
+def without_prefix(name, prefix):
+    thelen = len(prefix)
+    if name.startswith(prefix):
+        return name[len(prefix):]
+    else:
+        return None
+
+fixup_debug = True
+
+def fixup_namespace(module, names, old_modules):
+    mname = module.__name__
+    print 'NAMESPACE FIXUP: {0} ({1})'.format(module, mname)
+    for name in names:
+        item = getattr(module, name)
+        if (hasattr(item, '__module__') and
+            without_prefix(item.__module__, mname + '.') in old_modules):
+            if fixup_debug:
+                print 'namespace fixup: {{{0} => {1}}}.{2}'.format(
+                    item.__module__, 'mdp', item.__name__)
+            item.__module__ = mname

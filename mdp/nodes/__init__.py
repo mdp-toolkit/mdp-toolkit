@@ -78,3 +78,8 @@ del nipals
 del lle_nodes
 del xsfa_nodes
 del config
+
+from mdp import utils
+import sys
+del utils
+del sys

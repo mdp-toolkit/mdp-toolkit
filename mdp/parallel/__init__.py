@@ -39,6 +39,7 @@ from parallelhinet import (
 )
 
 from mdp import config
+from mdp.utils import fixup_namespace
 
 if config.has('Parallel Python'):
     import pp_support
@@ -65,3 +66,5 @@ __all__ = [
     "NodeResultContainer", "ParallelFlowException", "NoTaskException",
     "ParallelFlow", "ParallelCheckpointFlow",
     "ParallelFlowNode", "ParallelLayer", "ParallelCloneLayer"]
+
+import sys as _sys
