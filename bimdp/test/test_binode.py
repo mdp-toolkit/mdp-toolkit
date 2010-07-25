@@ -1,5 +1,5 @@
 import mdp
-n = mdp.numx
+from mdp import numx, numx_rand
 
 import py.test
 
@@ -113,14 +113,14 @@ class TestBiNode(object):
             def _inverse(self, x, a, b):
                 self.a = a
                 self.b = b
-                y = n.zeros((len(x), self.input_dim))
+                y = numx.zeros((len(x), self.input_dim))
                 return y
             @staticmethod
             def is_trainable(): return False
         binode = TestBiNode(node_id="test", input_dim=20, output_dim=10)
         b_key = "test" + MSG_ID_SEP + "b"
         msg = {"c": 12, "a": 13, b_key: 42, "method": "inverse"}
-        x = n.zeros((5, binode.output_dim))
+        x = numx.zeros((5, binode.output_dim))
         result = binode.execute(x, msg)
         assert len(result) == 3
         assert result[2] == -1
@@ -132,14 +132,14 @@ class TestBiNode(object):
             def _inverse(self, x, a, b):
                 self.a = a
                 self.b = b
-                y = n.zeros((len(x), self.input_dim))
+                y = numx.zeros((len(x), self.input_dim))
                 return y, None, "test2"
             @staticmethod
             def is_trainable(): return False
         binode = TestBiNode(node_id="test", input_dim=20, output_dim=10)
         b_key = "test" + MSG_ID_SEP + "b"
         msg = {"c": 12, "a": 13, b_key: 42, "method": "inverse"}
-        x = n.zeros((5, binode.output_dim))
+        x = numx.zeros((5, binode.output_dim))
         result = binode.execute(x, msg)
         assert result[2] == "test2"
 
@@ -149,7 +149,7 @@ class TestBiNode(object):
         bi_sfa_node = SFABiNode(stop_result=stop_result,
                                 node_id="testing binode")
         assert bi_sfa_node.is_trainable()
-        x = n.random.random((100,10))
+        x = numx.random.random((100,10))
         train_result = bi_sfa_node.train(x)
         assert train_result == None
         assert bi_sfa_node.is_training()
@@ -164,8 +164,8 @@ class TestBiNode(object):
         stop_result = [({"test": 0}, 1), ({"test2": 0}, 2)]
         binode = FDABiNode(stop_result=stop_result,
                            node_id="testing binode")
-        x = n.random.random((100,10))
-        msg = {"cl": n.zeros(len(x))}
+        x = numx.random.random((100,10))
+        msg = {"cl": numx.zeros(len(x))}
         binode.train(x, msg)
         result = binode.stop_training()
         assert result == (None,) + stop_result[0]
@@ -180,20 +180,20 @@ class TestBiNode(object):
             def _execute(self, x, a):
                 self.a = a
                 self.x = x
-                y = n.zeros((len(x), self.output_dim))
+                y = numx.zeros((len(x), self.output_dim))
                 return y
 
         binode = TestBiNode(input_dim=20, output_dim=10)
-        x = n.ones((5, binode.input_dim))
+        x = numx.ones((5, binode.input_dim))
         binode.train(x)
         msg = {"x": x, "a": 13, "method": "execute"}
         result = binode.stop_training(msg)
-        assert n.all(binode.x == x)
+        assert numx.all(binode.x == x)
         assert binode.x.shape == (5, binode.input_dim)
         assert binode.a == 13
         assert len(result) == 2
         assert result[0].shape == (5, binode.output_dim)
-        assert not n.any(result[0])
+        assert not result[0].any()
 
     def test_stop_training_inverse(self):
         """Test the magic inverse method argument for stop_training."""
@@ -202,21 +202,21 @@ class TestBiNode(object):
             def _inverse(self, x, a):
                 self.a = a
                 self.x = x
-                y = n.zeros((len(x), self.input_dim))
+                y = numx.zeros((len(x), self.input_dim))
                 return y
 
         binode = TestBiNode(input_dim=20, output_dim=10)
-        binode.train(n.ones((5, binode.input_dim)))
-        x = n.ones((5, binode.output_dim))
+        binode.train(numx.ones((5, binode.input_dim)))
+        x = numx.ones((5, binode.output_dim))
         msg = {"x": x, "a": 13, "method": "inverse"}
         result = binode.stop_training(msg)
-        assert n.all(binode.x == x)
+        assert numx.all(binode.x == x)
         assert binode.x.shape == (5, binode.output_dim)
         assert binode.a == 13
         assert len(result) == 3
         assert result[2] == -1
         assert result[0].shape == (5, binode.input_dim)
-        assert not n.any(result[0])
+        assert not result[0].any()
 
     def test_flow_from_sum(self):
         """Test the special addition method for BiNode."""
@@ -251,7 +251,7 @@ class TestBiClassifierNode(object):
             def is_trainable():
                 return False
         node = TestBiClassifier()
-        x = n.empty((5,2))
+        x = numx.empty((5,2))
         msg = {"return_labels": "test->",
                "return_probs": True}
         result = node.execute(x, msg)
@@ -272,7 +272,7 @@ class TestBiClassifierNode(object):
         node = SignumBiClassifier()
         msg = {"return_labels": True}
         # taken from the SignumClassifier unittest
-        x = n.array([[1, 2, -3, -4], [1, 2, 3, 4]])
+        x = numx.array([[1, 2, -3, -4], [1, 2, 3, 4]])
         result = node.execute(x, msg)
         assert result[0] is x
         assert result[1]["labels"].tolist() == [-1, 1]
@@ -287,14 +287,14 @@ class TestIdentityBiNode(object):
         accept msg arguments.
         """
         binode = IdentityBiNode(node_id="testing binode")
-        x = n.random.random((10,5))
-        msg = {"some array": n.random.random((10,3))}
+        x = numx.random.random((10,5))
+        msg = {"some array": numx.random.random((10,3))}
         # see if msg causes no problem
         y, msg = binode.execute(x, msg)
-        assert n.all(x==y)
+        assert(x == y).all()
         # see if missing msg causes problem
         y = binode.execute(x)
-        assert n.all(x==y)
+        assert (x == y).all()
 
 
 class TestJumpBiNode(object):
@@ -307,7 +307,7 @@ class TestJumpBiNode(object):
         jumpnode = JumpBiNode(train_results=train_results,
                               stop_train_results=stop_train_results,
                               execute_results=execute_results)
-        x = n.random.random((2,2))
+        x = numx_rand.random((2,2))
         assert jumpnode.is_trainable()
         # training
         rec_train_results = []
@@ -353,7 +353,7 @@ class TestBiNodeCoroutine(object):
 
         node = CoroutineBiNode(node_id="conode")
         flow = BiFlow([node])
-        x = n.random.random((3,2))
+        x = numx_rand.random((3,2))
         y, msg = flow.execute(x, {"alpha": 3})
         assert msg["alpha"] == 4
         assert msg["beta"] == 4
@@ -378,7 +378,7 @@ class TestBiNodeCoroutine(object):
 
         node = CoroutineBiNode(node_id="conode")
         flow = BiFlow([node])
-        x = n.random.random((3,2))
+        x = numx_rand.random((3,2))
         y, msg = flow.execute(x, {"alpha": 3})
         assert msg["alpha"] == 4
         assert msg["beta"] == 4
@@ -399,7 +399,7 @@ class TestBiNodeCoroutine(object):
 
         node = CoroutineBiNode(node_id="conode")
         flow = BiFlow([node])
-        x = n.random.random((3,2))
+        x = numx_rand.random((3,2))
         y, msg = flow.execute(x)
         assert msg["alpha"] == 7
         assert msg["beta"] == 8
@@ -421,7 +421,7 @@ class TestBiNodeCoroutine(object):
                 raise StopIteration(None, {"a": 1}, self.node_id)
 
         node1 = CoroutineBiNode()
-        x = n.random.random((3,2))
+        x = numx_rand.random((3,2))
         result = node1.execute(x)
         assert result == (None, {"a": 1}, None)
 
@@ -442,7 +442,7 @@ class TestBiNodeCoroutine(object):
                 raise StopIteration(x)
 
         node1 = CoroutineBiNode()
-        x = n.random.random((3,2))
+        x = numx_rand.random((3,2))
         # this inits the coroutine, a argument is needed
         node1.execute(x, {"a": 2})
         node1.execute(x)
@@ -467,19 +467,6 @@ class TestBiNodeCoroutine(object):
                 raise StopIteration(x)
 
         node1 = CoroutineBiNode()
-        x = n.random.random((3,2))
+        x = numx_rand.random((3,2))
         node1.execute(x, {"a": 2})
         assert node1._coroutine_instances == {}
-
-
-def get_suite():
-    suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(TestBiNode))
-    suite.addTest(unittest.makeSuite(TestBiClassifierNode))
-    suite.addTest(unittest.makeSuite(TestIdentityBiNode))
-    suite.addTest(unittest.makeSuite(TestJumpBiNode))
-    suite.addTest(unittest.makeSuite(TestBiNodeCoroutine))
-    return suite
-
-if __name__ == '__main__':
-    unittest.main()
