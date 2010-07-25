@@ -53,7 +53,7 @@ del hinet_translator
 del switchboard_factory
 
 __all__ = ['FlowNode', 'Layer', 'SameInputLayer', 'CloneLayer',
-           'Switchboard', 'SwitchboardException', 'ChannelSwitchboard'
+           'Switchboard', 'SwitchboardException', 'ChannelSwitchboard',
            'Rectangular2dSwitchboard', 'Rectangular2dSwitchboardException',
            'DoubleRect2dSwitchboard', 'DoubleRect2dSwitchboardException',
            'DoubleRhomb2dSwitchboard', 'DoubleRhomb2dSwitchboardException',
