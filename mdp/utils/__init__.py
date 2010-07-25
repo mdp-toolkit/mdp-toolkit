@@ -127,3 +127,13 @@ def fixup_namespace(module, names, old_modules):
                 print 'namespace fixup: {{{0} => {1}}}.{2}'.format(
                     item.__module__, 'mdp', item.__name__)
             item.__module__ = mname
+
+fixup_namespace(_sys.modules[__name__], __all__,
+                ('routines',
+                 'introspection',
+                 'quad_forms',
+                 'covariance',
+                 'progress_bar',
+                 'slideshow',
+                 'repo_revision',
+                 ))

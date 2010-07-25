@@ -81,5 +81,24 @@ del config
 
 from mdp import utils
 import sys
+utils.fixup_namespace(sys.modules[__name__], __all__,
+                      ('expansion_nodes',
+                       'pca_nodes',
+                       'sfa_nodes',
+                       'ica_nodes',
+                       'neural_gas_nodes',
+                       'fda_nodes',
+                       'em_nodes',
+                       'misc_nodes',
+                       'isfa_nodes',
+                       'rbm_nodes',
+                       'regression_nodes',
+                       'classifier_nodes',
+                       'jade',
+                       'nipals',
+                       'lle_nodes',
+                       'xsfa_nodes',
+                       'config',
+                       ))
 del utils
 del sys
