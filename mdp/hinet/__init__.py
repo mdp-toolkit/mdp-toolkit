@@ -46,12 +46,6 @@ from switchboard_factory import (
     FactoryDoubleRhomb2dSwitchboard
 )
 
-del flownode
-del layer
-del switchboard
-del hinet_translator
-del switchboard_factory
-
 __all__ = ['FlowNode', 'Layer', 'SameInputLayer', 'CloneLayer',
            'Switchboard', 'SwitchboardException', 'ChannelSwitchboard',
            'Rectangular2dSwitchboard', 'Rectangular2dSwitchboardException',
