@@ -3,6 +3,14 @@ from _tools import *
 import mdp.parallel as parallel
 n = numx
 
+def test_process_scheduler_shutdown():
+    """Test that we can properly shutdown the subprocesses"""
+    scheduler = parallel.ProcessScheduler(verbose=False,
+                                          n_processes=1,
+                                          source_paths=None,
+                                          cache_callable=False)
+    scheduler.shutdown()
+
 def test_process_scheduler_order():
     """Test the correct result order in process scheduler."""
     scheduler = parallel.ProcessScheduler(verbose=False,
@@ -30,6 +38,17 @@ def test_process_scheduler_no_cache():
         scheduler.add_task(i, parallel.SqrTestCallable())
     results = scheduler.get_results()
     scheduler.shutdown()
+    # check result
+    results = n.array(results)
+    assert n.all(results == n.array([0,1,4,9,16,25,36,49]))
+    
+def test_process_scheduler_manager():
+    """Test process scheduler with context manager itnerface."""
+    with parallel.ProcessScheduler(n_processes=2, source_paths=None) \
+    as scheduler:
+        for i in xrange(8):
+            scheduler.add_task(i, parallel.SqrTestCallable())
+        results = scheduler.get_results()
     # check result
     results = n.array(results)
     assert n.all(results == n.array([0,1,4,9,16,25,36,49]))
@@ -77,12 +96,3 @@ def test_process_scheduler_mdp_version():
     # check that we get 2 identical dictionaries
     assert out[0] == out[1], 'Subprocesses did not run'
     'the same MDP as the parent:\n%s\n--\n%s'%(out[0], out[1])
-
-def test_process_scheduler_shutdown():
-    """Test that we can properly shutdown the subprocesses"""
-    scheduler = parallel.ProcessScheduler(verbose=False,
-                                          n_processes=1,
-                                          source_paths=None,
-                                          cache_callable=False)
-    scheduler.shutdown()
-

@@ -13,6 +13,32 @@ def test_scheduler():
     # check result
     results = n.array(results)
     assert n.all(results == n.array([0,1,4,9,16,25]))
+    
+def test_scheduler_manager():
+    """Test context manager interface for scheduler."""
+    with parallel.Scheduler() as scheduler:
+        for i in xrange(6):
+            scheduler.add_task(i, lambda x: x**2)
+        results = scheduler.get_results()
+    assert n.all(results == n.array([0,1,4,9,16,25]))
+    
+def test_scheduler_manager_exception():
+    """Test context manager interface for scheduler in case of an exception."""
+    log = []
+    class TestSchedulerException(Exception): pass
+    class TestScheduler(parallel.Scheduler):
+        def _shutdown(self):
+            log.append("shutdown")
+        def _process_task(self, data, task_callable, task_index):
+            raise TestSchedulerException()
+    try:
+        with TestScheduler() as scheduler:
+            for i in xrange(6):
+                scheduler.add_task(i, lambda x: x**2)
+            scheduler.get_results()
+    except TestSchedulerException:
+        pass
+    assert log == ["shutdown"]
 
 def test_cpu_count():
     """Test the cpu_count helper function."""

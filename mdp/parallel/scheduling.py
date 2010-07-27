@@ -306,6 +306,20 @@ class Scheduler(object):
         error messages.
         """
         self._shutdown()
+        
+    ## Context Manager interface ##
+    
+    def __enter__(self):
+        """Return self."""
+        return self
+    
+    def __exit__(self, type, value, traceback):
+        """Shutdown the scheduler.
+        
+        It is important that all the calculations have finished
+        when this is called, otherwise the shutdown might fail.
+        """
+        self.shutdown()
 
     ## override these methods in custom schedulers ##
 
