@@ -44,8 +44,8 @@ def test_process_scheduler_no_cache():
     
 def test_process_scheduler_manager():
     """Test process scheduler with context manager itnerface."""
-    with parallel.ProcessScheduler(n_processes=2, source_paths=None) \
-    as scheduler:
+    with parallel.ProcessScheduler(n_processes=2,
+                                   source_paths=None) as scheduler:
         for i in xrange(8):
             scheduler.add_task(i, parallel.SqrTestCallable())
         results = scheduler.get_results()
@@ -61,21 +61,20 @@ def test_process_scheduler_flow():
     node3 = mdp.nodes.SFANode(output_dim=10)
     flow = mdp.parallel.ParallelFlow([node1, node2, node3])
     parallel_flow = mdp.parallel.ParallelFlow(flow.copy()[:])
-    scheduler = parallel.ProcessScheduler(verbose=False,
-                                          n_processes=3,
-                                          source_paths=None)
     input_dim = 30
     scales = n.linspace(1, 100, num=input_dim)
     scale_matrix = mdp.numx.diag(scales)
     train_iterables = [n.dot(mdp.numx_rand.random((5, 100, input_dim)),
                              scale_matrix)
                        for _ in xrange(3)]
-    parallel_flow.train(train_iterables, scheduler=scheduler)
     x = mdp.numx.random.random((10, input_dim))
-    # test that parallel execution works as well
-    # note that we need more chungs then processes to test caching
-    parallel_flow.execute([x for _ in xrange(8)], scheduler=scheduler)
-    scheduler.shutdown()
+    with parallel.ProcessScheduler(verbose=False,
+                                   n_processes=3,
+                                   source_paths=None) as scheduler:
+        parallel_flow.train(train_iterables, scheduler=scheduler)
+        # test that parallel execution works as well
+        # note that we need more chungs then processes to test caching
+        parallel_flow.execute([x for _ in xrange(8)], scheduler=scheduler)
     # compare to normal flow
     flow.train(train_iterables)
     assert parallel_flow[0].tlen == flow[0].tlen
