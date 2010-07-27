@@ -178,16 +178,25 @@ class TestGradientExtension(object):
             mdp.deactivate_extension("gradient")
 
     def test_switchboard_gradient2(self):
-        """Test gradient for a simple switchboard."""
-        sboard = mdp.hinet.Switchboard(input_dim=5, connections=[2,0,4])
-        x = numx_rand.random((7,5))
-        mdp.activate_extension("gradient")
-        try:
-            result = sboard._gradient(x)
-            grad = result[1]["grad"]
-            assert grad.shape == (7,3,5)
-        finally:
-            mdp.deactivate_extension("gradient")
+        """Test gradient for a larger switchboard."""
+        dim = 100
+        connections = [int(i) for i in numx.random.random((dim,)) * (dim-1)]
+        sboard = mdp.hinet.Switchboard(input_dim=dim, connections=connections)
+        x = numx.random.random((10, dim))
+        # assume a 5-dimensional gradient at this stage
+        grad = numx.random.random((10, dim, 5))
+        # original reference implementation
+        def _switchboard_grad(self, x):
+            grad = numx.zeros((self.output_dim, self.input_dim))
+            grad[range(self.output_dim), self.connections] = 1
+            return numx.tile(grad, (len(x), 1, 1))
+        with mdp.extension("gradient"):
+            result = sboard._gradient(x, grad)
+            ext_grad = result[1]["grad"]
+            tmp_grad = _switchboard_grad(sboard, x)
+            ref_grad = numx.asarray([numx.dot(tmp_grad[i], grad[i])
+                                     for i in range(len(tmp_grad))])
+        assert numx.all(ext_grad == ref_grad)
 
     def test_network_gradient(self):
         """Test gradient for a small SFA network."""

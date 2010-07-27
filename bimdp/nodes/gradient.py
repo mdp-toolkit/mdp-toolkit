@@ -144,9 +144,23 @@ def _layer_grad(self, x):
                 node._get_grad(x[:, in_start:in_stop])
     return grad
 
-# TODO: cache this gradient, like for linear nodes
-@mdp.extension_method("gradient", mdp.hinet.Switchboard, "_get_grad")
-def _switchboard_grad(self, x):
-    grad = np.zeros((self.output_dim, self.input_dim))
-    grad[range(self.output_dim), self.connections] = 1
-    return np.tile(grad, (len(x), 1, 1))
+# this is an optimized implementation, the original implementation is
+# used for reference in the unittest
+@mdp.extension_method("gradient", mdp.hinet.Switchboard, "_gradient")
+def _switchboard_gradient(self, x, grad=None):
+    if grad is None:
+        grad = np.zeros((len(x), self.input_dim, self.input_dim))
+        diag_indices = np.arange(self.input_dim)
+        grad[:,diag_indices,diag_indices] = 1.0
+    ## custom implementation for greater speed 
+    grad =  grad[:, self.connections]
+    # update the x value for the next node
+    result = self._execute(x)
+    if isinstance(result, tuple):
+        x = result[0]
+        msg = result[1]
+    else:
+        x = result
+        msg = {}
+    msg.update({"grad": grad})
+    return x, msg
