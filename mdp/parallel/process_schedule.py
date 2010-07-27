@@ -212,22 +212,22 @@ def _process_run(cache_callable=True):
             if task == "EXIT":
                 exit_loop = True
             else:
-                data, callable_, task_index = task
-                if callable_ is None:
+                data, task_callable, task_index = task
+                if task_callable is None:
                     if last_callable is None:
                         err = ("No callable was provided and no cached "
                                "callable is available.")
                         raise Exception(err)
-                    callable_ = last_callable.fork()
+                    task_callable = last_callable.fork()
                 elif cache_callable:
                     # store callable in cache
-                    last_callable = callable_
-                    callable_.setup_environment()
-                    callable_ = callable_.fork()
+                    last_callable = task_callable
+                    task_callable.setup_environment()
+                    task_callable = task_callable.fork()
                 else:
-                    callable_.setup_environment()
-                result = callable_(data)
-                del callable_  # free memory
+                    task_callable.setup_environment()
+                result = task_callable(data)
+                del task_callable  # free memory
                 pickle.dump(result, pickle_out, protocol=-1)
                 pickle_out.flush()
         except Exception, exception:

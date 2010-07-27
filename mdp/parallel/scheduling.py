@@ -74,20 +74,25 @@ class OrderedResultContainer(ListResultContainer):
 
 
 class TaskCallable(object):
-    """Abstract base class for callables."""
+    """Abstract base class for task callables.
+    
+    This class encapsulates the task behavior and the related fixed data
+    (data which stays constant over multiple tasks).
+    """
 
     def setup_environment(self):
-        """This hook method is called when the callable is first loaded.
+        """This hook method is only called when the callable is first called.
 
-        It should be used to make any required modifications in the Python
-        environment that are required by this callable.
+        It can be used for modifications in the Python environment that are
+        required by this callable.
         """
         pass
 
     def __call__(self, data):
         """Perform the computation and return the result.
 
-        Override this method with a concrete implementation."""
+        Override this method with a concrete implementation.
+        """
         return data
 
     def fork(self):
@@ -95,8 +100,8 @@ class TaskCallable(object):
 
         This method is always used before a callable is actually called, so
         instead of the original callable the fork is called. The ensures that
-        the original callable is preserved when cachin is used. If the callable
-        is not modified by the call it can simply return itself.
+        the original callable is preserved when caching is used. If the
+        callable is not modified by the call it can simply return itself.
         """
         return self
 
@@ -135,9 +140,9 @@ class TaskCallableWrapper(TaskCallable):
     This wrapper is applied internally in Scheduler.
     """
 
-    def __init__(self, callable_):
+    def __init__(self, task_callable):
         """Store and wrap the callable."""
-        self._callable = callable_
+        self._callable = task_callable
 
     def __call__(self, data):
         """Call the internal callable with the data and return the result."""
