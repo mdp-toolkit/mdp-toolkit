@@ -21,7 +21,7 @@ This keeps the code readable and is compatible with automatic code checkers
 (like the background pylint checks in the Eclipse IDE with PyDev).
 """
 
-from mdp import MDPException, NodeMetaclass, utils, Node, numx
+from mdp import MDPException, NodeMetaclass
 
 # TODO: note the ParllelBiFlowNode purge_nodes method, which is not part
 #    of the ParallelNode interface. Allow this?
@@ -140,8 +140,8 @@ class ExtensionNodeMetaclass(NodeMetaclass):
             # This new extension is not directly derived from another class,
             # so there is nothing to register (no default implementation).
             # We disable the doc method extension mechanism as this class
-            # is not a node subclass and adding eg. _execute methods would
-            # give problems.
+            # is not a node subclass and adding methods (e.g. _execute) would
+            # cause problems.
             cls.DOC_METHODS = []
             return super(ExtensionNodeMetaclass, cls).__new__(cls, classname,
                                                               bases, members)
@@ -192,7 +192,7 @@ class ExtensionNode(object):
       Here SFA2Node was given instead of the extension node class for the
       SFA2Node.
       If the extensions node class is used directly (without the extension
-      mechanism) this may lead to problems. In this case you have to be
+      mechanism) this can cause problems. In that case you have to be
       careful about the inheritance order and the effect on the MRO.
 
     - call it explicitly using the __func__ attribute [python version < 3]:
