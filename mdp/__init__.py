@@ -329,6 +329,7 @@ from test import test
 del signal_node
 del linear_flows
 del classifier_node
+del helper_funcs
 
 # explicitly set __all__, mainly needed for epydoc
 __all__ = ['CheckpointFlow', 'CheckpointFunction', 'CheckpointSaveFunction',
@@ -338,7 +339,7 @@ __all__ = ['CheckpointFlow', 'CheckpointFunction', 'CheckpointSaveFunction',
            'IsNotTrainableException', 'MDPException', 'MDPWarning', 'Node',
            'NodeException', 'TrainingException', 'TrainingFinishedException',
            'ClassifierNode', 'ClassifierCumulator',
-           'get_eta', 'graph', 'helper_funcs', 'hinet', 'nodes',
+           'get_eta', 'graph', 'hinet', 'nodes',
            'numx_description', 'pca', 'sfa', 'utils', 'whitening',
            'parallel', 'numx_version',
            'extension_method', 'ExtensionNodeMetaclass', 'ExtensionNode',
