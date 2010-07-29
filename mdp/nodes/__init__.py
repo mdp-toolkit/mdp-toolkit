@@ -80,13 +80,12 @@ del xsfa_nodes
 del config
 
 from mdp import utils
-import sys
-utils.fixup_namespace(sys.modules[__name__], __all__,
-                      ('expansion_nodes',
-                       'pca_nodes',
+utils.fixup_namespace(__name__, __all__,
+                      ('pca_nodes',
                        'sfa_nodes',
                        'ica_nodes',
                        'neural_gas_nodes',
+                       'expansion_nodes',
                        'fda_nodes',
                        'em_nodes',
                        'misc_nodes',
@@ -98,7 +97,10 @@ utils.fixup_namespace(sys.modules[__name__], __all__,
                        'nipals',
                        'lle_nodes',
                        'xsfa_nodes',
-                       'config',
+                       'convolution_nodes',
+                       'shogun_svm_classifier',
+                       'svm_classifiers',
+                       'libsvm_classifier',
+                       'svn_classifiers',
                        ))
 del utils
-del sys

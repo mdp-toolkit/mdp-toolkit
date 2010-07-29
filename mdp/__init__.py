@@ -356,7 +356,7 @@ if config.module_exists('joblib'):
     import caching
     __all__ += ['caching']
 
-utils.fixup_namespace(_sys.modules[__name__], __all__,
+utils.fixup_namespace(__name__, __all__,
                       ('signal_node',
                        'linear_flows',
                        'helper_funcs',

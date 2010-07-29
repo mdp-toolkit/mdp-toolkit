@@ -71,7 +71,7 @@ __all__ = [
     "ParallelFlowNode", "ParallelLayer", "ParallelCloneLayer"]
 
 import sys as _sys
-fixup_namespace(_sys.modules[__name__], __all__,
+fixup_namespace(__name__, __all__,
                 ('scheduling',
                  'process_schedule',
                  'thread_schedule',

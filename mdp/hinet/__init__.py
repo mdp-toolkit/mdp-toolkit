@@ -58,7 +58,7 @@ __all__ = ['FlowNode', 'Layer', 'SameInputLayer', 'CloneLayer',
 
 from mdp.utils import fixup_namespace
 import sys as _sys
-fixup_namespace(_sys.modules[__name__], __all__,
+fixup_namespace(__name__, __all__,
                 ('flownode',
                  'layer',
                  'switchboard',
