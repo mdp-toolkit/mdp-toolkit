@@ -119,6 +119,8 @@ fixup_debug = False
 def fixup_namespace(mname, names, old_modules):
     import sys
     module = sys.modules[mname]
+    if names is None:
+        names = [name for name in dir(module) if not name.startswith('_')]
     if fixup_debug:
         print 'NAMESPACE FIXUP: {0} ({1})'.format(module, mname)
     for name in names:

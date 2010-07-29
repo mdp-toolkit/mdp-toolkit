@@ -26,7 +26,10 @@ MODULES = ['mdp',
            ]
 
 def pytest_generate_tests(metafunc):
-    for module in MODULES:
+    generate_calls(MODULES, metafunc)
+
+def generate_calls(modules, metafunc):
+    for module in modules:
         metafunc.addcall(funcargs=dict(parentname=module), id=module)
 
 def test_dunder_module_dunder(parentname):
