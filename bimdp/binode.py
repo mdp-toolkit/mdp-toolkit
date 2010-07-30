@@ -91,8 +91,7 @@ class BiNode(mdp.Node):
     This class itself is not non-functional.
 
     Derived class should, if necessary, overwrite the following methods (in
-    addition to the normal mdp.Node methods):
-    _stop_message, _bi_reset, and is_bi_training
+    addition to the normal mdp.Node methods): _bi_reset, is_bi_training
 
     Note hat this class can also be used as an Adapter / Mixin for normal nodes.
     This can for example be useful for nodes which require additional data
@@ -302,8 +301,8 @@ class BiNode(mdp.Node):
         This method should return True if the node is gathering any data which
         is internally stored beyond the bi_reset() call. The typical example is
         some kind of learning in execute or message calls.
-        Changes to the node by stop_message alone do not fall into this
-        category.
+        Note that changes during a stop_training phase do not fall into
+        this category, since this phase is always performed centralized.
 
         This method is used by the parallel package to decide if a node has to
         to be forked or if a copy is used.
@@ -477,7 +476,7 @@ class BiNode(mdp.Node):
 
 ### Helper Functions / Decorators ###
 
-def binode_coroutine(args=None, defaults=(), stop_message=False):
+def binode_coroutine(args=None, defaults=()):
     """Decorator for the convenient definition of BiNode couroutines.
 
     Note that this decorator should be used with the CoroutineMixin to

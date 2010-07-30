@@ -460,7 +460,7 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
         self._post_stop_training_hook()
         if (result is not None) and (not isinstance(result, dict)):
             err = ("Target node not found in flow during " +
-                   "stop_message propagation, last result: " +
+                   "stop_training phase, last result: " +
                    str(result))
             raise BiFlowException(err)
         self._bi_reset()
@@ -630,7 +630,7 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
                     pass
                 else:
                     err = ("Target node not found in flow during " +
-                           "stop_message propagation, last result: " +
+                           "stop_training phase, last result: " +
                            str(result))
                     raise BiFlowException(err)
             self._flownode.bi_reset()

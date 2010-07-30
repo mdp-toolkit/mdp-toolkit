@@ -243,14 +243,14 @@ class BiFlow(mdp.Flow):
                 err = ("The training data iterable for node "
                        "no. %d is empty." % (nodenr+1))
                 raise BiFlowException(err)
+        ## stop_training part
         # unlike the normal mdp.Flow we always close the training
-        # otherwise stop_message propagation would be difficult
+        # to perform the stop_training phase
         self._stop_training_hook()
         if stop_msg is None:
             result = self.flow[nodenr].stop_training()
         else:
             result = self.flow[nodenr].stop_training(stop_msg)
-        ## deal with stop_message execution
         if result is None:
             # the training phase ends here without an execute phase
             return
@@ -572,8 +572,7 @@ class BiCheckpointFlow(BiFlow, mdp.CheckpointFlow):
     """Similar to normal checkpoint flow.
 
     The main difference is that even the last training phase of a
-    node is already closed before the checkpoint function is called (otherwise
-    it would be difficult to propagate bi_stop_message).
+    node is already closed before the checkpoint function is called.
     """
 
     def train(self, data_iterables, checkpoints, msg_iterables=None,
