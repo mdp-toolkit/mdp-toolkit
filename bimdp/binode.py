@@ -478,9 +478,10 @@ class BiNode(mdp.Node):
 
 def binode_coroutine(args=None, defaults=()):
     """Decorator for the convenient definition of BiNode couroutines.
-
-    Note that this decorator should be used with the CoroutineMixin to
-    guarantee correct reseting in case of an exception.
+    
+    This decorator takes care of all the boilerplate code to use a coroutine
+    as a BiNode method for continuations (which is more elegant and convenient
+    than using a a state machine implementation). 
 
     args -- List of string names of the additional arguments. Note that the
         standard 'x' array is always given as the first value. So if n args
@@ -530,7 +531,6 @@ def binode_coroutine(args=None, defaults=()):
         ## create the initialization method
         def _coroutine_initialization(self, *args):
             coroutine_instance = coroutine(self, *args)
-            # better than using new.instancemethod
             bound_coroutine_interface = coroutine_interface.__get__(
                                                         self, self.__class__)
             if self._coroutine_instances is None:
