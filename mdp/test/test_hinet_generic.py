@@ -1,3 +1,4 @@
+from __future__ import with_statement
 import mdp.hinet as mh
 from _tools import *
 from test_nodes_generic import (generic_test_factory,

@@ -220,7 +220,7 @@ class MDPConfiguration(object):
     def has_parallel_python(self):
         try:
             import pp as __pp
-        except ImportError as msg:
+        except ImportError, msg:
             return ExternalDepFail(msg)
         return ExternalDepFound()
 
@@ -228,7 +228,7 @@ class MDPConfiguration(object):
         try:
             import shogun.Kernel as _sgKernel
             import shogun.Classifier as _sgClassifier
-        except ImportError as msg:
+        except ImportError, msg:
             return ExternalDepFail(msg)
         # We need to have at least SHOGUN 0.9, as we rely on
         # SHOGUN's CClassifier::classify() method.
@@ -248,7 +248,7 @@ class MDPConfiguration(object):
     def has_libsvm(self):
         try:
             import svm as libsvm
-        except ImportError as msg:
+        except ImportError, msg:
             return ExternalDepFail(msg)
         return ExternalDepFound()
     

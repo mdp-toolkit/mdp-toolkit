@@ -1,4 +1,5 @@
 """Test caching extension."""
+from __future__ import with_statement
 from _tools import *
 
 requires_joblib = skip_on_condition(

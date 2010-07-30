@@ -1,3 +1,4 @@
+from __future__ import with_statement
 import py.test
 import inspect
 from mdp import nodes, PreserveDimNode, InconsistentDimException

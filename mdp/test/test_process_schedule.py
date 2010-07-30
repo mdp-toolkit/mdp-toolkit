@@ -1,3 +1,4 @@
+from __future__ import with_statement
 from _tools import *
 
 import mdp.parallel as parallel
