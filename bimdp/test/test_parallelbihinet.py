@@ -1,5 +1,4 @@
 import mdp
-from mdp import numx as n
 from bimdp import BiFlow, MSG_ID_SEP, EXIT_TARGET
 from bimdp.parallel import (
     ParallelBiFlow, ParallelBiFlowNode, ParallelCloneBiLayer
@@ -21,7 +20,7 @@ class TestCloneBiLayer(object):
                                                 n_nodes=3,
                                                 use_copies=False,
                                                 node_id="clonelayer")
-        data = [[n.random.random((100,30)) for _ in range(5)]]
+        data = [[mdp.numx_rand.random((100,30)) for _ in range(5)]]
         biflow = ParallelBiFlow([clonelayer])
         biflow.train(data, scheduler=mdp.parallel.Scheduler())
         assert clonelayer.use_copies is True

@@ -1,5 +1,5 @@
 import mdp
-from mdp import numx as n
+from mdp import numx_rand
 from bimdp.nodes import SFABiNode, SFA2BiNode
 from bimdp import BiFlow
 from bimdp.parallel import ParallelBiFlow, ParallelBiFlowNode
@@ -11,7 +11,7 @@ class TestParallelBiNode(object):
     def test_stop_message_attribute(self):
         """Test that the stop_result attribute is present in forked node."""
         stop_result = ({"test": "blabla"}, "node123")
-        x = n.random.random([100,10])
+        x = numx_rand.random([100,10])
         node = SFABiNode(stop_result=stop_result)
         try:
             mdp.activate_extension("parallel")
@@ -37,14 +37,14 @@ class TestParallelBiFlow(object):
         flow = ParallelBiFlow([mdp.nodes.SFANode(output_dim=5),
                                mdp.nodes.PolynomialExpansionNode(degree=3),
                                mdp.nodes.SFANode(output_dim=20)])
-        data_iterables = [[n.random.random((20,10)) for _ in range(6)],
+        data_iterables = [[numx_rand.random((20,10)) for _ in range(6)],
                           None,
-                          [n.random.random((20,10)) for _ in range(6)]]
+                          [numx_rand.random((20,10)) for _ in range(6)]]
         scheduler = mdp.parallel.Scheduler()
         flow.train(data_iterables, scheduler=scheduler)
-        x = n.random.random([100,10])
+        x = numx_rand.random([100,10])
         flow.execute(x)
-        iterator = [n.random.random((20,10)) for _ in range(6)]
+        iterator = [numx_rand.random((20,10)) for _ in range(6)]
         flow.execute(iterator, scheduler=scheduler)
         scheduler.shutdown()
 
@@ -53,12 +53,12 @@ class TestParallelBiFlow(object):
         flow = ParallelBiFlow([mdp.nodes.PCANode(output_dim=8),
                                SFABiNode(output_dim=5),
                                SFA2BiNode(output_dim=20)])
-        data_iterables = [[n.random.random((20,10)) for _ in range(6)]] * 3
+        data_iterables = [[numx_rand.random((20,10)) for _ in range(6)]] * 3
         scheduler = mdp.parallel.Scheduler()
         flow.train(data_iterables, scheduler=scheduler)
-        x = n.random.random([100,10])
+        x = numx_rand.random([100,10])
         flow.execute(x)
-        iterator = [n.random.random((20,10)) for _ in range(6)]
+        iterator = [numx_rand.random((20,10)) for _ in range(6)]
         flow.execute(iterator, scheduler=scheduler)
         scheduler.shutdown()
 
@@ -73,15 +73,15 @@ class TestParallelBiFlow(object):
         flow = ParallelBiFlow([flownode,
                                mdp.nodes.PolynomialExpansionNode(degree=2),
                                mdp.nodes.SFANode(output_dim=5)])
-        data_iterables = [[n.random.random((30,10)) for _ in range(6)],
+        data_iterables = [[numx_rand.random((30,10)) for _ in range(6)],
                           None,
-                          [n.random.random((30,10)) for _ in range(6)]]
+                          [numx_rand.random((30,10)) for _ in range(6)]]
         scheduler = mdp.parallel.Scheduler()
         flow.train(data_iterables, scheduler=scheduler)
-        x = n.random.random([100,10])
+        x = numx_rand.random([100,10])
         flow.execute([x for _ in range(4)], scheduler=scheduler)
         flow.execute(x)
-        iterator = [n.random.random((20,10)) for _ in range(6)]
+        iterator = [numx_rand.random((20,10)) for _ in range(6)]
         flow.execute(iterator, scheduler=scheduler)
         scheduler.shutdown()
 
@@ -93,14 +93,14 @@ class TestParallelBiFlow(object):
         sfa_node = mdp.nodes.SFANode(input_dim=10, output_dim=8)
         sfa2_node = mdp.nodes.SFA2Node(input_dim=8, output_dim=6)
         flow = ParallelBiFlow([sfa_node, sfa2_node])
-        data_iterables = [[n.random.random((30,10)) for _ in range(6)],
-                          [n.random.random((30,10)) for _ in range(7)]]
+        data_iterables = [[numx_rand.random((30,10)) for _ in range(6)],
+                          [numx_rand.random((30,10)) for _ in range(7)]]
         scheduler = mdp.parallel.ProcessScheduler(n_processes=2)
         flow.train(data_iterables, scheduler=scheduler)
         flow.execute(data_iterables[1], scheduler=scheduler)
-        x = n.random.random([100,10])
+        x = numx_rand.random([100,10])
         flow.execute(x)
-        iterator = [n.random.random((20,10)) for _ in range(6)]
+        iterator = [numx_rand.random((20,10)) for _ in range(6)]
         flow.execute(iterator, scheduler=scheduler)
         scheduler.shutdown()
 

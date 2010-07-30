@@ -1,7 +1,7 @@
 import py.test
 
 import mdp
-from mdp import numx as np
+from mdp import numx, numx_rand
 
 from bimdp import (
     MessageResultContainer, BiFlow, BiFlowException, EXIT_TARGET, nodes
@@ -17,12 +17,12 @@ class TestMessageResultContainer(object):
         rescont = MessageResultContainer()
         msg1 = {
             "f": 2,
-            "a": np.zeros((10,3), 'int'),
+            "a": numx.zeros((10,3), 'int'),
             "b": "aaa",
             "c": 1,
         }
         msg2 = {
-            "a": np.ones((15,3), 'int'),
+            "a": numx.ones((15,3), 'int'),
             "b": "bbb",
             "c": 3,
             "d": 1,
@@ -30,10 +30,10 @@ class TestMessageResultContainer(object):
         rescont.add_message(msg1)
         rescont.add_message(msg2)
         combined_msg = rescont.get_message()
-        a = np.zeros((25,3), 'int')
+        a = numx.zeros((25,3), 'int')
         a[10:] = 1
         reference_msg = {"a": a, "c": 4, "b": "aaabbb", "d": 1, "f": 2}
-        assert np.all(reference_msg["a"] == reference_msg["a"])
+        assert numx.all(reference_msg["a"] == reference_msg["a"])
         combined_msg.pop("a")
         reference_msg.pop("a")
         assert combined_msg == reference_msg
@@ -50,7 +50,7 @@ class TestMessageResultContainer(object):
     def test_incompatible_arrays(self):
         """Test with incompatible arrays."""
         rescont = MessageResultContainer()
-        msgs = [{"a":  np.zeros((10,3))}, {"a":  np.zeros((10,4))}]
+        msgs = [{"a":  numx.zeros((10,3))}, {"a":  numx.zeros((10,4))}]
         for msg in msgs:
             rescont.add_message(msg)
         py.test.raises(ValueError, rescont.get_message)
@@ -63,11 +63,11 @@ class TestBiFlow(object):
         flow = BiFlow([mdp.nodes.SFANode(output_dim=5),
                        mdp.nodes.PolynomialExpansionNode(degree=3),
                        mdp.nodes.SFANode(output_dim=20)])
-        data_iterables = [[np.random.random((20,10)) for _ in range(6)],
+        data_iterables = [[numx_rand.random((20,10)) for _ in range(6)],
                           None,
-                          [np.random.random((20,10)) for _ in range(6)]]
+                          [numx_rand.random((20,10)) for _ in range(6)]]
         flow.train(data_iterables)
-        x = np.random.random([100,10])
+        x = numx_rand.random([100,10])
         flow.execute(x)
 
     def test_normal_multiphase(self):
@@ -81,24 +81,24 @@ class TestBiFlow(object):
         flow = BiFlow([flownode,
                        mdp.nodes.PolynomialExpansionNode(degree=2),
                        mdp.nodes.SFANode(output_dim=5)])
-        data_iterables = [[np.random.random((30,10)) for _ in range(6)],
+        data_iterables = [[numx_rand.random((30,10)) for _ in range(6)],
                           None,
-                          [np.random.random((30,10)) for _ in range(6)]]
+                          [numx_rand.random((30,10)) for _ in range(6)]]
         flow.train(data_iterables)
-        x = np.random.random([100,10])
+        x = numx_rand.random([100,10])
         flow.execute(x)
 
     def test_fda_binode(self):
         """Test using the FDABiNode in a BiFlow."""
-        samples = mdp.numx_rand.random((100,10))
-        labels = mdp.numx.arange(100)
+        samples = numx_rand.random((100,10))
+        labels = numx.arange(100)
         flow = BiFlow([mdp.nodes.PCANode(), nodes.FDABiNode()])
         flow.train([[samples],[samples]], [None,[{"cl": labels}]])
 
     def test_wrong_argument_handling(self):
         """Test correct error for additional arguments in Node instance."""
-        samples = mdp.numx_rand.random((100,10))
-        labels = mdp.numx.arange(100)
+        samples = numx_rand.random((100,10))
+        labels = numx.arange(100)
         # cl argument of FDANode is not supported in biflow
         flow = BiFlow([mdp.nodes.PCANode(), mdp.nodes.FDANode()])
         # the iterables are passed as if this were a normal Flow
@@ -141,9 +141,9 @@ class TestBiFlow(object):
                     execute_results=[(None, {"b": 2}, EXIT_TARGET)],
                     verbose=verbose)
         biflow = BiFlow([node1, node2, node3])
-        data_iterables = [[np.random.random((1,1)) for _ in range(2)],
-                          [np.random.random((1,1)) for _ in range(2)],
-                          [np.random.random((1,1)) for _ in range(2)]]
+        data_iterables = [[numx_rand.random((1,1)) for _ in range(2)],
+                          [numx_rand.random((1,1)) for _ in range(2)],
+                          [numx_rand.random((1,1)) for _ in range(2)]]
         biflow.train(data_iterables)
         # print ",\n".join(str(log) for log in tracelog)
         # tracelog reference
@@ -253,7 +253,7 @@ class TestBiFlow(object):
         node = IdNode()
         biflow = BiFlow([node])
         msg = {"a": 1}
-        result = biflow.execute(np.random.random((1,1)), msg)
+        result = biflow.execute(numx_rand.random((1,1)), msg)
         assert msg == result[1]
 
     def test_exit_target(self):
