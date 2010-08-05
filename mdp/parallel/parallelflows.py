@@ -212,12 +212,11 @@ class ParallelFlow(mdp.Flow):
             transformations before the data is actually fed into the flow
             (e.g. from 8 bit image to 64 bit double precision).
             Note that the train_callable_class is only used if a scheduler was
-            provided. If a scheduler is provided the default class used is
-            NodeResultContainer.
+            provided. By default NodeResultContainer is used.
         overwrite_result_container -- If set to True (default value) then
             the result container in the scheduler will be overwritten with an
-            instance of NodeResultContainer, if it is not already an instance
-            of NodeResultContainer.
+            instance of NodeResultContainer (unless it is already an instance
+            of NodeResultContainer). This improves the memory efficiency.
         """
         # Warning: If this method is updated you also have to update train
         #          in ParallelCheckpointFlow.
@@ -466,8 +465,10 @@ class ParallelFlow(mdp.Flow):
             NodeResultContainer.
         overwrite_result_container -- If set to True (default value) then
             the result container in the scheduler will be overwritten with an
-            instance of OrderedResultContainer, if it is not already an
-            instance of OrderedResultContainer.
+            instance of OrderedResultContainer (unless it is already an
+            instance of OrderedResultContainer). Otherwise the results might
+            have a different order than the data chunks, which could mess up
+            any subsequent analysis.
         """
         if self.is_parallel_training:
             raise ParallelFlowException("Parallel training is underway.")
