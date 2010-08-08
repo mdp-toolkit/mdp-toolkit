@@ -6,29 +6,14 @@ Run this module to overwrite the autogen_binodes module with a new version.
 
 import inspect
 import mdp
+from cStringIO import StringIO
 
-# Note: 'NoiseNode' was removed because the function argument default value
-#    causes problems.
-AUTOMATIC_MDP_NODES = [
-    'AdaptiveCutoffNode', 'CuBICANode', 'CutoffNode', 'EtaComputerNode',
-    'FANode', 'FDANode', 'FastICANode', 'GrowingNeuralGasExpansionNode',
-    'GrowingNeuralGasNode', 'HLLENode', 'HistogramNode', 'HitParadeNode',
-    'ICANode', 'ISFANode', 'IdentityNode', 'JADENode', 'LLENode',
-    'LinearRegressionNode', 'NIPALSNode', 'NormalNoiseNode',
-    'PCANode', 'PolynomialExpansionNode',
-    'QuadraticExpansionNode', 'RBFExpansionNode', 'RBMNode',
-    'RBMWithLabelsNode', 'SFA2Node', 'SFANode', 'TDSEPNode',
-    'TimeFramesNode', 'WhiteningNode', 'XSFANode',
+# Blacklist of nodes that cause problems with autogeneration
+NOAUTOGEN_MDP_NODES = [
+    'NoiseNode'  # function default 
 ]
+NOAUTOGEN_MDP_CLASSIFIERS = []
 
-AUTOMATIC_MDP_CLASSIFIERS = [
-     'SignumClassifier', 'PerceptronClassifier',
-     'SimpleMarkovClassifier', 'DiscreteHopfieldClassifier',
-     'KMeansClassifier',
-     # 'LibSVMClassifier', 'ShogunSVMClassifier'
-]
-
-# this function is currently not needed, but can be used for node_classes
 def _get_node_subclasses(node_class=mdp.Node, module=mdp.nodes):
     """
     Return all node classes in module which are subclasses of node_class.
@@ -40,9 +25,12 @@ def _get_node_subclasses(node_class=mdp.Node, module=mdp.nodes):
             node_subclasses.append(node_subclass)
     return node_subclasses
 
-def _write_single_node(fid, node_class, modulename, base_classname="BiNode",
-                       old_classname="Node"):
+def _binode_code(fid, node_class, modulename, base_classname="BiNode",
+                 old_classname="Node"):
     """Write code for BiMDP versions of normal node classes into module file.
+    
+    It preserves the signature, which is useful for introspection (this is
+    used by the ParallelNode _default_fork implementation).
 
     fid -- File handle of the module file.
     node_class -- Node class for which the new node class will be created.
@@ -72,26 +60,28 @@ def _write_single_node(fid, node_class, modulename, base_classname="BiNode",
     fid.write(''.join(', ' + arg + '=' + repr(defaults[i_arg])
                       for i_arg, arg in enumerate(args[first_default:])))
     if varargs:
-        err = ("varargs are not supported by autogen, " +
-               "please disable the automatic node creation for class " +
-               node_name)
-        raise Exception(err)
-    if varkw:
-        fid.write(', *%s' % varkw)
+        fid.write(', *%s' % varargs)
+    # always support kwargs, to prevent multiple-inheritance issues 
+    if not varkw:
+        varkw = "kwargs"
+    fid.write(', **%s' % varkw)
     fid.write('):')
     if docstring:
         fid.write('\n        """%s"""' % docstring)
     fid.write('\n        super(%s, self).__init__(' % binode_name)
     fid.write(', '.join('%s=%s' % (arg, arg) for arg in args))
-    if varkw:
-        if not args:
+    if varargs:
+        if args:
             fid.write(', ')
-        fid.write('**%s' % varkw)
+        fid.write('*%s' % varargs)
+    if args or varargs:
+        fid.write(', ')
+    fid.write('**%s' % varkw)
     fid.write(')\n\n')
 
-def _write_node_file(fid, node_classes, modulename="mdp.nodes",
-                     base_classname="BiNode", old_classname="Node",
-                     base_import="from bimdp import BiNode"):
+def _binode_module(fid, node_classes, modulename="mdp.nodes",
+                   base_classname="BiNode", old_classname="Node",
+                   base_import="from bimdp import BiNode"):
     """Write code for BiMDP versions of normal node classes into module file.
 
     fid -- File handle of the module file.
@@ -107,31 +97,28 @@ def _write_node_file(fid, node_classes, modulename="mdp.nodes",
     fid.write('\n\nimport %s\n' % modulename)
     fid.write(base_import + '\n\n')
     for node_class in node_classes:
-        _write_single_node(fid, node_class, modulename,
-                           base_classname=base_classname,
-                           old_classname=old_classname)
-
-if __name__ == "__main__":
-    ## create file with binode classes
-    filename = "autogen_binodes.py"
-    autogen_file = open(filename, 'w')
-    try:
-        _write_node_file(autogen_file,
-                         (getattr(mdp.nodes, node_name)
-                          for node_name in AUTOMATIC_MDP_NODES))
-    finally:
-        autogen_file.close()
-    print "wrote auto-generated code into file %s" % filename
-    ## create file with classifier classes
-    filename = "autogen_biclassifiers.py"
-    autogen_file = open(filename, 'w')
-    try:
-        _write_node_file(autogen_file,
-                (getattr(mdp.nodes, node_name)
-                 for node_name in AUTOMATIC_MDP_CLASSIFIERS),
-                base_classname="BiClassifier",
-                old_classname="Classifier",
-                base_import="from bimdp import BiClassifier")
-    finally:
-        autogen_file.close()
-    print "wrote auto-generated code into file %s" % filename
+        _binode_code(fid, node_class, modulename,
+                     base_classname=base_classname,
+                     old_classname=old_classname)
+        
+def binodes_code():
+    """Generate and import the BiNode wrappers for MDP Nodes."""
+    fid = StringIO()
+    nodes = (node for node in
+                _get_node_subclasses(node_class=mdp.Node, module=mdp.nodes)
+             if not isinstance(node, mdp.ClassifierNode) and
+                 node.__name__ not in NOAUTOGEN_MDP_NODES)
+    _binode_module(fid, nodes)
+    return fid.getvalue()
+    
+def biclassifiers_code():
+    """Generate and import the BiClassifier wrappers for ClassifierNodes."""
+    fid = StringIO()
+    nodes = (node for node in
+                _get_node_subclasses(node_class=mdp.ClassifierNode,
+                                     module=mdp.nodes)
+             if node.__name__ not in NOAUTOGEN_MDP_CLASSIFIERS)
+    _binode_module(fid, nodes, base_classname="BiClassifier",
+                   old_classname="Classifier",
+                   base_import="from bimdp import BiClassifier")
+    return fid.getvalue()

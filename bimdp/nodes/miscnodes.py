@@ -1,6 +1,6 @@
 
 from bimdp import BiNode, MSG_ID_SEP
-from autogen_binodes import IdentityBiNode
+from bimdp.nodes import IdentityBiNode
 
 
 class SenderBiNode(IdentityBiNode):
