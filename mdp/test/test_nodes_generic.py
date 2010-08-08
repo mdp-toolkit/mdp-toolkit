@@ -266,7 +266,8 @@ NODES = [
         init_args=["LINEAR","C_SVC"])
     ]
 
-EXCLUDE_NODES = [nodes.ICANode, nodes.IdentityNode]
+EXCLUDE_NODES = [nodes.ICANode, nodes.PreserveDimNode, nodes.IdentityNode,
+                 nodes.HistogramNode]
 
 def generate_nodes_list(nodes_dicts):
     nodes_list = []

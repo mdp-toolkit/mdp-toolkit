@@ -6,9 +6,9 @@ from expansion_nodes import (QuadraticExpansionNode, PolynomialExpansionNode,
                              RBFExpansionNode, GrowingNeuralGasExpansionNode)
 from fda_nodes import FDANode
 from em_nodes import FANode
-from misc_nodes import (IdentityNode, HitParadeNode, TimeFramesNode,
-                        EtaComputerNode, NoiseNode, NormalNoiseNode,
-                        GaussianClassifierNode,
+from misc_nodes import (PreserveDimNode, IdentityNode, HitParadeNode,
+                        TimeFramesNode, EtaComputerNode, NoiseNode,
+                        NormalNoiseNode, GaussianClassifierNode,
                         CutoffNode, HistogramNode, AdaptiveCutoffNode)
 from isfa_nodes import ISFANode
 from rbm_nodes import RBMNode, RBMWithLabelsNode
