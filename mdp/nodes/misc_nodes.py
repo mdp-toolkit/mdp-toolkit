@@ -19,7 +19,26 @@ MIN_NUM = {numx.dtype('b'): -128,
            numx.dtype('d'): numx.finfo(numx.float64).min}
 
 
-class IdentityNode(Node):
+class PreserveDimNode(Node):
+    """Abstract base class with output_dim == input_dim.
+    
+    If one dimension is set then the other is set to the same value.
+    If the output is set to a mismatching value an exception is raised.
+    """
+    
+    def _set_input_dim(self, n):
+        self._input_dim = n
+        self._output_dim = n
+
+    def _set_output_dim(self, n):
+        if (self._input_dim is not None) and (self._input_dim != n):
+            err = "output_dim must be equal to input_dim for indentity nodes"
+            raise NodeException(err)
+        self._input_dim = n
+        self._output_dim = n
+
+
+class IdentityNode(PreserveDimNode):
     """Return input data (useful in complex network layouts)"""
 
     @staticmethod
@@ -31,17 +50,6 @@ class IdentityNode(Node):
         return (mdp.utils.get_dtypes('AllFloat') +
                 mdp.utils.get_dtypes('AllInteger') +
                 mdp.utils.get_dtypes('Complex'))
-
-    def _set_input_dim(self, n):
-        self._input_dim = n
-        self._output_dim = n
-
-    def _set_output_dim(self, n):
-        if (self._input_dim is not None) and (self._input_dim != n):
-            err = "output_dim must be equal to input_dim for indentity nodes"
-            raise NodeException(err)
-        self._input_dim = n
-        self._output_dim = n
 
 
 class OneDimensionalHitParade(object):
@@ -495,7 +503,7 @@ class NoiseNode(Node):
         return real_pickle.loads(as_str)
 
 
-class NormalNoiseNode(mdp.Node):
+class NormalNoiseNode(PreserveDimNode):
     """Special version of NoiseNode for Gaussian additive noise.
 
     Unlike NoiseNode it does not store a noise function reference but simply
@@ -503,15 +511,13 @@ class NormalNoiseNode(mdp.Node):
     (which does not work for a normal NoiseNode).
     """
 
-    def __init__(self, noise_args=(0, 1), input_dim=None, dtype=None):
+    def __init__(self, noise_args=(0, 1), **kwargs):
         """Set the noise parameters.
 
         noise_args -- Tuple of (mean, standard deviation) for the normal
             distribution, default is (0,1).
         """
-        super(NormalNoiseNode, self).__init__(input_dim=input_dim,
-                                              output_dim=input_dim,
-                                              dtype=dtype)
+        super(NormalNoiseNode, self).__init__(**kwargs)
         self.noise_args = noise_args
 
     @staticmethod
@@ -671,24 +677,21 @@ class GaussianClassifierNode(ClassifierNode):
         return [self.labels[winner[i]] for i in range(len(winner))]
 
 
-class CutoffNode(mdp.Node):
+class CutoffNode(PreserveDimNode):
     """Node to cut off values at specified bounds.
 
     Works similar to numpy.clip, but also works when only a lower or upper
     bound is specified.
     """
 
-    def __init__(self, lower_bound=None, upper_bound=None,
-                 input_dim=None, dtype=None):
+    def __init__(self, lower_bound=None, upper_bound=None, **kwargs):
         """Initialize node.
 
         lower_bound -- Data values below this are cut to the lower_bound value.
             If lower_bound is None no cutoff is performed.
         upper_bound -- Works like lower_bound.
         """
-        super(CutoffNode, self).__init__(input_dim=input_dim,
-                                         output_dim=input_dim,
-                                         dtype=dtype)
+        super(CutoffNode, self).__init__(**kwargs)
         self.lower_bound = lower_bound
         self.upper_bound = upper_bound
 
@@ -714,7 +717,7 @@ class CutoffNode(mdp.Node):
         return x
 
 
-class HistogramNode(mdp.Node):
+class HistogramNode(PreserveDimNode):
     """Node which stores a history of the data during its training phase.
 
     The data history is stored in self.data_hist and can also be deleted to
@@ -724,7 +727,7 @@ class HistogramNode(mdp.Node):
     """
 
     def __init__(self, hist_fraction=1.0, hist_filename=None,
-                 input_dim=None, dtype=None):
+                 input_dim=None, output_dim=None, dtype=None):
         """Initialize the node.
 
         hist_fraction -- Defines the fraction of the data that is stored
@@ -736,19 +739,11 @@ class HistogramNode(mdp.Node):
             and can be directly used after training.
         """
         super(HistogramNode, self).__init__(input_dim=input_dim,
-                                            output_dim=None,
+                                            output_dim=output_dim,
                                             dtype=dtype)
         self._hist_filename = hist_filename
         self.hist_fraction = hist_fraction
         self.data_hist = None  # stores the data history
-
-    def _set_input_dim(self, n):
-        self._input_dim = n
-        self._output_dim = n
-
-    def _set_output_dim(self, n):
-        msg = "Output dim cannot be set explicitly!"
-        raise mdp.NodeException(msg)
 
     def _get_supported_dtypes(self):
         return (mdp.utils.get_dtypes('AllFloat') +
