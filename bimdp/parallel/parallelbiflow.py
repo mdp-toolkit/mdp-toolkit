@@ -449,10 +449,6 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
             task_callable((x, msg))
             if self.verbose:
                 print ("    finished nonparallel task no. %d" % i_task)
-        if self.verbose:
-            print ("finished nonparallel training phase of " +
-                   "node no. %d in parallel flow" %
-                   (self._i_train_node+1))
         # perform stop_training with result check
         self._stop_training_hook()
         result = self._flownode.stop_training(
