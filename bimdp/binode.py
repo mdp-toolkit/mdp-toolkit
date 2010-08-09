@@ -136,6 +136,9 @@ class BiNode(mdp.Node):
         key.
         """
         if msg is None:
+            if x is None:
+                err = "Both x and msg are None."
+                raise BiNodeException(err)
             return super(BiNode, self).execute(x)
         msg_id_keys = self._get_msg_id_keys(msg)
         target = self._extract_message_key("target", msg, msg_id_keys)
@@ -176,6 +179,9 @@ class BiNode(mdp.Node):
             err = "The training phase has already finished."
             raise mdp.TrainingFinishedException(err)
         if msg is None:
+            if x is None:
+                err = "Both x and msg are None."
+                raise BiNodeException(err)
             # no fall-back on Node.train because we might have a return value
             self._check_input(x)
             self._check_train_args(x)

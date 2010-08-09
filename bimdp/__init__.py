@@ -42,6 +42,10 @@ This is described in more detail in the BiNode module.
 
 ### T O D O ###
 
+# TODO: Terminate execution if both x and msg are None? This could help in
+#    the stop_training execution, but could lead to strange results
+#    during normal execution.
+#    We could add a check before the result is returned in execute.
 
 # ------------- optional ----------------
 
