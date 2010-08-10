@@ -80,10 +80,7 @@ class MessageResultContainer(object):
             else:
                 self._msg_results[key] = n.concatenate(
                                                 self._msg_array_results[key])
-        if self._msg_results:
-            return self._msg_results
-        else:
-            return None
+        return self._msg_results
 
 
 class BiFlow(mdp.Flow):
@@ -281,7 +278,9 @@ class BiFlow(mdp.Flow):
                 raise BiFlowException(err)
 
     def execute(self, iterable, msg_iterable=None, target_iterable=None):
-        """Execute the flow and return y or (y, msg).
+        """Execute the flow and return (y, msg).
+        
+        Note that the returned msg can be an empty dict, but not None.
 
         iterable -- Can be an iterable or iterator for arrays, a single array
             or None. In the last two cases it is assumed that msg is a single
@@ -352,10 +351,7 @@ class BiFlow(mdp.Flow):
         if y_results:
             y_results = n.concatenate(y_results)
         result_msg = msg_results.get_message()
-        if result_msg:
-            return (y_results, result_msg)
-        else:
-            return y_results
+        return y_results, result_msg
 
     def __call__(self, iterable, msg_iterable=None):
         """Calling an instance is equivalent to call its 'execute' method."""
