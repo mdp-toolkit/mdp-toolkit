@@ -465,8 +465,8 @@ class BiNode(mdp.Node):
         Note that if a flow is added then a deep copy is used (deep
         copies of the nodes are used).
         """
-        # unfortunately the inline import are required to avoid
-        # a cyclic import (unless one add a helper function somewhere else)
+        # unfortunately the inline imports are required to avoid
+        # a cyclic import (unless one adds a helper function somewhere else)
         if isinstance(other, mdp.Node):
             import bimdp
             return bimdp.BiFlow([self, other])
