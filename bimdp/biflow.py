@@ -261,6 +261,8 @@ class BiFlow(mdp.Flow):
             target = None
         elif len(result) == 3:
             x, msg, target = result
+            if target == EXIT_TARGET:
+                return
         else:
             err = ("Node produced invalid return value " +
                    "for stop_training: " + str(result))

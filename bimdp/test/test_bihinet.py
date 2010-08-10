@@ -96,9 +96,9 @@ class TestCloneBiLayer(object):
                                   n_nodes=3,
                                   use_copies=False,
                                   node_id="clonelayer")
+        biflow = clonelayer + IdentityBiNode()
         x = n.random.random((100,30))
-        clonelayer.train(x)
-        clonelayer.stop_training()
+        biflow.train(x)
         assert clonelayer.use_copies is True
 
     def test_message_splitting(self):
