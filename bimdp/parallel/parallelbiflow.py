@@ -479,7 +479,7 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
                 scheduler=None,
                 execute_callable_class=None,
                 overwrite_result_container=True):
-        """Train all trainable nodes in the flow.
+        """Execute the flow and return (y, msg).
 
         If a scheduler is provided the execution will be done in parallel on
         the scheduler.
