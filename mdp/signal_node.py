@@ -670,7 +670,8 @@ def VariadicCumulator(*fields):
             self._cumulator_fields = fields
             for arg in self._cumulator_fields:
                 if hasattr(self, arg):
-                    raise mdp.MDPException("Cumulator Error: Property %s already taken" % arg)
+                    errstr = "Cumulator Error: Property %s already defined"
+                    raise mdp.MDPException(errstr % arg)
                 setattr(self, arg, [])
             self.tlen = 0
 
@@ -678,20 +679,24 @@ def VariadicCumulator(*fields):
             """Cumulate all input data in a one dimensional list."""
             self.tlen += args[0].shape[0]
             for field, data in zip(self._cumulator_fields, args):
-                getattr(self, field).extend(data.ravel().tolist())
+                getattr(self, field).append(data)
 
         def _stop_training(self, *args, **kwargs):
-            """Transform the data list to an array object and reshape it."""
-            # This complicated transformation from array to list and
-            # back is to avoid having to use numpy.concatenate, that
-            # for multiple arrays makes pairwise concatenation, each
-            # time copying the the arrays it needs to
-            # concatenate. This is much less efficient than our
-            # baroque solution.
+            """Concatenate the comulated data in a single array."""
+            # We avoid using 'concatenate', as for multiple arrays it makes
+            # pairwise concatenation, each time making a copy of the data,
+            # which wastes a lot of memory
             for field in self._cumulator_fields:
                 data = getattr(self, field)
-                setattr(self, field, numx.array(data, dtype=self.dtype))
-                getattr(self, field).shape = (self.tlen, self.input_dim)
+                # allocate space
+                cumdata = numx.empty((self.tlen, self.input_dim),
+                                     dtype=self.dtype)
+                pos = 0
+                for x in data:
+                    step = x.shape[0]
+                    cumdata[pos:pos+step] = x
+                    pos += step
+                setattr(self, field, cumdata)
 
     return Cumulator
 

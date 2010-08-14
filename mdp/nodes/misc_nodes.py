@@ -586,7 +586,7 @@ class GaussianClassifierNode(ClassifierNode):
                   or a single label, in which case all input data is assigned to
                   the same class.
         """
-         # if labels is a number, all x's belong to the same class
+        # if labels is a number, all x's belong to the same class
         if isinstance(labels, (list, tuple, numx.ndarray)):
             labels_ = numx.asarray(labels)
             # get all classes from cl
