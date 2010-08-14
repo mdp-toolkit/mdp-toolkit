@@ -696,6 +696,7 @@ def VariadicCumulator(*fields):
     return Cumulator
 
 Cumulator = VariadicCumulator('data')
-"""A Cumulator is a specialised version of a VariadicCumulator which only
-fills the field 'self.data'."""
+Cumulator.__doc__ = ("A Cumulator is a specialised version of a " +
+                     "VariadicCumulator which only fills the field " +
+                     " 'self.data'.")
 
