@@ -15,8 +15,8 @@ class SignumClassifier(ClassifierNode):
 
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
-        return (mdp.utils.get_dtypes('AllFloat') +
-                mdp.utils.get_dtypes('AllInteger'))
+        return (mdp.utils.get_dtypes('Float') +
+                mdp.utils.get_dtypes('Integer'))
 
     @staticmethod
     def is_trainable():
@@ -34,11 +34,6 @@ class PerceptronClassifier(ClassifierNode):
         self.weights = []
         self.offset_weight = 0
         self.learning_rate = 0.1
-
-    def _get_supported_dtypes(self):
-        """Return the list of dtypes supported by this node."""
-        return (mdp.utils.get_dtypes('AllFloat') +
-                mdp.utils.get_dtypes('AllInteger'))
 
     def _check_train_args(self, x, labels):
         if (isinstance(labels, (list, tuple, numx.ndarray)) and
@@ -103,8 +98,8 @@ class SimpleMarkovClassifier(ClassifierNode):
         
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
-        return (mdp.utils.get_dtypes('AllFloat') +
-                mdp.utils.get_dtypes('AllInteger') +
+        return (mdp.utils.get_dtypes('Float') +
+                mdp.utils.get_dtypes('Integer') +
                 mdp.utils.get_dtypes('Character'))
 
     def _check_train_args(self, x, labels):
@@ -278,11 +273,6 @@ class KMeansClassifier(ClassifierNode):
         self.tlen = 0
         self._centroids = None
         self.max_iter = max_iter
-        
-    def _get_supported_dtypes(self):
-        """Return the list of dtypes supported by this node."""
-        return (mdp.utils.get_dtypes('AllFloat') +
-                mdp.utils.get_dtypes('AllInteger'))
 
     def _train(self, x):
         # append all data

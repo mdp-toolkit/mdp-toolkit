@@ -45,13 +45,6 @@ class IdentityNode(PreserveDimNode):
     def is_trainable():
         False
 
-    def _get_supported_dtypes(self):
-        """Return the list of dtypes supported by this node."""
-        return (mdp.utils.get_dtypes('AllFloat') +
-                mdp.utils.get_dtypes('AllInteger') +
-                mdp.utils.get_dtypes('Complex'))
-
-
 class OneDimensionalHitParade(object):
     """
     Class to produce hit-parades (i.e., a list of the largest
@@ -252,7 +245,8 @@ class TimeFramesNode(Node):
 
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
-        return ['int8', 'int16', 'int32', 'int64', 'float32', 'float64']
+        return (mdp.utils.get_dtypes('AllFloat') +
+                mdp.utils.get_dtypes('AllInteger'))
 
     @staticmethod
     def is_trainable():
@@ -361,10 +355,6 @@ class EtaComputerNode(Node):
         self._input_dim = n
         self.output_dim = n
 
-    def _get_supported_dtypes(self):
-        """Return the list of dtypes supported by this node."""
-        return ['float32', 'float64']
-
     def _init_internals(self):
         input_dim = self.input_dim
         self._mean = numx.zeros((input_dim,), dtype='d')
@@ -458,8 +448,8 @@ class NoiseNode(Node):
 
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
-        return (mdp.utils.get_dtypes('AllFloat') +
-                mdp.utils.get_dtypes('AllInteger'))
+        return (mdp.utils.get_dtypes('Float') +
+                mdp.utils.get_dtypes('Integer'))
 
     @staticmethod
     def is_trainable():
@@ -528,9 +518,6 @@ class NormalNoiseNode(PreserveDimNode):
     def is_invertible():
         return False
 
-    def _get_supported_dtypes(self):
-        return mdp.utils.get_dtypes('AllFloat')
-
     def _execute(self, x):
         noise = self._refcast(mdp.numx_rand.normal(size=x.shape) * self.noise_args[1]
                               + self.noise_args[0])
@@ -558,10 +545,6 @@ class GaussianClassifierNode(ClassifierNode):
     def _set_output_dim(self, n):
         msg = "Output dim cannot be set explicitly!"
         raise mdp.NodeException(msg)
-
-    def _get_supported_dtypes(self):
-        """Return the list of dtypes supported by this node."""
-        return ['float32', 'float64']
 
     @staticmethod
     def is_invertible():
@@ -704,8 +687,8 @@ class CutoffNode(PreserveDimNode):
         return False
 
     def _get_supported_dtypes(self):
-        return (mdp.utils.get_dtypes('AllFloat') +
-                mdp.utils.get_dtypes('AllInteger'))
+        return (mdp.utils.get_dtypes('Float') +
+                mdp.utils.get_dtypes('Integer'))
 
     def _execute(self, x):
         """Return the clipped data."""
@@ -746,8 +729,8 @@ class HistogramNode(PreserveDimNode):
         self.data_hist = None  # stores the data history
 
     def _get_supported_dtypes(self):
-        return (mdp.utils.get_dtypes('AllFloat') +
-                mdp.utils.get_dtypes('AllInteger'))
+        return (mdp.utils.get_dtypes('Float') +
+                mdp.utils.get_dtypes('Integer'))
 
     def _train(self, x):
         """Store the history data."""

@@ -87,9 +87,6 @@ class PCANode(Node):
                          ", should be 0<y<=%d" % (y.shape[1], self.output_dim))
             raise NodeException(error_str)
 
-    def _get_supported_dtypes(self):
-        return ['float32', 'float64']
-
     def get_explained_variance(self):
         """Return the fraction of the original variance that can be
         explained by self._output_dim PCA components.

@@ -129,10 +129,6 @@ class RBFExpansionNode(mdp.Node):
         super(RBFExpansionNode, self).__init__(None, None, dtype)
         self._init_RBF(centers, sizes)
 
-    def _get_supported_dtypes(self):
-        """Return the list of dtypes supported by this node."""
-        return mdp.utils.get_dtypes('AllFloat')
-
     @staticmethod
     def is_trainable():
         return False
@@ -194,7 +190,6 @@ class RBFExpansionNode(mdp.Node):
         return y
 
 class GrowingNeuralGasExpansionNode(GrowingNeuralGasNode):
-
     """
     Perform a trainable radial basis expansion, where the centers and
     sizes of the basis functions are learned through a growing neural
@@ -251,7 +246,6 @@ class GrowingNeuralGasExpansionNode(GrowingNeuralGasNode):
         return False
 
     def _stop_training(self):
-
         super(GrowingNeuralGasExpansionNode, self)._stop_training()
 
         # set the output dimension to the number of nodes of the neural gas
@@ -273,7 +267,6 @@ class GrowingNeuralGasExpansionNode(GrowingNeuralGasNode):
         self.rbf_expansion = mdp.nodes.RBFExpansionNode(centers = centers, sizes = sizes)
 
     def _execute(self,x):
-
         return self.rbf_expansion(x)
 
 

@@ -336,7 +336,7 @@ class Node(object):
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node.
         The types can be specified in any format allowed by numpy.dtype."""
-        return mdp.utils.get_dtypes('All')
+        return mdp.utils.get_dtypes('Float')
 
     def get_supported_dtypes(self):
         """Return dtypes supported by the node as a list of numpy.dtype

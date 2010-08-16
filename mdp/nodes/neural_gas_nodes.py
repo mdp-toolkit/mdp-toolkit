@@ -96,10 +96,6 @@ class GrowingNeuralGasNode(Node):
         self._input_dim = n
         self.output_dim = n
 
-    def _get_supported_dtypes(self):
-        """Return the list of dtypes supported by this node."""
-        return ['float32', 'float64']
-
     def _add_node(self, pos):
         node = self.graph.add_node(_GNGNodeData(pos))
         return node

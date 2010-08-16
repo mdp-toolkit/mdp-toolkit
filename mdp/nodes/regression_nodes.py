@@ -54,9 +54,6 @@ class LinearRegressionNode(Node):
         # if with_bias=True, beta includes the bias term in the first column
         self.beta = None
 
-    def _get_supported_dtypes(self):
-        return ['float32', 'float64']
-
     @staticmethod
     def is_invertible():
         return False

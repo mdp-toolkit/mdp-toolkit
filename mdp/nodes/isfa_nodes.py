@@ -221,6 +221,7 @@ class ISFANode(Node):
         # finally call base class constructor
         super(ISFANode, self).__init__(input_dim, output_dim, dtype)
 
+    # XXX Is this intended to be for double only?
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
         return ['float64']

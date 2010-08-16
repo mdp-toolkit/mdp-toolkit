@@ -31,6 +31,7 @@ class LibSVMClassifier(_SVMClassifier):
         if classifier:
             self.set_classifier(classifier)
 
+    # XXX Is this intended to be for double only?
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
         return ('float64',)

@@ -52,10 +52,6 @@ class RBMNode(mdp.Node):
         super(RBMNode, self).__init__(visible_dim, hidden_dim, dtype)
         self._initialized = False
 
-    def _get_supported_dtypes(self):
-        """Return the list of dtypes supported by this node."""
-        return ['float32', 'float64']
-
     def _init_weights(self):
         # weights and biases are initialized to small random values to
         # break the simmetry that might lead to degenerate solutions during
@@ -239,9 +235,6 @@ class RBMWithLabelsNode(RBMNode):
 
         self.output_dim = hidden_dim
         self._initialized = False
-
-    def _get_supported_dtypes(self):
-        return ['float32', 'float64']
 
     def _set_input_dim(self, n):
         self._input_dim = n

@@ -309,7 +309,7 @@ class ShogunSVMClassifier(_SVMClassifier):
         if kernel_name:
             self.set_kernel(kernel_name, kernel_options)
 
-    
+    # XXX Is this intended to be for double only?
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
         return ('float64',)

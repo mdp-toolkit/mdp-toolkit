@@ -37,9 +37,6 @@ class SFANode(Node):
         self._bias = None  # avg multiplied with sf
         self.tlen = None
 
-    def _get_supported_dtypes(self):
-        return ['float32', 'float64']
-
     def time_derivative(self, x):
         """Compute the linear approximation of the time derivative."""
         # this is faster than a linear_filter or a weave-inline solution
