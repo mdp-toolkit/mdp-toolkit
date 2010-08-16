@@ -127,7 +127,7 @@ class NodeMetaclass(type):
                                           defaults,
                                           formatvalue=lambda value: "")[1:-1]
         return dict(name=func.__name__, argnames=argnames, signature=signature,
-                    defaults = func.func_defaults, doc=func.__doc__,
+                    defaults=func.func_defaults, doc=func.__doc__,
                     module=func.__module__, dict=func.__dict__,
                     globals=func.func_globals, closure=func.func_closure)
 
@@ -159,7 +159,7 @@ class NodeMetaclass(type):
         cls -- Class to which the wrapper method will be added, this is used
             for the super call.
         """
-        src = ("lambda %(signature)s: " % wrapper_infodict+
+        src = ("lambda %(signature)s: " % wrapper_infodict +
                "super(_wrapper_class_, _wrapper_class_)." +
                "%(name)s(%(signature)s)" % wrapper_infodict)
         wrapped_func = eval(src, {"_wrapper_class_": cls})
@@ -256,7 +256,7 @@ class Node(object):
         when needed."""
         if n is None:
             pass
-        elif (self._input_dim is not None) and (self._input_dim !=  n):
+        elif (self._input_dim is not None) and (self._input_dim != n):
             msg = ("Input dim are set already (%d) "
                    "(%d given)!" % (self.input_dim, n))
             raise NodeException(msg)
@@ -268,7 +268,7 @@ class Node(object):
 
     input_dim = property(get_input_dim,
                          set_input_dim,
-                         doc = "Input dimensions")
+                         doc="Input dimensions")
 
     def get_output_dim(self):
         """Return output dimensions."""
@@ -294,7 +294,7 @@ class Node(object):
 
     output_dim = property(get_output_dim,
                           set_output_dim,
-                          doc = "Output dimensions")
+                          doc="Output dimensions")
 
     def get_dtype(self):
         """Return dtype."""
@@ -315,7 +315,7 @@ class Node(object):
             raise NodeException(errstr)
         elif t not in self.get_supported_dtypes():
             errstr = ("\ndtype '%s' is not supported.\n"
-                      "Supported dtypes: %s" % ( t.name,
+                      "Supported dtypes: %s" % (t.name,
                                                  [numx.dtype(t).name for t in
                                                   self.get_supported_dtypes()]))
             raise NodeException(errstr)
@@ -331,7 +331,7 @@ class Node(object):
 
     dtype = property(get_dtype,
                      set_dtype,
-                     doc = "dtype")
+                     doc="dtype")
 
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node.
@@ -346,10 +346,10 @@ class Node(object):
         return [numx.dtype(t) for t in self._get_supported_dtypes()]
 
     supported_dtypes = property(get_supported_dtypes,
-                                doc = "Supported dtypes")
+                                doc="Supported dtypes")
 
     _train_seq = property(lambda self: self._get_train_seq(),
-                          doc = "List of tuples: [(training-phase1, "
+                          doc="List of tuples: [(training-phase1, "
                           "stop-training-phase1), (training-phase2, "
                           "stop_training-phase2), ... ].\n"
                           " By default _train_seq = [(self._train,"
@@ -610,7 +610,7 @@ class Node(object):
             return flow_copy.copy()
         else:
             err_str = ('can only concatenate node'
-                       ' (not \'%s\') to node' % (type(other).__name__) )
+                       ' (not \'%s\') to node' % (type(other).__name__))
             raise TypeError(err_str)
 
     ###### string representation
@@ -628,7 +628,7 @@ class Node(object):
         else:
             typ = "dtype='%s'" % self.dtype.name
         args = ', '.join((inp, out, typ))
-        return name+'('+args+')'
+        return name + '(' + args + ')'
 
     def copy(self, protocol=-1):
         """Return a deep copy of the node.
@@ -676,32 +676,21 @@ def VariadicCumulator(*fields):
             self.tlen = 0
 
         def _train(self, *args):
-            """Cumulate all input data in a one dimensional list."""
+            """Collect all input data in a list."""
             self.tlen += args[0].shape[0]
             for field, data in zip(self._cumulator_fields, args):
                 getattr(self, field).append(data)
 
         def _stop_training(self, *args, **kwargs):
-            """Concatenate the comulated data in a single array."""
-            # We avoid using 'concatenate', as for multiple arrays it makes
-            # pairwise concatenation, each time making a copy of the data,
-            # which wastes a lot of memory
+            """Concatenate the collected data in a single array."""
             for field in self._cumulator_fields:
                 data = getattr(self, field)
-                # allocate space
-                cumdata = numx.empty((self.tlen, self.input_dim),
-                                     dtype=self.dtype)
-                pos = 0
-                for x in data:
-                    step = x.shape[0]
-                    cumdata[pos:pos+step] = x
-                    pos += step
-                setattr(self, field, cumdata)
+                setattr(self, field, numx.concatenate(data, 0))
 
     return Cumulator
 
 Cumulator = VariadicCumulator('data')
-Cumulator.__doc__ = ("A Cumulator is a specialised version of a " +
+Cumulator.__doc__ = ("A Cumulator is a specialized version of a " +
                      "VariadicCumulator which only fills the field " +
                      " 'self.data'.")
 
