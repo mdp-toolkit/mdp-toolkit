@@ -6,6 +6,8 @@ from mdp.utils import (DelayCovarianceMatrix, MultipleCovarianceMatrices,
                        rotate, mult)
 
 
+# TODO: support floats of size different than 64-bit; will need to change SQRT_EPS_D
+
 # rename often used functions
 sum, cos, sin, PI = numx.sum, numx.cos, numx.sin, numx.pi
 SQRT_EPS_D = numx.sqrt(numx.finfo('d').eps)
@@ -221,7 +223,6 @@ class ISFANode(Node):
         # finally call base class constructor
         super(ISFANode, self).__init__(input_dim, output_dim, dtype)
 
-    # XXX Is this intended to be for double only?
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
         return ['float64']
