@@ -9,6 +9,14 @@ class NodeException(mdp.MDPException):
     """Base class for exceptions in Node subclasses."""
     pass
 
+class InconsistentDimException(NodeException):
+    """Raised when there is a conflict setting the dimensionalities.
+    
+    Note that incoming data with conflicting dimensionality raises a normal
+    NodeException.
+    """
+    pass
+
 class TrainingException(NodeException):
     """Base class for exceptions in the training phase."""
     pass
@@ -259,7 +267,7 @@ class Node(object):
         elif (self._input_dim is not None) and (self._input_dim != n):
             msg = ("Input dim are set already (%d) "
                    "(%d given)!" % (self.input_dim, n))
-            raise NodeException(msg)
+            raise InconsistentDimException(msg)
         else:
             self._set_input_dim(n)
 
@@ -285,7 +293,7 @@ class Node(object):
         elif (self._output_dim is not None) and (self._output_dim != n):
             msg = ("Output dim are set already (%d) "
                    "(%d given)!" % (self.output_dim, n))
-            raise NodeException(msg)
+            raise InconsistentDimException(msg)
         else:
             self._set_output_dim(n)
 
@@ -653,6 +661,30 @@ class Node(object):
             flh = open(filename, mode)
             _cPickle.dump(self, flh, protocol)
             flh.close()
+
+
+class PreserveDimNode(Node):
+    """Abstract base class with output_dim == input_dim.
+    
+    If one dimension is set then the other is set to the same value.
+    If the dimensions are set to different values, then an
+    InconsistentDimException is raised.
+    """
+    
+    def _set_input_dim(self, n):
+        if (self._output_dim is not None) and (self._output_dim != n):
+            err = "input_dim must be equal to output_dim for this node."
+            raise InconsistentDimException(err)
+        self._input_dim = n
+        self._output_dim = n
+
+    def _set_output_dim(self, n):
+        if (self._input_dim is not None) and (self._input_dim != n):
+            err = "output_dim must be equal to input_dim for this node."
+            raise InconsistentDimException(err)
+        self._input_dim = n
+        self._output_dim = n
+
 
 def VariadicCumulator(*fields):
     """A VariadicCumulator is a Node whose training phase simply collects

@@ -10,7 +10,7 @@ from cStringIO import StringIO
 
 # Blacklist of nodes that cause problems with autogeneration
 NOAUTOGEN_MDP_NODES = [
-    'NoiseNode'  # function default 
+    'NoiseNode'  # function default value causes trouble
 ]
 NOAUTOGEN_MDP_CLASSIFIERS = []
 

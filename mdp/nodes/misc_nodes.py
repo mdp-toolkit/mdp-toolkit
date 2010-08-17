@@ -1,5 +1,5 @@
 import mdp
-from mdp import numx, numx_linalg, utils, Node, ClassifierNode, NodeException
+from mdp import numx, utils, Node, NodeException, PreserveDimNode
 
 import cPickle as pickle
 import pickle as real_pickle
@@ -19,27 +19,12 @@ MIN_NUM = {numx.dtype('b'): -128,
            numx.dtype('d'): numx.finfo(numx.float64).min}
 
 
-class PreserveDimNode(Node):
-    """Abstract base class with output_dim == input_dim.
-    
-    If one dimension is set then the other is set to the same value.
-    If the output is set to a mismatching value an exception is raised.
-    """
-    
-    def _set_input_dim(self, n):
-        self._input_dim = n
-        self._output_dim = n
-
-    def _set_output_dim(self, n):
-        if (self._input_dim is not None) and (self._input_dim != n):
-            err = "output_dim must be equal to input_dim for indentity nodes"
-            raise NodeException(err)
-        self._input_dim = n
-        self._output_dim = n
-
-
 class IdentityNode(PreserveDimNode):
-    """Return input data (useful in complex network layouts)"""
+    """Execute returns the input data and the node is not trainable.
+    
+    This node can be instanciated and is for example useful in
+    complex network layouts.
+    """
 
     @staticmethod
     def is_trainable():
@@ -48,8 +33,7 @@ class IdentityNode(PreserveDimNode):
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
         return (mdp.utils.get_dtypes('AllFloat') +
-                mdp.utils.get_dtypes('AllInteger') +
-                mdp.utils.get_dtypes('Complex'))
+                mdp.utils.get_dtypes('AllInteger'))
 
 
 class OneDimensionalHitParade(object):
@@ -57,6 +41,7 @@ class OneDimensionalHitParade(object):
     Class to produce hit-parades (i.e., a list of the largest
     and smallest values) out of a one-dimensional time-series.
     """
+    
     def __init__(self, n, d, real_dtype="d", integer_dtype="l"):
         """
         Input arguments:
@@ -138,7 +123,7 @@ class OneDimensionalHitParade(object):
         return m[sort], im[sort]
 
 
-class HitParadeNode(Node):
+class HitParadeNode(PreserveDimNode):
     """Collect the first 'n' local maxima and minima of the training signal
     which are separated by a minimum gap 'd'.
 
@@ -147,13 +132,15 @@ class HitParadeNode(Node):
     'get_maxima' and 'get_minima' methods to access them.
     """
 
-    def __init__(self, n, d=1, input_dim=None, dtype=None):
+    def __init__(self, n, d=1, input_dim=None, output_dim=None, dtype=None):
         """
         Input arguments:
         n -- Number of maxima and minima to store
         d -- Minimum gap between two maxima or two minima
         """
-        super(HitParadeNode, self).__init__(input_dim, None, dtype)
+        super(HitParadeNode, self).__init__(input_dim=input_dim,
+                                            output_dim=output_dim,
+                                            dtype=dtype)
         self.n = int(n)
         self.d = int(d)
         self.itype = 'int64'
@@ -240,14 +227,17 @@ class TimeFramesNode(Node):
     method does the correct thing when it is indeed possible.
     """
 
-    def __init__(self, time_frames, gap=1, input_dim=None, dtype=None):
+    def __init__(self, time_frames, gap=1,
+                 input_dim=None, output_dim=None, dtype=None):
         """
         Input arguments:
         time_frames -- Number of delayed copies
         gap -- Time delay between the copies
         """
         self.time_frames = time_frames
-        super(TimeFramesNode, self).__init__(input_dim, None, dtype)
+        super(TimeFramesNode, self).__init__(input_dim=input_dim,
+                                             output_dim=output_dim,
+                                             dtype=dtype)
         self.gap = gap
 
     def _get_supported_dtypes(self):
@@ -417,7 +407,7 @@ class EtaComputerNode(Node):
         return self._refcast(self._eta*t)
 
 
-class NoiseNode(Node):
+class NoiseNode(PreserveDimNode):
     """Inject multiplicative or additive noise into the input data.
 
     Original code contributed by Mathias Franzius.
@@ -425,8 +415,9 @@ class NoiseNode(Node):
     Note that due to the noise_func attribute this node cannot be pickled.
     """
 
-    def __init__(self, noise_func = mdp.numx_rand.normal, noise_args = (0, 1),
-                 noise_type = 'additive', input_dim = None, dtype = None):
+    def __init__(self, noise_func=mdp.numx_rand.normal, noise_args=(0, 1),
+                 noise_type='additive',
+                 input_dim=None, output_dim=None, dtype=None):
         """
         Add noise to input signals.
 
@@ -484,6 +475,8 @@ class NoiseNode(Node):
         Note: the pickled Node is not guaranteed to be upward or
         backward compatible."""
         if filename is None:
+            # cPickle seems to create an error, probably due to the
+            # self.noise_func attribute.
             return real_pickle.dumps(self, protocol)
         else:
             # if protocol != 0 open the file in binary mode
@@ -494,7 +487,6 @@ class NoiseNode(Node):
             flh = open(filename, mode)
             real_pickle.dump(self, flh, protocol)
             flh.close()
-
 
     def copy(self, protocol = -1):
         """Return a deep copy of the node.
@@ -511,13 +503,16 @@ class NormalNoiseNode(PreserveDimNode):
     (which does not work for a normal NoiseNode).
     """
 
-    def __init__(self, noise_args=(0, 1), **kwargs):
+    def __init__(self, noise_args=(0, 1),
+                 input_dim=None, output_dim=None, dtype=None):
         """Set the noise parameters.
 
         noise_args -- Tuple of (mean, standard deviation) for the normal
             distribution, default is (0,1).
         """
-        super(NormalNoiseNode, self).__init__(**kwargs)
+        super(NormalNoiseNode, self).__init__(input_dim=input_dim,
+                                              output_dim=output_dim,
+                                              dtype=dtype)
         self.noise_args = noise_args
 
     @staticmethod
@@ -532,149 +527,10 @@ class NormalNoiseNode(PreserveDimNode):
         return mdp.utils.get_dtypes('AllFloat')
 
     def _execute(self, x):
-        noise = self._refcast(mdp.numx_rand.normal(size=x.shape) * self.noise_args[1]
+        noise = self._refcast(mdp.numx_rand.normal(size=x.shape) *
+                                    self.noise_args[1]
                               + self.noise_args[0])
         return x + noise
-
-
-class GaussianClassifierNode(ClassifierNode):
-    """Perform a supervised Gaussian classification.
-
-    Given a set of labelled data, the node fits a gaussian distribution
-    to each class. Note that it is written as an analysis node (i.e., the
-    execute function is the identity function). To perform classification,
-    use the 'label' method. If instead you need the posterior
-    probability of the classes given the data use the 'class_probabilities'
-    method.
-    """
-    def __init__(self, input_dim=None, dtype=None):
-        super(GaussianClassifierNode, self).__init__(input_dim, None, dtype)
-        self.cov_objs = {}
-
-    def _set_input_dim(self, n):
-        self._input_dim = n
-        self._output_dim = n
-
-    def _set_output_dim(self, n):
-        msg = "Output dim cannot be set explicitly!"
-        raise mdp.NodeException(msg)
-
-    def _get_supported_dtypes(self):
-        """Return the list of dtypes supported by this node."""
-        return ['float32', 'float64']
-
-    @staticmethod
-    def is_invertible():
-        return False
-
-    def _check_train_args(self, x, labels):
-        if isinstance(labels, (list, tuple, numx.ndarray)) and (
-            len(labels) != x.shape[0]):
-            msg = ("The number of labels should be equal to the number of "
-                   "datapoints (%d != %d)" % (len(labels), x.shape[0]))
-            raise mdp.TrainingException(msg)
-
-    def _update_covs(self, x, lbl):
-        if lbl not in self.cov_objs:
-            self.cov_objs[lbl] = utils.CovarianceMatrix(dtype=self.dtype)
-        self.cov_objs[lbl].update(x)
-
-    def _train(self, x, labels):
-        """
-        Additional input arguments:
-        labels -- Can be a list, tuple or array of labels (one for each data point)
-                  or a single label, in which case all input data is assigned to
-                  the same class.
-        """
-        # if labels is a number, all x's belong to the same class
-        if isinstance(labels, (list, tuple, numx.ndarray)):
-            labels_ = numx.asarray(labels)
-            # get all classes from cl
-            for lbl in set(labels_):
-                x_lbl = numx.compress(labels_==lbl, x, axis=0)
-                self._update_covs(x_lbl, lbl)
-        else:
-            self._update_covs(x, labels)
-
-    def _stop_training(self):
-        self.labels = self.cov_objs.keys()
-        self.labels.sort()
-
-        # we are going to store the inverse of the covariance matrices
-        # since only those are useful to compute the probabilities
-        self.inv_covs = []
-        self.means = []
-        self.p = []
-        # this list contains the square root of the determinant of the
-        # corresponding covariance matrix
-        self._sqrt_def_covs = []
-        nitems = 0
-
-        for lbl in self.labels:
-            cov, mean, p = self.cov_objs[lbl].fix()
-            nitems += p
-            self._sqrt_def_covs.append(numx.sqrt(numx_linalg.det(cov)))
-            self.means.append(mean)
-            self.p.append(p)
-            self.inv_covs.append(utils.inv(cov))
-
-        for i in range(len(self.p)):
-            self.p[i] /= float(nitems)
-
-        del self.cov_objs
-
-    def _gaussian_prob(self, x, lbl_idx):
-        """Return the probability of the data points x with respect to a
-        gaussian.
-
-        Input arguments:
-        x -- Input data
-        S -- Covariance matrix
-        mn -- Mean
-        """
-        x = self._refcast(x)
-
-        dim = self.input_dim
-        sqrt_detS = self._sqrt_def_covs[lbl_idx]
-        invS = self.inv_covs[lbl_idx]
-        # subtract the mean
-        x_mn = x - self.means[lbl_idx][numx.newaxis, :]
-        # exponent
-        exponent = -0.5 * (utils.mult(x_mn, invS)*x_mn).sum(axis=1)
-        # constant
-        constant = (2.*numx.pi)**-(dim/2.)/sqrt_detS
-        # probability
-        return constant * numx.exp(exponent)
-
-    def class_probabilities(self, x):
-        """Return the posterior probability of each class given the input."""
-        self._pre_execution_checks(x)
-
-        # compute the probability for each class
-        tmp_prob = numx.zeros((x.shape[0], len(self.labels)),
-                              dtype=self.dtype)
-        for i in range(len(self.labels)):
-            tmp_prob[:, i] = self._gaussian_prob(x, i)
-            tmp_prob[:, i] *= self.p[i]
-
-        # normalize to probability 1
-        # (not necessary, but sometimes useful)
-        tmp_tot = tmp_prob.sum(axis=1)
-        tmp_tot = tmp_tot[:, numx.newaxis]
-        return tmp_prob/tmp_tot
-
-    def _prob(self, x):
-        """Return the posterior probability of each class given the input in a dict."""
-
-        class_prob = self.class_probabilities(x)
-        return [dict(zip(self.labels, prob)) for prob in class_prob]
-
-    def _label(self, x):
-        """Classify the input data using Maximum A-Posteriori."""
-
-        class_prob = self.class_probabilities(x)
-        winner = class_prob.argmax(axis=-1)
-        return [self.labels[winner[i]] for i in range(len(winner))]
 
 
 class CutoffNode(PreserveDimNode):
@@ -684,14 +540,17 @@ class CutoffNode(PreserveDimNode):
     bound is specified.
     """
 
-    def __init__(self, lower_bound=None, upper_bound=None, **kwargs):
+    def __init__(self, lower_bound=None, upper_bound=None,
+                 input_dim=None, output_dim=None, dtype=None):
         """Initialize node.
 
         lower_bound -- Data values below this are cut to the lower_bound value.
             If lower_bound is None no cutoff is performed.
         upper_bound -- Works like lower_bound.
         """
-        super(CutoffNode, self).__init__(**kwargs)
+        super(CutoffNode, self).__init__(input_dim=input_dim,
+                                         output_dim=output_dim,
+                                         dtype=dtype)
         self.lower_bound = lower_bound
         self.upper_bound = upper_bound
 
@@ -786,7 +645,7 @@ class AdaptiveCutoffNode(HistogramNode):
 
     def __init__(self, lower_cutoff_fraction=None, upper_cutoff_fraction=None,
                  hist_fraction=1.0, hist_filename=None,
-                 input_dim=None, dtype=None):
+                 input_dim=None, output_dim=None, dtype=None):
         """Initialize the node.
 
         lower_cutoff_fraction -- Fraction of data that will be cut off after
@@ -804,6 +663,7 @@ class AdaptiveCutoffNode(HistogramNode):
         super(AdaptiveCutoffNode, self).__init__(hist_fraction=hist_fraction,
                                                  hist_filename=hist_filename,
                                                  input_dim=input_dim,
+                                                 output_dim=output_dim,
                                                  dtype=dtype)
         self.lower_cutoff_fraction = lower_cutoff_fraction
         self.upper_cutoff_fraction = upper_cutoff_fraction

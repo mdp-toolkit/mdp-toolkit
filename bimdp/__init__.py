@@ -42,24 +42,10 @@ This is described in more detail in the BiNode module.
 
 ### T O D O ###
 
-# TODO: Terminate execution if both x and msg are None? This could help in
-#    the stop_training execution, but could lead to strange results
-#    during normal execution.
-#    We could add a check before the result is returned in execute.
-
 # ------------- optional ----------------
-
-# TODO: have BiFlow always return a tuple with message?
-#    Having different return types can be confusing.
-
-# TODO: support dictionary methods like 'keys' in BiFlow? 
 
 # TODO: maybe also allow target==EXIT_TARGET during training
 #     would have to modify _train_node_single_phase
-
-# TODO: add workaround for Google Chrome issue once a solution for
-#    http://code.google.com/p/chromium/issues/detail?id=47416
-#    is in place.
 
 # TODO: add a target seperator that does not remove the key. Could use
 #    -> remove key
@@ -71,6 +57,17 @@ This is described in more detail in the BiNode module.
 # TODO: add wildcard support for node_id in message keys.
 #    Simply tread the node_id part of the key as a regex and check for match.
 #    This adds an overhead of about 1 sec per 100,000 messages.
+
+# TODO: Terminate execution if both x and msg are None? This could help in
+#    the stop_training execution, but could lead to strange results
+#    during normal execution.
+#    We could add a check before the result is returned in execute.
+
+# TODO: support dictionary methods like 'keys' in BiFlow? 
+
+# TODO: add workaround for Google Chrome issue once a solution for
+#    http://code.google.com/p/chromium/issues/detail?id=47416
+#    is in place.
 
 # TODO: Would it make sense to guarantee that join/fork is always called on
 #    the original node? For fork this would prevent caching, for join this
@@ -88,7 +85,9 @@ This is described in more detail in the BiNode module.
 #    or enable some kind of folding (might be possible via CSS like suckerfish)
 
 
-from binode import BiNodeException, BiNode, MSG_ID_SEP, binode_coroutine
+from binode import (
+    BiNodeException, BiNode, PreserveDimBiNode, MSG_ID_SEP, binode_coroutine
+)
 from biclassifier import BiClassifier
 from biflow import (
     MessageResultContainer, BiFlowException, BiFlow, BiCheckpointFlow,

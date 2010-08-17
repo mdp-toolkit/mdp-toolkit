@@ -292,13 +292,15 @@ config = MDPConfiguration()
 import utils
 
 # import exceptions from nodes and flows
-from signal_node import (NodeException, TrainingException,
+from signal_node import (NodeException, InconsistentDimException,
+                         TrainingException,
                          TrainingFinishedException, IsNotTrainableException,
                          IsNotInvertibleException)
 from linear_flows import CrashRecoveryException, FlowException, FlowExceptionCR
 
-# import base node and flow classes
-from signal_node import NodeMetaclass, Node, Cumulator, VariadicCumulator
+# import base nodes and flow classes
+from signal_node import (NodeMetaclass, Node, PreserveDimNode,
+                         Cumulator, VariadicCumulator)
 
 from linear_flows import (Flow, CheckpointFlow,
                           CheckpointFunction, CheckpointSaveFunction)

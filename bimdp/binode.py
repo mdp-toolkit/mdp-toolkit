@@ -480,6 +480,11 @@ class BiNode(mdp.Node):
             return super(BiNode, self).__add__(other)
 
 
+class PreserveDimBiNode(BiNode, mdp.PreserveDimNode):
+    """BiNode version of the PreserveDimNode."""
+    pass
+
+
 ### Helper Functions / Decorators ###
 
 def binode_coroutine(args=None, defaults=()):

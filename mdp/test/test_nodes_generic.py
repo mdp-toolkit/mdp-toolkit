@@ -1,6 +1,6 @@
 import py.test
 import inspect
-from mdp import nodes, numx, numx_rand
+from mdp import nodes, numx, numx_rand, InconsistentDimException
 from _tools import *
 uniform = numx_rand.random
 
@@ -154,15 +154,26 @@ def test_outputdim_consistency(klass, init_args, inp_arg_gen,
         assert out.shape[1] == output_dim
         assert node._output_dim == output_dim
 
+    # check if the node output dimension can be set or must be determined
+    # by the node
     if 'output_dim' in inspect.getargspec(klass.__init__)[0]:
         # case 1: output dim set in the constructor
-        node = klass(*args, output_dim=output_dim)
-        _test(node)
-
+        try:
+            node = klass(*args, output_dim=output_dim)
+            _test(node)
+        except InconsistentDimException:
+            # node probably derived from PreserveDimNode, skip the test
+            pass
+        
         # case 2: output_dim set explicitly
-        node = klass(*args)
-        node.output_dim = output_dim
-        _test(node)
+        try:
+            node = klass(*args)
+            node.output_dim = output_dim
+            _test(node)
+            pass
+        except InconsistentDimException:
+            # node probably derived from PreserveDimNode, skip the test
+            pass
     else:
         node = klass(*args)
         _train_if_necessary(inp, node, sup_arg_gen)
@@ -266,8 +277,7 @@ NODES = [
         init_args=["LINEAR","C_SVC"])
     ]
 
-EXCLUDE_NODES = [nodes.ICANode, nodes.PreserveDimNode, nodes.IdentityNode,
-                 nodes.HistogramNode]
+EXCLUDE_NODES = [nodes.ICANode]
 
 def generate_nodes_list(nodes_dicts):
     nodes_list = []

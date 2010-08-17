@@ -1,16 +1,14 @@
 import mdp
-from mdp import ClassifierNode
-from mdp import numx, numx_rand
-import operator
-import itertools
+from mdp import ClassifierNode, utils, numx, numx_rand, numx_linalg
+
 
 class SignumClassifier(ClassifierNode):
     """This classifier node classifies as 1, if the sum of the data points is
     positive and as -1, if the data point is negative"""
 
-    def __init__(self, input_dim=None, dtype=None):
+    def __init__(self, input_dim=None, output_dim=None, dtype=None):
         super(SignumClassifier, self).__init__(input_dim=input_dim,
-                                               output_dim=None,
+                                               output_dim=output_dim,
                                                dtype=dtype)
 
     def _get_supported_dtypes(self):
@@ -29,8 +27,10 @@ class SignumClassifier(ClassifierNode):
 
 class PerceptronClassifier(ClassifierNode):
     """A simple perceptron with input_dim input nodes."""
-    def __init__(self, input_dim=None, dtype=None):
-        super(PerceptronClassifier, self).__init__(input_dim, None, dtype)
+    def __init__(self, input_dim=None, output_dim=None, dtype=None):
+        super(PerceptronClassifier, self).__init__(input_dim=input_dim,
+                                                   output_dim=output_dim,
+                                                   dtype=dtype)
         self.weights = []
         self.offset_weight = 0
         self.learning_rate = 0.1
@@ -93,8 +93,10 @@ class SimpleMarkovClassifier(ClassifierNode):
     It can be trained on a vector of tuples the label being the next element
     in the testing data.
     """
-    def __init__(self, input_dim=None, dtype=None):
-        super(SimpleMarkovClassifier, self).__init__(input_dim, None, dtype)
+    def __init__(self, input_dim=None, output_dim=None, dtype=None):
+        super(SimpleMarkovClassifier, self).__init__(input_dim=input_dim,
+                                                     output_dim=output_dim,
+                                                     dtype=dtype)
         self.ntotal_connections = 0
 
         self.features = {}
@@ -190,8 +192,10 @@ class DiscreteHopfieldClassifier(ClassifierNode):
     """Node for simulating a simple discrete Hopfield model"""
     # TODO: It is unclear if this belongs to classifiers or is a general node
     # because label space is a subset of feature space
-    def __init__(self, input_dim=None, dtype='b'):
-        super(DiscreteHopfieldClassifier, self).__init__(input_dim, input_dim, dtype)
+    def __init__(self, input_dim=None, output_dim=None, dtype='b'):
+        super(DiscreteHopfieldClassifier, self).__init__(input_dim=input_dim,
+                                                         output_dim=output_dim,
+                                                         dtype=dtype)
         self._weight_matrix = 0 # assigning zero to ease addition
         self._num_patterns = 0
         self._shuffled_update = True
@@ -265,14 +269,17 @@ class DiscreteHopfieldClassifier(ClassifierNode):
 # TODO: Make it more efficient
 
 class KMeansClassifier(ClassifierNode):
-    def __init__(self, num_clusters, max_iter=10000, input_dim=None, dtype=None):
+    def __init__(self, num_clusters, max_iter=10000,
+                 input_dim=None, output_dim=None, dtype=None):
         """Employs K-Means Clustering for a given number of centroids.
 
         num_clusters -- number of centroids to use = number of clusters
         max_iter     -- if the algorithm does not reach convergence (for some
                         numerical reason), stop after max_iter iterations
         """
-        super(KMeansClassifier, self).__init__(input_dim, None, dtype)
+        super(KMeansClassifier, self).__init__(input_dim=input_dim,
+                                               output_dim=output_dim,
+                                               dtype=dtype)
         self._num_clusters = num_clusters
         self.data = []
         self.tlen = 0
@@ -333,4 +340,139 @@ class KMeansClassifier(ClassifierNode):
         a list of centroids.
         """
         return [self._nearest_centroid_idx(xi, self._centroids) for xi in x]
+
+
+class GaussianClassifierNode(ClassifierNode):
+    """Perform a supervised Gaussian classification.
+
+    Given a set of labelled data, the node fits a gaussian distribution
+    to each class. Note that it is written as an analysis node (i.e., the
+    execute function is the identity function). To perform classification,
+    use the 'label' method. If instead you need the posterior
+    probability of the classes given the data use the 'class_probabilities'
+    method.
+    """
+    
+    def __init__(self, input_dim=None, output_dim=None, dtype=None):
+        super(GaussianClassifierNode, self).__init__(input_dim=input_dim,
+                                                     output_dim=output_dim,
+                                                     dtype=dtype)
+        self.cov_objs = {}
+
+    def _get_supported_dtypes(self):
+        """Return the list of dtypes supported by this node."""
+        return ['float32', 'float64']
+
+    @staticmethod
+    def is_invertible():
+        return False
+
+    def _check_train_args(self, x, labels):
+        if isinstance(labels, (list, tuple, numx.ndarray)) and (
+            len(labels) != x.shape[0]):
+            msg = ("The number of labels should be equal to the number of "
+                   "datapoints (%d != %d)" % (len(labels), x.shape[0]))
+            raise mdp.TrainingException(msg)
+
+    def _update_covs(self, x, lbl):
+        if lbl not in self.cov_objs:
+            self.cov_objs[lbl] = utils.CovarianceMatrix(dtype=self.dtype)
+        self.cov_objs[lbl].update(x)
+
+    def _train(self, x, labels):
+        """
+        Additional input arguments:
+        labels -- Can be a list, tuple or array of labels (one for each data point)
+                  or a single label, in which case all input data is assigned to
+                  the same class.
+        """
+        # if labels is a number, all x's belong to the same class
+        if isinstance(labels, (list, tuple, numx.ndarray)):
+            labels_ = numx.asarray(labels)
+            # get all classes from cl
+            for lbl in set(labels_):
+                x_lbl = numx.compress(labels_==lbl, x, axis=0)
+                self._update_covs(x_lbl, lbl)
+        else:
+            self._update_covs(x, labels)
+
+    def _stop_training(self):
+        self.labels = self.cov_objs.keys()
+        self.labels.sort()
+
+        # we are going to store the inverse of the covariance matrices
+        # since only those are useful to compute the probabilities
+        self.inv_covs = []
+        self.means = []
+        self.p = []
+        # this list contains the square root of the determinant of the
+        # corresponding covariance matrix
+        self._sqrt_def_covs = []
+        nitems = 0
+
+        for lbl in self.labels:
+            cov, mean, p = self.cov_objs[lbl].fix()
+            nitems += p
+            self._sqrt_def_covs.append(numx.sqrt(numx_linalg.det(cov)))
+            self.means.append(mean)
+            self.p.append(p)
+            self.inv_covs.append(utils.inv(cov))
+
+        for i in range(len(self.p)):
+            self.p[i] /= float(nitems)
+
+        del self.cov_objs
+
+    def _gaussian_prob(self, x, lbl_idx):
+        """Return the probability of the data points x with respect to a
+        gaussian.
+
+        Input arguments:
+        x -- Input data
+        S -- Covariance matrix
+        mn -- Mean
+        """
+        x = self._refcast(x)
+
+        dim = self.input_dim
+        sqrt_detS = self._sqrt_def_covs[lbl_idx]
+        invS = self.inv_covs[lbl_idx]
+        # subtract the mean
+        x_mn = x - self.means[lbl_idx][numx.newaxis, :]
+        # exponent
+        exponent = -0.5 * (utils.mult(x_mn, invS)*x_mn).sum(axis=1)
+        # constant
+        constant = (2.*numx.pi)**-(dim/2.)/sqrt_detS
+        # probability
+        return constant * numx.exp(exponent)
+
+    def class_probabilities(self, x):
+        """Return the posterior probability of each class given the input."""
+        self._pre_execution_checks(x)
+
+        # compute the probability for each class
+        tmp_prob = numx.zeros((x.shape[0], len(self.labels)),
+                              dtype=self.dtype)
+        for i in range(len(self.labels)):
+            tmp_prob[:, i] = self._gaussian_prob(x, i)
+            tmp_prob[:, i] *= self.p[i]
+
+        # normalize to probability 1
+        # (not necessary, but sometimes useful)
+        tmp_tot = tmp_prob.sum(axis=1)
+        tmp_tot = tmp_tot[:, numx.newaxis]
+        return tmp_prob/tmp_tot
+
+    def _prob(self, x):
+        """Return the posterior probability of each class given the input in a dict."""
+
+        class_prob = self.class_probabilities(x)
+        return [dict(zip(self.labels, prob)) for prob in class_prob]
+
+    def _label(self, x):
+        """Classify the input data using Maximum A-Posteriori."""
+
+        class_prob = self.class_probabilities(x)
+        winner = class_prob.argmax(axis=-1)
+        return [self.labels[winner[i]] for i in range(len(winner))]
 

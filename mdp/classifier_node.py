@@ -1,21 +1,13 @@
-from mdp import Node, numx, VariadicCumulator
+from mdp import PreserveDimNode, numx, VariadicCumulator
 import operator
 
 
-class ClassifierNode(Node):
+class ClassifierNode(PreserveDimNode):
     """A ClassifierNode can be used for classification tasks that should not
     interfere with the normal execution flow. A Reason for that may be that the
     labels used for classification are not in the normal feature space but in
     label space.
     """
-
-    def _set_input_dim(self, n):
-        self._input_dim = n
-        self._output_dim = n
-
-    def _set_output_dim(self, n):
-        msg = "Output dim cannot be set explicitly!"
-        raise mdp.NodeException(msg)
 
     ### Methods to be implemented by the subclasses
 
@@ -81,7 +73,9 @@ class ClassifierCumulator(VariadicCumulator('data', 'labels'), ClassifierNode):
     """
 
     def __init__(self, input_dim=None, output_dim=None, dtype=None):
-        super(ClassifierCumulator, self).__init__(input_dim, output_dim, dtype)
+        super(ClassifierCumulator, self).__init__(input_dim=input_dim,
+                                                  output_dim=output_dim,
+                                                  dtype=dtype)
 
     def _check_train_args(self, x, labels):
         super(ClassifierCumulator, self)._check_train_args(x, labels)
