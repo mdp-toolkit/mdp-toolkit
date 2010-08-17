@@ -272,7 +272,8 @@ class ShogunSVMClassifier(_SVMClassifier):
 
     def __init__(self, classifier="libsvmmulticlass", classifier_arguments=(),
                  classifier_options=None, kernel_name=None, kernel_options=None,
-                 num_threads="autodetect", input_dim=None, dtype=None):
+                 num_threads="autodetect",
+                 input_dim=None, output_dim=None, dtype=None):
         """
         Initialises a new ShogunSVMClassifier.
 
@@ -287,7 +288,9 @@ class ShogunSVMClassifier(_SVMClassifier):
                            Attention: this could crash on windows
 
         """
-        super(ShogunSVMClassifier, self).__init__(input_dim=input_dim, dtype=dtype)
+        super(ShogunSVMClassifier, self).__init__(input_dim=input_dim,
+                                                  output_dim=output_dim,
+                                                  dtype=dtype)
 
         if classifier_options is None:
             classifier_options = {}

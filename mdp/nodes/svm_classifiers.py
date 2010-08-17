@@ -65,20 +65,13 @@ class _LabelNormalizer(object):
 class _SVMClassifier(ClassifierCumulator):
     """Base class for the SVM classifier nodes."""
 
-    def __init__(self, input_dim = None, dtype = None):
+    def __init__(self, input_dim=None, output_dim=None, dtype=None):
         self.normalizer = None
-
-        super(_SVMClassifier, self).__init__(input_dim, None, dtype)
+        super(_SVMClassifier, self).__init__(input_dim=input_dim,
+                                             output_dim=output_dim,
+                                             dtype=dtype)
 
     @staticmethod
     def is_invertible():
         return False
-
-    def _set_input_dim(self, n):
-        self._input_dim = n
-        self._output_dim = n
-
-    def _set_output_dim(self, n):
-        msg = "Output dim cannot be set explicitly!"
-        raise mdp.NodeException(msg)
 
