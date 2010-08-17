@@ -1,6 +1,6 @@
 import py.test
 import inspect
-from mdp import nodes, numx, numx_rand, InconsistentDimException
+from mdp import nodes, PreserveDimNode, InconsistentDimException
 from _tools import *
 uniform = numx_rand.random
 
@@ -156,25 +156,36 @@ def test_outputdim_consistency(klass, init_args, inp_arg_gen,
 
     # check if the node output dimension can be set or must be determined
     # by the node
-    if 'output_dim' in inspect.getargspec(klass.__init__)[0]:
+    if (not issubclass(klass, PreserveDimNode) and
+        'output_dim' in inspect.getargspec(klass.__init__)[0]):
         # case 1: output dim set in the constructor
-        try:
-            node = klass(*args, output_dim=output_dim)
-            _test(node)
-        except InconsistentDimException:
-            # node probably derived from PreserveDimNode, skip the test
-            pass
+        node = klass(*args, output_dim=output_dim)
+        _test(node)
         
         # case 2: output_dim set explicitly
-        try:
-            node = klass(*args)
-            node.output_dim = output_dim
-            _test(node)
-            pass
-        except InconsistentDimException:
-            # node probably derived from PreserveDimNode, skip the test
-            pass
+        node = klass(*args)
+        node.output_dim = output_dim
+        _test(node)
     else:
+        if issubclass(klass, PreserveDimNode):
+            # check that constructor allows to set output_dim
+            assert 'output_dim' in inspect.getargspec(klass.__init__)[0]
+            # check that setting the input dim, then incompatible output dims
+            # raises an appropriate error
+            # case 1: both in the constructor
+            py.test.raises(InconsistentDimException,
+                           'klass(*args, input_dim=inp.shape[1], output_dim=output_dim)')
+            # case 2: first input_dim, then output_dim
+            node = klass(*args, input_dim=inp.shape[1])
+            py.test.raises(InconsistentDimException,
+                           'node.output_dim = output_dim')
+            # case 3: first output_dim, then input_dim
+            node = klass(*args, output_dim=output_dim)
+            node.output_dim = output_dim
+            py.test.raises(InconsistentDimException,
+                           'node.input_dim = inp.shape[1]')
+            
+        # check that output_dim is set to whatever the output dim is
         node = klass(*args)
         _train_if_necessary(inp, node, sup_arg_gen)
         out = node.execute(inp, *extra)
@@ -198,7 +209,7 @@ def test_inverse(klass, init_args, inp_arg_gen,
                  sup_arg_gen, execute_arg_gen):
     args = call_init_args(init_args)
     inp = inp_arg_gen()
-        # take the first available dtype for the test
+    # take the first available dtype for the test
     dtype = klass(*args).get_supported_dtypes()[0]
     args = call_init_args(init_args)
     node = klass(dtype=dtype, *args)

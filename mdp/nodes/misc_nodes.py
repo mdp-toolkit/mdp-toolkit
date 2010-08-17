@@ -228,7 +228,7 @@ class TimeFramesNode(Node):
     """
 
     def __init__(self, time_frames, gap=1,
-                 input_dim=None, output_dim=None, dtype=None):
+                 input_dim=None, dtype=None):
         """
         Input arguments:
         time_frames -- Number of delayed copies
@@ -236,7 +236,7 @@ class TimeFramesNode(Node):
         """
         self.time_frames = time_frames
         super(TimeFramesNode, self).__init__(input_dim=input_dim,
-                                             output_dim=output_dim,
+                                             output_dim=None,
                                              dtype=dtype)
         self.gap = gap
 
@@ -436,7 +436,7 @@ class NoiseNode(PreserveDimNode):
                         Default is 'additive'.
         """
         super(NoiseNode, self).__init__(input_dim=input_dim,
-                                        output_dim=input_dim,
+                                        output_dim=output_dim,
                                         dtype=dtype)
         self.noise_func = noise_func
         self.noise_args = noise_args
