@@ -49,10 +49,6 @@ class FDANode(mdp.Node):
         self.v = None  # transposed of the projection matrix
         self.avg = None  # mean of the input data
 
-    def _get_supported_dtypes(self):
-        """Return the list of dtypes supported by this node."""
-        return ['float32', 'float64']
-
     def _check_train_args(self, x, cl):
         if (isinstance(cl, (list, tuple, numx.ndarray)) and
             len(cl) != x.shape[0]):

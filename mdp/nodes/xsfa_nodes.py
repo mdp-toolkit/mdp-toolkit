@@ -173,10 +173,6 @@ class XSFANode(mdp.Node):
         self._training_phases_mods = [sum(training_phases[:i+1]) for i in
                                       range(len(training_phases[:-1]))]
 
-    def _get_supported_dtypes(self):
-        """Return the list of dtypes supported by this node."""
-        return ('float32', 'float64')
-
     @staticmethod
     def is_invertible():
         return False
@@ -282,7 +278,6 @@ class ProjectionNode(mdp.Node):
 
     def _stop_training(self):
         self.proj_mtx, avgx, avgy, self.tlen = self._cov_mtx.fix()
-
 
     def _execute(self, x):
         src = x[:, -self.output_dim:-self.L]

@@ -309,9 +309,9 @@ class ShogunSVMClassifier(_SVMClassifier):
         if kernel_name:
             self.set_kernel(kernel_name, kernel_options)
 
-    
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
+        # Support only float64 because of external library
         return ('float64',)
 
     def _set_num_threads(self):

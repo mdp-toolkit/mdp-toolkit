@@ -74,9 +74,6 @@ class LLENode(Cumulator):
         self.svd = svd
         self.verbose = verbose
 
-    def _get_supported_dtypes(self):
-        return ['float32', 'float64']
-
     def _stop_training(self):
         Cumulator._stop_training(self)
 

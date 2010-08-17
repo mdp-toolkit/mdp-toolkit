@@ -80,6 +80,11 @@ class Switchboard(mdp.Node):
         else:
             return x[:, self.inverse_connections]
 
+    def _get_supported_dtypes(self):
+        """Return the list of dtypes supported by this node."""
+        return (mdp.utils.get_dtypes('AllFloat') +
+                mdp.utils.get_dtypes('AllInteger') +
+                mdp.utils.get_dtypes('Character'))
 
 class MeanInverseSwitchboard(Switchboard):
     """Variant of Switchboard with modified inverse.

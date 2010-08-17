@@ -33,6 +33,7 @@ class LibSVMClassifier(_SVMClassifier):
 
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
+        # Support only float64 because of external library
         return ('float64',)
 
     def set_classifier(self, classifier):

@@ -4,37 +4,22 @@ from mdp import numx, utils, Node, NodeException, PreserveDimNode
 import cPickle as pickle
 import pickle as real_pickle
 
-MAX_NUM = {numx.dtype('b'): 127,
-           numx.dtype('h'): 32767,
-           numx.dtype('i'): 2147483647,
-           numx.dtype('q'): 9223372036854775807L,
-           numx.dtype('f'): numx.finfo(numx.float32).max,
-           numx.dtype('d'): numx.finfo(numx.float64).max}
-
-MIN_NUM = {numx.dtype('b'): -128,
-           numx.dtype('h'): -32768,
-           numx.dtype('i'): -2147483648,
-           numx.dtype('q'): -9223372036854775808L,
-           numx.dtype('f'): numx.finfo(numx.float32).min,
-           numx.dtype('d'): numx.finfo(numx.float64).min}
-
-
 class IdentityNode(PreserveDimNode):
     """Execute returns the input data and the node is not trainable.
     
-    This node can be instanciated and is for example useful in
+    This node can be instantiated and is for example useful in
     complex network layouts.
     """
-
-    @staticmethod
-    def is_trainable():
-        False
 
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
         return (mdp.utils.get_dtypes('AllFloat') +
-                mdp.utils.get_dtypes('AllInteger'))
+                mdp.utils.get_dtypes('AllInteger') +
+                mdp.utils.get_dtypes('Character'))
 
+    @staticmethod
+    def is_trainable():
+        False
 
 class OneDimensionalHitParade(object):
     """
@@ -56,9 +41,17 @@ class OneDimensionalHitParade(object):
         self.d = int(d)
         self.iM = numx.zeros((n, ), dtype=integer_dtype)
         self.im = numx.zeros((n, ), dtype=integer_dtype)
+        
         real_dtype = numx.dtype(real_dtype)
-        self.M = numx.array([MIN_NUM[real_dtype]]*n, dtype=real_dtype)
-        self.m = numx.array([MAX_NUM[real_dtype]]*n, dtype=real_dtype)
+        if real_dtype in mdp.utils.get_dtypes('AllInteger'):
+            max_num = numx.iinfo(real_dtype).max
+            min_num = numx.iinfo(real_dtype).min
+        else:
+            max_num = numx.finfo(real_dtype).max
+            min_num = numx.finfo(real_dtype).min
+        self.M = numx.array([min_num]*n, dtype=real_dtype)
+        self.m = numx.array([max_num]*n, dtype=real_dtype)
+        
         self.lM = 0
         self.lm = 0
 
@@ -153,7 +146,8 @@ class HitParadeNode(PreserveDimNode):
 
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
-        return ['b', 'h', 'i', 'q', 'f', 'd']
+        return (mdp.utils.get_dtypes('Float') +
+                mdp.utils.get_dtypes('AllInteger'))
 
     def _train(self, x):
         hit = self.hit
@@ -174,9 +168,7 @@ class HitParadeNode(PreserveDimNode):
         Return the tuple (maxima, indices).
         Maxima are sorted in descending order.
 
-        If the training pha    dict(klass='PerceptronClassifier',
-         sup_arg_gen=_rand_classification_labels_array)
-se has not been completed yet, call
+        If the training phase has not been completed yet, call
         stop_training.
         """
         self._if_training_stop_training()
@@ -242,7 +234,9 @@ class TimeFramesNode(Node):
 
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
-        return ['int8', 'int16', 'int32', 'int64', 'float32', 'float64']
+        return (mdp.utils.get_dtypes('AllFloat') +
+                mdp.utils.get_dtypes('AllInteger') +
+                mdp.utils.get_dtypes('Character'))
 
     @staticmethod
     def is_trainable():
@@ -351,10 +345,6 @@ class EtaComputerNode(Node):
         self._input_dim = n
         self.output_dim = n
 
-    def _get_supported_dtypes(self):
-        """Return the list of dtypes supported by this node."""
-        return ['float32', 'float64']
-
     def _init_internals(self):
         input_dim = self.input_dim
         self._mean = numx.zeros((input_dim,), dtype='d')
@@ -449,7 +439,7 @@ class NoiseNode(PreserveDimNode):
 
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
-        return (mdp.utils.get_dtypes('AllFloat') +
+        return (mdp.utils.get_dtypes('Float') +
                 mdp.utils.get_dtypes('AllInteger'))
 
     @staticmethod
@@ -523,9 +513,6 @@ class NormalNoiseNode(PreserveDimNode):
     def is_invertible():
         return False
 
-    def _get_supported_dtypes(self):
-        return mdp.utils.get_dtypes('AllFloat')
-
     def _execute(self, x):
         noise = self._refcast(mdp.numx_rand.normal(size=x.shape) *
                                     self.noise_args[1]
@@ -563,7 +550,7 @@ class CutoffNode(PreserveDimNode):
         return False
 
     def _get_supported_dtypes(self):
-        return (mdp.utils.get_dtypes('AllFloat') +
+        return (mdp.utils.get_dtypes('Float') +
                 mdp.utils.get_dtypes('AllInteger'))
 
     def _execute(self, x):
@@ -606,7 +593,8 @@ class HistogramNode(PreserveDimNode):
 
     def _get_supported_dtypes(self):
         return (mdp.utils.get_dtypes('AllFloat') +
-                mdp.utils.get_dtypes('AllInteger'))
+                mdp.utils.get_dtypes('AllInteger') +
+                mdp.utils.get_dtypes('Character'))
 
     def _train(self, x):
         """Store the history data."""
@@ -627,7 +615,6 @@ class HistogramNode(PreserveDimNode):
             finally:
                 pickle_file.close( )
             self.data_hist = None
-
 
 class AdaptiveCutoffNode(HistogramNode):
     """Node which uses the data history during training to learn cutoff values.
@@ -669,6 +656,10 @@ class AdaptiveCutoffNode(HistogramNode):
         self.upper_cutoff_fraction = upper_cutoff_fraction
         self.lower_bounds = None
         self.upper_bounds = None
+        
+    def _get_supported_dtypes(self):
+        return (mdp.utils.get_dtypes('Float') +
+                mdp.utils.get_dtypes('AllInteger'))
 
     def _stop_training(self):
         """Calculate the cutoff bounds based on collected histogram data."""

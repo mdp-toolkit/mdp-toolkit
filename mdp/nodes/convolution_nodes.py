@@ -133,9 +133,6 @@ class Convolution2DNode(mdp.Node):
     def is_invertible(self):
         return False
 
-    def _get_supported_dtypes(self):
-        return ['float32', 'float64']
-
     def _pre_execution_checks(self, x):
         """This method contains all pre-execution checks.
         It can be used when a subclass defines multiple execution methods.
@@ -151,7 +148,6 @@ class Convolution2DNode(mdp.Node):
             raise NodeException(error_str)
 
         # set 2D shape if necessary
-
         if self._input_shape is None:
             if x.ndim == 2:
                 error_str = "Cannot infer 2D shape from 1D data points. " + \

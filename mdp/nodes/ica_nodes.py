@@ -92,10 +92,6 @@ class ICANode(mdp.Cumulator, mdp.Node, ProjectMatrixMixin):
         elif self.white_comp is None:
             self.output_dim = n
 
-    def _get_supported_dtypes(self):
-        """Return the list of dtypes supported by this node."""
-        return ['float32', 'float64']
-
     def _stop_training(self):
         """Whiten data if needed and call the 'core' routine to perform ICA.
            Take care of telescope-mode if needed.

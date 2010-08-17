@@ -6,6 +6,8 @@ from mdp.utils import (DelayCovarianceMatrix, MultipleCovarianceMatrices,
                        rotate, mult)
 
 
+# TODO: support floats of size different than 64-bit; will need to change SQRT_EPS_D
+
 # rename often used functions
 sum, cos, sin, PI = numx.sum, numx.cos, numx.sin, numx.pi
 SQRT_EPS_D = numx.sqrt(numx.finfo('d').eps)
