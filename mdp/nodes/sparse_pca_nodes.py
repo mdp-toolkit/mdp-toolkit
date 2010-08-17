@@ -15,7 +15,6 @@ def _check_roundoff(t, dtype):
               '\nerrors. See CovarianceMatrix docstring for more'
               ' information.' % (t, dtype.name))
         warnings.warn(wr, mdp.MDPWarning)
-
 class SparseCovarianceMatrix(object):
     """This class stores an empirical covariance matrix that can be updated
     incrementally. A call to the 'fix' method returns the current state of
@@ -196,9 +195,6 @@ class SparsePCANode(Node):
             error_str = ("y has dimension %d" 
                          ", should be 0<y<=%d" % (y.shape[1], self.output_dim))
             raise NodeException(error_str)
-
-    def _get_supported_dtypes(self):
-        return ['float32', 'float64']
     
     def get_explained_variance(self):
         """Return the fraction of the original variance that can be
@@ -248,11 +244,12 @@ class SparsePCANode(Node):
                        self.cov_mtx and self.dcov_mtx to be examined.
         """
         # request the covariance matrix and clean up
-        self.cov_mtx, avg, self.tlen = self._cov_mtx.fix()
+        self.cov_mtx, self.avg, self.tlen = self._cov_mtx.fix()
         del self._cov_mtx
 
         # range for the eigenvalues
-        rng = self._adjust_output_dim()
+        #rng = self._adjust_output_dim()
+        rng = self.output_dim
         
         # if we have more variables then observations we are bound to fail here
         # suggest to use the NIPALSNode instead.
@@ -271,11 +268,12 @@ class SparsePCANode(Node):
         # compute the eigenvectors of the covariance matrix (inplace)
         # (eigenvalues sorted in ascending order)
         try:
-            d, v = mdp.numx.sparse.svd(self.cov_mtx)
-            self._symeig(self.cov_mtx, k=rng, overwrite=(not debug))
+            print rng
+            d, v = mdp.numx.sparse.linalg.eigen_symmetric(self.cov_mtx, k=rng)
+            #self._symeig(self.cov_mtx, k=rng, overwrite=(not debug))
             # if reduce=False and svd=False. we should check for
             # negative eigenvalues and fail
-            if not (self.reduce or self.svd or (self.desired_variance is
+            if not (self.reduce or (self.desired_variance is
                                                 not None)):
                 if d.min() < 0:
                     raise NodeException("Got negative eigenvalues: "
@@ -283,7 +281,7 @@ class SparsePCANode(Node):
                                         "You may either set output_dim to be"
                                         " smaller, or set reduce=True and/or "
                                         "svd=True" % str(d))
-        except SymeigException, exception:
+        except mdp.utils.SymeigException as exception:
             err = str(exception)+("\nCovariance matrix may be singular."
                                   "Try setting svd=True.")
             raise NodeException(err)
@@ -291,6 +289,7 @@ class SparsePCANode(Node):
         # delete covariance matrix if no exception occurred
         if not debug:
             del self.cov_mtx
+            del self.avg
         
         # sort by descending order
         d = numx.take(d, range(d.shape[0]-1, -1, -1))

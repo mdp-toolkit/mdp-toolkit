@@ -38,19 +38,32 @@ testdecimals = {testtypes[0]: 12, testtypes[1]: 6}
 #import scipy
 #from numpy.random import rand
 
-# create pca node
-pcanode1 = mdp.nodes.SparsePCANode()
+x = mdp.numx.sparse.lil_matrix((12, 11))
+for i in range(11):
+    #x[i,i] = float(i)
+    #x[i,i] = float(i)
+    x[0,i] = float(i)+1.
+    x[i+1,i] = -float(i)-1.
+    
+#d, v = numx.sparse.linalg.eigen_symmetric(x, k=10)
+
+
+
 
  
 # create random sparse matrix
-x = mdp.numx.sparse.lil_matrix((1000, 1000))
-x[0, :100] = mdp.numx.rand(100)
-x[1, 100:200] = x[0, :100]
-x.setdiag(mdp.numx.rand(1000))
-x = x.tocsr() # convert it to CSR
+#x = mdp.numx.sparse.lil_matrix((1000, 1000))
+#[0, :100] = mdp.numx.rand(100)
+#x[1, 100:200] = x[0, :100]
+#x.setdiag(mdp.numx.rand(1000))
+#x = x.tocsr() # convert it to CSR
 
-v, u, w = numx.sparse.linalg.eigen_symmetric(x)
+
+# create pca node
+pcanode1 = mdp.nodes.SparsePCANode(output_dim=10)
 
 pcanode1.train(x)
-pcanode1.stop_training()
+pcanode1.stop_training(debug=True)
 
+#print pcanode1.d, d
+#assert all(pcanode1.d == d)
