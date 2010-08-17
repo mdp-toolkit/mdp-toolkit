@@ -99,7 +99,7 @@ class SimpleMarkovClassifier(ClassifierNode):
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
         return (mdp.utils.get_dtypes('Float') +
-                mdp.utils.get_dtypes('Integer') +
+                mdp.utils.get_dtypes('AllInteger') +
                 mdp.utils.get_dtypes('Character'))
 
     def _check_train_args(self, x, labels):
@@ -316,7 +316,6 @@ class KMeansClassifier(ClassifierNode):
     def _nearest_centroid_idx(self, data, centroids):
         dists = numx.array([numx.linalg.norm(data - c) for c in centroids])
         return dists.argmin()
-
 
     def _label(self, x):
         """For a set of feature vectors x, this classifier returns

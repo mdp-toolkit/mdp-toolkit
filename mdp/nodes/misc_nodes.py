@@ -4,21 +4,6 @@ from mdp import numx, numx_linalg, utils, Node, ClassifierNode, NodeException
 import cPickle as pickle
 import pickle as real_pickle
 
-MAX_NUM = {numx.dtype('b'): 127,
-           numx.dtype('h'): 32767,
-           numx.dtype('i'): 2147483647,
-           numx.dtype('q'): 9223372036854775807L,
-           numx.dtype('f'): numx.finfo(numx.float32).max,
-           numx.dtype('d'): numx.finfo(numx.float64).max}
-
-MIN_NUM = {numx.dtype('b'): -128,
-           numx.dtype('h'): -32768,
-           numx.dtype('i'): -2147483648,
-           numx.dtype('q'): -9223372036854775808L,
-           numx.dtype('f'): numx.finfo(numx.float32).min,
-           numx.dtype('d'): numx.finfo(numx.float64).min}
-
-
 class PreserveDimNode(Node):
     """Abstract base class with output_dim == input_dim.
     
@@ -41,6 +26,12 @@ class PreserveDimNode(Node):
 class IdentityNode(PreserveDimNode):
     """Return input data (useful in complex network layouts)"""
 
+    def _get_supported_dtypes(self):
+        """Return the list of dtypes supported by this node."""
+        return (mdp.utils.get_dtypes('AllFloat') +
+                mdp.utils.get_dtypes('AllInteger') +
+                mdp.utils.get_dtypes('Character'))
+
     @staticmethod
     def is_trainable():
         False
@@ -50,6 +41,7 @@ class OneDimensionalHitParade(object):
     Class to produce hit-parades (i.e., a list of the largest
     and smallest values) out of a one-dimensional time-series.
     """
+    
     def __init__(self, n, d, real_dtype="d", integer_dtype="l"):
         """
         Input arguments:
@@ -64,9 +56,17 @@ class OneDimensionalHitParade(object):
         self.d = int(d)
         self.iM = numx.zeros((n, ), dtype=integer_dtype)
         self.im = numx.zeros((n, ), dtype=integer_dtype)
+        
         real_dtype = numx.dtype(real_dtype)
-        self.M = numx.array([MIN_NUM[real_dtype]]*n, dtype=real_dtype)
-        self.m = numx.array([MAX_NUM[real_dtype]]*n, dtype=real_dtype)
+        if real_dtype in mdp.utils.get_dtypes('AllInteger'):
+            max_num = numx.iinfo(real_dtype).max
+            min_num = numx.iinfo(real_dtype).min
+        else:
+            max_num = numx.finfo(real_dtype).max
+            min_num = numx.finfo(real_dtype).min
+        self.M = numx.array([min_num]*n, dtype=real_dtype)
+        self.m = numx.array([max_num]*n, dtype=real_dtype)
+        
         self.lM = 0
         self.lm = 0
 
@@ -159,7 +159,8 @@ class HitParadeNode(Node):
 
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
-        return ['b', 'h', 'i', 'q', 'f', 'd']
+        return (mdp.utils.get_dtypes('Float') +
+                mdp.utils.get_dtypes('AllInteger'))
 
     def _train(self, x):
         hit = self.hit
@@ -246,7 +247,8 @@ class TimeFramesNode(Node):
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
         return (mdp.utils.get_dtypes('AllFloat') +
-                mdp.utils.get_dtypes('AllInteger'))
+                mdp.utils.get_dtypes('AllInteger') +
+                mdp.utils.get_dtypes('Character'))
 
     @staticmethod
     def is_trainable():
@@ -449,7 +451,7 @@ class NoiseNode(Node):
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
         return (mdp.utils.get_dtypes('Float') +
-                mdp.utils.get_dtypes('Integer'))
+                mdp.utils.get_dtypes('AllInteger'))
 
     @staticmethod
     def is_trainable():
@@ -688,7 +690,7 @@ class CutoffNode(PreserveDimNode):
 
     def _get_supported_dtypes(self):
         return (mdp.utils.get_dtypes('Float') +
-                mdp.utils.get_dtypes('Integer'))
+                mdp.utils.get_dtypes('AllInteger'))
 
     def _execute(self, x):
         """Return the clipped data."""
@@ -729,8 +731,9 @@ class HistogramNode(PreserveDimNode):
         self.data_hist = None  # stores the data history
 
     def _get_supported_dtypes(self):
-        return (mdp.utils.get_dtypes('Float') +
-                mdp.utils.get_dtypes('Integer'))
+        return (mdp.utils.get_dtypes('AllFloat') +
+                mdp.utils.get_dtypes('AllInteger') +
+                mdp.utils.get_dtypes('Character'))
 
     def _train(self, x):
         """Store the history data."""
@@ -792,6 +795,10 @@ class AdaptiveCutoffNode(HistogramNode):
         self.upper_cutoff_fraction = upper_cutoff_fraction
         self.lower_bounds = None
         self.upper_bounds = None
+        
+    def _get_supported_dtypes(self):
+        return (mdp.utils.get_dtypes('Float') +
+                mdp.utils.get_dtypes('AllInteger'))
 
     def _stop_training(self):
         """Calculate the cutoff bounds based on collected histogram data."""
