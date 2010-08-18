@@ -88,7 +88,7 @@ class FANode(mdp.Node):
         else:
             scale = numx.product(sigma)**(1./d)
         if scale <= 0.:
-            err = ("The covariance matrix of the data is singular. " +
+            err = ("The covariance matrix of the data is singular. "
                    "Redundant dimensions need to be removed.")
             raise NodeException(err)
 
@@ -185,7 +185,7 @@ class FANode(mdp.Node):
         if self.output_dim is None:
             # if the input_dim is not defined, raise an exception
             if self.input_dim is None:
-                errstr = ("Number of input dimensions undefined. Inversion"
+                errstr = ("Number of input dimensions undefined. Inversion "
                           "not possible.")
                 raise NodeException(errstr)
             self.output_dim = self.input_dim
