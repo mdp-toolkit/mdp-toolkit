@@ -215,7 +215,7 @@ def get_dtypes(typecodes_key, _safe=True):
     return types
 
 _UNSAFE_DTYPES = [numx.typeDict[d] for d in
-                  ['float96', 'float128', 'complex192']
+                  ['float96', 'float128', 'complex192', 'complex256']
                   if numx.typeDict.has_key(d)]
 
 # the following functions and classes were part of the scipy_emulation.py file
