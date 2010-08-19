@@ -247,20 +247,26 @@ class MDPConfiguration(object):
         except ImportError as msg:
             return ExternalDepFail(msg)
         return ExternalDepFound()
+    
+    def has_symeig(self):
+        return self._has_symeig
 
     def numerical_backend(self):
         return (numx_description, numx_version)
 
     def symeig(self):
         import utils
+        self._has_symeig = False
         # check what symeig are we using
         if utils.symeig is utils.wrap_eigh:
             SYMEIG = 'scipy.linalg.eigh'
+            self._has_symeig = True
         else:
             try:
                 import symeig
                 if utils.symeig is symeig.symeig:
                     SYMEIG = 'symeig'
+                    self._has_symeig = True
                 elif utils.symeig is utils._symeig_fake:
                     SYMEIG = 'symeig_fake'
                 else:

@@ -189,20 +189,34 @@ def comb(N, k):
         ret //= dv
     return ret
 
-
-def get_dtypes(typecodes_key):
+# WARNING numpy.linalg.eig does not support float sizes larger than 64 bits,
+# and complex numbers of size larger than 128 bits.
+# This is not a problem for MDP, as long as scipy.linalg.eigh is available.
+def get_dtypes(typecodes_key, _safe=True):
     """Return the list of dtypes corresponding to the set of
     typecodes defined in numpy.typecodes[typecodes_key].
     E.g., get_dtypes('Float') = [dtype('f'), dtype('d'), dtype('g')].
+    
+    If _safe is True (default), we remove large floating point types
+    if the numerical backend does not support them.
     """
     types = []
     for c in numx.typecodes[typecodes_key]:
         try:
             type_ = numx.dtype(c)
+            print c, numx.dtype(c)
+            print type_ in _UNSAFE_DTYPES
+            if (_safe and not mdp.config.has_symeig()
+                and type_ in _UNSAFE_DTYPES):
+                continue
             types.append(type_)
         except TypeError:
             pass
     return types
+
+_UNSAFE_DTYPES = [numx.typeDict[d] for d in
+                  ['float96', 'float128', 'complex192']
+                  if numx.typeDict.has_key(d)]
 
 # the following functions and classes were part of the scipy_emulation.py file
 
