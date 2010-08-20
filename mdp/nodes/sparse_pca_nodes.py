@@ -15,6 +15,7 @@ def _check_roundoff(t, dtype):
               '\nerrors. See CovarianceMatrix docstring for more'
               ' information.' % (t, dtype.name))
         warnings.warn(wr, mdp.MDPWarning)
+        
 class SparseCovarianceMatrix(object):
     """This class stores an empirical covariance matrix that can be updated
     incrementally. A call to the 'fix' method returns the current state of
@@ -289,7 +290,6 @@ class SparsePCANode(Node):
         # delete covariance matrix if no exception occurred
         if not debug:
             del self.cov_mtx
-            del self.avg
         
         # sort by descending order
         d = numx.take(d, range(d.shape[0]-1, -1, -1))
