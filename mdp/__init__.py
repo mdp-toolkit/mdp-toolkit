@@ -159,6 +159,8 @@ __contact__ = 'mdp-toolkit-users@lists.sourceforge.net'
 
 from utils.routines import OrderedDict
 
+import sys
+
 class MDPConfiguration(object):
     """MDPConfiguration() does checks on the available libraries
     and auto-generates a list of features for inclusion in debug output.
@@ -191,7 +193,9 @@ class MDPConfiguration(object):
 
         self.add_info('MDP Version', __version__)
         self.add_info('MDP Revision', __revision__)
-
+        self.add_info('Python Version', '.'.join([str(x) for x in
+                                                  sys.version_info]))
+        
         self.add_feature("numpy", numx_description == 'numpy', doc=False)
         self.add_feature("scipy", numx_description == 'scipy', doc=False)
 
@@ -336,6 +340,7 @@ from test import test
 del signal_node
 del linear_flows
 del classifier_node
+del sys
 
 # explicitly set __all__, mainly needed for epydoc
 __all__ = ['CheckpointFlow', 'CheckpointFunction', 'CheckpointSaveFunction',
