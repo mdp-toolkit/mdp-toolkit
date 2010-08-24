@@ -133,6 +133,15 @@ class Convolution2DNode(mdp.Node):
     def is_invertible(self):
         return False
 
+    def _get_supported_dtypes(self):
+        """Return the list of dtypes supported by this node.
+      
+        Support floating point types with size smaller or equal than 64 bits.
+        This is because fftpack does not support floating point types larger
+        than that.
+        """
+        return [t for t in mdp.utils.get_dtypes('Float') if t.itemsize<=8]
+
     def _pre_execution_checks(self, x):
         """This method contains all pre-execution checks.
         It can be used when a subclass defines multiple execution methods.
