@@ -224,8 +224,11 @@ class ISFANode(Node):
         super(ISFANode, self).__init__(input_dim, output_dim, dtype)
 
     def _get_supported_dtypes(self):
-        """Return the list of dtypes supported by this node."""
-        return ['float64']
+        """Return the list of dtypes supported by this node.
+      
+        Support floating point types with size larger than 64 bits.
+        """
+        return [t for t in mdp.utils.get_dtypes('Float') if t.itemsize>=8]
 
     def _set_dtype(self, dtype):
         # when typecode is set, we set the whitening node if needed and
