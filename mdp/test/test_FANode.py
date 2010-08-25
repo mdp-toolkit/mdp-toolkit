@@ -48,3 +48,30 @@ def test_FANode():
     assert_array_almost_equal_diff(numx.cov(est, rowvar=0),
                                    mdp.utils.mult(fa.A, fa.A.T), 1)
 
+def test_FANode_indim():
+    # FANode uses two slightly different initialization for input_dims
+    # larger or smaller than 200
+    x = numx_rand.normal(size=(5000, 10))
+    mdp.nodes.FANode(output_dim=1)(x)
+    x = numx_rand.normal(size=(5000, 500))
+    mdp.nodes.FANode(output_dim=1)(x)
+
+def test_FANode_singular_cov():
+    x = numx.array([[ 1., 1., 0., 0., 0.],
+                    [ 0., 1., 1., 0., 0.],
+                    [ 0., 1., 0., 0., 0.],
+                    [ 0., 1., 1., 0., 0.],
+                    [ 0., 1., 0., 0., 1.],
+                    [ 0., 1., 0., 1., 0.],
+                    [ 0., 1., 0., 0., 0.],
+                    [ 1., 1., 0., 0., 0.],
+                    [ 1., 1., 0., 0., 0.],
+                    [ 0., 1., 0., 1., 1.]])
+
+
+
+    fanode = mdp.nodes.FANode(output_dim=3)
+    fanode.train(x)
+    # the matrix x is singular
+    py.test.raises(mdp.NodeException, "fanode.stop_training()")
+

@@ -11,7 +11,6 @@ _LHOOD_WARNING = ('Likelihood decreased in FANode. This is probably due '
                   'to some numerical errors.')
 warnings.filterwarnings('always', _LHOOD_WARNING, mdp.MDPWarning)
 
-
 class FANode(mdp.Node):
     """Perform Factor Analysis.
 
@@ -84,8 +83,15 @@ class FANode(mdp.Node):
         # Zoubin uses the determinant of cov_mtx^1/d as scale but it's
         # too slow for large matrices. Is the product of the diagonal a good
         # approximation?
-        #scale = det(cov_mtx)**(1./d)
-        scale = numx.product(sigma)**(1./d)
+        if d<=300:
+            scale = det(cov_mtx)**(1./d)
+        else:
+            scale = numx.product(sigma)**(1./d)
+        if scale <= 0.:
+            err = ("The covariance matrix of the data is singular. " +
+                   "Redundant dimensions need to be removed.")
+            raise NodeException(err)
+
         A = normal(0., sqrt(scale/k), size=(d, k)).astype(typ)
 
         ##### EM-cycle
