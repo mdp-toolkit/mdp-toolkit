@@ -4,8 +4,11 @@ import py.test
 
 ###################################################################
 ### After changing this file, please copy it to
-### ../../bimdp/test/conftest.py. Those two files should
-### be identical.
+### ../../mdp/test/conftest.py. The content of those two files
+### should be identical, but they cannot be exactly the same.
+### Otherwise py.test >= 1.3 skips one of them.
+### E.g.
+###  sed -r 's+mdp/+TMP\/+g; s+bimdp/+mdp/+g; s+TMP\/+bimdp/+g' <bimdp/test/conftest.py >mdp/test/conftest.py
 ###################################################################
 
 _err_str = """
@@ -40,8 +43,8 @@ try:
 except AttributeError:
     # Global variable py.test.mdp_toolkit_reporting_configured is necessary
     # to not create the pytest_* functions. Otherwise the terminal
-    # report would be printed twice: once for mdp/ and the second time
-    # for bimdp/test. When running tests just for one of the
+    # report would be printed twice: once for bimdp/ and the second time
+    # for mdp/test. When running tests just for one of the
     # directories, the report is still printed correctly.
     def pytest_report_header(config):
         return '%s\nRandom Seed: %d\n' % (mdp.config.info(), config.option.seed)

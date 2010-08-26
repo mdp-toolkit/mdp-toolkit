@@ -4,8 +4,11 @@ import py.test
 
 ###################################################################
 ### After changing this file, please copy it to
-### ../../bimdp/test/conftest.py. Those two files should
-### be identical.
+### ../../bimdp/test/conftest.py. The content of those two files
+### should be identical, but they cannot be exactly the same.
+### Otherwise py.test >= 1.3 skips one of them.
+### E.g.
+###  sed -r 's+bimdp/+TMP\/+g; s+mdp/+bimdp/+g; s+TMP\/+mdp/+g' <mdp/test/conftest.py >bimdp/test/conftest.py
 ###################################################################
 
 _err_str = """
