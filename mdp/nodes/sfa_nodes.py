@@ -1,5 +1,5 @@
 import mdp
-from mdp import numx, Node, NodeException
+from mdp import numx, Node, NodeException, TrainingException
 from mdp.utils import (mult, pinv, symeig, CovarianceMatrix, QuadraticForm,
                        SymeigException)
 
@@ -52,6 +52,13 @@ class SFANode(Node):
             self.output_dim = self.input_dim
         return rng
 
+    def _check_train_args(self, x):
+        # check that we have at least 2 time samples to
+        # compute the update for the derivative covariance matrix
+        s = x.shape[0]
+        if  s < 2:
+            raise TrainingException('Need at least 2 time samples to '
+                                    'compute time derivative (%d given)'%s)
     def _train(self, x):
         ## update the covariance matrices
         # Cut the final point to avoid a trivial solution in special cases. (?)

@@ -32,3 +32,13 @@ def testSFANode_range_argument():
     node.stop_training()
     y = node.execute(x, n=5)
     assert y.shape[1] == 5
+
+def testSFANode_one_time_samples():
+    # when training with x.shape = (1, n), stop_training
+    # was failing with a ValueError: array must not contain infs or NaNs
+    # because with only one samples no time difference can be computed and
+    # the covmatrix is updated with zeros!
+    node = mdp.nodes.SFANode()
+    x = numx.random.random((1,5))
+    py.test.raises(mdp.TrainingException, "node.train(x)")
+
