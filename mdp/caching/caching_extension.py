@@ -14,11 +14,13 @@ from ..signal_node import Node
 _cachedir = None
 _memory = None
 
-def set_cachedir(cachedir=None):
+def set_cachedir(cachedir=None, verbose=0):
     """Set root directory for the joblib cache.
 
-    If the input argument is None, a temporary directory is created using
-    tempfile.mkdtemp()."""
+    cachedir -- the cache directory name; if None, a temporary directory
+                is created using tempfile.mkdtemp()
+    verbose -- an integer number, control the verbosity of the cache
+    """
 
     global _cachedir
     global _memory
@@ -26,7 +28,7 @@ def set_cachedir(cachedir=None):
     if cachedir is None:
         cachedir = mkdtemp()
     _cachedir = cachedir
-    _memory = joblib.Memory(cachedir)
+    _memory = joblib.Memory(cachedir, verbose=0)
 
 # initialize cache with temporary variable
 set_cachedir()
