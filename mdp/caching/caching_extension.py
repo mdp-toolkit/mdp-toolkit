@@ -33,6 +33,10 @@ def set_cachedir(cachedir=None, verbose=0):
 # initialize cache with temporary variable
 set_cachedir()
 
+# TODO: the latest version of joblib fixes a bug that did not allow it
+# to decorate methods; it should now be possible to remove the
+# __getstate__ method
+
 class CacheExecuteExtensionNode(ExtensionNode, Node):
     """MDP extension for caching execution results.
 
