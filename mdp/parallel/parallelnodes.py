@@ -16,16 +16,16 @@ import mdp
 from mdp import numx
 
 
-class TrainingPhaseNotParallelException(mdp.NodeException):
-    """Exception for parallel nodes that do not support fork() in some phases.
+class NotForkableParallelException(mdp.NodeException):
+    """Exception to signal that a fork is not possible.
 
-    This exception signals that training should be done locally for this
-    training phase. Only when this exception, when raised by fork(), is caught
-    in ParallelFlow for local training.
+    This exception is can be safely used and should be caught inside the
+    ParallelFlow or the Scheduler.
     """
     pass
 
-class JoinParallelNodeException(mdp.NodeException):
+
+class JoinParallelException(mdp.NodeException):
     """Exception for errors when joining parallel nodes."""
     pass
 
@@ -43,6 +43,10 @@ class ParallelExtensionNode(mdp.ExtensionNode, mdp.Node):
 
     extension_name = "parallel"
 
+    # TODO: allow that forked nodes are not forkable themselves,
+    #    and are not joinable either
+    #    this implies that caching does not work for these
+    
     def fork(self):
         """Return a new instance of this node class for remote training.
 
@@ -52,36 +56,25 @@ class ParallelExtensionNode(mdp.ExtensionNode, mdp.Node):
         The forked node should be a ParallelNode of the same class as well,
         thus allowing recursive forking and joining.
         """
-        if not self.is_trainable():
-            raise mdp.IsNotTrainableException, "This node is not trainable."
-        if not self.is_training():
-            raise mdp.TrainingFinishedException, \
-                  "The training phase has already finished."
         return self._fork()
 
-    # TODO: check that the dimensions match?
     def join(self, forked_node):
         """Absorb the trained node from a fork into this parent node.
 
         This is a template method, the actual joining should be implemented in
         _join.
         """
-        if not self.is_trainable():
-            raise mdp.IsNotTrainableException, "This node is not trainable."
-        if not self.is_training():
-            raise mdp.TrainingFinishedException, \
-                  "The training phase has already finished."
         if self.dtype is None:
             self.dtype = forked_node.dtype
         if self.input_dim is None:
             self.input_dim = forked_node.input_dim
         if self.output_dim is None:
             self.output_dim = forked_node.output_dim
-        if not self._train_phase_started:
+        if self.is_training() and not self._train_phase_started:
             self._train_phase_started = True
         self._join(forked_node)
 
-    ## hook methods, overwrite these ##
+    ## overwrite these methods ##
 
     def _fork(self):
         """Hook method for forking with default implementation.
@@ -90,16 +83,28 @@ class ParallelExtensionNode(mdp.ExtensionNode, mdp.Node):
         You can use _default_fork, if that is compatible with your node class,
         typically the hard part is the joining.
         """
-        raise TrainingPhaseNotParallelException("fork is not implemented " +
-                                                "by this node (%s)" %
-                                                str(self.__class__))
+        raise NotForkableParallelException("fork is not implemented " +
+                                           "by this node (%s)" %
+                                           str(self.__class__))
 
     def _join(self, forked_node):
         """Hook method for joining, to be overridden."""
-        raise TrainingPhaseNotParallelException("join is not implemented " +
-                                                "by this node (%s)" %
-                                                str(self.__class__))
-
+        raise JoinParallelException("join is not implemented " +
+                                    "by this node (%s)" %
+                                    str(self.__class__))
+    
+    @property
+    def use_execute_fork(self):
+        """Return True if node requires a fork / join even during execution.
+        
+        The default output is False, overwrite this property if required.
+        
+        Note that the same fork and join methods are used as during training,
+        so the distinction must be implemented in the custom _fork and _join
+        methods.
+        """
+        return False
+    
     ## helper methods ##
 
     def _default_fork(self):
@@ -134,7 +139,7 @@ class ParallelExtensionNode(mdp.ExtensionNode, mdp.Node):
             if missing_defaults:
                 err = ("could not find attributes for init arguments %s" %
                        str(missing_defaults))
-                raise TrainingPhaseNotParallelException(err)
+                raise NotForkableParallelException(err)
         # create new instance
         return self.__class__(**kwargs)
 
@@ -196,7 +201,7 @@ class ParallelFDANode(ParallelExtensionNode, mdp.nodes.FDANode):
             if forked_node.get_current_train_phase() != 1:
                 msg = ("This node is in training phase 1, but the forked node "
                        "is not.")
-                raise JoinParallelNodeException(msg)
+                raise NotForkableParallelException(msg)
             if self._S_W is None:
                 self.set_dtype(forked_node._allcov._dtype)
                 self._allcov = forked_node._allcov
