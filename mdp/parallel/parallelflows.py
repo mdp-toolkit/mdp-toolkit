@@ -8,14 +8,16 @@ as well.
 import mdp
 from mdp import numx as n
 
-from parallelnodes import TrainingPhaseNotParallelException
-import scheduling
+from parallelnodes import NotForkableParallelException
+from scheduling import (
+    TaskCallable, ResultContainer, OrderedResultContainer, Scheduler
+)
 from mdp.hinet import FlowNode
 
 
 ### Train task classes ###
 
-class FlowTaskCallable(scheduling.TaskCallable):
+class FlowTaskCallable(TaskCallable):
     """Base class for all flow callables.
 
     It deals activating the required extensions.
@@ -42,13 +44,16 @@ class FlowTrainCallable(FlowTaskCallable):
     You can also derive from this class to define your own callable class.
     """
 
-    def __init__(self, flownode):
+    def __init__(self, flownode, purge_nodes=True):
         """Store everything for the training.
 
         keyword arguments:
         flownode -- FlowNode containing the flow to be trained.
+        purge_nodes -- If True nodes not needed for the join will be replaced
+            with dummy nodes to reduce the footprint.
         """
         self._flownode = flownode
+        self._purge_nodes = purge_nodes
         super(FlowTrainCallable, self).__init__()
 
     def __call__(self, data):
@@ -63,71 +68,118 @@ class FlowTrainCallable(FlowTaskCallable):
             self._flownode.train(*data)
         # note the local training in ParallelFlow relies on the flownode
         # being preserved, so derived classes should preserve it as well
-        for node in self._flownode:
-            if node.is_training():
-                return node
+        if self._purge_nodes:
+            self._flownode.purge_nodes()
+        return self._flownode
 
     def fork(self):
         return self.__class__(self._flownode.fork())
 
 
-class NodeResultContainer(scheduling.ResultContainer):
+class TrainResultContainer(ResultContainer):
     """Container for parallel nodes.
 
-    Expects parallel nodes as results and joins them to save memory.
-    A list containing one node is returned, so this container can replace
+    Expects flownodes as results and joins them to save memory.
+    A list containing one flownode is returned, so this container can replace
     the standard list container without any changes elsewhere.
     """
 
     def __init__(self):
-        self._node = None
+        super(TrainResultContainer, self).__init__()
+        self._flownode = None
 
     def add_result(self, result, task_index):
-        if not self._node:
-            self._node = result
+        if not self._flownode:
+            self._flownode = result
         else:
-            self._node.join(result)
+            self._flownode.join(result)
 
     def get_results(self):
-        node = self._node
-        self._node = None
-        return [node,]
-
+        flownode = self._flownode
+        self._flownode = None
+        return [flownode,]
+    
 
 ### Execute task classes ###
 
 class FlowExecuteCallable(FlowTaskCallable):
-    """Implements data execution through the whole flow.
-
-    Note that one could also pass the flow itself as the callable, so this
-    class is not really needed. However, it serves as the base class for more
-    complicated callables, e.g. which do some kind of preprocessing before
-    executing the data with the flow.
+    """Implements data execution through a Flow.
+    
+    A FlowNode is used to simplify the forking process and to
+    encapsulate the flow.
     """
 
-    def __init__(self, flow, nodenr=None):
+    def __init__(self, flownode, nodenr=None, purge_nodes=True):
         """Store everything for the execution.
 
-        keyword arguments:
-        flow -- flow instance for the execution
+        flownode -- FlowNode for the execution
         nodenr -- optional nodenr argument for the flow execute method
-        extensions -- List of the names of the extensions required by the
-            callable. These are then activated by setup_environment.
+        purge_nodes -- If True nodes not needed for the join will be replaced
+            with dummy nodes to reduce the footprint.
         """
-        self._flow = flow
+        self._flownode = flownode
         self._nodenr = nodenr
+        self._purge_nodes = purge_nodes
         super(FlowExecuteCallable, self).__init__()
 
     def __call__(self, x):
         """Return the execution result.
 
         x -- data chunk
+        
+        If use_fork_execute is True for the flownode then it is returned
+        in the result tuple.
         """
-        return self._flow.execute(x, nodenr=self._nodenr)
+        result = self._flownode.execute(x, nodenr=self._nodenr)
+        if self._flownode.use_fork_execute:
+            if self._purge_nodes:
+                self._flownode.purge_nodes()
+            return (result, self._flownode)
+        else:
+            return (result, None)
 
     def fork(self):
-        return self.__class__(self._flow, self._nodenr)
+        return self.__class__(self._flownode, nodenr=self._nodenr,
+                              purge_nodes=self._purge_nodes)
+    
 
+class OrderedExecuteResultContainer(OrderedResultContainer):
+    """Default result container with automatic restoring of the result order.
+
+    This result container should be used together with BiFlowExecuteCallable.
+    Both the execute result (x and possibly msg) and the forked BiFlowNode
+    are stored.
+    """
+
+    def __init__(self):
+        """Initialize attributes."""
+        super(OrderedExecuteResultContainer, self).__init__()
+        self._flownode = None
+
+    def add_result(self, result, task_index):
+        """Remove the forked BiFlowNode from the result and join it."""
+        excecute_result, forked_flownode = result
+        super(OrderedExecuteResultContainer, self).add_result(excecute_result,
+                                                                task_index)
+        if forked_flownode is not None:
+            if self._flownode is None:
+                self._flownode = forked_flownode
+            else:
+                self._flownode.join(forked_flownode)
+
+    def get_results(self):
+        """Return the ordered results.
+
+        The joined BiFlowNode is returned in the first result list entry,
+        for the following result entries BiFlowNode is set to None.
+        This reduces memory consumption while staying transparent for the
+        ParallelBiFlow.
+        """
+        excecute_results = super(OrderedExecuteResultContainer,
+                                                            self).get_results()
+        flownode_results = ([self._flownode,]
+                              + ([None] * (len(excecute_results)-1)))
+        return zip(excecute_results, flownode_results)
 
 ### ParallelFlow Class ###
 
@@ -239,7 +291,7 @@ class ParallelFlow(mdp.Flow):
                                     train_callable_class=train_callable_class,
                                     **kwargs)
                 # prepare scheduler
-                if not isinstance(scheduler, scheduling.Scheduler):
+                if not isinstance(scheduler, Scheduler):
                     # scheduler contains an iterable with the schedulers
                     # self._i_train_node was set in setup_parallel_training
                     schedulers = iter(scheduler)
@@ -264,8 +316,8 @@ class ParallelFlow(mdp.Flow):
                 if ((scheduler is not None) and
                     overwrite_result_container and
                     (not isinstance(scheduler.result_container,
-                                    NodeResultContainer))):
-                    scheduler.result_container = NodeResultContainer()
+                                    TrainResultContainer))):
+                    scheduler.result_container = TrainResultContainer()
                 ## train all nodes
                 while self.is_parallel_training:
                     while self.task_available:
@@ -292,8 +344,8 @@ class ParallelFlow(mdp.Flow):
                         if ((scheduler is not None) and
                             overwrite_result_container and
                             (not isinstance(scheduler.result_container,
-                                            NodeResultContainer))):
-                            scheduler.result_container = NodeResultContainer()
+                                            TrainResultContainer))):
+                            scheduler.result_container = TrainResultContainer()
             finally:
                 # reset iterable references, which cannot be pickled
                 self._train_data_iterables = None
@@ -374,10 +426,10 @@ class ParallelFlow(mdp.Flow):
                 self._next_task = (task_data_chunk,
                             self._train_callable_class(self._flownode.fork()))
                 break
-            except TrainingPhaseNotParallelException, e:
+            except NotForkableParallelException, exception:
                 if self.verbose:
                     print ("could not fork node no. %d: %s" %
-                           (self._i_train_node+1, str(e)))
+                           (self._i_train_node+1, str(exception)))
                     print ("start nonparallel training phase of " +
                            "node no. %d in parallel flow" %
                            (self._i_train_node+1))
@@ -484,8 +536,8 @@ class ParallelFlow(mdp.Flow):
         # check that the scheduler is compatible
         if overwrite_result_container:
             if not isinstance(scheduler.result_container,
-                              scheduling.OrderedResultContainer):
-                scheduler.result_container = scheduling.OrderedResultContainer()
+                              OrderedResultContainer):
+                scheduler.result_container = OrderedResultContainer()
         # do parallel training
         try:
             self.setup_parallel_execution(

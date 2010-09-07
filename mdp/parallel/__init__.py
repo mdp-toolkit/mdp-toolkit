@@ -25,13 +25,12 @@ from scheduling import (
 from process_schedule import ProcessScheduler
 from thread_schedule import ThreadScheduler
 from parallelnodes import (
-    ParallelExtensionNode, JoinParallelNodeException,
-    TrainingPhaseNotParallelException,
+    ParallelExtensionNode, NotForkableParallelException, JoinParallelException,
     ParallelPCANode, ParallelSFANode, ParallelFDANode, ParallelHistogramNode
 )
 from parallelflows import (
     FlowTaskCallable, FlowTrainCallable, FlowExecuteCallable,
-    NodeResultContainer, ParallelFlowException, NoTaskException,
+    OrderedExecuteResultContainer, ParallelFlowException, NoTaskException,
     ParallelFlow, ParallelCheckpointFlow
 )
 from parallelhinet import (

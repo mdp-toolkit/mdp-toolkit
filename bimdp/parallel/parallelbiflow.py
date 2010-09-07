@@ -12,32 +12,17 @@ n = mdp.numx
 
 import mdp.parallel as parallel
 
-from bimdp import (BiFlow, BiFlowException, MessageResultContainer,
-                   BiCheckpointFlow, EXIT_TARGET)
-
-from parallelbihinet import BiFlowNode
+from bimdp import (
+    BiFlow, BiFlowException, MessageResultContainer, BiCheckpointFlow,
+    EXIT_TARGET
+)
+from bimdp.hinet import BiFlowNode
 
 
 ### Train Task Classes ###
 
-class BiFlowTrainTaskException(Exception):
-    """Exception for problems with the BiFlowTrainTask execution."""
-    pass
-
-
-class BiFlowTrainCallable(parallel.FlowTaskCallable):
+class BiFlowTrainCallable(parallel.FlowTrainCallable):
     """Task implementing a single training phase in a flow for a data block."""
-
-    def __init__(self, biflownode, purge_nodes=True):
-        """Store everything for the training.
-
-        biflownode -- BiFlowNode encapsulating the forked BiFlow.
-        purge_nodes -- If True nodes not needed for the join will be replaced
-            with dummy nodes to reduce the footprint.
-        """
-        self._biflownode = biflownode
-        self._purge_nodes = purge_nodes
-        super(BiFlowTrainCallable, self).__init__()
 
     def __call__(self, data):
         """Do the training and return the purged BiFlowNode.
@@ -46,7 +31,7 @@ class BiFlowTrainCallable(parallel.FlowTaskCallable):
         """
         x, msg = data
         while True:
-            result = self._biflownode.train(x, msg)
+            result = self._flownode.train(x, msg)
             if (result is None) or isinstance(result, dict):
                 break
             elif len(result) == 4:
@@ -56,13 +41,13 @@ class BiFlowTrainCallable(parallel.FlowTaskCallable):
                 err = ("Target node not found in flow during " +
                        "training, last result: " + str(result))
                 raise BiFlowException(err)
-        self._biflownode.bi_reset()
+        self._flownode.bi_reset()
         if self._purge_nodes:
-            self._biflownode.purge_nodes()
-        return self._biflownode
+            self._flownode.purge_nodes()
+        return self._flownode
 
     def fork(self):
-        return self.__class__(self._biflownode.fork(),
+        return self.__class__(self._flownode.fork(),
                               purge_nodes=self._purge_nodes)
 
 
@@ -87,89 +72,41 @@ class BiFlowTrainResultContainer(parallel.ResultContainer):
         self._biflownode = None
         return [biflownode,]
 
-
 ### Execute Task Classes ###
-
-class BiFlowExecuteTaskException(Exception):
-    """Exception for problems with the BiFlowExecuteTask execution."""
-    pass
-
 
 class BiFlowExecuteCallable(parallel.FlowTaskCallable):
     """Task implementing data execution for a BiFlowNode."""
-
-    def __init__(self, biflownode, purge_nodes=True):
+    
+    def __init__(self, flownode, purge_nodes=True):
         """Store everything for the execution.
 
-        biflownode -- BiFlowNode for the execution
+        flownode -- FlowNode for the execution
         purge_nodes -- If True nodes not needed for the join will be replaced
             with dummy nodes to reduce the footprint.
         """
-        self._biflownode = biflownode
-        self._purge_nodes = purge_nodes
-        super(BiFlowExecuteCallable, self).__init__()
+        super(BiFlowExecuteCallable, self).__init__(flownode,
+                                                    purge_nodes=purge_nodes)
 
     def __call__(self, data):
         """Return the execution result and the BiFlowNode as a tuple.
 
-        If is_bi_training() is False for the BiFlowNode then None is returned
-        instead of the BiFlowNode. If is_bi_training() is True then the
-        BiFlowNode is purged.
+        If use_fork_execute is True for the flownode then it is returned
+        in the result tuple.
         """
         x, msg, target = data
         # by using _flow we do not have to reenter (like for train)
-        result = self._biflownode._flow.execute(x, msg, target)
-        self._biflownode.bi_reset()
-        if self._biflownode.is_bi_training():
+        result = self._flownode._flow.execute(x, msg, target)
+        self._flownode.bi_reset()
+        if self._flownode.use_fork_execute:
             if self._purge_nodes:
-                self._biflownode.purge_nodes()
-            return (result, self._biflownode)
+                self._flownode.purge_nodes()
+            return (result, self._flownode)
         else:
             return (result, None)
 
     def fork(self):
-        return self.__class__(self._biflownode.fork(),
+        return self.__class__(self._flownode.fork(),
                               purge_nodes=self._purge_nodes)
-
-
-class OrderedBiExecuteResultContainer(parallel.OrderedResultContainer):
-    """Default result container with automatic restoring of the result order.
-
-    This result container should be used together with BiFlowExecuteCallable.
-    Both the execute result (x and possibly msg) and the forked BiFlowNode
-    are stored.
-    """
-
-    def __init__(self):
-        """Initialize attributes."""
-        super(OrderedBiExecuteResultContainer, self).__init__()
-        self._biflownode = None
-
-    def add_result(self, result, task_index):
-        """Remove the forked BiFlowNode from the result and join it."""
-        excecute_result, forked_biflownode = result
-        super(OrderedBiExecuteResultContainer, self).add_result(excecute_result,
-                                                                task_index)
-        # join biflownode
-        if forked_biflownode is not None:
-            if self._biflownode is None:
-                self._biflownode = forked_biflownode
-            else:
-                self._biflownode.join(forked_biflownode)
-
-    def get_results(self):
-        """Return the ordered results.
-
-        The joined BiFlowNode is returned in the first result list entry,
-        for the following result entries BiFlowNode is set to None.
-        This reduces memory consumption while staying transparent for the
-        ParallelBiFlow.
-        """
-        excecute_results = super(OrderedBiExecuteResultContainer,
-                                                            self).get_results()
-        biflownode_results = ([self._biflownode,]
-                              + ([None] * (len(excecute_results)-1)))
-        return zip(excecute_results, biflownode_results)
 
 
 ### ParallelBiFlow Class ###
@@ -416,10 +353,10 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
                             self._train_callable_class(self._flownode.fork(),
                                                        purge_nodes=True))
                 break
-            except parallel.TrainingPhaseNotParallelException, e:
+            except parallel.NotForkableParallelException, exception:
                 if self.verbose:
                     print ("could not fork node no. %d: %s" %
-                           (self._i_train_node + 1, str(e)))
+                           (self._i_train_node + 1, str(exception)))
                     print ("start nonparallel training phase of " +
                            "node no. %d in parallel flow" %
                            (self._i_train_node+1))
@@ -517,8 +454,8 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
         # check that the scheduler is compatible
         if overwrite_result_container:
             if not isinstance(scheduler.result_container,
-                              OrderedBiExecuteResultContainer):
-                scheduler.result_container = OrderedBiExecuteResultContainer()
+                              OrderedExecuteResultContainer):
+                scheduler.result_container = OrderedExecuteResultContainer()
         # do parallel execution
         try:
             self.setup_parallel_execution(
