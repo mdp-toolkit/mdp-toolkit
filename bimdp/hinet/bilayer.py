@@ -249,23 +249,6 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
             # note: reaching this code probably means that copies should be used
             self.node.bi_reset()
 
-    def is_bi_training(self):
-        """Return true if is_bi_learning is True for at least one inner node.
-
-        But if copies are used it is still advisable that they return the same
-        is_bi_learning value.
-        """
-        if self.use_copies:
-            for node in self.nodes:
-                if node.is_bi_training():
-                    return True
-            return False
-        else:
-            if self.node.is_bi_training():
-                return True
-            else:
-                return False
-
     def _request_node_id(self, node_id):
         """Return an internal node if it matches the provided node id.
 

@@ -143,7 +143,7 @@ class FlowExecuteCallable(FlowTaskCallable):
                               purge_nodes=self._purge_nodes)
     
 
-class OrderedExecuteResultContainer(OrderedResultContainer):
+class ExecuteResultContainer(OrderedResultContainer):
     """Default result container with automatic restoring of the result order.
 
     This result container should be used together with BiFlowExecuteCallable.
@@ -153,14 +153,14 @@ class OrderedExecuteResultContainer(OrderedResultContainer):
 
     def __init__(self):
         """Initialize attributes."""
-        super(OrderedExecuteResultContainer, self).__init__()
+        super(ExecuteResultContainer, self).__init__()
         self._flownode = None
 
     def add_result(self, result, task_index):
         """Remove the forked BiFlowNode from the result and join it."""
         excecute_result, forked_flownode = result
-        super(OrderedExecuteResultContainer, self).add_result(excecute_result,
-                                                                task_index)
+        super(ExecuteResultContainer, self).add_result(excecute_result,
+                                                       task_index)
         if forked_flownode is not None:
             if self._flownode is None:
                 self._flownode = forked_flownode
@@ -175,8 +175,7 @@ class OrderedExecuteResultContainer(OrderedResultContainer):
         This reduces memory consumption while staying transparent for the
         ParallelBiFlow.
         """
-        excecute_results = super(OrderedExecuteResultContainer,
-                                                            self).get_results()
+        excecute_results = super(ExecuteResultContainer, self).get_results()
         flownode_results = ([self._flownode,]
                               + ([None] * (len(excecute_results)-1)))
         return zip(excecute_results, flownode_results)

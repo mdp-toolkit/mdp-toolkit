@@ -1,7 +1,7 @@
 
 from parallelbinode import ParallelExtensionBiNode
 from parallelbiflow import (
-    BiFlowTrainCallable, BiFlowTrainResultContainer, BiFlowExecuteCallable,
+    BiFlowTrainCallable, BiFlowExecuteCallable,
     ParallelBiFlowException, ParallelBiFlow, ParallelCheckpointBiFlow)
 from parallelbihinet import ParallelCloneBiLayer
 

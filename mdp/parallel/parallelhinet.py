@@ -89,3 +89,6 @@ class ParallelCloneLayer(hinet.CloneLayer, parallelnodes.ParallelExtensionNode):
     def _join(self, forked_node):
         """Join the internal node in the clone layer."""
         self.node.join(forked_node.node)
+        
+    def use_execute_fork(self):
+        return self.node.use_execute_fork

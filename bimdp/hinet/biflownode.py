@@ -239,12 +239,6 @@ class BiFlowNode(BiNode, hinet.FlowNode):
             if isinstance(node, BiNode):
                 node.bi_reset()
 
-    def is_bi_training(self):
-        for node in self._flow:
-            if isinstance(node, BiNode) and node.is_bi_training():
-                return True
-        return False
-
     def _request_node_id(self, node_id):
         if self._node_id == node_id:
             return self

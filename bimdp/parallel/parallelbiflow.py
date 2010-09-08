@@ -51,30 +51,9 @@ class BiFlowTrainCallable(parallel.FlowTrainCallable):
                               purge_nodes=self._purge_nodes)
 
 
-class BiFlowTrainResultContainer(parallel.ResultContainer):
-    """Container for a BiFlowNode.
-
-    This class is required for parallel BiFlow training since there may be
-    nodes for which is_bi_training is True during the normal training phase.
-    """
-
-    def __init__(self):
-        self._biflownode = None
-
-    def add_result(self, result, task_index):
-        if not self._biflownode:
-            self._biflownode = result
-        else:
-            self._biflownode.join(result)
-
-    def get_results(self):
-        biflownode = self._biflownode
-        self._biflownode = None
-        return [biflownode,]
-
 ### Execute Task Classes ###
 
-class BiFlowExecuteCallable(parallel.FlowTaskCallable):
+class BiFlowExecuteCallable(parallel.FlowExecuteCallable):
     """Task implementing data execution for a BiFlowNode."""
     
     def __init__(self, flownode, purge_nodes=True):
@@ -97,7 +76,7 @@ class BiFlowExecuteCallable(parallel.FlowTaskCallable):
         # by using _flow we do not have to reenter (like for train)
         result = self._flownode._flow.execute(x, msg, target)
         self._flownode.bi_reset()
-        if self._flownode.use_fork_execute:
+        if self._flownode.use_execute_fork:
             if self._purge_nodes:
                 self._flownode.purge_nodes()
             return (result, self._flownode)
@@ -221,8 +200,9 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
                 if ((scheduler is not None) and
                     overwrite_result_container and
                     (not isinstance(scheduler.result_container,
-                                    BiFlowTrainResultContainer))):
-                    scheduler.result_container = BiFlowTrainResultContainer()
+                                    parallel.TrainResultContainer))):
+                    scheduler.result_container = \
+                        parallel.TrainResultContainer()
                 while self.is_parallel_training:
                     while self.task_available:
                         task = self.get_task()
@@ -454,8 +434,8 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
         # check that the scheduler is compatible
         if overwrite_result_container:
             if not isinstance(scheduler.result_container,
-                              OrderedExecuteResultContainer):
-                scheduler.result_container = OrderedExecuteResultContainer()
+                              parallel.ExecuteResultContainer):
+                scheduler.result_container = parallel.ExecuteResultContainer()
         # do parallel execution
         try:
             self.setup_parallel_execution(
@@ -489,15 +469,15 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
             the scheduler. By specifying your own class you can implement data
             transformations before the data is actually fed into the flow
             (e.g. from 8 bit image to 64 bit double precision).
-            Note that the execute_callable_class is only used if a scheduler was
-            provided. If a scheduler is provided the default class used is
+            Note that the execute_callable_class is only used if a scheduler
+            was provided. If a scheduler is provided the default class used is
             NodeResultContainer.
         """
         self._bi_reset()  # normally not required, just for safety
         if self.is_parallel_training:
             raise ParallelBiFlowException("Parallel training is underway.")
         self._flownode = BiFlowNode(BiFlow(self.flow))
-        if self._flownode.is_bi_training():
+        if self._flownode.use_execute_fork:
             # this will raise an exception if fork is not supported
             task_flownode = self._flownode.fork()
         else:

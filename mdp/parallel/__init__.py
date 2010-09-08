@@ -30,7 +30,8 @@ from parallelnodes import (
 )
 from parallelflows import (
     FlowTaskCallable, FlowTrainCallable, FlowExecuteCallable,
-    OrderedExecuteResultContainer, ParallelFlowException, NoTaskException,
+    TrainResultContainer, ExecuteResultContainer,
+    ParallelFlowException, NoTaskException,
     ParallelFlow, ParallelCheckpointFlow
 )
 from parallelhinet import (
