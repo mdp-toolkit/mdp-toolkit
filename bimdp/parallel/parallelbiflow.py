@@ -227,9 +227,9 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
                         if ((scheduler is not None) and
                             overwrite_result_container and
                             (not isinstance(scheduler.result_container,
-                                            BiFlowTrainResultContainer))):
+                                            parallel.TrainResultContainer))):
                             scheduler.result_container = \
-                                            BiFlowTrainResultContainer()
+                                            parallel.TrainResultContainer()
             finally:
                 # reset remaining iterator references, which cannot be pickled
                 self._train_data_iterator = None
@@ -437,6 +437,7 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
                               parallel.ExecuteResultContainer):
                 scheduler.result_container = parallel.ExecuteResultContainer()
         # do parallel execution
+        self._flownode = BiFlowNode(BiFlow(self.flow))
         try:
             self.setup_parallel_execution(
                                 iterable=iterable,
@@ -476,12 +477,13 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
         self._bi_reset()  # normally not required, just for safety
         if self.is_parallel_training:
             raise ParallelBiFlowException("Parallel training is underway.")
-        self._flownode = BiFlowNode(BiFlow(self.flow))
         if self._flownode.use_execute_fork:
             # this will raise an exception if fork is not supported
             task_flownode = self._flownode.fork()
+            purge_nodes = True
         else:
-            task_flownode = self._flownode.copy()
+            task_flownode = self._flownode
+            purge_nodes = False
         self._execute_callable_class = execute_callable_class
         iterable, msg_iterable, target_iterable = self._sanitize_iterables(
                                                            iterable,
@@ -501,7 +503,7 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
         # first task contains the new callable
         self._next_task = (task_data_chunk,
                            self._execute_callable_class(task_flownode,
-                                                        purge_nodes=True))
+                                                    purge_nodes=purge_nodes))
 
     def _create_execute_task(self):
         """Create and return a single execution task.
@@ -547,8 +549,6 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
                            str(result))
                     raise BiFlowException(err)
             self._flownode.bi_reset()
-            # update the node list of this flow
-            self.flow = self._flownode._flow.flow
             if self.verbose:
                 print ("finished parallel training phase of node no. " +
                        "%d in parallel flow" % (self._i_train_node+1))
@@ -563,7 +563,6 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
             msg_results = MessageResultContainer()
             # use internal flownode to join all biflownodes
             self._flownode = BiFlowNode(BiFlow(self.flow))
-            did_join_flownodes = False  # flag to show if a join took place
             for result_tuple in results:
                 result, forked_biflownode = result_tuple
                 # consolidate results
@@ -583,12 +582,6 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
                 # join biflownode
                 if forked_biflownode is not None:
                     self._flownode.join(forked_biflownode)
-                    did_join_flownodes = True
-            # update the node list of this flow
-            self.flow = self._flownode._flow.flow
-            if self.verbose and did_join_flownodes:
-                print ("joined nodes with forked nodes from " +
-                       "parallel execution")
             # return results
             if y_results is not None:
                 y_results = n.concatenate(y_results)

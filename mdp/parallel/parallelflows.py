@@ -577,6 +577,13 @@ class ParallelFlow(mdp.Flow):
         """
         if self.is_parallel_training:
             raise ParallelFlowException("Parallel training is underway.")
+        if self._flownode.use_execute_fork:
+            # this will raise an exception if fork is not supported
+            task_flownode = self._flownode.fork()
+            purge_nodes = True
+        else:
+            task_flownode = self._flownode
+            purge_nodes = False
         self._execute_callable_class = execute_callable_class
         if isinstance(iterable, n.ndarray):
             iterable = [iterable]
@@ -588,7 +595,8 @@ class ParallelFlow(mdp.Flow):
         task_data_chunk = first_task[0]
         # first task contains the new callable
         self._next_task = (task_data_chunk,
-                           self._execute_callable_class(self._flownode.fork()))
+                           self._execute_callable_class(task_flownode,
+                                                    purge_nodes=purge_nodes))
 
     def _create_execute_task(self):
         """Create and return a single execution task.
@@ -667,9 +675,11 @@ class ParallelFlow(mdp.Flow):
         elif self.is_parallel_executing:
             self._exec_data_iterator = None
             ys = [result[0] for result in results]
-            flownodes = [result[1] for result in results]
-            for flownode in flownodes:
-                self._flownode.join(flownode)
+            if self._flownode.use_execute_fork:
+                flownodes = [result[1] for result in results]
+                for flownode in flownodes:
+                    if flownode is not None:
+                        self._flownode.join(flownode)
             return n.concatenate(ys)
 
 
