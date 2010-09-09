@@ -101,15 +101,8 @@ def generic_test_factory(big_nodes, metafunc):
             except TypeError:
                 continue
 
-        theid = metafunc.function.id_format.format(**funcargs)
+        theid = nodetype['klass'].__name__
         metafunc.addcall(funcargs, id=theid)
-
-def id_format(format):
-    """Specify the name of the test"""
-    def f(func):
-        func.id_format = format
-        return func
-    return f
 
 def only_if_node(condition):
     """Execute the test only if condition(nodetype) is True.
@@ -125,7 +118,6 @@ def call_init_args(init_args):
     return [item() if hasattr(item, '__call__') else item
             for item in init_args]
 
-@id_format("{klass.__name__}")
 def test_dtype_consistency(klass, init_args, inp_arg_gen,
                            sup_arg_gen, execute_arg_gen):
     args = call_init_args(init_args)
@@ -133,7 +125,7 @@ def test_dtype_consistency(klass, init_args, inp_arg_gen,
     for dtype in supported_types:
         inp = inp_arg_gen()
         args = call_init_args(init_args)
-        node = klass(*args, dtype=dtype)
+        node = klass(dtype=dtype, *args)
         _train_if_necessary(inp, node, sup_arg_gen)
 
         extra = [execute_arg_gen(inp)] if execute_arg_gen else []
@@ -141,7 +133,6 @@ def test_dtype_consistency(klass, init_args, inp_arg_gen,
         assert out.dtype == dtype
 
 
-@id_format("{klass.__name__}")
 def test_outputdim_consistency(klass, init_args, inp_arg_gen,
                                sup_arg_gen, execute_arg_gen):
     args = call_init_args(init_args)
@@ -160,7 +151,7 @@ def test_outputdim_consistency(klass, init_args, inp_arg_gen,
     if (not issubclass(klass, PreserveDimNode) and
         'output_dim' in inspect.getargspec(klass.__init__)[0]):
         # case 1: output dim set in the constructor
-        node = klass(*args, output_dim=output_dim)
+        node = klass(output_dim=output_dim, *args)
         _test(node)
         
         # case 2: output_dim set explicitly
@@ -175,13 +166,13 @@ def test_outputdim_consistency(klass, init_args, inp_arg_gen,
             # raises an appropriate error
             # case 1: both in the constructor
             py.test.raises(InconsistentDimException,
-                           'klass(*args, input_dim=inp.shape[1], output_dim=output_dim)')
+                   'klass(input_dim=inp.shape[1], output_dim=output_dim, *args)')
             # case 2: first input_dim, then output_dim
-            node = klass(*args, input_dim=inp.shape[1])
+            node = klass(input_dim=inp.shape[1], *args)
             py.test.raises(InconsistentDimException,
                            'node.output_dim = output_dim')
             # case 3: first output_dim, then input_dim
-            node = klass(*args, output_dim=output_dim)
+            node = klass(output_dim=output_dim, *args)
             node.output_dim = output_dim
             py.test.raises(InconsistentDimException,
                            'node.input_dim = inp.shape[1]')
@@ -192,7 +183,6 @@ def test_outputdim_consistency(klass, init_args, inp_arg_gen,
         out = node.execute(inp, *extra)
         assert out.shape[1] == node.output_dim
 
-@id_format("{klass.__name__}")
 def test_dimdtypeset(klass, init_args, inp_arg_gen,
                      sup_arg_gen, execute_arg_gen):
     init_args = call_init_args(init_args)
@@ -204,7 +194,6 @@ def test_dimdtypeset(klass, init_args, inp_arg_gen,
     assert node.dtype is not None
     assert node.input_dim is not None
 
-@id_format("{klass.__name__}")
 @only_if_node(lambda nodetype: nodetype.is_invertible())
 def test_inverse(klass, init_args, inp_arg_gen,
                  sup_arg_gen, execute_arg_gen):

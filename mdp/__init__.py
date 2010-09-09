@@ -289,9 +289,7 @@ class MDPConfiguration(object):
         maxlen = max(len(f) for f in listable_features)
         l = []
         for feature in listable_features:
-            s = "{feature:{maxlen}}: {desc!s}".format(feature=feature,
-                                                      desc=self[feature],
-                                                      maxlen=maxlen+1)
+            s = "%*s: %s" % (maxlen+1, feature, self[feature])
             l.append(s)
         return "\n".join(l)
 

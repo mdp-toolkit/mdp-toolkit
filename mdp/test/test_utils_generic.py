@@ -59,6 +59,5 @@ def pytest_generate_tests(metafunc):
                 funcargs = dict(dtype=testtype,
                                 range=therange,
                                 func=func)
-                format = "{func.__name__}, '{dtype}', {range}"
-                theid = format.format(**funcargs)
-                metafunc.addcall(funcargs,id=theid)
+                theid = "%s, %s, %s" % (func.__name__, testtype, therange)
+                metafunc.addcall(funcargs, id=theid)
