@@ -23,10 +23,9 @@ class ParallelFlowNode(hinet.FlowNode, parallelnodes.ParallelExtensionNode):
     """Parallel version of FlowNode."""
 
     def _fork(self):
-        """Reference the needed part of the _flow and fork the training node.
+        """Fork nodes that require it, reference all other nodes.
 
-        If the fork() of the current node fails the exception is not caught
-        here (but will for example be caught in an encapsulating ParallelFlow).
+        If a required fork() fails the exception is not caught here.
         """   
         node_list = []
         for node in self._flow:
@@ -44,7 +43,8 @@ class ParallelFlowNode(hinet.FlowNode, parallelnodes.ParallelExtensionNode):
                 
     def use_execute_fork(self):
         return any(node.use_execute_fork for node in self._flow)
-        
+    
+    # TODO: move this to a custom class in parallelflows        
     def purge_nodes(self):
         """Replace nodes that are not forked with None.
 

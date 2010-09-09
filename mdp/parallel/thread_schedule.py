@@ -4,6 +4,7 @@ Thread based scheduler for distribution across multiple CPU cores.
 
 import threading
 import time
+import cPickle as pickle
 
 from scheduling import Scheduler, cpu_count
 
@@ -17,6 +18,12 @@ class ThreadScheduler(Scheduler):
     numpy calculations (or some other external non-blocking C code) or for IO,
     but can be more efficient than ProcessScheduler because of the
     shared memory.
+    
+    WARNING: The parallel module tries to minimize node copy operations. If
+        nodes are not thread safe (e.g. in BiMDP when using the coroutine
+        decorator) this can cause problems with his scheduler, since the
+        same instance is used across multiple threads. In this case implement
+        proper forking for the affected nodes.
     """
 
     def __init__(self, result_container=None, verbose=False, n_threads=1):
@@ -53,6 +60,11 @@ class ThreadScheduler(Scheduler):
             else:
                 try:
                     self._lock.release()
+                    # create a deep copy of the task_callable,
+                    # since it might not be thread safe 
+                    as_str = pickle.dumps(task_callable, -1)
+                    task_callable = pickle.loads(as_str)
+                    # fork is still required
                     task_callable = task_callable.fork()
                     thread = threading.Thread(target=self._task_thread,
                                               args=(data, task_callable,

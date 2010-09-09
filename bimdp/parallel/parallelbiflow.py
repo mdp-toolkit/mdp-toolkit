@@ -328,9 +328,11 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
                 if task_data_chunk is None:
                     err = "Training data iterator is empty."
                     raise ParallelBiFlowException(err)
-                # first task contains the new callable
+                # Only first task contains the new callable (enable caching).
+                # A fork is not required here, since the callable is always
+                # forked in the scheduler.
                 self._next_task = (task_data_chunk,
-                            self._train_callable_class(self._flownode.fork(),
+                            self._train_callable_class(self._flownode,
                                                        purge_nodes=True))
                 break
             except parallel.NotForkableParallelException, exception:
@@ -477,13 +479,6 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
         self._bi_reset()  # normally not required, just for safety
         if self.is_parallel_training:
             raise ParallelBiFlowException("Parallel training is underway.")
-        if self._flownode.use_execute_fork:
-            # this will raise an exception if fork is not supported
-            task_flownode = self._flownode.fork()
-            purge_nodes = True
-        else:
-            task_flownode = self._flownode
-            purge_nodes = False
         self._execute_callable_class = execute_callable_class
         iterable, msg_iterable, target_iterable = self._sanitize_iterables(
                                                            iterable,
@@ -500,10 +495,12 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
         if task_data_chunk is None:
             err = "Execution data iterable is empty."
             raise ParallelBiFlowException(err)
-        # first task contains the new callable
+        # Only first task contains the new callable (enable caching).
+        # A fork is not required here, since the callable is always
+        # forked in the scheduler.
         self._next_task = (task_data_chunk,
-                           self._execute_callable_class(task_flownode,
-                                                    purge_nodes=purge_nodes))
+                           self._execute_callable_class(self._flownode,
+                                                        purge_nodes=True))
 
     def _create_execute_task(self):
         """Create and return a single execution task.

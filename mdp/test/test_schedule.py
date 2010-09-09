@@ -3,6 +3,8 @@ from _tools import *
 import mdp.parallel as parallel
 n = numx
 
+# TODO: add test that the callable is forked exactly once before a call?
+
 def test_scheduler():
     """Test scheduler with 6 tasks."""
     scheduler = parallel.Scheduler()

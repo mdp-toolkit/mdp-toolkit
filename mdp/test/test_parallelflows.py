@@ -3,7 +3,8 @@ from _tools import *
 import mdp.parallel as parallel
 n = numx
 
-# TODO: add test with explicit parallel nodes mixed in
+# TODO: add tests for new use_execute_fork mechanism
+
 def test_tasks():
     """Test parallel training and execution by running the tasks."""
     flow = parallel.ParallelFlow([

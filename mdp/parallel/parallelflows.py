@@ -421,9 +421,11 @@ class ParallelFlow(mdp.Flow):
                                    "no. %d is empty." % (self._i_train_node+1))
                         raise mdp.FlowException(err_str)
                 task_data_chunk = first_task[0]
-                # first task contains the new callable
+                # Only first task contains the new callable (enable caching).
+                # A fork is not required here, since the callable is always
+                # forked in the scheduler.
                 self._next_task = (task_data_chunk,
-                            self._train_callable_class(self._flownode.fork()))
+                                   self._train_callable_class(self._flownode))
                 break
             except NotForkableParallelException, exception:
                 if self.verbose:
@@ -577,13 +579,6 @@ class ParallelFlow(mdp.Flow):
         """
         if self.is_parallel_training:
             raise ParallelFlowException("Parallel training is underway.")
-        if self._flownode.use_execute_fork:
-            # this will raise an exception if fork is not supported
-            task_flownode = self._flownode.fork()
-            purge_nodes = True
-        else:
-            task_flownode = self._flownode
-            purge_nodes = False
         self._execute_callable_class = execute_callable_class
         if isinstance(iterable, n.ndarray):
             iterable = [iterable]
@@ -593,10 +588,12 @@ class ParallelFlow(mdp.Flow):
             errstr = ("The execute data iterator is empty.")
             raise mdp.FlowException(errstr)
         task_data_chunk = first_task[0]
-        # first task contains the new callable
+        # Only first task contains the new callable (enable caching).
+        # A fork is not required here, since the callable is always
+        # forked in the scheduler.
         self._next_task = (task_data_chunk,
-                           self._execute_callable_class(task_flownode,
-                                                    purge_nodes=purge_nodes))
+                           self._execute_callable_class(self._flownode,
+                                                        purge_nodes=True))
 
     def _create_execute_task(self):
         """Create and return a single execution task.
