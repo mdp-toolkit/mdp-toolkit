@@ -223,9 +223,3 @@ class Convolution2DNode(mdp.Node):
             y.resize((y.shape[0], self.output_dim))
 
         return y
-
-if __name__=='__main__':
-    import numpy, mdp
-    im = numpy.random.rand(4, 3,3)
-    node = mdp.nodes.Convolution2DNode(numpy.array([[[1.]]]))
-    node.execute(im)

@@ -6,6 +6,13 @@ requires_signal = skip_on_condition(
     "This test requires the 'scipy.signal' module.")
 
 @requires_signal
+def testConvolution2Dsimple():
+    # copied over from convolution_nodes.py
+    im = numx_rand.rand(4, 3,3)
+    node = mdp.nodes.Convolution2DNode(numx.array([[[1.]]]))
+    node.execute(im)
+
+@requires_signal
 def testConvolution2DNodeFunctionality():
     filters = numx.empty((3,1,1))
     filters[:,0,0] = [1.,2.,3.]
