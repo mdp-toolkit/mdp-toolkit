@@ -97,8 +97,9 @@ class TaskCallable(object):
         return data
 
     # TODO: is 'fork' really a good name?
-    #    Maybe one should split this class into a CallableFactory and the
-    #    actual TaskCallable class.
+    #    As an alternative one could have a separate CallableFactory class,
+    #    but this would make things more complicated for simple callables
+    #    (similar to why iterators implement the iterable interface).
     def fork(self):
         """Return a fork of this callable, e.g. by making a copy.
 

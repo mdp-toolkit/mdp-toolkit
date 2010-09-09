@@ -23,9 +23,6 @@ This keeps the code readable and is compatible with automatic code checkers
 
 from mdp import MDPException, NodeMetaclass
 
-# TODO: note the ParllelBiFlowNode purge_nodes method, which is not part
-#    of the ParallelNode interface. Allow this?
-
 # TODO: Register the node instances as well?
 #    This would allow instance initialization when an extension is activated.
 #    Implementing this should not be too hard via the metclass.

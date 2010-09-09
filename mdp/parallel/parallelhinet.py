@@ -5,18 +5,9 @@ Note that internal nodes are referenced instead of copied, in order to save
 memory.
 """
 
-import mdp
 import mdp.hinet as hinet
 
 import parallelnodes
-
-
-class DummyNode(mdp.Node):
-    """Dummy node class for empty nodes."""
-
-    @staticmethod
-    def is_trainable():
-        return False
 
 
 class ParallelFlowNode(hinet.FlowNode, parallelnodes.ParallelExtensionNode):
@@ -36,7 +27,7 @@ class ParallelFlowNode(hinet.FlowNode, parallelnodes.ParallelExtensionNode):
         return self.__class__(self._flow.__class__(node_list))
     
     def _join(self, forked_node):
-        """Join the last node from the given forked _flow into this FlowNode."""             
+        """Join the required nodes from the forked node into this FlowNode."""             
         for i_node, node in enumerate(forked_node._flow):
             if node.is_training() or node.use_execute_fork:
                 self._flow[i_node].join(node)
@@ -44,17 +35,6 @@ class ParallelFlowNode(hinet.FlowNode, parallelnodes.ParallelExtensionNode):
     def use_execute_fork(self):
         return any(node.use_execute_fork for node in self._flow)
     
-    # TODO: move this to a custom class in parallelflows        
-    def purge_nodes(self):
-        """Replace nodes that are not forked with None.
-
-        While a purged flow cannot be used to process data any more, it can
-        still be joined and can thus save memory and bandwidth.
-        """
-        for i_node, node in enumerate(self._flow):
-            if not (node._train_phase_started or node.use_execute_fork):
-                self._flow[i_node] = DummyNode()
-
 
 class ParallelLayer(hinet.Layer, parallelnodes.ParallelExtensionNode):
     """Parallel version of a Layer."""

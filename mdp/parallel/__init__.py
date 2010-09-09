@@ -29,7 +29,7 @@ from parallelnodes import (
     ParallelPCANode, ParallelSFANode, ParallelFDANode, ParallelHistogramNode
 )
 from parallelflows import (
-    FlowTaskCallable, FlowTrainCallable, FlowExecuteCallable,
+    _purge_flownode, FlowTaskCallable, FlowTrainCallable, FlowExecuteCallable,
     TrainResultContainer, ExecuteResultContainer,
     ParallelFlowException, NoTaskException,
     ParallelFlow, ParallelCheckpointFlow

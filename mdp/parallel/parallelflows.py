@@ -15,6 +15,29 @@ from scheduling import (
 from mdp.hinet import FlowNode
 
 
+### Helper code for node purging before transport. ###
+
+class _DummyNode(mdp.Node):
+    """Dummy node class for empty nodes."""
+
+    @staticmethod
+    def is_trainable():
+        return False
+    
+    def _execute(self, x):
+        err = "This is only a dummy created by 'parallel._purge_flownode'."
+        raise mdp.NodeException(err)
+
+
+_DUMMY_NODE = _DummyNode()
+
+def _purge_flownode(flownode):
+    """Replace nodes that are """
+    for i_node, node in enumerate(flownode._flow):
+        if not (node._train_phase_started or node.use_execute_fork):
+            flownode._flow.flow[i_node] = _DUMMY_NODE
+
+
 ### Train task classes ###
 
 class FlowTaskCallable(TaskCallable):
@@ -69,7 +92,7 @@ class FlowTrainCallable(FlowTaskCallable):
         # note the local training in ParallelFlow relies on the flownode
         # being preserved, so derived classes should preserve it as well
         if self._purge_nodes:
-            self._flownode.purge_nodes()
+            _purge_flownode(self._flownode)
         return self._flownode
 
     def fork(self):
@@ -133,7 +156,7 @@ class FlowExecuteCallable(FlowTaskCallable):
         y = self._flownode.execute(x, nodenr=self._nodenr)
         if self._flownode.use_execute_fork:
             if self._purge_nodes:
-                self._flownode.purge_nodes()
+                _purge_flownode(self._flownode)
             return (y, self._flownode)
         else:
             return (y, None)

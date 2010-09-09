@@ -43,7 +43,7 @@ class BiFlowTrainCallable(parallel.FlowTrainCallable):
                 raise BiFlowException(err)
         self._flownode.bi_reset()
         if self._purge_nodes:
-            self._flownode.purge_nodes()
+            parallel._purge_flownode(self._flownode)
         return self._flownode
 
     def fork(self):
@@ -78,7 +78,7 @@ class BiFlowExecuteCallable(parallel.FlowExecuteCallable):
         self._flownode.bi_reset()
         if self._flownode.use_execute_fork:
             if self._purge_nodes:
-                self._flownode.purge_nodes()
+                parallel._purge_flownode(self._flownode)
             return (result, self._flownode)
         else:
             return (result, None)

@@ -69,12 +69,6 @@ This is described in more detail in the BiNode module.
 #    http://code.google.com/p/chromium/issues/detail?id=47416
 #    is in place.
 
-# TODO: Would it make sense to guarantee that join/fork is always called on
-#    the original node? For fork this would prevent caching, for join this
-#    would prevent gathering the results in remote nodes/processes.
-#    Could be optional depending on node, fork could somehow return a
-#    non-forkable node?
-
 # TODO: Implement more internal checks for node output result?
 #    Check that last element is not None? Use assume?
 

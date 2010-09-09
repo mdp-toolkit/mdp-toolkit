@@ -18,12 +18,6 @@ class ThreadScheduler(Scheduler):
     numpy calculations (or some other external non-blocking C code) or for IO,
     but can be more efficient than ProcessScheduler because of the
     shared memory.
-    
-    WARNING: The parallel module tries to minimize node copy operations. If
-        nodes are not thread safe (e.g. in BiMDP when using the coroutine
-        decorator) this can cause problems with his scheduler, since the
-        same instance is used across multiple threads. In this case implement
-        proper forking for the affected nodes.
     """
 
     def __init__(self, result_container=None, verbose=False, n_threads=1):
