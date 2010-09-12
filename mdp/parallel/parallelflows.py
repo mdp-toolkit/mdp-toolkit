@@ -561,8 +561,8 @@ class ParallelFlow(mdp.Flow):
         # check that the scheduler is compatible
         if overwrite_result_container:
             if not isinstance(scheduler.result_container,
-                              OrderedResultContainer):
-                scheduler.result_container = OrderedResultContainer()
+                              ExecuteResultContainer):
+                scheduler.result_container = ExecuteResultContainer()
         # do parallel execution
         self._flownode = FlowNode(mdp.Flow(self.flow))
         try:
