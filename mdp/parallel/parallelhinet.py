@@ -31,7 +31,8 @@ class ParallelFlowNode(hinet.FlowNode, parallelnodes.ParallelExtensionNode):
         for i_node, node in enumerate(forked_node._flow):
             if node.is_training() or node.use_execute_fork:
                 self._flow[i_node].join(node)
-                
+    
+    @property
     def use_execute_fork(self):
         return any(node.use_execute_fork for node in self._flow)
     
@@ -54,7 +55,8 @@ class ParallelLayer(hinet.Layer, parallelnodes.ParallelExtensionNode):
         for i_node, layer_node in enumerate(self.nodes):
             if layer_node.is_training():
                 layer_node.join(forked_node.nodes[i_node])
-                
+    
+    @property           
     def use_execute_fork(self):
         return any(node.use_execute_fork for node in self.nodes)
 
@@ -69,6 +71,7 @@ class ParallelCloneLayer(hinet.CloneLayer, parallelnodes.ParallelExtensionNode):
     def _join(self, forked_node):
         """Join the internal node in the clone layer."""
         self.node.join(forked_node.node)
-        
+    
+    @property
     def use_execute_fork(self):
         return self.node.use_execute_fork
