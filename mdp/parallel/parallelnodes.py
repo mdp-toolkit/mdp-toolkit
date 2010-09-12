@@ -70,7 +70,7 @@ class ParallelExtensionNode(mdp.ExtensionNode, mdp.Node):
             self.input_dim = forked_node.input_dim
         if self.output_dim is None:
             self.output_dim = forked_node.output_dim
-        if self.is_training() and not self._train_phase_started:
+        if forked_node._train_phase_started and not self._train_phase_started:
             self._train_phase_started = True
         self._join(forked_node)
 
@@ -93,6 +93,8 @@ class ParallelExtensionNode(mdp.ExtensionNode, mdp.Node):
                                     "by this node (%s)" %
                                     str(self.__class__))
     
+    # TODO: Drop the property, this makes it harder to override!!!
+    #    This is especially dangerous for boolean return values.
     @property
     def use_execute_fork(self):
         """Return True if node requires a fork / join even during execution.
