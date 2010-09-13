@@ -96,7 +96,8 @@ class FlowTrainCallable(FlowTaskCallable):
         return self._flownode
 
     def fork(self):
-        return self.__class__(self._flownode.fork())
+        return self.__class__(self._flownode.fork(),
+                              purge_nodes=self._purge_nodes)
 
 
 class TrainResultContainer(ResultContainer):
