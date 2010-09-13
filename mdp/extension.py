@@ -331,6 +331,9 @@ def deactivate_extensions(extension_names, verbose=False):
     for extension_name in extension_names:
         deactivate_extension(extension_name, verbose=verbose)
 
+# TODO: add check that only extensions are deactivated that were
+#    originally activcated by this extension (same in context manager)
+#    also add test for this
 def with_extension(extension_name):
     """Return a wrapper function to activate and deactivate the extension.
 
