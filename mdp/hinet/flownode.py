@@ -78,6 +78,13 @@ class FlowNode(mdp.Node):
 
     def _set_output_dim(self, n):
         # try setting the output_dim of the last node
+        
+        # TODO: If last noode output_dim is None then try to set the
+        #    dims in the flow, by setting the undefined input_dims,
+        #    only if that fails raise exception.
+        if self._flow[-1].output_dim is None:
+            raise Exception("Can't do this!!!")
+        
         self._flow[-1].output_dim = n
         # let a consistency check run
         self._flow._check_nodes_consistency()
