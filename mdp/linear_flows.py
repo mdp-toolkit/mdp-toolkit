@@ -450,7 +450,7 @@ class Flow(object):
 
     def _check_dimension_consistency(self, out, inp):
         """Raise ValueError when both dimensions are set and different."""
-        if ((out and inp) is not None) and out != inp:
+        if not (out is None or inp is None) and out != inp:
             errstr = "dimensions mismatch: %d != %d" % (out, inp)
             raise ValueError(errstr)
 
