@@ -34,7 +34,7 @@ _DUMMY_NODE = _DummyNode()
 def _purge_flownode(flownode):
     """Replace nodes that are """
     for i_node, node in enumerate(flownode._flow):
-        if not (node._train_phase_started or node.use_execute_fork):
+        if not (node._train_phase_started or node.use_execute_fork()):
             flownode._flow.flow[i_node] = _DUMMY_NODE
 
 
@@ -154,7 +154,7 @@ class FlowExecuteCallable(FlowTaskCallable):
         in the result tuple.
         """
         y = self._flownode.execute(x, nodenr=self._nodenr)
-        if self._flownode.use_execute_fork:
+        if self._flownode.use_execute_fork():
             if self._purge_nodes:
                 _purge_flownode(self._flownode)
             return (y, self._flownode)
@@ -695,7 +695,7 @@ class ParallelFlow(mdp.Flow):
         elif self.is_parallel_executing:
             self._exec_data_iterator = None
             ys = [result[0] for result in results]
-            if self._flownode.use_execute_fork:
+            if self._flownode.use_execute_fork():
                 flownodes = [result[1] for result in results]
                 for flownode in flownodes:
                     if flownode is not None:

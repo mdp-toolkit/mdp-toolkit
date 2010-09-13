@@ -76,7 +76,7 @@ class BiFlowExecuteCallable(parallel.FlowExecuteCallable):
         # by using _flow we do not have to reenter (like for train)
         result = self._flownode._flow.execute(x, msg, target)
         self._flownode.bi_reset()
-        if self._flownode.use_execute_fork:
+        if self._flownode.use_execute_fork():
             if self._purge_nodes:
                 parallel._purge_flownode(self._flownode)
             return (result, self._flownode)

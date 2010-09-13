@@ -93,13 +93,11 @@ class ParallelExtensionNode(mdp.ExtensionNode, mdp.Node):
                                     "by this node (%s)" %
                                     str(self.__class__))
     
-    # TODO: Drop the property, this makes it harder to override!!!
-    #    This is especially dangerous for boolean return values.
-    @property
-    def use_execute_fork(self):
+    @staticmethod
+    def use_execute_fork():
         """Return True if node requires a fork / join even during execution.
         
-        The default output is False, overwrite this property if required.
+        The default output is False, overwrite this method if required.
         
         Note that the same fork and join methods are used as during training,
         so the distinction must be implemented in the custom _fork and _join

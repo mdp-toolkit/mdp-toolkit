@@ -67,6 +67,6 @@ class ParallelCloneBiLayer(CloneBiLayer, ParallelExtensionBiNode):
             
     def use_execute_fork(self):
         if self.use_copies:
-            return any(node.use_execute_fork for node in self.nodes)
+            return any(node.use_execute_fork() for node in self.nodes)
         else:
-            return self.node.use_execute_fork
+            return self.node.use_execute_fork()
