@@ -23,9 +23,6 @@ This keeps the code readable and is compatible with automatic code checkers
 
 from mdp import MDPException, NodeMetaclass
 
-# TODO: note the ParllelBiFlowNode purge_nodes method, which is not part
-#    of the ParallelNode interface. Allow this?
-
 # TODO: Register the node instances as well?
 #    This would allow instance initialization when an extension is activated.
 #    Implementing this should not be too hard via the metclass.
@@ -334,6 +331,9 @@ def deactivate_extensions(extension_names, verbose=False):
     for extension_name in extension_names:
         deactivate_extension(extension_name, verbose=verbose)
 
+# TODO: add check that only extensions are deactivated that were
+#    originally activcated by this extension (same in context manager)
+#    also add test for this
 def with_extension(extension_name):
     """Return a wrapper function to activate and deactivate the extension.
 

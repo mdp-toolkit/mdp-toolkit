@@ -57,8 +57,7 @@ class PPScheduler(scheduling.Scheduler):
         Depending on the scheduler state this function is non-blocking or
         blocking. One reason for blocking can be a full task-queue.
         """
-        # no explicit fork is necessary, since the task is always pickled
-        task = (data, task_callable, task_index)
+        task = (data, task_callable.fork(), task_index)
         def execute_task(task):
             """Call the first args entry and return the return value."""
             data, task_callable, task_index = task

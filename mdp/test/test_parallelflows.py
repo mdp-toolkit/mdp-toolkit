@@ -3,7 +3,6 @@ from _tools import *
 import mdp.parallel as parallel
 n = numx
 
-# TODO: add test with explicit parallel nodes mixed in
 def test_tasks():
     """Test parallel training and execution by running the tasks."""
     flow = parallel.ParallelFlow([
@@ -189,4 +188,82 @@ def test_nonparallel3():
     # test execution
     x = n.random.random([100,10])
     flow.execute(x)
+    
+def test_train_purge_nodes():
+    """Test that FlowTrainCallable correctly purges nodes."""
+    sfa_node = mdp.nodes.SFANode(input_dim=10, output_dim=8)
+    sfa2_node = mdp.nodes.SFA2Node(input_dim=8, output_dim=6)
+    flownode = mdp.hinet.FlowNode(mdp.Flow([sfa_node,
+                                            mdp.nodes.IdentityNode(),
+                                            sfa2_node]))
+    data = n.random.random((30,10))
+    mdp.activate_extension("parallel")
+    try:
+        clbl = mdp.parallel.FlowTrainCallable(flownode)
+        flownode = clbl(data)
+    finally:
+        mdp.deactivate_extension("parallel")
+    assert flownode._flow[1].__class__.__name__ == "_DummyNode"
+    
+def test_execute_fork():
+    """Test the forking of a node based on use_execute_fork."""
+    
+    class _test_ExecuteForkNode(mdp.nodes.IdentityNode):
+        
+        # Note: The explicit signature is important to preserve the dim
+        #    information during the fork.
+        def __init__(self, input_dim=None, output_dim=None, dtype=None):
+            self.n_forks = 0
+            self.n_joins = 0
+            super(_test_ExecuteForkNode, self).__init__(input_dim=input_dim,
+                                                        output_dim=output_dim,
+                                                        dtype=dtype)
+    
+    class Parallel_test_ExecuteForkNode(parallel.ParallelExtensionNode,
+                                        _test_ExecuteForkNode):
+       
+        def _fork(self):
+            self.n_forks += 1
+            return self._default_fork()
+        
+        def _join(self, forked_node):
+            self.n_joins += forked_node.n_joins + 1
+            
+        def use_execute_fork(self):
+            return True
+    
+    try:
+        n_chunks = 6
+        
+        ## Part 1: test execute fork during flow training
+        data_iterables = [[n.random.random((30,10)) for _ in xrange(n_chunks)],
+                          None,
+                          [n.random.random((30,10)) for _ in xrange(n_chunks)],
+                          None]
+        flow = parallel.ParallelFlow([mdp.nodes.PCANode(output_dim=5),
+                                      _test_ExecuteForkNode(),
+                                      mdp.nodes.SFANode(),
+                                      _test_ExecuteForkNode()])
+        scheduler = parallel.Scheduler()
+        flow.train(data_iterables, scheduler=scheduler)
+        for node in flow:
+            if isinstance(node, _test_ExecuteForkNode):
+                assert node.n_forks == 2 * n_chunks + 2
+                assert node.n_joins == 2 * n_chunks
+                # reset the counters to prepare the execute test
+                node.n_forks = 0
+                node.n_joins = 0
+                
+        ## Part 2: test execute fork during flow execute
+        data_iterable = [n.random.random((30,10)) for _ in xrange(n_chunks)]
+        flow.execute(data_iterable, scheduler=scheduler)
+        for node in flow:
+            if isinstance(node, _test_ExecuteForkNode):
+                assert node.n_forks == n_chunks
+                assert node.n_joins == n_chunks
+    finally:
+        # unregister the testing class
+        del mdp.get_extensions()["parallel"][_test_ExecuteForkNode]
+        scheduler.shutdown()
+  
 

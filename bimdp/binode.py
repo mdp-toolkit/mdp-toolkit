@@ -90,8 +90,8 @@ class BiNode(mdp.Node):
 
     This class itself is not non-functional.
 
-    Derived class should, if necessary, overwrite the following methods (in
-    addition to the normal mdp.Node methods): _bi_reset, is_bi_training
+    Derived class should, if necessary, overwrite the _bi_reset method
+    (in addition to the normal mdp.Node methods). 
 
     Note hat this class can also be used as an Adapter / Mixin for normal nodes.
     This can for example be useful for nodes which require additional data
@@ -300,23 +300,6 @@ class BiNode(mdp.Node):
     def _bi_reset(self):
         """Hook method, overwrite when needed."""
         pass
-
-    def is_bi_training(self):
-        """Return True if a node is currently in a data gathering state.
-
-        This method should return True if the node is gathering any data which
-        is internally stored beyond the bi_reset() call. The typical example is
-        some kind of learning in execute or message calls.
-        Note that changes during a stop_training phase do not fall into
-        this category, since this phase is always performed centralized.
-
-        This method is used by the parallel package to decide if a node has to
-        to be forked or if a copy is used.
-        Basically you should ask yourself if it is sufficient to perform
-        execute or message on a copy of this Node that is later discarded, or
-        if any data gathered during the operation should be stored.
-        """
-        return False
 
     def _request_node_id(self, node_id):
         """Return the node if it matches the provided node id.

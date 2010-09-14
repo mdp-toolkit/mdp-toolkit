@@ -106,7 +106,9 @@ class ProcessScheduler(Scheduler):
                                                  stdout=subprocess.PIPE,
                                                  stdin=subprocess.PIPE)
                                 for _ in range(self._n_processes)]
-        # tag each process with its cached callable index
+        # tag each process with its cached callable task_index,
+        # this is compared with _last_callable_index to check if the cached
+        # task_callable is still up to date
         for process in self._free_processes:
             process._callable_index = -1
         if self.verbose:

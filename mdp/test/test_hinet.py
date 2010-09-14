@@ -70,6 +70,40 @@ def test_FlowNode_pretrained_node():
         flownode.train(x)
         flownode.stop_training()
     flownode.execute(x)
+    
+def test_FlowNode_fix_nodes_dimensions1():
+    x = numx_rand.random([100,10])
+    last_node = mdp.nodes.IdentityNode()
+    flow = mdp.Flow([mdp.nodes.PCANode(output_dim=3),
+                     mdp.nodes.IdentityNode(),
+                     last_node])
+    flownode = mh.FlowNode(flow)
+    flownode.train(x)
+    flownode.stop_training()
+    # check that the dimensions of NoiseNode and FlowNode where all set
+    # by calling _fix_nodes_dimensions
+    assert flownode.output_dim == 3
+    assert last_node.input_dim == 3
+    assert last_node.output_dim == 3
+    
+def test_FlowNode_fix_nodes_dimensions2():
+    flow = mdp.Flow([mdp.nodes.IdentityNode(),
+                     mdp.nodes.IdentityNode()])
+    flownode = mh.FlowNode(flow)
+    # this should fail, since the internal nodes don't have fixed dims
+    py.test.raises(mdp.InconsistentDimException,
+                   lambda: flownode.set_output_dim(10))
+    x = numx_rand.random([100,10])
+    flownode.execute(x)
+    assert flownode.output_dim == 10
+    
+def test_FlowNode_fix_nodes_dimensions3():
+    flow = mdp.Flow([mdp.nodes.IdentityNode()])
+    flownode = mh.FlowNode(flow)
+    # for a single node this should not raise an Exception
+    flownode.set_output_dim(10)
+    x = numx_rand.random([100,10])
+    flownode.execute(x)
 
 def test_FlowNode_pretrained_flow():
     flow = mdp.Flow([mdp.nodes.PolynomialExpansionNode(degree=2),

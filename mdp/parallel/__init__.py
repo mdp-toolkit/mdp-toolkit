@@ -25,13 +25,13 @@ from scheduling import (
 from process_schedule import ProcessScheduler
 from thread_schedule import ThreadScheduler
 from parallelnodes import (
-    ParallelExtensionNode, JoinParallelNodeException,
-    TrainingPhaseNotParallelException,
+    ParallelExtensionNode, NotForkableParallelException, JoinParallelException,
     ParallelPCANode, ParallelSFANode, ParallelFDANode, ParallelHistogramNode
 )
 from parallelflows import (
-    FlowTaskCallable, FlowTrainCallable, FlowExecuteCallable,
-    NodeResultContainer, ParallelFlowException, NoTaskException,
+    _purge_flownode, FlowTaskCallable, FlowTrainCallable, FlowExecuteCallable,
+    TrainResultContainer, ExecuteResultContainer,
+    ParallelFlowException, NoTaskException,
     ParallelFlow, ParallelCheckpointFlow
 )
 from parallelhinet import (
@@ -57,11 +57,12 @@ __all__ = [
     "OrderedResultContainer", "TaskCallable", "SqrTestCallable",
     "SleepSqrTestCallable", "TaskCallableWrapper", "Scheduler",
     "ProcessScheduler", "ThreadScheduler",
-    "ParallelExtensionNode", "JoinParallelNodeException",
-    "TrainingPhaseNotParallelException",
+    "ParallelExtensionNode", "JoinParallelException",
+    "NotForkableParallelException",
     "ParallelSFANode", "ParallelSFANode", "ParallelFDANode",
     "ParallelHistogramNode",
     "FlowTaskCallable", "FlowTrainCallable", "FlowExecuteCallable",
-    "NodeResultContainer", "ParallelFlowException", "NoTaskException",
+    "ExecuteResultContainer", "TrainResultContainer", "ParallelFlowException",
+    "NoTaskException",
     "ParallelFlow", "ParallelCheckpointFlow",
     "ParallelFlowNode", "ParallelLayer", "ParallelCloneLayer"]

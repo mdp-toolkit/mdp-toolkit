@@ -2,9 +2,10 @@ import mdp
 from mdp import numx as n
 from bimdp import BiFlow, MSG_ID_SEP, EXIT_TARGET
 from bimdp.parallel import (
-    ParallelBiFlow, ParallelBiFlowNode, ParallelCloneBiLayer
-    )
+    ParallelBiFlow, ParallelCloneBiLayer
+)
 from bimdp.nodes import SFABiNode
+from bimdp.hinet import BiFlowNode
 
 
 class TestCloneBiLayer(object):
@@ -16,7 +17,7 @@ class TestCloneBiLayer(object):
                        EXIT_TARGET)
         stop_sfa_node = SFABiNode(stop_result=stop_result,
                                   input_dim=10, output_dim=3)
-        biflownode = ParallelBiFlowNode(BiFlow([stop_sfa_node]))
+        biflownode = BiFlowNode(BiFlow([stop_sfa_node]))
         clonelayer = ParallelCloneBiLayer(node=biflownode,
                                                 n_nodes=3,
                                                 use_copies=False,

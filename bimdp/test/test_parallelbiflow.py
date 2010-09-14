@@ -2,7 +2,7 @@ import mdp
 from mdp import numx as n
 from bimdp.nodes import SFABiNode, SFA2BiNode
 from bimdp import BiFlow
-from bimdp.parallel import ParallelBiFlow, ParallelBiFlowNode
+from bimdp.parallel import ParallelBiFlow
 
 # TODO: maybe test the helper classes as well, e.g. the new callable
 
@@ -57,29 +57,6 @@ class TestParallelBiFlow(object):
         scheduler = mdp.parallel.Scheduler()
         flow.train(data_iterables, scheduler=scheduler)
         x = n.random.random([100,10])
-        flow.execute(x)
-        iterator = [n.random.random((20,10)) for _ in range(6)]
-        flow.execute(iterator, scheduler=scheduler)
-        scheduler.shutdown()
-
-    def test_parallel_multiphase(self):
-        """Test training and execution with multiple training phases.
-
-        The node with multiple training phases is a hinet.FlowNode.
-        """
-        sfa_node = mdp.nodes.SFANode(input_dim=10, output_dim=8)
-        sfa2_node = mdp.nodes.SFA2Node(input_dim=8, output_dim=6)
-        flownode = ParallelBiFlowNode(BiFlow([sfa_node, sfa2_node]))
-        flow = ParallelBiFlow([flownode,
-                               mdp.nodes.PolynomialExpansionNode(degree=2),
-                               mdp.nodes.SFANode(output_dim=5)])
-        data_iterables = [[n.random.random((30,10)) for _ in range(6)],
-                          None,
-                          [n.random.random((30,10)) for _ in range(6)]]
-        scheduler = mdp.parallel.Scheduler()
-        flow.train(data_iterables, scheduler=scheduler)
-        x = n.random.random([100,10])
-        flow.execute([x for _ in range(4)], scheduler=scheduler)
         flow.execute(x)
         iterator = [n.random.random((20,10)) for _ in range(6)]
         flow.execute(iterator, scheduler=scheduler)

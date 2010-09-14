@@ -4,6 +4,7 @@ Thread based scheduler for distribution across multiple CPU cores.
 
 import threading
 import time
+import cPickle as pickle
 
 from scheduling import Scheduler, cpu_count
 
@@ -51,15 +52,20 @@ class ThreadScheduler(Scheduler):
                 time.sleep(SLEEP_TIME)
                 self._lock.acquire()
             else:
+                self._lock.release()
+                task_callable = task_callable.fork()
+                # create a deep copy of the task_callable,
+                # since it might not be thread safe 
+                # (but the fork is still required)
+                as_str = pickle.dumps(task_callable, -1)
+                task_callable = pickle.loads(as_str)
                 try:
-                    self._lock.release()
-                    task_callable = task_callable.fork()
                     thread = threading.Thread(target=self._task_thread,
                                               args=(data, task_callable,
                                                     task_index))
                     thread.start()
                     task_started = True
-                except thread.error:
+                except Exception:
                     if self.verbose:
                         print ("unable to create new thread,"
                                " waiting 2 seconds...")

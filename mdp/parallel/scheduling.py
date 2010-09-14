@@ -81,7 +81,8 @@ class TaskCallable(object):
     """
 
     def setup_environment(self):
-        """This hook method is only called when the callable is first called.
+        """This hook method is only called when the callable is first called
+        in a different Python process / environment.
 
         It can be used for modifications in the Python environment that are
         required by this callable.
@@ -95,13 +96,18 @@ class TaskCallable(object):
         """
         return data
 
+    # TODO: is 'fork' really a good name?
+    #    As an alternative one could have a separate CallableFactory class,
+    #    but this would make things more complicated for simple callables
+    #    (similar to why iterators implement the iterable interface).
     def fork(self):
         """Return a fork of this callable, e.g. by making a copy.
 
-        This method is always used before a callable is actually called, so
-        instead of the original callable the fork is called. The ensures that
-        the original callable is preserved when caching is used. If the
-        callable is not modified by the call it can simply return itself.
+        This method is always called exactly once before a callable is called,
+        so instead of the original callable a fresh fork is called. This
+        ensures that the original callable is preserved when caching is used.
+        If the callable is not modified by the call then it can simply return
+        itself.
         """
         return self
 
@@ -122,6 +128,7 @@ class SleepSqrTestCallable(TaskCallable):
         time.sleep(data[1])
         return data[0]**2
 
+
 class MDPVersionCallable(TaskCallable):
     """Callable For testing MDP version.
     
@@ -133,6 +140,7 @@ class MDPVersionCallable(TaskCallable):
         """Ignore input data and return mdp.info()"""
         import mdp
         return mdp.config.info()
+
 
 class TaskCallableWrapper(TaskCallable):
     """Wrapper to provide a fork method for simple callables like a function.
@@ -154,6 +162,7 @@ def cpu_count():
     """Return the number of CPU cores."""
     try:
         return multiprocessing.cpu_count()
+    # TODO: remove except clause once we support only python >= 2.6 
     except NameError:
         ## This code part is taken from parallel python.
         # Linux, Unix and MacOS
@@ -326,13 +335,15 @@ class Scheduler(object):
     def _process_task(self, data, task_callable, task_index):
         """Process the task and store the result.
 
-        Warning: When this method is entered is has the lock, the lock must be
-        released here. Also note that fork has not been called yet, so the
-        provided task_callable is the original and must not be modified
-        in any way.
-
         You can override this method for custom schedulers.
+
+        Warning: When this method is entered is has the lock, the lock must be
+        released here.
+        
+        Warning: Note that fork has not been called yet, so the provided
+        task_callable must not be called. Only a forked version can be called. 
         """
+        # IMPORTANT: always call fork, since it must be called at least once!
         task_callable = task_callable.fork()
         result = task_callable(data)
         # release lock before store_result

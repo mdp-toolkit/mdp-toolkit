@@ -2,78 +2,9 @@
 Parallel version of bihinet.
 """
 
-import mdp
-
-from bimdp import BiNode, BiNodeException
-from bimdp import BiFlow
-from bimdp.hinet import BiFlowNode, CloneBiLayer
+from bimdp.hinet import CloneBiLayer
 
 from parallelbinode import ParallelExtensionBiNode
-
-
-class BiLearningPhaseNotParallelException(BiNodeException):
-    """Exception for unsupported when is_bi_leaning is True."""
-    pass
-
-
-class DummyNode(mdp.Node):
-    """Dummy node class for empty nodes."""
-
-    @staticmethod
-    def is_trainable():
-        return False
-
-
-class ParallelBiFlowNode(BiFlowNode, ParallelExtensionBiNode):
-
-    def _fork(self):
-        """Fork the training nodes and assemble it with the rest of the flow.
-
-        If the fork() of the current node fails the exception is not caught
-        here (but will for example be caught in an encapsulating ParallelFlow).
-        """
-        i_train_node = 0  # index of current training node
-        while not self._flow[i_train_node].is_training():
-            i_train_node += 1
-            if i_train_node >= len(self._flow):
-                i_train_node = -1  # no node in training
-                break
-        node_list = []
-        for i_node, node in enumerate(self._flow):
-            if i_node == i_train_node:
-                node_list.append(node.fork())
-            elif isinstance(node, BiNode) and node.is_bi_training():
-                node_list.append(node.fork())
-            else:
-                node_list.append(node)
-        return ParallelBiFlowNode(BiFlow(node_list))
-
-    def _join(self, forked_node):
-        """Join the forked node and all bi_forked nodes.
-
-        This also works for purged ParallelBiFlowNodes, nodes entries which are
-        None are ignored.
-        """
-        i_train_node = 0  # index of current training node
-        while not self._flow[i_train_node].is_training():
-            i_train_node += 1
-        for i_node, node in  enumerate(forked_node._flow):
-            if i_node == i_train_node:
-                self._flow[i_node].join(node)
-            elif isinstance(node, BiNode) and node.is_bi_training():
-                self._flow[i_node].join(node)
-
-    def purge_nodes(self):
-        """Replace nodes that are not training or bi-learning with None.
-
-        While a purged flow cannot be used to process data any more, it can
-        still be joined and can thus save memory and bandwidth.
-        """
-        for i_node, node in enumerate(self._flow):
-            if not ((node._train_phase_started) or
-                    (isinstance(node, BiNode) and
-                     node.is_bi_training())):
-                self._flow[i_node] = DummyNode()
 
 
 class ParallelCloneBiLayer(CloneBiLayer, ParallelExtensionBiNode):
@@ -133,3 +64,9 @@ class ParallelCloneBiLayer(CloneBiLayer, ParallelExtensionBiNode):
                 layer_node.join(forked_node.nodes[i_node])
         else:
             self.node.join(forked_node.node)
+            
+    def use_execute_fork(self):
+        if self.use_copies:
+            return any(node.use_execute_fork() for node in self.nodes)
+        else:
+            return self.node.use_execute_fork()
