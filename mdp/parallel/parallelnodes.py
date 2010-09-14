@@ -65,11 +65,11 @@ class ParallelExtensionNode(mdp.ExtensionNode, mdp.Node):
         _join.
         """
         if self.dtype is None:
-            self.dtype = forked_node.dtype
+            self._dtype = forked_node.dtype
         if self.input_dim is None:
-            self.input_dim = forked_node.input_dim
+            self._input_dim = forked_node.input_dim
         if self.output_dim is None:
-            self.output_dim = forked_node.output_dim
+            self._output_dim = forked_node.output_dim
         if forked_node._train_phase_started and not self._train_phase_started:
             self._train_phase_started = True
         self._join(forked_node)
