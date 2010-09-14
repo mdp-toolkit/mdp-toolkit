@@ -460,7 +460,7 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
     def setup_parallel_execution(self, iterable, msg_iterable=None,
                                  target_iterable=None,
                                  execute_callable_class=BiFlowExecuteCallable):
-        """Parallel version of the standard execute method.
+        """Prepare the flow for handing out tasks to do the execution.
 
         Instead of automatically executing the _flow with the iterable, it only
         prepares the tasks for the scheduler.
