@@ -209,18 +209,22 @@ def test_execute_fork():
     """Test the forking of a node based on use_execute_fork."""
     
     class _test_ExecuteForkNode(mdp.nodes.IdentityNode):
-  
-        def __init__(self, **kwargs):
+        
+        # Note: The explicit signature is important to preserve the dim
+        #    information during the fork.
+        def __init__(self, input_dim=None, output_dim=None, dtype=None):
             self.n_forks = 0
             self.n_joins = 0
-            super(_test_ExecuteForkNode, self).__init__(**kwargs)
+            super(_test_ExecuteForkNode, self).__init__(input_dim=input_dim,
+                                                        output_dim=output_dim,
+                                                        dtype=dtype)
     
     class Parallel_test_ExecuteForkNode(parallel.ParallelExtensionNode,
                                         _test_ExecuteForkNode):
        
         def _fork(self):
             self.n_forks += 1
-            return _test_ExecuteForkNode()
+            return self._default_fork()
         
         def _join(self, forked_node):
             self.n_joins += forked_node.n_joins + 1
