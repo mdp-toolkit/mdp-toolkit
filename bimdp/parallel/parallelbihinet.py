@@ -2,12 +2,11 @@
 Parallel version of bihinet.
 """
 
+import mdp
 from bimdp.hinet import CloneBiLayer
 
-from parallelbinode import ParallelExtensionBiNode
 
-
-class ParallelCloneBiLayer(CloneBiLayer, ParallelExtensionBiNode):
+class ParallelCloneBiLayer(CloneBiLayer, mdp.parallel.ParallelExtensionNode):
     """Parallel version of CloneBiLayer.
 
     This class also adds support for calling switch_to_instance during training,
