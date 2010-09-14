@@ -77,19 +77,40 @@ class FlowNode(mdp.Node):
         self._input_dim = n
 
     def _set_output_dim(self, n):
-        # try setting the output_dim of the last node
-        
-        # TODO: If last noode output_dim is None then try to set the
-        #    dims in the flow, by setting the undefined input_dims,
-        #    only if that fails raise exception.
-        if self._flow[-1].output_dim is None:
-            raise Exception("Can't do this!!!")
-        
-        self._flow[-1].output_dim = n
-        # let a consistency check run
-        self._flow._check_nodes_consistency()
-        # if we didn't fail here, go on
+        last_node = self._flow[-1]
+        if len(self._flow) == 1:
+            self._flow[-1].output_dim = n
+        elif last_node.output_dim is None:
+            self._fix_nodes_dimensions()
+            # check if it worked
+            if last_node.output_dim is None:
+                if last_node.input_dim is None:
+                    err = ("FlowNode can't set the dimension of the last "
+                           "node, because its input_dim is undefined ("
+                           "which could lead to inconsistent dimensions).")
+                    raise mdp.InconsistentDimException(err)
+                # now we can safely try to set the dimension
+                last_node.output_dim = n
+        # the last_node dim is now set 
+        if n != last_node.output_dim:
+            err = (("FlowNode can't be set to output_dim %d" % n) +
+                   " because the last internal node already has " +
+                   "output_dim %d." % last_node.output_dim)
+            raise mdp.InconsistentDimException(err)
         self._output_dim = n
+    
+    def _fix_nodes_dimensions(self):
+        """Try to fix the dimensions of the internal nodes."""
+        if len(self._flow) > 1:
+            prev_node = self._flow[0]
+            for node in self._flow[1:]:
+                if node.input_dim is None:
+                    node.input_dim = prev_node.output_dim
+                prev_node = node
+            self._flow._check_nodes_consistency()
+        if self._flow[-1].output_dim is not None:
+            # additional checks are performed here
+            self.output_dim = self._flow[-1].output_dim
 
     def _set_dtype(self, t):
         # dtype can not be set for sure in arbitrary flows
@@ -114,6 +135,7 @@ class FlowNode(mdp.Node):
 
     def _get_train_seq(self):
         """Return a training sequence containing all training phases."""
+        
         def get_train_function(_i_node, _node):
             # This internal function is needed to channel the data through
             # the nodes in front of the current nodes.
@@ -125,6 +147,7 @@ class FlowNode(mdp.Node):
                 else:
                     _node.train(x, *args, **kwargs)
             return _train
+        
         train_seq = []
         for i_node, node in enumerate(self._flow):
             if node.is_trainable():
@@ -132,20 +155,20 @@ class FlowNode(mdp.Node):
                                  - self._pretrained_phase[i_node])
                 train_seq += ([(get_train_function(i_node, node),
                                 node.stop_training)] * remaining_len)
-        # If the last node is trainable,
-        # then we have to set the output dimensions of the FlowNode.
-        if self._flow[-1].is_trainable():
-            train_seq[-1] = (train_seq[-1][0],
-                             self._get_stop_training_wrapper(self._flow[-1],
-                                                             train_seq[-1][1]))
-        return train_seq
 
-    def _get_stop_training_wrapper(self, node, func):
-        """Return wrapper for stop_training to set FlowNode outputdim."""
-        def _stop_training_wrapper(*args, **kwargs):
-            func(*args, **kwargs)
-            self.output_dim = node.output_dim
-        return _stop_training_wrapper
+        # try fix the dimension of the internal nodes and the FlowNode
+        # after the last node has been trained
+        def _get_stop_training_wrapper(self, node, func):
+            def _stop_training_wrapper(*args, **kwargs):
+                func(*args, **kwargs)
+                self._fix_nodes_dimensions()
+            return _stop_training_wrapper
+        
+        if train_seq:
+            train_seq[-1] = (train_seq[-1][0],
+                             _get_stop_training_wrapper(self, self._flow[-1],
+                                                        train_seq[-1][1]))
+        return train_seq
 
     def _execute(self, x, *args, **kwargs):
         return self._flow.execute(x, *args, **kwargs)
