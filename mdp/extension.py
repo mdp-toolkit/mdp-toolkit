@@ -336,16 +336,25 @@ def deactivate_extensions(extension_names, verbose=False):
 #    also add test for this
 def with_extension(extension_name):
     """Return a wrapper function to activate and deactivate the extension.
-
+    
     This function is intended to be used with the decorator syntax.
+
+    The deactivation happens only if the extension was activated by the
+    decorator (not if it was already active before). So this decorator
+    ensures that the extensions is active and prevents unintended side effects.
     """
     def decorator(func):
         def wrapper(*args, **kwargs):
-            try:
-                activate_extension(extension_name)
+            # make sure that we don't deactive and extension that was
+            # not activated by the decorator (would be a strange sideeffect)
+            if extension_name not in get_active_extensions():
+                try:
+                    activate_extension(extension_name)
+                    result = func(*args, **kwargs)
+                finally:
+                    deactivate_extension(extension_name)
+            else:
                 result = func(*args, **kwargs)
-            finally:
-                deactivate_extension(extension_name)
             return result
         # now make sure that docstring and signature match the original
         func_info = NodeMetaclass._function_infodict(func)
@@ -354,7 +363,7 @@ def with_extension(extension_name):
 
 class extension(object):
     """Context manager for MDP extension.
-
+    
     This allows you to use extensions using a 'with' statement, as in:
 
     with mdp.extension('extension_name'):
@@ -366,15 +375,23 @@ class extension(object):
     with mdp.extension(['ext1', 'ext2']):
         # 'node' is executed with the two extensions activated
         node.execute(x)
+        
+    The deactivation at the end happens only for the extensions that were
+    activated by this context manager (not for those that were already active
+    when the context was entered). This prevents unintended side effects.
     """
 
     def __init__(self, ext_names):
         if isinstance(ext_names, str):
             ext_names = [ext_names]
         self.ext_names = ext_names
+        self.deactivate_exts = []
 
     def __enter__(self):
+        already_active = get_active_extensions()
+        self.deactivate_exts = [ext_name for ext_name in self.ext_names
+                                if ext_name not in already_active]
         activate_extensions(self.ext_names)
 
     def __exit__(self, type, value, traceback):
-        deactivate_extensions(self.ext_names)
+        deactivate_extensions(self.deactivate_exts)

@@ -30,8 +30,32 @@ class TestMDPExtensions(object):
         assert sfa_node._testtest_attr == 1338
         mdp.deactivate_extension("__test")
         assert not hasattr(mdp.nodes.SFANode, "_testtest")
+        
+    def testContextDecorator(self):
+        """Test the with_extension function decorator."""
+        
+        class Test1ExtensionNode(mdp.ExtensionNode):
+            extension_name = "__test1"
+            def _testtest(self):
+                pass
+        
+        @mdp.with_extension("__test1")
+        def test():
+            return mdp.get_active_extensions()
+            
+        # check that the extension is activated
+        assert mdp.get_active_extensions() == []
+        active = test()
+        assert active == ["__test1"]
+        assert mdp.get_active_extensions() == []
+        
+        # check that it is only deactiveted if it was activated there
+        mdp.activate_extension("__test1")
+        active = test()
+        assert active == ["__test1"]
+        assert mdp.get_active_extensions() == ["__test1"]
 
-    def testContextManager(self):
+    def testContextManager1(self):
         """Test that the context manager activates extensions."""
 
         class Test1ExtensionNode(mdp.ExtensionNode):
@@ -53,7 +77,14 @@ class TestMDPExtensions(object):
             assert '__test1' in active
             assert '__test2' in active
         assert mdp.get_active_extensions() == []
-
+        mdp.activate_extension("__test1")
+        # Test that only activated extensions are deactiveted.
+        with mdp.extension(['__test1', '__test2']):
+            active = mdp.get_active_extensions()
+            assert '__test1' in active
+            assert '__test2' in active
+        assert mdp.get_active_extensions() == ["__test1"]
+        
     def testDecoratorExtension(self):
         """Test extension decorator with a single new extension."""
         class TestExtensionNode(mdp.ExtensionNode):
