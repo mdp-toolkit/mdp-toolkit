@@ -36,6 +36,21 @@ class TestParallelHinetNodes():
             flownode.stop_training()
         # test execution
         flownode.execute(x)
+        
+    def test_flownode_forksingle(self):
+        """Test that ParallelFlowNode forks only the first training node."""
+        flow = mdp.Flow([mdp.nodes.SFANode(output_dim=5),
+                         mdp.nodes.PolynomialExpansionNode(degree=2),
+                         mdp.nodes.SFANode(output_dim=3)])
+        flownode = mdp.hinet.FlowNode(flow)
+        forked_flownode = flownode.fork()
+        assert flownode._flow[0] is not forked_flownode._flow[0]
+        assert flownode._flow[1] is forked_flownode._flow[1]
+        assert flownode._flow[2] is forked_flownode._flow[2]
+        # Sabotage joining for the second SFANode, which should not be joined,
+        # causing AttributeError: 'NoneType' ... when it is joined.
+        flownode._flow[2]._cov_mtx = None
+        flownode.join(forked_flownode)
 
     def test_parallelnet(self):
         """Test a simple parallel net with big data.

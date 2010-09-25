@@ -19,17 +19,25 @@ class ParallelFlowNode(hinet.FlowNode, parallelnodes.ParallelExtensionNode):
         If a required fork() fails the exception is not caught here.
         """   
         node_list = []
+        found_train_node = False  # set to True at the first training node
         for node in self._flow:
-            if node.is_training() or node.use_execute_fork():
+            if not found_train_node and node.is_training():
+                found_train_node = True
+                node_list.append(node.fork())
+            elif node.use_execute_fork():
                 node_list.append(node.fork())
             else:
                 node_list.append(node)
         return self.__class__(self._flow.__class__(node_list))
     
     def _join(self, forked_node):
-        """Join the required nodes from the forked node into this FlowNode."""             
+        """Join the required nodes from the forked node into this FlowNode."""
+        found_train_node = False  # set to True at the first training node          
         for i_node, node in enumerate(forked_node._flow):
-            if node.is_training() or node.use_execute_fork():
+            if not found_train_node and node.is_training():
+                found_train_node = True
+                self._flow[i_node].join(node)
+            elif node.use_execute_fork():
                 self._flow[i_node].join(node)
     
     def use_execute_fork(self):
