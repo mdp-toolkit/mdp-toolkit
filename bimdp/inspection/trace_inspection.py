@@ -245,10 +245,11 @@ class TraceHTMLInspector(hinet.HiNetTranslator):
             err = "A msg was given for a normal Flow (need BiFlow)."
             raise Exception(err)
         try:
-            if msg is None:
-                y = self._flow.execute(x, **kwargs)
+            if msg or target:
+                result = self._flow.execute(x, msg, target, **kwargs)
+            # this case also works for mdp.Flow
             else:
-                y = self._flow.execute(x, msg, target, **kwargs)
+                result = self._flow.execute(x, **kwargs)
         # Note: this also catches legacy string exceptions (which are still
         #    used in numpy, e.g. np.core.multiarray.error)
         except:
@@ -273,7 +274,7 @@ class TraceHTMLInspector(hinet.HiNetTranslator):
                        "slides.")
                 raise Exception(err)
         return (self._slide_filenames, self._slide_node_ids,
-                self._section_ids, y)
+                self._section_ids, result)
 
     def _tracer_callback(self, node, method_name, method_result, method_args,
                          method_kwargs):
