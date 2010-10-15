@@ -15,6 +15,9 @@ class SwitchboardException(mdp.NodeException):
     pass
 
 
+# TODO: deal with input_dim, output_dim and dtype correctly,
+#    like in IdentityNode
+
 class Switchboard(mdp.Node):
     """Does the routing associated with the connections between layers.
 
@@ -197,9 +200,17 @@ class ChannelSwitchboard(Switchboard):
         return covered.nonzero()[0]
 
 
+def to_2tuple(value):
+    """Return value or (value, value) if value is not a tuple."""
+    if not isinstance(value, tuple):
+        value = (value, value)
+    return value
+
+    
 class Rectangular2dSwitchboardException(SwitchboardException):
     """Exception for routing problems in the Rectangular2dSwitchboard class."""
     pass
+
 
 class Rectangular2dSwitchboard(ChannelSwitchboard):
     """Switchboard for a 2-dimensional topology.
@@ -217,99 +228,89 @@ class Rectangular2dSwitchboard(ChannelSwitchboard):
     CoordinateTranslator class).
 
     public attributes (in addition to init arguments and inherited attributes):
-        x_unused_channels
-        y_unused_channels
-        x_out_channels
-        y_out_channels
+        unused_channels_xy
+        out_channels_xy
     """
-
-    def __init__(self, x_in_channels, y_in_channels,
-                 x_field_channels, y_field_channels,
-                 x_field_spacing=1, y_field_spacing=1,
-                 in_channel_dim=1, ignore_cover=False):
+    
+    def __init__(self, in_channels_xy, field_channels_xy,
+                 field_spacing_xy=1, in_channel_dim=1, ignore_cover=False):
         """Calculate the connections.
 
         Keyword arguments:
-        x_in_channels -- Number of input channels in the x-direction.
-            This has to be specified, since the actual input is only one
-            1d array.
-        y_in_channels -- Number of input channels in the y-direction.
+        in_channels_xy -- 2-Tuple with number of input channels in the x- and
+            y-direction (or a single number for both). This has to be
+            specified, since the actual input is only one 1d array.
+        field_channels_xy -- 2-Tuple with number of channels in each field in
+            the x- and y-direction (or a single number for both).
+        field_spacing_xy -- 2-Tuple with offset between two fields in the x-
+            and y-direction (or a single number for both).
         in_channel_dim -- Number of connections per input channel.
-        x_field_channels -- Number of channels in each field in the x-direction.
-        y_field_channels -- Number of channels in each field in the y-direction.
-        x_field_spacing -- Offset between two fields in the x-direction.
-        y_field_spacing -- Offset between two fields in the y-direction.
-        x_out_channels, y_out_channels -- Number of output channels in the
-            x and y direction.
         ignore_cover -- Boolean value defines if an
             Rectangular2dSwitchboardException is raised when the fields do not
             cover all input channels. Set this to True if you are willing to
             risk loosing input channels at the border.
         """
-        ## count channels and stuff
-        self.x_in_channels = x_in_channels
-        self.y_in_channels = y_in_channels
-        self.x_field_channels = x_field_channels
-        self.y_field_channels = y_field_channels
+        in_channels_xy = to_2tuple(in_channels_xy) 
+        field_channels_xy = to_2tuple(field_channels_xy) 
+        field_spacing_xy = to_2tuple(field_spacing_xy) 
+        self.in_channels_xy = in_channels_xy
+        self.field_channels_xy = field_channels_xy
+        self.field_spacing_xy = field_spacing_xy
+        # number of channels which are not covered
         out_channel_dim = (in_channel_dim *
-                           x_field_channels * y_field_channels)
-        self.x_field_spacing = x_field_spacing
-        self.y_field_spacing = y_field_spacing
-        self.x_unused_channels = 0  # number of channels which are not covered
-        self.y_unused_channels = 0
+                           field_channels_xy[0] * field_channels_xy[1])
         ## check parameters for inconsistencies
-        if (x_field_channels > x_in_channels):
-            err = ("Number of field channels "
-                   "exceeds the number of input channels in x-direction. "
-                   "This would lead to an empty connection list.")
-            raise Rectangular2dSwitchboardException(err)
-        if (y_field_channels > y_in_channels):
-            err = ("Number of field channels "
-                   "exceeds the number of input channels in y-direction. "
-                   "This would lead to an empty connection list.")
-            raise Rectangular2dSwitchboardException(err)
+        for i, name in enumerate(["x", "y"]):
+            if (field_channels_xy[i] > in_channels_xy[i]):
+                err = ("Number of field channels exceeds the number of "
+                       "input channels in %s-direction. "
+                       "This would lead to an empty connection list." %
+                       name)
+                raise Rectangular2dSwitchboardException(err)
         # number of output channels in x-direction
-        self.x_out_channels = ((x_in_channels - x_field_channels) //
-                               x_field_spacing + 1)
-        self.x_unused_channels = x_in_channels - x_field_channels
-        if self.x_unused_channels > 0:
-            self.x_unused_channels %= x_field_spacing
-        elif self.x_unused_channels < 0:
-            self.x_unused_channels = x_in_channels
-        if self.x_unused_channels and not ignore_cover:
-            err = ("Channel fields do not "
-                   "cover all input channels in x-direction.")
-            raise Rectangular2dSwitchboardException(err)
+        x_out_channels = (((in_channels_xy[0] - field_channels_xy[0]) //
+                           field_spacing_xy[0]) + 1)
+        x_unused_channels = in_channels_xy[0] - field_channels_xy[0]
+        if x_unused_channels > 0:
+            x_unused_channels %= field_spacing_xy[0]
+        elif x_unused_channels < 0:
+            x_unused_channels = in_channels_xy[0]
         # number of output channels in y-direction
-        self.y_out_channels = ((y_in_channels - y_field_channels) //
-                               y_field_spacing + 1)
-        self.y_unused_channels = y_in_channels - y_field_channels
-        if self.y_unused_channels > 0:
-            self.y_unused_channels %= y_field_spacing
-        elif self.y_unused_channels < 0:
-            self.y_unused_channels = y_in_channels
-        if self.y_unused_channels and not ignore_cover:
-            err = ("Channel fields do not "
-                   "cover all input channels in y-direction.")
-            raise Rectangular2dSwitchboardException(err)
+        y_out_channels = (((in_channels_xy[1] - field_channels_xy[1]) //
+                           field_spacing_xy[1]) + 1)
+        y_unused_channels = in_channels_xy[1] - field_channels_xy[1]
+        if y_unused_channels > 0:
+            y_unused_channels %= field_spacing_xy[1]
+        elif y_unused_channels < 0:
+            y_unused_channels = in_channels_xy[1]
+        self.unused_channels_xy = (x_unused_channels, y_unused_channels)
+        for i, name in enumerate(["x", "y"]):
+            if self.unused_channels_xy[i] and not ignore_cover:
+                err = ("Channel fields do not "
+                       "cover all input channels in %s-direction." % name)
+                raise Rectangular2dSwitchboardException(err)
+        self.out_channels_xy = (x_out_channels, y_out_channels)
         ## end of parameters checks
-        out_channels = self.x_out_channels * self.y_out_channels
-        in_trans = CoordinateTranslator(x_in_channels, y_in_channels)
+        # TODO: rewrite all this leveraging numpy?
+        #    this might make the code much simpler
+        #    use 3rd shape entry for channel width
+        out_channels = x_out_channels * y_out_channels
+        in_trans = CoordinateTranslator(*in_channels_xy)
         # input-output mapping of connections
         # connections has an entry for each output connection,
         # containing the index of the input connection.
         connections = numx.zeros([out_channels * out_channel_dim],
                                  dtype=numx.int32)
         first_out_con = 0
-        for y_out_chan in range(self.y_out_channels):
-            for x_out_chan in range(self.x_out_channels):
+        for y_out_chan in range(self.out_channels_xy[1]):
+            for x_out_chan in range(self.out_channels_xy[0]):
                 # inner loop over field
-                x_start_chan = x_out_chan * x_field_spacing
-                y_start_chan = y_out_chan * y_field_spacing
+                x_start_chan = x_out_chan * field_spacing_xy[0]
+                y_start_chan = y_out_chan * field_spacing_xy[1]
                 for y_in_chan in range(y_start_chan,
-                                       y_start_chan + self.y_field_channels):
+                                       y_start_chan + field_channels_xy[1]):
                     for x_in_chan in range(x_start_chan,
-                                        x_start_chan + self.x_field_channels):
+                                        x_start_chan + field_channels_xy[0]):
                         first_in_con = (in_trans.image_to_index(
                                                     x_in_chan, y_in_chan) *
                                         in_channel_dim)
@@ -318,8 +319,8 @@ class Rectangular2dSwitchboard(ChannelSwitchboard):
                             range(first_in_con, first_in_con + in_channel_dim)
                         first_out_con += in_channel_dim
         super(Rectangular2dSwitchboard, self).__init__(
-                                input_dim= (x_in_channels * y_in_channels *
-                                            in_channel_dim),
+                                input_dim= (in_channel_dim *
+                                    in_channels_xy[0] * in_channels_xy[1]),
                                 connections=connections,
                                 out_channel_dim=out_channel_dim,
                                 in_channel_dim=in_channel_dim)

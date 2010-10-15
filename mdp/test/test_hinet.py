@@ -242,13 +242,10 @@ def testOutChannelsInputChannels():
 ## Tests for Rectangular2dSwitchboard ##
 
 def testRect2dRouting1():
-    sboard = mh.Rectangular2dSwitchboard(x_in_channels=3,
-                                         y_in_channels=2,
+    sboard = mh.Rectangular2dSwitchboard(in_channels_xy=(3,2),
                                          in_channel_dim=2,
-                                         x_field_channels=2,
-                                         y_field_channels=1,
-                                         x_field_spacing=1,
-                                         y_field_spacing=1)
+                                         field_channels_xy=(2,1),
+                                         field_spacing_xy=1)
     assert numx.all(sboard.connections ==
                            numx.array([0, 1, 2, 3, 2, 3, 4, 5, 6, 7,
                                        8, 9, 8, 9, 10, 11]))
@@ -260,13 +257,10 @@ def testRect2dRouting1():
     channel_sboard.execute(x)
 
 def testRect2dRouting2():
-    sboard = mh.Rectangular2dSwitchboard(x_in_channels=2,
-                                         y_in_channels=4,
+    sboard = mh.Rectangular2dSwitchboard(in_channels_xy=(2,4),
                                          in_channel_dim=1,
-                                         x_field_channels=1,
-                                         y_field_channels=2,
-                                         x_field_spacing=1,
-                                         y_field_spacing=2)
+                                         field_channels_xy=(1,2),
+                                         field_spacing_xy=(1,2))
     assert numx.all(sboard.connections ==
                     numx.array([0, 2, 1, 3, 4, 6, 5, 7]))
     x = numx.array([range(0, sboard.input_dim),
@@ -277,24 +271,18 @@ def testRect2dRouting2():
     channel_sboard.execute(x)
 
 def testRect2dRouting3():
-    sboard = mh.Rectangular2dSwitchboard(x_in_channels=2,
-                                         y_in_channels=4,
+    sboard = mh.Rectangular2dSwitchboard(in_channels_xy=(2,4),
                                          in_channel_dim=1,
-                                         x_field_channels=2,
-                                         y_field_channels=2,
-                                         x_field_spacing=1,
-                                         y_field_spacing=2)
+                                         field_channels_xy=2,
+                                         field_spacing_xy=(1,2))
     assert (sboard.connections ==
             numx.array([0, 1, 2, 3, 4, 5, 6, 7])).all()
 
 def testRect2dRouting4():
-    sboard = mh.Rectangular2dSwitchboard(x_in_channels=4,
-                                         y_in_channels=4,
+    sboard = mh.Rectangular2dSwitchboard(in_channels_xy=4,
                                          in_channel_dim=1,
-                                         x_field_channels=3,
-                                         y_field_channels=2,
-                                         x_field_spacing=1,
-                                         y_field_spacing=2)
+                                         field_channels_xy=(3,2),
+                                         field_spacing_xy=(1,2))
     assert (sboard.connections ==
             numx.array([0, 1, 2, 4, 5, 6,
                         1, 2, 3, 5, 6, 7,
@@ -302,13 +290,10 @@ def testRect2dRouting4():
                         9, 10, 11, 13, 14, 15])).all()
 
 def testRect2d_get_out_channel_node():
-    sboard = mh.Rectangular2dSwitchboard(x_in_channels=5,
-                                         y_in_channels=4,
+    sboard = mh.Rectangular2dSwitchboard(in_channels_xy=(5,4),
                                          in_channel_dim=2,
-                                         x_field_channels=3,
-                                         y_field_channels=2,
-                                         x_field_spacing=1,
-                                         y_field_spacing=2)
+                                         field_channels_xy=(3,2),
+                                         field_spacing_xy=(1,2))
     x = numx.array([range(0, sboard.input_dim),
                     range(101, 101+sboard.input_dim)])
     y = sboard.execute(x)
@@ -320,39 +305,30 @@ def testRect2d_get_out_channel_node():
     assert (y == layer_y).all()
 
 def test_Rect2d_exception_1():
-    bad_args = dict(x_in_channels=12,
-                    y_in_channels=8,
-                    x_field_channels=4,
-                    # this is the problematic value:
-                        y_field_channels=3,
-                    x_field_spacing=2,
-                    y_field_spacing=2,
+    bad_args = dict(in_channels_xy=(12,8),
+                    # 3 is the problematic value:
+                    field_channels_xy=(4,3),
+                    field_spacing_xy=2,
                     in_channel_dim=3,
                     ignore_cover=False)
     py.test.raises(mh.Rectangular2dSwitchboardException,
                    'mh.Rectangular2dSwitchboard(**bad_args)')
 
 def test_Rect2d_exception_2():
-    bad_args = dict(x_in_channels=12,
-                    y_in_channels=8,
-                    x_field_channels=4,
-                    # this is the problematic value:
-                        y_field_channels=9,
-                    x_field_spacing=2,
-                    y_field_spacing=2,
+    bad_args = dict(in_channels_xy=(12,8),
+                    # 9 is the problematic value:
+                    field_channels_xy=(4,9),
+                    field_spacing_xy=2,
                     in_channel_dim=3,
                     ignore_cover=False)
     py.test.raises(mh.Rectangular2dSwitchboardException,
                    'mh.Rectangular2dSwitchboard(**bad_args)')
 
 def test_Rect2d_exception_3():
-    bad_args = dict(x_in_channels=12,
-                    y_in_channels=8,
-                    x_field_channels=4,
-                    # this is the problematic value:
-                        y_field_channels=9,
-                    x_field_spacing=2,
-                    y_field_spacing=2,
+    bad_args = dict(in_channels_xy=(12,8),
+                    # 9 is the problematic value:
+                    field_channels_xy=(4,9),
+                    field_spacing_xy=2,
                     in_channel_dim=3,
                     ignore_cover=True)
     py.test.raises(mh.Rectangular2dSwitchboardException,
@@ -494,12 +470,9 @@ def test_DoubleRhomd_routing_8():
     sboard.execute(x)
 
 def test_hinet_simple_net():
-    switchboard = mh.Rectangular2dSwitchboard(x_in_channels=12,
-                                              y_in_channels=8,
-                                              x_field_channels=4,
-                                              y_field_channels=4,
-                                              x_field_spacing=2,
-                                              y_field_spacing=2,
+    switchboard = mh.Rectangular2dSwitchboard(in_channels_xy=(12,8),
+                                              field_channels_xy=4,
+                                              field_spacing_xy=2,
                                               in_channel_dim=3)
 
     node = mdp.nodes.PCANode(input_dim=4*4*3, output_dim=5)
@@ -515,12 +488,9 @@ def pytest_funcarg__noisenode(request):
 
 def test_SFA_net(noisenode):
     sfa_node = mdp.nodes.SFANode(input_dim=20*20, output_dim=10, dtype='f')
-    switchboard = mh.Rectangular2dSwitchboard(x_in_channels=100,
-                                              y_in_channels=100,
-                                              x_field_channels=20,
-                                              y_field_channels=20,
-                                              x_field_spacing=10,
-                                              y_field_spacing=10)
+    switchboard = mh.Rectangular2dSwitchboard(in_channels_xy=100,
+                                              field_channels_xy=20,
+                                              field_spacing_xy=10)
     flownode = mh.FlowNode(mdp.Flow([noisenode, sfa_node]))
     sfa_layer = mh.CloneLayer(flownode, switchboard.output_channels)
     flow = mdp.Flow([switchboard, sfa_layer])
@@ -530,12 +500,9 @@ def test_SFA_net(noisenode):
 def testHiNetHTML(noisenode):
     # create some flow for testing
     sfa_node = mdp.nodes.SFANode(input_dim=20*20, output_dim=10)
-    switchboard = mh.Rectangular2dSwitchboard(x_in_channels=100,
-                                              y_in_channels=100,
-                                              x_field_channels=20,
-                                              y_field_channels=20,
-                                              x_field_spacing=10,
-                                              y_field_spacing=10)
+    switchboard = mh.Rectangular2dSwitchboard(in_channels_xy=100,
+                                              field_channels_xy=20,
+                                              field_spacing_xy=10)
     flownode = mh.FlowNode(mdp.Flow([noisenode, sfa_node]))
     sfa_layer = mh.CloneLayer(flownode, switchboard.output_channels)
     flow = mdp.Flow([switchboard, sfa_layer])
