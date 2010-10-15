@@ -337,11 +337,9 @@ def test_Rect2d_exception_3():
 ## Tests for DoubleRect2dSwitchboard ##
 
 def test_Rect_double_routing_1():
-    sboard = mh.DoubleRect2dSwitchboard(x_in_channels=4,
-                                        y_in_channels=4,
-                                        in_channel_dim=1,
-                                        x_field_channels=2,
-                                        y_field_channels=2)
+    sboard = mh.DoubleRect2dSwitchboard(in_channels_xy=4,
+                                        field_channels_xy=2,
+                                        in_channel_dim=1)
     assert (sboard.connections ==
             numx.array([0,1,4,5, 2,3,6,7, 8,9,12,13, 10,11,14,15,
                         # uneven fields
@@ -351,11 +349,9 @@ def test_Rect_double_routing_1():
     sboard.execute(x)
 
 def test_Rect_double_routing_2():
-    sboard = mh.DoubleRect2dSwitchboard(x_in_channels=6,
-                                        y_in_channels=4,
-                                        in_channel_dim=1,
-                                        x_field_channels=2,
-                                        y_field_channels=2)
+    sboard = mh.DoubleRect2dSwitchboard(in_channels_xy=(6,4),
+                                        field_channels_xy=(2,2),
+                                        in_channel_dim=1)
     assert (sboard.connections ==
             numx.array([0,1,6,7, 2,3,8,9, 4,5,10,11, 12,13,18,19,
                         14,15,20,21, 16,17,22,23,
@@ -366,11 +362,9 @@ def test_Rect_double_routing_2():
     sboard.execute(x)
 
 def test_Rect_double_routing_3():
-    sboard = mh.DoubleRect2dSwitchboard(x_in_channels=4,
-                                        y_in_channels=6,
-                                        in_channel_dim=1,
-                                        x_field_channels=2,
-                                        y_field_channels=2)
+    sboard = mh.DoubleRect2dSwitchboard(in_channels_xy=(4,6),
+                                        field_channels_xy=2,
+                                        in_channel_dim=1)
     assert (sboard.connections ==
             numx.array([0,1,4,5, 2,3,6,7, 8,9,12,13, 10,11,14,15,
                         16,17,20,21, 18,19,22,23,
@@ -383,8 +377,7 @@ def test_Rect_double_routing_3():
 ## Tests for DoubleRhomb2dSwitchboard ##
 
 def test_DoubleRhomb_routing_1():
-    sboard = mh.DoubleRhomb2dSwitchboard(x_long_in_channels=3,
-                                         y_long_in_channels=2,
+    sboard = mh.DoubleRhomb2dSwitchboard(long_in_channels_xy=(3,2),
                                          diag_field_channels=2,
                                          in_channel_dim=1)
     assert (sboard.connections ==
@@ -394,8 +387,7 @@ def test_DoubleRhomb_routing_1():
     sboard.execute(x)
 
 def test_DoubleRhomd_routing_2():
-    sboard = mh.DoubleRhomb2dSwitchboard(x_long_in_channels=2,
-                                         y_long_in_channels=3,
+    sboard = mh.DoubleRhomb2dSwitchboard(long_in_channels_xy=(2,3),
                                          diag_field_channels=2,
                                          in_channel_dim=1)
     assert (sboard.connections ==
@@ -405,8 +397,7 @@ def test_DoubleRhomd_routing_2():
     sboard.execute(x)
 
 def test_DoubleRhomd_routing_3():
-    sboard = mh.DoubleRhomb2dSwitchboard(x_long_in_channels=4,
-                                         y_long_in_channels=2,
+    sboard = mh.DoubleRhomb2dSwitchboard(long_in_channels_xy=(4,2),
                                          diag_field_channels=2,
                                          in_channel_dim=1)
     assert (sboard.connections ==
@@ -416,8 +407,7 @@ def test_DoubleRhomd_routing_3():
     sboard.execute(x)
 
 def test_DoubleRhomd_routing_4():
-    sboard = mh.DoubleRhomb2dSwitchboard(x_long_in_channels=2,
-                                         y_long_in_channels=4,
+    sboard = mh.DoubleRhomb2dSwitchboard(long_in_channels_xy=(2,4),
                                          diag_field_channels=2,
                                          in_channel_dim=1)
     assert (sboard.connections ==
@@ -427,8 +417,7 @@ def test_DoubleRhomd_routing_4():
     sboard.execute(x)
 
 def test_DoubleRhomd_routing_5():
-    sboard = mh.DoubleRhomb2dSwitchboard(x_long_in_channels=4,
-                                         y_long_in_channels=4,
+    sboard = mh.DoubleRhomb2dSwitchboard(long_in_channels_xy=4,
                                          diag_field_channels=2,
                                          in_channel_dim=1)
     assert (sboard.connections ==
@@ -443,8 +432,7 @@ def test_DoubleRhomd_routing_5():
     sboard.execute(x)
 
 def test_DoubleRhomd_routing_6():
-    sboard = mh.DoubleRhomb2dSwitchboard(x_long_in_channels=7,
-                                         y_long_in_channels=4,
+    sboard = mh.DoubleRhomb2dSwitchboard(long_in_channels_xy=(7,4),
                                          diag_field_channels=4,
                                          in_channel_dim=1)
     x = numx.array([range(0, sboard.input_dim),
@@ -452,8 +440,7 @@ def test_DoubleRhomd_routing_6():
     sboard.execute(x)
 
 def test_DoubleRhomd_routing_7():
-    sboard = mh.DoubleRhomb2dSwitchboard(x_long_in_channels=4,
-                                         y_long_in_channels=7,
+    sboard = mh.DoubleRhomb2dSwitchboard(long_in_channels_xy=(4,7),
                                          diag_field_channels=4,
                                          in_channel_dim=1)
     x = numx.array([range(0, sboard.input_dim),
@@ -461,8 +448,7 @@ def test_DoubleRhomd_routing_7():
     sboard.execute(x)
 
 def test_DoubleRhomd_routing_8():
-    sboard = mh.DoubleRhomb2dSwitchboard(x_long_in_channels=6,
-                                         y_long_in_channels=7,
+    sboard = mh.DoubleRhomb2dSwitchboard(long_in_channels_xy=(6,7),
                                          diag_field_channels=4,
                                          in_channel_dim=1)
     x = numx.array([range(0, sboard.input_dim),

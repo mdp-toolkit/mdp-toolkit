@@ -17,16 +17,9 @@ def get_2d_image_switchboard(image_size_xy):
 
     This can then be used as the prev_switchboard.
     """
-    if isinstance(image_size_xy, int):
-        image_size_x = image_size_xy
-        image_size_y = image_size_xy
-    else:
-        image_size_x, image_size_y = image_size_xy
-    return Rectangular2dSwitchboard(
-                        x_in_channels=image_size_x,
-                        y_in_channels=image_size_y,
-                        x_field_channels=1, y_field_channels=1,
-                        x_field_spacing=1, y_field_spacing=1)
+    return Rectangular2dSwitchboard(in_channels_xy=image_size_xy,
+                                    field_channels_xy=1,
+                                    field_spacing_xy=1)
 
 
 class FactoryExtensionChannelSwitchboard(mdp.ExtensionNode,
@@ -70,9 +63,6 @@ class FactoryExtensionChannelSwitchboard(mdp.ExtensionNode,
                    " is not compatible with this switchboard class" +
                    " '%s'." % cls.__name__)
             raise mdp.hinet.SwitchboardException(err)
-        for key, value in free_params.items():
-            if key.endswith('_xy') and isinstance(value, int):
-                free_params[key] = (value, value)
         kwargs = cls._get_switchboard_kwargs(free_params, prev_switchboard,
                                              prev_output_dim)
         return cls(**kwargs)
@@ -105,12 +95,9 @@ class FactoryRectangular2dSwitchboard(FactoryExtensionChannelSwitchboard,
         in_channel_dim = (prev_output_dim // prev_switchboard.output_channels)
         if not "ignore_cover" in free_params:
             free_params["ignore_cover"] = True
-        return {"x_in_channels": prev_switchboard.x_out_channels,
-                "y_in_channels": prev_switchboard.y_out_channels,
-                "x_field_channels": free_params["field_size_xy"][0],
-                "y_field_channels": free_params["field_size_xy"][1],
-                "x_field_spacing": free_params["field_step_xy"][0],
-                "y_field_spacing": free_params["field_step_xy"][1],
+        return {"in_channels_xy": prev_switchboard.out_channels_xy,
+                "field_size_xy": free_params["field_size_xy"],
+                "field_step_xy": free_params["field_step_xy"],
                 "in_channel_dim": in_channel_dim,
                 "ignore_cover": free_params["ignore_cover"]}
 
@@ -128,10 +115,8 @@ class FactoryDoubleRect2dSwitchboard(FactoryExtensionChannelSwitchboard,
         in_channel_dim = (prev_output_dim // prev_switchboard.output_channels)
         if not "ignore_cover" in free_params:
             free_params["ignore_cover"] = True
-        return {"x_in_channels": prev_switchboard.x_out_channels,
-                "y_in_channels": prev_switchboard.y_out_channels,
-                "x_field_channels": free_params["field_size_xy"][0],
-                "y_field_channels": free_params["field_size_xy"][1],
+        return {"in_channels_xy": prev_switchboard.out_channels_xy,
+                "field_size_xy": free_params["field_size_xy"],
                 "in_channel_dim": in_channel_dim,
                 "ignore_cover": free_params["ignore_cover"]}
 
@@ -146,7 +131,6 @@ class FactoryDoubleRhomb2dSwitchboard(FactoryExtensionChannelSwitchboard,
     def _get_switchboard_kwargs(free_params, prev_switchboard,
                                 prev_output_dim):
         in_channel_dim = (prev_output_dim // prev_switchboard.output_channels)
-        return {"x_long_in_channels": prev_switchboard.x_long_out_channels,
-                "y_long_in_channels": prev_switchboard.y_long_out_channels,
+        return {"long_out_channels_xy": prev_switchboard.long_out_channels_xy,
                 "diag_field_channels": free_params["field_size"],
                 "in_channel_dim": in_channel_dim}
