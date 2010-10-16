@@ -85,7 +85,7 @@ class FactoryExtensionChannelSwitchboard(mdp.ExtensionNode,
 class FactoryRectangular2dSwitchboard(FactoryExtensionChannelSwitchboard,
                                       Rectangular2dSwitchboard):
 
-    free_parameters = ["field_size_xy", "field_step_xy", "ignore_cover"]
+    free_parameters = ["field_channels_xy", "field_spacing_xy", "ignore_cover"]
     compatible_pre_switchboards = [Rectangular2dSwitchboard,
                                    DoubleRhomb2dSwitchboard]
 
@@ -96,8 +96,8 @@ class FactoryRectangular2dSwitchboard(FactoryExtensionChannelSwitchboard,
         if not "ignore_cover" in free_params:
             free_params["ignore_cover"] = True
         return {"in_channels_xy": prev_switchboard.out_channels_xy,
-                "field_size_xy": free_params["field_size_xy"],
-                "field_step_xy": free_params["field_step_xy"],
+                "field_channels_xy": free_params["field_channels_xy"],
+                "field_spacing_xy": free_params["field_spacing_xy"],
                 "in_channel_dim": in_channel_dim,
                 "ignore_cover": free_params["ignore_cover"]}
 
@@ -105,7 +105,7 @@ class FactoryRectangular2dSwitchboard(FactoryExtensionChannelSwitchboard,
 class FactoryDoubleRect2dSwitchboard(FactoryExtensionChannelSwitchboard,
                                      DoubleRect2dSwitchboard):
 
-    free_parameters = ["field_size_xy", "ignore_cover"]
+    free_parameters = ["field_channels_xy", "ignore_cover"]
     compatible_pre_switchboards = [Rectangular2dSwitchboard,
                                    DoubleRhomb2dSwitchboard]
 
@@ -116,7 +116,7 @@ class FactoryDoubleRect2dSwitchboard(FactoryExtensionChannelSwitchboard,
         if not "ignore_cover" in free_params:
             free_params["ignore_cover"] = True
         return {"in_channels_xy": prev_switchboard.out_channels_xy,
-                "field_size_xy": free_params["field_size_xy"],
+                "field_channels_xy": free_params["field_channels_xy"],
                 "in_channel_dim": in_channel_dim,
                 "ignore_cover": free_params["ignore_cover"]}
 
