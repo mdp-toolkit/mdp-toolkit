@@ -20,7 +20,8 @@ class ThreadScheduler(Scheduler):
     shared memory.
     """
 
-    def __init__(self, result_container=None, verbose=False, n_threads=1):
+    def __init__(self, result_container=None, verbose=False, n_threads=1,
+                 copy_callable=True):
         """Initialize the scheduler.
 
         result_container -- ResultContainer used to store the results.
@@ -28,6 +29,9 @@ class ThreadScheduler(Scheduler):
             (default value is False).
         n_threads -- Number of threads used in parallel. If None (default)
             then the number of detected CPU cores is used.
+        copy_callable -- Use deep copies of the task callable in the threads.
+            This is for example required if some nodes are stateful during
+            execution (e.g., a BiNode using the coroutine decorator).
         """
         super(ThreadScheduler, self).__init__(
                                             result_container=result_container,
@@ -37,6 +41,7 @@ class ThreadScheduler(Scheduler):
         else:
             self._n_threads = cpu_count()
         self._n_active_threads = 0
+        self.copy_callable = copy_callable
 
     def _process_task(self, data, task_callable, task_index):
         """Add a task, if possible without blocking.
@@ -54,11 +59,12 @@ class ThreadScheduler(Scheduler):
             else:
                 self._lock.release()
                 task_callable = task_callable.fork()
-                # create a deep copy of the task_callable,
-                # since it might not be thread safe 
-                # (but the fork is still required)
-                as_str = pickle.dumps(task_callable, -1)
-                task_callable = pickle.loads(as_str)
+                if self.copy_callable:
+                    # create a deep copy of the task_callable,
+                    # since it might not be thread safe 
+                    # (but the fork is still required)
+                    as_str = pickle.dumps(task_callable, -1)
+                    task_callable = pickle.loads(as_str)
                 try:
                     thread = threading.Thread(target=self._task_thread,
                                               args=(data, task_callable,
