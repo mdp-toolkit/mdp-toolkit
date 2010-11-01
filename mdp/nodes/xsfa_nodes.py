@@ -42,8 +42,8 @@ class XSFANode(mdp.Node):
     References:
     Sprekeler, H., Zito, T., and Wiskott, L. (2009).
     An Extension of Slow Feature Analysis for Nonlinear Blind Source Separation
-    Journal of Machine Learning Research, submitted
-    [pdf link follows]
+    Journal of Machine Learning Research
+    http://cogprints.org/7056/1/SprekelerZitoWiskott-Cogprints-2010.pdf
     """
     def __init__(self, basic_exp=None, intern_exp=None, svd=False, verbose=False,
                  input_dim=None, output_dim=None, dtype=None):
