@@ -64,12 +64,14 @@ class ParallelExtensionNode(mdp.ExtensionNode, mdp.Node):
         This is a template method, the actual joining should be implemented in
         _join.
         """
+        # Warning: Use the properties / setters here. Otherwise we get problems
+        #    in certain situations (e.g., for FlowNode).
         if self.dtype is None:
-            self._dtype = forked_node.dtype
+            self.dtype = forked_node.dtype
         if self.input_dim is None:
-            self._input_dim = forked_node.input_dim
+            self.input_dim = forked_node.input_dim
         if self.output_dim is None:
-            self._output_dim = forked_node.output_dim
+            self.output_dim = forked_node.output_dim
         if forked_node._train_phase_started and not self._train_phase_started:
             self._train_phase_started = True
         self._join(forked_node)
