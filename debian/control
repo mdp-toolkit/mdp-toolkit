@@ -11,7 +11,7 @@ Homepage: http://mdp-toolkit.sourceforge.net/
 Package: python-mdp
 Architecture: all
 Depends: ${misc:Depends}, ${python:Depends}, python-numpy
-Recommends: python-scipy, python-shogun-modular, python-libsvm
+Recommends: python-scipy, shogun-python-modular, python-libsvm
 Suggests: python-pp
 Enhances: python-mvpa
 Description: Modular toolkit for Data Processing
