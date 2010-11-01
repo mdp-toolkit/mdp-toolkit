@@ -122,33 +122,31 @@ class  HTMLExtensionNode(mdp.ExtensionNode, mdp.Node):
                       "_html_representation")
 def _rect2d_switchoard_html(self):
     lines = ['rec. field size (in channels): %d x %d = %d' %
-                (self.x_field_channels, self.y_field_channels,
-                 self.x_field_channels * self.y_field_channels),
+                (self.field_channels_xy[0], self.field_channels_xy[1],
+                 self.field_channels_xy[0] * self.field_channels_xy[1]),
              '# of rec. fields (out channels): %d x %d = %d' %
-                (self.x_out_channels, self.y_out_channels,
+                (self.out_channels_xy[0], self.out_channels_xy[1],
                  self.output_channels),
-             'rec. field distances (in channels): (%d x %d)' %
-                (self.x_field_spacing, self.y_field_spacing),
+             'rec. field distances (in channels): ' +
+                str(self.field_spacing_xy),
              'channel width: %d' % self.in_channel_dim]
-    if self.x_unused_channels or self.y_unused_channels:
-        lines.append('unused channels: (%d, %d)' %
-                     (self.x_unused_channels, self.y_unused_channels))
+    if not all(self.unused_channels_xy):
+        lines.append('unused channels: ' + str(self.unused_channels_xy))
     return lines
 
 @mdp.extension_method("html", switchboard.DoubleRect2dSwitchboard,
                       "_html_representation")
 def _double_rect2d_switchoard_html(self):
     lines = ['rec. field size (in channels): %d x %d = %d' %
-                (self.x_field_channels, self.y_field_channels,
-                 self.x_field_channels * self.y_field_channels),
-             '# of long row rec. fields (out channels): %d, %d' %
-                (self.x_long_out_channels, self.y_long_out_channels),
+                (self.field_channels_xy[0], self.field_channels_xy[1],
+                 self.field_channels_xy[0] * self.field_channels_xy[1]),
+             '# of long row rec. fields (out channels): ' +
+                str(self.long_out_channels_xy),
              'total number of receptive fields: %d' %
                 self.output_channels,
              'channel width: %d' % self.in_channel_dim]
     if self.x_unused_channels or self.y_unused_channels:
-        lines.append('unused channels: (%d, %d)' %
-                     (self.x_unused_channels, self.y_unused_channels))
+        lines.append('unused channels: ' + str(self.unused_channels_xy))
     return lines
 
 @mdp.extension_method("html", switchboard.DoubleRhomb2dSwitchboard,
@@ -156,7 +154,7 @@ def _double_rect2d_switchoard_html(self):
 def _double_rhomb2d_switchoard_html(self):
     lines = ['rec. field size: %d' % self.diag_field_channels,
              '# of rec. fields (out channels): %d x %d = %d' %
-                (self.x_out_channels, self.y_out_channels,
+                (self.out_channels_xy[0], self.out_channels_xy[1],
                  self.output_channels),
              'channel width: %d' % self.in_channel_dim]
     return lines
