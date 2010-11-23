@@ -93,13 +93,13 @@ class TestBiFlow(object):
         samples = mdp.numx_rand.random((100,10))
         labels = mdp.numx.arange(100)
         flow = BiFlow([mdp.nodes.PCANode(), nodes.FDABiNode()])
-        flow.train([[samples],[samples]], [None,[{"cl": labels}]])
+        flow.train([[samples],[samples]], [None,[{"labels": labels}]])
 
     def test_wrong_argument_handling(self):
         """Test correct error for additional arguments in Node instance."""
         samples = mdp.numx_rand.random((100,10))
         labels = mdp.numx.arange(100)
-        # cl argument of FDANode is not supported in biflow
+        # labels argument of FDANode is not supported in biflow
         flow = BiFlow([mdp.nodes.PCANode(), mdp.nodes.FDANode()])
         # the iterables are passed as if this were a normal Flow
         py.test.raises(BiFlowException,

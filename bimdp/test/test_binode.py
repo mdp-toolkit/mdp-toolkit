@@ -165,7 +165,7 @@ class TestBiNode(object):
         binode = FDABiNode(stop_result=stop_result,
                            node_id="testing binode")
         x = n.random.random((100,10))
-        msg = {"cl": n.zeros(len(x))}
+        msg = {"labels": n.zeros(len(x))}
         binode.train(x, msg)
         result = binode.stop_training()
         assert result == (None,) + stop_result[0]
