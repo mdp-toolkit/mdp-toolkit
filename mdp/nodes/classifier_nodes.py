@@ -331,7 +331,7 @@ class KMeansClassifier(ClassifierNode):
         return [self._nearest_centroid_idx(xi, self._centroids) for xi in x]
 
 
-class GaussianClassifierNode(ClassifierNode):
+class GaussianClassifier(ClassifierNode):
     """Perform a supervised Gaussian classification.
 
     Given a set of labelled data, the node fits a gaussian distribution
@@ -343,9 +343,9 @@ class GaussianClassifierNode(ClassifierNode):
     """
     
     def __init__(self, input_dim=None, output_dim=None, dtype=None):
-        super(GaussianClassifierNode, self).__init__(input_dim=input_dim,
-                                                     output_dim=output_dim,
-                                                     dtype=dtype)
+        super(GaussianClassifier, self).__init__(input_dim=input_dim,
+                                                 output_dim=output_dim,
+                                                 dtype=dtype)
         self.cov_objs = {}
 
     @staticmethod

@@ -7,7 +7,7 @@ def testGaussianClassifier_train():
     covs = []
     means = []
 
-    node = mdp.nodes.GaussianClassifierNode()
+    node = mdp.nodes.GaussianClassifier()
     for i in xrange(nclasses):
         cov = utils.symrand(uniform((dim,))*dim+1)
         mn = uniform((dim,))*10.
@@ -39,7 +39,7 @@ def testGaussianClassifier_train():
                                   decimal-2)
 
 def testGaussianClassifier_labellistbug():
-    gc = mdp.nodes.GaussianClassifierNode()
+    gc = mdp.nodes.GaussianClassifier()
     # this was failing as of MDP-2.5-309-gefa0f9d!
     gc.train(mdp.numx_rand.random((50, 3)), [+1] * 50)
 
@@ -69,7 +69,7 @@ def testGaussianClassifier_classify():
     x = numx.take(x, perm_idx, axis=0)
     classes = numx.take(classes, perm_idx, axis=0)
 
-    node = mdp.nodes.GaussianClassifierNode()
+    node = mdp.nodes.GaussianClassifier()
     node.train(x, classes)
     classification = node.label(x)
 
