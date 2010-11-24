@@ -15,7 +15,8 @@ from regression_nodes import LinearRegressionNode
 from classifier_nodes import (SignumClassifier, PerceptronClassifier,
                               SimpleMarkovClassifier,
                               DiscreteHopfieldClassifier,
-                              KMeansClassifier, GaussianClassifier)
+                              KMeansClassifier, GaussianClassifier,
+                              NearestMeanClassifier)
 from jade import JADENode
 from nipals import NIPALSNode
 from lle_nodes import LLENode, HLLENode
@@ -26,7 +27,8 @@ from misc_nodes import OneDimensionalHitParade as _OneDimensionalHitParade
 from expansion_nodes import expanded_dim as _expanded_dim
 
 __all__ = ['CuBICANode', 'EtaComputerNode', 'FANode', 'FDANode', 'FastICANode',
-           'GaussianClassifier', 'GrowingNeuralGasNode', 'HitParadeNode',
+           'GaussianClassifier', 'NearestMeanClassifier',
+           'GrowingNeuralGasNode', 'HitParadeNode',
            'ICANode', 'ISFANode', 'NoiseNode', 'NormalNoiseNode',
            'IdentityNode',
            'PCANode', 'PolynomialExpansionNode', 'QuadraticExpansionNode',

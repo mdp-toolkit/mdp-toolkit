@@ -1,6 +1,8 @@
 import mdp
 from mdp import ClassifierNode, utils, numx, numx_rand, numx_linalg
 
+# TODO: The GaussianClassifier and NearestMeanClassifier could be parallelized.
+
 
 class SignumClassifier(ClassifierNode):
     """This classifier node classifies as 1, if the sum of the data points is
@@ -463,3 +465,67 @@ class GaussianClassifier(ClassifierNode):
         class_prob = self.class_probabilities(x)
         winner = class_prob.argmax(axis=-1)
         return [self.labels[winner[i]] for i in range(len(winner))]
+    
+# TODO: Maybe extract some common elements form this class and
+#    GaussianClassifier, like in _train.
+
+class NearestMeanClassifier(ClassifierNode):
+    """Nearest-Mean classifier."""
+    
+    def __init__(self, input_dim=None, output_dim=None, dtype=None):
+        super(NearestMeanClassifier, self).__init__(input_dim=input_dim,
+                                                    output_dim=output_dim,
+                                                    dtype=dtype)
+        self.means = {}
+        self.n_samples = {}
+        self.ordered_labels = []
+        self.ordered_means = []
+        
+    def _train(self, x, labels):
+        """Update the mean information for the different classes.
+        
+        labels -- Can be a list, tuple or array of labels (one for each data
+            point) or a single label, in which case all input data is assigned
+            to the same class (computationally this is more efficient).
+        """
+        if isinstance(labels, (list, tuple, numx.ndarray)):
+            labels = numx.asarray(labels)
+            for label in set(labels):
+                x_label = numx.compress(labels==label, x, axis=0)
+                self._update_mean(x_label, label)
+        else:
+            self._update_mean(x, labels)
+            
+    def _update_mean(self, x, label):
+        """Update the mean with data for a single label."""
+        if label not in self.means:
+            self.means[label] = numx.zeros(self.input_dim)
+            self.n_samples[label] = 0
+        # TODO: use smarter summing to avoid rounding errors
+        self.means[label] += numx.sum(x, axis=0)
+        self.n_samples[label] += len(x)
+        
+    def _check_train_args(self, x, labels):
+        if isinstance(labels, (list, tuple, numx.ndarray)) and (
+            len(labels) != x.shape[0]):
+            msg = ("The number of labels should be equal to the number of "
+                   "datapoints (%d != %d)" % (len(labels), x.shape[0]))
+            raise mdp.TrainingException(msg)
+        
+    def _stop_training(self):
+        """Calculate the class means."""
+        for label in self.means:
+            self.means[label] /= self.n_samples[label]
+            self.ordered_labels.append(label)
+            self.ordered_means.append(self.means[label])
+        self.ordered_means = numx.vstack(self.ordered_means)
+            
+    def _label(self, x):
+        """Classify the data based on minimal distance to mean."""
+        n_labels = len(self.ordered_labels)
+        differences = x[:,:,numx.newaxis].repeat(n_labels, 2). \
+                        swapaxes(1,2) - self.ordered_means
+        square_distances = (differences**2).sum(2)
+        label_indices = square_distances.argmin(1)
+        labels = [self.ordered_labels[i] for i in label_indices]
+        return labels
