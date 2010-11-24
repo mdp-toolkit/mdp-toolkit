@@ -346,7 +346,16 @@ class GaussianClassifier(ClassifierNode):
         super(GaussianClassifier, self).__init__(input_dim=input_dim,
                                                  output_dim=output_dim,
                                                  dtype=dtype)
-        self.cov_objs = {}
+        self._cov_objs = {}  # only stored during training
+        # this list contains the square root of the determinant of the
+        # corresponding covariance matrix
+        self._sqrt_def_covs = []
+        # we are going to store the inverse of the covariance matrices
+        # since only those are useful to compute the probabilities
+        self.inv_covs = []
+        self.means = []
+        self.p = []  # number of observations
+        self.labels = None
 
     @staticmethod
     def is_invertible():
@@ -360,9 +369,9 @@ class GaussianClassifier(ClassifierNode):
             raise mdp.TrainingException(msg)
 
     def _update_covs(self, x, lbl):
-        if lbl not in self.cov_objs:
-            self.cov_objs[lbl] = utils.CovarianceMatrix(dtype=self.dtype)
-        self.cov_objs[lbl].update(x)
+        if lbl not in self._cov_objs:
+            self._cov_objs[lbl] = utils.CovarianceMatrix(dtype=self.dtype)
+        self._cov_objs[lbl].update(x)
 
     def _train(self, x, labels):
         """
@@ -382,23 +391,17 @@ class GaussianClassifier(ClassifierNode):
             self._update_covs(x, labels)
 
     def _stop_training(self):
-        self.labels = self.cov_objs.keys()
+        self.labels = self._cov_objs.keys()
         self.labels.sort()
-
-        # we are going to store the inverse of the covariance matrices
-        # since only those are useful to compute the probabilities
-        self.inv_covs = []
-        self.means = []
-        self.p = []
-        # this list contains the square root of the determinant of the
-        # corresponding covariance matrix
-        self._sqrt_def_covs = []
         nitems = 0
-
         for lbl in self.labels:
-            cov, mean, p = self.cov_objs[lbl].fix()
+            cov, mean, p = self._cov_objs[lbl].fix()
             nitems += p
             self._sqrt_def_covs.append(numx.sqrt(numx_linalg.det(cov)))
+            if self._sqrt_def_covs[-1] == 0.0:
+                err = ("The covariance matrix is singular for at least "
+                       "one class.")
+                raise mdp.NodeException(err)
             self.means.append(mean)
             self.p.append(p)
             self.inv_covs.append(utils.inv(cov))
@@ -406,7 +409,7 @@ class GaussianClassifier(ClassifierNode):
         for i in range(len(self.p)):
             self.p[i] /= float(nitems)
 
-        del self.cov_objs
+        del self._cov_objs
 
     def _gaussian_prob(self, x, lbl_idx):
         """Return the probability of the data points x with respect to a
@@ -427,7 +430,7 @@ class GaussianClassifier(ClassifierNode):
         # exponent
         exponent = -0.5 * (utils.mult(x_mn, invS)*x_mn).sum(axis=1)
         # constant
-        constant = (2.*numx.pi)**-(dim/2.)/sqrt_detS
+        constant = (2.*numx.pi)**(-dim/2.) / sqrt_detS
         # probability
         return constant * numx.exp(exponent)
 
@@ -446,7 +449,7 @@ class GaussianClassifier(ClassifierNode):
         # (not necessary, but sometimes useful)
         tmp_tot = tmp_prob.sum(axis=1)
         tmp_tot = tmp_tot[:, numx.newaxis]
-        return tmp_prob/tmp_tot
+        return tmp_prob / tmp_tot
 
     def _prob(self, x):
         """Return the posterior probability of each class given the input in a dict."""
@@ -460,4 +463,3 @@ class GaussianClassifier(ClassifierNode):
         class_prob = self.class_probabilities(x)
         winner = class_prob.argmax(axis=-1)
         return [self.labels[winner[i]] for i in range(len(winner))]
-
