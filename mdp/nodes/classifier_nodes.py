@@ -529,3 +529,76 @@ class NearestMeanClassifier(ClassifierNode):
         label_indices = square_distances.argmin(1)
         labels = [self.ordered_labels[i] for i in label_indices]
         return labels
+    
+    
+class KNNClassifier(ClassifierNode):
+    """K-Nearest-Neighbour Classifier."""
+    
+    def __init__(self, k=1, input_dim=None, output_dim=None, dtype=None):
+        """Initialize classifier.
+        
+        k -- Number of closest sample points that are taken into account.
+        """
+        super(KNNClassifier, self).__init__(input_dim=input_dim,
+                                            output_dim=output_dim,
+                                            dtype=dtype)
+        self.k = k
+        self._label_samples = {}  # temporary variable during training
+        self.n_samples = None
+        self.samples = None
+        self.sample_label_indices = None
+        self.ordered_labels = []
+        
+    def _train(self, x, labels):
+        """Add the sampel points to the classes.
+        
+        labels -- Can be a list, tuple or array of labels (one for each data
+            point) or a single label, in which case all input data is assigned
+            to the same class (computationally this is more efficient).
+        """
+        if isinstance(labels, (list, tuple, numx.ndarray)):
+            labels = numx.asarray(labels)
+            for label in set(labels):
+                x_label = numx.compress(labels==label, x, axis=0)
+                self._add_samples(x_label, label)
+        else:
+            self._add_samples(x, labels)
+    
+    def _add_samples(self, x, label):
+        """Store x set for later neirest-neighbour calculation."""
+        if label not in self._label_samples:
+            self._label_samples[label] = []
+        self._label_samples[label].append(x)
+        
+    def _check_train_args(self, x, labels):
+        if isinstance(labels, (list, tuple, numx.ndarray)) and (
+            len(labels) != x.shape[0]):
+            msg = ("The number of labels should be equal to the number of "
+                   "datapoints (%d != %d)" % (len(labels), x.shape[0]))
+            raise mdp.TrainingException(msg)
+        
+    def _stop_training(self):
+        """Organize the sample data."""
+        ordered_samples = []
+        for label in self._label_samples:
+            ordered_samples.append(
+                            numx.concatenate(self._label_samples[label]))
+            self.ordered_labels.append(label)
+        del self._label_samples
+        self.samples = numx.concatenate(ordered_samples)
+        self.n_samples = len(self.samples)
+        self.sample_label_indices = numx.concatenate(
+                                [numx.ones(len(ordered_samples[i]),
+                                           dtype="int32") * i
+                                 for i in range(len(self.ordered_labels))])
+
+    def _label(self, x):
+        """Label the data by comparison with the reference points."""
+        differences = x[:,:,numx.newaxis].repeat(self.n_samples, 2). \
+                        swapaxes(1,2) - self.samples
+        square_distances = (differences**2).sum(2)
+        min_indices = square_distances.argsort(1)
+        win_is = [numx.bincount(self.sample_label_indices[indices[0:self.k]]).
+                  argmax(0) for indices in min_indices]
+        labels = [self.ordered_labels[i] for i in win_is] 
+        return labels
