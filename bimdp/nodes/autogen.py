@@ -106,7 +106,7 @@ def binodes_code():
     fid = StringIO()
     nodes = (node for node in
                 _get_node_subclasses(node_class=mdp.Node, module=mdp.nodes)
-             if not isinstance(node, mdp.ClassifierNode) and
+             if not issubclass(node, mdp.ClassifierNode) and
                  node.__name__ not in NOAUTOGEN_MDP_NODES)
     _binode_module(fid, nodes)
     return fid.getvalue()
