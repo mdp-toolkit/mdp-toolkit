@@ -44,7 +44,7 @@ def testGaussianClassifier_labellistbug():
     gc.train(mdp.numx_rand.random((50, 3)), [+1] * 50)
 
 
-def testGaussianClassifier_classify():
+def testGaussianClassifier_label():
     mean1 = [0., 2.]
     mean2 = [0., -2.]
     std_ = numx.array([1., 0.2])
