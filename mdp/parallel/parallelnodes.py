@@ -113,7 +113,7 @@ class ParallelExtensionNode(mdp.ExtensionNode, mdp.Node):
         """Default implementation of _fork.
 
         It uses introspection to determine the init kwargs and tries to fill
-        them with public attributes. These kwargs are then used to instanciate
+        them with attributes. These kwargs are then used to instanciate
         self.__class__ to create the fork instance.
 
         So you can use this method if all the required keys are also public
@@ -144,7 +144,18 @@ class ParallelExtensionNode(mdp.ExtensionNode, mdp.Node):
                 raise NotForkableParallelException(err)
         # create new instance
         return self.__class__(**kwargs)
-
+    
+    @staticmethod
+    def _join_covariance(cov, forked_cov):
+        """Helper method to join two CovarianceMatrix instances.
+        
+        cov -- Instance of CovarianceMatrix, to which the forked_cov instance
+            is aded in-place.
+        """
+        cov._cov_mtx += forked_cov._cov_mtx
+        cov._avg += forked_cov._avg
+        cov._tlen += forked_cov._tlen
+        
 
 ## MDP parallel node implementations ##
 
@@ -160,9 +171,7 @@ class ParallelPCANode(ParallelExtensionNode, mdp.nodes.PCANode):
             self.set_dtype(self._cov_mtx._dtype)
             self._cov_mtx = forked_node._cov_mtx
         else:
-            self._cov_mtx._cov_mtx += forked_node._cov_mtx._cov_mtx
-            self._cov_mtx._avg += forked_node._cov_mtx._avg
-            self._cov_mtx._tlen += forked_node._cov_mtx._tlen
+            self._join_covariance(self._cov_mtx, forked_node._cov_mtx)
 
 
 class ParallelSFANode(ParallelExtensionNode, mdp.nodes.SFANode):
@@ -178,12 +187,8 @@ class ParallelSFANode(ParallelExtensionNode, mdp.nodes.SFANode):
             self._cov_mtx = forked_node._cov_mtx
             self._dcov_mtx = forked_node._dcov_mtx
         else:
-            self._cov_mtx._cov_mtx += forked_node._cov_mtx._cov_mtx
-            self._cov_mtx._avg += forked_node._cov_mtx._avg
-            self._cov_mtx._tlen += forked_node._cov_mtx._tlen
-            self._dcov_mtx._cov_mtx += forked_node._dcov_mtx._cov_mtx
-            self._dcov_mtx._avg += forked_node._dcov_mtx._avg
-            self._dcov_mtx._tlen += forked_node._dcov_mtx._tlen
+            self._join_covariance(self._cov_mtx, forked_node._cov_mtx)
+            self._join_covariance(self._dcov_mtx, forked_node._dcov_mtx)
 
 
 class ParallelFDANode(ParallelExtensionNode, mdp.nodes.FDANode):
@@ -209,9 +214,7 @@ class ParallelFDANode(ParallelExtensionNode, mdp.nodes.FDANode):
                 self._allcov = forked_node._allcov
                 self._S_W = forked_node._S_W
             else:
-                self._allcov._cov_mtx += forked_node._allcov._cov_mtx
-                self._allcov._avg += forked_node._allcov._avg
-                self._allcov._tlen += forked_node._allcov._tlen
+                self._join_covariance(self._allcov, forked_node._allcov)
                 self._S_W += forked_node._S_W
         else:
             for lbl in forked_node.means:
