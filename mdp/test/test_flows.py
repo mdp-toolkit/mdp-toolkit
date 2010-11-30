@@ -199,6 +199,18 @@ def testFlow_append_node_copy():
     flow = mdp.Flow([node1])
     flow += node2
     assert flow[0] is node1
+    
+def testFlow_iadd():
+    # check that in-place adding to flow does not return new flow
+    node1 = BogusNode()
+    node2 = BogusNode()
+    node3 = BogusNode()
+    flow = mdp.Flow([node1])
+    oldflow = flow
+    flow += node2
+    assert oldflow is flow
+    flow += mdp.Flow([node3])
+    assert oldflow is flow
 
 def testFlow_as_sum_of_nodes():
     node1 = BogusNode()

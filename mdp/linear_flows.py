@@ -521,9 +521,22 @@ class Flow(object):
             # if no exception was raised, accept the new sequence
             return self.__class__(flow_copy)
         else:
-            err_str = ('can only concatenate flow'
+            err_str = ('can only concatenate flow or node'
                        ' (not \'%s\') to flow' % (type(other).__name__))
             raise TypeError(err_str)
+        
+    def __iadd__(self, other):
+        # append other to self
+        if isinstance(other, Flow):
+            self.flow += other.flow
+        elif isinstance(other, mdp.Node):
+            self.flow.append(other)
+        else:
+            err_str = ('can only concatenate flow or node'
+                       ' (not \'%s\') to flow' % (type(other).__name__))
+            raise TypeError(err_str)
+        self._check_nodes_consistency(self.flow)
+        return self
 
     ###### public container methods
 
