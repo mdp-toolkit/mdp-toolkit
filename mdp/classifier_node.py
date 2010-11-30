@@ -8,6 +8,22 @@ class ClassifierNode(PreserveDimNode):
     labels used for classification are not in the normal feature space but in
     label space.
     """
+    
+    def __init__(self, execute_method=None,
+                 input_dim=None, output_dim=None, dtype=None):
+        """Initialize classifier.
+        
+        execute_method -- Set to string value 'label', 'rank', or 'prob' to
+            force the corresponding classification method being used instead
+            of the standard identity execution (which is used when
+            execute_method has the default value None). This can be used when
+            the node is last in a flow, the return value from Flow.execute
+            will then consist of the classification results.
+        """
+        self.execute_method = execute_method
+        super(ClassifierNode, self).__init__(input_dim=input_dim,
+                                             output_dim=output_dim,
+                                             dtype=dtype)
 
     ### Methods to be implemented by the subclasses
 
@@ -59,6 +75,16 @@ class ClassifierNode(PreserveDimNode):
                       sorted(ranking, key=operator.itemgetter(1), reverse=True)]
             all_ranking.append(result)
         return all_ranking
+    
+    def _execute(self, x):
+        if not self.execute_method:
+            return x
+        elif self.execute_method == "label":
+            return self.label(x)
+        elif self.execute_method == "rank":
+            return self.rank(x)
+        elif self.execute_method == "prob":
+            return self.prob(x)
 
 
 class ClassifierCumulator(VariadicCumulator('data', 'labels'), ClassifierNode):
