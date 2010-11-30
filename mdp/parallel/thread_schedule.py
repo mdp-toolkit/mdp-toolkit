@@ -51,7 +51,7 @@ class ThreadScheduler(Scheduler):
         """
         task_started = False
         while not task_started:
-            if not self._n_threads - self._n_active_threads:
+            if self._n_active_threads >= self._n_threads:
                 # release lock for other threads and wait
                 self._lock.release()
                 time.sleep(SLEEP_TIME)
