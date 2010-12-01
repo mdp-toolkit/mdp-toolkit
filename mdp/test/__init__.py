@@ -40,8 +40,8 @@ def subtest(script, args):
 def get_worker():
     try:
         # use py.test module interface if it's installed
-        import py
-        return py.cmdline.pytest
+        import py.test
+        return py.test.cmdline.main
     except ImportError:
         # try to locate the script
         script = os.path.join(os.path.dirname(__file__), SCRIPT)
