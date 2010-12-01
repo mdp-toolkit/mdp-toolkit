@@ -41,7 +41,7 @@ from parallelhinet import (
 
 from mdp import config
 
-if config.has_parallel_python():
+if config.has_parallel_python:
     import pp_support
 
 del scheduling

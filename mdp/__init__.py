@@ -72,10 +72,9 @@ class config(object):
             self.failmsg = str(failmsg) if failmsg is not None else None
 
             global config
-            method = lambda: self
-            method.order = config._HAS_NUMBER
+            self.order = config._HAS_NUMBER
             config._HAS_NUMBER += 1
-            setattr(config, 'has_' + name, staticmethod(method))
+            setattr(config, 'has_' + name, self)
 
         def __nonzero__(self):
             return self.failmsg is None
@@ -99,11 +98,10 @@ class config(object):
         """Return nicely formatted info about MDP."""
         listable_features = [(f[4:].replace('_', ' '), getattr(cls, f))
                              for f in dir(cls) if f.startswith('has_')]
-        maxlen = max(len(f) for f,func in listable_features)
-        listable_features = sorted(listable_features,
-                                   key=lambda f_func: f_func[1].order)
-        return '\n'.join('%*s: %r' % (maxlen+1, f, func())
-                         for f,func in listable_features)
+        maxlen = max(len(f[0]) for f in listable_features)
+        listable_features = sorted(listable_features, key=lambda f: f[1].order)
+        return '\n'.join('%*s: %r' % (maxlen+1, f[0], f[1])
+                         for f in listable_features)
 
 import sys, os
 
@@ -161,7 +159,7 @@ else:
 
 del _USR_LABEL
 
-if config.has_scipy():
+if config.has_scipy:
     try:
         import scipy.signal
     except ImportError, exc:

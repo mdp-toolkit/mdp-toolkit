@@ -201,7 +201,7 @@ def get_dtypes(typecodes_key, _safe=True):
     for c in numx.typecodes[typecodes_key]:
         try:
             type_ = numx.dtype(c)
-            if (_safe and not mdp.config.has_symeig()
+            if (_safe and not mdp.config.has_symeig
                 and type_ in _UNSAFE_DTYPES):
                 continue
             types.append(type_)
