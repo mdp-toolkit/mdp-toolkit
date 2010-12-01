@@ -62,7 +62,35 @@ class MDPWarning(UserWarning):
     """Base class for warnings in MDP."""
     pass
 
+
+class ExternalDep(object):
+    def __init__(self, version=None, failmsg=None):
+        self.version = version
+        self.failmsg = failmsg
+
+    def __repr__(self):
+        if self:
+            return "%s" % self.version
+        else:
+            return "NOT AVAILABLE: %s" % self.failmsg
+
+class ExternalDepFail(ExternalDep):
+    def __init__(self, failmsg):
+        super(ExternalDepFail, self).__init__(failmsg=failmsg)
+
+    def __nonzero__(self):
+        return False
+
+class ExternalDepFound(ExternalDep):
+    def __init__(self, version):
+        super(ExternalDepFound, self).__init__(version=version)
+
+    def __nonzero__(self):
+        return True
+
+
 import os as _os
+import functools
 
 # list of supported numerical extensions
 _NUMX_LABELS = ['scipy', 'numpy']
@@ -123,28 +151,6 @@ else:
 del _os, _NUMX_LABELS, _USR_LABEL, _label
 
 
-class ExternalDep(object):
-    def __init__(self, version=None, failmsg=None):
-        self.available = None
-        self.version = version
-        self.failmsg = failmsg
-        self.module = "unknown"
-
-    def __repr__(self):
-        if self.available:
-            return "%s" % self.version
-        else:
-            return "NOT AVAILABLE: %s" % self.failmsg
-
-class ExternalDepFail(ExternalDep):
-    def __init__(self, failmsg):
-        super(ExternalDepFail, self).__init__(version=None, failmsg=failmsg)
-        self.available = False
-
-class ExternalDepFound(ExternalDep):
-    def __init__(self, version="(unknown version)"):
-        super(ExternalDepFound, self).__init__(version=version, failmsg=None)
-        self.available = True
 
 
 from utils import get_git_revision
@@ -215,14 +221,14 @@ class MDPConfiguration(object):
 
     def has(self, dep):
         """Checks if a dependency is available."""
-        return self[dep].available
+        return self[dep]
 
     def has_parallel_python(self):
         try:
-            import pp as __pp
+            import pp
         except ImportError, msg:
             return ExternalDepFail(msg)
-        return ExternalDepFound()
+        return ExternalDepFound(pp.version)
 
     def has_shogun(self):
         try:
@@ -247,11 +253,11 @@ class MDPConfiguration(object):
 
     def has_libsvm(self):
         try:
-            import svm as libsvm
-        except ImportError, msg:
-            return ExternalDepFail(msg)
-        return ExternalDepFound()
-    
+            import svm
+        except ImportError, exc:
+            return ExternalDepFail(exc)
+        return ExternalDepFound(svm.libsvm._name)
+
     def has_symeig(self):
         return self._has_symeig
 
@@ -282,7 +288,6 @@ class MDPConfiguration(object):
                     SYMEIG = 'unknown'
         return SYMEIG
 
-    
     def info(self):
         """Return nicely formatted info about MDP."""
         listable_features = [f for f in self._features if f in self._doc]
