@@ -120,7 +120,7 @@ class FDANode(mdp.Node):
             self.output_dim = self.input_dim
         else:
             rng = (1, self.output_dim)
-        self.v = mdp.utils.symeig(S_W, S_T, range=rng, overwrite = 1)[1]
+        self.v = mdp.symeig(S_W, S_T, range=rng, overwrite = 1)[1]
 
     def _update_SW(self, x, label):
         """Update the covariance matrix of the class means.

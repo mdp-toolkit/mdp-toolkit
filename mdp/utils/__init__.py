@@ -1,7 +1,7 @@
-from routines import (timediff, refcast, scast, rotate, random_rot, wrap_eigh,
+from routines import (timediff, refcast, scast, rotate, random_rot,
                       permute, symrand, norm2, cov2,
                       mult_diag, comb, sqrtm, get_dtypes, nongeneral_svd,
-                      SymeigException, hermitian, _symeig_fake, cov_maxima,
+                      hermitian, cov_maxima,
                       lrep, rrep, irep, orthogonal_permutations,
                       izip_stretched,
                       weighted_choice, bool_to_sign, sign_to_bool, gabor)
@@ -23,21 +23,6 @@ from slideshow import (BASIC_STYLE, SLIDESHOW_STYLE, HTMLSlideShow,
 
 
 import mdp as _mdp
-import inspect as _inspect
-
-try:
-    # check if scipy.linalg.eigh is the new version
-    # if yes, just wrap it
-    args = _inspect.getargspec(_mdp.numx_linalg.eigh)[0]
-    if len(args) > 4:
-        symeig = wrap_eigh
-    else:
-        import symeig
-        SymeigException = symeig.SymeigException
-        symeig = symeig.symeig
-except ImportError:
-    symeig = routines._symeig_fake
-
 # matrix multiplication function
 # we use an alias to be able to use the wrapper for the 'gemm' Lapack
 # function in the future
@@ -82,7 +67,7 @@ def svd(x, compute_uv = True):
             s = _mdp.numx_linalg.svd(x, compute_uv=False)
             return refcast(s, tc)
     except _mdp.numx_linalg.LinAlgError, exc:
-        raise SymeigException(str(exc))
+        raise _mdp.SymeigException(str(exc))
 
 # clean up namespace
 del routines
@@ -95,12 +80,12 @@ del repo_revision
 
 __all__ = ['CovarianceMatrix', 'DelayCovarianceMatrix','CrossCovarianceMatrix',
            'MultipleCovarianceMatrices', 'QuadraticForm',
-           'QuadraticFormException', 'SymeigException',
+           'QuadraticFormException',
            'comb', 'cov2', 'dig_node', 'get_dtypes', 'get_node_size',
            'hermitian', 'inv', 'mult', 'mult_diag', 'nongeneral_svd',
            'norm2', 'permute', 'pinv', 'progressinfo',
            'random_rot', 'refcast', 'rotate', 'scast', 'solve', 'sqrtm',
-           'svd', 'symeig', 'symrand', 'timediff', 'matmult',
+           'svd', 'symrand', 'timediff', 'matmult',
            'get_git_revision', 'SLIDESHOW_STYLE', 'HTMLSlideShow',
            'ImageHTMLSlideShow', 'IMAGE_SLIDESHOW_STYLE',
            'SectionHTMLSlideShow',

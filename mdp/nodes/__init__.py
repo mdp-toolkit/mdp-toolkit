@@ -44,17 +44,17 @@ __all__ = ['CuBICANode', 'EtaComputerNode', 'FANode', 'FDANode', 'FastICANode',
 # nodes with external dependencies
 from mdp import config
 
-if config.module_exists('scipy.signal'):
+if config.has_scipy_signal():
     from convolution_nodes import Convolution2DNode
     __all__ += ['Convolution2DNode']
     del convolution_nodes
 
-if config.has('shogun'):
+if config.has_shogun():
     from shogun_svm_classifier import ShogunSVMClassifier
     __all__ += ['ShogunSVMClassifier']
     del shogun_svm_classifier
 
-if config.has('LibSVM'):
+if config.has_libsvm():
     from libsvm_classifier import LibSVMClassifier
     __all__ += ['LibSVMClassifier']
     del libsvm_classifier

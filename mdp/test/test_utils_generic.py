@@ -46,9 +46,9 @@ def test_geneigenproblem(dtype, range, func):
     assert_array_almost_equal(diag2, numx.ones(diag2.shape[0]),
                               TESTDECIMALS[dtype])
 
-test_geneigenproblem.funcs = [utils._symeig_fake]
-if utils.symeig is utils.wrap_eigh:
-    test_geneigenproblem.funcs.append(utils.wrap_eigh)
+test_geneigenproblem.funcs = [utils._symeig._symeig_fake]
+if mdp.symeig is utils._symeig.wrap_eigh:
+    test_geneigenproblem.funcs.append(utils._symeig.wrap_eigh)
 
 test_eigenproblem.funcs = test_geneigenproblem.funcs + [utils.nongeneral_svd]
 

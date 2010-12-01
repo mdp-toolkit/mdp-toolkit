@@ -1,7 +1,6 @@
 """Test the configuration object."""
 
-import mdp
+from mdp import config
 
-def test_config_module_exists():
-    assert mdp.config.module_exists('numpy')
-    assert not mdp.config.module_exists('__this_module_does_not_exists')
+def test_config_numpy_or_scipy():
+    assert config.has_scipy() or config.has_numpy()

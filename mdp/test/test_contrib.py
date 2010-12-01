@@ -5,7 +5,7 @@ from _tools import *
 from test_ICANode import verify_ICANode, verify_ICANodeMatrices
 
 requires_joblib = skip_on_condition(
-    "not hasattr(mdp, 'caching')",
+    "not mdp.config.has_caching()",
     "This test requires the 'joblib' module.")
 
 def _s_shape(theta):
@@ -277,7 +277,7 @@ def test_XSFANode():
                               ' covariance: %g' % min(corrs))
 
 @skip_on_condition(
-    "not hasattr(mdp.nodes, 'ShogunSVMClassifier')",
+    "not mdp.config.has_shogun()",
     "This test requires the 'shogun' module.")
 def test_ShogunSVMClassifier():
     # TODO: Implement parameter ranges
@@ -395,7 +395,7 @@ def test_ShogunSVMClassifier():
             assert should_fail == failed, msg
 
 @skip_on_condition(
-    "not hasattr(mdp.nodes, 'LibSVMClassifier')",
+    "not mdp.config.has_libsvm()",
     "This test requires the 'libsvm' module.")
 def test_LibSVMClassifier():
     num_train = 100
