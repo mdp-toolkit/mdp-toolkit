@@ -92,65 +92,57 @@ class ExternalDepFound(ExternalDep):
 import os as _os
 import functools
 
-# list of supported numerical extensions
-_NUMX_LABELS = ['scipy', 'numpy']
-
 # To force MDP to use one specific extension module
 # set the environment variable MDPNUMX
 # Mainly useful for testing
 _USR_LABEL = _os.getenv('MDPNUMX')
-if _USR_LABEL in _NUMX_LABELS:
-    _NUMX_LABELS = [_USR_LABEL]
-elif _USR_LABEL is None:
-    pass
-else:
-    err = ("\nExtension '%s' not supported. "
-           "Supported extensions:\n %s" % (_USR_LABEL,str(_NUMX_LABELS)))
+if _USR_LABEL and _USR_LABEL not in ('numpy', 'scipy'):
+    err = """
+Numerical backend '%s' not supported.
+Supported backends: numpy, scipy.""" % _USR_LABEL
     raise ImportError(err)
 
-# try to load in sequence: scipy, numpy
+
 numx_description = None
 numx_exceptions = {}
-for _label in _NUMX_LABELS:
+
+if not _USR_LABEL or _USR_LABEL=='scipy':
     try:
-        if _label == 'scipy':
-            import scipy, scipy.linalg, scipy.fftpack, scipy.version
-            numx = scipy
-            numx_rand = scipy.random
-            numx_linalg = scipy.linalg
-            numx_fft = scipy.fftpack
-            numx_description = 'scipy'
-            numx_version = scipy.version.version
-            del scipy
-            break
-        else:
-            import numpy
-            import numpy as numx
-            import numpy.random as numx_rand
-            import numpy.linalg as numx_linalg
-            import numpy.fft as numx_fft
-            numx_description = 'numpy'
-            numx_version = numpy.version.version
-            del numpy
-            break
+        import scipy_fail
+        import scipy as numx
+        from scipy import (linalg as numx_linalg,
+                           fftpack as numx_fft,
+                           random as numx_rand,
+                           version as numx_version)
+        numx_description = 'scipy'
     except ImportError, exc:
-        # collect exceptions in case we don't find anything
-        # should help in debugging
-        numx_exceptions[_label] = exc
-        pass
+        numx_exceptions['scipy'] = exc
+
+if numx_description is None and (not _USR_LABEL or _USR_LABEL=='numpy'):
+    try:
+        import numpy_fail
+        import numpy as numx
+        from numpy import (linalg as numx_linalg,
+                           fft as numx_fft,
+                           random as numx_rand)
+        from numpy.version import version as numx_version
+        numx_description = 'numpy'
+    except ImportError, exc:
+        numx_exceptions['numpy'] = exc
 
 if numx_description is None:
-    msg = ("Could not import any of the numeric modules.\n"
-           "Import errors:\n"+'\n'.join([label+': '+str(exc) for label, exc in
-                                         numx_exceptions.items()]))
+    # The test is for numx_description, not numx, because numx could
+    # be imported sucessfuly, but e.g. numx_rand could later fail.
+    msg = ("Could not import any of the numeric backends.\n"
+           "Import errors:\n"
+           + '\n'.join(label+': '+str(exc)
+                       for label, exc in numx_exceptions.iteritems()))
     raise ImportError(msg)
 else:
     # we have numx, we don't need the exceptions anymore
     del numx_exceptions
 
-del _os, _NUMX_LABELS, _USR_LABEL, _label
-
-
+del _os, _USR_LABEL
 
 
 from utils import get_git_revision
