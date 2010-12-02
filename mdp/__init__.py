@@ -157,7 +157,7 @@ __license__ = 'Modified BSD License (GPL compatible), see COPYRIGHT'
 __contact__ = 'mdp-toolkit-users@lists.sourceforge.net'
 
 
-from utils.routines import OrderedDict
+from utils import OrderedDict
 
 import sys
 

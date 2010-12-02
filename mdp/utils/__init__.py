@@ -4,8 +4,12 @@ from routines import (timediff, refcast, scast, rotate, random_rot, wrap_eigh,
                       SymeigException, hermitian, _symeig_fake, cov_maxima,
                       lrep, rrep, irep, orthogonal_permutations,
                       izip_stretched,
-                      weighted_choice, bool_to_sign, sign_to_bool, OrderedDict,
-                      gabor)
+                      weighted_choice, bool_to_sign, sign_to_bool, gabor)
+try:
+    from collections import OrderedDict
+except ImportError:
+    ## Getting an Ordered Dict for Python < 2.7
+    from _ordered_dict import OrderedDict
 from introspection import dig_node, get_node_size, get_node_size_str
 from quad_forms import QuadraticForm, QuadraticFormException
 from covariance import (CovarianceMatrix, DelayCovarianceMatrix,

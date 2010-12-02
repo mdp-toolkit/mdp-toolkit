@@ -1,5 +1,6 @@
 import mdp
 from mdp import numx
+from mdp.utils import OrderedDict as _OrderedDict
 
 from svm_classifiers import _SVMClassifier, _LabelNormalizer
 
@@ -45,37 +46,6 @@ shogun_classifier_types = {}
 for ct in dir(sgClassifier):
     if ct.startswith("CT_"):
         shogun_classifier_types[getattr(sgClassifier, ct)] = ct
-
-
-class _OrderedDict(object):
-    """Very simple version of an ordered dict."""
-    def __init__(self, items):
-        self._keys = []
-        self._vals = []
-        self.update(items)
-
-    def update(self, other):
-        """Update an ordered dict with new values."""
-        for entry in other:
-            if isinstance(other, dict):
-                new_key = entry
-                new_val = other[entry]
-            else:
-                new_key = entry[0]
-                if len(entry) > 1:
-                    new_val = entry[1]
-                else:
-                    None
-            if new_key in self._keys:
-                i = self._keys.index(new_key)
-                self._vals[i] = new_val
-            else:
-                self._keys.append(new_key)
-                self._vals.append(new_val)
-
-    @property
-    def values(self):
-        return self._vals
 
 
 class Classifier(object):
@@ -358,7 +328,7 @@ class ShogunSVMClassifier(_SVMClassifier):
             and not isinstance(kernel_options, list):
             default_opts = _OrderedDict(ShogunSVMClassifier.kernel_parameters[kernel_name])
             default_opts.update(kernel_options)
-            options = default_opts.values
+            options = default_opts.values()
 
         kernel_meth = getattr(sgKernel, kernel_name)
         try:
