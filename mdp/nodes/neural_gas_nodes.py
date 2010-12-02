@@ -189,7 +189,8 @@ class GrowingNeuralGasNode(Node):
             (n0, n1), dists = self._get_nearest_nodes(x)
 
             # step 3 - increase age of the emanating edges
-            map(lambda e: e.data.inc_age(), n0.get_edges())
+            for e in n0.get_edges():
+                e.data.inc_age()
 
             # step 4 - update error
             n0.data.cum_error += numx.sqrt(dists[0])
@@ -217,9 +218,8 @@ class GrowingNeuralGasNode(Node):
                 self._insert_new_node()
 
             # step 9 - decrease errors
-            def _mult_err(node):
+            for node in g.nodes:
                 node.data.cum_error *= d
-            map(_mult_err, g.nodes)
 
     def nearest_neighbor(self, input):
         """Assign each point in the input data to the nearest node in
