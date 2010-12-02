@@ -188,7 +188,9 @@ else:
     config.ExternalDepFound('parallel_python', pp.version)
 
 try:
-    import shogun, shogun.Classifier, shogun.Kernel
+    from shogun import (Kernel as sgKernel,
+                        Features as sgFeatures,
+                        Classifier as sgClassifier)
 except ImportError, exc:
     config.ExternalDepFail('shogun', exc)
 else:
@@ -196,10 +198,10 @@ else:
     # SHOGUN's CClassifier::classify() method.
     # (It makes our code much nicer, by the way.)
     #
-    if not hasattr(shogun.Classifier.Classifier, 'classify'):
+    if not hasattr(sgClassifier.Classifier, 'classify'):
         config.ExternalDepFail('shogun', "CClassifier::classify not found")
     try:
-        version = shogun.Kernel._Kernel.Version_get_version_release()
+        version = sgKernel._Kernel.Version_get_version_release()
     except AttributeError, msg:
         config.ExternalDepFail('shogun', msg)
     else:
