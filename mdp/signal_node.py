@@ -1,4 +1,5 @@
 import cPickle as _cPickle
+import warnings as _warnings
 import copy as _copy
 import inspect
 
@@ -639,8 +640,11 @@ class Node(object):
         args = ', '.join((inp, out, typ))
         return name + '(' + args + ')'
 
-    def copy(self):
+    def copy(self, protocol=None):
         """Return a deep copy of the node."""
+        if protocol is not None:
+            _warnings.warn("protocol parameter to copy() is ignored",
+                           mdp.MDPDeprecationWarning, stacklevel=2)
         return _copy.deepcopy(self)
 
     def save(self, filename, protocol=-1):

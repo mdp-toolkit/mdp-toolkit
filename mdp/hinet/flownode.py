@@ -2,8 +2,9 @@
 Module for the FlowNode class.
 """
 
-import cPickle as pickle
 import mdp
+import warnings as _warnings
+import copy as _copy
 
 
 class FlowNode(mdp.Node):
@@ -176,12 +177,17 @@ class FlowNode(mdp.Node):
     def _inverse(self, x):
         return self._flow.inverse(x)
 
-    def copy(self, protocol=-1):
+    def copy(self, protocol=None):
         """Return a copy of this node.
 
         The copy call is delegated to the internal node, which allows the use
         of custom copy methods for special nodes.
+
+        The protocol parameter should not be used.
         """
+        if protocol is not None:
+            _warnings.warn("protocol parameter to copy() is ignored",
+                           mdp.MDPDeprecationWarning, stacklevel=2)
         # Warning: If we create a new FlowNode with the copied internal
         #    nodes then it will differ from the original one if some nodes
         #    were trained in the meantime. Especially _get_train_seq would
@@ -192,10 +198,10 @@ class FlowNode(mdp.Node):
         #
         # copy the nodes by delegation
         old_nodes = self._flow[:]
-        new_nodes = [node.copy(protocol=protocol) for node in old_nodes]
-        # now copy the rest of this flownode via pickle
+        new_nodes = [node.copy() for node in old_nodes]
+        # now copy the rest of this flownode via deepcopy
         self._flow.flow = None
-        new_flownode = pickle.loads(pickle.dumps(self, protocol))
+        new_flownode = _copy.deepcopy(self)
         new_flownode._flow.flow = new_nodes
         self._flow.flow = old_nodes
         return new_flownode
