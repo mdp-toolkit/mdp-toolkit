@@ -167,7 +167,7 @@ def cpu_count():
         ## This code part is taken from parallel python.
         # Linux, Unix and MacOS
         if hasattr(os, "sysconf"):
-            if os.sysconf_names.has_key("SC_NPROCESSORS_ONLN"):
+            if "SC_NPROCESSORS_ONLN" in os.sysconf_names:
                 # Linux & Unix
                 n_cpus = os.sysconf("SC_NPROCESSORS_ONLN")
                 if isinstance(n_cpus, int) and n_cpus > 0:
@@ -176,7 +176,7 @@ def cpu_count():
                 # OSX
                 return int(os.popen2("sysctl -n hw.ncpu")[1].read())
         # Windows
-        if os.environ.has_key("NUMBER_OF_PROCESSORS"):
+        if "NUMBER_OF_PROCESSORS" in os.environ:
             n_cpus = int(os.environ["NUMBER_OF_PROCESSORS"])
             if n_cpus > 0:
                 return n_cpus

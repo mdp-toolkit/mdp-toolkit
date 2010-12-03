@@ -54,12 +54,11 @@ class CacheExecuteExtensionNode(ExtensionNode, Node):
         # pickle. We hide self._cached_execute to avoid it complaining
         # when computing the joblib hash number
         dct = self.__dict__
-        if not dct.has_key('_cached_execute'):
-            return dct
-        else:
+        if '_cached_execute' in dct:
             dct = deepcopy(dct)
+            # XXX: is deepcopy necessary, why not just a copy?
             del dct['_cached_execute']
-            return dct
+        return dct
 
     def execute(self, x, *args, **kwargs):
         if not hasattr(self, '_cached_execute'):
