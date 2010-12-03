@@ -1,3 +1,4 @@
+from __future__ import with_statement
 import cPickle as _cPickle
 import inspect
 
@@ -654,13 +655,9 @@ class Node(object):
             return _cPickle.dumps(self, protocol)
         else:
             # if protocol != 0 open the file in binary mode
-            if protocol != 0:
-                mode = 'wb'
-            else:
-                mode = 'w'
-            flh = open(filename, mode)
-            _cPickle.dump(self, flh, protocol)
-            flh.close()
+            mode = 'wb' if protocol != 0 else 'w'
+            with open(filename, mode) as flh:
+                _cPickle.dump(self, flh, protocol)
 
 
 class PreserveDimNode(Node):
