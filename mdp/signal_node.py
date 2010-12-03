@@ -1,4 +1,5 @@
 import cPickle as _cPickle
+import copy as _copy
 import inspect
 
 import mdp
@@ -638,11 +639,9 @@ class Node(object):
         args = ', '.join((inp, out, typ))
         return name + '(' + args + ')'
 
-    def copy(self, protocol=-1):
-        """Return a deep copy of the node.
-        Protocol is the pickle protocol."""
-        as_str = _cPickle.dumps(self, protocol)
-        return _cPickle.loads(as_str)
+    def copy(self):
+        """Return a deep copy of the node."""
+        return _copy.deepcopy(self)
 
     def save(self, filename, protocol=-1):
         """Save a pickled serialization of the node to 'filename'.

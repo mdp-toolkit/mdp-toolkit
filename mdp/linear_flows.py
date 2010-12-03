@@ -7,6 +7,7 @@ import traceback as _traceback
 import cPickle as _cPickle
 import warnings as _warnings
 import tempfile as _tempfile
+import copy as _copy
 
 from mdp import numx
 
@@ -400,11 +401,9 @@ class Flow(object):
             raise FlowException(errstr)
         return numx.concatenate(res)
 
-    def copy(self, protocol = -1):
-        """Return a deep copy of the flow.
-        Protocol is the pickle protocol."""
-        as_str = _cPickle.dumps(self, protocol)
-        return _cPickle.loads(as_str)
+    def copy(self):
+        """Return a deep copy of the flow."""
+        return _copy.deepcopy(self)
 
     def save(self, filename, protocol=-1):
         """Save a pickled serialization of the flow to 'filename'.
