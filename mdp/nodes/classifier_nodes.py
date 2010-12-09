@@ -476,8 +476,8 @@ class NearestMeanClassifier(ClassifierNode):
         super(NearestMeanClassifier, self).__init__(input_dim=input_dim,
                                                     output_dim=output_dim,
                                                     dtype=dtype)
-        self.means = {}  # not normalized during training
-        self.n_samples = {}
+        self.label_means = {}  # not normalized during training
+        self.n_label_samples = {}
         # initialized after training, used for vectorized execution:
         self.ordered_labels = []
         self.ordered_means = None  # will be array
@@ -499,12 +499,12 @@ class NearestMeanClassifier(ClassifierNode):
             
     def _update_mean(self, x, label):
         """Update the mean with data for a single label."""
-        if label not in self.means:
-            self.means[label] = numx.zeros(self.input_dim)
-            self.n_samples[label] = 0
+        if label not in self.label_means:
+            self.label_means[label] = numx.zeros(self.input_dim)
+            self.n_label_samples[label] = 0
         # TODO: use smarter summing to avoid rounding errors
-        self.means[label] += numx.sum(x, axis=0)
-        self.n_samples[label] += len(x)
+        self.label_means[label] += numx.sum(x, axis=0)
+        self.n_label_samples[label] += len(x)
         
     def _check_train_args(self, x, labels):
         if isinstance(labels, (list, tuple, numx.ndarray)) and (
@@ -516,10 +516,10 @@ class NearestMeanClassifier(ClassifierNode):
     def _stop_training(self):
         """Calculate the class means."""
         ordered_means = [] 
-        for label in self.means:
-            self.means[label] /= self.n_samples[label]
+        for label in self.label_means:
+            self.label_means[label] /= self.n_label_samples[label]
             self.ordered_labels.append(label)
-            ordered_means.append(self.means[label])
+            ordered_means.append(self.label_means[label])
         self.ordered_means = numx.vstack(ordered_means)
             
     def _label(self, x):

@@ -29,7 +29,7 @@ def testNearestMeanClassifier_train():
     for i in xrange(nclasses):
         lbl_idx = node.ordered_labels.index(i)
         assert_array_almost_equal_diff(means[i],
-                                  node.means[lbl_idx],
+                                  node.label_means[lbl_idx],
                                   decimal-1)
 
 def testNearestMeanClassifier_label():

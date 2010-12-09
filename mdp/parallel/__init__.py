@@ -28,7 +28,10 @@ from parallelnodes import (
     ParallelExtensionNode, NotForkableParallelException, JoinParallelException,
     ParallelPCANode, ParallelSFANode, ParallelFDANode, ParallelHistogramNode
 )
-from parallelclassifiers import ParallelGaussianClassifier
+from parallelclassifiers import (
+    ParallelGaussianClassifier, ParallelNearestMeanClassifier,
+    ParallelKNNClassifier
+)
 from parallelflows import (
     _purge_flownode, FlowTaskCallable, FlowTrainCallable, FlowExecuteCallable,
     TrainResultContainer, ExecuteResultContainer,
