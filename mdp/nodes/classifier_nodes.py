@@ -476,10 +476,11 @@ class NearestMeanClassifier(ClassifierNode):
         super(NearestMeanClassifier, self).__init__(input_dim=input_dim,
                                                     output_dim=output_dim,
                                                     dtype=dtype)
-        self.means = {}
+        self.means = {}  # not normalized during training
         self.n_samples = {}
+        # initialized after training, used for vectorized execution:
         self.ordered_labels = []
-        self.ordered_means = []
+        self.ordered_means = None  # will be array
         
     def _train(self, x, labels):
         """Update the mean information for the different classes.
@@ -514,11 +515,12 @@ class NearestMeanClassifier(ClassifierNode):
         
     def _stop_training(self):
         """Calculate the class means."""
+        ordered_means = [] 
         for label in self.means:
             self.means[label] /= self.n_samples[label]
             self.ordered_labels.append(label)
-            self.ordered_means.append(self.means[label])
-        self.ordered_means = numx.vstack(self.ordered_means)
+            ordered_means.append(self.means[label])
+        self.ordered_means = numx.vstack(ordered_means)
             
     def _label(self, x):
         """Classify the data based on minimal distance to mean."""
@@ -545,8 +547,9 @@ class KNNClassifier(ClassifierNode):
         self.k = k
         self._label_samples = {}  # temporary variable during training
         self.n_samples = None
-        self.samples = None
-        self.sample_label_indices = None
+        # initialized after training:
+        self.samples = None  # 2d array with all samples
+        self.sample_label_indices = None  # 1d array for label indices
         self.ordered_labels = []
         
     def _train(self, x, labels):
@@ -597,8 +600,8 @@ class KNNClassifier(ClassifierNode):
         differences = x[:,:,numx.newaxis].repeat(self.n_samples, 2). \
                         swapaxes(1,2) - self.samples
         square_distances = (differences**2).sum(2)
-        min_indices = square_distances.argsort(1)
-        win_is = [numx.bincount(self.sample_label_indices[indices[0:self.k]]).
-                  argmax(0) for indices in min_indices]
-        labels = [self.ordered_labels[i] for i in win_is] 
+        min_inds = square_distances.argsort(1)
+        win_inds = [numx.bincount(self.sample_label_indices[indices[0:self.k]]).
+                    argmax(0) for indices in min_inds]
+        labels = [self.ordered_labels[i] for i in win_inds]
         return labels
