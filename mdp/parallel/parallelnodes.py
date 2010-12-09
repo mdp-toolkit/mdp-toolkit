@@ -118,6 +118,18 @@ class ParallelExtensionNode(mdp.ExtensionNode, mdp.Node):
 
         So you can use this method if all the required keys are also public
         attributes or have a single underscore in front.
+        
+        There are two reasons why this method does not simply replace _fork
+        of ParallelExtensionNode (plus removing Node from the
+        inheritance list):
+        - If a node is not parallelized _fork raises an exception, as do nodes
+            which can not fork due to some other reasons. Without this bahavior
+            of _fork we would have to check with hasattr first if fork is
+            present, adding more complexity at other places (mostly in
+            container nodes).
+        - This is a safeguard forcing users to think a little instead of
+            relying on the inherited (but possibly incompatible)
+            default implementation.
         """
         args, varargs, varkw, defaults = inspect.getargspec(self.__init__)
         args.remove("self")
