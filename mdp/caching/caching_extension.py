@@ -1,3 +1,10 @@
+"""MDP extension to cache the execution phase of nodes.
+
+This extension is based on the 'joblib' library by Gael Varoquaux,
+available at http://packages.python.org/joblib/ . At the moment, this
+extension supports joblib v. 0.4.6 .
+"""
+
 import joblib
 from copy import deepcopy
 from tempfile import mkdtemp
@@ -5,10 +12,13 @@ from tempfile import mkdtemp
 from ..extension import ExtensionNode, activate_extension, deactivate_extension
 from ..signal_node import Node
 
-# TODO: decorator per le singole istanze
-
 # FIXME: if cachedir is modified after an instance has been cached,
 # the extension does not notice and keeps caching in the old one
+
+# TODO: the latest version of joblib fixes a bug that did not allow it
+# to decorate methods; it should now be possible to remove the
+# __getstate__ method; UPDATE Dec 8 2010: this fix is only in the
+# development branch, it has not been fixed os as of joblib 0.4.6
 
 
 _cachedir = None
@@ -30,12 +40,8 @@ def set_cachedir(cachedir=None, verbose=0):
     _cachedir = cachedir
     _memory = joblib.Memory(cachedir, verbose=0)
 
-# initialize cache with temporary variable
+# initialize cache with temporary directory
 set_cachedir()
-
-# TODO: the latest version of joblib fixes a bug that did not allow it
-# to decorate methods; it should now be possible to remove the
-# __getstate__ method
 
 class CacheExecuteExtensionNode(ExtensionNode, Node):
     """MDP extension for caching execution results.
@@ -60,6 +66,11 @@ class CacheExecuteExtensionNode(ExtensionNode, Node):
             dct = deepcopy(dct)
             del dct['_cached_execute']
             return dct
+
+    _CLASS_CACHING = False
+
+    def set_cache(self, active=True):
+        self._cache_active = active
 
     def execute(self, x, *args, **kwargs):
         if not hasattr(self, '_cached_execute'):
@@ -86,10 +97,10 @@ def deactivate_caching(cachedir=None):
 class cache(object):
     """Context manager for the 'cache_execute' extension.
 
-    This allows you to use the caching extension using a 'with'
+    This allows using the caching extension using a 'with'
     statement, as in:
 
-    with mdp.caching(CACHEDIR):
+    with mdp.caching.cache(CACHEDIR):
         # 'node' is executed caching the results in CACHEDIR
         node.execute(x)
 
