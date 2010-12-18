@@ -1,8 +1,8 @@
 """MDP extension to cache the execution phase of nodes.
 
 This extension is based on the 'joblib' library by Gael Varoquaux,
-available at http://packages.python.org/joblib/ . At the moment, this
-extension supports joblib v. 0.4.6 .
+available at http://packages.python.org/joblib/ . At the moment, the
+extension is based on joblib v. 0.4.6 .
 """
 
 import joblib
@@ -11,10 +11,6 @@ from tempfile import mkdtemp
 
 from ..extension import ExtensionNode, activate_extension, deactivate_extension
 from ..signal_node import Node
-
-# FIXME: if cachedir is modified after an instance has been cached,
-# the extension does not notice and keeps caching in the old one
-# XXX: this should be now fixed, test it
 
 # -- global attributes for this extension
 
@@ -33,7 +29,8 @@ def set_cachedir(cachedir=None, verbose=0):
 
     cachedir -- the cache directory name; if None, a temporary directory
                 is created using tempfile.mkdtemp()
-    verbose -- an integer number, control the verbosity of the cache
+    verbose -- an integer number, controls the verbosity of the cache
+               (default is 0, i.e., not verbose)
     """
 
     global _cachedir
@@ -56,11 +53,18 @@ set_cachedir()
 class CacheExecuteExtensionNode(ExtensionNode, Node):
     """MDP extension for caching execution results.
 
-    Activating this extension results in all nodes caching the return
-    values of the 'execute' methods.
+    The return value of the 'execute' methods are cached if:
+    1) the extension is activated in global mode
+    2) the Node subclass is registered to be cached
+    or
+    3) the instance is registered to be cached
 
-    Warning: this extension might brake the algorithms if nodes rely
-    on side effects.
+    *Warning: this extension might brake the algorithms if nodes rely
+    on side effects.*
+    
+    See `activate_caching`, `deactivate_caching`, and the `cache` context
+    manager to learn about how to activate the caching mechanism and its
+    options.
     """
 
     extension_name = 'cache_execute'
@@ -75,6 +79,11 @@ class CacheExecuteExtensionNode(ExtensionNode, Node):
                 or self in _cached_instances)
 
     def set_instance_cache(self, active=True):
+        """Add or remove this instance from caching.
+        
+        The global caching and class caching options still have priority over
+        the instance caching option.
+        """
         # add to global dictionary
         global _cached_instances
         if active:
@@ -116,12 +125,15 @@ def activate_caching(cachedir=None,
     of Node). If cache_classes or cache instances are specified, the cache
     is activated only for those classes and instances.
     
-    Input arguments:
-    cachedir -- The root of the joblib cache, or a temporary directory if None
-    cache_classes -- A list of Node subclasses for which caching is
-                     activated. (Default: None)
-    cache_classes -- A list of Node instances for which caching is activated.
-                     (Default: None)
+    :Parameters:
+     cachedir
+      The root of the joblib cache, or a temporary directory if None
+     cache_classes
+      A list of Node subclasses for which caching is activated.
+      Default value: None
+     cache_classes
+      A list of Node instances for which caching is activated.
+      Default value: None
     """
     global _cache_active_global
     global _cached_classes
@@ -153,14 +165,16 @@ def deactivate_caching(cachedir=None):
     _cached_methods = {}
 
 class cache(object):
-    """Context manager for the 'cache_execute' extension.
+    """Context manager for the `cache_execute` extension.
 
     This allows using the caching extension using a 'with'
     statement, as in:
 
+    ``
     with mdp.caching.cache(CACHEDIR):
         # 'node' is executed caching the results in CACHEDIR
         node.execute(x)
+    ``
 
     If the argument to the context manager is not specified, caching is
     done in a temporary directory.
@@ -168,6 +182,22 @@ class cache(object):
 
     def __init__(self, cachedir=None, cache_classes=None, cache_instances=None,
                  verbose=0):
+        """Activate caching extension.
+        
+        By default, the cache is activated globally (i.e., for all instances
+        of Node). If cache_classes or cache instances are specified, the cache
+        is activated only for those classes and instances.
+        
+        :Parameters:
+         cachedir
+          The root of the joblib cache, or a temporary directory if None
+         cache_classes
+          A list of Node subclasses for which caching is activated.
+          Default value: None
+         cache_classes
+          A list of Node instances for which caching is activated.
+          Default value: None
+        """
         self.cachedir = cachedir
         self.cache_classes = cache_classes
         self.cache_instances = cache_instances
