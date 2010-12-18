@@ -37,6 +37,7 @@ def set_cachedir(cachedir=None, verbose=0):
     """
 
     global _cachedir
+    global _cached_methods
     global _memory
 
     if cachedir is None:
@@ -126,7 +127,7 @@ def activate_caching(cachedir=None,
     global _cached_classes
     global _cached_instances
 
-    set_cachedir(cachedir, verbose)
+    set_cachedir(cachedir=cachedir, verbose=verbose)
     _cache_active_global = (cache_classes is None and cache_instances is None)
 
     # active cache for specific classes and instances
@@ -145,9 +146,11 @@ def deactivate_caching(cachedir=None):
     global _cache_active_global
     global _cached_classes
     global _cached_instances
+    global _cached_methods
     _cache_active_global = True
     _cached_classes = []
     _cached_instances = []
+    _cached_methods = {}
 
 class cache(object):
     """Context manager for the 'cache_execute' extension.

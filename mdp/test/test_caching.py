@@ -125,10 +125,10 @@ def test_class_caching():
 def test_class_caching_functionality():
     """Test that cached classes really cache."""
     global _counter
-    x = mdp.numx.array([[10]], dtype='d')
+    x = mdp.numx.array([[210]], dtype='d')
 
     node = _CounterNode()
-
+    
     # here _CounterNode is not cached
     _counter = 0
     with mdp.caching.cache(cache_classes=[mdp.nodes.PCANode]):
@@ -158,7 +158,7 @@ def test_instance_caching():
 def test_instance_caching_functionality():
     """Test that cached instances really cache."""
     global _counter
-    x = mdp.numx.array([[10]], dtype='d')
+    x = mdp.numx.array([[130]], dtype='d')
 
     node = _CounterNode()
     othernode = _CounterNode()
@@ -178,6 +178,7 @@ def test_instance_caching_functionality():
         assert _counter == 1
         node.execute(x)
         assert _counter == 1
+
 @requires_joblib
 def test_preexecution_problem():
     """Test that automatic setting of e.g. input_dim does not stop
@@ -197,3 +198,31 @@ def test_preexecution_problem():
         node.execute(x)
         assert _counter == 1
 
+@requires_joblib
+def test_switch_cache():
+    """Test changing cache directory while extension is active."""
+    from tempfile import mkdtemp
+    global _counter
+
+    dir1 = mkdtemp()
+    dir2 = mkdtemp()
+    x = mdp.numx.array([[10]], dtype='d')
+ 
+    mdp.caching.activate_caching(cachedir=dir1)
+    
+    node = _CounterNode()
+    _counter = 0
+    node.execute(x)
+    assert _counter == 1
+    node.execute(x)
+    assert _counter == 1
+        
+    # now change path
+    mdp.caching.set_cachedir(cachedir=dir2)
+    node.execute(x)
+    assert _counter == 2
+    node.execute(x)
+    assert _counter == 2
+    
+    mdp.caching.deactivate_caching()
+    
