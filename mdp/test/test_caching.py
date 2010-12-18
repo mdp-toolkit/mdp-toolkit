@@ -73,9 +73,6 @@ def test_different_instances_same_content():
 
     mdp.caching.activate_caching()
     node = _CounterNode()
-    # make one fake execution to avoid that automatic setting of
-    # attributes (e.g. dtype) interfere with cache
-    node.execute(mdp.numx.array([[0.]], dtype='d'))
     _counter = 0
 
     # add attribute to make instance unique
@@ -102,9 +99,6 @@ def test_different_instances_same_content():
 def test_caching_context_manager():
     global _counter
     node = _CounterNode()
-    # make one fake execution to avoid that automatic setting of
-    # attributes (e.g. dtype interferes with cache)
-    node.execute(mdp.numx.array([[0.]], dtype='d'))
     _counter = 0
 
     assert mdp.get_active_extensions() == []
@@ -184,3 +178,22 @@ def test_instance_caching_functionality():
         assert _counter == 1
         node.execute(x)
         assert _counter == 1
+@requires_joblib
+def test_preexecution_problem():
+    """Test that automatic setting of e.g. input_dim does not stop
+    the caching extension from caching on the first run."""
+    global _counter
+    x = mdp.numx.array([[102.]])
+
+    node = _CounterNode()
+
+    # here _CounterNode is cached
+    _counter = 0
+    with mdp.caching.cache():
+        # on the first execution, input_dim and dtype are set ...
+        node.execute(x)
+        assert _counter == 1
+        # ... yet the result is cached
+        node.execute(x)
+        assert _counter == 1
+
