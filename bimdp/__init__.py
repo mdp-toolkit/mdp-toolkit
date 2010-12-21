@@ -90,6 +90,8 @@ from biflow import (
 # the inspection stuff is considered a core functionality
 from inspection import *
 
+from test import test
+
 import nodes
 import hinet
 import parallel
