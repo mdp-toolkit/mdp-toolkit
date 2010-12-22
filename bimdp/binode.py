@@ -184,7 +184,12 @@ class BiNode(mdp.Node):
                 raise BiNodeException(err)
             # no fall-back on Node.train because we might have a return value
             self._check_input(x)
-            self._check_train_args(x)
+            try:
+                self._check_train_args(x)
+            except TypeError:
+                err = ("%s training seems to require " % str(self) +
+                       "additional arguments, but none were given.")
+                raise BiNodeException(err)
             self._train_phase_started = True
             x = self._refcast(x)
             return self._train_seq[self._train_phase][0](x)
@@ -198,7 +203,13 @@ class BiNode(mdp.Node):
         if x is not None:
             if (not method_name) or (method_name == "train"):
                 self._check_input(x)
-                self._check_train_args(x, **arg_dict)
+                try:
+                    self._check_train_args(x, **arg_dict)
+                except TypeError:
+                    err = ("The given additional arguments %s " %
+                                str(arg_dict.keys()) +
+                           "are not compatible with training %s." % str(self))
+                    raise BiNodeException(err)
                 self._train_phase_started = True
                 x = self._refcast(x)
             elif method == self._inverse:
