@@ -91,7 +91,7 @@ def setup_package():
 
     setup(name = 'MDP', version = '2.6',
           author = 'Pietro Berkes, Niko Wilbert, and Tiziano Zito',
-          author_email = 'berkes@brandeis.edu, mail@nikowilbert.de, tiziano.zito@bccn-berlin.de',
+          author_email = 'berkes@brandeis.edu, mail@nikowilbert.de, opossumnano@gmail.com',
           maintainer = 'Pietro Berkes, Rike-Benjamin Schuppner, Niko Wilbert, and Tiziano Zito',
           maintainer_email = 'berkes@brandeis.edu, rike.schuppner@bccn-berlin.de, mail@nikowilbert.de, tiziano.zito@bccn-berlin.de',
           license = "http://www.gnu.org/licenses/lgpl.html",
