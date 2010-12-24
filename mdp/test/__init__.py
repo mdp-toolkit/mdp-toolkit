@@ -1,8 +1,8 @@
 import os
 SCRIPT="run_tests.py"
 
-def test(filename=None, keyword=None, seed=None):
-    """Run MDP tests.
+def test(filename=None, keyword=None, seed=None, mod_loc=None, script_loc=None):
+    """Run tests.
 
        filename -- only run tests in filename. If not set run all tests.
                    You do not need the full path, the relative path within the
@@ -15,11 +15,18 @@ def test(filename=None, keyword=None, seed=None):
 
        seed     -- set random seed
 
+       mod_loc  -- don't use it, it's for internal usage
+
+       script_loc  -- don't use it, it's for internal usage
     """
+    if mod_loc is None:
+        mod_loc = os.path.dirname(__file__)
+    if script_loc is None:
+        script_loc = os.path.dirname(__file__)
     if filename is None:
-        loc = os.path.dirname(__file__)
+        loc = mod_loc
     else:
-        loc = os.path.join(os.path.dirname(__file__), os.path.basename(filename))
+        loc = os.path.join(mod_loc, os.path.basename(filename))
     args = []
     if keyword is not None:
         args.extend(('-k', str(keyword)))
@@ -27,7 +34,7 @@ def test(filename=None, keyword=None, seed=None):
         args.extend(('--seed', str(seed)))
 
     args.append(loc)
-    _worker = get_worker()
+    _worker = get_worker(script_loc)
     return _worker(args)
 
 def subtest(script, args):
@@ -37,14 +44,14 @@ def subtest(script, args):
     subprocess.Popen([sys.executable,script]+args, stdout = sys.stdout,
                      stderr = sys.stderr)
 
-def get_worker():
+def get_worker(loc):
     try:
         # use py.test module interface if it's installed
         import py.test
         return py.test.cmdline.main
     except ImportError:
         # try to locate the script
-        script = os.path.join(os.path.dirname(__file__), SCRIPT)
+        script = os.path.join(loc, SCRIPT)
         if os.path.exists(script):
             return lambda args: subtest(script, args)
         else:
