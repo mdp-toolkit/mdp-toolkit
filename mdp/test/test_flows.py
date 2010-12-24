@@ -44,6 +44,12 @@ def testFlow_copy():
     assert flow[0].dummy_attr != copy_flow[0].dummy_attr, \
            'Flow copy method did not work'
 
+def test_Flow_copy_with_lambda():
+    generic_node = mdp.Node()
+    generic_node.lambda_function = lambda: 1
+    generic_flow = mdp.Flow([generic_node])
+    copy_flow = generic_flow.copy()
+    
 def testFlow_save():
     dummy_list = [1,2,3]
     flow = _get_default_flow()
