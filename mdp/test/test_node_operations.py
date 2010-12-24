@@ -17,6 +17,19 @@ def test_Node_copy():
     assert generic_node.dummy_attr != copy_node.dummy_attr,\
            'Node copy method did not work'
 
+def test_Node_copy_with_arrays_and_subnodes():
+    node = mdp.Node()
+    node.node = mdp.Node()
+    node.node.x = mdp.numx.zeros((2,2))
+    node2 = node.copy()
+    assert hasattr(node2, 'node')
+    assert mdp.numx.all(node2.node.x == node.node.x) 
+
+def test_Node_copy_with_lambdas():
+    generic_node = mdp.Node()
+    generic_node.lambda_function = lambda: 1
+    copy_node = generic_node.copy()
+    
 def test_Node_save():
     test_list = [1,2,3]
     generic_node = mdp.Node()
