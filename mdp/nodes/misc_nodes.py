@@ -480,16 +480,6 @@ class NoiseNode(PreserveDimNode):
             real_pickle.dump(self, flh, protocol)
             flh.close()
 
-    def copy(self, protocol=None):
-        """Return a deep copy of the node.
-
-        The protocol parameter should not be used.
-        """
-        if protocol is not None:
-            _warnings.warn("protocol parameter to copy() is ignored",
-                           mdp.MDPDeprecationWarning, stacklevel=2)
-        return _copy.deepcopy(self)
-
 
 class NormalNoiseNode(PreserveDimNode):
     """Special version of NoiseNode for Gaussian additive noise.
