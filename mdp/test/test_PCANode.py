@@ -109,7 +109,7 @@ def testPCANode_SVD():
                               des_var,decimal)
     # Now a more difficult test, create singular cov matrices
     # and test that PCANode crashes whereas PCASVDNode doesn't
-    mat, mix, inp = get_random_mix(mat_dim=(1000, 100), avg=1E+8)
+    mat, mix, inp = get_random_mix(mat_dim=(1000, 100), avg=1E+15)
     # now create a degenerate input
     for i in xrange(1,100):
         inp[:,i] = inp[:,1].copy()
@@ -118,7 +118,7 @@ def testPCANode_SVD():
     pca.train(inp)
     try:
         pca.stop_training()
-        raise Exception, "PCANode didn't catch singular covariance matrix"
+        raise Exception, "PCANode didn't catch singular covariance matrix: degenerate"
     except mdp.NodeException:
         pass
     # now try the SVD version
@@ -133,7 +133,7 @@ def testPCANode_SVD():
     pca.train(inp)
     try:
         pca.stop_training()
-        raise Exception, "PCANode didn't catch singular covariance matrix"
+        raise Exception, "PCANode didn't catch singular covariance matrix: undetermined"
     except mdp.NodeException:
         pass
     # now try the SVD version
