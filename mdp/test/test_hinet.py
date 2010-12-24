@@ -130,7 +130,7 @@ def test_FlowNode_copy2():
     class CopyFailException(Exception):
         pass
     class CopyFailNode(mdp.Node):
-        def copy(self, protocol=-1):
+        def copy(self, protocol=None):
             raise CopyFailException()
     flow = mdp.Flow([mdp.Node(), CopyFailNode()])
     flownode = mh.FlowNode(flow)

@@ -3,10 +3,12 @@ import mdp
 import sys as _sys
 import os as _os
 import inspect as _inspect
+import warnings as _warnings
 import traceback as _traceback
 import cPickle as _cPickle
 import warnings as _warnings
 import tempfile as _tempfile
+import copy as _copy
 
 from mdp import numx
 
@@ -400,11 +402,15 @@ class Flow(object):
             raise FlowException(errstr)
         return numx.concatenate(res)
 
-    def copy(self, protocol = -1):
+    def copy(self, protocol=None):
         """Return a deep copy of the flow.
-        Protocol is the pickle protocol."""
-        as_str = _cPickle.dumps(self, protocol)
-        return _cPickle.loads(as_str)
+
+        The protocol parameter should not be used.
+        """
+        if protocol is not None:
+            _warnings.warn("protocol parameter to copy() is ignored",
+                           mdp.MDPDeprecationWarning, stacklevel=2)
+        return _copy.deepcopy(self)
 
     def save(self, filename, protocol=-1):
         """Save a pickled serialization of the flow to 'filename'.

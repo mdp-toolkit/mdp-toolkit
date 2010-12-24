@@ -1,5 +1,7 @@
 from __future__ import with_statement
 import cPickle as _cPickle
+import warnings as _warnings
+import copy as _copy
 import inspect
 
 import mdp
@@ -639,11 +641,12 @@ class Node(object):
         args = ', '.join((inp, out, typ))
         return name + '(' + args + ')'
 
-    def copy(self, protocol=-1):
-        """Return a deep copy of the node.
-        Protocol is the pickle protocol."""
-        as_str = _cPickle.dumps(self, protocol)
-        return _cPickle.loads(as_str)
+    def copy(self, protocol=None):
+        """Return a deep copy of the node."""
+        if protocol is not None:
+            _warnings.warn("protocol parameter to copy() is ignored",
+                           mdp.MDPDeprecationWarning, stacklevel=2)
+        return _copy.deepcopy(self)
 
     def save(self, filename, protocol=-1):
         """Save a pickled serialization of the node to 'filename'.

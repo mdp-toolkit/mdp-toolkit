@@ -1,6 +1,8 @@
 import mdp
 from mdp import numx, utils, Node, NodeException, PreserveDimNode
 
+import warnings as _warnings
+import copy as _copy
 import cPickle as pickle
 import pickle as real_pickle
 
@@ -478,11 +480,15 @@ class NoiseNode(PreserveDimNode):
             real_pickle.dump(self, flh, protocol)
             flh.close()
 
-    def copy(self, protocol = -1):
+    def copy(self, protocol=None):
         """Return a deep copy of the node.
-        Protocol is the pickle protocol."""
-        as_str = real_pickle.dumps(self, protocol)
-        return real_pickle.loads(as_str)
+
+        The protocol parameter should not be used.
+        """
+        if protocol is not None:
+            _warnings.warn("protocol parameter to copy() is ignored",
+                           mdp.MDPDeprecationWarning, stacklevel=2)
+        return _copy.deepcopy(self)
 
 
 class NormalNoiseNode(PreserveDimNode):

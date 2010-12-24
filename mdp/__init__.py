@@ -62,6 +62,10 @@ class MDPWarning(UserWarning):
     """Base class for warnings in MDP."""
     pass
 
+class MDPDeprecationWarning(DeprecationWarning, MDPWarning):
+    """Warn about deprecated MDP API."""
+    pass
+
 import os as _os
 
 # list of supported numerical extensions
