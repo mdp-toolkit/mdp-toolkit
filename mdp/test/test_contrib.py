@@ -84,9 +84,19 @@ def _random_clusters(positions, radius=1, num_elem=1000):
         data.append(ball)
     return data
 
-def _linear_separable_data(positions, labels, radius=1, num_elem=1000, shuffled=False):
-    """Tries to make up some linear separable data.
-    num_elem - the number of elements in each
+def _separable_data(positions, labels, radius=1, num_elem=1000, shuffled=False):
+    """
+    For each position, we create num_elem data points in a certain radius around
+    that position. If shuffled, we shuffle the output data and labels.
+    
+    positions -- List of position tuples, e.g. [(1, 1), (-1, -1)]
+    labels    -- List of labels, e.g. [1, -1]
+    radius    -- The maximum distance to the position
+    num_elem  -- The number of elements to be created
+    shuffled  -- Should the output be shuffled.
+    
+    Returns:
+      data, labels
     """
     assert len(positions) == len(labels)
 
@@ -99,6 +109,25 @@ def _linear_separable_data(positions, labels, radius=1, num_elem=1000, shuffled=
         numx_rand.shuffle(ind)
         return data[ind], a_labels[ind]
     return data, a_labels
+
+class TestSeparableData(object):
+    def test_all_data_is_inside_radius(self):
+        def sqdist(tuple_a, tuple_b):
+            return sum([(a-b)**2 for a, b in zip(tuple_a, tuple_b)])
+        
+        positions = [[(1, 1), (-1, -1)],
+                     [(1, 1, 10), (100, -20, 30), (-1, 10, 1000)]]
+        labels = [[1, -1], [1, 2, 3]]
+        radii = [0.5, 1, 10]
+        num_elem = 100
+        
+        for poslabs, rad in itertools.product(zip(positions, labels), radii):
+            pos, labs = poslabs
+            data, ls = _separable_data(pos, labs, rad, num_elem)
+        
+            for d,l in zip(data, ls):
+                idx = labs.index(l)
+                assert rad**2 > sqdist(pos[idx], d)
 
 
 def test_JADENode():
@@ -304,9 +333,9 @@ def test_ShogunSVMClassifier():
         elif len(positions) == 4:
             labels = (-1, -1, 1, 1)
 
-        traindata_real, trainlab = _linear_separable_data(positions, labels,
+        traindata_real, trainlab = _separable_data(positions, labels,
                                                           radius, num_train)
-        testdata_real, testlab = _linear_separable_data(positions, labels,
+        testdata_real, testlab = _separable_data(positions, labels,
                                                         radius, num_test)
 
 
@@ -431,9 +460,9 @@ class TestLibSVMClassifier(object):
                           ((1,1,1,1), (-1,-1,-1,-1))]:
             radius = 0.3
 
-            traindata_real, trainlab = _linear_separable_data(positions, (-1, 1),
+            traindata_real, trainlab = _separable_data(positions, (-1, 1),
                                                               radius, num_train, True)
-            testdata_real, testlab = _linear_separable_data(positions, (-1, 1),
+            testdata_real, testlab = _separable_data(positions, (-1, 1),
                                                             radius, num_test, True)
 
             for comb in utils.orthogonal_permutations(self.combinations):
