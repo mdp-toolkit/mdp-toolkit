@@ -12,20 +12,34 @@ class LibSVMClassifier(_SVMClassifier):
 
     Information to the parameters can be found on
     http://www.csie.ntu.edu.tw/~cjlin/libsvm/
+    
+    The class provides access to change kernel and svm type with a text string.
+    
+    Additionally self.parameter is exposed which allows to change all other
+    svm parameters directly.
     """
     # The kernels and classifiers which LibSVM allows.
     kernels = ["RBF", "LINEAR", "POLY", "SIGMOID"]
     classifiers = ["C_SVC", "NU_SVC", "ONE_CLASS", "EPSILON_SVR", "NU_SVR"]
 
-    def __init__(self, kernel=None, classifier=None, probability=True,
+    def __init__(self, kernel=None, classifier=None, probability=True, params=None,
                  input_dim=None, output_dim=None, dtype=None):
         """
+        kernel -- The kernel to use
+        classifier -- The type of the SVM
+        params -- a dict of parameters to be passed to the svm_parameter
         probability -- Must be set to True, if algorithms based on probability
                        shall be used.
         """
-        self.kernel_type = libsvmutil.RBF
-        self._probability = probability
-        self._classification_type = "multi"
+        if not params:
+            params = {}
+        
+        # initialise the parameter and be quiet
+        self.parameter = libsvmutil.svm_parameter("-q")
+        if probability:
+            # allow for probability estimates
+            self.parameter.probability = 1
+        
         super(LibSVMClassifier, self).__init__(input_dim=input_dim,
                                                output_dim=output_dim,
                                                dtype=dtype)
@@ -33,6 +47,11 @@ class LibSVMClassifier(_SVMClassifier):
             self.set_kernel(kernel)
         if classifier:
             self.set_classifier(classifier)
+        # set all other parameters
+        for k, v in params.iteritems():
+            if hasattr(self.parameter, k):
+                setattr(self.parameter, k, v)
+            
 
     def _get_supported_dtypes(self):
         """Return the list of dtypes selfupported by this node."""
@@ -48,7 +67,7 @@ class LibSVMClassifier(_SVMClassifier):
                       self.classifiers
         """
         if classifier.upper() in self.classifiers:
-            self.classifier_type = getattr(libsvmutil, classifier.upper())
+            self.parameter.svm_type = getattr(libsvmutil, classifier.upper())
         else:
             msg = "Classifier Type %s is unknown or not supported." % classifier
             raise TypeError(msg)
@@ -62,33 +81,15 @@ class LibSVMClassifier(_SVMClassifier):
                       self.kernels
         """
         if kernel.upper() in self.kernels:
-            self.kernel_type = getattr(libsvmutil, kernel.upper())
+            self.parameter.kernel_type = getattr(libsvmutil, kernel.upper())
         else:
             msg = "Kernel Type %s is unknown or not supported." % kernel
             raise TypeError(msg)
 
-    def _train_problem(self, labels, features, parameter):
-        prob = libsvmutil.svm_problem(labels.tolist(), features.tolist())
-        # Train
-        model = libsvmutil.svm_train(prob, parameter)
-        return model
-
     def _stop_training(self):
         super(LibSVMClassifier, self)._stop_training()
         self.normalizer = _LabelNormalizer(self.labels)
-
-        if self._probability:
-            prob = 1
-        else:
-            prob = 0
-            
-        parameters = "-s {svm_type} -t {kernel_type} -b {prob} -q".format(svm_type=self.classifier_type,
-                                                                       kernel_type=self.kernel_type,
-                                                                       prob=prob)
-        self.parameter = libsvmutil.svm_parameter(parameters)
-        
-        self.parameter.show()
-
+                
         labels = self.normalizer.normalize(self.labels.tolist())
         features = self.data
 
@@ -96,7 +97,6 @@ class LibSVMClassifier(_SVMClassifier):
         prob = libsvmutil.svm_problem(labels, features.tolist())
         # Train
         self.model = libsvmutil.svm_train(prob, self.parameter)
-        
 
     def _label(self, x):
         if isinstance(x, (list, tuple, numx.ndarray)):

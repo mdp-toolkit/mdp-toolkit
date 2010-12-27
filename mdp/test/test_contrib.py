@@ -398,11 +398,13 @@ def test_ShogunSVMClassifier():
     "not hasattr(mdp.nodes, 'LibSVMClassifier')",
     "This test requires the 'libsvm' module.")
 def test_LibSVMClassifier():
+    import svm as libsvm
+    
     num_train = 100
     num_test = 50
     dist = 0.4
     width = 2.1
-    C = 1
+    C = 1.01
     epsilon = 1e-5
     for positions in [((1,), (-1,)),
                       ((1,1), (-1,-1)),
@@ -426,9 +428,14 @@ def test_LibSVMClassifier():
             if comb['kernel'] in ["SIGMOID", "RBF", "POLY"]:
                 continue
 
-            svm_node = mdp.nodes.LibSVMClassifier()
+            svm_node = mdp.nodes.LibSVMClassifier(params={"C": C, "eps": epsilon})
             svm_node.set_kernel(comb['kernel'])
             svm_node.set_classifier(comb['classifier'])
+            
+            # check that the parameters are correct
+            assert svm_node.parameter.kernel_type == getattr(libsvm, comb['kernel'])
+            assert svm_node.parameter.svm_type == getattr(libsvm, comb['classifier'])
+            assert svm_node.parameter.C == C
 
             # train in two chunks to check update mechanism
             svm_node.train(traindata_real[:num_train], trainlab[:num_train])
