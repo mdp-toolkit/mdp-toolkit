@@ -60,14 +60,14 @@ def get_random_mix(mat_dim = None, type = "d", scale = 1,\
         mat -= mean(mat,axis=0)
         mat /= std(mat,axis=0)
         # check that the minimum eigenvalue is finite and positive
-        d1 = min(mdp.utils.symeig(mdp.utils.mult(mat.T, mat), eigenvectors = 0))
+        d1 = min(mdp.symeig(mdp.utils.mult(mat.T, mat), eigenvectors = 0))
         if std_dev is not None: mat *= std_dev
         if avg is not None: mat += avg
         mix = (rand_func(size=(N,N))*scale).astype(type)
         matmix = mdp.utils.mult(mat,mix)
         matmix_n = matmix - mean(matmix, axis=0)
         matmix_n /= std(matmix_n, axis=0)
-        d2 = min(mdp.utils.symeig(mdp.utils.mult(matmix_n.T,matmix_n),eigenvectors=0))
+        d2 = min(mdp.symeig(mdp.utils.mult(matmix_n.T,matmix_n),eigenvectors=0))
         d = min(d1, d2)
     return mat, mix, matmix
 

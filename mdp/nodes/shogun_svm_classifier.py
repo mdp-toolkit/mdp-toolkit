@@ -1,25 +1,8 @@
 import mdp
-from mdp import numx
+from mdp import numx, sgKernel, sgFeatures, sgClassifier
 from mdp.utils import OrderedDict as _OrderedDict
 
 from svm_classifiers import _SVMClassifier, _LabelNormalizer
-
-import shogun.Kernel as sgKernel
-import shogun.Features as sgFeatures
-import shogun.Classifier as sgClassifier
-
-# We need to have at least SHOGUN 0.9, as we rely on
-# SHOGUN's CClassifier::classify() method.
-# (It makes our code much nicer, by the way.)
-#
-try:
-    version = sgKernel._Kernel.Version_get_version_release()
-except AttributeError:
-    version = ""
-
-if not (version.startswith('v0.9') or version.startswith('v1.')):
-    msg = "We need at least SHOGUN version 0.9."
-    raise ImportError(msg)
 
 # switch off spurious warnings from shogun
 import warnings

@@ -3,7 +3,7 @@ from __future__ import with_statement
 from _tools import *
 
 requires_joblib = skip_on_condition(
-    "not hasattr(mdp, 'caching')",
+    "not mdp.config.has_joblib",
     "This test requires the 'joblib' module.")
 
 

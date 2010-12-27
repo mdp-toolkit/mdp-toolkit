@@ -6,7 +6,7 @@ extension is based on joblib v. 0.4.6.
 """
 __docformat__ = "restructuredtext en"
 
-import joblib
+from mdp import joblib
 from copy import deepcopy
 from tempfile import mkdtemp
 

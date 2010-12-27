@@ -1,9 +1,9 @@
-from mdp import numx, Node, NodeException, MDPWarning
-from mdp.utils import (mult, symeig, nongeneral_svd, CovarianceMatrix,
-                       SymeigException)
+import mdp
+from mdp import numx
+from mdp.utils import mult, nongeneral_svd, CovarianceMatrix
 import warnings as _warnings
 
-class PCANode(Node):
+class PCANode(mdp.Node):
     """Filter the input data through the most significatives of its
     principal components.
 
@@ -54,7 +54,7 @@ class PCANode(Node):
         if svd:
             self._symeig = nongeneral_svd
         else:
-            self._symeig = symeig
+            self._symeig = mdp.symeig
         self.var_abs = var_abs
         self.var_rel = var_rel
         self.var_part = var_part
@@ -80,12 +80,12 @@ class PCANode(Node):
         # check output rank
         if not y.ndim == 2:
             error_str = "y has rank %d, should be 2" % (y.ndim)
-            raise NodeException(error_str)
-        
+            raise mdp.NodeException(error_str)
+
         if y.shape[1] == 0 or y.shape[1] > self.output_dim:
             error_str = ("y has dimension %d"
                          ", should be 0<y<=%d" % (y.shape[1], self.output_dim))
-            raise NodeException(error_str)
+            raise mdp.NodeException(error_str)
 
     def get_explained_variance(self):
         """Return the fraction of the original variance that can be
@@ -153,7 +153,7 @@ class PCANode(Node):
                    'is larger than the number of input variables '
                    '(%d). You may want to use '
                    'the NIPALSNode instead.' % (self.tlen, self.input_dim))
-            _warnings.warn(wrn, MDPWarning)
+            _warnings.warn(wrn, mdp.MDPWarning)
 
         # total variance can be computed at this point:
         # note that vartot == d.sum()
@@ -169,15 +169,14 @@ class PCANode(Node):
             if not (self.reduce or self.svd or (self.desired_variance is
                                                 not None)):
                 if d.min() < 0:
-                    raise NodeException("Got negative eigenvalues: "
-                                        "%s.\n"
-                                        "You may either set output_dim to be"
-                                        " smaller, or set reduce=True and/or "
-                                        "svd=True" % str(d))
-        except SymeigException, exception:
+                    raise mdp.NodeException(
+                        "Got negative eigenvalues: %s.\n"
+                        "You may either set output_dim to be smaller, "
+                        "or set reduce=True and/or svd=True" % str(d))
+        except mdp.SymeigException, exception:
             err = str(exception)+("\nCovariance matrix may be singular."
                                   "Try setting svd=True.")
-            raise NodeException(err)
+            raise mdp.NodeException(err)
 
         # delete covariance matrix if no exception occurred
         if not debug:
@@ -257,7 +256,7 @@ class PCANode(Node):
         if n > self.output_dim:
             error_str = ("y has dimension %d,"
                          " should be at most %d" % (n, self.output_dim))
-            raise NodeException(error_str)
+            raise mdp.NodeException(error_str)
 
         v = self.get_recmatrix()
         if n is not None:

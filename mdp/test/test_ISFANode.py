@@ -209,7 +209,7 @@ def testISFANode_AnalyticalSolution():
         # rotate the analytical solution
         covs_rot.transform(R)
         # find the SFA solution to initialize ISFA
-        eigval, SFARP = mdp.utils.symeig(covs_rot.covs[:,:,0])
+        eigval, SFARP = mdp.symeig(covs_rot.covs[:,:,0])
         # order SFA solution by slowness
         SFARP = SFARP[:,-1::-1]
         # run ISFA

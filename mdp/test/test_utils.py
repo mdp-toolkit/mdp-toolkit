@@ -82,8 +82,8 @@ def test_mult_diag():
 def test_symeig_fake_integer():
     a = numx.array([[1,2],[2,7]])
     b = numx.array([[3,1],[1,5]])
-    w,z = utils._symeig_fake(a)
-    w,z = utils._symeig_fake(a,b)
+    w,z = utils._symeig._symeig_fake(a)
+    w,z = utils._symeig._symeig_fake(a,b)
 
 def test_symeig_fake_LAPACK_bug():
     # bug. when input matrix is almost an identity matrix
@@ -96,7 +96,7 @@ def test_symeig_fake_LAPACK_bug():
     y = (y+y.T)/2
     for i in xrange(4):
         y[i,i]=1
-    val, vec = utils._symeig_fake(y)
+    val, vec = utils._symeig._symeig_fake(y)
     assert_almost_equal(abs(numx_linalg.det(vec)), 1., 12)
 
 def test_QuadraticForm_extrema():
@@ -121,7 +121,7 @@ def test_QuadraticForm_invariances():
     #nu = numx.linspace(2.,-3,10)
     nu = numx.linspace(6., 1, 10)
     H = utils.symrand(nu)
-    E, W = utils.symeig(H)
+    E, W = mdp.symeig(H)
     q = utils.QuadraticForm(H)
     xmax, xmin = q.get_extrema(5.)
     e_w, e_sd = q.get_invariances(xmax)
