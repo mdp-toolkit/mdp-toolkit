@@ -1,3 +1,5 @@
+__docformat__ = "restructuredtext en"
+
 import mdp
 from mdp import numx
 from mdp.utils import mult
@@ -21,12 +23,12 @@ class RBMNode(mdp.Node):
     probabilistic network with binary variables. The graph is
     bipartite into observed ('visible') and hidden ('latent') variables.
 
-    By default, the 'execute' function returns the *probability* of
+    By default, the `execute` function returns the *probability* of
     one of the hiden variables being equal to 1 given the input.
 
-    Use the 'sample_v' function to sample from the observed variables
-    given a setting of the hidden variables, and 'sample_h' to do the
-    opposite. The 'energy' function can be used to compute the energy
+    Use the `sample_v` function to sample from the observed variables
+    given a setting of the hidden variables, and `sample_h` to do the
+    opposite. The `energy` function can be used to compute the energy
     of a given setting of all variables.
 
     The network is trained by Contrastive Divergence, as described in
@@ -34,9 +36,10 @@ class RBMNode(mdp.Node):
     contrastive divergence. Neural Computation, 14(8):1711-1800
 
     Internal variables of interest:
-    self.w -- generative weights between hidden and observed variables
-    self.bv -- bias vector of the observed variables
-    self.bh -- bias vector of the hidden variables
+
+    - ``self.w`` -- generative weights between hidden and observed variables
+    - ``self.bv`` -- bias vector of the observed variables
+    - ``self.bh`` -- bias vector of the hidden variables
 
     For more information on RBMs, see
     Geoffrey E. Hinton (2007) Boltzmann machine. Scholarpedia, 2(5):1668
@@ -44,10 +47,11 @@ class RBMNode(mdp.Node):
 
     def __init__(self, hidden_dim, visible_dim = None, dtype = None):
         """
-        Arguments:
-
-        hidden_dim -- number of hidden variables
-        visible_dim -- number of observed variables
+        :Parameters:
+          hidden_dim
+            number of hidden variables
+          visible_dim
+            number of observed variables
         """
         super(RBMNode, self).__init__(visible_dim, hidden_dim, dtype)
         self._initialized = False
@@ -82,15 +86,21 @@ class RBMNode(mdp.Node):
 
     def _train(self, v, n_updates=1, epsilon=0.1, decay=0., momentum=0.,
                verbose=False):
-        """Update the internal structures according to the input data 'v'.
+        """Update the internal structures according to the input data `v`.
         The training is performed using Contrastive Divergence (CD).
 
-        v -- a binary matrix having different variables on different columns
-             and observations on the rows
-        n_updates -- number of CD iterations. Default value: 1
-        epsilon -- learning rate. Default value: 0.1
-        decay -- weight decay term. Default value: 0.
-        momentum -- momentum term. Default value: 0.
+        :Parameters:
+          v
+            a binary matrix having different variables on different columns
+            and observations on the rows
+          n_updates
+            number of CD iterations. Default value: 1
+          epsilon
+            learning rate. Default value: 0.1
+          decay
+            weight decay term. Default value: 0.
+          momentum
+            momentum term. Default value: 0.
         """
         if not self._initialized:
             self._init_weights()
@@ -155,20 +165,21 @@ class RBMNode(mdp.Node):
     def sample_h(self, v):
         """Sample the hidden variables given observations v.
 
-        Returns a tuple (prob_h, h), where prob_h[n,i] is the
-        probability that variable 'i' is one given the observations
-        v[n,:], and h[n,i] is a sample from the posterior probability."""
-
+        :Returns: a tuple ``(prob_h, h)``, where ``prob_h[n,i]`` is the
+          probability that variable ``i`` is one given the observations
+          ``v[n,:]``, and ``h[n,i]`` is a sample from the posterior probability.
+        """
         self._pre_execution_checks(v)
         return self._sample_h(v)
 
     def sample_v(self, h):
         """Sample the observed variables given hidden variable state h.
 
-        Returns a tuple (prob_v, v), where prob_v[n,i] is the
-        probability that variable 'i' is one given the hidden variables
-        h[n,:], and v[n,i] is a sample from that conditional probability."""
-
+        :Returns: a tuple ``(prob_v, v)``, where ``prob_v[n,i]`` is the
+          probability that variable ``i`` is one given the hidden
+          variables ``h[n,:]``, and ``v[n,i]`` is a sample from that
+          conditional probability.
+        """
         self._pre_inversion_checks(h)
         return self._sample_v(h)
 
@@ -177,14 +188,15 @@ class RBMNode(mdp.Node):
                 (mult(v, self.w)*h).sum(axis=1))
 
     def energy(self, v, h):
-        """Compute the energy of the RBM given observed variables state 'v' and
-        hidden variables state 'h'."""
+        """Compute the energy of the RBM given observed variables state `v` and
+        hidden variables state `h`.
+        """
         return self._energy(v, h)
 
     def _execute(self, v, return_probs=True):
-        """If 'return_probs' is True, returns the probability of the
+        """If `return_probs` is True, returns the probability of the
         hidden variables h[n,i] being 1 given the observations v[n,:].
-        If 'return_probs' is False, return a sample from that probability.
+        If `return_probs` is False, return a sample from that probability.
         """
         probs, h = self._sample_h(v)
         if return_probs:
@@ -201,12 +213,12 @@ class RBMWithLabelsNode(RBMNode):
     any time. The node is able to learn associations between the
     visible variables and the labels.
 
-    By default, the 'execute' function returns the *probability* of
+    By default, the `execute` function returns the *probability* of
     one of the hiden variables being equal to 1 given the input.
 
-    Use the 'sample_v' function to sample from the observed variables
+    Use the `sample_v` function to sample from the observed variables
     (visible and labels) given a setting of the hidden variables, and
-    'sample_h' to do the opposite. The 'energy' function can be used
+    `sample_h` to do the opposite. The `energy` function can be used
     to compute the energy of a given setting of all variables.
 
     The network is trained by Contrastive Divergence, as described in
@@ -214,9 +226,10 @@ class RBMWithLabelsNode(RBMNode):
     contrastive divergence. Neural Computation, 14(8):1711-1800
 
     Internal variables of interest:
-    self.w -- generative weights between hidden and observed variables
-    self.bv -- bias vector of the observed variables
-    self.bh -- bias vector of the hidden variables
+
+    - ``self.w`` -- generative weights between hidden and observed variables
+    - ``self.bv`` -- bias vector of the observed variables
+    - ``self.bh`` -- bias vector of the hidden variables
 
     For more information on RBMs with labels, see
 
@@ -278,28 +291,28 @@ class RBMWithLabelsNode(RBMNode):
     # execution methods
 
     def sample_h(self, v, l):
-        """Sample the hidden variables given observations v and labels l.
+        """Sample the hidden variables given observations `v` and labels `l`.
 
-        Returns a tuple (prob_h, h), where prob_h[n,i] is the
-        probability that variable 'i' is one given the observations
-        v[n,:] and the labels l[n,:],and h[n,i] is a sample from
-        the posterior probability."""
+        :Returns: a tuple ``(prob_h, h)``, where ``prob_h[n,i]`` is the
+          probability that variable ``i`` is one given the observations
+          ``v[n,:]`` and the labels ``l[n,:]``, and ``h[n,i]`` is a sample
+          from the posterior probability."""
 
         x = numx.concatenate((v, l), axis=1)
         self._pre_execution_checks(x)
         return self._sample_h(x)
 
     def sample_v(self, h):
-        """Sample the observed variables given hidden variable state h.
+        """Sample the observed variables given hidden variable state `h`.
 
-        Returns a tuple (prob_v, probs_l, v, l), where prob_v[n,i] is
-        the probability that the visible variable 'i' is one given the
-        hidden variables h[n,:], and v[n,i] is a sample from that
-        conditional probability. prob_l and l have similar
-        interpretations for the label variables. Note that the labels
-        are activated using a softmax function, so that only one label
-        can be active at any time."""
-
+        :Returns: a tuple ``(prob_v, probs_l, v, l)``, where ``prob_v[n,i]``
+          is the probability that the visible variable ``i`` is one given
+          the hidden variables ``h[n,:]``, and ``v[n,i]`` is a sample from
+          that conditional probability. ``prob_l`` and ``l`` have similar
+          interpretations for the label variables. Note that the labels are
+          activated using a softmax function, so that only one label can be
+          active at any time.
+        """
         self._pre_inversion_checks(h)
 
         probs_v, probs_l, v, l = self._sample_v(h, sample_l=True,
@@ -307,16 +320,16 @@ class RBMWithLabelsNode(RBMNode):
         return probs_v, probs_l, v, l
 
     def energy(self, v, h, l):
-        """Compute the energy of the RBM given observed variables state 'v'
-        and 'l', and hidden variables state 'h'."""
+        """Compute the energy of the RBM given observed variables state `v`
+        and `l`, and hidden variables state `h`."""
 
         x = numx.concatenate((v, l), axis=1)
         return self._energy(x, h)
 
     def execute(self, v, l, return_probs = True):
-        """If 'return_probs' is True, returns the probability of the
+        """If `return_probs` is True, returns the probability of the
         hidden variables h[n,i] being 1 given the observations v[n,:]
-        and l[n,:].  If 'return_probs' is False, return a sample from
+        and l[n,:].  If `return_probs` is False, return a sample from
         that probability.
         """
         x = numx.concatenate((v, l), axis=1)
@@ -334,18 +347,25 @@ class RBMWithLabelsNode(RBMNode):
 
     def train(self, v, l, n_updates=1, epsilon=0.1, decay=0., momentum=0.,
               verbose=False):
-        """Update the internal structures according to the visible data 'v'
-        and the labels 'l'.
+        """Update the internal structures according to the visible data `v`
+        and the labels `l`.
         The training is performed using Contrastive Divergence (CD).
 
-        v -- a binary matrix having different variables on different columns
-             and observations on the rows
-        l -- a binary matrix having different variables on different columns
-             and observations on the rows. Only one value per row should be 1.
-        n_updates -- number of CD iterations. Default value: 1
-        epsilon -- learning rate. Default value: 0.1
-        decay -- weight decay term. Default value: 0.
-        momentum -- momentum term. Default value: 0.
+        :Parameters:
+          v
+            a binary matrix having different variables on different columns
+            and observations on the rows
+          l
+            a binary matrix having different variables on different columns
+            and observations on the rows. Only one value per row should be 1.
+          n_updates
+            number of CD iterations. Default value: 1
+          epsilon
+            learning rate. Default value: 0.1
+          decay
+            weight decay term. Default value: 0.
+          momentum
+            momentum term. Default value: 0.
         """
 
         if not self.is_training():

@@ -1,3 +1,5 @@
+__docformat__ = "restructuredtext en"
+
 import mdp
 
 class XSFANode(mdp.Node):
@@ -19,7 +21,7 @@ class XSFANode(mdp.Node):
     >>> flow.train(x)
 
     doing so will automatically train all training phases. The argument
-    'x' to the flow.train method can be an array or a list of iterables
+    ``x`` to the `Flow.train` method can be an array or a list of iterables
     (see the section about Iterators in the MDP tutorial for more info).
 
     If the number of training samples is large, you may run into
@@ -40,40 +42,44 @@ class XSFANode(mdp.Node):
     References:
     Sprekeler, H., Zito, T., and Wiskott, L. (2009).
     An Extension of Slow Feature Analysis for Nonlinear Blind Source Separation
-    Journal of Machine Learning Research, submitted
-    [pdf link follows]
+    Journal of Machine Learning Research
+    http://cogprints.org/7056/1/SprekelerZitoWiskott-Cogprints-2010.pdf
     """
     def __init__(self, basic_exp=None, intern_exp=None, svd=False, verbose=False,
                  input_dim=None, output_dim=None, dtype=None):
         """
-        Keyword arguments:
+        :Keywords:
+           basic_exp
+             a tuple ``(node, args, kwargs)`` defining the node used for
+             the basic nonlinear expansion.  It is assumed that the
+             mixture is linearly invertible after this expansion. The
+             higher the complexity of the nonlinearity, the higher are
+             the chances of inverting the unknown mixture. On the
+             other hand, high complexity of the nonlinear expansion
+             increases the danger of numeric instabilities, which can
+             cause singularities in the simulation or errors in the
+             source estimation. The trade-off has to be evaluated
+             carefully.
 
-          basic_exp --  a tuple (node, args, kwargs) defining the node
-                        used for the basic nonlinear expansion.  It is
-                        assumed that the mixture is linearly invertible
-                        after this expansion. The higher the complexity
-                        of the nonlinearity, the higher are the chances
-                        of inverting the unknown mixture. On the other
-                        hand, high complexity of the nonlinear
-                        expansion increases the danger of numeric
-                        instabilities, which can cause singularities in
-                        the simulation or errors in the source
-                        estimation. The trade-off has to be evaluated
-                        carefully.  Default:
-                        (mdp.nodes.PolynomialExpansionNode, (2, ), {})
+             Default: ``(mdp.nodes.PolynomialExpansionNode, (2, ), {})``
 
-          intern_exp -- a tuple (node, args, kwargs) defining the node
-                        used for the internal nonlinear expansion of
-                        the estimated sources to be removed from the input space.
-                        The same trade-off as for basic_exp is valid here.
-                        Default:
-                        (mdp.nodes.PolynomialExpansionNode, (10, ), {})
+           intern_exp
+             a tuple ``(node, args, kwargs)`` defining the node used
+             for the internal nonlinear expansion of the estimated
+             sources to be removed from the input space.  The same
+             trade-off as for basic_exp is valid here.
 
-                 svd -- enable Singular Value Decomposition for normalization
-                        and regularization. Use it if the node complains about
-                        singular covariance matrices.
+             Default: ``(mdp.nodes.PolynomialExpansionNode, (10, ), {})``
 
-             verbose -- show some progress during training.
+           svd
+             enable Singular Value Decomposition for normalization
+             and regularization. Use it if the node complains about
+             singular covariance matrices.
+
+           verbose
+             show some progress during training.
+
+             Default: False
         """
 
         # set up basic expansion

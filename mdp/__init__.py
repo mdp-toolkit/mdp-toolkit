@@ -53,6 +53,7 @@ make it also a valid educational tool.
 
 http://mdp-toolkit.sourceforge.net
 """
+__docformat__ = "restructuredtext en"
 
 class MDPException(Exception):
     """Base class for exceptions in MDP."""
@@ -199,7 +200,7 @@ class MDPConfiguration(object):
         self.add_info('MDP Revision', __revision__)
         self.add_info('Python Version', '.'.join([str(x) for x in
                                                   sys.version_info]))
-        
+
         self.add_feature("numpy", numx_description == 'numpy', doc=False)
         self.add_feature("scipy", numx_description == 'scipy', doc=False)
 
@@ -255,7 +256,7 @@ class MDPConfiguration(object):
         except ImportError, msg:
             return ExternalDepFail(msg)
         return ExternalDepFound()
-    
+
     def has_symeig(self):
         return self._has_symeig
 
@@ -286,7 +287,7 @@ class MDPConfiguration(object):
                     SYMEIG = 'unknown'
         return SYMEIG
 
-    
+
     def info(self):
         """Return nicely formatted info about MDP."""
         listable_features = [f for f in self._features if f in self._doc]
