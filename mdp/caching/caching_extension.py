@@ -1,9 +1,10 @@
 """MDP extension to cache the execution phase of nodes.
 
-This extension is based on the 'joblib' library by Gael Varoquaux,
-available at http://packages.python.org/joblib/ . At the moment, the
-extension is based on joblib v. 0.4.6 .
+This extension is based on the **joblib** library by Gael Varoquaux,
+available at http://packages.python.org/joblib/. At the moment, the
+extension is based on joblib v. 0.4.6.
 """
+__docformat__ = "restructuredtext en"
 
 import joblib
 from copy import deepcopy
@@ -27,10 +28,13 @@ _cached_methods = {}
 def set_cachedir(cachedir=None, verbose=0):
     """Set root directory for the joblib cache.
 
-    cachedir -- the cache directory name; if None, a temporary directory
-                is created using tempfile.mkdtemp()
-    verbose -- an integer number, controls the verbosity of the cache
-               (default is 0, i.e., not verbose)
+    :Parameters:
+     cachedir
+         the cache directory name; if None, a temporary directory
+         is created using tempfile.mkdtemp()
+     verbose
+         an integer number, controls the verbosity of the cache
+         (default is 0, i.e., not verbose)
     """
 
     global _cachedir
@@ -165,16 +169,14 @@ def deactivate_caching(cachedir=None):
     _cached_methods = {}
 
 class cache(object):
-    """Context manager for the `cache_execute` extension.
+    """Context manager for the 'cache_execute' extension.
 
     This allows using the caching extension using a 'with'
     statement, as in:
 
-    ``
-    with mdp.caching.cache(CACHEDIR):
-        # 'node' is executed caching the results in CACHEDIR
-        node.execute(x)
-    ``
+    >>> with mdp.caching.cache(CACHEDIR):                    # doctest: +SKIP
+    ...     # 'node' is executed caching the results in CACHEDIR
+    ...     node.execute(x)
 
     If the argument to the context manager is not specified, caching is
     done in a temporary directory.
