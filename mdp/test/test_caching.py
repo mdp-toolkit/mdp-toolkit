@@ -24,7 +24,7 @@ class _CounterNode(mdp.Node):
 
 @requires_joblib
 def test_caching_extension():
-    """Test that the caching extension is working."""
+    """Test that the caching extension is working at the global level."""
 
     global _counter
     _counter = 0
@@ -50,7 +50,7 @@ def test_caching_extension():
         x = mdp.numx.array([[i]], dtype='d')
         for _ in range(2):
             assert mdp.numx.all(node.execute(x) == x)
-            assert _counter == i+1
+            assert _counter == i + 1
 
     # after deactivation
     mdp.caching.deactivate_caching()
@@ -73,9 +73,6 @@ def test_different_instances_same_content():
 
     mdp.caching.activate_caching()
     node = _CounterNode()
-    # make one fake execution to avoid that automatic setting of
-    # attributes (e.g. dtype interferes with cache)
-    node.execute(mdp.numx.array([[0.]], dtype='d'))
     _counter = 0
 
     # add attribute to make instance unique
@@ -86,14 +83,13 @@ def test_different_instances_same_content():
     assert _counter == 1
     # should be cached now
     node.execute(x)
-    print _counter
     assert _counter == 1
 
-    # create new instance, make is also unique and check that
+    # create new instance, make it also unique and check that
     # result is still cached
     _counter = 0
     node = _CounterNode()
-    node.attr = 'unique'
+    node.attr = 'unique and different'
     node.execute(x)
     assert _counter == 1
 
@@ -103,9 +99,6 @@ def test_different_instances_same_content():
 def test_caching_context_manager():
     global _counter
     node = _CounterNode()
-    # make one fake execution to avoid that automatic setting of
-    # attributes (e.g. dtype interferes with cache)
-    node.execute(mdp.numx.array([[0.]], dtype='d'))
     _counter = 0
 
     assert mdp.get_active_extensions() == []
@@ -116,5 +109,119 @@ def test_caching_context_manager():
             x = mdp.numx.array([[i]], dtype='d')
             for _ in range(2):
                 assert mdp.numx.all(node.execute(x) == x)
-                assert _counter == i+1
+                assert _counter == i + 1
     assert mdp.get_active_extensions() == []
+
+@requires_joblib
+def test_class_caching():
+    """Test that we can cache individual classes."""
+    cached = mdp.nodes.PCANode()
+    notcached = mdp.nodes.SFANode()
+    with mdp.caching.cache(cache_classes=[mdp.nodes.PCANode]):
+        assert cached.is_cached()
+        assert not notcached.is_cached()
+
+@requires_joblib
+def test_class_caching_functionality():
+    """Test that cached classes really cache."""
+    global _counter
+    x = mdp.numx.array([[210]], dtype='d')
+
+    node = _CounterNode()
+
+    # here _CounterNode is not cached
+    _counter = 0
+    with mdp.caching.cache(cache_classes=[mdp.nodes.PCANode]):
+        node.execute(x)
+        assert _counter == 1
+        node.execute(x)
+        assert _counter == 2
+
+    # here _CounterNode is cached
+    _counter = 0
+    with mdp.caching.cache(cache_classes=[_CounterNode]):
+        node.execute(x)
+        assert _counter == 1
+        node.execute(x)
+        assert _counter == 1
+
+@requires_joblib
+def test_instance_caching():
+    """Test that we can cache individual instances."""
+    cached = mdp.nodes.PCANode()
+    notcached = mdp.nodes.PCANode()
+    with mdp.caching.cache(cache_instances=[cached]):
+        assert cached.is_cached()
+        assert not notcached.is_cached()
+
+@requires_joblib
+def test_instance_caching_functionality():
+    """Test that cached instances really cache."""
+    global _counter
+    x = mdp.numx.array([[130]], dtype='d')
+
+    node = _CounterNode()
+    othernode = _CounterNode()
+
+    # here _CounterNode is not cached
+    _counter = 0
+    with mdp.caching.cache(cache_instances=[othernode]):
+        node.execute(x)
+        assert _counter == 1
+        node.execute(x)
+        assert _counter == 2
+
+    # here _CounterNode is cached
+    _counter = 0
+    with mdp.caching.cache(cache_instances=[node]):
+        node.execute(x)
+        assert _counter == 1
+        node.execute(x)
+        assert _counter == 1
+
+@requires_joblib
+def test_preexecution_problem():
+    """Test that automatic setting of e.g. input_dim does not stop
+    the caching extension from caching on the first run."""
+    global _counter
+    x = mdp.numx.array([[102.]])
+
+    node = _CounterNode()
+
+    # here _CounterNode is cached
+    _counter = 0
+    with mdp.caching.cache():
+        # on the first execution, input_dim and dtype are set ...
+        node.execute(x)
+        assert _counter == 1
+        # ... yet the result is cached
+        node.execute(x)
+        assert _counter == 1
+
+@requires_joblib
+def test_switch_cache():
+    """Test changing cache directory while extension is active."""
+    from tempfile import mkdtemp
+    global _counter
+
+    dir1 = mkdtemp()
+    dir2 = mkdtemp()
+    x = mdp.numx.array([[10]], dtype='d')
+
+    mdp.caching.activate_caching(cachedir=dir1)
+
+    node = _CounterNode()
+    _counter = 0
+    node.execute(x)
+    assert _counter == 1
+    node.execute(x)
+    assert _counter == 1
+
+    # now change path
+    mdp.caching.set_cachedir(cachedir=dir2)
+    node.execute(x)
+    assert _counter == 2
+    node.execute(x)
+    assert _counter == 2
+
+    mdp.caching.deactivate_caching()
