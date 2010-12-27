@@ -8,11 +8,6 @@ class SignumClassifier(ClassifierNode):
     """This classifier node classifies as 1, if the sum of the data points is
     positive and as -1, if the data point is negative"""
 
-    def __init__(self, input_dim=None, output_dim=None, dtype=None):
-        super(SignumClassifier, self).__init__(input_dim=input_dim,
-                                               output_dim=output_dim,
-                                               dtype=dtype)
-
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
         return (mdp.utils.get_dtypes('Float') +
@@ -29,10 +24,14 @@ class SignumClassifier(ClassifierNode):
 
 class PerceptronClassifier(ClassifierNode):
     """A simple perceptron with input_dim input nodes."""
-    def __init__(self, input_dim=None, output_dim=None, dtype=None):
-        super(PerceptronClassifier, self).__init__(input_dim=input_dim,
-                                                   output_dim=output_dim,
-                                                   dtype=dtype)
+    
+    def __init__(self, execute_method=None,
+                 input_dim=None, output_dim=None, dtype=None):
+        super(PerceptronClassifier, self).__init__(
+                                                execute_method=execute_method,
+                                                input_dim=input_dim,
+                                                output_dim=output_dim,
+                                                dtype=dtype)
         self.weights = []
         self.offset_weight = 0
         self.learning_rate = 0.1
@@ -90,10 +89,13 @@ class SimpleMarkovClassifier(ClassifierNode):
     It can be trained on a vector of tuples the label being the next element
     in the testing data.
     """
-    def __init__(self, input_dim=None, output_dim=None, dtype=None):
-        super(SimpleMarkovClassifier, self).__init__(input_dim=input_dim,
-                                                     output_dim=output_dim,
-                                                     dtype=dtype)
+    def __init__(self, execute_method=None,
+                 input_dim=None, output_dim=None, dtype=None):
+        super(SimpleMarkovClassifier, self).__init__(
+                                                execute_method=execute_method,
+                                                input_dim=input_dim,
+                                                output_dim=output_dim,
+                                                dtype=dtype)
         self.ntotal_connections = 0
 
         self.features = {}
@@ -189,10 +191,13 @@ class DiscreteHopfieldClassifier(ClassifierNode):
     """Node for simulating a simple discrete Hopfield model"""
     # TODO: It is unclear if this belongs to classifiers or is a general node
     # because label space is a subset of feature space
-    def __init__(self, input_dim=None, output_dim=None, dtype='b'):
-        super(DiscreteHopfieldClassifier, self).__init__(input_dim=input_dim,
-                                                         output_dim=output_dim,
-                                                         dtype=dtype)
+    def __init__(self, execute_method=None,
+                 input_dim=None, output_dim=None, dtype='b'):
+        super(DiscreteHopfieldClassifier, self).__init__(
+                                            execute_method=execute_method,
+                                            input_dim=input_dim,
+                                            output_dim=output_dim,
+                                            dtype=dtype)
         self._weight_matrix = 0 # assigning zero to ease addition
         self._num_patterns = 0
         self._shuffled_update = True
@@ -266,7 +271,7 @@ class DiscreteHopfieldClassifier(ClassifierNode):
 # TODO: Make it more efficient
 
 class KMeansClassifier(ClassifierNode):
-    def __init__(self, num_clusters, max_iter=10000,
+    def __init__(self, num_clusters, max_iter=10000, execute_method=None,
                  input_dim=None, output_dim=None, dtype=None):
         """Employs K-Means Clustering for a given number of centroids.
 
@@ -274,7 +279,8 @@ class KMeansClassifier(ClassifierNode):
         max_iter     -- if the algorithm does not reach convergence (for some
                         numerical reason), stop after max_iter iterations
         """
-        super(KMeansClassifier, self).__init__(input_dim=input_dim,
+        super(KMeansClassifier, self).__init__(execute_method=execute_method,
+                                               input_dim=input_dim,
                                                output_dim=output_dim,
                                                dtype=dtype)
         self._num_clusters = num_clusters
@@ -344,8 +350,10 @@ class GaussianClassifier(ClassifierNode):
     method.
     """
     
-    def __init__(self, input_dim=None, output_dim=None, dtype=None):
-        super(GaussianClassifier, self).__init__(input_dim=input_dim,
+    def __init__(self, execute_method=False,
+                 input_dim=None, output_dim=None, dtype=None):
+        super(GaussianClassifier, self).__init__(execute_method=execute_method,
+                                                 input_dim=input_dim,
                                                  output_dim=output_dim,
                                                  dtype=dtype)
         self._cov_objs = {}  # only stored during training
@@ -472,10 +480,13 @@ class GaussianClassifier(ClassifierNode):
 class NearestMeanClassifier(ClassifierNode):
     """Nearest-Mean classifier."""
     
-    def __init__(self, input_dim=None, output_dim=None, dtype=None):
-        super(NearestMeanClassifier, self).__init__(input_dim=input_dim,
-                                                    output_dim=output_dim,
-                                                    dtype=dtype)
+    def __init__(self, execute_method=None,
+                 input_dim=None, output_dim=None, dtype=None):
+        super(NearestMeanClassifier, self).__init__(
+                                            execute_method=execute_method,
+                                            input_dim=input_dim,
+                                            output_dim=output_dim,
+                                            dtype=dtype)
         self.label_means = {}  # not normalized during training
         self.n_label_samples = {}
         # initialized after training, used for vectorized execution:
@@ -536,12 +547,14 @@ class NearestMeanClassifier(ClassifierNode):
 class KNNClassifier(ClassifierNode):
     """K-Nearest-Neighbour Classifier."""
     
-    def __init__(self, k=1, input_dim=None, output_dim=None, dtype=None):
+    def __init__(self, k=1, execute_method=None,
+                 input_dim=None, output_dim=None, dtype=None):
         """Initialize classifier.
         
         k -- Number of closest sample points that are taken into account.
         """
-        super(KNNClassifier, self).__init__(input_dim=input_dim,
+        super(KNNClassifier, self).__init__(execute_method=execute_method,
+                                            input_dim=input_dim,
                                             output_dim=output_dim,
                                             dtype=dtype)
         self.k = k
