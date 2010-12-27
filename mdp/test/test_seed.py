@@ -1,3 +1,8 @@
+###################################################################
+### After changing this file, please copy it so that files
+### ../../{mbp,bimdp}/test/test_seed.py are identical.
+###################################################################
+
 import mdp
 
 _SEED = None
