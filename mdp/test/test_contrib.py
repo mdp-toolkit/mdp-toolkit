@@ -423,7 +423,7 @@ def test_LibSVMClassifier():
             # Take out non-working cases
             if comb['classifier'] in ["ONE_CLASS"]:
                 continue
-            if comb['kernel'] in ["SIGMOID"]:
+            if comb['kernel'] in ["SIGMOID", "RBF", "POLY"]:
                 continue
 
             svm_node = mdp.nodes.LibSVMClassifier()

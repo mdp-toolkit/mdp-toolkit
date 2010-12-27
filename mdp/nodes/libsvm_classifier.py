@@ -3,7 +3,7 @@ from mdp import numx
 
 from svm_classifiers import _SVMClassifier, _LabelNormalizer
 
-import svm as libsvm
+import svmutil as libsvmutil
 
 class LibSVMClassifier(_SVMClassifier):
     """
@@ -23,7 +23,7 @@ class LibSVMClassifier(_SVMClassifier):
         probability -- Must be set to True, if algorithms based on probability
                        shall be used.
         """
-        self.kernel_type = libsvm.RBF
+        self.kernel_type = libsvmutil.RBF
         self._probability = probability
         self._classification_type = "multi"
         super(LibSVMClassifier, self).__init__(input_dim=input_dim,
@@ -35,7 +35,7 @@ class LibSVMClassifier(_SVMClassifier):
             self.set_classifier(classifier)
 
     def _get_supported_dtypes(self):
-        """Return the list of dtypes supported by this node."""
+        """Return the list of dtypes selfupported by this node."""
         # Support only float64 because of external library
         return ('float64',)
 
@@ -48,7 +48,7 @@ class LibSVMClassifier(_SVMClassifier):
                       self.classifiers
         """
         if classifier.upper() in self.classifiers:
-            self.classifier_type = getattr(libsvm, classifier.upper())
+            self.classifier_type = getattr(libsvmutil, classifier.upper())
         else:
             msg = "Classifier Type %s is unknown or not supported." % classifier
             raise TypeError(msg)
@@ -62,21 +62,15 @@ class LibSVMClassifier(_SVMClassifier):
                       self.kernels
         """
         if kernel.upper() in self.kernels:
-            self.kernel_type = getattr(libsvm, kernel.upper())
+            self.kernel_type = getattr(libsvmutil, kernel.upper())
         else:
             msg = "Kernel Type %s is unknown or not supported." % kernel
             raise TypeError(msg)
 
     def _train_problem(self, labels, features, parameter):
-        problem = libsvm.svm_problem(labels.tolist(), features.tolist())
-        # Quieten libsvm
-        # Method only available since libsvm 2.9 (on personal demand)
-        try:
-            libsvm.svmc.svm_set_quiet()
-        except AttributeError:
-            pass
+        prob = libsvmutil.svm_problem(labels.tolist(), features.tolist())
         # Train
-        model = libsvm.svm_model(problem, parameter)
+        model = libsvmutil.svm_train(prob, parameter)
         return model
 
     def _stop_training(self):
@@ -87,19 +81,29 @@ class LibSVMClassifier(_SVMClassifier):
             prob = 1
         else:
             prob = 0
-        self.parameter = libsvm.svm_parameter(svm_type=self.classifier_type,
-                                              kernel_type=self.kernel_type,
-                                              C=1, probability=prob)
+            
+        parameters = "-s {svm_type} -t {kernel_type} -b {prob} -q".format(svm_type=self.classifier_type,
+                                                                       kernel_type=self.kernel_type,
+                                                                       prob=prob)
+        self.parameter = libsvmutil.svm_parameter(parameters)
+        
+        self.parameter.show()
 
-        labels = self.normalizer.normalize(self.labels)
+        labels = self.normalizer.normalize(self.labels.tolist())
         features = self.data
 
         # Call svm training method.
-        self.model = self._train_problem(labels, features, self.parameter)
+        prob = libsvmutil.svm_problem(labels, features.tolist())
+        # Train
+        self.model = libsvmutil.svm_train(prob, self.parameter)
+        
 
     def _label(self, x):
         if isinstance(x, (list, tuple, numx.ndarray)):
-            return numx.array([self.model.predict(xi) for xi in x])
+            y = [0] * len(x)
+            p_labs, p_acc, p_vals = libsvmutil.svm_predict(y, x.tolist(), self.model, "-b 1")
+            
+            return numx.array(p_labs)
         else:
             msg = "Data must be a sequence of vectors"
             raise mdp.NodeException(msg)
@@ -107,12 +111,15 @@ class LibSVMClassifier(_SVMClassifier):
     def predict_probability(self, x):
         self._pre_execution_checks(x)
         if isinstance(x, (list, tuple, numx.ndarray)):
-            return map(self.model.predict_probability, x)
+            return self._prob(x)
         else:
-            return self.model.predict_probability(x)
+            return self._prob([x])
 
     def _prob(self, x):
-        return [self.model.predict_probability(xi)[1] for xi in x]
+        y = [0] * len(x)
+        p_labs, p_acc, p_vals = libsvmutil.svm_predict(y, x.tolist(), self.model, "-b 1")
+        labels = self.model.get_labels()
+        return [dict(zip(labels, ps)) for ps in p_vals]
 
     def _train(self, x, labels):
         super(LibSVMClassifier, self)._train(x, labels)

@@ -254,6 +254,13 @@ class MDPConfiguration(object):
             import svm as libsvm
         except ImportError, msg:
             return ExternalDepFail(msg)
+        try:
+            import svmutil as libsvmutil
+        except ImportError, msg:
+            return ExternalDepFail("We need the svmutil interface.")
+        pre_291_version = hasattr(libsvm, 'cross_validation')
+        if pre_291_version:
+            return ExternalDepFail("We need at least libsvm 2.91.")
         return ExternalDepFound()
     
     def has_symeig(self):
