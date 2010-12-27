@@ -35,6 +35,23 @@ def testClassifierNode_ranking():
         # check that the probabilities sum up to 100
         assert 0.999 < p[r[0]] + p[r[1]] < 1.001
 
+def testClassifier_execute_method():
+    """Test that the execute result has the correct format when execute_method
+    is used.
+    """
+    bc = _BogusClassifier(execute_method="label")
+    data = numx_rand.random((5, 20)) - 0.5
+    result = bc.execute(data)
+    assert isinstance(result, list)
+    assert isinstance(result[0], int)
+    bc.execute_method = "prob"
+    result = bc.execute(data)
+    assert isinstance(result, list)
+    assert isinstance(result[0], dict)
+    bc.execute_method = "rank"
+    result = bc.execute(data)
+    assert isinstance(result, list)
+    assert isinstance(result[0], list)
 
 def testSignumClassifier():
     c = SignumClassifier()
