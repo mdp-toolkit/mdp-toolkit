@@ -68,6 +68,26 @@ class MDPDeprecationWarning(DeprecationWarning, MDPWarning):
     pass
 
 class config(object):
+    """Provide information about optional dependencies.
+
+    This class should not be instantiated, it serves as a namespace
+    for dependency information. This information is encoded as a
+    series of attributes called 'has_<dependency>'.
+
+    Dependency parameters are object which have a a boolean value
+    (``True`` if the dependency is available). If False, they contain an
+    error string which will be used in ``mdp.config.info()`` output. If
+    ``True``, they contain information about the available version of
+    the dependency. Those objects should be created by using the helper
+    class methods `ExternalDepFound` and `ExternalDepFailed`.
+
+    Dependency parameters are numbered in the order of creation,
+    so the output is predictable.
+
+    >>> config.has_python
+    True
+    """
+
     _HAS_NUMBER = 0
     class _ExternalDep(object):
         def __init__(self, name, version=None, failmsg=None):
@@ -91,16 +111,60 @@ class config(object):
                 return "NOT AVAILABLE: " + self.failmsg
 
     @classmethod
-    def ExternalDepFail(cls, name, failmsg):
+    def ExternalDepFailed(cls, name, failmsg):
+        """Inform that an optional dependency was not found.
+
+        A new `_ExternalDep` object will be created and stored
+        in `config`.
+
+        :Parameters:
+          name
+            identifier of the optional dependency. This should
+            be a valid python identifier, because it will be
+            accessible as ``mdp.config.has_<name>`` attribute.
+          failmsg
+            an object convertible to ``str``, which will be displayed in
+            ``mdp.config.info()`` output. This will usually be either an
+            exception (e.g. ``ImportError``), or a message string.
+        """
         return cls._ExternalDep(name, failmsg=failmsg)
 
     @classmethod
     def ExternalDepFound(cls, name, version):
+        """Inform that an optional dependency was found.
+
+        A new `_ExternalDep` object will be created and stored
+        in `config`.
+
+        :Parameters:
+          name
+            identifier of the optional dependency. This should
+            be a valid python identifier, because it will be
+            accessible as ``mdp.config.has_<name>`` attribute.
+          version
+            an object convertible to ``str``, which will be displayed in
+            ``mdp.config.info()`` output. Something like ``'0.4.3'``.
+        """
         return cls._ExternalDep(name, version=version)
 
     @classmethod
     def info(cls):
-        """Return nicely formatted info about MDP."""
+        """Return nicely formatted info about MDP.
+
+        >>> print mdp.config.info()                           # doctest: +SKIP
+                  python: 2.6.6.final.0
+                   scipy: 0.7.2
+            scipy signal: 0.7.2
+         parallel python: 1.6.0
+                  shogun: v0.9.3_r4889_2010-05-27_20:52_
+                  libsvm: NOT AVAILABLE: No module named svm
+              new symeig: NOT AVAILABLE: symeig version too old
+                  symeig: wrap_eigh
+                  joblib: 0.4.6
+
+        This function is used to provide the py.test report header and
+        footer.
+        """
         listable_features = [(f[4:].replace('_', ' '), getattr(cls, f))
                              for f in dir(cls) if f.startswith('has_')]
         maxlen = max(len(f[0]) for f in listable_features)
@@ -168,11 +232,11 @@ if config.has_scipy:
     try:
         import scipy.signal
     except ImportError, exc:
-        config.ExternalDepFail('scipy_signal', exc)
+        config.ExternalDepFailed('scipy_signal', exc)
     else:
         config.ExternalDepFound('scipy_signal', scipy.version.version)
 else:
-    config.ExternalDepFail('scipy_signal', 'scipy not available')
+    config.ExternalDepFailed('scipy_signal', 'scipy not available')
 
 # import the utils module (used by other modules)
 # here we set scipy_emulation if needed.
@@ -188,7 +252,7 @@ __contact__ = 'mdp-toolkit-users@lists.sourceforge.net'
 try:
     import pp
 except ImportError, exc:
-    config.ExternalDepFail('parallel_python', exc)
+    config.ExternalDepFailed('parallel_python', exc)
 else:
     config.ExternalDepFound('parallel_python', pp.version)
 
@@ -197,27 +261,27 @@ try:
                         Features as sgFeatures,
                         Classifier as sgClassifier)
 except ImportError, exc:
-    config.ExternalDepFail('shogun', exc)
+    config.ExternalDepFailed('shogun', exc)
 else:
     # We need to have at least SHOGUN 0.9, as we rely on
     # SHOGUN's CClassifier::classify() method.
     # (It makes our code much nicer, by the way.)
     #
     if not hasattr(sgClassifier.Classifier, 'classify'):
-        config.ExternalDepFail('shogun', "CClassifier::classify not found")
+        config.ExternalDepFailed('shogun', "CClassifier::classify not found")
     try:
         version = sgKernel._Kernel.Version_get_version_release()
     except AttributeError, msg:
-        config.ExternalDepFail('shogun', msg)
+        config.ExternalDepFailed('shogun', msg)
     else:
         if not (version.startswith('v0.9') or version.startswith('v1.')):
-            config.ExternalDepFail('We need at least SHOGUN version 0.9.')
+            config.ExternalDepFailed('We need at least SHOGUN version 0.9.')
         config.ExternalDepFound('shogun', version)
 
 try:
     import svm as libsvm
 except ImportError, exc:
-    config.ExternalDepFail('libsvm', exc)
+    config.ExternalDepFailed('libsvm', exc)
 else:
     config.ExternalDepFound('libsvm', libsvm.libsvm._name)
 
@@ -229,13 +293,13 @@ try:
     if len(args) <= 4:
         from symeig import symeig, SymeigException
     else:
-        config.ExternalDepFail('new symeig', 'symeig version too old')
+        config.ExternalDepFailed('new_symeig', 'symeig version too old')
         from utils._symeig import (wrap_eigh as symeig,
                                    SymeigException)
 
     config.ExternalDepFound('symeig', symeig.__name__)
 except ImportError, exc:
-    config.ExternalDepFail('symeig_real', exc)
+    config.ExternalDepFailed('symeig_real', exc)
     from utils._symeig import (_symeig_fake as symeig,
                                SymeigException)
     config.ExternalDepFound('symeig', symeig)
@@ -305,7 +369,7 @@ try:
     __all__ += ['joblib']
     config.ExternalDepFound('joblib', joblib.__version__)
 except ImportError, exc:
-    config.ExternalDepFail('joblib', exc)
+    config.ExternalDepFailed('joblib', exc)
 
 if config.has_joblib:
     import caching

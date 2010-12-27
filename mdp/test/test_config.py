@@ -26,7 +26,7 @@ class TestConfig(object):
         assert '0.777' in info
 
     def test_config_depfailed_exc(self):
-        s = config.ExternalDepFail('test_property', ImportError('GOOGOO'))
+        s = config.ExternalDepFailed('test_property', ImportError('GOOGOO'))
         assert bool(s) == False
         assert not config.has_test_property
         info = config.info()
@@ -34,7 +34,7 @@ class TestConfig(object):
         assert 'GOOGOO' in info
 
     def test_config_depfailed_string(self):
-        s = config.ExternalDepFail('test_property', 'GOOGOO')
+        s = config.ExternalDepFailed('test_property', 'GOOGOO')
         assert bool(s) == False
         assert not config.has_test_property
         info = config.info()
