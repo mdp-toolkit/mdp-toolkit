@@ -394,40 +394,19 @@ def test_ShogunSVMClassifier():
 
             assert should_fail == failed, msg
 
-@skip_on_condition(
-    "not hasattr(mdp.nodes, 'LibSVMClassifier')",
-    "This test requires the 'libsvm' module.")
-def test_LibSVMClassifier():
-    import svm as libsvm
-    
-    num_train = 100
-    num_test = 50
-    dist = 0.4
-    width = 2.1
-    C = 1.01
-    epsilon = 1e-5
-    for positions in [((1,), (-1,)),
-                      ((1,1), (-1,-1)),
-                      ((1,1,1), (-1,-1,1)),
-                      ((1,1,1,1), (-1,1,1,1)),
-                      ((1,1,1,1), (-1,-1,-1,-1))]:
-        radius = 0.3
+class TestLibSVMClassifier(object):
+    pytestmark = skip_on_condition(
+        "not hasattr(mdp.nodes, 'LibSVMClassifier')",
+        "This test requires the 'libsvm' module.")
+    def setup_method(self, method):
+        self.combinations = {'kernel': mdp.nodes.LibSVMClassifier.kernels,
+                             'classifier': mdp.nodes.LibSVMClassifier.classifiers}
 
-        traindata_real, trainlab = _linear_separable_data(positions, (-1, 1),
-                                                          radius, num_train, True)
-        testdata_real, testlab = _linear_separable_data(positions, (-1, 1),
-                                                        radius, num_test, True)
-
-        combinations = {'kernel': mdp.nodes.LibSVMClassifier.kernels,
-                        'classifier': mdp.nodes.LibSVMClassifier.classifiers}
-
-        for comb in utils.orthogonal_permutations(combinations):
-            # Take out non-working cases
-            if comb['classifier'] in ["ONE_CLASS"]:
-                continue
-            if comb['kernel'] in ["SIGMOID", "RBF", "POLY"]:
-                continue
-
+    def test_that_parameters_are_correct(self):
+        import svm as libsvm
+        for comb in utils.orthogonal_permutations(self.combinations):
+            C = 1.01
+            epsilon = 1.1e-5
             svm_node = mdp.nodes.LibSVMClassifier(params={"C": C, "eps": epsilon})
             svm_node.set_kernel(comb['kernel'])
             svm_node.set_classifier(comb['classifier'])
@@ -436,23 +415,60 @@ def test_LibSVMClassifier():
             assert svm_node.parameter.kernel_type == getattr(libsvm, comb['kernel'])
             assert svm_node.parameter.svm_type == getattr(libsvm, comb['classifier'])
             assert svm_node.parameter.C == C
+            assert svm_node.parameter.eps == epsilon
 
-            # train in two chunks to check update mechanism
-            svm_node.train(traindata_real[:num_train], trainlab[:num_train])
-            svm_node.train(traindata_real[num_train:], trainlab[num_train:])
+    def test_linear_separable_data(self):
+        num_train = 100
+        num_test = 50
+        dist = 0.4
+        width = 2.1
+        C = 1.01
+        epsilon = 1e-5
+        for positions in [((1,), (-1,)),
+                          ((1,1), (-1,-1)),
+                          ((1,1,1), (-1,-1,1)),
+                          ((1,1,1,1), (-1,1,1,1)),
+                          ((1,1,1,1), (-1,-1,-1,-1))]:
+            radius = 0.3
 
-            assert svm_node.input_dim == len(traindata_real.T)
+            traindata_real, trainlab = _linear_separable_data(positions, (-1, 1),
+                                                              radius, num_train, True)
+            testdata_real, testlab = _linear_separable_data(positions, (-1, 1),
+                                                            radius, num_test, True)
 
-            out = svm_node.label(testdata_real)
+            for comb in utils.orthogonal_permutations(self.combinations):
+                # Take out non-working cases
+                if comb['classifier'] in ["ONE_CLASS"]:
+                    continue
+                if comb['kernel'] in ["SIGMOID", "POLY"]:
+                    continue
+                if len(positions[0]) == 1 and comb['kernel'] == "RBF":
+                    # RBF won't work in 1d
+                    continue
 
-            testerr = numx.all(numx.sign(out) == testlab)
-            assert testerr, ('classification error for ', comb)
+                svm_node = mdp.nodes.LibSVMClassifier(kernel=comb['kernel'],
+                                                      classifier=comb['classifier'],
+                                                      probability=True,
+                                                      params={"C": C, "eps": epsilon})
+                
+                # train in two chunks to check update mechanism
+                svm_node.train(traindata_real[:num_train], trainlab[:num_train])
+                svm_node.train(traindata_real[num_train:], trainlab[num_train:])
 
-            # we don't have ranks in our regression models
-            if not comb['classifier'].endswith("SVR"):
-                pos1_rank = numx.array(svm_node.rank(numx.array([positions[0]])))
-                pos2_rank = numx.array(svm_node.rank(numx.array([positions[1]])))
+                assert svm_node.input_dim == len(traindata_real.T)
 
-                assert numx.all(pos1_rank == -pos2_rank)
-                assert numx.all(abs(pos1_rank) == 1)
-                assert numx.all(abs(pos2_rank) == 1)
+                out = svm_node.label(testdata_real)
+
+                testerr = numx.all(numx.sign(out) == testlab)
+                assert testerr, ('classification error for ', comb)
+
+                # we don't have ranks in our regression models
+                if not comb['classifier'].endswith("SVR"):
+                    pos1_rank = numx.array(svm_node.rank(numx.array([positions[0]])))
+                    pos2_rank = numx.array(svm_node.rank(numx.array([positions[1]])))
+
+                    assert numx.all(pos1_rank == -pos2_rank)
+                    assert numx.all(abs(pos1_rank) == 1)
+                    assert numx.all(abs(pos2_rank) == 1)
+
+    

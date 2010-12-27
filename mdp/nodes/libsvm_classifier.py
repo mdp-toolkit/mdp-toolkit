@@ -109,7 +109,7 @@ class LibSVMClassifier(_SVMClassifier):
     def _label(self, x):
         if isinstance(x, (list, tuple, numx.ndarray)):
             y = [0] * len(x)
-            p_labs, p_acc, p_vals = libsvmutil.svm_predict(y, x.tolist(), self.model, "-b 1")
+            p_labs, p_acc, p_vals = libsvmutil.svm_predict(y, x.tolist(), self.model)
             
             return numx.array(p_labs)
         else:
