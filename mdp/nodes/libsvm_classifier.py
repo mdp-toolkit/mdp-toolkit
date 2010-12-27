@@ -49,8 +49,16 @@ class LibSVMClassifier(_SVMClassifier):
             self.set_classifier(classifier)
         # set all other parameters
         for k, v in params.iteritems():
+            if not k in self.parameter._names:
+                # check that the name is a valid parameter
+                msg = "'{}' is not a valid parameter for libsvm".format(k)
+                raise mdp.NodeException(msg)
+                
             if hasattr(self.parameter, k):
                 setattr(self.parameter, k, v)
+            else:
+                msg = "'svm_parameter' has no attribute {}".format(k)
+                raise AttributeError(msg)
             
 
     def _get_supported_dtypes(self):
