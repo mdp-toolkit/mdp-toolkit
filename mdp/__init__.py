@@ -207,8 +207,8 @@ if numx_description is None and (not _USR_LABEL or _USR_LABEL=='numpy'):
         import numpy as numx
         from numpy import (linalg as numx_linalg,
                            fft as numx_fft,
-                           random as numx_rand)
-        from numpy.version import version as numx_version
+                           random as numx_rand,
+                           version as numx_version)
         numx_description = 'numpy'
         config.ExternalDepFound('numx', numx_version.version)
     except ImportError, exc:
