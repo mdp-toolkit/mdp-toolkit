@@ -309,10 +309,10 @@ try:
 
     config.ExternalDepFound('symeig', symeig.__name__)
 except ImportError, exc:
-    config.ExternalDepFailed('symeig_real', exc)
+    config.ExternalDepFailed('symeig', exc)
     from utils._symeig import (_symeig_fake as symeig,
                                SymeigException)
-    config.ExternalDepFound('symeig', symeig.__name__)
+    config.ExternalDepFound('symeig_fake', symeig.__name__)
 
 # import exceptions from nodes and flows
 from signal_node import (NodeException, InconsistentDimException,
