@@ -189,7 +189,9 @@ Supported backends: numpy, scipy.""" % _USR_LABEL
 numx_description = None
 numx_exceptions = {}
 
-if not _USR_LABEL or _USR_LABEL == 'scipy':
+if _USR_LABEL and _USR_LABEL != 'scipy':
+    config.ExternalDepFailed('scipy', 'MDPNUMX set to %s' % _USR_LABEL)
+else:
     try:
         import scipy as numx
         from scipy import (linalg as numx_linalg,
@@ -198,11 +200,10 @@ if not _USR_LABEL or _USR_LABEL == 'scipy':
                            version as numx_version)
     except ImportError, exc:
         numx_exceptions['scipy'] = exc
+        config.ExternalDepFailed('scipy', exc)
     else:
         numx_description = 'scipy'
         config.ExternalDepFound('scipy', numx_version.version)
-else:
-    config.ExternalDepFailed('scipy', 'MDPNUMX set to %s' % _USR_LABEL)
 
 if _USR_LABEL and _USR_LABEL != 'numpy':
     config.ExternalDepFailed('numpy', 'MDPNUMX set to %s' % _USR_LABEL)
@@ -216,6 +217,7 @@ elif numx_description is None:
         numx_description = 'numpy'
         config.ExternalDepFound('numpy', numx_version.version)
     except ImportError, exc:
+        config.ExternalDepFailed('numpy', exc)
         numx_exceptions['numpy'] = exc
 else:
     config.ExternalDepFailed('numpy', 'scipy is preferred')
@@ -310,7 +312,7 @@ except ImportError, exc:
     config.ExternalDepFailed('symeig_real', exc)
     from utils._symeig import (_symeig_fake as symeig,
                                SymeigException)
-    config.ExternalDepFound('symeig', symeig)
+    config.ExternalDepFound('symeig', symeig.__name__)
 
 # import exceptions from nodes and flows
 from signal_node import (NodeException, InconsistentDimException,
