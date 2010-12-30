@@ -189,7 +189,7 @@ Supported backends: numpy, scipy.""" % _USR_LABEL
 numx_description = None
 numx_exceptions = {}
 
-if not _USR_LABEL or _USR_LABEL=='scipy':
+if not _USR_LABEL or _USR_LABEL == 'scipy':
     try:
         import scipy as numx
         from scipy import (linalg as numx_linalg,
@@ -201,8 +201,12 @@ if not _USR_LABEL or _USR_LABEL=='scipy':
     else:
         numx_description = 'scipy'
         config.ExternalDepFound('scipy', numx_version.version)
+else:
+    config.ExternalDepFailed('scipy', 'MDPNUMX set to %s' % _USR_LABEL)
 
-if numx_description is None and (not _USR_LABEL or _USR_LABEL=='numpy'):
+if _USR_LABEL and _USR_LABEL != 'numpy':
+    config.ExternalDepFailed('numpy', 'MDPNUMX set to %s' % _USR_LABEL)
+elif numx_description is None:
     try:
         import numpy as numx
         from numpy import (linalg as numx_linalg,
@@ -210,9 +214,13 @@ if numx_description is None and (not _USR_LABEL or _USR_LABEL=='numpy'):
                            random as numx_rand,
                            version as numx_version)
         numx_description = 'numpy'
-        config.ExternalDepFound('numx', numx_version.version)
+        config.ExternalDepFound('numpy', numx_version.version)
     except ImportError, exc:
         numx_exceptions['numpy'] = exc
+else:
+    config.ExternalDepFailed('numpy', 'scipy is preferred')
+
+assert config.has_scipy != config.has_numpy
 
 if numx_description is None:
     # The test is for numx_description, not numx, because numx could
