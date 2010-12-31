@@ -1,3 +1,5 @@
+__docformat__ = "restructuredtext en"
+
 import mdp
 from mdp import numx
 from mdp.utils import mult, nongeneral_svd, CovarianceMatrix
@@ -7,15 +9,22 @@ class PCANode(mdp.Node):
     """Filter the input data through the most significatives of its
     principal components.
 
-    Internal variables of interest:
-    self.avg -- Mean of the input data (available after training)
-    self.v -- Transposed of the projection matrix (available after training)
-    self.d -- Variance corresponding to the PCA components
-              (eigenvalues of the covariance matrix)
-    self.explained_variance -- When output_dim has been specified as a fraction
-                               of the total variance, this is the fraction
-                               of the total variance that is actually explained
+    :Internal variables of interest:
+    
+      ``self.avg``
+          Mean of the input data (available after training).
 
+      ``self.v``
+          Transposed of the projection matrix (available after training).
+
+      ``self.d``
+          Variance corresponding to the PCA components (eigenvalues of the
+          covariance matrix).
+
+      ``self.explained_variance``
+          When output_dim has been specified as a fraction of the total
+          variance, this is the fraction of the total variance that is
+          actually explained.
 
     More information about Principal Component Analysis, a.k.a. discrete
     Karhunen-Loeve transform can be found among others in
@@ -265,19 +274,26 @@ class PCANode(mdp.Node):
 
 
 class WhiteningNode(PCANode):
-    """'Whiten' the input data by filtering it through the most
+    """*Whiten* the input data by filtering it through the most
     significatives of its principal components. All output
     signals have zero mean, unit variance and are decorrelated.
 
-    Internal variables of interest:
-    self.avg -- Mean of the input data (available after training)
-    self.v -- Transpose of the projection matrix (available after training)
-    self.d -- Variance corresponding to the PCA components
-              (eigenvalues of the covariance matrix).
-    self.explained_variance -- When output_dim has been specified as a fraction
-                               of the total variance, this is the fraction
-                               of the total variance that is actually explained
+    :Internal variables of interest:
 
+      ``self.avg``
+          Mean of the input data (available after training).
+
+      ``self.v``
+          Transpose of the projection matrix (available after training).
+
+      ``self.d``
+          Variance corresponding to the PCA components (eigenvalues of the
+          covariance matrix).
+
+      ``self.explained_variance``
+          When output_dim has been specified as a fraction of the total
+          variance, this is the fraction of the total variance that is actually
+          explained.
     """
 
     def _stop_training(self, debug=False):
