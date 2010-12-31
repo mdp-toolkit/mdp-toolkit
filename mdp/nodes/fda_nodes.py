@@ -1,3 +1,5 @@
+__docformat__ = "restructuredtext en"
+
 import mdp
 
 numx = mdp.numx
@@ -10,27 +12,30 @@ class FDANode(mdp.Node):
     FDANode has two training phases and is supervised so make sure to
     pay attention to the following points when you train it:
 
-    - call the 'train' function with *two* arguments: the input data
-      and the labels (see the doc string of the train method for details)
+    - call the ``train`` method with *two* arguments: the input data
+      and the labels (see the doc string of the ``train`` method for details).
 
-    - if you are training the node by hand, call the train function twice
+    - if you are training the node by hand, call the ``train`` method twice.
 
     - if you are training the node using a flow (recommended), the
-      only argument to Flow.train must be a list of (data_point,
-      label) tuples or an iterator returning lists of such tuples,
-      *not* a generator.  The Flow.train function can be called just
-      once as usual, since it takes care of "rewinding" the iterator
+      only argument to ``Flow.train`` must be a list of
+      ``(data_point, label)`` tuples or an iterator returning lists of
+      such tuples, *not* a generator.  The ``Flow.train`` function can be
+      called just once as usual, since it takes care of *rewinding* the iterator
       to perform the second training step.
 
     More information on Fisher Discriminant Analysis can be found for
     example in C. Bishop, Neural Networks for Pattern Recognition,
     Oxford Press, pp. 105-112.
 
-    Internal variables of interest:
-    self.avg -- Mean of the input data (available after training)
-    self.v -- Transposed of the projection matrix, so that
-              output = dot(input-self.avg, self.v)
-              (available after training)
+    :Internal variables of interest:
+
+      ``self.avg``
+          Mean of the input data (available after training)
+
+      ``self.v``
+          Transposed of the projection matrix, so that
+          ``output = dot(input-self.avg, self.v)`` (available after training).
     """
 
     def _get_train_seq(self):
