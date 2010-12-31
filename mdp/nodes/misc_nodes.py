@@ -310,8 +310,8 @@ class TimeDelayNode(TimeFramesNode):
     """
     Copy delayed version of the input signal on the space dimensions.
 
-    For example, for ``time_frames=3`` and ``gap=2``:: 
-    
+    For example, for ``time_frames=3`` and ``gap=2``::
+
       [ X(1) Y(1)        [ X(1) Y(1)   0    0    0    0
         X(2) Y(2)          X(2) Y(2)   0    0    0    0
         X(3) Y(3)   -->    X(3) Y(3) X(1) Y(1)   0    0
@@ -322,10 +322,10 @@ class TimeDelayNode(TimeFramesNode):
         X(8) Y(8)
         ...  ...  ]
 
-    This node provides similar functionality as the ``TimeFramesNode``, only that
-    it performs a time embedding into the past rather than into the future. 
+    This node provides similar functionality as the ``TimeFramesNode``, only
+    that it performs a time embedding into the past rather than into the future.
 
-    See ``TimeDelaySlidingWindowNode` for a sliding window delay node for
+    See ``TimeDelaySlidingWindowNode`` for a sliding window delay node for
     application in a non-batch manner.
 
     Original code contributed by Sebastian Hoefer <mail@sebastianhoefer.de>
