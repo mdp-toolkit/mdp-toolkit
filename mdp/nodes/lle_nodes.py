@@ -1,3 +1,5 @@
+__docformat__ = "restructuredtext en"
+
 from mdp import (numx, numx_linalg, Cumulator, TrainingException, MDPWarning,
                  symeig)
 from mdp.utils import mult, nongeneral_svd, svd, sqrtm
@@ -15,24 +17,25 @@ sqrt = numx.sqrt
 class LLENode(Cumulator):
     """Perform a Locally Linear Embedding analysis on the data.
 
-    Internal variables of interest:
-      self.training_projection -- the LLE projection of the training data
-                                 (defined when training finishes)
-      self.desired_variance -- variance limit used to compute
-                               intrinsic dimensionality
+    :Internal variables of interest:
 
-    Based on the algorithm outlined in 'An Introduction to Locally
-    Linear Embedding' by L. Saul and S. Roweis, using improvements
-    suggested in 'Locally Linear Embedding for Classification' by
+      ``self.training_projection``
+          The LLE projection of the training data (defined when
+          training finishes).
+
+      ``self.desired_variance``
+          variance limit used to compute intrinsic dimensionality.
+
+    Based on the algorithm outlined in *An Introduction to Locally
+    Linear Embedding* by L. Saul and S. Roweis, using improvements
+    suggested in *Locally Linear Embedding for Classification* by
     D. deRidder and R.P.W. Duin.
 
     References: Roweis, S. and Saul, L., Nonlinear dimensionality
     reduction by locally linear embedding, Science 290 (5500), pp.
     2323-2326, 2000.
 
-    Original code contributed by:
-      Jake VanderPlas, University of Washington
-      vanderplas@astro.washington.edu
+    Original code contributed by: Jake VanderPlas, University of Washington,
     """
 
     def __init__(self, k, r=0.001, svd=False, verbose=False,
@@ -328,20 +331,21 @@ def _mgs(a):
 class HLLENode(LLENode):
     """Perform a Hessian Locally Linear Embedding analysis on the data.
 
-    Internal variables of interest:
-      self.training_projection -- the HLLE projection of the training data
-                                 (defined when training finishes)
-      self.desired_variance -- variance limit used to compute
-                               intrinsic dimensionality
+    :Internal variables of interest:
+
+      ``self.training_projection``
+          the HLLE projection of the training data (defined when training
+          finishes)
+
+      ``self.desired_variance``
+          variance limit used to compute intrinsic dimensionality.
 
     Implementation based on algorithm outlined in
     Donoho, D. L., and Grimes, C., Hessian Eigenmaps: new locally linear
     embedding techniques for high-dimensional data, Proceedings of the
     National Academy of Sciences 100(10): 5591-5596, 2003.
 
-    Original code contributed by:
-      Jake Vanderplas, University of Washington
-      vanderplas@astro.washington.edu
+    Original code contributed by: Jake Vanderplas, University of Washington
     """
 
     #----------------------------------------------------
