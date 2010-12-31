@@ -1,3 +1,5 @@
+__docformat__ = "restructuredtext en"
+
 import mdp
 from mdp import numx, numx_linalg, utils, NodeException
 from mdp.utils import mult, CovarianceMatrix
@@ -19,21 +21,24 @@ class FANode(mdp.Node):
     training phase, and all EM-cycles are performed at
     its end.
 
-    The 'execute' function returns the Maximum A Posteriori estimate
-    of the latent variables. The 'generate_input' function generates
+    The ``execute`` method returns the Maximum A Posteriori estimate
+    of the latent variables. The ``generate_input`` method generates
     observations from the prior distribution.
 
-    tol -- tolerance (minimum change in log-likelihood before exiting
-           the EM algorithm)
-    max_cycles -- maximum number of EM cycles
-    verbose -- if True, print log-likelihood during the EM-cycles
+    :Internal variables of interest:
 
-    Internal variables of interest:
-    self.mu -- Mean of the input data (available after training)
-    self.A -- Generating weights (available after training)
-    self.E_y_mtx -- Weights for Maximum A Posteriori inference
-    self.sigma -- Vector of estimated variance of the noise
-                  for all input components
+      ``self.mu``
+          Mean of the input data (available after training)
+
+      ``self.A``
+          Generating weights (available after training)
+
+      ``self.E_y_mtx``
+          Weights for Maximum A Posteriori inference
+
+      ``self.sigma``
+          Vector of estimated variance of the noise
+          for all input components
 
     More information about Factor Analysis can be found in
     Max Welling's classnotes:
@@ -43,6 +48,11 @@ class FANode(mdp.Node):
     def __init__(self, tol=1e-4, max_cycles=100, verbose=False,
                  input_dim=None, output_dim=None, dtype=None):
 
+        """tol -- tolerance (minimum change in log-likelihood before exiting
+                  the EM algorithm)
+           max_cycles -- maximum number of EM cycles
+           verbose -- if True, print log-likelihood during the EM-cycles
+        """
         # Notation as in Max Welling's notes
         super(FANode, self).__init__(input_dim, output_dim, dtype)
         self.tol = tol
