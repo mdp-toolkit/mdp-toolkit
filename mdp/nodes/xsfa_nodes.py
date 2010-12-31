@@ -15,13 +15,13 @@ class XSFANode(mdp.Node):
     The node has multiple training phases. The number of training
     phases depends on the number of sources that must be
     extracted. The recommended way of training this node is through a
-    container flow:
+    container flow::
 
-    >>> flow = mdp.Flow([XSFANode()])
-    >>> flow.train(x)
+       >>> flow = mdp.Flow([XSFANode()])
+       >>> flow.train(x)
 
     doing so will automatically train all training phases. The argument
-    ``x`` to the `Flow.train` method can be an array or a list of iterables
+    ``x`` to the ``Flow.train`` method can be an array or a list of iterables
     (see the section about Iterators in the MDP tutorial for more info).
 
     If the number of training samples is large, you may run into
@@ -29,11 +29,11 @@ class XSFANode(mdp.Node):
     memory usage.
 
     If you need to debug training and/or execution of this node, the
-    suggested approach is to use the capabilities of BiMDP. For example:
+    suggested approach is to use the capabilities of BiMDP. For example::
 
-    >>> flow = mdp.Flow([XSFANode()])
-    >>> tr_filename = bimdp.show_training(flow=flow, data_iterators=x)
-    >>> ex_filename, out = bimdp.show_execution(flow, x=x)
+       >>> flow = mdp.Flow([XSFANode()])
+       >>> tr_filename = bimdp.show_training(flow=flow, data_iterators=x)
+       >>> ex_filename, out = bimdp.show_execution(flow, x=x)
 
     this will run training and execution with bimdp inspection. Snapshots
     of the internal flow state for each training phase and execution step
@@ -41,8 +41,8 @@ class XSFANode(mdp.Node):
 
     References:
     Sprekeler, H., Zito, T., and Wiskott, L. (2009).
-    An Extension of Slow Feature Analysis for Nonlinear Blind Source Separation
-    Journal of Machine Learning Research
+    An Extension of Slow Feature Analysis for Nonlinear Blind Source Separation.
+    Journal of Machine Learning Research. 
     http://cogprints.org/7056/1/SprekelerZitoWiskott-Cogprints-2010.pdf
     """
     def __init__(self, basic_exp=None, intern_exp=None, svd=False, verbose=False,
