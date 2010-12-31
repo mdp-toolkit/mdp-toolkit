@@ -1,3 +1,5 @@
+__docformat__ = "restructuredtext en"
+
 import mdp
 from mdp import numx, utils, Node, NodeException, PreserveDimNode
 
@@ -8,7 +10,7 @@ import pickle as real_pickle
 
 class IdentityNode(PreserveDimNode):
     """Execute returns the input data and the node is not trainable.
-    
+
     This node can be instantiated and is for example useful in
     complex network layouts.
     """
@@ -119,12 +121,12 @@ class OneDimensionalHitParade(object):
 
 
 class HitParadeNode(PreserveDimNode):
-    """Collect the first 'n' local maxima and minima of the training signal
-    which are separated by a minimum gap 'd'.
+    """Collect the first ``n`` local maxima and minima of the training signal
+    which are separated by a minimum gap ``d``.
 
     This is an analysis node, i.e. the data is analyzed during training
     and the results are stored internally. Use the
-    'get_maxima' and 'get_minima' methods to access them.
+    ``get_maxima`` and ``get_minima`` methods to access them.
     """
 
     def __init__(self, n, d=1, input_dim=None, output_dim=None, dtype=None):
@@ -204,20 +206,20 @@ class HitParadeNode(PreserveDimNode):
 class TimeFramesNode(Node):
     """Copy delayed version of the input signal on the space dimensions.
 
-    For example, for time_frames=3 and gap=2:
+    For example, for ``time_frames=3`` and ``gap=2``::
 
-    [ X(1) Y(1)        [ X(1) Y(1) X(3) Y(3) X(5) Y(5)
-      X(2) Y(2)          X(2) Y(2) X(4) Y(4) X(6) Y(6)
-      X(3) Y(3)   -->    X(3) Y(3) X(5) Y(5) X(7) Y(7)
-      X(4) Y(4)          X(4) Y(4) X(6) Y(6) X(8) Y(8)
-      X(5) Y(5)          ...  ...  ...  ...  ...  ... ]
-      X(6) Y(6)
-      X(7) Y(7)
-      X(8) Y(8)
-      ...  ...  ]
+      [ X(1) Y(1)        [ X(1) Y(1) X(3) Y(3) X(5) Y(5)
+        X(2) Y(2)          X(2) Y(2) X(4) Y(4) X(6) Y(6)
+        X(3) Y(3)   -->    X(3) Y(3) X(5) Y(5) X(7) Y(7)
+        X(4) Y(4)          X(4) Y(4) X(6) Y(6) X(8) Y(8)
+        X(5) Y(5)          ...  ...  ...  ...  ...  ... ]
+        X(6) Y(6)
+        X(7) Y(7)
+        X(8) Y(8)
+        ...  ...  ]
 
     It is not always possible to invert this transformation (the
-    transformation is not surjective. However, the 'pseudo_inverse'
+    transformation is not surjective. However, the ``pseudo_inverse``
     method does the correct thing when it is indeed possible.
     """
 
@@ -310,17 +312,19 @@ class EtaComputerNode(Node):
 
     The delta value of a signal is a measure of its temporal
     variation, and is defined as the mean of the derivative squared,
-    i.e. delta(x) = mean(dx/dt(t)^2).  delta(x) is zero if
-    x is a constant signal, and increases if the temporal variation
+    i.e. ``delta(x) = mean(dx/dt(t)^2)``.  ``delta(x)`` is zero if
+    ``x`` is a constant signal, and increases if the temporal variation
     of the signal is bigger.
 
     The eta value is a more intuitive measure of temporal variation,
-    defined as
+    defined as::
+    
        eta(x) = T/(2*pi) * sqrt(delta(x))
-    If x is a signal of length T which consists of a sine function
-    that accomplishes exactly N oscillations, then eta(x)=N.
 
-    EtaComputerNode normalizes the training data to have unit
+    If ``x`` is a signal of length ``T`` which consists of a sine function
+    that accomplishes exactly ``N`` oscillations, then ``eta(x)=N``.
+
+    ``EtaComputerNode`` normalizes the training data to have unit
     variance, such that it is possible to compare the temporal
     variation of two signals independently from their scaling.
 
@@ -332,11 +336,11 @@ class EtaComputerNode(Node):
     going to consider only the first tlen-1 points together with their
     derivatives. This means in particular that the variance of the
     signal is not computed on all data points. This behavior is
-    compatible with that of SFANode.
+    compatible with that of ``SFANode``.
 
     This is an analysis node, i.e. the data is analyzed during training
-    and the results are stored internally.  Use the functions
-    'get_eta' to access them.
+    and the results are stored internally.  Use the method
+    ``get_eta`` to access them.
     """
 
     def __init__(self, input_dim=None, dtype=None):
@@ -403,8 +407,6 @@ class NoiseNode(PreserveDimNode):
     """Inject multiplicative or additive noise into the input data.
 
     Original code contributed by Mathias Franzius.
-
-    Note that due to the noise_func attribute this node cannot be pickled.
     """
 
     def __init__(self, noise_func=mdp.numx_rand.normal, noise_args=(0, 1),
@@ -482,11 +484,10 @@ class NoiseNode(PreserveDimNode):
 
 
 class NormalNoiseNode(PreserveDimNode):
-    """Special version of NoiseNode for Gaussian additive noise.
+    """Special version of ``NoiseNode`` for Gaussian additive noise.
 
-    Unlike NoiseNode it does not store a noise function reference but simply
-    uses numx_rand.normal. This has the advantage that the node can be pickled
-    (which does not work for a normal NoiseNode).
+    Unlike ``NoiseNode`` it does not store a noise function reference but simply
+    uses ``numx_rand.normal``.
     """
 
     def __init__(self, noise_args=(0, 1),
@@ -519,7 +520,7 @@ class NormalNoiseNode(PreserveDimNode):
 class CutoffNode(PreserveDimNode):
     """Node to cut off values at specified bounds.
 
-    Works similar to numpy.clip, but also works when only a lower or upper
+    Works similar to ``numpy.clip``, but also works when only a lower or upper
     bound is specified.
     """
 
@@ -562,7 +563,7 @@ class CutoffNode(PreserveDimNode):
 class HistogramNode(PreserveDimNode):
     """Node which stores a history of the data during its training phase.
 
-    The data history is stored in self.data_hist and can also be deleted to
+    The data history is stored in ``self.data_hist`` and can also be deleted to
     free memory. Alternatively it can be automatically pickled to disk.
 
     Note that data is only stored during training.
@@ -615,14 +616,14 @@ class HistogramNode(PreserveDimNode):
 class AdaptiveCutoffNode(HistogramNode):
     """Node which uses the data history during training to learn cutoff values.
 
-    As opposed to the simple CutoffNode, a different cutoff value is learned
+    As opposed to the simple ``CutoffNode``, a different cutoff value is learned
     for each data coordinate. For example if an upper cutoff fraction of
     0.05 is specified, then the upper cutoff bound is set so that the upper
     5% of the training data would have been clipped (in each dimension).
     The cutoff bounds are then applied during execution.
-    This Node also works as a HistogramNode, so the histogram data is stored.
+    This node also works as a ``HistogramNode``, so the histogram data is stored.
 
-    When stop_training is called the cutoff values for each coordinate are
+    When ``stop_training`` is called the cutoff values for each coordinate are
     calculated based on the collected histogram data.
     """
 
