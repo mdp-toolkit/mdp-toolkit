@@ -26,20 +26,19 @@ from xsfa_nodes import XSFANode
 from misc_nodes import OneDimensionalHitParade as _OneDimensionalHitParade
 from expansion_nodes import expanded_dim as _expanded_dim
 
-__all__ = ['CuBICANode', 'EtaComputerNode', 'FANode', 'FDANode', 'FastICANode',
+__all__ = ['PCANode', 'WhiteningNode', 'NIPALSNode', 'FastICANode',
+           'CuBICANode', 'TDSEPNode', 'JADENode', 'SFANode', 'SFA2Node',
+           'ISFANode', 'XSFANode', 'FDANode', 'FANode', 'RBMNode',
+           'RBMWithLabelsNode', 'GrowingNeuralGasNode', 'LLENode', 'HLLENode',
+           'LinearRegressionNode', 'QuadraticExpansionNode',
+           'PolynomialExpansionNode', 'RBFExpansionNode',
+           'GrowingNeuralGasExpansionNode', '_expanded_dim', 'SignumClassifier',
+           'PerceptronClassifier', 'SimpleMarkovClassifier',
+           'DiscreteHopfieldClassifier', 'KMeansClassifier',
            'GaussianClassifier', 'NearestMeanClassifier', 'KNNClassifier',
-           'GrowingNeuralGasNode', 'HitParadeNode',
-           'ICANode', 'ISFANode', 'NoiseNode', 'NormalNoiseNode',
-           'IdentityNode',
-           'PCANode', 'PolynomialExpansionNode', 'QuadraticExpansionNode',
-           'RBFExpansionNode', 'RBMNode', 'RBMWithLabelsNode', 'SFA2Node',
-           'SFANode', 'TDSEPNode', 'TimeFramesNode','WhiteningNode',
-           'LinearRegressionNode', '_OneDimensionalHitParade', '_expanded_dim',
-           'CutoffNode', 'HistogramNode', 'AdaptiveCutoffNode',
-           'SignumClassifier', 'PerceptronClassifier',
-           'SimpleMarkovClassifier', 'DiscreteHopfieldClassifier',
-           'KMeansClassifier', 'JADENode', 'NIPALSNode', 'LLENode', 'HLLENode',
-           'XSFANode']
+           'EtaComputerNode', 'HitParadeNode', 'NoiseNode', 'NormalNoiseNode',
+           'TimeFramesNode', 'CutoffNode', 'AdaptiveCutoffNode',
+           'HistogramNode', 'IdentityNode', '_OneDimensionalHitParade']
 
 # nodes with external dependencies
 from mdp import config
