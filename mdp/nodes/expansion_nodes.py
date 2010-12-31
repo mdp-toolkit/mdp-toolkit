@@ -1,3 +1,5 @@
+__docformat__ = "restructuredtext en"
+
 import mdp
 from mdp import numx, numx_linalg, utils
 from mdp.utils import mult, matmult
@@ -91,7 +93,8 @@ class PolynomialExpansionNode(_ExpansionNode):
 class QuadraticExpansionNode(PolynomialExpansionNode):
     """Perform expansion in the space formed by all linear and quadratic
     monomials.
-    QuadraticExpansionNode() is equivalent to a PolynomialExpansionNode(2)"""
+    ``QuadraticExpansionNode()`` is equivalent to a
+    ``PolynomialExpansionNode(2)``"""
 
     def __init__(self, input_dim = None, dtype = None):
         super(QuadraticExpansionNode, self).__init__(2, input_dim = input_dim,
@@ -101,11 +104,11 @@ class RBFExpansionNode(mdp.Node):
     """Expand input space with Gaussian Radial Basis Functions (RBFs).
 
     The input data is filtered through a set of unnormalized Gaussian
-    filters, i.e.,
+    filters, i.e.::
 
        y_j = exp(-0.5/s_j * ||x - c_j||^2)
 
-    for isotropic RBFs, or more in general
+    for isotropic RBFs, or more in general::
 
        y_j = exp(-0.5 * (x-c_j)^T S^-1 (x-c_j))
 
@@ -195,17 +198,19 @@ class GrowingNeuralGasExpansionNode(GrowingNeuralGasNode):
     sizes of the basis functions are learned through a growing neural
     gas.
 
-    positions of RBFs - position of the nodes of the neural gas
-    sizes of the RBFs - mean distance to the neighbouring nodes.
+      positions of RBFs
+        position of the nodes of the neural gas
+
+      sizes of the RBFs
+        mean distance to the neighbouring nodes.
 
     Important: Adjust the maximum number of nodes to control the
-    dimension of the expansion
+    dimension of the expansion.
 
-    More information on this expansion type can be found in
-
-    B. Fritzke:
-    Growing cell structures-a self-organizing network for unsupervised and supervised learning
-    Neural Networks 7, p. 1441--1460 (1994)
+    More information on this expansion type can be found in:
+    B. Fritzke.
+    Growing cell structures-a self-organizing network for unsupervised
+    and supervised learning. Neural Networks 7, p. 1441--1460 (1994).
     """
 
     def __init__(self, start_poss=None, eps_b=0.2, eps_n=0.006, max_age=50,
