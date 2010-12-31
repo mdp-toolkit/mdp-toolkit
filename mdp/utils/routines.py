@@ -186,7 +186,7 @@ def comb(N, k):
         ret //= dv
     return ret
 
-# WARNING numpy.linalg.eig does not support float sizes larger than 64 bits,
+# WARNING numpy.linalg.eigh does not support float sizes larger than 64 bits,
 # and complex numbers of size larger than 128 bits.
 # This is not a problem for MDP, as long as scipy.linalg.eigh is available.
 def get_dtypes(typecodes_key, _safe=True):
@@ -201,7 +201,7 @@ def get_dtypes(typecodes_key, _safe=True):
     for c in numx.typecodes[typecodes_key]:
         try:
             type_ = numx.dtype(c)
-            if (_safe and not mdp.config.has_symeig
+            if (_safe and not mdp.config.has_symeig == 'scipy.linalg.eigh'
                 and type_ in _UNSAFE_DTYPES):
                 continue
             types.append(type_)

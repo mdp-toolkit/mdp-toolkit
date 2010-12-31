@@ -296,23 +296,23 @@ else:
     config.ExternalDepFound('libsvm', libsvm.libsvm._name)
 
 import inspect as _inspect
-try:
-    # check if scipy.linalg.eigh is the new version
-    # if yes, just wrap it
-    args = _inspect.getargspec(numx_linalg.eigh)[0]
-    if len(args) <= 4:
-        from symeig import symeig, SymeigException
-    else:
-        config.ExternalDepFailed('new_symeig', 'symeig version too old')
-        from utils._symeig import (wrap_eigh as symeig,
-                                   SymeigException)
 
-    config.ExternalDepFound('symeig', symeig.__name__)
-except ImportError, exc:
-    config.ExternalDepFailed('symeig', exc)
+# if we have scipy, check if the version of
+# scipy.linalg.eigh supports the rich interface
+_args = _inspect.getargspec(numx_linalg.eigh)[0]
+if len(_args) > 4:
+    # if yes, just wrap it
+    from utils._symeig import (wrap_eigh as symeig,
+                               SymeigException)
+    config.ExternalDepFound('symeig', 'scipy.linalg.eigh')
+else:
+    # either we have numpy, or we have an old scipy
+    # we need to use our own rich wrapper
     from utils._symeig import (_symeig_fake as symeig,
                                SymeigException)
-    config.ExternalDepFound('symeig_fake', symeig.__name__)
+    config.ExternalDepFound('symeig', 'symeig_fake')
+del _args
+del _inspect
 
 # import exceptions from nodes and flows
 from signal_node import (NodeException, InconsistentDimException,
