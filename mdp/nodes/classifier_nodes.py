@@ -1,3 +1,5 @@
+__docformat__ = "restructuredtext en"
+
 import mdp
 from mdp import ClassifierNode, utils, numx, numx_rand, numx_linalg
 
@@ -5,8 +7,8 @@ from mdp import ClassifierNode, utils, numx, numx_rand, numx_linalg
 
 
 class SignumClassifier(ClassifierNode):
-    """This classifier node classifies as 1, if the sum of the data points is
-    positive and as -1, if the data point is negative"""
+    """This classifier node classifies as ``1`` if the sum of the data points
+    is positive and as ``-1`` if the data point is negative"""
 
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
@@ -271,10 +273,10 @@ class DiscreteHopfieldClassifier(ClassifierNode):
 # TODO: Make it more efficient
 
 class KMeansClassifier(ClassifierNode):
+    """Employs K-Means Clustering for a given number of centroids."""
     def __init__(self, num_clusters, max_iter=10000, execute_method=None,
                  input_dim=None, output_dim=None, dtype=None):
-        """Employs K-Means Clustering for a given number of centroids.
-
+        """
         num_clusters -- number of centroids to use = number of clusters
         max_iter     -- if the algorithm does not reach convergence (for some
                         numerical reason), stop after max_iter iterations
@@ -343,11 +345,7 @@ class GaussianClassifier(ClassifierNode):
     """Perform a supervised Gaussian classification.
 
     Given a set of labelled data, the node fits a gaussian distribution
-    to each class. Note that it is written as an analysis node (i.e., the
-    execute function is the identity function). To perform classification,
-    use the 'label' method. If instead you need the posterior
-    probability of the classes given the data use the 'class_probabilities'
-    method.
+    to each class.
     """
     
     def __init__(self, execute_method=False,
