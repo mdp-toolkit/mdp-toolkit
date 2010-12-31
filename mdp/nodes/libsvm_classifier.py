@@ -1,3 +1,5 @@
+__docformat__ = "restructuredtext en"
+
 import mdp
 from mdp import numx
 
@@ -7,7 +9,7 @@ import svmutil as libsvmutil
 
 class LibSVMClassifier(_SVMClassifier):
     """
-    The LibSVMClassifier class acts as a wrapper around the LibSVM library
+    The ``LibSVMClassifier`` class acts as a wrapper around the LibSVM library
     for support vector machines.
 
     Information to the parameters can be found on
@@ -15,7 +17,7 @@ class LibSVMClassifier(_SVMClassifier):
     
     The class provides access to change kernel and svm type with a text string.
     
-    Additionally self.parameter is exposed which allows to change all other
+    Additionally ``self.parameter`` is exposed which allows to change all other
     svm parameters directly.
     """
     # The kernels and classifiers which LibSVM allows.

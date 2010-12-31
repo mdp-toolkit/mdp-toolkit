@@ -1,3 +1,5 @@
+__docformat__ = "restructuredtext en"
+
 import mdp
 from mdp import numx, sgKernel, sgFeatures, sgClassifier
 from mdp.utils import OrderedDict as _OrderedDict
@@ -190,7 +192,7 @@ class Classifier(object):
 
 
 class ShogunSVMClassifier(_SVMClassifier):
-    """The ShogunSVMClassifier works as a wrapper class for accessing
+    """The ``ShogunSVMClassifier`` works as a wrapper class for accessing
     the SHOGUN machine learning toolbox for support vector machines.
 
     Most kernel machines and linear classifier should work with this class.
