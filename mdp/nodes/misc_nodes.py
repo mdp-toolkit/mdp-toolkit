@@ -306,6 +306,122 @@ class TimeFramesNode(Node):
             count += 1
         return x
 
+class TimeDelayNode(TimeFramesNode):
+    """
+    Copy delayed version of the input signal on the space dimensions.
+
+    For example, for ``time_frames=3`` and ``gap=2``:: 
+    
+      [ X(1) Y(1)        [ X(1) Y(1)   0    0    0    0
+        X(2) Y(2)          X(2) Y(2)   0    0    0    0
+        X(3) Y(3)   -->    X(3) Y(3) X(1) Y(1)   0    0
+        X(4) Y(4)          X(4) Y(4) X(2) Y(2)   0    0
+        X(5) Y(5)          X(5) Y(5) X(3) Y(3) X(1) Y(1)
+        X(6) Y(6)          ...  ...  ...  ...  ...  ... ]
+        X(7) Y(7)
+        X(8) Y(8)
+        ...  ...  ]
+
+    This node provides similar functionality as the ``TimeFramesNode``, only that
+    it performs a time embedding into the past rather than into the future. 
+
+    See ``TimeDelaySlidingWindowNode` for a sliding window delay node for
+    application in a non-batch manner.
+
+    Original code contributed by Sebastian Hoefer <mail@sebastianhoefer.de>
+    Dec 31, 2010
+    """
+
+    def __init__(self, time_frames, gap=1, input_dim=None, dtype=None):
+        """
+        Input arguments:
+        time_frames -- Number of delayed copies
+        gap -- Time delay between the copies
+        """
+        super(TimeDelayNode, self).__init__(time_frames, gap,
+                                            input_dim, dtype)
+
+    def _execute(self, x):
+        gap = self.gap
+        rows = x.shape[0]
+        cols = self.output_dim
+        n = self.input_dim
+
+        y = numx.zeros((rows, cols), dtype=self.dtype)
+
+        for frame in range(self.time_frames):
+            y[gap*frame:, frame*n:(frame+1)*n] = x[:rows-gap*frame, :]
+
+        return y
+
+    def pseudo_inverse(self, y):
+        raise NotImplementedError
+
+class TimeDelaySlidingWindowNode(TimeDelayNode):
+    """
+    ``TimeDelaySlidingWindowNode`` is an alternative to ``TimeDelayNode``
+    which should be used for online learning/execution. Whereas the
+    ``TimeDelayNode`` works in a batch manner, for online application
+    a sliding window is necessary which yields only one row per call.
+
+    Applied to the same data the collection of all returned rows of the
+    ``TimeDelaySlidingWindowNode`` is equivalent to the result of the
+    ``TimeDelayNode``.
+
+    Original code contributed by Sebastian Hoefer <mail@sebastianhoefer.de>
+    Dec 31, 2010
+    """
+    def __init__(self, time_frames, gap=1, input_dim=None, dtype=None):
+        """
+        Input arguments:
+        time_frames -- Number of delayed copies
+        gap -- Time delay between the copies
+        """
+
+        self.time_frames = time_frames
+        self.gap = gap
+        super(TimeDelaySlidingWindowNode, self).__init__(time_frames, gap,
+                                                         input_dim, dtype)
+        self.sliding_wnd = None
+        self.cur_idx = 0
+        self.slide = False
+
+    def _init_sliding_window(self):
+        rows = self.gap+1
+        cols = self.input_dim*self.time_frames
+        self.sliding_wnd = numx.zeros((rows, cols), dtype=self.dtype)
+
+    def _execute(self, x):
+        assert x.shape[0] == 1
+
+        if self.sliding_wnd == None:
+            self._init_sliding_window()
+
+        gap = self.gap
+        rows = self.sliding_wnd.shape[0]
+        cols = self.output_dim
+        n = self.input_dim
+
+        new_row = numx.zeros(cols)
+        new_row[:n] = x
+
+        # Slide
+        if self.slide:
+            self.sliding_wnd[:-1, :] = self.sliding_wnd[1:, :]
+
+        # Delay
+        if self.cur_idx-gap >= 0:
+            new_row[n:] = self.sliding_wnd[self.cur_idx-gap, :-n]
+
+        # Add new row to matrix
+        self.sliding_wnd[self.cur_idx, :] = new_row
+
+        if self.cur_idx < rows-1:
+            self.cur_idx = self.cur_idx+1 
+        else:
+            self.slide = True
+
+        return new_row
 
 class EtaComputerNode(Node):
     """Compute the eta values of the normalized training data.

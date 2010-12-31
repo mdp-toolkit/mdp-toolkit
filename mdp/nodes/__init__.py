@@ -7,6 +7,7 @@ from expansion_nodes import (QuadraticExpansionNode, PolynomialExpansionNode,
 from fda_nodes import FDANode
 from em_nodes import FANode
 from misc_nodes import (IdentityNode, HitParadeNode, TimeFramesNode,
+                        TimeDelayNode, TimeDelaySlidingWindowNode,
                         EtaComputerNode, NoiseNode, NormalNoiseNode,
                         CutoffNode, HistogramNode, AdaptiveCutoffNode)
 from isfa_nodes import ISFANode
@@ -37,8 +38,9 @@ __all__ = ['PCANode', 'WhiteningNode', 'NIPALSNode', 'FastICANode',
            'DiscreteHopfieldClassifier', 'KMeansClassifier',
            'GaussianClassifier', 'NearestMeanClassifier', 'KNNClassifier',
            'EtaComputerNode', 'HitParadeNode', 'NoiseNode', 'NormalNoiseNode',
-           'TimeFramesNode', 'CutoffNode', 'AdaptiveCutoffNode',
-           'HistogramNode', 'IdentityNode', '_OneDimensionalHitParade']
+           'TimeFramesNode', 'TimeDelayNode', 'TimeDelaySlidingWindowNode',
+           'CutoffNode', 'AdaptiveCutoffNode', 'HistogramNode',
+           'IdentityNode', '_OneDimensionalHitParade']
 
 # nodes with external dependencies
 from mdp import config
