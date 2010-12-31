@@ -205,6 +205,8 @@ class ShogunSVMClassifier(_SVMClassifier):
 
     Note that some parts in this classifier might receive some
     refinement in the future.
+
+    This node depends on ``shogun``.
     """
 
     default_parameters = {

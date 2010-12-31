@@ -19,6 +19,8 @@ class LibSVMClassifier(_SVMClassifier):
     
     Additionally ``self.parameter`` is exposed which allows to change all other
     svm parameters directly.
+
+    This node depends on ``libsvm``.
     """
     # The kernels and classifiers which LibSVM allows.
     kernels = ["RBF", "LINEAR", "POLY", "SIGMOID"]
