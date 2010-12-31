@@ -32,9 +32,10 @@ class GrowingNeuralGasNode(Node):
     A java implementation is available at:
     http://www.neuroinformatik.ruhr-uni-bochum.de/ini/VDM/research/gsn/DemoGNG/GNG.html
 
-    Attributes and methods of interest:
+    :Attributes and methods of interest:
 
-    - graph -- The corresponding `mdp.graph.Graph` object
+      ``graph``
+          The corresponding ``mdp.graph.Graph`` object
     """
     def __init__(self, start_poss=None, eps_b=0.2, eps_n=0.006, max_age=50,
                  lambda_=100, alpha=0.5, d=0.995, max_nodes=2147483647,
