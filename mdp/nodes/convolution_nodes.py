@@ -1,3 +1,5 @@
+__docformat__ = "restructuredtext en"
+
 from mdp import numx, numx_linalg, utils, NodeException
 import mdp
 import scipy.signal as signal
@@ -11,16 +13,16 @@ import scipy.signal as signal
 class Convolution2DNode(mdp.Node):
     """Convolve input data with filter banks.
 
-    The 'filters' argument specifies a set of 2D filters that are
+    The ``filters`` argument specifies a set of 2D filters that are
     convolved with the input data during execution. Convolution can
     be selected to be executed by linear filtering of the data, or
     in the frequency domain using a Discrete Fourier Transform.
 
     Input data can be given as 3D data, each row being a 2D array
     to be convolved with the filters, or as 2D data, in which case
-    the 'input_shape' argument must be specified.
+    the ``input_shape`` argument must be specified.
 
-    This node depends on 'scipy'.
+    This node depends on ``scipy``.
     """
 
     def __init__(self, filters, input_shape = None,
