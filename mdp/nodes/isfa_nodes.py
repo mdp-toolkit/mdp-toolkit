@@ -1,3 +1,5 @@
+__docformat__ = "restructuredtext en"
+
 import sys as _sys
 import mdp
 from mdp import Node, NodeException, numx, numx_rand
@@ -27,35 +29,41 @@ class ISFANode(Node):
     """
     Perform Independent Slow Feature Analysis on the input data.
 
-    Internal variables of interest:
-    self.RP -- the global rotation-permutation matrix. This is the filter
-               applied on input_data to get output_data
+    :Internal variables of interest:
 
-    self.RPC -- the *complete* global rotation-permutation matrix. This
-                is a matrix of dimension input_dim x input_dim
-                (the 'outer space' is retained)
+      ``self.RP``
+          The global rotation-permutation matrix. This is the filter
+          applied on input_data to get output_data
 
-    self.covs -- A mdp.utils.MultipleCovarianceMatrices instance containing
-                 the current time-delayed covariance matrices of the
-                 input_data. After convergence the uppermost
-                 output_dim x output_dim submatrices should be almost
-                 diagonal.
+      ``self.RPC``
+          The *complete* global rotation-permutation matrix. This
+          is a matrix of dimension input_dim x input_dim (the 'outer space'
+          is retained)
 
-                 self.covs[n-1] is the covariance matrix relative to
-                 the n-th time-lag
+      ``self.covs``
+          A ``mdp.utils.MultipleCovarianceMatrices`` instance containing
+          the current time-delayed covariance matrices of the input_data.
+          After convergence the uppermost ``output_dim`` x ``output_dim``
+          submatrices should be almost diagonal.
+          
+          ``self.covs[n-1]`` is the covariance matrix relative to the ``n``-th
+          time-lag
+            
+          Note: they are not cleared after convergence. If you need to free
+          some memory, you can safely delete them with::
+          
+              >>> del self.covs
 
-                 Note: they are not cleared after convergence. If you
-                 need to free some memory, you can safely delete them with
-                 >>> del self.covs
+      ``self.initial_contrast``
+          A dictionary with the starting contrast and the SFA and ICA parts of
+          it.
 
-    self.initial_contrast -- a dictionary with the starting contrast
-                             and the SFA and ICA parts of it.
-
-    self.final_contrast   -- like the above but after convergence.
+      ``self.final_contrast``
+          Like the above but after convergence.
 
     Note: If you intend to use this node for large datasets please have
-          a look at the stop_training method documentation for
-          speeding things up.
+    a look at the ``stop_training`` method documentation for
+    speeding things up.
 
     References:
     Blaschke, T. , Zito, T., and Wiskott, L. (2007).

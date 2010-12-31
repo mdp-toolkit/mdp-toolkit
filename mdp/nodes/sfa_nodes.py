@@ -1,3 +1,5 @@
+__docformat__ = "restructuredtext en"
+
 import mdp
 from mdp import numx, Node, NodeException, TrainingException
 from mdp.utils import mult, pinv, CovarianceMatrix, QuadraticForm
@@ -8,13 +10,18 @@ class SFANode(Node):
     Wiskott, L. and Sejnowski, T.J., Slow Feature Analysis: Unsupervised
     Learning of Invariances, Neural Computation, 14(4):715-770 (2002).
 
-    Internal variables of interest:
-    self.avg -- Mean of the input data (available after training)
-    self.sf -- Matrix of the SFA filters (available after training)
-    self.d -- Delta values corresponding to the SFA components
-              (generalized eigenvalues).
-              (See the docs of the 'get_eta_values' method for
-              more information)
+    :Internal variables of interest:
+
+      ``self.avg``
+          Mean of the input data (available after training)
+
+      ``self.sf``
+          Matrix of the SFA filters (available after training)
+
+      ``self.d``
+          Delta values corresponding to the SFA components (generalized
+          eigenvalues). [See the docs of the ``get_eta_values`` method for
+          more information]
     """
 
     def __init__(self, input_dim=None, output_dim=None, dtype=None):
@@ -146,9 +153,9 @@ class SFANode(Node):
 class SFA2Node(SFANode):
     """Get an input signal, expand it in the space of
     inhomogeneous polynomials of degree 2 and extract its slowly varying
-    components. The 'get_quadratic_form' method returns the input-output
-    function of one of the learned unit as a QuadraticForm object.
-    See the documentation of mdp.utils.QuadraticForm for additional
+    components. The ``get_quadratic_form`` method returns the input-output
+    function of one of the learned unit as a ``QuadraticForm`` object.
+    See the documentation of ``mdp.utils.QuadraticForm`` for additional
     information.
 
     More information about Slow Feature Analysis can be found in
