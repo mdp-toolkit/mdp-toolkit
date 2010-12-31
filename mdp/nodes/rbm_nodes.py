@@ -21,25 +21,30 @@ def rrep(x, n):
 class RBMNode(mdp.Node):
     """Restricted Boltzmann Machine node. An RBM is an undirected
     probabilistic network with binary variables. The graph is
-    bipartite into observed ('visible') and hidden ('latent') variables.
+    bipartite into observed (*visible*) and hidden (*latent*) variables.
 
-    By default, the `execute` function returns the *probability* of
+    By default, the ``execute`` method returns the *probability* of
     one of the hiden variables being equal to 1 given the input.
 
-    Use the `sample_v` function to sample from the observed variables
-    given a setting of the hidden variables, and `sample_h` to do the
-    opposite. The `energy` function can be used to compute the energy
+    Use the ``sample_v`` method to sample from the observed variables
+    given a setting of the hidden variables, and ``sample_h`` to do the
+    opposite. The ``energy`` method can be used to compute the energy
     of a given setting of all variables.
 
     The network is trained by Contrastive Divergence, as described in
     Hinton, G. E. (2002). Training products of experts by minimizing
     contrastive divergence. Neural Computation, 14(8):1711-1800
 
-    Internal variables of interest:
+    :Internal variables of interest:
 
-    - ``self.w`` -- generative weights between hidden and observed variables
-    - ``self.bv`` -- bias vector of the observed variables
-    - ``self.bh`` -- bias vector of the hidden variables
+      ``self.w``
+          Generative weights between hidden and observed variables
+
+      ``self.bv``
+          bias vector of the observed variables
+
+      ``self.bh``
+          bias vector of the hidden variables
 
     For more information on RBMs, see
     Geoffrey E. Hinton (2007) Boltzmann machine. Scholarpedia, 2(5):1668
@@ -207,18 +212,18 @@ class RBMNode(mdp.Node):
 class RBMWithLabelsNode(RBMNode):
     """Restricted Boltzmann Machine with softmax labels. An RBM is an
     undirected probabilistic network with binary variables. In this
-    case, the node is partitioned into a set of observed ('visible')
-    variables, a set of hidden ('latent') variables, and a set of
+    case, the node is partitioned into a set of observed (*visible*)
+    variables, a set of hidden (*latent*) variables, and a set of
     label variables (also observed), only one of which is active at
     any time. The node is able to learn associations between the
     visible variables and the labels.
 
-    By default, the `execute` function returns the *probability* of
+    By default, the ``execute`` method returns the *probability* of
     one of the hiden variables being equal to 1 given the input.
 
-    Use the `sample_v` function to sample from the observed variables
+    Use the ``sample_v`` method to sample from the observed variables
     (visible and labels) given a setting of the hidden variables, and
-    `sample_h` to do the opposite. The `energy` function can be used
+    ``sample_h`` to do the opposite. The ``energy`` method can be used
     to compute the energy of a given setting of all variables.
 
     The network is trained by Contrastive Divergence, as described in
@@ -227,16 +232,20 @@ class RBMWithLabelsNode(RBMNode):
 
     Internal variables of interest:
 
-    - ``self.w`` -- generative weights between hidden and observed variables
-    - ``self.bv`` -- bias vector of the observed variables
-    - ``self.bh`` -- bias vector of the hidden variables
+      ``self.w``
+          Generative weights between hidden and observed variables
+
+      ``self.bv``
+          bias vector of the observed variables
+
+      ``self.bh``
+          bias vector of the hidden variables
 
     For more information on RBMs with labels, see
-
-    Geoffrey E. Hinton (2007) Boltzmann machine. Scholarpedia, 2(5):1668
-
-    Hinton, G. E, Osindero, S., and Teh, Y. W. (2006). A fast learning
-    algorithm for deep belief nets. Neural Computation, 18:1527-1554.
+    
+      * Geoffrey E. Hinton (2007) Boltzmann machine. Scholarpedia, 2(5):1668.
+      * Hinton, G. E, Osindero, S., and Teh, Y. W. (2006). A fast learning
+        algorithm for deep belief nets. Neural Computation, 18:1527-1554.
     """
 
     def __init__(self, hidden_dim, labels_dim, visible_dim=None, dtype=None):
