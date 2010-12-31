@@ -1,3 +1,5 @@
+__docformat__ = "restructuredtext en"
+
 from mdp import numx, numx_linalg, utils, Node, NodeException, TrainingException
 from mdp.utils import mult
 
@@ -6,19 +8,21 @@ from mdp.utils import mult
 
 class LinearRegressionNode(Node):
     """Compute least-square, multivariate linear regression on the input
-    data, i.e., learn coefficients b_j so that
+    data, i.e., learn coefficients ``b_j`` so that::
 
       y_i = b_0 + b_1 x_1 + ... b_N x_N ,
 
-    for i = 1 ... M, minimizes the square error given the training x's
-    and y's.
+    for ``i = 1 ... M``, minimizes the square error given the training ``x``'s
+    and ``y``'s.
 
-    This is a supervised learning node, and requires input data x and
-    target data y to be supplied during training (see 'train'
+    This is a supervised learning node, and requires input data ``x`` and
+    target data ``y`` to be supplied during training (see ``train``
     docstring).
 
-    Internal variables of interest:
-    self.beta -- the coefficients of the linear regression
+    :Internal variables of interest:
+
+      ``self.beta``
+          The coefficients of the linear regression
     """
 
     def __init__(self, with_bias=True, use_pinv=False,
