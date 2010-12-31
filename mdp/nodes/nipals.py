@@ -1,11 +1,12 @@
+__docformat__ = "restructuredtext en"
+
 from mdp import numx, NodeException, Cumulator
 from mdp.utils import mult
 from mdp.nodes import PCANode
 sqrt = numx.sqrt
 
 class NIPALSNode(Cumulator, PCANode):
-    """
-    Perform Principal Component Analysis using the NIPALS algorithm.
+    """Perform Principal Component Analysis using the NIPALS algorithm.
     This algorithm is particularyl useful if you have more variable than
     observations, or in general when the number of variables is huge and
     calculating a full covariance matrix may be unfeasable. It's also more
@@ -13,17 +14,24 @@ class NIPALSNode(Cumulator, PCANode):
     principal components to be a small. In this case setting output_dim to be
     a certain fraction of the total variance, say 90%, may be of some help.
 
-    Internal variables of interest:
-    self.avg -- Mean of the input data (available after training)
-    self.d -- Variance corresponding to the PCA components
-    self.v -- Transposed of the projection matrix (available after training)
-    self.explained_variance -- When output_dim has been specified as a fraction
-                               of the total variance, this is the fraction
-                               of the total variance that is actually explained
+    :Internal variables of interest:
+
+      ``self.avg``
+          Mean of the input data (available after training).
+
+      ``self.d``
+          Variance corresponding to the PCA components.
+
+      ``self.v``
+          Transposed of the projection matrix (available after training).
+      ``self.explained_variance``
+          When output_dim has been specified as a fraction of the total
+          variance, this is the fraction of the total variance that is actually
+          explained.
 
     Reference for NIPALS (Nonlinear Iterative Partial Least Squares):
     Wold, H.
-    Nonlinear estimation by iterative least squares procedures
+    Nonlinear estimation by iterative least squares procedures.
     in David, F. (Editor), Research Papers in Statistics, Wiley,
     New York, pp 411-444 (1966).
 
