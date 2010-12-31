@@ -1,3 +1,5 @@
+__docformat__ = "restructuredtext en"
+
 import math
 import mdp
 from isfa_nodes import ISFANode
@@ -44,7 +46,6 @@ class ICANode(mdp.Cumulator, mdp.Node, ProjectMatrixMixin):
     among others in
     Hyvarinen A., Karhunen J., Oja E. (2001). Independent Component Analysis,
     Wiley.
-
     """
 
     def __init__(self, limit = 0.001, telescope = False, verbose = False,
@@ -170,7 +171,7 @@ class CuBICANode(ICANode):
     out of memory when you have many components and many time samples.
 
     As an alternative to this batch mode you might consider the telescope
-    mode (see the docs of the __init__ function).
+    mode (see the docs of the ``__init__`` method).
 
     Reference:
     Blaschke, T. and Wiskott, L. (2003).
@@ -178,13 +179,17 @@ class CuBICANode(ICANode):
     Fourth-Order Cumulant Diagonalization.
     IEEE Transactions on Signal Processing, 52(5), pp. 1250-1256.
 
+    :Internal variables of interest:
 
-    Internal variables of interest:
+      ``self.white``
+          The whitening node used for preprocessing.
 
-      self.white       -- the whitening node used for preprocessing.
-      self.filters     -- the ICA filters matrix (this is the transposed of the
-                        projection matrix after whitening).
-      self.convergence -- the value of the convergence threshold.
+      ``self.filters``
+          The ICA filters matrix (this is the transposed of the
+          projection matrix after whitening).
+
+      ``self.convergence``
+          The value of the convergence threshold.
     """
 
     def core(self, data):
@@ -297,16 +302,22 @@ class FastICANode(ICANode):
     Fast and Robust Fixed-Point Algorithms for Independent Component Analysis
     IEEE Transactions on Neural Networks, 10(3):626-634.
 
-    Internal variables of interest:
+    :Internal variables of interest:
 
-      self.white       -- the whitening node used for preprocessing.
-      self.filters     -- the ICA filters matrix (this is the transposed of the
-                        projection matrix after whitening).
-      self.convergence -- the value of the convergence threshold.
+      ``self.white``
+          The whitening node used for preprocessing.
+
+      ``self.filters``
+          The ICA filters matrix (this is the transposed of the
+          projection matrix after whitening).
+
+      ``self.convergence``
+          The value of the convergence threshold.
 
     History:
-    - 1.4.1998  created for Matlab by Jarmo Hurri, Hugo Gavert,
-                Jaakko Sarela, and Aapo Hyvarinen
+    
+    - 1.4.1998 created for Matlab by Jarmo Hurri, Hugo Gavert, Jaakko Sarela,
+      and Aapo Hyvarinen
     - 7.3.2003  modified for Python by Thomas Wendler
     - 3.6.2004  rewritten and adapted for scipy and MDP by MDP's authors
     - 25.5.2005 now independent from scipy. Requires Numeric or numarray
@@ -921,16 +932,21 @@ class TDSEPNode(ISFANode, ProjectMatrixMixin):
 
     Reference:
     Ziehe, Andreas and Muller, Klaus-Robert (1998).
-    TDSEP an efficient algorithm for blind separation using time structure
+    TDSEP an efficient algorithm for blind separation using time structure.
     in Niklasson, L, Boden, M, and Ziemke, T (Editors), Proc. 8th Int. Conf.
     Artificial Neural Networks (ICANN 1998).
 
-    Internal variables of interest:
+    :Internal variables of interest:
 
-      self.white       -- the whitening node used for preprocessing.
-      self.filters     -- the ICA filters matrix (this is the transposed of the
-                        projection matrix after whitening).
-      self.convergence -- the value of the convergence threshold.
+      ``self.white``
+          The whitening node used for preprocessing.
+
+      ``self.filters``
+          The ICA filters matrix (this is the transposed of the
+          projection matrix after whitening).
+
+      ``self.convergence``
+          The value of the convergence threshold.
     """
     def __init__(self, lags=1, limit = 0.00001, max_iter=10000,
                  verbose = False, whitened = False, white_comp = None,

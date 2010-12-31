@@ -1,5 +1,7 @@
+__docformat__ = "restructuredtext en"
+
 import mdp
-from mdp.nodes import ICANode
+from ica_nodes import ICANode
 numx, numx_rand, numx_linalg = mdp.numx, mdp.numx_rand, mdp.numx_linalg
 
 mult = mdp.utils.mult
@@ -16,17 +18,19 @@ class JADENode(ICANode):
     JADE does not support the telescope mode.
 
     Main references:
-    * Cardoso, Jean-Francois and Souloumiac, Antoine (1993)
-      Blind beamforming for non Gaussian signals
-      Radar and Signal Processing, IEE Proceedings F, 140(6): 362-370
-    * Cardoso, Jean-Francois (1999)
-      High-order contrasts for independent component analysis
-      Neural Computation, 11(1): 157-192
+    
+      * Cardoso, Jean-Francois and Souloumiac, Antoine (1993).
+        Blind beamforming for non Gaussian signals.
+        Radar and Signal Processing, IEE Proceedings F, 140(6): 362-370.
+      * Cardoso, Jean-Francois (1999).
+        High-order contrasts for independent component analysis.
+        Neural Computation, 11(1): 157-192.
 
-    Original code contributed by:
+    Original code contributed by: 
     Gabriel Beckers (2008).
 
     History:
+    
     - May 2005    version 1.8 for MATLAB released by Jean-Francois Cardoso
     - Dec 2007    MATLAB version 1.8 ported to Python/NumPy by Gabriel Beckers
     - Feb 15 2008 Python/NumPy version adapted for MDP by Gabriel Beckers
