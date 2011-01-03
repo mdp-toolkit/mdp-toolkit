@@ -252,11 +252,11 @@ else:
 # here we set scipy_emulation if needed.
 import utils
 
-__version__ = '2.6'
+__version__ = '3.0'
 __revision__ = utils.get_git_revision()
-__authors__ = 'Pietro Berkes, Rike-Benjamin Schuppner, Niko Wilbert, and Tiziano Zito'
-__copyright__ = '(c) 2003-2010 Pietro Berkes, Rike-Benjamin Schuppner, Niko Wilbert, Tiziano Zito'
-__license__ = 'Modified BSD License (GPL compatible), see COPYRIGHT'
+__authors__ = 'MDP Developers'
+__copyright__ = '(c) 2003-2011 mdp-toolkit-devel@lists.sourceforge.net'
+__license__ = 'BSD License, see COPYRIGHT'
 __contact__ = 'mdp-toolkit-users@lists.sourceforge.net'
 
 try:

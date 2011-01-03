@@ -2,7 +2,16 @@ from distutils.core import setup
 import os
 import sys
 
-short_description = "Modular toolkit for Data Processing (MDP) is a library of widely used data processing algorithms that can be combined according to a pipeline analogy to build more complex data processing software. Implemented algorithms include Principal Component Analysis (PCA), Independent Component Analysis (ICA), Slow Feature Analysis (SFA), and many more."
+email = 'mdp-toolkit-devel@lists.sourceforge.net'
+
+short_description = ("Modular toolkit for Data Processing (MDP) is a"
+                     " library of widely used data processing algorithms"
+                     " that can be combined according to a pipeline"
+                     " analogy to build more complex data processing"
+                     " software. Implemented algorithms include"
+                     " Principal Component Analysis (PCA), Independent"
+                     " Component Analysis (ICA), Slow Feature Analysis"
+                     " (SFA), and many more.")
 
 long_description = """
 The Modular toolkit for Data Processing (MDP) is a library of widely
@@ -63,13 +72,21 @@ classifiers = ["Development Status :: 5 - Production/Stable",
                "Intended Audience :: Developers",
                "Intended Audience :: Education",
                "Intended Audience :: Science/Research",
-               "License :: OSI Approved :: GNU Library or "+\
-               "Lesser General Public License (LGPL)",
+               "License :: OSI Approved :: BSD License"
                "Operating System :: OS Independent",
                "Programming Language :: Python",
                "Topic :: Scientific/Engineering :: Information Analysis",
                "Topic :: Scientific/Engineering :: Mathematics"]
 
+
+def get_version():
+    mdp_init = file(os.path.join(os.getcwd(), 'mdp', '__init__.py'), 'r')
+    for line in mdp_init:
+        str_ = line.strip()
+        if str_.startswith('__version__'):
+            exec(str_)
+            return __version__
+    return None
 
 def setup_package():
 
@@ -84,17 +101,26 @@ def setup_package():
         py3tool.sync_2to3('mdp', os.path.join(src_path, 'mdp'))
         py3tool.sync_2to3('bimdp', os.path.join(src_path, 'bimdp'))
 
+    # check that we have a version
+    try:
+        version = get_version()
+        if not isinstance(version, str) or len(version) == 0:
+            raise Exception
+    except Exception, exc:
+        raise Exception(str(exc) +
+                        ('\nCan not get MDP version!\nPlease report '
+                         'a bug to %s'%email))
     # Run build
     old_path = os.getcwd()
     os.chdir(src_path)
     sys.path.insert(0, src_path)
 
-    setup(name = 'MDP', version = '2.6',
-          author = 'Pietro Berkes, Niko Wilbert, and Tiziano Zito',
-          author_email = 'berkes@brandeis.edu, mail@nikowilbert.de, opossumnano@gmail.com',
-          maintainer = 'Pietro Berkes, Rike-Benjamin Schuppner, Niko Wilbert, and Tiziano Zito',
-          maintainer_email = 'berkes@brandeis.edu, rike.schuppner@bccn-berlin.de, mail@nikowilbert.de, tiziano.zito@bccn-berlin.de',
-          license = "http://www.gnu.org/licenses/lgpl.html",
+    setup(name = 'MDP', version = get_version(),
+          author = 'MDP Developers',
+          author_email = email,
+          maintainer = 'MDP Developers',
+          maintainer_email = email,
+          license = "http://mdp-toolkit.sourceforge.net/license.html",
           platforms = ["Any"],
           url = 'http://mdp-toolkit.sourceforge.net',
           download_url = 'http://sourceforge.net/projects/mdp-toolkit/files',
@@ -102,7 +128,7 @@ def setup_package():
           long_description = long_description,
           classifiers = classifiers,
           packages = ['mdp', 'mdp.nodes', 'mdp.utils', 'mdp.hinet',
-                      'mdp.test', 'mdp.graph',
+                      'mdp.test', 'mdp.graph', 'mdp.caching',
                       'mdp.parallel', 'bimdp', 'bimdp.hinet', 'bimdp.inspection',
                       'bimdp.nodes', 'bimdp.parallel', 'bimdp.test'],
           package_data = {'mdp.hinet': ['hinet.css'],
