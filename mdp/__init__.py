@@ -303,7 +303,7 @@ __all__ = ['CheckpointFlow', 'CheckpointFunction', 'CheckpointSaveFunction',
 try:
     import joblib
     __all__ += ['joblib']
-    if joblib.__version__ < '0.4.6':
+    if joblib.__version__ < '0.4.3':
         config.ExternalDepFail('joblib',
                                'version %s is too old' % joblib.__version__)
     else:
