@@ -258,6 +258,7 @@ __authors__ = 'MDP Developers'
 __copyright__ = '(c) 2003-2011 mdp-toolkit-devel@lists.sourceforge.net'
 __license__ = 'BSD License, see COPYRIGHT'
 __contact__ = 'mdp-toolkit-users@lists.sourceforge.net'
+__homepage__ = 'http://mdp-toolkit.sourceforge.net'
 
 try:
     import pp
