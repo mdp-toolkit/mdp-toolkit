@@ -19,6 +19,17 @@ def _rand_classification_labels_array(x):
 def _rand_array_halfdim(x):
     return uniform(size=(x.shape[0], x.shape[1]//2))
 
+class Iter(object):
+    pass
+
+def _rand_array_single_rows():
+    x = uniform((500,4))
+    class _Iter(Iter):
+        def __iter__(self):
+            for row in range(x.shape[0]):
+                yield x[numx.newaxis,row,:]
+    return _Iter()
+    
 def _contrib_get_random_mix():
     return get_random_mix(type='d', mat_dim=(100, 3))[2]
 
@@ -29,7 +40,12 @@ def _train_if_necessary(inp, node, sup_arg_gen):
                 # for nodes that need supervision
                 node.train(inp, sup_arg_gen(inp))
             else:
-                node.train(inp)
+                # support generators
+                if isinstance(inp, Iter):
+                    for x in inp:
+                        node.train(x)
+                else:
+                    node.train(inp)
             if node.get_remaining_train_phase() > 1:
                 node.stop_training()
             else:
@@ -39,7 +55,11 @@ def _stop_training_or_execute(node, inp):
     if node.is_trainable():
         node.stop_training()
     else:
-        node.execute(inp)
+        if isinstance(inp, Iter):
+            for x in inp:
+                node.execute(x)
+        else:
+            node.execute(inp)
 
 def pytest_generate_tests(metafunc):
     generic_test_factory(NODES, metafunc)
@@ -70,7 +90,7 @@ def generic_test_factory(big_nodes, metafunc):
 
     `inp_arg_gen=...a call to get_random_mix('d')`
       Used to construct the `inp` data argument used for training and
-      execution.
+      execution. It can be an iterable. 
 
     `sup_arg_gen=None`
       A function taking a single argument (`inp`)
@@ -129,7 +149,12 @@ def test_dtype_consistency(klass, init_args, inp_arg_gen,
         _train_if_necessary(inp, node, sup_arg_gen)
 
         extra = [execute_arg_gen(inp)] if execute_arg_gen else []
-        out = node.execute(inp, *extra)
+        # support generators
+        if isinstance(inp, Iter):
+            for x in inp:
+                out = node.execute(x, *extra)
+        else:
+            out = node.execute(inp, *extra)
         assert out.dtype == dtype
 
 
@@ -137,12 +162,23 @@ def test_outputdim_consistency(klass, init_args, inp_arg_gen,
                                sup_arg_gen, execute_arg_gen):
     args = call_init_args(init_args)
     inp = inp_arg_gen()
-    output_dim = inp.shape[1] // 2
+    # support generators
+    if isinstance(inp, Iter):
+        for x in inp:
+            pass
+        output_dim = x.shape[1] // 2
+    else:
+        output_dim = inp.shape[1] // 2
     extra = [execute_arg_gen(inp)] if execute_arg_gen else []
 
     def _test(node):
         _train_if_necessary(inp, node, sup_arg_gen)
-        out = node.execute(inp, *extra)
+        # support generators
+        if isinstance(inp, Iter):
+            for x in inp:
+                out = node.execute(x)
+        else:
+            out = node.execute(inp, *extra)
         assert out.shape[1] == output_dim
         assert node._output_dim == output_dim
 
@@ -180,7 +216,13 @@ def test_outputdim_consistency(klass, init_args, inp_arg_gen,
         # check that output_dim is set to whatever the output dim is
         node = klass(*args)
         _train_if_necessary(inp, node, sup_arg_gen)
-        out = node.execute(inp, *extra)
+        # support generators
+        if isinstance(inp, Iter):
+            for x in inp:
+                out = node.execute(x, *extra)
+        else:
+            out = node.execute(inp, *extra)
+
         assert out.shape[1] == node.output_dim
 
 def test_dimdtypeset(klass, init_args, inp_arg_gen,
@@ -235,6 +277,11 @@ NODES = [
          init_args=[2, 5]),
     dict(klass='TimeFramesNode',
          init_args=[3, 4]),
+    dict(klass='TimeDelayNode',
+         init_args=[3, 4]),
+    dict(klass='TimeDelaySlidingWindowNode',
+         init_args=[3, 4],
+         inp_arg_gen=_rand_array_single_rows),
     dict(klass='FDANode',
          sup_arg_gen=_rand_labels),
     dict(klass='GaussianClassifier',
