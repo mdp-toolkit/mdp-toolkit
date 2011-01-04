@@ -1,7 +1,11 @@
 __docformat__ = "restructuredtext en"
 
+from shogun import (Kernel as sgKernel,
+                    Features as sgFeatures,
+                    Classifier as sgClassifier)
+
 import mdp
-from mdp import numx, sgKernel, sgFeatures, sgClassifier
+from mdp import numx
 from mdp.utils import OrderedDict as _OrderedDict
 
 from svm_classifiers import _SVMClassifier, _LabelNormalizer

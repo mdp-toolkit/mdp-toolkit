@@ -2,7 +2,8 @@ __docformat__ = "restructuredtext en"
 
 import mdp
 from mdp import numx, Node, NodeException, TrainingException
-from mdp.utils import mult, pinv, CovarianceMatrix, QuadraticForm
+from mdp.utils import (mult, pinv, CovarianceMatrix, QuadraticForm,
+                       symeig, SymeigException)
 
 class SFANode(Node):
     """Extract the slowly varying components from the input data.
@@ -34,7 +35,7 @@ class SFANode(Node):
         self._dcov_mtx = CovarianceMatrix(dtype)
 
         # set routine for eigenproblem
-        self._symeig = mdp.symeig
+        self._symeig = symeig
 
         # SFA eigenvalues and eigenvectors, will be set after training
         self.d = None
@@ -96,7 +97,7 @@ class SFANode(Node):
                            " or prepend the SFANode with a PCANode(reduce=True)"
                            " or PCANode(svd=True)"% str(d))
                 raise NodeException(err_msg)
-        except mdp.SymeigException, exception:
+        except SymeigException, exception:
             errstr = str(exception)+"\n Covariance matrices may be singular."
             raise NodeException(errstr)
 

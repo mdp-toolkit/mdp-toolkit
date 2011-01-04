@@ -21,6 +21,7 @@ from slideshow import (BASIC_STYLE, SLIDESHOW_STYLE, HTMLSlideShow,
                        SectionHTMLSlideShow, SectionImageHTMLSlideShow,
                        image_slideshow, show_image_slideshow)
 
+from _symeig import SymeigException
 
 import mdp as _mdp
 # matrix multiplication function
@@ -67,7 +68,7 @@ def svd(x, compute_uv = True):
             s = _mdp.numx_linalg.svd(x, compute_uv=False)
             return refcast(s, tc)
     except _mdp.numx_linalg.LinAlgError, exc:
-        raise _mdp.SymeigException(str(exc))
+        raise SymeigException(str(exc))
 
 # clean up namespace
 del routines

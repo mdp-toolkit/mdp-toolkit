@@ -121,7 +121,7 @@ def test_QuadraticForm_invariances():
     #nu = numx.linspace(2.,-3,10)
     nu = numx.linspace(6., 1, 10)
     H = utils.symrand(nu)
-    E, W = mdp.symeig(H)
+    E, W = mdp.utils.symeig(H)
     q = utils.QuadraticForm(H)
     xmax, xmin = q.get_extrema(5.)
     e_w, e_sd = q.get_invariances(xmax)

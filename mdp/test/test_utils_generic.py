@@ -47,7 +47,7 @@ def test_geneigenproblem(dtype, range, func):
                               TESTDECIMALS[dtype])
 
 test_geneigenproblem.funcs = [utils._symeig._symeig_fake]
-if mdp.symeig is utils._symeig.wrap_eigh:
+if mdp.utils.symeig is utils._symeig.wrap_eigh:
     test_geneigenproblem.funcs.append(utils._symeig.wrap_eigh)
 
 test_eigenproblem.funcs = test_geneigenproblem.funcs + [utils.nongeneral_svd]

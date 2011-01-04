@@ -1,8 +1,7 @@
 __docformat__ = "restructuredtext en"
 
-from mdp import (numx, numx_linalg, Cumulator, TrainingException, MDPWarning,
-                 symeig)
-from mdp.utils import mult, nongeneral_svd, svd, sqrtm
+from mdp import numx, numx_linalg, Cumulator, TrainingException, MDPWarning
+from mdp.utils import mult, nongeneral_svd, svd, sqrtm, symeig
 import warnings as _warnings
 
 # some useful functions

@@ -231,7 +231,7 @@ def nongeneral_svd(A, range=None, **kwargs):
 
 def sqrtm(A):
     """This is a symmetric definite positive matrix sqrt function"""
-    d, V = mdp.symeig(A)
+    d, V = mdp.utils.symeig(A)
     return mdp.utils.mult(V, mult_diag(numx.sqrt(d), V.T))
 
 # replication functions

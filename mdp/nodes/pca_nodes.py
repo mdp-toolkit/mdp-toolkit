@@ -2,7 +2,8 @@ __docformat__ = "restructuredtext en"
 
 import mdp
 from mdp import numx
-from mdp.utils import mult, nongeneral_svd, CovarianceMatrix
+from mdp.utils import (mult, nongeneral_svd, CovarianceMatrix,
+                       symeig, SymeigException)
 import warnings as _warnings
 
 class PCANode(mdp.Node):
@@ -63,7 +64,7 @@ class PCANode(mdp.Node):
         if svd:
             self._symeig = nongeneral_svd
         else:
-            self._symeig = mdp.symeig
+            self._symeig = symeig
         self.var_abs = var_abs
         self.var_rel = var_rel
         self.var_part = var_part
@@ -182,7 +183,7 @@ class PCANode(mdp.Node):
                         "Got negative eigenvalues: %s.\n"
                         "You may either set output_dim to be smaller, "
                         "or set reduce=True and/or svd=True" % str(d))
-        except mdp.SymeigException, exception:
+        except SymeigException, exception:
             err = str(exception)+("\nCovariance matrix may be singular."
                                   "Try setting svd=True.")
             raise mdp.NodeException(err)

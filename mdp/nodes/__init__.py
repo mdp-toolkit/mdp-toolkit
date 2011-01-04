@@ -43,9 +43,9 @@ __all__ = ['PCANode', 'WhiteningNode', 'NIPALSNode', 'FastICANode',
            'IdentityNode', '_OneDimensionalHitParade']
 
 # nodes with external dependencies
-from mdp import config
+from mdp import config, numx_description
 
-if config.has_scipy_signal:
+if numx_description == 'scipy':
     from convolution_nodes import Convolution2DNode
     __all__ += ['Convolution2DNode']
     del convolution_nodes
@@ -83,3 +83,4 @@ del nipals
 del lle_nodes
 del xsfa_nodes
 del config
+del numx_description
