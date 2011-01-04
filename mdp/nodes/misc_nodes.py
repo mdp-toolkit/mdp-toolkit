@@ -402,7 +402,7 @@ class TimeDelaySlidingWindowNode(TimeDelayNode):
         cols = self.output_dim
         n = self.input_dim
 
-        new_row = numx.zeros(cols)
+        new_row = numx.zeros(cols, dtype=self.dtype)
         new_row[:n] = x
 
         # Slide
@@ -421,7 +421,7 @@ class TimeDelaySlidingWindowNode(TimeDelayNode):
         else:
             self.slide = True
 
-        return new_row
+        return new_row[numx.newaxis,:]
 
 class EtaComputerNode(Node):
     """Compute the eta values of the normalized training data.
