@@ -63,7 +63,9 @@ def testISFANode_SFAPart():
     for i in xrange(3):
         fmat[(i+1)*5000:,i] = 0.
     mat = numx_fft.irfft(fmat,axis=0)
-    src = mdp.sfa(mat)
+    _sfanode = mdp.nodes.SFANode()
+    _sfanode.train(mat)
+    src = _sfanode.execute(mat)
     # test with unmixed signals (i.e. the node should make nothing at all)
     out = mdp.nodes.ISFANode(lags=1,
                              whitened=True,
@@ -209,7 +211,7 @@ def testISFANode_AnalyticalSolution():
         # rotate the analytical solution
         covs_rot.transform(R)
         # find the SFA solution to initialize ISFA
-        eigval, SFARP = mdp.symeig(covs_rot.covs[:,:,0])
+        eigval, SFARP = mdp.utils.symeig(covs_rot.covs[:,:,0])
         # order SFA solution by slowness
         SFARP = SFARP[:,-1::-1]
         # run ISFA
