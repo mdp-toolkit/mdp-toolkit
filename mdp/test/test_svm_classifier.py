@@ -59,25 +59,23 @@ def _separable_data(positions, labels, radius=1, num_elem=1000, shuffled=False):
         return data[ind], a_labels[ind]
     return data, a_labels
 
-class TestSeparableData(object):
-    def test_all_data_is_inside_radius(self):
-        def sqdist(tuple_a, tuple_b):
-            return sum([(a-b)**2 for a, b in zip(tuple_a, tuple_b)])
-        
-        positions = [[(1, 1), (-1, -1)],
-                     [(1, 1, 10), (100, -20, 30), (-1, 10, 1000)]]
-        labels = [[1, -1], [1, 2, 3]]
-        radii = [0.5, 1, 10]
-        num_elem = 100
-        
-        for poslabs, rad in itertools.product(zip(positions, labels), radii):
-            pos, labs = poslabs
+def _sqdist(tuple_a, tuple_b):
+    return sum( (a-b)**2 for a, b in zip(tuple_a, tuple_b) )
+
+def test_separable_data_is_inside_radius():
+    positions = [[(1, 1), (-1, -1)],
+                 [(1, 1, 10), (100, -20, 30), (-1, 10, 1000)]]
+    labels = [[1, -1], [1, 2, 3]]
+    radii = [0.5, 1, 10]
+    num_elem = 100
+
+    for pos, labs in zip(positions, labels):
+        for rad in radii:
             data, ls = _separable_data(pos, labs, rad, num_elem)
-        
+
             for d,l in zip(data, ls):
                 idx = labs.index(l)
-                assert rad**2 > sqdist(pos[idx], d)
-
+                assert rad**2 > _sqdist(pos[idx], d)
 
 @skip_on_condition(
     "not hasattr(mdp.nodes, 'ShogunSVMClassifier')",
