@@ -22,6 +22,9 @@ class config(object):
 
     >>> config.has_python
     True
+
+    The loading of a dependency can be inhibited by setting the
+    environment variable MDP_DISABLE_DEPNAME.
     """
 
     _HAS_NUMBER = 0
@@ -191,9 +194,13 @@ def set_configuration():
     # parallel python dependency
     try:
         import pp
-        config.ExternalDepFound('parallel_python', pp.version)
     except ImportError, exc:
         config.ExternalDepFailed('parallel_python', exc)
+    else:
+        if os.getenv('MDP_DISABLE_PARALLEL_PYTHON'):
+            config.ExternalDepFailed('parallel_python', 'disabled')
+        else:
+            config.ExternalDepFound('parallel_python', pp.version)
 
     # shogun
     try:
@@ -215,8 +222,11 @@ def set_configuration():
         except AttributeError, msg:
             config.ExternalDepFailed('shogun', msg)
         else:
-            if not (version.startswith('v0.9') or version.startswith('v1.')):
-                config.ExternalDepFailed('We need at least SHOGUN version 0.9.')
+            if os.getenv('MDP_DISABLE_SHOGUN'):
+                config.ExternalDepFailed('shogun', 'disabled')
+            elif not (version.startswith('v0.9') or version.startswith('v1.')):
+                config.ExternalDepFailed('shogun',
+                                         'We need at least SHOGUN version 0.9.')
             else:
                 config.ExternalDepFound('shogun', version)
 
@@ -225,12 +235,18 @@ def set_configuration():
     except ImportError, exc:
         config.ExternalDepFailed('libsvm', exc)
     else:
-        config.ExternalDepFound('libsvm', libsvm.libsvm._name)
+        if os.getenv('MDP_DISABLE_LIBSVM'):
+            config.ExternalDepFailed('libsvm', 'disabled')
+        else:
+            config.ExternalDepFound('libsvm', libsvm.libsvm._name)
 
 
     try:
         import joblib
-        config.ExternalDepFound('joblib', joblib.__version__)
     except ImportError, exc:
         config.ExternalDepFailed('joblib', exc)
-
+    else:
+        if os.getenv('MDP_DISABLE_JOBLIB'):
+            config.ExternalDepFailed('joblib', 'disabled')
+        else:
+            config.ExternalDepFound('joblib', joblib.__version__)
