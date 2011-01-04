@@ -248,5 +248,8 @@ def set_configuration():
     else:
         if os.getenv('MDP_DISABLE_JOBLIB'):
             config.ExternalDepFailed('joblib', 'disabled')
+        elif joblib.__version__ < '0.4.3':
+            config.ExternalDepFail('joblib',
+                                   'version %s is too old' % joblib.__version__)
         else:
             config.ExternalDepFound('joblib', joblib.__version__)
