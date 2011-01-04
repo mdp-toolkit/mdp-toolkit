@@ -165,7 +165,7 @@ def get_numx():
         msg = ("Could not import any of the numeric backends.\n"
                "Import errors:\n"
                + '\n'.join(label+': '+str(exc)
-                           for label, exc in numx_exceptions.items()))
+                           for label, exc in numx_exception.items()))
         raise ImportError(msg)
 
     return (numx_description, numx, numx_linalg,
