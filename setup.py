@@ -1,6 +1,7 @@
 from distutils.core import setup
 import os
 import sys
+import re
 
 email = 'mdp-toolkit-devel@lists.sourceforge.net'
 
@@ -80,13 +81,15 @@ classifiers = ["Development Status :: 5 - Production/Stable",
 
 
 def get_version():
-    mdp_init = file(os.path.join(os.getcwd(), 'mdp', '__init__.py'), 'r')
+    mdp_init = open(os.path.join(os.getcwd(), 'mdp', '__init__.py'))
     for line in mdp_init:
-        str_ = line.strip()
-        if str_.startswith('__version__'):
-            exec(str_)
-            return __version__
-    return None
+        if line.startswith('__version__'):
+            match = re.match(r'__version__\s*=\s*[\'"](.+)[\'"]', line)
+            if match:
+                return match.group(1)
+            break
+    raise ValueError('Can not get MDP version!\n'
+                     'Please report a bug to %s' % email)
 
 def setup_package():
 
@@ -102,20 +105,12 @@ def setup_package():
         py3tool.sync_2to3('bimdp', os.path.join(src_path, 'bimdp'))
 
     # check that we have a version
-    try:
-        version = get_version()
-        if not isinstance(version, str) or len(version) == 0:
-            raise Exception
-    except Exception, exc:
-        raise Exception(str(exc) +
-                        ('\nCan not get MDP version!\nPlease report '
-                         'a bug to %s'%email))
+    version = get_version()
     # Run build
-    old_path = os.getcwd()
     os.chdir(src_path)
     sys.path.insert(0, src_path)
 
-    setup(name = 'MDP', version = get_version(),
+    setup(name = 'MDP', version=version,
           author = 'MDP Developers',
           author_email = email,
           maintainer = 'MDP Developers',
