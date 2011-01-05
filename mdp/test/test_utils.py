@@ -37,7 +37,7 @@ def test_introspection():
     assert sorted(a_sfa.keys()) == keys, 'Wrong arrays in SFANode'
     sfa.stop_training()
     a_sfa, string = utils.dig_node(sfa)
-    keys = ['_bias', 'avg', 'd', 'sf']
+    keys = ['_bias', 'avg', 'd', 'davg', 'sf']
     assert sorted(a_sfa.keys()) == keys, 'Wrong arrays in SFANode'
 
 def test_random_rot():
