@@ -13,6 +13,7 @@ Before release:
   and tutorial_src/tutorial.rst)
 - try mdp tests with MDPNUMX=scipy, MDNUMX=numpy, and with parallel
   python
+- try make doctest in docs repository
 
 During release:
 - update CHANGES: you can generate a new bunch of CHANGES with:
