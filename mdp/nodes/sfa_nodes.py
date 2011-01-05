@@ -75,6 +75,7 @@ class SFANode(Node):
         SFANode class docstring.
          """
         super(SFANode, self).__init__(input_dim, output_dim, dtype)
+        self._include_last_sample = include_last_sample
 
         # init two covariance matrices
         # one for the input data
@@ -91,8 +92,6 @@ class SFANode(Node):
         self.avg = None
         self._bias = None  # avg multiplied with sf
         self.tlen = None
-        # x[:None] == x[:]
-        self._include_last_sample = None if include_last_sample else -1
 
     def time_derivative(self, x):
         """Compute the linear approximation of the time derivative."""
@@ -124,11 +123,11 @@ class SFANode(Node):
         """
         if include_last_sample is None:
             include_last_sample = self._include_last_sample
-        else:
-            include_last_sample = None if include_last_sample else -1
+        # works because x[:None] == x[:]
+        last_sample_index = None if include_last_sample else -1
 
         # update the covariance matrices
-        self._cov_mtx.update(x[:include_last_sample, :])
+        self._cov_mtx.update(x[:last_sample_index, :])
         self._dcov_mtx.update(self.time_derivative(x))
 
     def _stop_training(self, debug=False):
