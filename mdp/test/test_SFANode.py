@@ -42,3 +42,38 @@ def testSFANode_one_time_samples():
     x = numx.random.random((1,5))
     py.test.raises(mdp.TrainingException, "node.train(x)")
 
+
+def testSFANode_include_last_sample():
+    # check that the default behaviour is True
+    node = mdp.nodes.SFANode()
+    x = numx.random.random((100,10))
+    node.train(x)
+    node.stop_training()
+    assert node.tlen == 100
+    assert node.dtlen == 99
+
+    # check that you can set it explicitly
+    node = mdp.nodes.SFANode(include_last_sample=True)
+    x = numx.random.random((100,10))
+    node.train(x)
+    node.stop_training()
+    assert node.tlen == 100
+    assert node.dtlen == 99
+
+    # check the old behaviour
+    node = mdp.nodes.SFANode(include_last_sample=False)
+    x = numx.random.random((100,10))
+    node.train(x)
+    node.stop_training()
+    assert node.tlen == 99
+    assert node.dtlen == 99
+
+    # check that we can change it during training
+    node = mdp.nodes.SFANode(include_last_sample=False)
+    x = numx.random.random((100,10))
+    node.train(x, include_last_sample=True)
+    node.stop_training()
+    assert node.tlen == 100
+    assert node.dtlen == 99
+
+    

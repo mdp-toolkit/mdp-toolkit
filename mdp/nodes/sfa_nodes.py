@@ -23,9 +23,57 @@ class SFANode(Node):
           Delta values corresponding to the SFA components (generalized
           eigenvalues). [See the docs of the ``get_eta_values`` method for
           more information]
+
+    :Special arguments for constructor:
+
+      ``include_last_sample``
+          If ``False`` the ``train`` method discards the last sample in every
+          chunk during training when calculating the covariance matrix.
+          The last sample is in this case only used for calculating the
+          covariance matrix of the derivatives. The switch should be set
+          to ``False`` if you plan to train with several small chunks. For
+          example we can split a sequence (index is time)::
+
+            x_1 x_2 x_3 x_4
+
+          in smaller parts like this::
+
+            x_1 x_2
+            x_2 x_3
+            x_3 x_4
+
+          The SFANode will see 3 derivatives for the temporal covariance
+          matrix, and the first 3 points for the spatial covariance matrix.
+          Of course you will need to use a generator that *connects* the
+          small chunks (the last sample needs to be sent again in the next
+          chunk). If ``include_last_sample`` was True, depending on the
+          generator you use, you would either get::
+
+             x_1 x_2
+             x_2 x_3
+             x_3 x_4
+
+          in which case the last sample of every chunk would be used twice
+          when calculating the covariance matrix, or::
+
+             x_1 x_2
+             x_3 x_4
+
+          in which case you loose the derivative between ``x_3`` and ``x_2``.
+
+          If you plan to train with a single big chunk leave
+          ``include_last_sample`` to the default value, i.e. ``True``.
+
+          You can even change this behaviour during training. Just set the
+          corresponding switch in the ``train`` method.
     """
 
-    def __init__(self, input_dim=None, output_dim=None, dtype=None):
+    def __init__(self, input_dim=None, output_dim=None, dtype=None,
+                 include_last_sample=True):
+        """
+        For the ``include_last_sample`` switch have a look at the
+        SFANode class docstring.
+         """
         super(SFANode, self).__init__(input_dim, output_dim, dtype)
 
         # init two covariance matrices
@@ -43,6 +91,8 @@ class SFANode(Node):
         self.avg = None
         self._bias = None  # avg multiplied with sf
         self.tlen = None
+        # x[:None] == x[:]
+        self._include_last_sample = None if include_last_sample else -1
 
     def time_derivative(self, x):
         """Compute the linear approximation of the time derivative."""
@@ -59,27 +109,33 @@ class SFANode(Node):
             self.output_dim = self.input_dim
         return rng
 
-    def _check_train_args(self, x):
+    def _check_train_args(self, x, *args, **kwargs):
         # check that we have at least 2 time samples to
         # compute the update for the derivative covariance matrix
         s = x.shape[0]
         if  s < 2:
             raise TrainingException('Need at least 2 time samples to '
                                     'compute time derivative (%d given)'%s)
-    def _train(self, x):
-        ## update the covariance matrices
-        # Cut the final point to avoid a trivial solution in special cases. (?)
-        # This also makes sense if the last data point is duplicated as the
-        # first data point of the next chunk, in which case the chunking
-        # of the data has no influence on the result.
-        self._cov_mtx.update(x[:-1, :])
+        
+    def _train(self, x, include_last_sample=None):
+        """
+        For the ``include_last_sample`` switch have a look at the
+        SFANode class docstring.
+        """
+        if include_last_sample is None:
+            include_last_sample = self._include_last_sample
+        else:
+            include_last_sample = None if include_last_sample else -1
+
+        # update the covariance matrices
+        self._cov_mtx.update(x[:include_last_sample, :])
         self._dcov_mtx.update(self.time_derivative(x))
 
     def _stop_training(self, debug=False):
         ##### request the covariance matrices and clean up
         self.cov_mtx, self.avg, self.tlen = self._cov_mtx.fix()
         del self._cov_mtx
-        self.dcov_mtx, davg, dtlen = self._dcov_mtx.fix()
+        self.dcov_mtx, self.davg, self.dtlen = self._dcov_mtx.fix()
         del self._dcov_mtx
 
         rng = self._set_range()
