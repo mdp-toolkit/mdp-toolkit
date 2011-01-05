@@ -219,10 +219,12 @@ class SFA2Node(SFANode):
     Wiskott, L. and Sejnowski, T.J., Slow Feature Analysis: Unsupervised
     Learning of Invariances, Neural Computation, 14(4):715-770 (2002)."""
 
-    def __init__(self, input_dim=None, output_dim=None, dtype=None):
+    def __init__(self, input_dim=None, output_dim=None, dtype=None,
+                 include_last_sample=True):
         self._expnode = mdp.nodes.QuadraticExpansionNode(input_dim=input_dim,
                                                          dtype=dtype)
-        super(SFA2Node, self).__init__(input_dim, output_dim, dtype)
+        super(SFA2Node, self).__init__(input_dim, output_dim, dtype,
+                                       include_last_sample)
 
     @staticmethod
     def is_invertible():
@@ -233,9 +235,9 @@ class SFA2Node(SFANode):
         self._expnode.input_dim = n
         self._input_dim = n
 
-    def _train(self, x):
+    def _train(self, x, include_last_sample=None):
         # expand in the space of polynomials of degree 2
-        super(SFA2Node, self)._train(self._expnode(x))
+        super(SFA2Node, self)._train(self._expnode(x), include_last_sample)
 
     def _set_range(self):
         if (self.output_dim is not None) and (
