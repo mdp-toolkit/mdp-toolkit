@@ -1,13 +1,20 @@
-PARMS = {'2.5': ('numpy',),
-         '2.6': ('scipy', 'parallel_python', 'shogun', 'libsvm', 'joblib'),
-         '2.7': ('numpy',),
-         '3.1': ('numpy',),
+PARMS = {'2.5': ('numpy', None),
+         '2.7': ('numpy', None),
+         '3.1': ('numpy', None),
+         '2.6': ('scipy', None, 'parallel_python', 'shogun', 'libsvm', 'joblib'),
          }
 
 import os
 import sys
 import subprocess
 import time
+
+# get from sys.argv a directory to add to pythonpath
+# /path/to/pythonVERSION/dir
+if len(sys.argv) > 1:
+    dirbase = sys.argv[1]
+else:
+    dirbase = '/dev/null'
 
 # check that we are in our git repo
 conds = (os.path.exists('.git'),
@@ -19,23 +26,41 @@ if not all(conds):
     sys.stderr.write('Not in mdp git clone!')
     sys.exit(-1)
 
-null = open('/tmp/mdp_current_test', 'w')
-
 # create command line
 for vers in PARMS:
+    print 'Running: '+vers
+    path = dirbase.replace('VERSION', vers)
+    # if version is 3.X we need to build mdp and change to the build directory
+    if vers[0] == '3':
+        cmdline = ('python'+vers,
+                   'setup.py',
+                   'build',
+                   '> /tmp/mdp_build',
+                   '2>&1',
+                   )
+        print 'Building for Python3... ',
+        os.system(' '.join(cmdline))
+        print 'done.'
+        # we need to change directory
+        build_dir = os.listdir(os.path.join('build','py3k','build'))[0]
+        os.chdir(os.path.join('build','py3k','build', build_dir))
     env = {'MDPNUMX': PARMS[vers][0]}
     for dep in PARMS[vers][1:]:
-        key = 'MDP_DISABLE_'+dep.upper()
+        if dep is not None:
+            key = 'MDP_DISABLE_'+dep.upper()
+        else:
+            key = 'MDP_DISABLE_NONE'
         env[key] = '1'
         cmdline_base = ('export MDPNUMX='+env['MDPNUMX'],
-                        key+'=1;',
-                        'python'+vers,
+                        key+'=1',
+                        'PYTHONPATH='+path,
+                        '; python'+vers,
                         )
 
         cmdline_config = ('-c "import mdp; import sys; sys.stdout.write(mdp.config.info())"',)
         cmdline_tests = (os.path.join('mdp','test','run_tests.py'),
                          '--capture', 'fd',
-                         '-x',
+                         #'-x',
                          'mdp',
                          'bimdp',
                          '>',
@@ -43,11 +68,11 @@ for vers in PARMS:
                          '2>&1',
                          )
         # show config
-        print 'Running: '
         os.system(' '.join(cmdline_base+cmdline_config))
         sys.stdout.write('\n')
-        #print 'Running: ', ' '.join(cmdline)
+        # print '  '+' '.join(cmdline_base+cmdline_tests)
         exit_status = os.system(' '.join(cmdline_base+cmdline_tests))
         if exit_status != 0:
             sys.stderr.write('='*30+' FAILURE '+'='*30)
-            sys.exit(-1)
+            sys.stderr.write('\nLog is in /tmp/mdp_current_test.\n')
+            #sys.exit(-1)
