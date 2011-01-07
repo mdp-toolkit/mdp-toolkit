@@ -34,15 +34,15 @@ for name in scikits_modules:
 # TODO: wrap_scikits_instance
 # TODO: add scikits.learn availability to test info strings
 # TODO: which tests ? (test that particular algorithm are / are not trainable)
-# XXX: at present, it is not possible to automatically set output_dim, as in
-#      scikits.learn the corresponding attribute is sometimes called
-#      'n_components', sometimes 'k' (e.g., algorithms in scikits.learn.cluster)
+# XXX: if class defines n_components, allow output_dim, otherwise throw exception
+#      also for classifiers (overwrite _set_output_dim)
+#      Problem: sometimes they call it 'k' (e.g., algorithms in scikits.learn.cluster)
 
 def apply_to_scikits_algorithms(current_module, action,
                                 processed_modules=None,
                                 processed_classes=None):
     """ Function that traverses a module to find scikits algorithms.
-    
+
     'scikits.learn' algorithms are identified by the 'fit' 'predict',
     or 'transform' methods. The 'action' function is applied to each found
     algorithm.
@@ -91,7 +91,7 @@ The wrapped instance can be accessed through the ``scikits_alg`` attribute.]
 """
 
 _OUTPUTDIM_ERROR = """'output_dim' keyword not supported.
-                
+
 Please set the output dimensionality using scikits.learn keyword
 arguments (e.g., 'n_components', or 'k'). See the docstring of this
 class for details."""
@@ -111,6 +111,16 @@ def wrap_scikits_classifier(scikits_class):
 
         def __init__(self, input_dim=None, output_dim=None, dtype=None,
                      **kwargs):
+
+            if output_dim is not None:
+                # output_dim and n_components cannot be defined at the same time
+                if kwargs.has_key('n_components'):
+                    msg = ("Dimensionality set both by "
+                           "output_dim=%d and n_components=%d""")
+                    raise ScikitsException(msg % (output_dim,
+                                                  kwargs['n_components']))
+
+
             super(ScikitsNode, self).__init__(input_dim=input_dim,
                                               output_dim=output_dim,
                                               dtype=dtype)
