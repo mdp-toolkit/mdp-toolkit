@@ -230,6 +230,7 @@ def set_configuration():
             else:
                 config.ExternalDepFound('shogun', version)
 
+    # libsvm
     try:
         import svm as libsvm
     except ImportError, exc:
@@ -240,7 +241,7 @@ def set_configuration():
         else:
             config.ExternalDepFound('libsvm', libsvm.libsvm._name)
 
-
+    # joblib
     try:
         import joblib
     except ImportError, exc:
@@ -253,3 +254,15 @@ def set_configuration():
                                    'version %s is too old' % joblib.__version__)
         else:
             config.ExternalDepFound('joblib', joblib.__version__)
+
+    # scikits.learn
+    try:
+        import scikits.learn
+    except ImportError, exc:
+        config.ExternalDepFailed('scikits', exc)
+    else:
+        if os.getenv('MDP_DISABLE_SCIKITS_LEARN'):
+            config.ExternalDepFailed('scikits', 'disabled')
+        else:
+            config.ExternalDepFound('scikits', joblib.__version__)
+

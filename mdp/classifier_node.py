@@ -4,9 +4,9 @@ import operator
 
 class ClassifierNode(PreserveDimNode):
     """A ClassifierNode can be used for classification tasks that should not
-    interfere with the normal execution flow. A Reason for that may be that the
-    labels used for classification are not in the normal feature space but in
-    label space.
+    interfere with the normal execution flow. A reason for that is that the
+    labels used for classification do not form a vector space, and so they don't
+    make much sense in a flow.
     """
     
     def __init__(self, execute_method=None,
@@ -86,7 +86,7 @@ class ClassifierNode(PreserveDimNode):
         elif self.execute_method == "prob":
             return self.prob(x)
 
-
+# XXX are the _train and _stop_training functions necessary anymore?
 class ClassifierCumulator(VariadicCumulator('data', 'labels'), ClassifierNode):
     """A ClassifierCumulator is a Node whose training phase simply collects
     all input data and labels. In this way it is possible to easily implement
@@ -128,6 +128,6 @@ class ClassifierCumulator(VariadicCumulator('data', 'labels'), ClassifierNode):
         """Transform the data and labels lists to array objects and reshape them."""
         self.data = numx.array(self.data, dtype=self.dtype)
         self.data.shape = (self.tlen, self.input_dim)
-        self.labels = numx.array(self.labels, dtype=self.dtype)
+        self.labels = numx.array(self.labels)
         self.labels.shape = (self.tlen)
 

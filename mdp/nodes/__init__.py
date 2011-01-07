@@ -60,10 +60,19 @@ if config.has_libsvm:
     __all__ += ['LibSVMClassifier']
     del libsvm_classifier
 
+if config.has_scikits:
+    from scikits_nodes import scikits_module as scikits
+    __all__.append([name
+                    for name in scikits.__dict__
+                    if name.endswith('Node')])
+    del scikits
+    del scikits_nodes
+
 try:
     del svm_classifiers
 except NameError:
     pass
+
 
 # clean up namespace
 del expansion_nodes

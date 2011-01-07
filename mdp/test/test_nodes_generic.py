@@ -1,19 +1,22 @@
 from __future__ import with_statement
 import py.test
 import inspect
-from mdp import nodes, PreserveDimNode, InconsistentDimException
+
+from mdp import (config, nodes, ClassifierNode,
+                 PreserveDimNode, InconsistentDimException)
 from _tools import *
+
 uniform = numx_rand.random
 
 def _rand_labels(x):
-    return numx.around(uniform(x.shape[0]))
+    return numx_rand.randint(0, 2, size=(x.shape[0],))
 
 def _rand_labels_array(x):
-    return numx.around(uniform(x.shape[0])).reshape((x.shape[0],1))
+    return numx_rand.randint(0, 2, size=(x.shape[0], 1))
 
 def _rand_classification_labels_array(x):
-    labels = numx_rand.randint(0., 2., size=(x.shape[0],))
-    labels[labels==0.] = -1.
+    labels = numx_rand.randint(0, 2, size=(x.shape[0],))
+    labels[labels==0] = -1
     return labels
 
 def _rand_array_halfdim(x):
@@ -266,6 +269,10 @@ def SFA2Node_inp_arg_gen():
 def LinearRegressionNode_inp_arg_gen():
     return uniform(size=(1000, 5))
 
+def _rand_1d(x):
+    return uniform(size=(x.shape[0],))
+
+
 NODES = [
     dict(klass='SFA2Node',
          inp_arg_gen=SFA2Node_inp_arg_gen),
@@ -326,8 +333,18 @@ NODES = [
         init_args=["libsvmmulticlass", (), None, "GaussianKernel"]),
     dict(klass='LibSVMClassifier',
         sup_arg_gen=_rand_labels_array,
-        init_args=["LINEAR","C_SVC"])
+        init_args=["LINEAR","C_SVC"]),
+    dict(klass='NeighborsScikitsNode',
+        sup_arg_gen=_rand_1d)
     ]
+
+# add scikits.learn classifiers if defined
+if config.has_scikits:
+    for node in mdp.nodes.scikits.__dict__.values():
+        if (inspect.isclass(node) 
+            and issubclass(node, ClassifierNode)):
+            NODES.append(dict(klass=node,
+                              sup_arg_gen=_rand_labels))
 
 EXCLUDE_NODES = [nodes.ICANode]
 
@@ -336,19 +353,23 @@ def generate_nodes_list(nodes_dicts):
     # append nodes with additional arguments or supervised if they exist
     visited = []
     for dct in nodes_dicts:
-        klass_name = dct['klass']
-        if hasattr(nodes, klass_name):
+        klass = dct['klass']
+        if type(klass) is str:
+            # some of the nodes on the list may be optional
+            if not hasattr(nodes, klass): continue
             # transform class name into class (needed by automatic tests)
-            klass_class = getattr(nodes, klass_name)
-            dct['klass'] = klass_class
-            nodes_list.append(dct)
-            visited.append(klass_class)
+            klass = getattr(nodes, klass)
+            dct['klass'] = klass
+        nodes_list.append(dct)
+        visited.append(klass)
     # append all other nodes in mdp.nodes
     for attr in dir(nodes):
         if attr[0] == '_':
             continue
         attr = getattr(nodes, attr)
-        if (issubclass(attr, mdp.Node) and attr not in visited
+        if (inspect.isclass(attr)
+            and issubclass(attr, mdp.Node)
+            and attr not in visited
             and attr not in EXCLUDE_NODES):
             nodes_list.append(attr)
     return nodes_list
