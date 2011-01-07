@@ -186,6 +186,19 @@ def get_symeig(numx_linalg):
         config.ExternalDepFound('symeig', 'symeig_fake')
     return symeig
 
+def _joblib_too_old(version):
+    known_good = (0, 4, 3)
+    for part,expected in zip(version.split('.'), known_good):
+        try:
+            p = int(part)
+        except ValueError:
+            break
+        if p < expected:
+            return True
+        if p > expected:
+            return False
+    return False
+
 def set_configuration():
     # set python version
     config.ExternalDepFound('python', '.'.join([str(x)
@@ -249,7 +262,7 @@ def set_configuration():
     else:
         if os.getenv('MDP_DISABLE_JOBLIB'):
             config.ExternalDepFailed('joblib', 'disabled')
-        elif joblib.__version__ < '0.4.3':
+        elif _joblib_too_old(joblib.__version__):
             config.ExternalDepFail('joblib',
                                    'version %s is too old' % joblib.__version__)
         else:
