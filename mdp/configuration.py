@@ -264,5 +264,5 @@ def set_configuration():
         if os.getenv('MDP_DISABLE_SCIKITS_LEARN'):
             config.ExternalDepFailed('scikits', 'disabled')
         else:
-            config.ExternalDepFound('scikits', joblib.__version__)
+            config.ExternalDepFound('scikits', scikits.learn.__version__)
 
