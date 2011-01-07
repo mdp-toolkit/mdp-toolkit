@@ -65,7 +65,7 @@ if config.has_scikits:
     __all__.append([name
                     for name in scikits.__dict__
                     if name.endswith('Node')])
-    del scikits
+    __all__.append('scikits')
     del scikits_nodes
 
 try:
