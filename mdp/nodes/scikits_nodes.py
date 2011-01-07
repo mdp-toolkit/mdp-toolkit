@@ -15,7 +15,13 @@ scikits_modules = ['ann', 'cluster', 'covariance', 'feature_extraction',
                    'pca', 'lda', 'hmm', 'fastica', 'grid_search', 'mixture',
                    'naive_bayes', 'neighbors', 'qda']
 for name in scikits_modules:
-    __import__('scikits.learn.' + name)
+    # not all modules may be available due to missing dependencies
+    # on the user system.
+    # we just ignore failing imports
+    try:
+        __import__('scikits.learn.' + name)
+    except ImportError:
+        pass
 
 # TODO: generalize dtype support
 # TODO: have a look at predict_proba for Classifier.prob
@@ -334,6 +340,6 @@ apply_to_scikits_algorithms(scikits.learn,
 scikits_module = new.module('scikits')
 dict_ = scikits_module.__dict__
 for wrapped_c in scikits_nodes:
-    print wrapped_c.__name__
+    #print wrapped_c.__name__
     dict_[wrapped_c.__name__] = wrapped_c
 
