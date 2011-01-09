@@ -11,8 +11,8 @@ sys_paths = ["/home/wilbert/develop/workspace/MDP",
              "/home/wilbert/develop/workspace/parallelpython/src/pp"]
 
 @requires_parallel_python
-def test_simple(self):
-    scheduler = pp_support.NetworkPPScheduler(
+def test_simple():
+    scheduler = parallel.pp_support.NetworkPPScheduler(
         remote_slaves=remote_slaves,
         timeout=60,
         source_paths=sys_paths,

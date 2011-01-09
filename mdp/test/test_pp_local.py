@@ -4,8 +4,8 @@ from _tools import *
 
 requires_parallel_python = skip_on_condition(
     'True',
-    #"not mdp.config.has('Parallel Python')",
-    "This test requires Parallel Python (which is broken)")
+    #"not mdp.config.has_parallel_python",
+    "This test requires Parallel Python")
 
 @requires_parallel_python
 def test_simple():
@@ -21,7 +21,7 @@ def test_simple():
     # check result
     results.sort()
     results = numx.array(results[:6])
-    assertTrue(numx.all(results == numx.array([0,1,4,9,16,25])))
+    assert (results == numx.array([0,1,4,9,16,25])).all()
 
 @requires_parallel_python
 def test_scheduler_flow():
@@ -49,7 +49,7 @@ def test_scheduler_flow():
     scheduler.shutdown()
     # compare to normal flow
     flow.train(train_iterables)
-    assertTrue(parallel_flow[0].tlen == flow[0].tlen)
+    assert parallel_flow[0].tlen == flow[0].tlen
     y1 = flow.execute(x)
     y2 = parallel_flow.execute(x)
-    assert numx.max(numx.abs(y1 - y2)) < 10**(-precision)
+    assert abs(y1 - y2).max() < 10**(-precision)
