@@ -10,7 +10,7 @@ class PCANode(mdp.Node):
     """Filter the input data through the most significatives of its
     principal components.
 
-    :Internal variables of interest:
+    **Internal variables of interest**
     
       ``self.avg``
           Mean of the input data (available after training).
@@ -279,7 +279,7 @@ class WhiteningNode(PCANode):
     significatives of its principal components. All output
     signals have zero mean, unit variance and are decorrelated.
 
-    :Internal variables of interest:
+    **Internal variables of interest**
 
       ``self.avg``
           Mean of the input data (available after training).

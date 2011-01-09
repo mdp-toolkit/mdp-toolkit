@@ -14,7 +14,7 @@ class NIPALSNode(Cumulator, PCANode):
     principal components to be a small. In this case setting output_dim to be
     a certain fraction of the total variance, say 90%, may be of some help.
 
-    :Internal variables of interest:
+    **Internal variables of interest**
 
       ``self.avg``
           Mean of the input data (available after training).

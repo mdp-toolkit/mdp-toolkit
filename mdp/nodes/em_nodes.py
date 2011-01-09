@@ -25,7 +25,7 @@ class FANode(mdp.Node):
     of the latent variables. The ``generate_input`` method generates
     observations from the prior distribution.
 
-    :Internal variables of interest:
+    **Internal variables of interest**
 
       ``self.mu``
           Mean of the input data (available after training)
@@ -48,10 +48,15 @@ class FANode(mdp.Node):
     def __init__(self, tol=1e-4, max_cycles=100, verbose=False,
                  input_dim=None, output_dim=None, dtype=None):
 
-        """tol -- tolerance (minimum change in log-likelihood before exiting
-                  the EM algorithm)
-           max_cycles -- maximum number of EM cycles
-           verbose -- if True, print log-likelihood during the EM-cycles
+        """
+        :Parameters:
+          tol
+            tolerance (minimum change in log-likelihood before exiting
+            the EM algorithm)
+          max_cycles
+            maximum number of EM cycles
+          verbose
+            if true, print log-likelihood during the EM-cycles
         """
         # Notation as in Max Welling's notes
         super(FANode, self).__init__(input_dim, output_dim, dtype)
@@ -182,11 +187,13 @@ class FANode(mdp.Node):
 
         If the training phase has not been completed yet, call stop_training.
 
-        Input arguments:
-        len_or_y -- If integer, it specified the number of observation
+        :Arguments:
+          len_or_y
+                    If integer, it specified the number of observation
                     to generate. If array, it is used as a set of samples
                     of the latent variables
-        noise -- if True, generation includes the estimated noise
+          noise
+                    if true, generation includes the estimated noise
         """
 
         self._if_training_stop_training()

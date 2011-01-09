@@ -11,7 +11,7 @@ class SFANode(Node):
     Wiskott, L. and Sejnowski, T.J., Slow Feature Analysis: Unsupervised
     Learning of Invariances, Neural Computation, 14(4):715-770 (2002).
 
-    :Internal variables of interest:
+    **Instance variables of interest**
 
       ``self.avg``
           Mean of the input data (available after training)
@@ -24,10 +24,10 @@ class SFANode(Node):
           eigenvalues). [See the docs of the ``get_eta_values`` method for
           more information]
 
-    :Special arguments for constructor:
+    **Special arguments for constructor**
 
       ``include_last_sample``
-          If ``False`` the ``train`` method discards the last sample in every
+          If ``False`` the `train` method discards the last sample in every
           chunk during training when calculating the covariance matrix.
           The last sample is in this case only used for calculating the
           covariance matrix of the derivatives. The switch should be set
@@ -65,7 +65,7 @@ class SFANode(Node):
           ``include_last_sample`` to the default value, i.e. ``True``.
 
           You can even change this behaviour during training. Just set the
-          corresponding switch in the ``train`` method.
+          corresponding switch in the `train` method.
     """
 
     def __init__(self, input_dim=None, output_dim=None, dtype=None,
@@ -180,7 +180,7 @@ class SFANode(Node):
     def get_eta_values(self, t=1):
         """Return the eta values of the slow components learned during
         the training phase. If the training phase has not been completed
-        yet, call stop_training.
+        yet, call `stop_training`.
 
         The delta value of a signal is a measure of its temporal
         variation, and is defined as the mean of the derivative squared,
@@ -190,12 +190,14 @@ class SFANode(Node):
 
         The eta value is a more intuitive measure of temporal variation,
         defined as
-            eta(x) = t/(2*pi) * sqrt(delta(x))
+        eta(x) = t/(2*pi) * sqrt(delta(x))
         If x is a signal of length 't' which consists of a sine function
         that accomplishes exactly N oscillations, then eta(x)=N.
 
-        Input arguments:
-        t -- Sampling frequency in Hz
+        :Parameters:
+           t
+             Sampling frequency in Hz.
+
              The original definition in (Wiskott and Sejnowski, 2002)
              is obtained for t = number of training data points, while
              for t=1 (default), this corresponds to the beta-value defined in

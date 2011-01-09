@@ -179,7 +179,7 @@ class CuBICANode(ICANode):
     Fourth-Order Cumulant Diagonalization.
     IEEE Transactions on Signal Processing, 52(5), pp. 1250-1256.
 
-    :Internal variables of interest:
+    **Internal variables of interest**
 
       ``self.white``
           The whitening node used for preprocessing.
@@ -302,7 +302,7 @@ class FastICANode(ICANode):
     Fast and Robust Fixed-Point Algorithms for Independent Component Analysis
     IEEE Transactions on Neural Networks, 10(3):626-634.
 
-    :Internal variables of interest:
+    **Internal variables of interest**
 
       ``self.white``
           The whitening node used for preprocessing.
@@ -936,7 +936,7 @@ class TDSEPNode(ISFANode, ProjectMatrixMixin):
     in Niklasson, L, Boden, M, and Ziemke, T (Editors), Proc. 8th Int. Conf.
     Artificial Neural Networks (ICANN 1998).
 
-    :Internal variables of interest:
+    **Internal variables of interest**
 
       ``self.white``
           The whitening node used for preprocessing.

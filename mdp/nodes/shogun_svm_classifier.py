@@ -238,16 +238,19 @@ class ShogunSVMClassifier(_SVMClassifier):
         """
         Initialises a new ShogunSVMClassifier.
 
-        Keyword arguments:
+        :Arguments:
+          classifier
+            The classifier to use
+          classifier_arguments
+            Arguments needed for the constructor of the classifier
+          classifier_options
+            Options for the classifier
+          num_threads
+            The number of threads, SHOGUN should use
+            can be set to ``"autodetect"``, then SHOGUN will use
+            the number of CPU cores.
 
-            classifier  -- The classifier to use
-            classifier_arguments -- Arguments needed for the constructor of the classifier
-            classifier_options -- Options for the classifier
-            num_threads -- The number of threads, SHOGUN should use
-                           can be set to "autodetect", then SHOGUN will use
-                           the number of CPU cores.
-                           Attention: this could crash on windows
-
+            Attention: this could crash on windows
         """
         super(ShogunSVMClassifier, self).__init__(input_dim=input_dim,
                                                   output_dim=output_dim,
@@ -300,18 +303,24 @@ class ShogunSVMClassifier(_SVMClassifier):
         We try to guess it right in many cases but in general, you will have to
         consult the SHOGUN documentation.
 
-        kernel    --    The kernel to use. Default parameters are specified for
-                            "PolyKernel"
-                            "GaussianKernel"
-                            "LinearKernel"
-                            "SigmoidKernel"
-                        Further kernels are possible if they are included in
-                        SHOGUN and if kernel_options provides the correct init
-                        arguments.
-        kernel_options -- For known kernels, a dict specifying the options is
-                          possible. Options not included take a default value.
-                          Unknown kernels need an ordered list of constructor
-                          arguments.
+        :Parameters:
+          kernel_name
+            The kernel to use. Default parameters are specified for
+
+            - ``"PolyKernel"``
+            - ``"GaussianKernel"``
+            - ``"LinearKernel"``
+            - ``"SigmoidKernel"``
+
+            Further kernels are possible if they are included in
+            SHOGUN and if kernel_options provides the correct init
+            arguments.
+
+          kernel_options
+            For known kernels, a dict specifying the options is
+            possible. Options not included take a default value.
+            Unknown kernels need an ordered list of constructor
+            arguments.
         """
         if kernel_options is None:
             kernel_options = {}

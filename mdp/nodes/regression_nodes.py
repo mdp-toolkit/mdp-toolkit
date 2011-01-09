@@ -19,7 +19,7 @@ class LinearRegressionNode(Node):
     target data ``y`` to be supplied during training (see ``train``
     docstring).
 
-    :Internal variables of interest:
+    **Internal variables of interest**
 
       ``self.beta``
           The coefficients of the linear regression
@@ -28,17 +28,21 @@ class LinearRegressionNode(Node):
     def __init__(self, with_bias=True, use_pinv=False,
                  input_dim=None, output_dim=None, dtype=None):
         """
-        Input arguments:
+        :Arguments:
 
-        with_bias -- If True, the linear model includes a constant term
-                         True:  y_i = b_0 + b_1 x_1 + ... b_N x_N
-                         False: y_i =       b_1 x_1 + ... b_N x_N
-                     If present, the constant term is stored in the first
-                     column of self.beta
+          with_bias
+            If true, the linear model includes a constant term
 
-        use_pinv -- If true, uses the pseudo-inverse function to compute
-                    the linear regression coefficients, which is more robust
-                    in some cases
+            - True:  y_i = b_0 + b_1 x_1 + ... b_N x_N
+            - False: y_i =       b_1 x_1 + ... b_N x_N
+
+            If present, the constant term is stored in the first
+            column of ``self.beta``.
+
+          use_pinv
+            If true, uses the pseudo-inverse function to compute
+            the linear regression coefficients, which is more robust
+            in some cases
         """
         super(LinearRegressionNode, self).__init__(input_dim, output_dim, dtype)
 
@@ -75,9 +79,11 @@ class LinearRegressionNode(Node):
 
     def _train(self, x, y):
         """
-        Additional input arguments:
-        y -- array of size (x.shape[0], output_dim) that contains the observed
-             output to the input x's.
+        **Additional input arguments**
+
+        y
+          array of size (x.shape[0], output_dim) that contains the observed
+          output to the input x's.
         """
         # initialize internal vars if necessary
         if self._xTx is None:

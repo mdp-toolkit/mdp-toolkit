@@ -28,7 +28,7 @@ class FDANode(mdp.Node):
     example in C. Bishop, Neural Networks for Pattern Recognition,
     Oxford Press, pp. 105-112.
 
-    :Internal variables of interest:
+    **Internal variables of interest**
 
       ``self.avg``
           Mean of the input data (available after training)

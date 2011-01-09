@@ -277,9 +277,12 @@ class KMeansClassifier(ClassifierNode):
     def __init__(self, num_clusters, max_iter=10000, execute_method=None,
                  input_dim=None, output_dim=None, dtype=None):
         """
-        num_clusters -- number of centroids to use = number of clusters
-        max_iter     -- if the algorithm does not reach convergence (for some
-                        numerical reason), stop after max_iter iterations
+        :Arguments:
+          num_clusters
+            number of centroids to use = number of clusters
+          max_iter
+            if the algorithm does not reach convergence (for some
+            numerical reason), stop after ``max_iter`` iterations
         """
         super(KMeansClassifier, self).__init__(execute_method=execute_method,
                                                input_dim=input_dim,
@@ -383,10 +386,13 @@ class GaussianClassifier(ClassifierNode):
 
     def _train(self, x, labels):
         """
-        Additional input arguments:
-        labels -- Can be a list, tuple or array of labels (one for each data point)
-                  or a single label, in which case all input data is assigned to
-                  the same class.
+        :Arguments:
+          x
+              data
+          labels
+              Can be a list, tuple or array of labels (one for each data point)
+              or a single label, in which case all input data is assigned to
+              the same class.
         """
         # if labels is a number, all x's belong to the same class
         if isinstance(labels, (list, tuple, numx.ndarray)):

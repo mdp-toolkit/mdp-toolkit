@@ -11,8 +11,8 @@ def nmonomials(degree, nvariables):
     return int(mdp.utils.comb(nvariables+degree-1, degree))
 
 def expanded_dim(degree, nvariables):
-    """Return the size of a vector of dimension 'nvariables' after
-    a polynomial expansion of degree 'degree'."""
+    """Return the size of a vector of dimension ``nvariables`` after
+    a polynomial expansion of degree ``degree``."""
     return int(mdp.utils.comb(nvariables+degree, degree))-1
 
 class _ExpansionNode(mdp.Node):
@@ -117,17 +117,20 @@ class RBFExpansionNode(mdp.Node):
 
     def __init__(self, centers, sizes, dtype = None):
         """
-        Input arguments:
-        centers -- Centers of the RBFs. The dimensionality
-                   of the centers determines the input dimensionality;
-                   the number of centers determines the output
-                   dimensionalities
-        sizes -- Radius of the RBFs.
-                'sizes' is a list with one element for each RBF, either
-                a scalar (the variance of the RBFs for isotropic RBFs)
-                or a covariance matrix (for anisotropic RBFs).
-                If 'sizes' is not a list, the same variance/covariance
-                is used for all RBFs.
+        :Arguments:
+          centers
+            Centers of the RBFs. The dimensionality
+            of the centers determines the input dimensionality;
+            the number of centers determines the output
+            dimensionalities
+          sizes
+            Radius of the RBFs.
+
+            ``sizes`` is a list with one element for each RBF, either
+            a scalar (the variance of the RBFs for isotropic RBFs)
+            or a covariance matrix (for anisotropic RBFs).
+            If ``sizes`` is not a list, the same variance/covariance
+            is used for all RBFs.
         """
         super(RBFExpansionNode, self).__init__(None, None, dtype)
         self._init_RBF(centers, sizes)

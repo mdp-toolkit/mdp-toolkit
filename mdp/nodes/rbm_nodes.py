@@ -35,7 +35,7 @@ class RBMNode(mdp.Node):
     Hinton, G. E. (2002). Training products of experts by minimizing
     contrastive divergence. Neural Computation, 14(8):1711-1800
 
-    :Internal variables of interest:
+    **Internal variables of interest**
 
       ``self.w``
           Generative weights between hidden and observed variables

@@ -508,10 +508,12 @@ class EtaComputerNode(Node):
         phase. If the training phase has not been completed yet, call
         stop_training.
 
-        Input arguments:
-        t -- Sampling frequency in Hz
+        :Arguments:
+           t
+             Sampling frequency in Hz.
+
              The original definition in (Wiskott and Sejnowski, 2002)
-             is obtained for t=self._tlen, while for t=1 (default),
+             is obtained for ``t=self._tlen``, while for ``t=1`` (default),
              this corresponds to the beta-value defined in
              (Berkes and Wiskott, 2005).
         """
@@ -531,19 +533,26 @@ class NoiseNode(PreserveDimNode):
         """
         Add noise to input signals.
 
-        Input signal:
-        'noise_func' -- A function that generates noise. It must
-                        take a 'size' keyword argument and return
-                        a random array of that size. Default is normal noise.
+        :Arguments:
+          noise_func
+            A function that generates noise. It must
+            take a ``size`` keyword argument and return
+            a random array of that size. Default is normal noise.
 
-        'noise_args' -- Tuple of additional arguments passed to noise_func.
-                        Default is (0,1) for (mean, standard deviation)
-                        of the normal distribution.
+          noise_args
+            Tuple of additional arguments passed to `noise_func`.
+            Default is (0,1) for (mean, standard deviation)
+            of the normal distribution.
 
-        'noise_type' -- Either 'additive' or 'multiplicative':
-                         'additive' returns x + noise
-                         'multiplicative' returns x * (1 + noise)
-                        Default is 'additive'.
+          noise_type
+            Either ``'additive'`` or ``'multiplicative'``.
+
+            'additive'
+               returns ``x + noise``.
+            'multiplicative'
+               returns ``x * (1 + noise)``
+
+            Default is ``'additive'``.
         """
         super(NoiseNode, self).__init__(input_dim=input_dim,
                                         output_dim=output_dim,
@@ -644,9 +653,12 @@ class CutoffNode(PreserveDimNode):
                  input_dim=None, output_dim=None, dtype=None):
         """Initialize node.
 
-        lower_bound -- Data values below this are cut to the lower_bound value.
-            If lower_bound is None no cutoff is performed.
-        upper_bound -- Works like lower_bound.
+        :Parameters:
+          lower_bound
+            Data values below this are cut to the ``lower_bound`` value.
+            If ``lower_bound`` is ``None`` no cutoff is performed.
+          upper_bound
+            Works like ``lower_bound``.
         """
         super(CutoffNode, self).__init__(input_dim=input_dim,
                                          output_dim=output_dim,
@@ -748,17 +760,23 @@ class AdaptiveCutoffNode(HistogramNode):
                  input_dim=None, output_dim=None, dtype=None):
         """Initialize the node.
 
-        lower_cutoff_fraction -- Fraction of data that will be cut off after
+        :Parameters:
+          lower_cutoff_fraction
+            Fraction of data that will be cut off after
             the training phase (assuming the data distribution does not
-            change). If set to None (default value) no cutoff is performed.
-        upper_cutoff_fraction -- Works like lower_cutoff_fraction.
-        hist_fraction -- Defines the fraction of the data that is stored for the
+            change). If set to ``None`` (default value) no cutoff is performed.
+          upper_cutoff_fraction
+            Works like `lower_cutoff_fraction`.
+          hist_fraction
+            Defines the fraction of the data that is stored for the
             histogram.
-        hist_filename -- Filename for the file to which the data history will
-            be pickled after training. The data is pickled when stop_training
-            is called and data_hist is then cleared (to free memory).
-            If filename is None (default value) then data_hist is not cleared
-            and can be directly used after training.
+          hist_filename
+            Filename for the file to which the data history will be
+            pickled after training. The data is pickled when
+            `stop_training` is called and ``data_hist`` is then
+            cleared (to free memory).  If filename is ``None``
+            (default value) then ``data_hist`` is not cleared and can
+            be directly used after training.
         """
         super(AdaptiveCutoffNode, self).__init__(hist_fraction=hist_fraction,
                                                  hist_filename=hist_filename,

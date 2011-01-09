@@ -16,7 +16,7 @@ sqrt = numx.sqrt
 class LLENode(Cumulator):
     """Perform a Locally Linear Embedding analysis on the data.
 
-    :Internal variables of interest:
+    **Internal variables of interest**
 
       ``self.training_projection``
           The LLE projection of the training data (defined when
@@ -40,28 +40,30 @@ class LLENode(Cumulator):
     def __init__(self, k, r=0.001, svd=False, verbose=False,
                  input_dim=None, output_dim=None, dtype=None):
         """
-        Keyword Arguments:
-
-         k -- number of nearest neighbors to use
-         r -- regularization constant; if None, r is automatically
-              computed using the method presented in deRidder and Duin;
-              this method involves solving an eigenvalue problem for
-              every data point, and can slow down the algorithm
-              If specified, it multiplies the trace of the local covariance
-              matrix of the distances, as in Saul & Roweis (faster)
-         svd -- if True, use SVD to compute the projection matrix;
-                SVD is slower but more stable
-         verbose -- if True, displays information about the progress
-                    of the algorithm
-
-         output_dim -- number of dimensions to output
-                       or a float between 0.0 and 1.0. In the latter case,
-                       output_dim specifies the desired fraction of variance
-                       to be exaplained, and the final number of output
-                       dimensions is known at the end of training
-                       (e.g., for 'output_dim=0.95' the algorithm will keep
-                       as many dimensions as necessary in order to explain
-                       95% of the input variance)
+        :Arguments:
+           k
+             number of nearest neighbors to use
+           r
+             regularization constant; if ``None``, ``r`` is automatically
+             computed using the method presented in deRidder and Duin;
+             this method involves solving an eigenvalue problem for
+             every data point, and can slow down the algorithm
+             If specified, it multiplies the trace of the local covariance
+             matrix of the distances, as in Saul & Roweis (faster)
+           svd
+             if true, use SVD to compute the projection matrix;
+             SVD is slower but more stable
+           verbose
+             if true, displays information about the progress
+             of the algorithm
+           output_dim
+             number of dimensions to output or a float between 0.0 and
+             1.0. In the latter case, ``output_dim`` specifies the desired
+             fraction of variance to be explained, and the final
+             number of output dimensions is known at the end of
+             training (e.g., for ``output_dim=0.95`` the algorithm will
+             keep as many dimensions as necessary in order to explain
+             95% of the input variance)
         """
 
         if isinstance(output_dim, float) and output_dim <= 1:
@@ -330,7 +332,7 @@ def _mgs(a):
 class HLLENode(LLENode):
     """Perform a Hessian Locally Linear Embedding analysis on the data.
 
-    :Internal variables of interest:
+    **Internal variables of interest**
 
       ``self.training_projection``
           the HLLE projection of the training data (defined when training
@@ -360,29 +362,31 @@ class HLLENode(LLENode):
     def __init__(self, k, r=0.001, svd=False, verbose=False,
                  input_dim=None, output_dim=None, dtype=None):
         """
-        Keyword Arguments:
-
-         k -- number of nearest neighbors to use; the node will raise
+        :Keyword arguments:
+           k
+              number of nearest neighbors to use; the node will raise
               an MDPWarning if k is smaller than
-                k >= 1 + output_dim + output_dim*(output_dim+1)/2,
+              k >= 1 + output_dim + output_dim*(output_dim+1)/2,
               because in this case a less efficient computation must be
               used, and the ablgorithm can become unstable
-         r -- regularization constant; as opposed to LLENode, it is
+           r
+              regularization constant; as opposed to LLENode, it is
               not possible to compute this constant automatically; it is
               only used during execution
-         svd -- if True, use SVD to compute the projection matrix;
-                SVD is slower but more stable
-         verbose -- if True, displays information about the progress
-                    of the algorithm
-
-         output_dim -- number of dimensions to output
-                       or a float between 0.0 and 1.0. In the latter case,
-                       output_dim specifies the desired fraction of variance
-                       to be exaplained, and the final number of output
-                       dimensions is known at the end of training
-                       (e.g., for 'output_dim=0.95' the algorithm will keep
-                       as many dimensions as necessary in order to explain
-                       95% of the input variance)
+           svd
+              if true, use SVD to compute the projection matrix;
+              SVD is slower but more stable
+           verbose
+              if true, displays information about the progress
+              of the algorithm
+           output_dim
+              number of dimensions to output or a float between 0.0
+              and 1.0. In the latter case, output_dim specifies the
+              desired fraction of variance to be exaplained, and the
+              final number of output dimensions is known at the end of
+              training (e.g., for 'output_dim=0.95' the algorithm will
+              keep as many dimensions as necessary in order to explain
+              95% of the input variance)
         """
         LLENode.__init__(self, k, r, svd, verbose,
                          input_dim, output_dim, dtype)

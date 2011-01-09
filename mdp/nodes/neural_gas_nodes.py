@@ -32,7 +32,7 @@ class GrowingNeuralGasNode(Node):
     A java implementation is available at:
     http://www.neuroinformatik.ruhr-uni-bochum.de/ini/VDM/research/gsn/DemoGNG/GNG.html
 
-    Attributes and methods of interest:
+    **Attributes and methods of interest**
 
     - graph -- The corresponding `mdp.graph.Graph` object
     """
