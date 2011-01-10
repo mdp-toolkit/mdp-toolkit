@@ -3,7 +3,8 @@ from sfa_nodes import SFANode, SFA2Node
 from ica_nodes import ICANode, CuBICANode, FastICANode, TDSEPNode
 from neural_gas_nodes import GrowingNeuralGasNode
 from expansion_nodes import (QuadraticExpansionNode, PolynomialExpansionNode,
-                             RBFExpansionNode, GrowingNeuralGasExpansionNode)
+                             RBFExpansionNode, GrowingNeuralGasExpansionNode,
+                             GeneralExpansionNode)
 from fda_nodes import FDANode
 from em_nodes import FANode
 from misc_nodes import (IdentityNode, HitParadeNode, TimeFramesNode,
@@ -32,7 +33,7 @@ __all__ = ['PCANode', 'WhiteningNode', 'NIPALSNode', 'FastICANode',
            'ISFANode', 'XSFANode', 'FDANode', 'FANode', 'RBMNode',
            'RBMWithLabelsNode', 'GrowingNeuralGasNode', 'LLENode', 'HLLENode',
            'LinearRegressionNode', 'QuadraticExpansionNode',
-           'PolynomialExpansionNode', 'RBFExpansionNode',
+           'PolynomialExpansionNode', 'RBFExpansionNode','GeneralExpansionNode',
            'GrowingNeuralGasExpansionNode', '_expanded_dim', 'SignumClassifier',
            'PerceptronClassifier', 'SimpleMarkovClassifier',
            'DiscreteHopfieldClassifier', 'KMeansClassifier',
@@ -87,9 +88,3 @@ del isfa_nodes
 del rbm_nodes
 del regression_nodes
 del classifier_nodes
-del jade
-del nipals
-del lle_nodes
-del xsfa_nodes
-del config
-del numx_description

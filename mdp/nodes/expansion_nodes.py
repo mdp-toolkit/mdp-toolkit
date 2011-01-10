@@ -2,7 +2,7 @@ __docformat__ = "restructuredtext en"
 
 import mdp
 from mdp import numx, numx_linalg, utils
-from mdp.utils import mult, matmult
+from mdp.utils import mult, matmult, invert_exp_funcs2
 from mdp.nodes import GrowingNeuralGasNode
 
 def nmonomials(degree, nvariables):
@@ -232,9 +232,10 @@ class GrowingNeuralGasExpansionNode(GrowingNeuralGasNode):
         # max_nodes. The default of the GrowingNeuralGasNode is
         # practically unlimited, possibly leading to very
         # high-dimensional expansions.
-        super(GrowingNeuralGasExpansionNode,self).__init__(start_poss=start_poss, eps_b=eps_b, eps_n=eps_n, max_age=max_age,
-                 lambda_=lambda_, alpha=alpha, d=d, max_nodes=max_nodes,
-                 input_dim=input_dim, dtype=dtype)
+        super(GrowingNeuralGasExpansionNode, self).__init__(
+            start_poss=start_poss, eps_b=eps_b, eps_n=eps_n, max_age=max_age,
+            lambda_=lambda_, alpha=alpha, d=d, max_nodes=max_nodes,
+            input_dim=input_dim, dtype=dtype)
 
     def _set_input_dim(self, n):
         # Needs to be overwritten because GrowingNeuralGasNode would
@@ -259,7 +260,8 @@ class GrowingNeuralGasExpansionNode(GrowingNeuralGasNode):
         # set the output dimension to the number of nodes of the neural gas
         self._output_dim = self.get_nodes_position().shape[0]
 
-        # use the nodes of the learned neural gas as centers for a radial basis function expansion.
+        # use the nodes of the learned neural gas as centers for a radial
+        # basis function expansion.
         centers = self.get_nodes_position()
 
         # use the mean distances to the neighbours as size of the RBF expansion
@@ -269,18 +271,99 @@ class GrowingNeuralGasExpansionNode(GrowingNeuralGasNode):
 
             # calculate the size of the current RBF
             pos = node.data.pos
-            sizes.append(numx.array([ ((pos-neighbor.data.pos)**2).sum() for neighbor in node.neighbors() ]).mean())
+            sizes.append(numx.array([((pos-neighbor.data.pos)**2).sum()
+                                     for neighbor in node.neighbors() ]).mean())
 
         # initialize the radial basis function expansion with centers and sizes
-        self.rbf_expansion = mdp.nodes.RBFExpansionNode(centers = centers, sizes = sizes)
+        self.rbf_expansion = mdp.nodes.RBFExpansionNode(centers = centers,
+                                                        sizes = sizes)
 
     def _execute(self,x):
         return self.rbf_expansion(x)
 
 
+class GeneralExpansionNode(_ExpansionNode):
+    """Expands the input signal x according to a list [f_0, ... f_k]
+    of functions.
+
+    Each function f_i should take the whole two-dimensional array x as input and
+    output another two-dimensional array. Moreover the output dimension should
+    depend only on the input dimension.
+    The output of the node is [f_0[x], ... f_k[x]], that is, the concatenation
+    of each one of the outputs f_i[x].
+
+    Original code contributed by Alberto Escalante.
+    """
+    def __init__(self, funcs, input_dim = None, dtype = None):
+        """
+        Short argument description:
+
+          ``funcs``
+               list of functions f_i that realize the expansion
+        """
+        self.funcs = funcs
+        super(GeneralExpansionNode, self).__init__(input_dim, dtype)
+
+    def expanded_dim(self, n):
+        """The expanded dim is computed by directly applying the expansion
+        functions f_i to a zero input of dimension n.
+        """
+        return int(self.output_sizes(n).sum())
+    
+    def output_sizes(self, n):
+        """Return the individual output sizes of each expansion function
+        when the input has lenght n"""
+        sizes = numx.zeros(len(self.funcs))
+        x = numx.zeros((1,n))
+        for i, func in enumerate(self.funcs):
+            outx = func(x)
+            sizes[i] = outx.shape[1]
+        return sizes
+
+    @staticmethod
+    def is_trainable():
+        return False
+
+    @staticmethod
+    def is_invertible():
+        return False
+
+    def pseudo_inverse(self, x, use_hint=None):
+        """Calculate a pseudo inverse of the expansion using
+        scipy.optimize.
+
+        ``use_hint``
+               when calculating the pseudo inverse of the expansion,
+               the hint determines the starting point for the approximation
+
+        This method requires scipy."""
+
+        try:
+            app_x_2, app_ex_x_2 = invert_exp_funcs2(x,
+                                                    self.input_dim,
+                                                    self.funcs,
+                                                    use_hint=use_hint,
+                                                    k=0.001)
+            return app_x_2.astype(self.dtype)
+        except NotImplementedError, exc:
+            raise mdp.MDPException(exc)
+
+    def _execute(self, x):
+        if self.input_dim is None:
+            self.set_input_dim(x.shape[1])
+
+        num_samples = x.shape[0]
+        sizes = self.output_sizes(self.input_dim)
+
+        out = numx.zeros((num_samples, self.output_dim), dtype=self.dtype)
+
+        current_pos = 0
+        for i, func in enumerate(self.funcs):
+            out[:,current_pos:current_pos+sizes[i]] = func(x)
+            current_pos += sizes[i]
+        return out
 
 ### old weave inline code to perform a quadratic expansion
-
 # weave C code executed in the function QuadraticExpansionNode.execute
 ## _EXPANSION_POL2_CCODE = """
 ##   // first of all, copy the linear part

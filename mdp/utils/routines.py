@@ -2,6 +2,7 @@ import mdp
 
 # import numeric module (scipy, Numeric or numarray)
 numx, numx_rand, numx_linalg  = mdp.numx, mdp.numx_rand, mdp.numx_linalg
+numx_description = mdp.numx_description
 import random
 import itertools
 
@@ -419,3 +420,55 @@ def gabor(size, alpha, phi, freq, sgm, x0 = None, res = 1, ampl = 1.):
              *numx.cos(-2.*numx.pi*(u0*x[0]+v0*x[1]) - phi)
 
     return im
+
+def residuals(app_x, y_noisy, exp_funcs, x_orig, k=0.0):
+    """Function used internally by invert_exp_funcs2 to approximate 
+    inverses in ConstantExpansionNode. """
+    app_x = app_x.reshape((1,len(app_x)))
+    app_exp_x =  numx.concatenate([func(app_x) for func in exp_funcs],axis=1)
+   
+    div_y = numx.sqrt(len(y_noisy))
+    div_x = numx.sqrt(len(x_orig))
+    return numx.append( (1-k)*(y_noisy-app_exp_x[0]) / div_y, k * (x_orig - app_x[0])/div_x )
+
+def invert_exp_funcs2(exp_x_noisy, dim_x, exp_funcs, use_hint=False, k=0.0):
+    """Approximates a preimage app_x of exp_x_noisy.
+
+    Returns an array app_x, such that each row of exp_x_noisy is close 
+    to each row of exp_funcs(app_x).   
+
+    use_hint: determines the starting point for the approximation of the
+    preimage. There are three possibilities.
+    if it equals False: starting point is generated with a normal distribution
+    if it equals True: starting point is the first dim_x elements of exp_x_noisy
+    otherwise: use the parameter use_hint itself as the first approximation
+
+    k: weighting factor in [0, 1] to balance between approximation error and 
+       closeness to the starting point. For instance:
+       objective function is to minimize:
+           (1-k) * |exp_funcs(app_x) - exp_x_noisy|/output_dim + 
+               k * |app_x - starting point|/input_dim
+
+    Note: this function requires scipy.
+    """
+    if numx_description != 'scipy':
+        raise NotImplementedError('This function requires scipy.')
+    else:
+        import scipy.optimize
+    num_samples = exp_x_noisy.shape[0]
+
+    if isinstance(use_hint, numx.ndarray):
+        app_x = use_hint.copy()
+    elif use_hint == True:
+        app_x = exp_x_noisy[:,0:dim_x].copy()
+    else:
+        app_x = numx.random.normal(size=(num_samples,dim_x))
+
+    for row in range(num_samples):
+        plsq = scipy.optimize.leastsq(residuals, app_x[row],
+                                      args=(exp_x_noisy[row], exp_funcs,
+                                            app_x[row], k), maxfev=50*dim_x)
+        app_x[row] = plsq[0]
+
+    app_exp_x = numx.concatenate([func(app_x) for func in exp_funcs],axis=1)
+    return app_x, app_exp_x
