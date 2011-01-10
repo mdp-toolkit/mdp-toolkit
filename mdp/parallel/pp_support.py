@@ -19,6 +19,7 @@ import subprocess
 import signal
 import traceback
 import itertools
+import tempfile
 
 import scheduling
 import pp
@@ -151,7 +152,8 @@ class NetworkPPScheduler(PPScheduler):
         slave_kill_filename -- Filename (including path) where a list of the
             remote slave processes should be stored. Together with the
             'kill_slaves' function this makes it possible to quickly all
-            remote slave processes in case something goes wrong. 
+            remote slave processes in case something goes wrong.
+            If None, a tempfile is created.
         """
         self._remote_slaves = remote_slaves
         self._running_remote_slaves = None  # list of strings 'address:port'
@@ -159,7 +161,9 @@ class NetworkPPScheduler(PPScheduler):
         self._ssh_procs = None
         self._remote_pids = None  # list of the pids of the remote servers
         self._port = port
-        self.slave_kill_filename = slave_kill_filename
+        if slave_kill_filename is None:
+            slave_kill_file = tempfile.mkstemp(prefix='MDPtmp-')[1]
+        self.slave_kill_file = slave_kill_file
         self._secret = secret
         self._slave_nice = nice
         self._timeout = timeout
@@ -198,7 +202,8 @@ class NetworkPPScheduler(PPScheduler):
         The slaves that could be started are stored in a textfile, in the form
         name:port:pid
         """
-        slave_kill_file = open(self.slave_kill_filename, "w")
+        slave_kill_file = open(self.slave_kill_file, 'w')
+        
         try:
             self._running_remote_slaves = []
             self._remote_pids = []
@@ -249,10 +254,14 @@ def start_slave(address, port, ncpus="autodetect", secret=SECRET, timeout=3600,
                (nice, port, timeout, secret, ncpus))
         proc.stdin.write(cmd + "\n")
         # send sys_paths
-        source_paths = [python_executable,] + source_paths
         if source_paths is not None:
+            source_paths = [python_executable,] + source_paths
             for sys_path in source_paths:
                 proc.stdin.write(sys_path + "\n")
+            source_paths = [python_executable,] + source_paths
+        else:
+            source_paths = [python_executable,]
+
         proc.stdin.write("_done_" + "\n")
         # print status message from slave
         sys.stdout.write(address + ": " + proc.stdout.readline())
