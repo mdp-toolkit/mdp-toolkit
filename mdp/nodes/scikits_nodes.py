@@ -7,6 +7,10 @@ import inspect
 
 import mdp
 
+class ScikitsException(mdp.NodeException):
+    """Base class for exceptions in nodes wrapping scikits algorithms."""
+    pass
+
 # import all submodules of scikits.learn (to work around lazy import)
 scikits_modules = ['ann', 'cluster', 'covariance', 'feature_extraction',
                    'feature_selection', 'features', 'gaussian_process', 'glm',
@@ -85,6 +89,11 @@ The wrapped instance can be accessed through the 'scikits_alg' attribute.]
 %s
 """
 
+_OUTPUTDIM_ERROR = """'output_dim' keyword not supported.
+                
+Please set the output dimensionality using scikits.learn keyword
+arguments (e.g., 'n_components', or 'k'). See the docstring of this
+class for details."""
 
 def wrap_scikits_classifier(scikits_class):
     """Wrap a scikits.learn classifier as an MDP Node subclass.
@@ -101,6 +110,8 @@ def wrap_scikits_classifier(scikits_class):
 
         def __init__(self, input_dim=None, output_dim=None, dtype=None,
                      **kwargs):
+            if output_dim is not None:
+                raise ScikitsException(_OUTPUTDIM_ERROR)
             super(ScikitsNode, self).__init__(input_dim=input_dim,
                                               output_dim=output_dim,
                                               dtype=dtype)
@@ -176,6 +187,8 @@ def wrap_scikits_transformer(scikits_class):
     class ScikitsNode(mdp.Cumulator):
 
         def __init__(self, input_dim=None, output_dim=None, dtype=None, **kwargs):
+            if output_dim is not None:
+                raise ScikitsException(_OUTPUTDIM_ERROR)
             super(ScikitsNode, self).__init__(input_dim=input_dim,
                                               output_dim=output_dim,
                                               dtype=dtype)
@@ -253,6 +266,8 @@ def wrap_scikits_predictor(scikits_class):
     class ScikitsNode(mdp.Cumulator):
 
         def __init__(self, input_dim=None, output_dim=None, dtype=None, **kwargs):
+            if output_dim is not None:
+                raise ScikitsException(_OUTPUTDIM_ERROR)
             super(ScikitsNode, self).__init__(input_dim=input_dim,
                                               output_dim=output_dim,
                                               dtype=dtype)
