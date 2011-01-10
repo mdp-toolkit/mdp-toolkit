@@ -71,7 +71,7 @@ def testISFANode_SFAPart():
                              whitened=True,
                              sfa_ica_coeff=[1.,0.])(src)
     max_cv = numx.diag(abs(_cov(out,src)))
-    assert_array_almost_equal(max_cv, numx.ones((3,)),6)
+    assert_array_almost_equal(max_cv, numx.ones((3,)),5)
     # mix linearly the signals
     mix = mult(src,uniform((3,3))*2-1)
     out = mdp.nodes.ISFANode(lags=1,
