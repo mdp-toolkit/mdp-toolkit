@@ -111,8 +111,6 @@ def wrap_scikits_classifier(scikits_class):
 
         def __init__(self, input_dim=None, output_dim=None, dtype=None,
                      **kwargs):
-            if output_dim is not None:
-                raise ScikitsException(_OUTPUTDIM_ERROR)
             super(ScikitsNode, self).__init__(input_dim=input_dim,
                                               output_dim=output_dim,
                                               dtype=dtype)
