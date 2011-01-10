@@ -30,3 +30,12 @@ del bihinet_translator
 del trace_inspection
 del trace_slideshow
 del facade
+
+from mdp.utils import fixup_namespace
+fixup_namespace(__name__, None,
+                ('bihinet_translator',
+                 'trace_inspection',
+                 'trace_slideshow',
+                 'facade',
+                 ))
+del fixup_namespace

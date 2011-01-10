@@ -129,10 +129,11 @@ from test import test
 del signal_node
 del linear_flows
 del classifier_node
+del helper_funcs
 del configuration
 
 # explicitly set __all__, mainly needed for epydoc
-__all__ = ['config'
+__all__ = ['config',
            'CheckpointFlow',
            'CheckpointFunction',
            'CheckpointSaveFunction',
@@ -161,7 +162,6 @@ __all__ = ['config'
            'extension_method',
            'get_extensions',
            'graph',
-           'helper_funcs',
            'hinet',
            'nodes',
            'parallel',
@@ -173,3 +173,12 @@ __all__ = ['config'
 if config.has_joblib:
     import caching
     __all__ += ['caching']
+
+utils.fixup_namespace(__name__, __all__,
+                      ('signal_node',
+                       'linear_flows',
+                       'helper_funcs',
+                       'extension',
+                       'classifier_node',
+                       'configuration',
+                       ))

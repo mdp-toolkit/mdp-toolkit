@@ -98,3 +98,31 @@ del lle_nodes
 del xsfa_nodes
 del regression_nodes
 del classifier_nodes
+
+from mdp import utils
+utils.fixup_namespace(__name__, __all__,
+                      ('pca_nodes',
+                       'sfa_nodes',
+                       'ica_nodes',
+                       'neural_gas_nodes',
+                       'expansion_nodes',
+                       'fda_nodes',
+                       'em_nodes',
+                       'misc_nodes',
+                       'isfa_nodes',
+                       'rbm_nodes',
+                       'regression_nodes',
+                       'classifier_nodes',
+                       'jade',
+                       'nipals',
+                       'lle_nodes',
+                       'xsfa_nodes',
+                       'convolution_nodes',
+                       'shogun_svm_classifier',
+                       'svm_classifiers',
+                       'libsvm_classifier',
+                       'svn_classifiers',
+                       'regression_nodes',
+                       'classifier_nodes',
+                       ))
+del utils

@@ -95,4 +95,41 @@ __all__ = ['CovarianceMatrix', 'DelayCovarianceMatrix','CrossCovarianceMatrix',
            'lrep', 'rrep', 'irep',
            'orthogonal_permutations', 'izip_stretched',
            'weighted_choice', 'bool_to_sign', 'sign_to_bool',
-           'OrderedDict', 'gabor']
+           'OrderedDict', 'gabor', 'fixup_namespace']
+
+def without_prefix(name, prefix):
+    thelen = len(prefix)
+    if name.startswith(prefix):
+        return name[len(prefix):]
+    else:
+        return None
+
+import os
+FIXUP_DEBUG = os.getenv('MDPNSDEBUG')
+del os
+
+def fixup_namespace(mname, names, old_modules):
+    import sys
+    module = sys.modules[mname]
+    if names is None:
+        names = [name for name in dir(module) if not name.startswith('_')]
+    if FIXUP_DEBUG:
+        print 'NAMESPACE FIXUP: %s (%s)' % (module, mname)
+    for name in names:
+        item = getattr(module, name)
+        if (hasattr(item, '__module__') and
+            without_prefix(item.__module__, mname + '.') in old_modules):
+            if FIXUP_DEBUG:
+                print 'namespace fixup: {%s => %s}.%s'.format(
+                    item.__module__, mname, item.__name__)
+            item.__module__ = mname
+
+fixup_namespace(__name__, __all__,
+                ('routines',
+                 'introspection',
+                 'quad_forms',
+                 'covariance',
+                 'progress_bar',
+                 'slideshow',
+                 'repo_revision',
+                 ))

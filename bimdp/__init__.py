@@ -99,3 +99,12 @@ import parallel
 del binode
 del biflow
 del inspection
+
+from mdp.utils import fixup_namespace
+fixup_namespace(__name__, None,
+                ('binode',
+                 'biclassifier',
+                 'biflow',
+                 'inspection',
+                 ))
+del fixup_namespace

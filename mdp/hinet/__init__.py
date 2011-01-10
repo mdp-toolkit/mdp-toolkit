@@ -55,3 +55,13 @@ __all__ = ['FlowNode', 'Layer', 'SameInputLayer', 'CloneLayer',
            'HINET_STYLE', 'NewlineWriteFile', 'show_flow',
            'get_2d_image_switchboard'
            ]
+
+from mdp.utils import fixup_namespace
+import sys as _sys
+fixup_namespace(__name__, __all__,
+                ('flownode',
+                 'layer',
+                 'switchboard',
+                 'hinet_translator',
+                 'switchboard_factory',
+                 ))
