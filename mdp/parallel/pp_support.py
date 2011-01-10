@@ -109,9 +109,7 @@ class LocalPPScheduler(PPScheduler):
         result_container -- ResultContainer used to store the results.
         verbose -- If True to get progress reports from the scheduler.
         """
-        ppserver = pp.Server(ncpus=ncpus,
-                             loglevel=logging.INFO,
-                             logstream=sys.stdout)
+        ppserver = pp.Server(ncpus=ncpus)
         super(LocalPPScheduler, self).__init__(ppserver=ppserver,
                                           max_queue_length=max_queue_length,
                                           result_container=result_container,
