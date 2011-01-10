@@ -44,7 +44,7 @@ __all__ = ['PCANode', 'WhiteningNode', 'NIPALSNode', 'FastICANode',
            'IdentityNode', '_OneDimensionalHitParade']
 
 # nodes with external dependencies
-from mdp import config, numx_description
+from mdp import config, numx_description, MDPException
 
 if numx_description == 'scipy':
     from convolution_nodes import Convolution2DNode
@@ -62,17 +62,16 @@ if config.has_libsvm:
     del libsvm_classifier
 
 if config.has_scikits:
-    from scikits_nodes import scikits_module as scikits
-    __all__.append([name
-                    for name in scikits.__dict__
-                    if name.endswith('Node')])
-    __all__.append('scikits')
+    import scikits_nodes
+    for name in scikits_nodes.DICT_:
+        if name.endswith('Node'):
+            globals()[name] = scikits_nodes.DICT_[name]
+            __all__.append(name)
     try:
         del name
     except:
         pass
     del scikits_nodes
-
 try:
     del svm_classifiers
 except NameError:
@@ -93,6 +92,7 @@ del rbm_nodes
 del nipals
 del numx_description
 del config
+del MDPException
 del jade
 del lle_nodes
 del xsfa_nodes

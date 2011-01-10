@@ -4,7 +4,6 @@ This module is based on the 0.6.X branch of scikits.learn .
 """
 import scikits.learn
 import inspect
-import new
 
 import mdp
 
@@ -130,7 +129,7 @@ def wrap_scikits_classifier(scikits_class):
             return ['float32', 'float64']
 
     # modify class name and docstring
-    ScikitsNode.__name__ = scikits_class.__name__ + 'Node'
+    ScikitsNode.__name__ = scikits_class.__name__ + 'ScikitsLearnNode'
     ScikitsNode.__doc__ = _DOC_TEMPLATE % (scikits_class.__module__,
                                            scikits_class.__name__,
                                            scikits_class.__doc__)
@@ -200,7 +199,7 @@ def wrap_scikits_transformer(scikits_class):
             return ['float32', 'float64']
 
     # modify class name and docstring
-    ScikitsNode.__name__ = scikits_class.__name__ + 'Node'
+    ScikitsNode.__name__ = scikits_class.__name__ + 'ScikitsLearnNode'
     ScikitsNode.__doc__ = _DOC_TEMPLATE % (scikits_class.__module__,
                                            scikits_class.__name__,
                                            scikits_class.__doc__)
@@ -272,7 +271,7 @@ def wrap_scikits_predictor(scikits_class):
             return ['float32', 'float64']
 
     # modify class name and docstring
-    ScikitsNode.__name__ = scikits_class.__name__ + 'Node'
+    ScikitsNode.__name__ = scikits_class.__name__ + 'ScikitsLearnNode'
     ScikitsNode.__doc__ = _DOC_TEMPLATE % (scikits_class.__module__,
                                            scikits_class.__name__,
                                            scikits_class.__doc__)
@@ -336,10 +335,10 @@ scikits_nodes = []
 apply_to_scikits_algorithms(scikits.learn,
                             lambda c: wrap_scikits_algorithms(c, scikits_nodes))
 
-# add scikit nodes to module
-scikits_module = new.module('scikits')
-dict_ = scikits_module.__dict__
+# add scikit nodes to dictionary
+#scikits_module = new.module('scikits')
+DICT_ = {}
 for wrapped_c in scikits_nodes:
     #print wrapped_c.__name__
-    dict_[wrapped_c.__name__] = wrapped_c
+    DICT_[wrapped_c.__name__] = wrapped_c
 

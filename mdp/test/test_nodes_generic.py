@@ -346,15 +346,22 @@ NODES = [
         sup_arg_gen=_rand_1d)
     ]
 
-# add scikits.learn classifiers if defined
-if config.has_scikits:
-    for node in mdp.nodes.scikits.__dict__.values():
-        if (inspect.isclass(node) 
-            and issubclass(node, ClassifierNode)):
-            NODES.append(dict(klass=node,
-                              sup_arg_gen=_rand_labels))
-
 EXCLUDE_NODES = [nodes.ICANode]
+
+if config.has_scikits:
+    # XXX
+    # remove all non classifier nodes from the scikits nodes
+    # they do not have a common API that would allow
+    # automatic testing
+    # XXX
+    for node_name in mdp.nodes.__dict__:
+        node = mdp.nodes.__dict__[node_name]
+        if inspect.isclass(node) and node_name.endswith('ScikitsLearnNode'):
+            if issubclass(node, ClassifierNode):
+                NODES.append(dict(klass=node_name,
+                                  sup_arg_gen=_rand_labels))
+            else:
+                EXCLUDE_NODES.append(node)
 
 def generate_nodes_list(nodes_dicts):
     nodes_list = []
