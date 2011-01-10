@@ -225,3 +225,16 @@ def test_switch_cache():
     assert _counter == 2
 
     mdp.caching.deactivate_caching()
+
+
+@requires_joblib
+def test_execute_magic():
+    """Test calling execute with magic while caching."""
+    x = mdp.numx_rand.rand(100, 10)
+
+    node = mdp.nodes.PCANode()
+
+    with mdp.caching.cache():
+        y = node(x)
+        y2 = node(x)
+        assert_array_equal(y, y2)

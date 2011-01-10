@@ -108,10 +108,10 @@ class CacheExecuteExtensionNode(ExtensionNode, Node):
             global _memory
             _cached_methods[self] = _memory.cache(
                 self._non_extension_execute.im_func)
-            # execute pre-execution checks one so that all automatic
+            # execute pre-execution checks once so that all automatic
             # settings of things like dtype and input_dim are done, and
             # caching begins from first execution, not the second
-            self._pre_execution_checks(x, *args, **kwargs)
+            self._pre_execution_checks(x)
 
         return _cached_methods[self](self, x, *args, **kwargs)
 
