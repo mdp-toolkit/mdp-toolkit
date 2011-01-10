@@ -34,8 +34,9 @@ for name in scikits_modules:
 # TODO: wrap_scikits_instance
 # TODO: add scikits.learn availability to test info strings
 # TODO: which tests ? (test that particular algorithm are / are not trainable)
-# XXX: if class defines n_components, allow output_dim, otherwise throw exception
-#      also for classifiers (overwrite _set_output_dim)
+# XXX: at present, it is not possible to automatically set output_dim, as in
+#      scikits.learn the corresponding attribute is sometimes called
+#      'n_components', sometimes 'k' (e.g., algorithms in scikits.learn.cluster)
 
 def apply_to_scikits_algorithms(current_module, action,
                                 processed_modules=None,
