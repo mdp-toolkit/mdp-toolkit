@@ -163,9 +163,14 @@ def wrap_scikits_classifier(scikits_class):
     for mdp_name, scikits_name in methods_dict.items():
         mdp_method = getattr(ScikitsNode, mdp_name)
         scikits_method = getattr(scikits_class, scikits_name)
-        mdp_method.im_func.__doc__ = _DOC_TEMPLATE % (scikits_class.__module__,
-                                                scikits_class.__name__,
-                                                scikits_method.im_func.__doc__)
+        if hasattr(scikits_method, 'im_func'):
+            # some scikits algorithms do not define an __init__ method
+            # the one inherited from 'object' is a
+            # "<slot wrapper '__init__' of 'object' objects>"
+            # which does not have a 'im_func' attribute
+            mdp_method.im_func.__doc__ = _DOC_TEMPLATE % (scikits_class.__module__,
+                                                    scikits_class.__name__,
+                                                    scikits_method.im_func.__doc__)
 
     if scikits_class.__init__.__doc__ is None:
         ScikitsNode.__init__.im_func.__doc__ = _DOC_TEMPLATE % (scikits_class.__module__,
