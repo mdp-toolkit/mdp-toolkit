@@ -6,20 +6,26 @@ requires_scikits = skip_on_condition(
 
 @requires_scikits
 def test_scikits_PCANode_training():
-    node = mdp.nodes.PCAScikitsLearnNode(output_dim=3)
-    x = numx.concatenate((numx_rand.randn(100, 10),
-                          10 + numx_rand.randn(300, 10)))
+    """Check functionality of scikits' PCANode."""
+    node = mdp.nodes.PCAScikitsLearnNode(n_components=2)
+
+    # the first two principal components are the second and fourth axes
+    T = 50000
+    x = numx_rand.randn(T, 4)
+    x[:,1] *= 10.
+    x[:,3] *= 100.
+
     node.train(x)
     node.stop_training()
     y = node.execute(x)
 
-    x.shape, y.shape
-    #node.prob(x)
+    # check dimensionality
+    assert y.shape[1] == 2
+    assert y.shape[0] == T
 
-#GMMNode = wrap_scikits_alg(scikits.learn.glm.ElasticNet)
-#node = GMMNode(alpha=0., dtype='f')
-#x = numpy.random.rand(100,5).astype('f')
-#y = 0.3 * x[:,1] + 0.7 * x[:,4]
-#node.train(x, y)
-#node.stop_training()
-#z = node.execute(x)
+    # arrays should be equal up to sign
+    if (y[:,0]*x[:,3]).mean() < 0.: y[:,0] *= -1.
+    if (y[:,1]*x[:,1]).mean() < 0.: y[:,1] *= -1.
+    assert_array_almost_equal(y[:,0]/100., x[:,3]/100., 1)
+    assert_array_almost_equal(y[:,1]/10., x[:,1]/10., 1)
+
