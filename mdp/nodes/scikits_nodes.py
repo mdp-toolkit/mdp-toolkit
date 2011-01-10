@@ -87,14 +87,20 @@ The wrapped instance can be accessed through the 'scikits_alg' attribute.]
 
 
 def wrap_scikits_classifier(scikits_class):
-    """NEED DOCSTRING."""
+    """Wrap a scikits.learn classifier as an MDP Node subclass.
+
+    The wrapper maps these MDP methods to their scikits.learn equivalents:
+    _stop_training -> fit
+    _label -> predict
+    """
 
     newaxis = mdp.numx.newaxis
 
     # create a wrapper class for a scikits.learn classifier
     class ScikitsNode(mdp.ClassifierCumulator):
 
-        def __init__(self, input_dim=None, output_dim=None, dtype=None, **kwargs):
+        def __init__(self, input_dim=None, output_dim=None, dtype=None,
+                     **kwargs):
             super(ScikitsNode, self).__init__(input_dim=input_dim,
                                               output_dim=output_dim,
                                               dtype=dtype)
@@ -120,9 +126,9 @@ def wrap_scikits_classifier(scikits_class):
             """Return True if the node can be trained, False otherwise."""
             return hasattr(scikits_class, 'fit')
 
-        # NOTE: at this point scikits nodes can only support up to 64-bits floats
-        # because some call numpy.linalg.svd, which for some reason does not
-        # support higher precisions
+        # NOTE: at this point scikits nodes can only support up to
+        # 64-bits floats because some call numpy.linalg.svd, which for
+        # some reason does not support higher precisions
         def _get_supported_dtypes(self):
             """Return the list of dtypes supported by this node.
             The types can be specified in any format allowed by numpy.dtype."""
@@ -159,7 +165,12 @@ def wrap_scikits_classifier(scikits_class):
 
 
 def wrap_scikits_transformer(scikits_class):
-    """NEED DOCSTRING."""
+    """Wrap a scikits.learn transformer as an MDP Node subclass.
+
+    The wrapper maps these MDP methods to their scikits.learn equivalents:
+    _stop_training -> fit
+    _execute -> transform
+    """
 
     # create a wrapper class for a scikits.learn transformer
     class ScikitsNode(mdp.Cumulator):
@@ -190,9 +201,9 @@ def wrap_scikits_transformer(scikits_class):
             """Return True if the node can be trained, False otherwise."""
             return hasattr(scikits_class, 'fit')
 
-        # NOTE: at this point scikits nodes can only support up to 64-bits floats
-        # because some call numpy.linalg.svd, which for some reason does not
-        # support higher precisions
+        # NOTE: at this point scikits nodes can only support up to
+        # 64-bits floats because some call numpy.linalg.svd, which for
+        # some reason does not support higher precisions
         def _get_supported_dtypes(self):
             """Return the list of dtypes supported by this node.
             The types can be specified in any format allowed by numpy.dtype."""
@@ -231,7 +242,12 @@ def wrap_scikits_transformer(scikits_class):
 
 
 def wrap_scikits_predictor(scikits_class):
-    """NEED DOCSTRING."""
+    """Wrap a scikits.learn transformer as an MDP Node subclass.
+
+    The wrapper maps these MDP methods to their scikits.learn equivalents:
+    _stop_training -> fit
+    _execute -> predict
+    """
 
     # create a wrapper class for a scikits.learn predictor
     class ScikitsNode(mdp.Cumulator):
