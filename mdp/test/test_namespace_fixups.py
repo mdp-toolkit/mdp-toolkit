@@ -1,7 +1,7 @@
 import sys
 from _tools import *
 
-def list_dunder_module_dunder(module):
+def _list_module(module):
     try:
         names = module.__all__
     except AttributeError:
@@ -32,10 +32,10 @@ def generate_calls(modules, metafunc):
     for module in modules:
         metafunc.addcall(funcargs=dict(parentname=module), id=module)
 
-def test_dunder_module_dunder(parentname):
+def test_exports(parentname):
     rootname = parentname.split('.')[-1]
     module = sys.modules[parentname]
-    for modname, itemname, item in list_dunder_module_dunder(module):
+    for modname, itemname, item in _list_module(module):
         parts = modname.split('.')
         assert (parts[0] != rootname or
                 modname == parentname), \

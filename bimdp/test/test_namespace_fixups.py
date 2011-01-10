@@ -1,5 +1,5 @@
 from mdp.test.test_namespace_fixups import (generate_calls,
-                                            test_dunder_module_dunder)
+                                            test_exports)
 
 MODULES = ['bimdp',
            'bimdp.nodes',
