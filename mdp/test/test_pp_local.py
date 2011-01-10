@@ -3,8 +3,7 @@ import mdp.parallel as parallel
 from _tools import *
 
 requires_parallel_python = skip_on_condition(
-    'True',
-    #"not mdp.config.has('Parallel Python')",
+    "not mdp.config.has_parallel_python",
     "This test requires Parallel Python (which is broken)")
 
 @requires_parallel_python
@@ -21,12 +20,12 @@ def test_simple():
     # check result
     results.sort()
     results = numx.array(results[:6])
-    assertTrue(numx.all(results == numx.array([0,1,4,9,16,25])))
+    assert(numx.all(results == numx.array([0,1,4,9,16,25])))
 
 @requires_parallel_python
 def test_scheduler_flow():
     """Test local pp scheduler with real Nodes."""
-    precision = 6
+    precision = 10**-6
     node1 = mdp.nodes.PCANode(output_dim=20)
     node2 = mdp.nodes.PolynomialExpansionNode(degree=1)
     node3 = mdp.nodes.SFANode(output_dim=10)
@@ -49,7 +48,7 @@ def test_scheduler_flow():
     scheduler.shutdown()
     # compare to normal flow
     flow.train(train_iterables)
-    assertTrue(parallel_flow[0].tlen == flow[0].tlen)
+    assert(parallel_flow[0].tlen == flow[0].tlen)
     y1 = flow.execute(x)
     y2 = parallel_flow.execute(x)
-    assert numx.max(numx.abs(y1 - y2)) < 10**(-precision)
+    assert_array_almost_equal(abs(y1 - y2), precision)
