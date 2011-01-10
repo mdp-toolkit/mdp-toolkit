@@ -8,7 +8,6 @@ If it is run the kill_slaves function is called.
 import sys
 import os
 import inspect
-import logging
 
 if __name__ == "__main__":
     module_file = os.path.abspath(inspect.getfile(sys._getframe(0)))
@@ -116,8 +115,6 @@ class LocalPPScheduler(PPScheduler):
                                           verbose=verbose)
 
 
-# filename used to store the slave info needed for a complete kill
-SLAVES_TEMPFILE = "networkslaves.txt"
 # default secret
 SECRET = "rosebud"
 
@@ -131,13 +128,13 @@ class NetworkPPScheduler(PPScheduler):
                  result_container=scheduling.ListResultContainer(),
                  verbose=False,
                  remote_slaves=None,
+                 source_paths=None,
                  port=50017,
                  secret=SECRET,
                  nice=-19,
                  timeout=3600,
-                 temp_filename=None,
                  n_local_workers=0,
-                 source_paths=None,
+                 slave_kill_filename=None,
                  remote_python_executable=None):
         """Initialize the remote slaves and create the internal pp scheduler.
 
@@ -147,10 +144,14 @@ class NetworkPPScheduler(PPScheduler):
             containing the name or IP adress of the slave, the second entry
             contains the number of processes (i.e. the pp ncpus parameter).
             The second entry can be None to use 'autodetect'.
-        n_local_workers -- Value of ncpus for this machine.
-        secret -- Secret password to secure the remote slaves.
         source_paths -- List of paths that will be appended to sys.path in the
         slaves.
+        n_local_workers -- Value of ncpus for this machine.
+        secret -- Secret password to secure the remote slaves.
+        slave_kill_filename -- Filename (including path) where a list of the
+            remote slave processes should be stored. Together with the
+            'kill_slaves' function this makes it possible to quickly all
+            remote slave processes in case something goes wrong. 
         """
         self._remote_slaves = remote_slaves
         self._running_remote_slaves = None  # list of strings 'address:port'
@@ -158,13 +159,7 @@ class NetworkPPScheduler(PPScheduler):
         self._ssh_procs = None
         self._remote_pids = None  # list of the pids of the remote servers
         self._port = port
-        if temp_filename is not None:
-            self.temp_filename = temp_filename
-        else:
-            # store the tmp file in this dir so that the kill script works
-            module_file = os.path.abspath(inspect.getfile(sys._getframe(0)))
-            module_path = os.path.dirname(module_file)
-            self.temp_filename = os.path.join(module_path, SLAVES_TEMPFILE)
+        self.slave_kill_filename = slave_kill_filename
         self._secret = secret
         self._slave_nice = nice
         self._timeout = timeout
@@ -178,9 +173,7 @@ class NetworkPPScheduler(PPScheduler):
                           for address in self._running_remote_slaves])
         ppserver = pp.Server(ppservers=ppslaves,
                              ncpus=n_local_workers,
-                             secret=self._secret,
-                             loglevel=logging.INFO,
-                             logstream=sys.stdout)
+                             secret=self._secret)
         super(NetworkPPScheduler, self).__init__(ppserver=ppserver,
                                           max_queue_length=max_queue_length,
                                           result_container=result_container,
@@ -205,7 +198,7 @@ class NetworkPPScheduler(PPScheduler):
         The slaves that could be started are stored in a textfile, in the form
         name:port:pid
         """
-        tempfile = open(self.temp_filename, "w")
+        slave_kill_file = open(self.slave_kill_filename, "w")
         try:
             self._running_remote_slaves = []
             self._remote_pids = []
@@ -221,12 +214,13 @@ class NetworkPPScheduler(PPScheduler):
                                     python_executable=self._python_executable,
                                     timeout=self._timeout)
                 if pid is not None:
-                    tempfile.write("%s:%d:%d\n" % (address, pid, ssh_proc.pid))
+                    slave_kill_file.write("%s:%d:%d\n" %
+                                          (address, pid, ssh_proc.pid))
                 self._running_remote_slaves.append(address)
                 self._remote_pids.append(pid)
                 self._ssh_procs.append(ssh_proc)
         finally:
-            tempfile.close()
+            slave_kill_file.close()
 
 
 ### Helper functions ###
@@ -270,9 +264,9 @@ def start_slave(address, port, ncpus="autodetect", secret=SECRET, timeout=3600,
         traceback.print_exc()
         return None
 
-def kill_slaves(temp_filename=SLAVES_TEMPFILE):
+def kill_slaves(slave_kill_filename):
     """Kill all remote slaves which are stored in the tempfile."""
-    tempfile = open(temp_filename)
+    tempfile = open(slave_kill_filename)
     try:
         for line in tempfile:
             address, pid, ssh_pid = line.split(":")
