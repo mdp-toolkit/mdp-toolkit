@@ -8,7 +8,7 @@
 PARMS = {'2.5': ('numpy', None),
          '2.7': ('numpy', None),
          '3.1': ('numpy', None),
-         '2.6': ('scipy', None, 'parallel_python', 'shogun', 'libsvm', 'joblib'),
+         '2.6': ('scipy', None, 'parallel_python', 'shogun', 'libsvm', 'joblib', 'scikits'),
          }
 
 import os

@@ -19,6 +19,12 @@ def _rand_classification_labels_array(x):
     labels[labels==0] = -1
     return labels
 
+def _dumb_quadratic_expansion(x):
+    dim_x = x.shape[1]
+    return numx.asarray([(x[i].reshape(dim_x,1) *
+                          x[i].reshape(1,dim_x)).flatten()
+                         for i in range(len(x))])
+
 def _rand_array_halfdim(x):
     return uniform(size=(x.shape[0], x.shape[1]//2))
 
@@ -280,6 +286,8 @@ NODES = [
          init_args=[3]),
     dict(klass='RBFExpansionNode',
          init_args=[[[0.]*5, [0.]*5], [1., 1.]]),
+    dict(klass='GeneralExpansionNode',
+         init_args=[[lambda x:x, lambda x: x**2, _dumb_quadratic_expansion]]),
     dict(klass='HitParadeNode',
          init_args=[2, 5]),
     dict(klass='TimeFramesNode',
