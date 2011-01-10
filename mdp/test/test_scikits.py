@@ -6,7 +6,7 @@ requires_scikits = skip_on_condition(
 
 @requires_scikits
 def test_scikits_PCANode_training():
-    node = mdp.nodes.scikits.PCANode(output_dim=3)
+    node = mdp.nodes.PCAScikitsLearnNode(output_dim=3)
     x = numx.concatenate((numx_rand.randn(100, 10),
                           10 + numx_rand.randn(300, 10)))
     node.train(x)
