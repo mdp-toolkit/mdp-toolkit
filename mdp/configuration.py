@@ -186,17 +186,34 @@ def get_symeig(numx_linalg):
         config.ExternalDepFound('symeig', 'symeig_fake')
     return symeig
 
-def _joblib_too_old(version):
-    known_good = (0, 4, 3)
+def _version_too_old(version, known_good):
+    """Return True iff a version is smaller than a tuple of integers.
+
+    This method will return True only if the version string can
+    confidently be said to be smaller than ``known_good``. If
+    the string cannot be parsed as dot-separated-integers, ``None``
+    (which is false) will be returned.
+
+    The comparison is performed part by part, the first non-equal
+    one wins.
+
+    >>> _version_too_old('0.4.3', (0,4,3))
+    False
+    >>> _version_too_old('0.4.2', (0,4,3))
+    True
+    >>> _version_too_old('0.5.devel', (0,4,3))
+    False
+    >>> _version_too_old('0.4.devel', (0,4,3))
+    """
     for part,expected in zip(version.split('.'), known_good):
         try:
             p = int(part)
         except ValueError:
-            break
+            return None
         if p < expected:
             return True
         if p > expected:
-            return False
+            break
     return False
 
 def set_configuration():
@@ -260,13 +277,14 @@ def set_configuration():
     except ImportError, exc:
         config.ExternalDepFailed('joblib', exc)
     else:
+        version = joblib.__version__
         if os.getenv('MDP_DISABLE_JOBLIB'):
             config.ExternalDepFailed('joblib', 'disabled')
-        elif _joblib_too_old(joblib.__version__):
-            config.ExternalDepFail('joblib',
-                                   'version %s is too old' % joblib.__version__)
+        elif _version_too_old(version, (0,4,3)):
+            config.ExternalDepFailed('joblib',
+                                     'version %s is too old' % version)
         else:
-            config.ExternalDepFound('joblib', joblib.__version__)
+            config.ExternalDepFound('joblib', version)
 
     # scikits.learn
     try:
@@ -274,8 +292,11 @@ def set_configuration():
     except ImportError, exc:
         config.ExternalDepFailed('scikits', exc)
     else:
+        version = scikits.learn.__version__
         if os.getenv('MDP_DISABLE_SCIKITS_LEARN'):
             config.ExternalDepFailed('scikits', 'disabled')
+        elif _version_too_old(version, (0,5)):
+            config.ExternalDepFailed('scikits',
+                                     'version %s is too old' % version)
         else:
-            config.ExternalDepFound('scikits', scikits.learn.__version__)
-
+            config.ExternalDepFound('scikits', version)
