@@ -293,7 +293,7 @@ def set_configuration():
         config.ExternalDepFailed('scikits', exc)
     else:
         version = scikits.learn.__version__
-        if os.getenv('MDP_DISABLE_SCIKITS_LEARN'):
+        if os.getenv('MDP_DISABLE_SCIKITS'):
             config.ExternalDepFailed('scikits', 'disabled')
         elif _version_too_old(version, (0,5)):
             config.ExternalDepFailed('scikits',
