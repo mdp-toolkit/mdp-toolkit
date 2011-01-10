@@ -114,21 +114,23 @@ def without_prefix(name, prefix):
     else:
         return None
 
-fixup_debug = False
+import os
+FIXUP_DEBUG = os.getenv('MDPNSDEBUG')
+del os
 
 def fixup_namespace(mname, names, old_modules):
     import sys
     module = sys.modules[mname]
     if names is None:
         names = [name for name in dir(module) if not name.startswith('_')]
-    if fixup_debug:
-        print 'NAMESPACE FIXUP: {0} ({1})'.format(module, mname)
+    if FIXUP_DEBUG:
+        print 'NAMESPACE FIXUP: %s (%s)' % (module, mname)
     for name in names:
         item = getattr(module, name)
         if (hasattr(item, '__module__') and
             without_prefix(item.__module__, mname + '.') in old_modules):
-            if fixup_debug:
-                print 'namespace fixup: {{{0} => {1}}}.{2}'.format(
+            if FIXUP_DEBUG:
+                print 'namespace fixup: {%s => %s}.%s'.format(
                     item.__module__, mname, item.__name__)
             item.__module__ = mname
 

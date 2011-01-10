@@ -39,5 +39,5 @@ def test_dunder_module_dunder(parentname):
         parts = modname.split('.')
         assert (parts[0] != rootname or
                 modname == parentname), \
-                '{0}.{1}.__module_ == {2.__module__} != {3}' \
-                .format(parentname, itemname, item, parentname)
+                '%s.%s.__module_ == %s != %s' % (
+                    parentname, itemname, item.__module__, parentname)
