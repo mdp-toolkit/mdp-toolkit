@@ -8,7 +8,7 @@ class config(object):
 
     This class should not be instantiated, it serves as a namespace
     for dependency information. This information is encoded as a
-    series of attributes called 'has_<dependency>'.
+    series of attributes called ``has_<dependency>``.
 
     Dependency parameters are object which have a a boolean value
     (``True`` if the dependency is available). If False, they contain an
@@ -17,11 +17,11 @@ class config(object):
     the dependency. Those objects should be created by using the helper
     class methods `ExternalDepFound` and `ExternalDepFailed`.
 
-    Dependency parameters are numbered in the order of creation,
-    so the output is predictable::
-
-    >>> config.has_python
+    >>> bool(config.has_python)
     True
+
+    Dependency parameters are numbered in the order of creation,
+    so the output is predictable.
 
     The loading of a dependency can be inhibited by setting the
     environment variable MDP_DISABLE_DEPNAME.

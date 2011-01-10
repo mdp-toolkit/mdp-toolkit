@@ -3,7 +3,7 @@ Extension Mechanism for nodes.
 
 The extension mechanism makes it possible to dynamically add class attributes,
 especially methods, for specific features to node classes
-(e.g. for parallelization nodes need a _fork and _join method).
+(e.g. nodes need a _fork and _join method for parallelization).
 It is also possible for users to define new extensions to provide new
 functionality for MDP nodes without having to modify any MDP code.
 
@@ -67,9 +67,14 @@ def extension_method(ext_name, node_cls, method_name=None):
 
     This function is intended to be used with the decorator syntax.
 
-    ext_name -- String with the name of the extension.
-    node_cls -- Node class for which the method should be registered.
-    method_name -- Name of the extension method (default value is None).
+    :Parameters:
+      ext_name
+        String with the name of the extension.
+      node_cls
+        Node class for which the method should be registered.
+      method_name
+        Name of the extension method (default value is ``None``).
+
         If no value is provided then the name of the function is used.
 
     Note that it is possible to directly call other extension functions, call
@@ -185,7 +190,7 @@ class ExtensionNode(object):
     To call an instance method from a parent class you have multiple options:
 
     - use super, but with the normal node class, e.g.:
-        super(mdp.nodes.SFA2Node, self).method()
+      >>>  super(mdp.nodes.SFA2Node, self).method()      # doctest: +SKIP
       Here SFA2Node was given instead of the extension node class for the
       SFA2Node.
       If the extensions node class is used directly (without the extension
@@ -193,9 +198,10 @@ class ExtensionNode(object):
       careful about the inheritance order and the effect on the MRO.
 
     - call it explicitly using the __func__ attribute [python version < 3]:
-        parent_class.method.__func__(self)
+      >>> parent_class.method.__func__(self)             # doctest: +SKIP
       or [python version >=3]:
-        parent_class.method(self)
+      >>> parent_class.method(self)                      # doctest: +SKIP
+
     To call the original (pre-extension) method in the same class use you
     simply prefix the method name with '_non_extension_' (this is the value
     of the ORIGINAL_ATTR_PREFIX constant in this module).
@@ -364,17 +370,17 @@ def with_extension(extension_name):
 class extension(object):
     """Context manager for MDP extension.
     
-    This allows you to use extensions using a 'with' statement, as in:
+    This allows you to use extensions using a ``with`` statement, as in:
 
-    with mdp.extension('extension_name'):
-        # 'node' is executed with the extension activated
-        node.execute(x)
+    >>> with mdp.extension('extension_name'):
+    ...     # 'node' is executed with the extension activated
+    ...     node.execute(x)
 
     It is also possible to activate multiple extensions at once:
 
-    with mdp.extension(['ext1', 'ext2']):
-        # 'node' is executed with the two extensions activated
-        node.execute(x)
+    >>> with mdp.extension(['ext1', 'ext2']):
+    ...     # 'node' is executed with the two extensions activated
+    ...     node.execute(x)
         
     The deactivation at the end happens only for the extensions that were
     activated by this context manager (not for those that were already active

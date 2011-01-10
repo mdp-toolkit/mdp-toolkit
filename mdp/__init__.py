@@ -166,6 +166,7 @@ __all__ = ['config',
            'nodes',
            'parallel',
            'pca',
+           'fastica',
            'utils',
            'with_extension',
            ]
