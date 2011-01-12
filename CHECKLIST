@@ -1,43 +1,50 @@
 === Checklist for MDP release ===
 
 Before release:
-- make sure new nodes have tests
-- add new nodes to tutorial list
-- new nodes must be in nodes/__init__.py __all__ list
-- change spinner design (tests)
-- make sure that __init__ and setup.py have right version number
-- update date in __copyright__ in __init__
-- make sure tutorial has right version
-- make sure tutorial PDF has right version
-- make sure homepage links to tutorial have right version (links in index.rst
-  and tutorial_src/tutorial.rst)
-- try mdp tests with MDPNUMX=scipy, MDNUMX=numpy, and with parallel
-  python
-- try make doctest in docs repository
+
+- check that new nodes have been explicitly imported in nodes/__init__.py
+  and that they are listed in __all__:
+  - create a list of defined nodes with:
+    git grep 'class .*Node(' mdp/nodes | grep -v test | grep -v Scikits | cut -d ':' -f 2 | cut -d ' ' -f 2 | cut -d '(' -f 1 | sort > /tmp/list_defined
+  - create a list of nodes imported in mdp.nodes with:
+    python -c "import sys, mdp; [sys.stdout.write(i+'\n') for i in  sorted([obj for obj in mdp.nodes.__dict__ if obj.endswith('Node') and not obj.endswith('ScikitsLearnNode')])]" > /tmp/list_in_dict
+  - create a list of nodes in __all__ with:
+    python -c "import sys, mdp; [sys.stdout.write(i+'\n') for i in  sorted([obj for obj in mdp.nodes.__all__ if obj.endswith('Node') and not obj.endswith('ScikitsLearnNode')])]" > /tmp/list_in_all
+  - compare those lists [keep in mind that a couple of nodes are private and
+    so those lists do not need to be exactly equal]
+
+- make sure that __init__ has the right version number
+
+- update date in variable __copyright__ in file __init__
+- test all suported python versions and dependencies with
+  python testall.py /home/tiziano/python/x86_64/lib/pythonVERSION/site-packages
+- "make doctest" in docs repository and fix all failures
 
 During release:
 - update CHANGES: you can generate a new bunch of CHANGES with:
-  git log --no-color --pretty="%w(79,0,12)%ad: %s%n%b" --date=short --since=2009-06-30
-  where the last argument is the date of the last release. You can then prepend 
-  the output of this command to the original CHANGES file!
+  git log --no-color --pretty="format:%w(79,0,12)%ad: %s%+b" --date=short --since=$LASTRELEASE
+  where LASTRELEASE is the date of the last release [LASTRELEASE=2010-05-15]. 
+  You can then prepend the output of this command to the original CHANGES file!
 - update TODO and COPYRIGHT (date)
-- generate tutorial using mdp_html/tutorial_src/genhtml
-- generate API documentation
-- change homepage color
-- generate home page
+- generate tutorial, website, and API documentation
+- change homepage colors
 - short/long description should go: on SF.net description, tutorial,
   home page, modules __init__, software.incf.net.
-- generate installers and source packages and test them
+- generate installers and source packages and test them:
+  for python2: run the gendist script
+  for python3: the windows installer must be generated under windows,
+               following the instructions in gendist
 - create a release notes file
-- tag release in git (tag both mdp-toolkit and docs repos)
+- tag release in git (tag mdp-toolkit repo)
+  git tag -a MDP-3.0
 - push the tag git push --tags
 - update on SF.net:
   release files: 
     - sftp username,mdp-toolkit@frs.sourceforge.net
-    - cd to /home/pfs/project/m/md/mdp-toolkit/mdp-toolkit/
-    - create a new directory for the release, for example for release 2.6:
-       mkdir 2.6
-       cd 2.6
+    - cd /home/pfs/project/m/md/mdp-toolkit/mdp-toolkit/
+    - create a new directory for the release, for example for release 3.0:
+       mkdir 3.0
+       cd 3.0
     - upload the files there: 
       file to upload are: .tar.gz, .zip, .exe, tutorial, release notes file
     - login to sourceforge, go to "Project Admin/File Manager", select the 
