@@ -1,3 +1,5 @@
+__docformat__ = "restructuredtext en"
+
 from pca_nodes import WhiteningNode, PCANode
 from sfa_nodes import SFANode, SFA2Node
 from ica_nodes import ICANode, CuBICANode, FastICANode, TDSEPNode
