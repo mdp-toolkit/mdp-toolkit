@@ -24,7 +24,7 @@ from classifier_nodes import (SignumClassifier, PerceptronClassifier,
 from jade import JADENode
 from nipals import NIPALSNode
 from lle_nodes import LLENode, HLLENode
-from xsfa_nodes import XSFANode
+from xsfa_nodes import XSFANode, NormalizeNode
 
 # import internals for use in test_suites
 from misc_nodes import OneDimensionalHitParade as _OneDimensionalHitParade
@@ -38,7 +38,7 @@ __all__ = ['PCANode', 'WhiteningNode', 'NIPALSNode', 'FastICANode',
            'PolynomialExpansionNode', 'RBFExpansionNode','GeneralExpansionNode',
            'GrowingNeuralGasExpansionNode', '_expanded_dim', 'SignumClassifier',
            'PerceptronClassifier', 'SimpleMarkovClassifier',
-           'DiscreteHopfieldClassifier', 'KMeansClassifier',
+           'DiscreteHopfieldClassifier', 'KMeansClassifier', 'NormalizeNode',
            'GaussianClassifier', 'NearestMeanClassifier', 'KNNClassifier',
            'EtaComputerNode', 'HitParadeNode', 'NoiseNode', 'NormalNoiseNode',
            'TimeFramesNode', 'TimeDelayNode', 'TimeDelaySlidingWindowNode',
