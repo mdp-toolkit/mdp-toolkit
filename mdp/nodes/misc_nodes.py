@@ -23,7 +23,7 @@ class IdentityNode(PreserveDimNode):
 
     @staticmethod
     def is_trainable():
-        False
+        return False
 
 class OneDimensionalHitParade(object):
     """
