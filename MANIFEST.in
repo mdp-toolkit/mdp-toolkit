@@ -1,6 +1,5 @@
 include CHANGES
 include COPYRIGHT
-include INSTALL
 include README
 include TODO
 include mdp/utils/slideshow.css
