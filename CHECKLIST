@@ -47,11 +47,17 @@ During release:
     - create a new directory for the release, for example for release 3.0:
        mkdir 3.0
        cd 3.0
-    - upload the files there (note: the release notes should be named README.txt): 
+    - upload the files there (note: the release notes should be named 
+      README.txt): 
       file to upload are: .tar.gz, .zip, .exe, tutorial, release notes file
-    - login to sourceforge, go to "Files", select the 
-      new created directory, select the release notes file and tag it as "release note", 
-      associate it with the other files
+       - login to sourceforge, go to "Files"
+       - select the new created directory
+       - select the installer for windows and set it as 
+         default for windows by clicking on the "i" icon on the right, 
+       - select the tar.gz for linux and set it as 
+         default for linux and mac
+       - at that point the readme file should be automatically shown as release
+         note file 
     - more info: https://sourceforge.net/apps/trac/sourceforge/wiki/Release%20files%20for%20download
   web: 
   cd mdp_html/html/
