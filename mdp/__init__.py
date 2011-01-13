@@ -13,12 +13,12 @@ successively training or executing all nodes in the network. This
 allows the user to specify complex algorithms as a series of simpler
 data processing steps in a natural way.
 
-The base of available algorithms is steadily increasing and includes,
-to name but the most common, Principal Component Analysis (PCA and
-NIPALS), several Independent Component Analysis algorithms (CuBICA,
-FastICA, TDSEP, JADE, and XSFA), Slow Feature Analysis, Gaussian
-Classifiers, Restricted Boltzmann Machine, and Locally Linear
-Embedding.
+The base of available algorithms is steadily increasing and includes
+signal processing methods (Principal Component Analysis,
+Independent Component Analysis, Slow Feature Analysis),
+manifold learning methods ([Hessian] Locally Linear Embedding),
+several classifiers, probabilistic methods (Factor Analysis, RBM),
+data pre-processing methods, and many others.
 
 Particular care has been taken to make computations efficient in terms
 of speed and memory.  To reduce memory requirements, it is possible to
@@ -54,6 +54,17 @@ make it also a valid educational tool.
 http://mdp-toolkit.sourceforge.net
 """
 __docformat__ = "restructuredtext en"
+
+__short_description__ = (
+    "MDP is a Python library of widely used data processing algorithms"
+    "that can be combined according to a pipeline analogy to build more"
+    "complex data processing software. The base of available algorithms"
+    "includes signal processing methods (Principal Component Analysis,"
+    "Independent Component Analysis, Slow Feature Analysis),"
+    "manifold learning methods ([Hessian] Locally Linear Embedding),"
+    "several classifiers, probabilistic methods (Factor Analysis, RBM),"
+    "data pre-processing methods, and many others."
+    )
 
 class MDPException(Exception):
     """Base class for exceptions in MDP."""
