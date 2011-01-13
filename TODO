@@ -37,9 +37,6 @@ for MDP 3.1
 - provide different versions of the MDP logo which includes the
   website address, possibly one higher quality print version,
   available in "how to cite" section
-- short and long description in a single file, automatically 
-  updated everywhere (tutorial, sf.net, setup.py, webpage, 
-  MDP announcement, ...) 
 - Use the new property decorators when migrating to Python 2.6 (see
   http://docs.python.org/library/functions.html#property).
 - kalman filters
