@@ -1,8 +1,10 @@
 """
 Adapters for the Parallel Python library (http://www.parallelpython.com).
 
-This python file also serves as the emergency kill script for remote slaves.
-If it is run the kill_slaves function is called.
+The PPScheduler class uses an existing pp scheduler and is a simple adapter.
+
+LocalPPScheduler includes the creation of a local pp scheduler.
+NetworkPPScheduler includes the management of the remote slaves via SSH.
 """
 
 import sys
@@ -18,7 +20,6 @@ import time
 import subprocess
 import signal
 import traceback
-import itertools
 import tempfile
 
 import scheduling
@@ -120,9 +121,13 @@ class LocalPPScheduler(PPScheduler):
 SECRET = "rosebud"
 
 class NetworkPPScheduler(PPScheduler):
-    """Scheduler which can manage pp remote servers.
+    """Scheduler which can manage pp remote servers (requires SSH).
 
     The remote slave servers are automatically started and killed at the end.
+    
+    Since the slaves are started via SSH this schduler does not work on normal
+    Windows systems. On such systems you can start the pp slaves
+    manually and then use the standard PPScheduler. 
     """
 
     def __init__(self, max_queue_length=1,
@@ -168,9 +173,12 @@ class NetworkPPScheduler(PPScheduler):
         self._slave_nice = nice
         self._timeout = timeout
         self._source_paths = source_paths
+        if remote_python_executable is None:
+            remote_python_executable = sys.executable
         self._python_executable = remote_python_executable
         module_file = os.path.abspath(inspect.getfile(sys._getframe(0)))
         self._script_path = os.path.dirname(module_file)
+        self.verbose = verbose
         # start ppserver
         self._start_slaves()
         ppslaves = tuple(["%s:%d" % (address, self._port)
@@ -185,17 +193,63 @@ class NetworkPPScheduler(PPScheduler):
 
     def _shutdown(self):
         """Shutdown all slaves."""
-
-        for ssh_proc, pid, address in itertools.izip(self._ssh_procs,
-                                self._remote_pids, self._running_remote_slaves):
-            print "killing slave " + address
-            ssh_proc.stdin.write("kill %d\n" % pid)
-            ssh_proc.stdin.flush()
-            # a SIGKILL might prevent the kill command transmission
+        for ssh_proc in self._ssh_procs:
             os.kill(ssh_proc.pid, signal.SIGQUIT)
-        print "all slaves killed"
-        super(NetworkPPScheduler, self).shutdown()
+        super(NetworkPPScheduler, self)._shutdown()
+        if self.verbose:
+            print "All slaves shut down."
 
+    def start_slave(self, address, ncpus="autodetect"):
+        """Start a single remote slave.
+    
+        The return value is a tuple of the ssh process handle and
+        the remote pid.
+        """
+        try:
+            print "starting slave " + address + " ..."
+            proc = subprocess.Popen(["ssh","-T", "%s" % address],
+                                    stdin=subprocess.PIPE,
+                                    stdout=subprocess.PIPE,
+                                    stderr=subprocess.STDOUT)
+            proc.stdin.write("cd %s\n" % self._script_path)
+            cmd = (self._python_executable +
+                   " pp_slave_script.py  %d %d %d %s %d" %
+                   (self._slave_nice, self._port, self._timeout, self._secret,
+                    ncpus))
+            proc.stdin.write(cmd + "\n")
+            # send sys_paths
+            if self._source_paths is not None:
+                source_paths = [self._python_executable,] + self._source_paths
+                for sys_path in source_paths:
+                    proc.stdin.write(sys_path + "\n")
+                source_paths = [self._python_executable,] + source_paths
+            else:
+                source_paths = [self._python_executable,]
+    
+            proc.stdin.write("_done_" + "\n")
+            # print status message from slave
+            sys.stdout.write(address + ": " + proc.stdout.readline())
+            # get PID for remote slave process
+            pid = None
+            if self.verbose:
+                print "*** output from slave %s ***" % address
+            while pid is None:
+                # the slave process might first output some hello message
+                try:
+                    value = proc.stdout.readline()
+                    if self.verbose:
+                        print value
+                    pid = int(value)
+                except ValueError:
+                    pass
+            if self.verbose:
+                print "*** output end ***"
+            return (proc, pid)
+        except:
+            print "Initialization of slave %s has failed." % address
+            traceback.print_exc()
+            return None
+        
     def _start_slaves(self):
         """Start remote slaves.
 
@@ -209,15 +263,7 @@ class NetworkPPScheduler(PPScheduler):
             self._remote_pids = []
             self._ssh_procs = []
             for (address, ncpus) in self._remote_slaves:
-                ssh_proc, pid = start_slave(
-                                    address=address, port=self._port,
-                                    ncpus=ncpus,
-                                    secret=self._secret,
-                                    nice=self._slave_nice,
-                                    script_path=self._script_path,
-                                    source_paths=self._source_paths,
-                                    python_executable=self._python_executable,
-                                    timeout=self._timeout)
+                ssh_proc, pid = self.start_slave(address, ncpus=ncpus)
                 if pid is not None:
                     slave_kill_file.write("%s:%d:%d\n" %
                                           (address, pid, ssh_proc.pid))
@@ -228,53 +274,12 @@ class NetworkPPScheduler(PPScheduler):
             slave_kill_file.close()
 
 
-### Helper functions ###
-
-def start_slave(address, port, ncpus="autodetect", secret=SECRET, timeout=3600,
-                nice=-19, script_path="",
-                source_paths=None, python_executable=None):
-    """Start a single remote slave.
-
-    The return value is a tuple of the ssh process handle and the remote pid.
-
-    script_path -- Path to pp slave script file (pp_slave_script).
-    source_paths -- List of paths that will be appended to sys.path in the
-        slaves.
-    """
-    try:
-        if python_executable is None:
-            python_executable = sys.executable
-        print "starting " + address + " ..."
-        proc = subprocess.Popen(["ssh","-T", "%s" % address],
-                                stdin=subprocess.PIPE,
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.STDOUT)
-        proc.stdin.write("cd %s\n" % script_path)
-        cmd = (python_executable + " pp_slave_script.py  %d %d %d %s %d" %
-               (nice, port, timeout, secret, ncpus))
-        proc.stdin.write(cmd + "\n")
-        # send sys_paths
-        if source_paths is not None:
-            source_paths = [python_executable,] + source_paths
-            for sys_path in source_paths:
-                proc.stdin.write(sys_path + "\n")
-            source_paths = [python_executable,] + source_paths
-        else:
-            source_paths = [python_executable,]
-
-        proc.stdin.write("_done_" + "\n")
-        # print status message from slave
-        sys.stdout.write(address + ": " + proc.stdout.readline())
-        # get PID for remote slave process
-        pid = int(proc.stdout.readline())
-        return (proc, pid)
-    except:
-        print "Initialization of slave %s has failed." % address
-        traceback.print_exc()
-        return None
-
 def kill_slaves(slave_kill_filename):
-    """Kill all remote slaves which are stored in the tempfile."""
+    """Kill all remote slaves which are stored in the given file.
+    
+    This functions is only meant for emergency situations, when something
+    went wrong and the slaves have to be killed manually.
+    """
     tempfile = open(slave_kill_filename)
     try:
         for line in tempfile:

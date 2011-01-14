@@ -42,8 +42,9 @@ def main():
         # return the pid via stdout
         print proc.pid
         sys.stdout.flush()
-    except:
+    except Exception, e:
         print "Error while starting the server process."
+        print e
         print -1
         sys.stdout.flush()
 
