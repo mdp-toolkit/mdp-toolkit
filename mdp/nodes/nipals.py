@@ -24,6 +24,7 @@ class NIPALSNode(Cumulator, PCANode):
 
       ``self.v``
           Transposed of the projection matrix (available after training).
+          
       ``self.explained_variance``
           When output_dim has been specified as a fraction of the total
           variance, this is the fraction of the total variance that is actually
