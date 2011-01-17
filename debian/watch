@@ -2,6 +2,6 @@
 version=3
 
 # Rely on numerical ID of the project
-http://sourceforge.net/project/showfiles.php?group_id=116959&package_id=127225  .*MDP-([\d\.]+)\.tar\.gz.*
-
+# http://sourceforge.net/project/showfiles.php?group_id=116959&package_id=127225  .*MDP-([\d\.]+)\.tar\.gz.*
+http://sf.net/mdp-toolkit/MDP-(.+)\.tar\.gz
 
