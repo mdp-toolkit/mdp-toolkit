@@ -78,10 +78,7 @@ During release:
   
   - pypi [you need an account here: http://pypi.python.org/pypi]:
      within a clone of the mdp-toolkit repo: python setup.py register
-     after registering, login to the PyPi <http://pypi.python.org/pypi?%3Aaction=login>
-	 and update the download URL to something like:
-	 http://sourceforge.net/projects/mdp-toolkit/files/mdp-toolkit/3.0/MDP-3.0.tar.gz/download
-	 this is for easy_install and pip
+  
   - mloss.org: https://mloss.org/software/update/60/
  
   - software.incf.org: http://software.incf.net/software/modular-toolkit-for-data-processing-mdp/
