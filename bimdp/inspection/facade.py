@@ -49,6 +49,12 @@ def _open_custom_brower(open_browser, url):
     else:
         webbrowser.open(url)
 
+
+class NoTrainingTraceException(Exception):
+    """Exception for empty traces, due to an untrainable flow."""
+    pass
+
+
 def inspect_training(snapshot_path, x_samples, msg_samples=None,
                      stop_messages=None, inspection_path=None,
                      trace_inspector=None, debug=False,
@@ -98,6 +104,10 @@ def inspect_training(snapshot_path, x_samples, msg_samples=None,
         del all_kwargs["all_kwargs"]
         slide_filenames, slide_node_ids, index_table = \
             _trace_biflow_training(**all_kwargs)
+        if not slide_filenames:
+            err = ("No inspection slides were generated, probably because "
+                   "there are no untrained nodes in the given flow.")
+            raise NoTrainingTraceException(err)
     except TraceDebugException, debug_exception:
         slide_filenames, slide_node_ids, index_table = debug_exception.result
     if index_table is None:
@@ -115,6 +125,8 @@ def show_training(flow, data_iterables, msg_iterables=None, stop_messages=None,
     """Perform both the flow training and the training inspection.
 
     The return value is the filename of the slideshow HTML file.
+    This function must be used with the untrained flow (no previous call
+    of Flow.train is required, the training happens here).
 
     This function is more convenient than inspect_training since it includes
     all required steps, but it is also less customizable. After everything

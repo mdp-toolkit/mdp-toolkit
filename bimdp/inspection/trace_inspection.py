@@ -897,6 +897,4 @@ def _trace_biflow_training(snapshot_path, inspection_path, css_filename,
             slide_node_ids += stop_ids
         debug_exception.result = (slide_filenames, slide_node_ids, index_table)
         raise
-    if i_snapshot == 0:
-        return None  # no snapshots were found
     return slide_filenames, slide_node_ids, index_table
