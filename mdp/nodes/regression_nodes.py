@@ -1,3 +1,5 @@
+__docformat__ = "restructuredtext en"
+
 from mdp import numx, numx_linalg, utils, Node, NodeException, TrainingException
 from mdp.utils import mult
 
@@ -6,38 +8,44 @@ from mdp.utils import mult
 
 class LinearRegressionNode(Node):
     """Compute least-square, multivariate linear regression on the input
-    data, i.e., learn coefficients b_j so that
+    data, i.e., learn coefficients ``b_j`` so that::
 
       y_i = b_0 + b_1 x_1 + ... b_N x_N ,
 
-    for i = 1 ... M, minimizes the square error given the training x's
-    and y's.
+    for ``i = 1 ... M``, minimizes the square error given the training ``x``'s
+    and ``y``'s.
 
-    This is a supervised learning node, and requires input data x and
-    target data y to be supplied during training (see 'train'
+    This is a supervised learning node, and requires input data ``x`` and
+    target data ``y`` to be supplied during training (see ``train``
     docstring).
 
-    Internal variables of interest:
-    self.beta -- the coefficients of the linear regression
+    **Internal variables of interest**
+
+      ``self.beta``
+          The coefficients of the linear regression
     """
 
     def __init__(self, with_bias=True, use_pinv=False,
                  input_dim=None, output_dim=None, dtype=None):
         """
-        Input arguments:
+        :Arguments:
 
-        with_bias -- If True, the linear model includes a constant term
-                         True:  y_i = b_0 + b_1 x_1 + ... b_N x_N
-                         False: y_i =       b_1 x_1 + ... b_N x_N
-                     If present, the constant term is stored in the first
-                     column of self.beta
+          with_bias
+            If true, the linear model includes a constant term
 
-        use_pinv -- If true, uses the pseudo-inverse function to compute
-                    the linear regression coefficients, which is more robust
-                    in some cases
+            - True:  y_i = b_0 + b_1 x_1 + ... b_N x_N
+            - False: y_i =       b_1 x_1 + ... b_N x_N
+
+            If present, the constant term is stored in the first
+            column of ``self.beta``.
+
+          use_pinv
+            If true, uses the pseudo-inverse function to compute
+            the linear regression coefficients, which is more robust
+            in some cases
         """
         super(LinearRegressionNode, self).__init__(input_dim, output_dim, dtype)
-        
+
         self.with_bias = with_bias
         self.use_pinv = use_pinv
 
@@ -54,10 +62,8 @@ class LinearRegressionNode(Node):
         # if with_bias=True, beta includes the bias term in the first column
         self.beta = None
 
-    def _get_supported_dtypes(self):
-        return ['float32', 'float64']
-
-    def is_invertible(self):
+    @staticmethod
+    def is_invertible():
         return False
 
     def _check_train_args(self, x, y):
@@ -73,9 +79,11 @@ class LinearRegressionNode(Node):
 
     def _train(self, x, y):
         """
-        Additional input arguments:
-        y -- array of size (x.shape[0], output_dim) that contains the observed
-             output to the input x's.
+        **Additional input arguments**
+
+        y
+          array of size (x.shape[0], output_dim) that contains the observed
+          output to the input x's.
         """
         # initialize internal vars if necessary
         if self._xTx is None:
@@ -102,7 +110,7 @@ class LinearRegressionNode(Node):
                 invfun = utils.inv
             inv_xTx = invfun(self._xTx)
         except numx_linalg.LinAlgError, exception:
-            errstr = (str(exception) + 
+            errstr = (str(exception) +
                       "\n Input data may be redundant (i.e., some of the " +
                       "variables may be linearly dependent).")
             raise NodeException(errstr)
@@ -124,5 +132,3 @@ class LinearRegressionNode(Node):
         """
         return numx.concatenate((numx.ones((x.shape[0], 1),
                                            dtype=self.dtype), x), axis=1)
-
-

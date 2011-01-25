@@ -1,3 +1,5 @@
+__docformat__ = "restructuredtext en"
+
 import math
 import mdp
 from isfa_nodes import ISFANode
@@ -24,7 +26,7 @@ class ProjectMatrixMixin(object):
     def get_recmatrix(self, transposed=1):
         """Return the back-projection matrix (i.e. the reconstruction matrix).
         Note that if the unknown sources are white, this is a good
-        approximation of the mixing matrix (up to a permutation matrix). 
+        approximation of the mixing matrix (up to a permutation matrix).
         """
         self._if_training_stop_training()
         Q = self.filters.T
@@ -44,9 +46,8 @@ class ICANode(mdp.Cumulator, mdp.Node, ProjectMatrixMixin):
     among others in
     Hyvarinen A., Karhunen J., Oja E. (2001). Independent Component Analysis,
     Wiley.
-
     """
-    
+
     def __init__(self, limit = 0.001, telescope = False, verbose = False,
                  whitened = False, white_comp = None, white_parm = None,
                  input_dim = None, dtype = None):
@@ -91,17 +92,13 @@ class ICANode(mdp.Cumulator, mdp.Node, ProjectMatrixMixin):
             self.output_dim = n
         elif self.white_comp is None:
             self.output_dim = n
-            
-    def _get_supported_dtypes(self):
-        """Return the list of dtypes supported by this node."""
-        return ['float32', 'float64']
 
     def _stop_training(self):
         """Whiten data if needed and call the 'core' routine to perform ICA.
            Take care of telescope-mode if needed.
         """
         super(ICANode, self)._stop_training()
-        
+
         verbose = self.verbose
         core = self.core
         limit = self.limit
@@ -116,13 +113,13 @@ class ICANode(mdp.Cumulator, mdp.Node, ProjectMatrixMixin):
             white.train(self.data)
             self.data = white.execute(self.data)
             self.white = white
-        
+
         # if output_dim not set, set it now
         if self.output_dim is None:
             self.output_dim = self.input_dim
 
         data = self.data
-        
+
         # call 'core' in telescope mode if needed
         if self.telescope:
             minpow = math.frexp(self.input_dim*10)[1]
@@ -174,21 +171,25 @@ class CuBICANode(ICANode):
     out of memory when you have many components and many time samples.
 
     As an alternative to this batch mode you might consider the telescope
-    mode (see the docs of the __init__ function).
-    
+    mode (see the docs of the ``__init__`` method).
+
     Reference:
     Blaschke, T. and Wiskott, L. (2003).
     CuBICA: Independent Component Analysis by Simultaneous Third- and
     Fourth-Order Cumulant Diagonalization.
     IEEE Transactions on Signal Processing, 52(5), pp. 1250-1256.
 
+    **Internal variables of interest**
 
-    Internal variables of interest:
+      ``self.white``
+          The whitening node used for preprocessing.
 
-      self.white       -- the whitening node used for preprocessing.
-      self.filters     -- the ICA filters matrix (this is the transposed of the
-                        projection matrix after whitening).
-      self.convergence -- the value of the convergence threshold.
+      ``self.filters``
+          The ICA filters matrix (this is the transposed of the
+          projection matrix after whitening).
+
+      ``self.convergence``
+          The value of the convergence threshold.
     """
 
     def core(self, data):
@@ -206,7 +207,7 @@ class CuBICANode(ICANode):
         limit = self.limit
         comp = x.shape[1]
         tlen = x.shape[0]
-        
+
         # some constants
         ct_c34 = 0.0625
         ct_s34 = 0.25
@@ -220,7 +221,7 @@ class CuBICANode(ICANode):
         num = int(1+round(numx.sqrt(comp)))
         count = 0
 
-        # start sweeping 
+        # start sweeping
         for k in range(num):
             maxangle = 0
             for i in range(comp - 1):
@@ -240,7 +241,7 @@ class CuBICANode(ICANode):
                     C1122 = mult(sq1, sq2)/tlen - 1.
                     C1222 = mult(sq2*u2, u1)/tlen
                     C2222 = mult(sq2, sq2)/tlen - 3.
-                                        
+
                     c_34 = ct_c34 * (    (C111*C111+C222*C222)-
                                       3.*(C112*C112+C122*C122)-
                                       2.*(C111*C122+C112*C222)  )
@@ -270,19 +271,19 @@ class CuBICANode(ICANode):
 
                     # keep track of maximum angle of rotation
                     maxangle = max(maxangle, abs(float(phi_max)))
-                    
+
                 count += 1
             self.maxangle.append(maxangle)
             if maxangle <= limit:
                 break
-        
+
         self.iter = k
         if verbose:
             print "\nSweeps: ", k
         self.filters = Qt
 
         # return the convergence criterium
-        return maxangle 
+        return maxangle
 
 class FastICANode(ICANode):
     """
@@ -295,33 +296,39 @@ class FastICANode(ICANode):
 
     FastICA does not support the telescope mode (the convergence
     criterium is not robust in telescope mode).
-    
+
     Reference:
     Aapo Hyvarinen (1999).
     Fast and Robust Fixed-Point Algorithms for Independent Component Analysis
     IEEE Transactions on Neural Networks, 10(3):626-634.
 
-    Internal variables of interest:
+    **Internal variables of interest**
 
-      self.white       -- the whitening node used for preprocessing.
-      self.filters     -- the ICA filters matrix (this is the transposed of the
-                        projection matrix after whitening).
-      self.convergence -- the value of the convergence threshold.
+      ``self.white``
+          The whitening node used for preprocessing.
+
+      ``self.filters``
+          The ICA filters matrix (this is the transposed of the
+          projection matrix after whitening).
+
+      ``self.convergence``
+          The value of the convergence threshold.
 
     History:
-    - 1.4.1998  created for Matlab by Jarmo Hurri, Hugo Gavert,
-                Jaakko Sarela, and Aapo Hyvarinen
+    
+    - 1.4.1998 created for Matlab by Jarmo Hurri, Hugo Gavert, Jaakko Sarela,
+      and Aapo Hyvarinen
     - 7.3.2003  modified for Python by Thomas Wendler
     - 3.6.2004  rewritten and adapted for scipy and MDP by MDP's authors
     - 25.5.2005 now independent from scipy. Requires Numeric or numarray
     - 26.6.2006 converted to numpy
-    - 14.9.2007 updated to Matlab version 2.5 
+    - 14.9.2007 updated to Matlab version 2.5
     """
-    
+
     def __init__(self, approach = 'defl', g = 'pow3', guess = None,
                  fine_g = 'pow3', mu = 1, stabilization = False,
                  sample_size = 1, fine_tanh = 1, fine_gaus = 1,
-                 max_it = 1000, max_it_fine = 100, 
+                 max_it = 1000, max_it_fine = 100,
                  failures = 5, limit = 0.001, verbose = False,
                  whitened = False, white_comp = None, white_parm = None,
                  input_dim = None, dtype=None):
@@ -337,13 +344,13 @@ class FastICANode(ICANode):
                       number of whitened components to keep during the
                       calculation (i.e., the input dimensions are reduced to
                       white_comp by keeping the components of largest variance).
-        
+
         white_parm -- a dictionary with additional parameters for whitening.
                       It is passed directly to the WhiteningNode constructor.
                       Ex: white_parm = { 'svd' : True }
 
         limit -- convergence threshold.
-        
+
         Specific for FastICA:
 
         approach  -- Approach to use. Possible values are:
@@ -371,18 +378,18 @@ class FastICANode(ICANode):
 
       sample_size -- Percentage of samples used in one iteration. If
                      sample_size < 1, samples are chosen in random order.
-                     
+
         fine_tanh -- parameter for 'tanh' nonlinearity
         fine_gaus -- parameter for 'gaus' nonlinearity
 
             guess -- initial guess for the mixing matrix (ignored if None)
-            
+
            max_it -- maximum number of iterations
 
       max_it_fine -- maximum number of iterations for fine tuning
 
          failures -- maximum number of failures to allow in deflation mode
-         
+
         """
         super(FastICANode, self).__init__(limit, False, verbose, whitened,
                                           white_comp, white_parm, input_dim,
@@ -435,7 +442,7 @@ class FastICANode(ICANode):
         # The logic behind the used_g hell is beyond my understanding :-)))
 
         X = data.T
-        
+
         # casted constants
         comp = X.shape[0]
         tlen = X.shape[1]
@@ -497,14 +504,14 @@ class FastICANode(ICANode):
             else:
                 stabilization = True
                 gFine = gOrig
-            fine_tuning = False   
+            fine_tuning = False
 
         muK = 0.01
         used_g = gOrig
         stroke = 0
         fine_tuned = False
         lng = False
-        
+
         # SYMMETRIC APPROACH
         if approach == 'symm':
             # create list to store convergence
@@ -519,7 +526,7 @@ class FastICANode(ICANode):
                 if round == max_it:
                     errstr = 'No convergence after %d steps\n' % max_it
                     raise mdp.NodeException(errstr)
-                          
+
 
                 # Symmetric orthogonalization. Q = Q * real(inv(Q' * Q)^(1/2));
                 Q = mult(Q, utils.sqrtm(utils.inv(mult(Q.T, Q))))
@@ -564,16 +571,16 @@ class FastICANode(ICANode):
                         mu = 0.5*mu
                         if used_g % 2 == 0:
                             used_g += 1
-                            
+
                 QOldF = QOld
                 QOld = Q
-                
+
                 # Show the progress...
                 if verbose:
                     msg = ('Step no. %d,'
                            ' convergence: %.3f' % (round+1,convergence[round]))
                     print msg
-                    
+
 
                 # First calculate the independent components (u_i's).
                 # u_i = b_i' x = x' b_i. For all x:s simultaneously this is
@@ -692,13 +699,13 @@ class FastICANode(ICANode):
                 else:
                     errstr = 'Nonlinearity not found: %i' % used_g
                     raise mdp.NodeException(errstr)
-                
+
             self.convergence = numx.array(convergence)
             self.convergence_fine = numx.array(convergence_fine)
             ret = convergence[-1]
         # DEFLATION APPROACH
         elif approach == 'defl':
-            # adjust limit! 
+            # adjust limit!
             #limit = 1 - limit*limit*0.5
             # create array to store convergence
             convergence = []
@@ -713,7 +720,7 @@ class FastICANode(ICANode):
                 fine_tuned = False
                 lng = False
                 end_finetuning = 0
-                
+
                 # Take a random initial vector of lenght 1 and orthogonalize it
                 # with respect to the other vectors.
                 w  = guess[:, round]
@@ -752,7 +759,7 @@ class FastICANode(ICANode):
                     else:
                         if i >= end_finetuning:
                             wOld = w
-                    
+
                     # Test for termination condition. Note that the algorithm
                     # has converged if the direction of w and wOld is the same.
                     #conv = float(abs((w*wOld).sum()))
@@ -855,7 +862,7 @@ class FastICANode(ICANode):
                         gauss =  u*ex
                         dgauss = (1. - fine_gaus *u2)*ex
                         w = (mult(X, gauss)-mult(dgauss.sum(axis=0), w))/tlen
-                    elif used_g == 31: 
+                    elif used_g == 31:
                         u = mult(X.T, w)
                         u2 = u*u
                         ex = numx.exp(-fine_gaus*u2*0.5)
@@ -925,16 +932,21 @@ class TDSEPNode(ISFANode, ProjectMatrixMixin):
 
     Reference:
     Ziehe, Andreas and Muller, Klaus-Robert (1998).
-    TDSEP an efficient algorithm for blind separation using time structure
-    in Niklasson, L, Boden, M, and Ziemke, T (Editors), Proc. 8th Int. Conf. 
+    TDSEP an efficient algorithm for blind separation using time structure.
+    in Niklasson, L, Boden, M, and Ziemke, T (Editors), Proc. 8th Int. Conf.
     Artificial Neural Networks (ICANN 1998).
 
-    Internal variables of interest:
+    **Internal variables of interest**
 
-      self.white       -- the whitening node used for preprocessing.
-      self.filters     -- the ICA filters matrix (this is the transposed of the
-                        projection matrix after whitening).
-      self.convergence -- the value of the convergence threshold.
+      ``self.white``
+          The whitening node used for preprocessing.
+
+      ``self.filters``
+          The ICA filters matrix (this is the transposed of the
+          projection matrix after whitening).
+
+      ``self.convergence``
+          The value of the convergence threshold.
     """
     def __init__(self, lags=1, limit = 0.00001, max_iter=10000,
                  verbose = False, whitened = False, white_comp = None,
@@ -973,7 +985,7 @@ class TDSEPNode(ISFANode, ProjectMatrixMixin):
                                         white_parm = None,
                                         eps_contrast=limit,
                                         max_iter=max_iter, RP=None,
-                                        verbose=verbose, 
+                                        verbose=verbose,
                                         input_dim=input_dim,
                                         output_dim=None,
                                         dtype=dtype)

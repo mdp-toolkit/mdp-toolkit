@@ -1,3 +1,951 @@
+MDP-3.0:
+
+2011-01-12: FIX: import NormalizeNode in mdp.nodes
+2011-01-12: FIX: no return in IdentityNode method
+2011-01-12: FIX: test_scikits should be run only if scipy is available
+2011-01-12: FIX: tell epydoc that nodes are documented in rst
+2011-01-11: NEW: convert scikits docstrings to rst This way I'm only getting
+            missing target warnings and the text is parse as rst. No monospace
+            font :)
+
+2011-01-11: FIX: fix some epydoc warnings, add some links and a forgotten
+            export
+2011-01-07: MISC: duplicate some useful code among the three wrappers last
+            merge from scikits branch.
+
+2011-01-11: ERF: make scikits default docs rst-compatible
+2011-01-10: Merge branch 'namespace_fixup' Conflicts:
+            mdp/__init__.py
+            mdp/nodes/__init__.py
+            mdp/utils/__init__.py
+
+            Add missing comma in __all__ in mdp/__init__.py.
+
+2011-01-10: OTH: shorten test name
+            (Looked awkward in py.test output.)
+
+2011-01-10: NEW: introduce MDPNSDEBUG environment variable This variable
+            controls namespace fixup debugging messages.
+
+            Also remove 'advanced string formatting' in favour of printf-style 
+            statements (for python 2.5 compatibility).
+
+2011-01-10: FIX: made the one scikits test a bit more useful
+2011-01-10: FIX: there is no problem with output_dim in scikits classifiers 
+            because they are identity nodes
+
+2011-01-10: DOC: documentation of output_dim problem in scikits.learn wrappers
+2011-01-10: FIX: check for existence of im_func in classifier wrapper
+2011-01-10: FIX: fail meaningfully when trying to set output_dim
+2011-01-10: FIX: added docstrings to scikits wrappers
+2011-01-10: FIX: Cache mechanism called pre_execution_check with too much
+            information
+2011-01-10: FIX: broken variable for disabling scikits.learn
+2011-01-10: FIX: fix wrapper string in scikits nodes
+2011-01-10: FIX: fixed hard-coded scikits test.
+2011-01-10: FIX: fixed a bit pp_remote support. I commented out the test.
+            There's no point in having a test that requires a working ssh
+            setup. we should move that code in the examples. TODO: I still did
+            not manage to test the remote support properly: it does not work
+            if ssh spits some session information on startup :-(
+
+2011-01-10: FIX: fix namespace issues with scikits nodes.
+2011-01-10: FIX: Made the straight forward fixes for pp 1.6 support, not sure
+            if this is working now.
+2011-01-10: Merge remote branch 'origin/master'
+2011-01-10: Merge a branch with some scikits work I'm doing this as a merge
+            instead of rebasing, because the work was really done in parallel,
+            and e.g. Tiziano removed the file, which I moved and updated.
+
+2011-01-10: FIX: make scikits support depend on version 0.5 Version 0.4
+            breaks... Version 0.5 at least does learn & execute.
+
+2011-01-10: FIX: move scikits test into mdp/tests/
+2011-01-10: Merge remote branch 'origin/master' Conflicts:
+            mdp/test/test_pp_local.py
+
+2011-01-10: FIX: Updated local scheduler to work with latest pp version 1.6.
+2011-01-10: FIX: fix name leaking in nodes/__init__.py
+2011-01-10: FIX: add scikits to list of dependencies in testall.py
+2011-01-10: FIX: Fixed local Parallel Python tests.
+2011-01-10: FIX: make test_ISFANode more robust.
+2011-01-10: FIX: remove stale test_scikits.py file
+2011-01-10: NEW: merged constant_expansion_node branch. Adds new
+            GeneralExpansionNode thanks to Alberto Escalante.
+
+            Tests and node had to be adjusted to merge cleanly and to follow
+            new conventions. TODO: pseudo_inverse method is quite fragile,
+            why?
+
+2011-01-10: ERF: Added native traceback flag to IDE test run template.
+2011-01-09: FIX: remove bitrot in test_pp_*.py. This makes the local tests
+            pass with parallel python 1.5.4. Remote tests still fail because 
+            amongst other things the server list must be passed explicitely.
+
+            The tests fail horribly with newer pp version.
+
+2011-01-09: FIX: kill epydoc warnings
+2011-01-09: Revert "DOC: migrated class.__doc__ to rst for nerual_gas_nodes" 
+            This reverts commit 2c2a4cd72ecd7d2dbb2032dd7db4f0754b3ba846.
+
+2011-01-07: FIX: make joblib version checking more robust e.g.
+            joblib.__version__='1.0.0-gitABCEDFG' should pass.
+
+2011-01-07: FIX: be more tolerant against missing modules in scikits.learn. 
+            depending on the installation procedure, user may or may not have
+            some of the scikits.learn modules. we just wrap the modules we
+            find.
+
+2011-01-07: FIX: add wrongly removed 'scikits' namespace from mdp.nodes.
+2011-01-07: FIX: wrong version in scikits.learn info item.
+2011-01-07: ERF: Merged "scikits" branch into "master". Conflicts:
+            mdp/__init__.py. Fixed new config syntax and generic_tests.
+
+2011-01-06: FIX: fixed testall script. now it works. the script should be
+            ported to use subprocess, so that it runs OS agnostic.
+
+2011-01-05: ERF: improved testall.py
+2011-01-05: DOC: updated CHECKLIST for release.
+2011-01-05: FIX: Slightly changed the include_last_sample argument to fix the
+            problem with the standard parallel fork implementation.
+2011-01-05: FIX: fix test broken due to new keyword in SFANode.
+2011-01-05: FIX: added include_last_sample to SFA2Node too.
+2011-01-05: ERF: added include_last_sample switch to SFANode. Motivation and
+            discussion can be found in this thread: 
+            http://sourceforge.net/mailarchive/forum.php?thread_name=20100826183424.GF26995%40tulpenbaum.cognition.tu-berlin.de&forum_name=mdp-toolkit-users
+
+2011-01-05: FIX: clean up __all__ in mdp/__init__.py numx* should not be in
+            all. Quoting Tiziano:
+
+            > numx was not in __all__, and therefore was not documented by
+            epydoc.
+            > Once it is added to __all__, indeed things break heavily. well,
+            I think even it was by mistake, it is a good thing that numx is
+            not in __all__. mdp.numx is an *internal* thing. people doing from
+            mdp import * should not get numx. so, leave it like this and we 
+            don't even need a workaround for epydoc.
+
+            While at it, remove whitening which was already gone and make the
+            list alphabetical.
+
+2011-01-04: Merge branch 'cache' Conflicts:
+            mdp/__init__.py
+
+2011-01-04: FIX: make setup.py run on also on python3 The code must run on all
+            supported python versions.
+
+            try: ... except Type, v: ...
+
+            file()
+
+            cannot be used.
+
+            While at it, I'm changing exec() to re.match. It's simpler.
+
+2011-01-04: FIX: python2.5 has no itertools.product
+2011-01-04: ERf: added script to test all python versions and dependencies.
+2011-01-04: FIX: fix name error in configuration.py
+2011-01-04: ERF: added way of disabling optional dependencies optional
+            dependencies can be disabled setting the env variable
+            MDP_DISABLE_DEPNAME
+
+2011-01-04: ERF: remove long deprecated helper functions. pca and fastica
+            survive because we use them as ad in the the site and because most
+            probably they are the only one in real use out there.
+
+2011-01-04: FIX: fix test failures due to previous commit.
+2011-01-04: ERF: cleaned up mdp/__init__.py. configuration is now a separate
+            file. the logic of numx loading has been changed (again!).
+            numpt/scipy can not be treated as an external dependency.
+
+2011-01-04: FIX: fix generic node test failures for
+            TimeFrameSlidingWindowNode.
+2011-01-04: ERF: support iterables in generic node tests.
+2011-01-03: FIX: MDP depends on joblib >= 0.4.3
+2011-01-03: FIX; fixed git log format in CHECKLIST
+2011-01-03: DOC: add __homepage__ variable in __init__.py
+2011-01-03: FIX: removed useless file.
+2011-01-03: ERF: updated author and maintainers, put version in one single
+            place.
+2011-01-03: DOC: changed reference to installation instructions
+2011-01-03: ERF: removed our names from COPYRIGHT. It makes little sense to
+            keep up-to-date the list of maintainers in this file. we have one
+            authoritative source: the development.rst page.
+
+2010-12-31: FIX: fixed TimeDelayNode docstring rst formatting
+2010-12-31: NEW: new TimeDelay and TimeDelaySlidingWindow nodes. Thanks to
+            Sebastian Höfer!
+
+2010-12-31: DOC: specify dependency in svm nodes.
+2010-12-31: FIX: change order of nodes in nodes/__init__.py __all__ order is
+            somehow arbitrary, but better than before. it is needed for the
+            automatic node list generation in the web site.
+
+2010-12-31: DOC: migrated class.__doc__ to rst for svm family
+2010-12-31: FIX: logic and wording of the symeig dependency test were wrong. I
+            don't have a 64bit machine to test that the function in 
+            mdp/utils/routines.py still does the right thing. if it does not, 
+            just change mdp.config.has_symeig == '...' to 
+            mdp.config.has_symeig != '...'
+            ;-)
+
+2010-12-31: DOC: migrated class.__doc__ to rst for misc_nodes
+2010-12-31: DOC: migrated class.__doc__ to rst for classifier_nodes
+2010-12-31: DOC: migrated class.__doc__ to rst for expansion_nodes
+2010-12-31: DOC: migrated class.__doc__ to rst for nerual_gas_nodes
+2010-12-31: DOC: migrated class.__doc__ to rst for regression_nodes
+2010-12-31: DOC: migrated class.__doc__ to rst for rbm_nodes
+2010-12-31: DOC: migrated class.__doc__ to rst for lle_nodes
+2010-12-31: DOC: migrated class.__doc__ to rst for em_nodes
+2010-12-31: DOC: migrated class.__doc__ to rst for fda_nodes
+2010-12-31: DOC: migrated class.__doc__ to rst for sfa family
+2010-12-31: DOC: migrated class.__doc__ to rst for ica family
+2010-12-31: DOC: migrated class.__doc__ to rst for nipals
+2010-12-31: DOC: migrated class.__doc__ to rst for pca_nodes
+2010-12-31: DOC: migrate convolution nodes to rst docstring
+2010-12-31: DOC: fixed migration to rst docstrings for xsfa_nodes.
+2010-12-30: Merge branch 'feature/libsvm_291_support' Conflicts:
+            mdp/__init__.py
+            mdp/test/test_contrib.py
+
+2010-12-30: FIX: failing dtype_consistency_tests with numpy as backend The
+            config.has_symeig logic was that config.has_symeig is False when
+            using the _fake_symeig compatibility wrapper. Dtypes were selected
+            based on that.
+
+2010-12-30: FIX: make sure mdp.config.has_{numpy,scipy} are always set, really
+2010-12-30: FIX: make sure mdp.config.has_{numpy,scipy} are always set
+2010-12-30: FIX: Don’t try to fetch version of numx_version twice.
+2010-12-29: ERF: Put SVM tests into a separate file. Also: Fix
+            skip_on_condition on class.
+2010-12-27: DOC: rename ExternalDepFail to -Failed and document stuff
+2010-12-27: FIX: test_seed failured when testing running bimdp.test() after
+            mdp.test() The reason was that when the test functions were
+            imported from mdp.test into bimdp.test, they still referenced
+            mdp.test._SEED global variable. But the --seed option in bimdp is
+            independent, so it was set to a different random seed. By
+            duplicating test_seed.py, a second independent global is created.
+
+2010-12-27: Add a test for separable data.
+2010-12-27: NEW: check if joblib is >= 0.4.6
+2010-12-27: ERF: Restructured the libsvm tests.
+2010-12-27: OTH: make COPYRIGHT valid rst This makes is easier to include in
+            the webpage.
+
+2010-12-27: Merge branch 'config_simplification' Conflicts:
+            mdp/__init__.py
+
+            This merge commit contains an adaptation of caching to the new 
+            framework.
+
+2010-12-27: NEW: convert caching_extention.py to rst
+2010-12-27: Merge branch 'rst_docstrings' Conflicts:
+            mdp/signal_node.py
+
+2010-12-27: Merge branch 'cache' Conflicts:
+            mdp/caching/caching_extension.py
+
+2010-12-27: Merge commit '06007d3e8987a6c8574fd63c7608b37e9e657e66'
+2010-12-27: ERF: Added test for execute_method in classifiers.
+2010-12-27: ERF: Add validation for libsvm parameters.
+2010-12-27: ERF: Get rid of superfluous parameter handling. Use svm_parameter
+            directly.
+2010-12-27: FIX: Get the libsvm tests running for versions >=2.91. TODO: * The
+            new interface still needs some polishing.
+            * We need to test the RBF classifier. It won’t work right now.
+2010-12-24: FIX: fix test of PCANode for degenerate case, it was failing
+            occasionally.
+2010-12-24: removed now useless copy method overwriting in NoiseNode
+2010-12-24: Merge branches 'deepcopy' and 'master'
+2010-12-24: ERF: added additional tests for node and flow deepcopy This tests
+            fail in master branch righ now, because lambdas can not be
+            pickled!
+
+2010-12-24: ERF: added additional tests for node and flow deepcopy
+2010-12-24: Merge branch 'master' of
+            ssh+git://mdp-toolkit.git.sourceforge.net/gitroot/mdp-toolkit/mdp-toolkit
+2010-12-24: FIX: fixex bimdp.test() under windows. The FIX introduced with
+            dfa8ec5a0d367941e4c297325a43361d579f8bbd was not working on
+            windows, because git does not support symlinks there. It has been
+            fixed differently now, and it should work reliably under any
+            system, I hope.
+
+2010-12-22: ERF: Improved the exception handling for failing training argument
+            check (user now gets a better error message).
+2010-12-22: changed my email address in copyright and setup
+2010-12-21: Merge remote branch 'new_guidelines'
+2010-12-21: FIX: now bimdp.test() really works as advertised!
+2010-12-21: FIX: regenerate run_tests.py script for running tests without
+            py.test
+2010-12-03: OTH: remove uses of deprecated dict.has_key()
+2010-12-03: OTH: use with_statement in signal_node
+2010-12-18: DOC: improved docs of caching mechanism
+2010-12-18: FIX: possible to switch caching path while extension active
+2010-12-18: FIX: caching started at second execution because of automatic
+            setting of dtype, input_dim
+2010-12-18: NEW: caching extension can now cache individual classes or
+            instances
+2010-12-18: DOC: a few fixes to the cache extension docs
+2010-12-09: NEW: Added parallelization for NearestMean and KNN classifier.
+            Also updated NearestMeanClassifier attribute names to avoid
+            confusion.
+2010-12-09: DOC: Added explanation in _default_fork docstring.
+2010-12-09: DOC: Improved code documentation.
+2010-12-03: FIX: copy with deepcopy everywhere, raise DeprecationWarning on
+            old API Since Node.copy() is a public function, changing the
+            allowed parameters might be bad. So just ignore the parameter and 
+            raise a DeprecationWarning if the parameter has a non-None value.
+
+            >>> import mdp
+            >>> node = mdp.Node()
+            >>> node2 = node.copy(protocol=1)
+            __main__:1: MDPDeprecationWarning: protocol parameter to copy() is
+            ignored
+
+2010-12-03: FIX: Patch for using deepcopy instead of pickle for Node and Flow 
+            Hi all,
+
+            here is a patch and test script for replacing the pickle with
+            deepcopy in Node.copy() and Flow.copy(). The signature of the copy
+            function changes (the protocol keyword is no longer necessary), I
+            don't know what the proper way to handle this is (deprecation
+            error?), so I'll leave it up to you guys.
+
+            Thanks for all the efforts, we get very positive feedback from all 
+            users of mdp and Oger!
+
+            David
+
+2010-12-02: OTH: remove redundant shogun version checking
+2010-12-02: NEW: add tests for the new config architecture
+2010-12-01: OTH: Convert config.has* to an attribute I have suspicions that
+            using a lambda function was causing problems with the process
+            scheduler.
+
+            git grep -l -E 'config.has_'|xargs sed -r -i
+            's/(config.has_[a-z_]+)\(\)/\1/g'
+
+2010-12-01: OTH: simplify mdp config discovery Create
+            ExternalDepFound/ExternalDepFail objects immediately after 
+            attempting import. This way there's no need to reverse engineer 
+            where the symeig implementation comes from.
+
+            TODO: test_process_schedule fails!
+
+2010-12-01: OTH: simplify numpy/scipy imports
+2010-12-01: OTH: make ExternalDep objects have boolean value
+2010-12-02: OTH: replace 'map()' with 'for:' following 2to3's advice
+2010-12-02: OTH: remove redundant OrderedDict implementation I'm also moving
+            the OrderedDict recipe to a separate file, because it's kind of
+            logically separate and will not be used in newer versions of
+            Python anyway.
+
+2010-12-01: OTH: mdp.test() should not cause SystemExit Function
+            py.cmdline.pytest calls py.test.cmdline.main, but also raises
+            SystemExit. Just call the latter one, so the interactive session
+            can continue.
+
+2010-12-01: Change __license__ to 'Modified BSD' in source code The license
+            text was already changed in the documentation, but not in the
+            source code.
+
+2010-11-30: NEW: Added the execute_method argument and attribute to the
+            Classifier class. This makes it possible to get the classification
+            results from a normal flow without resorting to monkey patching
+            (which makes nodes unpickelable).
+2010-11-30: ERF: Improved code readibility.
+2010-11-30: NEW: Added iadd method to Flow. Also fixed the error strings.
+2010-11-29: NEW: Added parallel version of Gaussian classifier.
+2010-11-29: ERF: Added helper function to combine CovarianceMatrix instances.
+2010-11-24: NEW: Added KNN classifier.
+2010-11-24: FIX: Fixed wrongly created classifier BiNodes.
+2010-11-24: NEW: Added nearest-mean classifier node.
+2010-11-24: FIX: Updated test name.
+2010-11-24: ERF: Some cleanup in the GaussianClassifier. Added an exception if
+            any class covariance matrix is singular.
+2010-11-23: BRK: Renamed GaussianClassifierNode to GaussianClassifier to
+            follow the general classifier convention (otherwise a special case
+            would be needed in the BiMDP autogenerated code).
+2010-11-23: FIX: Updated BiMDP test for the new siganture of FDANode.
+2010-11-23: BRK: Updated FDANode siganture to follow the newer conventions
+            from ClassifierNode (labels instead of cl) and the PCA/SFANode (n
+            instead of range).
+2010-11-09: OTH: move PROJECT_GUIDELINES and NEW_DEVELOPER_INFO to
+            development.rst in docs
+2010-11-01: NEW: convert neural_gas_nodes.py and rbm_nodes.py docstrings to
+            rst
+2010-11-01: NEW: add reference to JoMLR article
+2010-11-01: NEW: convert mdp/nodes/xsfa_nodes.py docstrings to rst
+2010-11-01: NEW: convert mdp/__init__.py and mdp/nodes/signal_node.py
+            docstrings to rst
+2010-11-01: Merge commit 'c3bdc14c092b92c214f8bd76002be565706f07ca'
+2010-11-01: FIX: Fixed bug in node join, leading to inconsistent state under
+            certain conditions with FlowNode.
+2010-10-31: ERF: Added copy_callable option for thread scheduler.
+2010-10-16: FIX: Updated failing unittest.
+2010-10-16: FIX: Fixed the parameter names in the switchboard factory.
+2010-10-15: BRK: Updated the remaining switchboards.
+2010-10-15: BRK: Started to replace the x_ and y_ arguments in 2d switchboards
+            with a single _xy argument. So far only the
+            Rectangular2dSwitchboard is done.
+2010-09-26: FIX: Correctly distinguish Flow and BiFlow in trace inspection
+            execute.
+2010-09-25: FIX: Fixed bug in ParallelFlowNode and added unittest.
+2010-09-14: DOC: Fixed wrong docstring.
+2010-09-14: BRK: Improved extension context manager and decorator to only
+            deactivate extensions that were activated by it. This prevents
+            unintended side effects. Corresponsing tests were added.
+2010-09-14: FIX: Fixed outdated import.
+2010-09-14: Merge commit '4671fc2511b3446e57afcc1974d46f15ac92cb5f'
+2010-09-14: BRK: Improved the dimension consistency handling in FlowNode, also
+            making the dimension setting stricter. This is to prevent really
+            strange errors in some corner cases (e.g. when the output_dim is
+            automatically set in execute). One generic test had to be dropped,
+            but explicit test for the dimension setting were added.
+2010-09-14: ERF: Streamlined the parallel fork template method.
+2010-09-14: FIX: Fixed the test node in the test_execute_fork unittest.
+2010-09-14: ERF: Removed the ParallelBiNode, since it is no longer needed.
+2010-09-14: Revert "FIX: Fixed small bug in dimension consistency check." This
+            reverts commit 0b37100894f08faf3653bab09bc4b5fb21705d72.
+
+2010-09-13: ERF: Added more unittests for parallel. One still fails because an
+            improvement in FlowNode is needed.
+2010-09-13: DOC: Added comment on necessary extension context improvement.
+2010-09-13: FIX: Fixed small bug in dimension consistency check.
+2010-09-13: ERF: Improved the threaded scheduler (better exception handling).
+2010-09-13: FIX: Fixed parallel bug, missing argument in callable.
+2010-09-13: ERF: Turned the use_execute_fork property into a normal method.
+2010-09-12: FIX: Added the missing property decorators (this was dangerous,
+            since a function attribute is cast as True)..
+2010-09-12: FIX: Fixed bug in ParallelNode.
+2010-09-12: FIX: Updated ParallelFlow to use correct execution result
+            container.
+2010-09-12: FIX: Updated __all__ list.
+2010-09-10: OTH: python2.5: remove PEP 3101 formatting
+2010-07-30: OTH: python2.5: 'with' and 'as'
+2010-09-09: Remove next-to-last import numpy from mdp codebase numx rules!
+
+2010-09-09: ERF: Changed the node purging mechanism in parallel to no longer
+            use a special extension method in FlowNode. Also some smaller
+            comment updates.
+2010-09-09: NEW: MDP migrates to BSD license!
+2010-09-09: BRK: Clarfied some subtle aspects of the parallel API and updated
+            the code to improve consistency.
+2010-09-09: Make git display python diffs better
+2010-09-08: FIX: Some smaller fixes in the updated parallel code.
+2010-09-08: FIX: The parallel BiMDP tests are running again. Also some more
+            cleanup in MDP parallel.
+2010-09-08: FIX: The standard MDP tests now all run again after the changes in
+            parallel.
+2010-09-07: BRK: Continued work on the parallelization update, not working
+            yet.
+2010-09-06: BRK: Started to modify the parallel node forking. The
+            is_bi_training in BiNode is replaced with a use_execute_fork in
+            the ParallelExtensionNode base class. This is more logical, less
+            complicated and a first step towards enabling more parallelization
+            patterns.
+2010-09-02: OTH: the caching mechanism could be simplified with the latest
+            joblib
+2010-08-31: DOC: Improve docs of caching mechanism, keywork argument for
+            verbosity of cache
+2010-08-26: FIX: SFANode.train fails with a meaningful error if trained with
+            x.shape = (1, n)
+2010-08-26: Fix --seed option for py.test >= 1.3 Py.test in version 1.3 added
+            a feature to skip conftest.py files when they are exactly the
+            same. This helps when a directory is copied to a subdirectory of
+            itself and the config files are not idempotent. Unfortunately,
+            this runs afoul of our logic to add the --seed option everywhere,
+            irrespective of wheter py.test is run implicitely for the whole
+            mdp-toolkit or for mdp or for bimdp or for both. The solution is 
+            to modify one of the conftest.py files to be unidentical.
+
+            Tested with with py.test 1.2.1 and 1.3.3.
+
+2010-08-18: OTH: Simplify docstring formatting.
+2010-08-25: NEW: FANode detects singluar matrices
+2010-08-24: ERF: fftpack does not support float >64; those types are removed
+            from the supported list for ConvolutionNode
+2010-08-24: FIX: Remove forgotten print statements
+2010-08-24: ERF: ISFA supports float>64
+2010-08-23: ERF: added python version to mdp.config
+2010-08-19: ERF: Add complex256 to list of unsafe dtypes
+2010-08-19: FIX: Generic tests failed for MDPNUMX='numpy' When symeig and
+            scipy.linalg.eigh are not present, MDP falls back into using
+            numpy.linalg.eig . This does not support large floating point
+            types, for some reasons, which caused the tests to fail.
+
+2010-08-17: ERF: Updated the classifier nodes that were overlooked in the big
+            PreserveDimNode cleanup.
+2010-08-17: Merge branch 'supporteddtypes' Conflicts:
+            mdp/nodes/misc_nodes.py
+
+2010-08-17: ERF: Clarify questions about support for float64 only
+2010-08-17: FIX: Fixed generic tests, now check that PreserveDimNode raises
+            right exceptions.
+2010-08-17: ERF: Added tests for PreserveDimNode.
+2010-08-17: ERF: Wrapped up the PreserveDimNode changes. Unable to fix the
+            generic unittests, somebody has to fix those.
+2010-08-16: ERF: Refined the choice of supported dtypes
+2010-08-16: ERF: Redefine default supported dtypes to be 'Floats', and modify
+            all nodes accordingly
+2010-08-16: ERF: Further simplified Cumulator mechanism; added test After
+            digging into numpy's C code, we decided that at present 
+            numpy.concatenate does the right thing, i.e. it creates a buffer
+            large enough and uses memcpy to copy the data in each array.
+
+2010-08-16: FIX: py.test failed with an error reporting a duplicated 'seed'
+            option In py.test 1.3.3 they changed the sequence in which the
+            conftest.py
+               files are loaded. In our case, the /mdp/test/conftest.py file
+            was
+               laoded before the /conftest.py file, which tried to redefine
+            the
+               optione 'seed', causing an error.
+
+2010-08-14: ERF: Simplified concatenation mechanism in Cumulator The new
+            solution is much faster and still avoids direct calls to 
+            numpy.concatenate, that performs pairwise concatenations and
+            wastes a lot of memory.
+
+2010-08-14: FIX: Cumulator had no docstring
+2010-08-10: FIX: Added missing exit target check in BiFlow. Changed the
+            unittest to better test this case.
+2010-08-10: ERF: Changed BiFlow.execute to always return a tuple (x,msg), even
+            if the msg is empty. The previous changing return signature was
+            too likely to cause errors.
+2010-08-10: DOC: Small fix in docstring.
+2010-08-10: DOC: Small fix in comment.
+2010-08-09: ERF: Added check for case when both x and msg are None to produce
+            better error message.
+2010-08-09: ERF: Removed duplicate verbose print.
+2010-08-08: FIX: Fixed the missing import for PreserveDimNode and fixed the
+            broken generic tests for these nodes by excluding them. This is
+            only a provisional fix.
+2010-08-08: ERF: Rewrote the creation of the autogenerated BiNode classes.
+            Went back to dynamically creating the classes at runtime. Now use
+            a node blacklist instead of the previous whitelist. These two
+            changes allow the import of nodes with dependencies, like the SVM
+            nodes.
+2010-08-08: NEW: Added new PreserveDimNode base class for input_dim ==
+            output_dim. This should avoid duplication of the set_dim methods.
+2010-08-05: ERF: Tweaked the hinet CSS.
+2010-08-05: DOC: Improved the ParallelFlow docstrings.
+2010-07-30: DOC: Small improvements to the corutine decorator docs.
+2010-07-30: FIX: Removed some left over stop_message references.
+2010-07-29: NEW: extend namespace_fixup to bimdp
+2010-07-29: ERF: rework fixup_namespace function and add tests
+2010-07-27: FIX: NodeMetaclass and ExtensionException where imported but not
+            in __all__
+2010-07-27: FIX: remove helper_funcs module from mdp namespace, they are
+            imported into mdp
+2010-07-27: NEW: Added a simple run script to run the tests from a .py file
+            (e.g. to use the Eclipse debugger).
+2010-07-27: ERF: Optimized the switchboard gradient implementation (about 10x
+            faster).
+2010-07-27: ERF: Changed one more unittest to use scheduler context manager.
+2010-07-27: ERF: Added context manager interface to Scheduler class and added
+            unittests.
+2010-07-27: ERF: Renamed callable_ to task_callable and made some small
+            docstring updates.
+2010-07-27: ERF: Removed unused imprts and updated docs.
+2010-07-27: FIX: Fix double delete
+2010-07-26: NEW: use sphinx links in mdp.parallel docstring
+2010-07-25: FIX: remove del's of nonexistent symbols
+2010-07-25: NEW: use fixup_namespace to clean up __import__
+2010-07-25: FIX: missing comma in __all__ was concatentating names
+2010-07-25: OTH: add import of fixup_namespace without actually using it This
+            is seperate to check if there are no circular imports
+
+2010-07-24: FIX: remove nonexistent name from __all__
+2010-07-23: FIX: remove unused import of hotshot.log
+2010-07-23: FIX: fix broken name delete
+2010-07-23: FIX: fixed setup.py (remove refs to demo & contrib)
+2010-07-23: FIX: convolution nodes are conditional on scipy.signal
+2010-07-23: FIX: remove del of nonexistent symbol
+2010-07-23: FIX: move pp_simple_slave_test.py to examples
+2010-07-23: FIX: regenerate bimdp wrappers for classifiers
+2010-07-23: ERF: convert parallel python tests to py.test and disable them
+2010-07-23: FIX: TODO had the wrond line ending. Sorry everybody :-(
+2010-07-23: FIX: Fix tests in test_nodes_generic with svm classifier nodes. 
+            Add arguments to ShogunSVMClassifier and LibSVMClassifier to
+            automatically set kernel and classifier on __init__. Add
+            parameters to test_nodes_generic to use these arguments.
+
+2010-07-23: DOC: updated TODO list
+2010-07-23: NEW: Added new tests for Convolution2DNode
+2010-07-23: FIX: removed contrib directory
+2010-07-23: FIX: duplicate conftest.py twice, so py.test can be run without
+            options, try 3 Previous version worked only under cygwin when on
+            windows.
+
+2010-07-23: ERF: PEP8
+2010-07-23: DOC: The reason of the strange transformations in CumulatorNode
+2010-07-23: FIX: Automatic test now cover everything, fixed a lot of stuff in
+            the meanwhile!
+2010-07-23: FIX: NormalNoise did not function properly
+2010-07-23: FIX: KMeansNode failed on some special cases
+2010-07-23: FIX: duplicate conftest.py twice, so py.test can be run without
+            options, try 2 Previous version worked only when PYTHONPATH
+            included mdp-toolkit/.
+
+2010-07-23: ERF: Migrated the demos to the examples. Removed the tutorial
+            demo.
+2010-07-23: FIX: duplicate conftest.py twice, so py.test can be run without
+            options Note: bimdp/test/conftest.py is a symbolic link to
+            bindmp/test/conftest.py.
+                 OTOH, conftest.py in the top directory is a little different.
+
+2010-07-23: ERF: remove old run_coverage script The new way is:
+             py.test --figleaf and the result go into html/.
+
+2010-07-23: OTH: Renamed NEW_DEVELOPER_INFO.txt → NEW_DEVELOPER_INFO.
+2010-07-23: ERF: Made tests for SVM classifiers, Convolution2D conditional on
+            presence of nodes
+2010-07-23: Merge branch 'test_cleanup' Conflicts:
+            mdp/test/_tools.py
+
+2010-07-23: FIX: fix broken conditional test for caching
+2010-07-23: ERF: simplify testing by providing commonly used imports in
+            test/_tools All testing files can just say
+             from _tools import * and the get numx, numx_rand, mult, ...
+
+            Py.test is not imported into _tools, so that it is easier to
+            possible to import files which don't actually depend on py.test
+            when it is not available.
+
+            Also includes some tiny naming and space corrections.
+
+2010-07-23: NEW: Conditional tests decorator; decorated test_caching tests
+2010-07-23: FIX: use the right TESTDECIMALS in test_utils_generic
+2010-07-23: ERF: convert utils tests to py.test
+2010-07-23: NEW: add QuadraticFormException for QuadraticForm errors
+2010-07-23: ERF: Caching now imported conditional on joblib
+2010-07-23: Merge branch 'master' of
+            ssh+git://mdp-toolkit.git.sourceforge.net/gitroot/mdp-toolkit/mdp-toolkit
+2010-07-23: Merge branch 'master' into HEAD Conflicts:
+            mdp/__init__.py
+
+2010-07-23: ERF: Added *Cumulator and ClassifierNode to __all__
+2010-07-23: OTH: Trying to push changes
+2010-07-23: ERF: Caching tests moved to own file, updated to py.test style
+2010-07-23: ERF: de-obfuscated code in config object
+2010-07-23: Merge branch 'sprint_cache' Conflicts:
+            mdp/__init__.py
+            mdp/extension.py
+            mdp/nodes/__init__.py
+            mdp/nodes/convolution_nodes.py
+            mdp/test/test_extension.py
+            mdp/test/test_nodes.py
+            mdp/utils/__init__.py
+            mdp/utils/routines.py
+
+2010-07-23: FIX: Windows specific fix.
+2010-07-23: OTH: whitespaces
+2010-07-23: ERF: make generic_test_factory a public function It is now even
+            documented.
+
+2010-07-23: OTH: Fixed whitespaces in convolution nodes
+2010-07-23: DOC: describe the complicated big_nodes argument of
+            _generic_test_factory
+2010-07-23: NEW: tests can be run within python shell. You can run the tests
+            with import mdp mdp.test()
+
+            you don't need py.test installed!
+
+2010-07-23: Merge branch 'sprint_conv2'
+2010-07-23: ERF: Made import of Convolution2DNode conditional on presence of
+            scipy
+2010-07-23: ERF: Added method in config object to check for existence of
+            arbitrary module by name
+2010-07-22: FIX: remove nonexistent import from __all__
+2010-07-22: ERF: Adding numpy and scipy to config.
+2010-07-22: Merge branch 'sprint_variadic_cumulator'
+2010-07-22: FIX: fix broken test_gradient. It was not useing the numx,
+            numx_rand convention!!!
+            >:-(
+
+2010-07-22: FIX: Fixing an error in contrib tests.
+2010-07-22: ERF: migrated bimdp tests to py.test
+2010-07-22: FIX: remove unexistent test name
+2010-07-22: NEW: Added convolution class and tests
+2010-07-22: ERF: Merged master to convolution branch and removed vestigial
+            file
+2010-07-22: DOC: Update docs
+2010-07-22: ERF: Cache extension migrated to own directory, tests updated
+2010-07-22: NEW: Init for caching module
+2010-07-22: OTH: Attempted refactoring cache extension in own directory, got
+            metaclass conflict
+2010-07-22: ERF: update gitignore for py.test gnerated files
+2010-07-22: Merge branch 'test_framework' Conflicts:
+            bimdp/test/test_binode.py
+            mdp/nodes/misc_nodes.py
+
+2010-07-22: NEW: Context manager for caching extension
+2010-07-22: FIX: Fixed documentation and call with wrong argument
+2010-07-22: DOC: Fixed error in documentation of context manager
+2010-07-22: ERF: Deleted forgotten print statement
+2010-07-22: NEW: activate_caching, deactivate_caching
+2010-07-22: ERF: Simplified extension context manager
+2010-07-22: ERF: port contrib and hinet to py.test
+2010-07-22: ERF: Cache directory can be changed or picked at random (default)
+2010-07-22: Merge branch 'sprint_info_refactoring'
+2010-07-22: ERF: Renamed ‘Requirements’ → ‘MDPConfiguration’. Changed the API
+            style a little. Needs more love with version checking.
+2010-07-22: ERF: Caching extension moved to own file
+2010-07-22: ERF: Tests for cache extension
+2010-07-22: DOC: add note about where the links must be changed in sphinx rst
+2010-07-22: FIX: Exception missing mdp module.
+2010-07-22: ERF: ClassifyCumulator also inherits from VariadicCumulator. A
+            little bit useless atm, since many methods are overwritten.
+2010-07-22: FIX: UTF-8 problem. I want to have Python 3 only…
+2010-07-22: FIX: broken linear regression test Use non-random input value, so
+            that it doesn't fail randomly.
+
+2010-07-22: NEW: added hooks and a command-line option in py.test Use --seed
+            to set the random seed.
+
+            Added report of extended configuration infos before and after
+            testing reports.  Added unit test for random seed [should only
+            fail in case of a bug in py.test and/or numpy].
+
+2010-07-22: FIX: make generated hinet tests pass
+2010-07-22: ERF: Cache extension now based on joblib
+2010-07-22: NEW: Added VariadicCumulator with mdp.Cumulator being a special
+            case of it. VariadicCumulator adds as many automatic fields as are
+            specified in the initialisation function.
+2010-07-22: ERF: use py.test.raises for exception testing
+2010-07-22: FIX: correct PCANode generation
+2010-07-22: ERF: extract PCANode generation to a helper function
+2010-07-22: ERF: migrate tests for hinet to py.test
+2010-07-22: FIX: Switchboard.is_invertible() cannot be a staticmethod
+2010-07-22: ERF: remove previously converted tests from test_nodes.py
+2010-07-22: ERF: migrate tests for CuBICA- and TDSEPNodes to py.test
+2010-07-22: ERF: migrate tests for HistParade- and TimeFrameNodes to py.test
+2010-07-22: ERF: migrate tests for EtaComputerNode to py.test
+2010-07-22: ERF: migrate tests for GrowingNeuralGasNode to py.test
+2010-07-22: ERF: migrate tests for NoiseNode to py.test
+2010-07-22: ERF: migrate tests for FDANode to py.test
+2010-07-22: ERF: migrate tests for GaussianClassifier to py.test
+2010-07-22: ERF: migrate tests for FANode to py.test
+2010-07-22: ERF: migrate tests for ISFANode to py.test
+2010-07-22: ERF: migrate tests for RMB*Node to py.test
+2010-07-22: ERF: move spinner to _tools
+2010-07-22: ERF: migrate tests for LinearRegressionNode to py.test
+2010-07-22: ERF: migrate tests for CutoffNode to py.test
+2010-07-22: ERF: migrate tests for HistogramNode to py.test
+2010-07-22: ERF: migrate tests for RBFExpansionNode to py.test
+2010-07-22: ERF: migrate tests for AdaptiveCutoffNode to py.test
+2010-07-22: ERF: migrate tests for SFA2Node to py.test
+2010-07-22: ERF: migrate tests for SFANode to py.test
+2010-07-22: ERF: migrate tests for WhiteningNode to py.test
+2010-07-22: ERF: migrate tests for PCANode to py.test
+2010-07-22: ERF: migrate tests for PolynomialExpansionNode to py.test
+2010-07-22: ERF: migrate covariance Node tests to py.test
+2010-07-22: ERF: add node copying, saving and training tests
+2010-07-22: ERF: move BogusNode* to _tools
+2010-07-22: FIX: fix python2.5 compatibility
+2010-07-21: FIX: Don’t include utils until it is needed.
+2010-07-21: ERF: Drop Python 2.4, use built-in all().
+2010-07-21: ERF: Fix some of the issues with contrib.__all__ and dependencies.
+2010-07-21: FIX: Fixing bugs with scheduling. Avoid printing while mdp is
+            imported.
+
+            Rename _info() to req.info() in MDPVersionCallable. req.info() is
+            a different object but it’s exact layout is not important for
+            scheduling.
+2010-07-21: ERF: add tests for RBFExpansionNode
+2010-07-21: FIX: don't use self in staticmethod
+2010-07-21: ERF: add generated tests for FastICA
+2010-07-21: ERF: generate tests for reversing
+2010-07-21: ERF: use any and all to check conditions
+2010-07-21: BRK: make is_trainable staticmethod where possible
+2010-07-21: BRK: make is_invertible staticmethod where possible
+2010-07-21: ERF: Everybody loves nicer output
+2010-07-21: OTH: implemented obvious thing of decorating the execute method
+            with joblib, it does not work; breaks the caching extension
+2010-07-21: ERF: Remove all the cool logic and decorators because __dict__ is
+            not ordered and all the methods are executed in arbitrary order.
+2010-07-21: Merge commit '38664d80675ea7304ee28b460ba88c547b55629e'
+2010-07-20: NEW: Added a new Requirements object which checks for available
+            features. Current version needs some discussion/rework because
+            class methods are not initialised in order...
+
+2010-07-21: ERF: generate dimdtypeset consistency tests
+2010-07-21: FIX: Fixed the remaining broken unittests.
+2010-07-21: ERF: generate outputdim_consistency tests
+2010-07-21: NEW: Adding the ‘official’ backport for OrderedDict to our
+            routines.py.
+2010-07-21: FIX: Updated the bimdp.hinet package to work with the new
+            stop_training.
+2010-07-21: ERF: world's first automatic test generation
+2010-07-21: OTH: Merged cache branch with convolution branch
+2010-07-21: FIX: Updated the BiFlowNode to work with new stop_training.
+2010-07-21: DOC: Improved documentation for Convolution2DNode
+2010-07-21: FIX: Fixed the failing BiFlow unittest.
+2010-07-21: ERF: Convolution2DNode now supports FFT convolution, checks for
+            the validity of all of its argments; the new tests are in a file
+            outside the repository, waiting for the new test framework
+2010-07-21: FIX: Fixed the inspection by removing the stop_message reference.
+2010-07-21: BRK: Simplified the coroutine decorator according the stop_message
+            removal.
+2010-07-21: BRK: Updated and simplified BiFlow for the new stop_training
+            specification. Not tested yet.
+2010-07-21: ERF: Added output dimension check to IdentityNode.
+2010-07-21: ERF: ported test_flows to py.test
+2010-07-21: ERf: ported test_graph.py to py.test
+2010-07-21: ERF: ported test_parallelflows to py.test
+2010-07-21: ERF: ported test_parallelhinet.py to py.test
+2010-07-21: ERF: ported test_parallelnodes.py to py.test
+2010-07-21: ERF: ported test_process_schedule to py.test
+2010-07-21: ERF: ported test_extension to py.test
+2010-07-21: FIX: caching extension now works with non-contiguous arrays
+2010-07-21: OTH: Updated bimdp todo list.
+2010-07-21: BRK: Started with change of the stop_training signature in bimdp
+            and removed stop_message. The binode file is basically done.
+2010-07-21: NEW: New utility function to generate Gabor wavelets
+2010-07-21: ERF: ported test_classifier to py.test
+2010-07-21: ERF: added new testing tools file.
+2010-07-21: ERF: ported test_schedule to py.test
+2010-07-20: FIX: globally remove trailing whitespace Used
+            http://svn.python.org/projects/python/trunk/Tools/scripts/reindent.py
+            .
+
+2010-07-20: FIX: broken import
+2010-07-20: Merge branch 'py3k', remote branch 'origin/sprint_gradient' into
+            master Conflicts:
+            bimdp/inspection/trace_inspection.py
+
+2010-07-20: FIX: Removed use of new.instancemethod from inspection.
+2010-07-20: FIX: typo in Flow.__setitem__
+2010-07-20: ERF: use context manager for file access
+2010-07-20: FIX: don't create a list that is ignored RefactoringTool:
+            Warnings/messages while refactoring: RefactoringTool: ### In file
+            /home/zbyszek/mdp/mdp-toolkit/build/py3k/mdp/linear_flows.py ### 
+            RefactoringTool: Line 481: You should use a for loop here
+
+2010-07-20: FIX: Fixed the integer division in bimdp.
+2010-07-20: FIX: remove bogus import in test/__init__.py
+2010-07-20: FIX: get rid of the "callable" variable and fix the scheduler
+            shutdown An explicit flush was needed.
+
+2010-07-20: NEW convolution2d node
+2010-07-20: ERF: esthetic change: activate heart beat spinner
+2010-07-20: FIX: another integer division problem
+2010-07-20: FIX: don't use None in comparisons
+2010-07-20: FIX: integer division again
+2010-07-20: FIX: fixed handling of binary mode for stdin and stdout for pickle
+2010-07-20: FIX: remove unused import
+2010-07-20: FIX: don't compare float with NoneType In Python2.6 None is
+            smaller than any float, but in Python3 the comparison fails with
+            TypeError.
+
+2010-07-20: FIX: whitespace
+2010-07-20: FIX: correct relative imports in process_schedule.py
+2010-07-20: FIX: another integer division problem
+2010-07-20: FIX: whitespace
+2010-07-20: FIX: add x before range git grep -l 'for.*[^x]range'
+            mdp/test/|xargs sed -i -r 's/for(.*[^x])in range/for\1in xrange/g'
+
+2010-07-20: FIX: matlab→python and py3k cleanups a = a + 1 becomes a += 1
+            / becomes // range() becomes xrange() useless cast removed 
+            exception variable doesn't leak out after the catch block anymore
+
+2010-07-19: FIX: whitespace
+2010-07-20: FIX: zip returns a generator in py3k, we need a list
+2010-07-19: FIX: fixed integer division
+2010-07-19: FIX: fixed calling unbound class methods in extensions. unbound
+            methods have been removed in python3.
+2010-07-19: ERF: refactored py3tool
+2010-07-19: FIX: use sets not lists in testing GraphNode
+2010-07-19: FIX: open files in binary mode when loading a pickle
+2010-07-19: MISC: gitignore build stuff
+2010-07-19: ERF: use 'open' function instead of the deprecated 'file' in
+            mdp/demo
+2010-07-19: FIX: missing import in setup.py [2]
+2010-07-19: FIX: missing import in setup.py
+2010-07-19: NEW: python3 setup logic (from numpy)
+2010-07-19: ERF: use 'open' function instead of the deprecated 'file'.
+2010-07-20: ERF: Restricted the gradient default implementation to the
+            IdentityNode, now raise an exception as the default.
+2010-07-20: ERF: Removed the explicitly defined IdentityBiNode, use the
+            autogenerated one instead.
+2010-07-20: NEW context manager for extensions
+2010-07-20: NEW basic implementation of the cache execute extension
+2010-07-19: ERF: Added a gradient unittest with a small network.
+2010-07-19: ERF: Improved one  layer gradient unittest into a functional test.
+            Insignificant cleanup in gradient module.
+2010-07-19: FIX: Fixed the switchboard gradient and added unittest.
+2010-07-19: NEW: Added the switchboard gradient implementation with a test
+            (more unittests are needed).
+2010-07-19: NEW: Added gradient implementation for layer with some unittests
+            (more are needed). Added check in gradient base node that node has
+            finished training.
+2010-07-19: DOC: Added the new project guidelines.
+2010-07-19: ERF: use integer division
+2010-07-19: NEW: Added gradient extension with some implementations for simple
+            nodes (no hinet yet).
+2010-07-02: Added kwargs to SenderBiNode init to enable multiple Inheritance.
+2010-07-02: Fixed bug in inspection: If nodes were added in later training
+            phases the clickability broke for all nodes. Again this affected
+            XSFA. Changed text in inspection from layer to node.
+2010-07-02: Updated the inspection example (more training phases for better
+            illustration). Tiny doc update in SenderBiNode.
+2010-07-02: Fixed bug for normal node in BiFlowNode (this broke the XSFA
+            inspection example).
+2010-07-01: Simplified the inspection msg printing.
+2010-07-01: Improved the inspection message printing (alphabetic sorting and
+            highlighted keywords).
+2010-06-29: Improved the key order in the inspection msg HTML view.
+2010-06-29: Improved the array HTML display in the inspection.
+2010-06-29: Fixed one corner case bug in coroutine decorator and added more
+            unittests. Updated bimdp todo list. Small docstring update in
+            switchboard.
+2010-06-16: Merged the coroutine mixin class into the BiNode base class. Added
+            _bi_reset hook method that should be overwritten instead of
+            bi_reset. This is more consistent with the standard MDP design.
+            The bi_reset template method now clears the coroutine table.
+            Dervied BiNode classes should rename their bi_reset to _bi_reset,
+            but unless they use the coroutine decorator there is currently no
+            negative effect for not doing so. Updated the BiMDP todo list.
+2010-06-15: Fixed duplicate classifier nodes in autogenereated code.
+2010-06-14: Added check and unittest for corner case of a directly terminating
+            coroutine.
+2010-06-13: Reverted my misguided fixes to the metaclass wrapping helpers.
+2010-06-11: Small comments update.
+2010-06-11: Updated the codecorator to work with the updated NodeMetaclass
+            wrapping helper functions. Add new feature to specify argument
+            default values. Changed the _coroutine_instances to be initially
+            None for better efficiency.
+2010-06-11: Rewrote the NodeMetaclass wrapping helper functions. The old
+            versions contained a bug (default values would prevent user
+            defined values from being passed to the function). The new version
+            is also arguably more elegant and flexible. A unittest was added
+            for parts of the new functionality.
+2010-06-11: Fixed the n argument in PCANode inverse.
+2010-06-09: Added new coroutine decorator and mixin for BiMDP, allowing easy
+            continuations (without boilerplate code or explicit state
+            machines).
+2010-06-09: Fixed bug in SenderBiNode.
+2010-06-09: Fixed typo.
+2010-06-09: Fixed broken SFA execute range argument and renamed it to n. Added
+            unittests for PCA and SFA n arguments. Added some missing SFANode
+            attributes to init.
+2010-06-09: Fixed bug in BiFlowNode.
+2010-05-31: Added loop check for previous button in slideshow.
+2010-05-27: Numpy still uses the deprecated string exceptions, which were
+            naturally not caught during inspection. I now changed inspection
+            to catch everything.
+2010-05-19: Added check for loop setting in slideshow next().
+2010-05-17: Very small cosmetic updates.
+2010-05-17: fixed other two python2.4 incompatibilities in demos.
+2010-05-15: fixed bug with ProcessScheduler when mdp installed by debian
+            package. Now it works correctly even when multiple versions of mdp
+            are installed, for example a system version via debian and a local
+            git version. A unit test has been added to make sure parent and
+            child processes are running the very same mdp. Thanks to Yaroslav
+            Halchenko for pointing out the problem!
+
+-------------------------------------------------------------------------------
 MDP-2.6:
 
 2010-05-14: fix spurious shogun warning.

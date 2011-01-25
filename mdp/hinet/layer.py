@@ -1,8 +1,8 @@
 """
 Module for Layers.
 
-Note that additional args and kwargs for train or execute are currently not 
-supported. 
+Note that additional args and kwargs for train or execute are currently not
+supported.
 """
 
 import mdp
@@ -15,12 +15,12 @@ from mdp import numx
 
 class Layer(mdp.Node):
     """Layers are nodes which consist of multiple horizontally parallel nodes.
-    
+
     The incoming data is split up according to the dimensions of the internal
     nodes. For example if the first node has an input_dim of 50 and the second
     node 100 then the layer will have an input_dim of 150. The first node gets
     x[:,:50], the second one x[:,50:].
-    
+
     Any additional arguments are forwarded unaltered to each node.
     Warning: This might change in the next release (2.5).
 
@@ -28,14 +28,14 @@ class Layer(mdp.Node):
     build a layered network). If one would like to use flows instead of nodes
     inside of a layer one can use a FlowNode.
     """
-    
+
     def __init__(self, nodes, dtype=None):
         """Setup the layer with the given list of nodes.
-        
-        The input and output dimensions for the nodes must be already set 
-        (the output dimensions for simplicity reasons). The training phases for 
+
+        The input and output dimensions for the nodes must be already set
+        (the output dimensions for simplicity reasons). The training phases for
         the nodes are allowed to differ.
-        
+
         Keyword arguments:
         nodes -- List of the nodes to be used.
         """
@@ -52,10 +52,10 @@ class Layer(mdp.Node):
         super(Layer, self).__init__(input_dim=input_dim,
                                     output_dim=output_dim,
                                     dtype=dtype)
-        
+
     def _get_output_dim_from_nodes(self):
         """Calculate the output_dim from the nodes and return it.
-        
+
         If the output_dim of a node is not set the None is returned.
         """
         output_dim = 0
@@ -65,12 +65,12 @@ class Layer(mdp.Node):
             else:
                 return None
         return output_dim
-                
+
     def _check_props(self, dtype):
         """Check the compatibility of the properties of the internal nodes.
-        
+
         Return the found dtype and check the dimensions.
-        
+
         dtype -- The specified layer dtype.
         """
         dtype_list = []  # the dtypes for all the nodes
@@ -87,7 +87,7 @@ class Layer(mdp.Node):
         nodes_dtypes = set(dtype_list)
         nodes_dtypes.discard(None)
         if len(nodes_dtypes) > 1:
-            err = ("All nodes must have the same dtype (found: %s)." % 
+            err = ("All nodes must have the same dtype (found: %s)." %
                    nodes_dtypes)
             raise mdp.NodeException(err)
         elif len(nodes_dtypes) == 1:
@@ -102,7 +102,7 @@ class Layer(mdp.Node):
         elif nodes_dtype and not dtype:
             dtype = nodes_dtype
         return dtype
-            
+
     def _set_dtype(self, t):
         for node in self.nodes:
             node.dtype = t
@@ -116,20 +116,14 @@ class Layer(mdp.Node):
         return list(types)
 
     def is_trainable(self):
-        for node in self.nodes:
-            if node.is_trainable():
-                return True
-        return False
-    
-    def is_invertible(self): 
-        for node in self.nodes:
-            if not node.is_invertible():
-                return False
-        return True
-    
+        return any(node.is_trainable() for node in self.nodes)
+
+    def is_invertible(self):
+        return all(node.is_invertible() for node in self.nodes)
+
     def _get_train_seq(self):
         """Return the train sequence.
-        
+
         The length is set by the node with maximum length.
         """
         max_train_length = 0
@@ -138,7 +132,7 @@ class Layer(mdp.Node):
             if node_length > max_train_length:
                 max_train_length = node_length
         return ([[self._train, self._stop_training]] * max_train_length)
-    
+
     def _train(self, x, *args, **kwargs):
         """Perform single training step by training the internal nodes."""
         start_index = 0
@@ -156,7 +150,7 @@ class Layer(mdp.Node):
                 node.stop_training(*args, **kwargs)
         if self.output_dim is None:
             self.output_dim = self._get_output_dim_from_nodes()
-            
+
     def _pre_execution_checks(self, x):
         """Make sure that output_dim is set and then perform normal checks."""
         if self.output_dim is None:
@@ -170,7 +164,7 @@ class Layer(mdp.Node):
             self.output_dim = self._get_output_dim_from_nodes()
             if self.output_dim is None:
                 err = "output_dim must be set at this point for all nodes"
-                raise mdp.NodeException(err)  
+                raise mdp.NodeException(err)
         super(Layer, self)._pre_execution_checks(x)
 
     def _execute(self, x, *args, **kwargs):
@@ -194,7 +188,7 @@ class Layer(mdp.Node):
                 y[:,out_start:out_stop] = node.execute(x[:,in_start:in_stop],
                                                         *args, **kwargs)
         return y
-    
+
     def _inverse(self, x, *args, **kwargs):
         """Combine the inverse of all the internal nodes."""
         in_start = 0
@@ -217,65 +211,65 @@ class Layer(mdp.Node):
                 y[:,out_start:out_stop] = node.inverse(x[:,in_start:in_stop],
                                                         *args, **kwargs)
         return y
-    
+
     ## container methods ##
-    
+
     def __len__(self):
         return len(self.nodes)
-    
+
     def __getitem__(self, key):
         return self.nodes.__getitem__(key)
-        
+
     def __contains__(self, item):
         return self.nodes.__contains__(item)
-    
+
     def __iter__(self):
         return self.nodes.__iter__()
 
 
 class CloneLayer(Layer):
     """Layer with a single node instance that is used multiple times.
-    
-    The same single node instance is used to build the layer, so 
-    Clonelayer(node, 3) executes in the same way as Layer([node]*3). 
-    But Layer([node]*3) would have a problem when closing a training phase, 
+
+    The same single node instance is used to build the layer, so
+    Clonelayer(node, 3) executes in the same way as Layer([node]*3).
+    But Layer([node]*3) would have a problem when closing a training phase,
     so one has to use CloneLayer.
-    
+
     A CloneLayer can be used for weight sharing in the training phase. It might
     be also useful for reducing the memory footprint use during the execution
     phase (since only a single node instance is needed).
     """
-    
+
     def __init__(self, node, n_nodes=1, dtype=None):
         """Setup the layer with the given list of nodes.
-        
+
         Keyword arguments:
         node -- Node to be cloned.
         n_nodes -- Number of repetitions/clones of the given node.
         """
         super(CloneLayer, self).__init__((node,) * n_nodes, dtype=dtype)
         self.node = node  # attribute for convenience
-        
+
     def _stop_training(self, *args, **kwargs):
         """Stop training of the internal node."""
         if self.node.is_training():
             self.node.stop_training(*args, **kwargs)
         if self.output_dim is None:
             self.output_dim = self._get_output_dim_from_nodes()
-        
+
 class SameInputLayer(Layer):
     """SameInputLayer is a layer were all nodes receive the full input.
-    
+
     So instead of splitting the input according to node dimensions, all nodes
     receive the complete input data.
-    """ 
-    
+    """
+
     def __init__(self, nodes, dtype=None):
         """Setup the layer with the given list of nodes.
-        
+
         The input dimensions for the nodes must all be equal, the output
         dimensions can differ (but must be set as well for simplicity reasons).
-        
+
         Keyword arguments:
         nodes -- List of the nodes to be used.
         """
@@ -293,16 +287,17 @@ class SameInputLayer(Layer):
         super(Layer, self).__init__(input_dim=input_dim,
                                     output_dim=output_dim,
                                     dtype=dtype)
-                
-    def is_invertible(self):
+
+    @staticmethod
+    def is_invertible():
         return False
-    
+
     def _train(self, x, *args, **kwargs):
         """Perform single training step by training the internal nodes."""
         for node in self.nodes:
             if node.is_training():
                 node.train(x, *args, **kwargs)
-                
+
     def _pre_execution_checks(self, x):
         """Make sure that output_dim is set and then perform nromal checks."""
         if self.output_dim is None:
@@ -315,7 +310,7 @@ class SameInputLayer(Layer):
                 raise mdp.NodeException(err)
         # intentionally use MRO above Layer, not SameInputLayer
         super(Layer, self)._pre_execution_checks(x)
-                
+
     def _execute(self, x, *args, **kwargs):
         """Process the data through the internal nodes."""
         out_start = 0

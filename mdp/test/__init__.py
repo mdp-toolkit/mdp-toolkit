@@ -1,70 +1,59 @@
-"""This is the test module for MDP.
+import os
+SCRIPT="run_tests.py"
 
-Run all tests with:
->>> import mdp
->>> mdp.test()
+def test(filename=None, keyword=None, seed=None, mod_loc=None, script_loc=None):
+    """Run tests.
 
-"""
+       filename -- only run tests in filename. If not set run all tests.
+                   You do not need the full path, the relative path within the
+                   test directory is enough.
 
-import unittest
-import sys
-import mdp
+       keyword  -- only run test items matching the given space separated
+                   keywords.  precede a keyword with '-' to negate.
+                   Terminate the expression with ':' to treat a match as
+                   a signal to run all subsequent tests.
 
-import test_nodes
-import test_flows
-import test_utils
-import test_graph
-import test_contrib
-import test_extension
-import test_hinet
-import test_schedule
-import test_parallelnodes
-import test_parallelflows
-import test_parallelhinet
-import test_process_schedule
-import test_classifier
+       seed     -- set random seed
 
-numx = mdp.numx
-numx_rand = mdp.numx_rand
+       mod_loc  -- don't use it, it's for internal usage
 
-_err_str = """\nIMPORTANT: some tests use random numbers. This could
-occasionally lead to failures due to numerical degeneracies.
-To rule this out, please run the tests more than once.
-If you get reproducible failures please report a bug!
-"""
-
-test_suites = {'flows': (test_flows.get_suite, 0),
-               'utils': (test_utils.get_suite, 1),
-               'graph': (test_graph.get_suite, 2),
-               'nodes': (test_nodes.get_suite, 3),
-               'extension': (test_extension.get_suite, 4),
-               'hinet':   (test_hinet.get_suite, 5),
-               'schedule': (test_schedule.get_suite, 6),
-               'parallelnodes': (test_parallelnodes.get_suite, 7),
-               'parallelflows': (test_parallelflows.get_suite, 8),
-               'parallelhinet': (test_parallelhinet.get_suite, 9),
-               'process_schedule': (test_process_schedule.get_suite, 10),
-               'contrib': (test_contrib.get_suite, 11),
-               'classifier': (test_classifier.get_suite, 12)}
-                           
-
-def test(suitename = 'all', verbosity = 2, seed = None, testname = None):
-    if seed is None:
-        seed = int(numx_rand.randint(2**31-1))
-
-    numx_rand.seed(seed)
-    mdp.info()
-    sys.stderr.write("\nRandom Seed: " + str(seed)+'\n')
-    if suitename == 'all':
-        sorted_suites = [x[0](testname=testname)
-                         for x in sorted(test_suites.values(),
-                                         key=lambda y: y[1])]
-        suite = unittest.TestSuite(sorted_suites)
+       script_loc  -- don't use it, it's for internal usage
+    """
+    if mod_loc is None:
+        mod_loc = os.path.dirname(__file__)
+    if script_loc is None:
+        script_loc = os.path.dirname(__file__)
+    if filename is None:
+        loc = mod_loc
     else:
-        suite = test_suites[suitename][0](testname=testname)
-    res = unittest.TextTestRunner(verbosity=verbosity).run(suite)
-    if len(res.errors+res.failures) > 0:
-        sys.stderr.write(_err_str)
-    mdp.info()
-    sys.stderr.write("\nRandom Seed was: " + str(seed)+'\n')
-    
+        loc = os.path.join(mod_loc, os.path.basename(filename))
+    args = []
+    if keyword is not None:
+        args.extend(('-k', str(keyword)))
+    if seed is not None:
+        args.extend(('--seed', str(seed)))
+
+    args.append(loc)
+    _worker = get_worker(script_loc)
+    return _worker(args)
+
+def subtest(script, args):
+    # run the auto-generated script in a subprocess"
+    import subprocess
+    import sys
+    subprocess.Popen([sys.executable,script]+args, stdout = sys.stdout,
+                     stderr = sys.stderr)
+
+def get_worker(loc):
+    try:
+        # use py.test module interface if it's installed
+        import py.test
+        return py.test.cmdline.main
+    except ImportError:
+        # try to locate the script
+        script = os.path.join(loc, SCRIPT)
+        if os.path.exists(script):
+            return lambda args: subtest(script, args)
+        else:
+            raise Exception('Could not find self-contained py.test script in'
+                            '"%s"'%script)

@@ -6,7 +6,7 @@ try:
     from functools import reduce
 except ImportError:
     pass
-    
+
 class GraphException(Exception):
     """Base class for exception in the graph package."""
     pass
@@ -43,7 +43,7 @@ def recursive_reduce(func, seq, *argv):
 
 class GraphNode(object):
     """Represent a graph node and all information attached to it."""
-    
+
     def __init__(self, data=None):
         self.data = data
         # edges in
@@ -56,10 +56,10 @@ class GraphNode(object):
 
     def add_edge_out(self, edge):
         self.eout.append(edge)
-    
+
     def remove_edge_in(self, edge):
         self.ein.remove(edge)
-    
+
     def remove_edge_out(self, edge):
         self.eout.remove(edge)
 
@@ -107,7 +107,7 @@ class GraphNode(object):
 
     def neighbors(self):
         return self.in_neighbors() + self.out_neighbors()
-        
+
 class GraphEdge(object):
     """Represent a graph edge and all information attached to it."""
 
@@ -118,7 +118,7 @@ class GraphEdge(object):
         self.tail = tail
         # arbitrary data slot
         self.data = data
-        
+
     def get_ends(self):
         """Return the tuple (head_id, tail_id)."""
         return (self.head, self.tail)
@@ -234,7 +234,7 @@ class Graph(object):
         for from_ in from_nodes:
             edges.append(map(lambda x: self.add_edge(from_, x), to_nodes))
         return edges
-        
+
     ###### graph algorithms
 
     def topological_sort(self):
@@ -271,7 +271,7 @@ class Graph(object):
         # raise a GraphTopographicalException
         if len(topological_list)!=len(self.nodes):
             raise GraphTopologicalException(topological_list)
-        
+
         return topological_list
 
     ### Depth-First sort
@@ -281,7 +281,7 @@ class Graph(object):
         # changing the neighbors function to return the sons of a node,
         # its parents, or both one gets normal dfs, reverse dfs, or
         # dfs on the equivalent undirected graph, respectively
-        
+
         # result list containing the nodes in Depth-First order
         dfs_list = []
         # keep track of all already visited nodes
@@ -303,9 +303,9 @@ class Graph(object):
                 if son not in visited_nodes:
                     visited_nodes[son] = None
                     dfs_stack.append(son)
-        
+
         return dfs_list
-        
+
     def dfs(self, root, visit_fct=None):
         """Return a list of nodes in some Depth First order starting from
         a root node. If defined, visit_fct is applied on each visited node.
@@ -313,7 +313,7 @@ class Graph(object):
         The returned list does not have to contain all nodes in the
         graph, but only the ones reachable from the root.
         """
-        
+
         neighbors_fct = lambda node: node.out_neighbors()
         return self._dfs(neighbors_fct, root, visit_fct=visit_fct)
 
@@ -330,11 +330,11 @@ class Graph(object):
     def connected_components(self):
         """Return a list of lists containing the nodes of all connected
         components of the graph."""
-        
+
         visited = {}
         def visit_fct(node, visited=visited):
             visited[node] = None
-            
+
         components = []
         nodes = self.nodes
         for node in nodes:
@@ -356,7 +356,7 @@ class Graph(object):
         # changing the neighbors function to return the sons of a node,
         # its parents, or both one gets normal bfs, reverse bfs, or
         # bfs on the equivalent undirected graph, respectively
-        
+
         # result list containing the nodes in Breadth-First order
         bfs_list = []
         # keep track of all already visited nodes
@@ -378,16 +378,16 @@ class Graph(object):
                 if son not in visited_nodes:
                     visited_nodes[son] = None
                     bfs_queue.append(son)
-        
+
         return bfs_list
-        
+
     def bfs(self, root, visit_fct=None):
         """Return a list of nodes in some Breadth First order starting from
         a root node. If defined, visit_fct is applied on each visited node.
 
         Note the returned list does not have to contain all nodes in the
         graph, but only the ones reachable from the root."""
-        
+
         neighbors_fct = lambda node: node.out_neighbors()
         return self._bfs(neighbors_fct, root, visit_fct=visit_fct)
 
@@ -396,6 +396,6 @@ class Graph(object):
 
         This function is identical to bfs, but the sort is performed on
         the equivalent undirected version of the graph."""
-        
+
         neighbors_fct = lambda node: node.neighbors()
         return self._bfs(neighbors_fct, root, visit_fct=visit_fct)

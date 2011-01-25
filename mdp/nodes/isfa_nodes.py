@@ -1,3 +1,5 @@
+__docformat__ = "restructuredtext en"
+
 import sys as _sys
 import mdp
 from mdp import Node, NodeException, numx, numx_rand
@@ -5,6 +7,8 @@ from mdp.nodes import WhiteningNode
 from mdp.utils import (DelayCovarianceMatrix, MultipleCovarianceMatrices,
                        rotate, mult)
 
+
+# TODO: support floats of size different than 64-bit; will need to change SQRT_EPS_D
 
 # rename often used functions
 sum, cos, sin, PI = numx.sum, numx.cos, numx.sin, numx.pi
@@ -25,35 +29,41 @@ class ISFANode(Node):
     """
     Perform Independent Slow Feature Analysis on the input data.
 
-    Internal variables of interest:
-    self.RP -- the global rotation-permutation matrix. This is the filter
-               applied on input_data to get output_data
+    **Internal variables of interest**
 
-    self.RPC -- the *complete* global rotation-permutation matrix. This
-                is a matrix of dimension input_dim x input_dim
-                (the 'outer space' is retained)
+      ``self.RP``
+          The global rotation-permutation matrix. This is the filter
+          applied on input_data to get output_data
 
-    self.covs -- A mdp.utils.MultipleCovarianceMatrices instance containing
-                 the current time-delayed covariance matrices of the
-                 input_data. After convergence the uppermost
-                 output_dim x output_dim submatrices should be almost
-                 diagonal.
-                 
-                 self.covs[n-1] is the covariance matrix relative to
-                 the n-th time-lag
-                 
-                 Note: they are not cleared after convergence. If you
-                 need to free some memory, you can safely delete them with
-                 >>> del self.covs
+      ``self.RPC``
+          The *complete* global rotation-permutation matrix. This
+          is a matrix of dimension input_dim x input_dim (the 'outer space'
+          is retained)
 
-    self.initial_contrast -- a dictionary with the starting contrast
-                             and the SFA and ICA parts of it.
+      ``self.covs``
+          A `mdp.utils.MultipleCovarianceMatrices` instance containing
+          the current time-delayed covariance matrices of the input_data.
+          After convergence the uppermost ``output_dim`` x ``output_dim``
+          submatrices should be almost diagonal.
+          
+          ``self.covs[n-1]`` is the covariance matrix relative to the ``n``-th
+          time-lag
+            
+          Note: they are not cleared after convergence. If you need to free
+          some memory, you can safely delete them with::
+          
+              >>> del self.covs
 
-    self.final_contrast   -- like the above but after convergence.
+      ``self.initial_contrast``
+          A dictionary with the starting contrast and the SFA and ICA parts of
+          it.
+
+      ``self.final_contrast``
+          Like the above but after convergence.
 
     Note: If you intend to use this node for large datasets please have
-          a look at the stop_training method documentation for
-          speeding things up.
+    a look at the ``stop_training`` method documentation for
+    speeding things up.
 
     References:
     Blaschke, T. , Zito, T., and Wiskott, L. (2007).
@@ -68,75 +78,89 @@ class ISFANode(Node):
                  dtype=None):
         """
         Perform Independent Slow Feature Analysis.
+
         The notation is the same used in the paper by Blaschke et al. Please
         refer to the paper for more information.
-        
-        Keyword arguments:
-        
-        lags    -- list of time-lags to generate the time-delayed covariance
-                   matrices (in the paper this is the set of \tau). If
-                   lags is an integer, time-lags 1,2,...,'lags' are used.
-                   Note that time-lag == 0 (instantaneous correlation) is
-                   always implicitly used.
 
-        sfa_ica_coeff -- a list of float with two entries, which defines the
-                         weights of the SFA and ICA part of the
-                         objective function. They are called b_{SFA} and
-                         b_{ICA} in the paper.
-        
-        sfaweights -- weighting factors for the covariance matrices relative
-                      to the SFA part of the objective function (called
-                      \kappa_{SFA}^{\tau} in the paper). Default is
-                      [1., 0., ..., 0.]
-                      For possible values see the description of icaweights.
+        :Parameters:
+          lags
+            list of time-lags to generate the time-delayed covariance
+            matrices (in the paper this is the set of \tau). If
+            lags is an integer, time-lags 1,2,...,'lags' are used.
+            Note that time-lag == 0 (instantaneous correlation) is
+            always implicitly used.
 
-        icaweights -- weighting factors for the cov matrices relative
-                      to the ICA part of the objective function (called
-                      \kappa_{ICA}^{\tau} in the paper). Default is 1.
-                      Possible values are:
-                          an integer n: all matrices are weighted the same
-                                        (note that it does not make sense to
-                                         have n != 1)
-                          a list or array of floats of len == len(lags): each
-                                        element of the list is used for
-                                        weighting the corresponding matrix
-                          None: use the default values.
-                                        
-        whitened   -- True if input data is already white, False otherwise (the
-                      data will be whitened internally).
+          sfa_ica_coeff
+            a list of float with two entries, which defines the
+            weights of the SFA and ICA part of the objective
+            function. They are called b_{SFA} and b_{ICA} in the
+            paper.
 
-        white_comp -- If whitened is False, you can set 'white_comp' to the
-                      number of whitened components to keep during the
-                      calculation (i.e., the input dimensions are reduced to
-                      white_comp by keeping the components of largest variance).
-        white_parm -- a dictionary with additional parameters for whitening.
-                      It is passed directly to the WhiteningNode constructor.
-                      Ex: white_parm = { 'svd' : True }        
-        
-        eps_contrast -- Convergence is achieved when the relative
-                        improvement in the contrast is below this threshold.
-                        Values in the range [1E-4, 1E-10] are usually
-                        reasonable.
-        
-        max_iter     -- If the algorithms does not achieve convergence within
-                        max_iter iterations raise an Exception. Should be
-                        larger than 100.
+          sfaweights
+            weighting factors for the covariance matrices relative
+            to the SFA part of the objective function (called
+            \kappa_{SFA}^{\tau} in the paper). Default is
+            [1., 0., ..., 0.]
+            For possible values see the description of icaweights.
 
-        RP     -- Starting rotation-permutation matrix. It is an
-                  input_dim x input_dim matrix used to initially rotate the
-                  input components. If not set, the identity matrix is used.
-                  In the paper this is used to start the algorithm at the
-                  SFA solution (which is often quite near to the optimum).
+          icaweights
+            weighting factors for the cov matrices relative
+            to the ICA part of the objective function (called
+            \kappa_{ICA}^{\tau} in the paper). Default is 1.
+            Possible values are:
 
-        verbose -- print progress information during convergence. This can
-                   slow down the algorithm, but it's the only way to see
-                   the rate of improvement and immediately spot if something
-                   is going wrong.
-       
-        output_dim -- sets the number of independent components that have to
-                      be extracted. Note that if this is not smaller than
-                      input_dim, the problem is solved linearly and SFA
-                      would give the same solution only much faster.
+            - an integer ``n``: all matrices are weighted the same
+              (note that it does not make sense to have ``n != 1``)
+
+            - a list or array of floats of ``len == len(lags)``:
+              each element of the list is used for weighting the
+              corresponding matrix
+
+            - ``None``: use the default values.
+
+          whitened
+            ``True`` if input data is already white, ``False``
+            otherwise (the data will be whitened internally).
+
+          white_comp
+            If whitened is false, you can set ``white_comp`` to the
+            number of whitened components to keep during the
+            calculation (i.e., the input dimensions are reduced to
+            ``white_comp`` by keeping the components of largest variance).
+          white_parm
+            a dictionary with additional parameters for whitening.
+            It is passed directly to the WhiteningNode constructor.
+            Ex: white_parm = { 'svd' : True }
+
+          eps_contrast
+            Convergence is achieved when the relative
+            improvement in the contrast is below this threshold.
+            Values in the range [1E-4, 1E-10] are usually
+            reasonable.
+
+          max_iter
+            If the algorithms does not achieve convergence within
+            max_iter iterations raise an Exception. Should be
+            larger than 100.
+
+          RP
+            Starting rotation-permutation matrix. It is an
+            input_dim x input_dim matrix used to initially rotate the
+            input components. If not set, the identity matrix is used.
+            In the paper this is used to start the algorithm at the
+            SFA solution (which is often quite near to the optimum).
+
+          verbose
+            print progress information during convergence. This can
+            slow down the algorithm, but it's the only way to see
+            the rate of improvement and immediately spot if something
+            is going wrong.
+
+          output_dim
+            sets the number of independent components that have to
+            be extracted. Note that if this is not smaller than
+            input_dim, the problem is solved linearly and SFA
+            would give the same solution only much faster.
         """
         # check that the "lags" argument has some meaningful value
         if isinstance(lags, (int, long)):
@@ -164,7 +188,7 @@ class ISFANode(Node):
                        "should be %d" % (str(len(icaweights)), str(len(lags))))
                 raise NodeException(err)
             self.icaweights = icaweights
-            
+
         if sfaweights is None:
             self.sfaweights = [0]*len(lags)
             self.sfaweights[0] = 1.
@@ -173,7 +197,7 @@ class ISFANode(Node):
                 err = ("sfaweights vector length is %d, "
                        "should be %d" % (str(len(sfaweights)), str(len(lags))))
                 raise NodeException(err)
-            self.sfaweights = sfaweights        
+            self.sfaweights = sfaweights
 
         # store attributes
         self.sfa_ica_coeff = sfa_ica_coeff
@@ -189,7 +213,7 @@ class ISFANode(Node):
             if output_dim is not None:
                 white_comp = output_dim
             elif white_comp is not None:
-                output_dim = white_comp        
+                output_dim = white_comp
             self.white = WhiteningNode(input_dim=input_dim,
                                        output_dim=white_comp,
                                        dtype=dtype, **white_parm)
@@ -200,7 +224,7 @@ class ISFANode(Node):
         # initialize the global rotation-permutation matrix
         # if not set that we'll eventually be an identity matrix
         self.RP = RP
-        
+
         # initialize verbose structure to print nice and useful progress info
         if verbose:
             info = { 'sweep' : max(len(str(self.max_iter)), 5),
@@ -222,8 +246,11 @@ class ISFANode(Node):
         super(ISFANode, self).__init__(input_dim, output_dim, dtype)
 
     def _get_supported_dtypes(self):
-        """Return the list of dtypes supported by this node."""
-        return ['float64']
+        """Return the list of dtypes supported by this node.
+      
+        Support floating point types with size larger or equal than 64 bits.
+        """
+        return [t for t in mdp.utils.get_dtypes('Float') if t.itemsize>=8]
 
     def _set_dtype(self, dtype):
         # when typecode is set, we set the whitening node if needed and
@@ -240,7 +267,7 @@ class ISFANode(Node):
             self._effective_input_dim = self.white.output_dim
         else:
             self._effective_input_dim = n
-            
+
     def _train(self, x):
         # train the whitening node if needed
         if not self.whitened:
@@ -285,15 +312,15 @@ class ISFANode(Node):
                                        ica_str,
                                        contrast_str])
         return table_entry
-        
+
     def _get_eye(self):
         # return an identity matrix with the right dimensions and type
         return numx.eye(self._effective_input_dim, dtype=self.dtype)
-    
+
     def _get_rnd_rotation(self, dim):
         # return a random rot matrix with the right dimensions and type
         return mdp.utils.random_rot(dim, self.dtype)
-    
+
     def _get_rnd_permutation(self, dim):
         # return a random permut matrix with the right dimensions and type
         zero = numx.zeros((dim, dim), dtype=self.dtype)
@@ -301,7 +328,7 @@ class ISFANode(Node):
         for col in range(dim):
             zero[row[col], col] = 1.
         return zero
-        
+
     def _givens_angle(self, i, j, covs, bica_bsfa=None, complete=0):
         # Return the Givens rotation angle for which the contrast function
         # is minimal
@@ -313,7 +340,7 @@ class ISFANode(Node):
         else:
             return self._givens_angle_case2(i, j, covs,
                                             bica_bsfa, complete=complete)
-        
+
 
     def _givens_angle_case2(self, m, n, covs, bica_bsfa, complete=0):
         # This function makes use of the constants computed in the paper
@@ -388,7 +415,7 @@ class ISFANode(Node):
             dg = covs[:R, :R, t].diagonal()
             dc[t] = (dg*dg).sum(axis=0)
         dc = ((dc-Cmm*Cmm)*sfaweights).sum()
-        
+
         ec = numx.zeros((ncovs, ), dtype = self.dtype)
         for t in range(ncovs):
             ec[t] = sum([covs[i, j, t]*covs[i, j, t] for i in range(R-1)
@@ -405,10 +432,10 @@ class ISFANode(Node):
             contrast = a20 + c22*cos(-2*phi) + s22*sin(-2*phi) +\
                        c24*cos(-4*phi) + s24*sin(-4*phi)
             return phi, contrast, minimum, minimum_contrast
-        else: 
+        else:
             return minimum, minimum_contrast
 
-    
+
     def _givens_angle_case1(self, m, n, covs, bica_bsfa, complete=0):
         # This function makes use of the constants computed in the paper
         #
@@ -423,7 +450,7 @@ class ISFANode(Node):
         icaweights = self.icaweights
         sfaweights = self.sfaweights
         bica, bsfa = bica_bsfa
-        
+
         Cmm, Cmn, Cnn = covs[m, m, :], covs[m, n, :], covs[n, n, :]
         d0 =   (sfaweights * (Cmm*Cmm+Cnn*Cnn)).sum()
         d1 = 4*(sfaweights * (Cmm*Cmn-Cmn*Cnn)).sum()
@@ -466,7 +493,7 @@ class ISFANode(Node):
             # Compute the contrast between -pi/2 and pi/2
             # (useful for testing purposes)
             phi = numx.linspace(-PI/2, PI/2, npoints+1)
-            contrast = a20 + c24*cos(-4*phi) + s24*sin(-4*phi)            
+            contrast = a20 + c24*cos(-4*phi) + s24*sin(-4*phi)
             return phi, contrast, minimum, minimum_contrast
         elif complete == 2:
             phi = numx.linspace(-PI/4, PI/4, npoints+1)
@@ -474,7 +501,7 @@ class ISFANode(Node):
             return phi, contrast, minimum, minimum_contrast
         else:
             return minimum, minimum_contrast
-    
+
 
     def _get_contrast(self, covs, bica_bsfa = None):
         if bica_bsfa is None:
@@ -486,7 +513,7 @@ class ISFANode(Node):
         icaweights = self.icaweights
         sfaweights = self.sfaweights
         # unpack the bsfa and bica coefficients
-        bica, bsfa = bica_bsfa 
+        bica, bsfa = bica_bsfa
         sfa = numx.zeros((ncovs, ), dtype=self.dtype)
         ica = numx.zeros((ncovs, ), dtype=self.dtype)
         for t in range(ncovs):
@@ -494,7 +521,7 @@ class ISFANode(Node):
             sfa[t] = sq_corr.trace()
             ica[t] = 2*_triu(sq_corr, 1).ravel().sum()
         return (bsfa*sfaweights*sfa).sum(), (bica*icaweights*ica).sum()
-        
+
     def _adjust_ica_sfa_coeff(self):
         # adjust sfa/ica ratio. ica and sfa term are scaled
         # differently because sfa accounts for the diagonal terms
@@ -521,7 +548,7 @@ class ISFANode(Node):
             # fix and whiten the covariance matrices
             for i in range(len(self.lags)):
                 covs[i], avg, avg_dt, tlen = covs[i].fix(proj)
-        
+
             # send the matrices to the container class
             covs = MultipleCovarianceMatrices(covs)
             # symmetrize the cov matrices
@@ -563,14 +590,14 @@ class ISFANode(Node):
 
         # size of the perturbation matrix
         psize = self._effective_input_dim-self.output_dim
-                        
+
         # if there is no outer space don't perturbe
         if self._effective_input_dim == self.output_dim:
             perturbed = -1
 
         # local eye matrix
         eye = self._get_eye()
-        
+
         # main loop
         # we'll keep on sweeping until the contrast has improved less
         # then self.eps_contrast
@@ -578,7 +605,7 @@ class ISFANode(Node):
         while sweeping:
             # update number of sweeps
             sweep += 1
-            
+
             # perform a single sweep
             max_increase, covs, Q, contrast = self._do_sweep(covs, Q, contrast)
 
@@ -604,7 +631,7 @@ class ISFANode(Node):
                     sweeping = False
                 # keep track of the last sweep we perturbed
                 part_sweep = sweep
-                
+
             # perform perturbation if needed
             if perturbed >= 1 and sweeping is True:
                 # generate a random rotation matrix for the external subspace
@@ -627,7 +654,7 @@ class ISFANode(Node):
                                                   perturbed,
                                                   contrast)
                 _sys.stdout.write(table_entry+len(table_entry)*'\b')
-                _sys.stdout.flush()            
+                _sys.stdout.flush()
 
             # if we made too many sweeps exit with error!
             if sweep == self.max_iter:
@@ -637,7 +664,7 @@ class ISFANode(Node):
 
         # if we land here, we have converged!
         # calculate output contrast
-        
+
         sfa, ica =  self._get_contrast(covs)
         contrast = sfa+ica
         # print final information
@@ -649,7 +676,7 @@ class ISFANode(Node):
         self.final_contrast = {'SFA': sfa,
                                'ICA': ica,
                                'TOT': sfa + ica}
-        
+
         # finally return optimal rotation matrix
         return Q
 
@@ -670,7 +697,7 @@ class ISFANode(Node):
                 # we can only break things from here on, better quit!
                 max_increase = -1
                 break
-            
+
             # relative improvement in the contrast function
             relative_diff = (prev_contrast-contrast)/abs(prev_contrast)
             if relative_diff < 0:
@@ -687,31 +714,33 @@ class ISFANode(Node):
             # store maximum and previous rate of change
             max_increase = max(max_increase, relative_diff)
             prev_contrast = contrast
-            
+
         return max_increase, covs, Q, contrast
-    
+
     def _stop_training(self, covs=None):
         """Stop the training phase.
+
         If the node is used on large datasets it may be wise to first
         learn the covariance matrices, and then tune the parameters
         until a suitable parameter set has been found (learning the
         covariance matrices is the slowest part in this case).  This
         could be done for example in the following way (assuming the
         data is already white):
-        
-        covs=[mdp.utils.DelayCovarianceMatrix(dt, dtype=dtype) for dt in lags]
-        for block in data:
-           [covs[i].update(block) for i in range(len(lags))]
+
+        >>> covs=[mdp.utils.DelayCovarianceMatrix(dt, dtype=dtype)
+        ...       for dt in lags]
+        >>> for block in data:
+        ...     [covs[i].update(block) for i in range(len(lags))]
 
         You can then initialize the ISFANode with the desired parameters,
         do a fake training with some random data to set the internal
         node structure and then call stop_training with the stored covariance
         matrices. For example:
 
-        isfa = ISFANode(lags, .....)
-        x = mdp.numx_rand.random((100, input_dim)).astype(dtype)
-        isfa.train(x)
-        isfa.stop_training(covs=covs)
+        >>> isfa = ISFANode(lags, .....)
+        >>> x = mdp.numx_rand.random((100, input_dim)).astype(dtype)
+        >>> isfa.train(x)
+        >>> isfa.stop_training(covs=covs)
 
         This trick has been used in the paper to apply ISFA to surrogate
         matrices, i.e. covariance matrices that were not learnt on a
@@ -758,7 +787,7 @@ class ISFANode(Node):
         d = (self.covs.covs[:self.output_dim, :self.output_dim, 0]).diagonal()
         idx = d.argsort()[::-1]
         self.RP = RP.take(idx, axis=1)
-        
+
         # we could in principle clean up self.covs, as we do in SFANode or
         # PCANode, but this algorithm is not stable enough to rule out
         # possible problems. When these occcurs examining the covariance

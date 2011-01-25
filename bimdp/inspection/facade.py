@@ -13,7 +13,7 @@ import mdp
 from mdp import hinet
 from mdp import numx
 
-from ..biflow import BiFlow
+from bimdp import BiFlow
 
 from bihinet_translator import BIHINET_STYLE
 from trace_inspection import (
@@ -55,14 +55,14 @@ def inspect_training(snapshot_path, x_samples, msg_samples=None,
                      slide_style=SLIDE_STYLE, show_size=False,
                      verbose=True, **kwargs):
     """Return the HTML code for an inspection slideshow of the training.
-    
+
     This function must be used after the training was completed. Before the
     training prepare_training_inspection must have been called to create
-    snapshots. After training one should call remove_inspection_residues. 
-    
+    snapshots. After training one should call remove_inspection_residues.
+
     Note that the file into which the returned slideshow HTML is inserted must
     be in the snapshot_path.
-    
+
     snapshot_path -- Path were the flow training snapshots are stored.
     css_filename -- Filename of the CSS file for the slides.
     x_samples, msg_samples -- Lists with the input data for the training trace.
@@ -113,13 +113,13 @@ def show_training(flow, data_iterables, msg_iterables=None, stop_messages=None,
                   path=None, trace_inspector=None, debug=False,
                   show_size=False, open_browser=True, **kwargs):
     """Perform both the flow training and the training inspection.
-    
-    The return value is the filename of the slideshow HTML file. 
-    
+
+    The return value is the filename of the slideshow HTML file.
+
     This function is more convenient than inspect_training since it includes
     all required steps, but it is also less customizable. After everything
     is complete the inspection slideshow is opened in the browser.
-    
+
     flow -- The untrained Flow or BiFlow. After this function has been called
         the flow will be fully trained.
     data_iterables, msg_iterables, stop_messages -- Same as for calling train
@@ -172,7 +172,7 @@ def show_training(flow, data_iterables, msg_iterables=None, stop_messages=None,
                   (x_samples, msg_samples, stop_messages))
     del x_samples
     del msg_samples
-    # perform the training and gather snapshots 
+    # perform the training and gather snapshots
     prepare_training_inspection(flow=flow, path=path)
     try:
         if isinstance(flow, BiFlow):
@@ -190,7 +190,7 @@ def show_training(flow, data_iterables, msg_iterables=None, stop_messages=None,
                 flow._bi_reset()
             except Exception:
                 pass
-            filename = (flow._snapshot_name_ + "_%d" % flow._snapshot_counter_ 
+            filename = (flow._snapshot_name_ + "_%d" % flow._snapshot_counter_
                         + PICKLE_EXT)
             robust_pickle(flow._snapshot_path_, filename, flow)
         else:
@@ -230,10 +230,10 @@ def inspect_execution(flow, x, msg=None, target=None, path=None, name=None,
                       **kwargs):
     """Return the HTML code for an inspection slideshow of the execution
     and the return value of the execution (in a tuple).
-    
+
     Note that the file into which the slideshow HTML is inserted must be in the
     snapshot_path.
-    
+
     flow -- The flow for the execution.
     x, msg, target -- Data for the execution, msg and target can only be used
         for a BiFlow (default value is None).
@@ -277,7 +277,7 @@ def inspect_execution(flow, x, msg=None, target=None, path=None, name=None,
         if not debug_exception.result:
             return None
         traceback.print_exc()
-        print ("exception during excecution, " + 
+        print ("exception during excecution, " +
                "create inspection up to failure point...")
         slide_filenames, slide_node_ids, section_ids = debug_exception.result
         result = None
@@ -288,7 +288,7 @@ def inspect_execution(flow, x, msg=None, target=None, path=None, name=None,
                                          delay=500, delay_delta=100,
                                          loop=False)
     else:
-        # after an exception the last section_id entry can be missing 
+        # after an exception the last section_id entry can be missing
         if len(section_ids) < len(slide_filenames):
             section_ids.append(section_ids[-1])
         slideshow = SectExecuteHTMLSlideShow(filenames=slide_filenames,
@@ -303,7 +303,7 @@ def show_execution(flow, x, msg=None, target=None, path=None, name=None,
                    open_browser=True, **kwargs):
     """Write the inspection slideshow into an HTML file and open it in the
     browser.
-    
+
     The return value is a tuple with the slideshow filename and the return
     value of the execution.
 

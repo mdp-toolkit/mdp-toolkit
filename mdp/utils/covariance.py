@@ -56,7 +56,7 @@ class CovarianceMatrix(object):
 
     def _init_internals(self, x):
         """Init the internal structures.
-        
+
         The reason this is not done in the constructor is that we want to be
         able to derive the input dimension and the dtype directly from the
         data this class receives.
@@ -74,7 +74,7 @@ class CovarianceMatrix(object):
 
     def update(self, x):
         """Update internal structures.
-        
+
         Note that no consistency checks are performed on the data (this is
         typically done in the enclosing node).
         """
@@ -124,7 +124,7 @@ class CovarianceMatrix(object):
         return cov_mtx, avg, tlen
 
 
-class DelayCovarianceMatrix(object):    
+class DelayCovarianceMatrix(object):
     """This class stores an empirical covariance matrix between the signal and
     time delayed signal that can be updated incrementally.
 
@@ -169,7 +169,7 @@ class DelayCovarianceMatrix(object):
         the constructor is that we want to be able to derive the input
         dimension and the dtype directly from the data this class receives.
         """
-        
+
         # init dtype
         if self._dtype is None:
             self._dtype = x.dtype
@@ -196,7 +196,7 @@ class DelayCovarianceMatrix(object):
         if tlen < (dt+1):
             err = 'Block length is %d, should be at least %d.' % (tlen, dt+1)
             raise mdp.MDPException(err)
-        
+
         # update the covariance matrix, the average and the number of
         # observations (try to do everything inplace)
         self._cov_mtx += mdp.utils.mult(x[:tlen-dt, :].T, x[dt:tlen, :])
@@ -213,11 +213,11 @@ class DelayCovarianceMatrix(object):
         the average <x(t)> over the first N-dt points, the average of the
         delayed signal <x(t+dt)> and the number of observations. The internal
         data is then reset to a zero-state.
-        
+
         If A is defined, the covariance matrix is transformed by the linear
         transformation Ax . E.g. to whiten the data, A is the whitening matrix.
         """
-        
+
         # local variables
         type_ = self._dtype
         tlen = self._tlen
@@ -230,7 +230,7 @@ class DelayCovarianceMatrix(object):
         # fix the covariance matrix (try to do everything inplace)
         avg_mtx = numx.outer(avg, avg_dt)
         avg_mtx /= tlen
-                 
+
         cov_mtx -= avg_mtx
         if self.bias:
             cov_mtx /= tlen
@@ -239,7 +239,7 @@ class DelayCovarianceMatrix(object):
 
         if A is not None:
             cov_mtx = mdp.utils.mult(A, mdp.utils.mult(cov_mtx, A.T))
-        
+
         # fix the average
         avg /= tlen
         avg_dt /= tlen
@@ -312,7 +312,7 @@ class MultipleCovarianceMatrices(object):
         covs[i, :, :], covs[j, :, :] = covs[j, :, :], covs[i, :, :] + 0
         covs[:, i, :], covs[:, j, :] = covs[:, j, :], covs[:, i, :] + 0
         self.covs = covs
-        
+
     def transform(self, trans_matrix):
         """Apply a linear transformation to all matrices, defined by the
         transformation matrix."""
@@ -321,7 +321,7 @@ class MultipleCovarianceMatrices(object):
             self.covs[:, :, cov] = mdp.utils.mult(
                 mdp.utils.mult(trans_matrix.T, self.covs[:, :, cov]),
                 trans_matrix)
-    
+
     def copy(self):
         """Return a deep copy of the instance."""
         return MultipleCovarianceMatrices(self.covs.transpose([2, 0, 1]))
@@ -341,7 +341,7 @@ class CrossCovarianceMatrix(CovarianceMatrix):
         type_ = self._dtype
         self._cov_mtx = numx.zeros((dim_x, dim_y), type_)
         self._avgx = numx.zeros(dim_x, type_)
-        self._avgy = numx.zeros(dim_y, type_) 
+        self._avgy = numx.zeros(dim_y, type_)
 
 
     def update(self, x, y):
@@ -350,7 +350,7 @@ class CrossCovarianceMatrix(CovarianceMatrix):
             err = '# samples mismatch: x (%d) != y (%d)'%(x.shape[0],
                                                           y.shape[0])
             raise mdp.MDPException(err)
-        
+
         if self._cov_mtx is None:
             self._init_internals(x, y)
 
@@ -396,4 +396,3 @@ class CrossCovarianceMatrix(CovarianceMatrix):
         self._tlen = 0
 
         return cov_mtx, avgx, avgy, tlen
-        

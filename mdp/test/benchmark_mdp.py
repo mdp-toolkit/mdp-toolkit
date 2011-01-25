@@ -26,7 +26,7 @@ def matmult_c_scipy_benchmark(dim):
     a = numx_rand.random((dim,dim))
     b = numx_rand.random((dim,dim))
     out = numx.dot(a,b)
-    
+
 def matmult_n_MDP_benchmark(dim):
     """    This benchmark multiplies two non-contiguous matrices using the
     MDP internal matrix multiplication routine.
@@ -69,7 +69,7 @@ def quadratic_expansion_benchmark(dim, len, times):
     qnode = mdp.nodes.QuadraticExpansionNode()
     for i in xrange(times):
         qnode(a)
-        
+
 def polynomial_expansion_benchmark(dim, len, degree, times):
     """    This benchmark expands random data of shape (len, dim)
     'times' times in the space of polynomials of degree 'degree'.
@@ -91,15 +91,15 @@ def _tobias_mix(src):
 def _get_random_slow_sources(nsrc, distr_fun):
     # nsrc: number of sources
     # distr_fun: random numbers function
-    
+
     src = distr_fun(size=(50000, nsrc))
     fsrc = numx_fft.rfft(src, axis=0)
     # enforce different time scales
-    for i in range(nsrc):
+    for i in xrange(nsrc):
         fsrc[5000+(i+1)*1000:,i] = 0.
     src = numx_fft.irfft(fsrc,axis=0)
     return src
-    
+
 def isfa_spiral_benchmark():
     """    Apply ISFA to twisted data."""
     numx_rand.seed(116599099)
@@ -134,7 +134,7 @@ def sfa_benchmark():
                      mdp.nodes.SFANode(output_dim = 30)])
     #src = src.reshape(1000,5,nsrc)
     flow.train([None, [src], [src]])
-    
+
 #### benchmark tools
 
 # function used to measure time
@@ -167,7 +167,7 @@ def run_benchmarks(bench_funcs, time_digits=15):
         funcname = func.__name__[:-10]
 
         # loop over all cases
-        for i in range(ncases):
+        for i in xrange(ncases):
             args = args_list[i]
 
             # format description string
@@ -180,7 +180,7 @@ def run_benchmarks(bench_funcs, time_digits=15):
                 print func.__doc__
                 print '+'+'-'*(results_strlen-2)+'+'
                 print label_str % 'Description'.center(descrlen)
-                print '+'+'-'*(results_strlen-2)+'+'        
+                print '+'+'-'*(results_strlen-2)+'+'
 
             # execute function
             t = timeit(func, *args)
@@ -190,15 +190,15 @@ def run_benchmarks(bench_funcs, time_digits=15):
 
         # print summary table tail
         print '+'+'-'*(results_strlen-2)+'+'
-        
+
     print '\nTotal running time:', (TIMEFUNC()-tstart)*100.
 
 ####### /benchmark function
 
-POLY_EXP_ARGS = [(2**i, 100, j, 200) for j in range(2,5) for i in range(2,4)]
+POLY_EXP_ARGS = [(2**i, 100, j, 200) for j in xrange(2,5) for i in xrange(2,4)]
 
 #if mdp.numx_description in ['symeig', 'scipy', 'numpy']:
-#    MUL_MTX_DIMS = [[2**i] for i in range(4,11)]
+#    MUL_MTX_DIMS = [[2**i] for i in xrange(4,11)]
 #    # list of (benchmark function, list of arguments)
 #    BENCH_FUNCS = [(matmult_c_MDP_benchmark, MUL_MTX_DIMS),
 #                   (matmult_c_scipy_benchmark, MUL_MTX_DIMS),

@@ -28,37 +28,37 @@ import traceback
 import warnings
 
 if __name__ == "__main__":
-    # shut off warnings of any kinds
-    warnings.filterwarnings("ignore", ".*")
-    # try to make sure that mdp can be imported by adding to sys.path
+    # try to make sure that mdp can be imported by adding it to sys.path
     mdp_path = os.path.realpath(__file__)
     mdp_index = mdp_path.rfind("mdp")
     if mdp_index:
-        mdp_path =  mdp_path[:mdp_index-1]
-        # the mdp path takes precedence over PYTHONPATH
-        sys.path = [mdp_path] + sys.path
-    
+        mdp_path = mdp_path[:mdp_index-1]
+        # mdp path goes after sys.path
+        sys.path.append(mdp_path)
+    # shut off warnings of any kinds
+    warnings.filterwarnings("ignore", ".*")
+
 import mdp
-from scheduling import Scheduler, cpu_count
+from mdp.parallel import Scheduler, cpu_count
 
 SLEEP_TIME = 0.1  # time spend sleeping when waiting for a free process
 
 
 class ProcessScheduler(Scheduler):
     """Scheduler that distributes the task to multiple processes.
-    
+
     The subprocess module is used to start the requested number of processes.
     The execution of each task is internally managed by dedicated thread.
-    
+
     This scheduler should work on all platforms (at least on Linux,
-    Windows XP and Vista). 
+    Windows XP and Vista).
     """
-    
+
     def __init__(self, result_container=None, verbose=False, n_processes=1,
                  source_paths=None, python_executable=None,
                  cache_callable=True):
         """Initialize the scheduler and start the slave processes.
-        
+
         result_container -- ResultContainer used to store the results.
         verbose -- Set to True to get progress reports from the scheduler
             (default value is False).
@@ -89,10 +89,10 @@ class ProcessScheduler(Scheduler):
             python_executable = sys.executable
         # get the location of this module to start the processes
         module_path = os.path.dirname(mdp.__file__)
-        module_file = os.path.join(module_path, "parallel", 
+        module_file = os.path.join(module_path, "parallel",
                                    "process_schedule.py")
-        # Note: -u argument is important on Windows to set stdout to binary 
-        #    mode. Otherwise you might get a strange error message for 
+        # Note: -u argument is important on Windows to set stdout to binary
+        #    mode. Otherwise you might get a strange error message for
         #    copy_reg.
         process_args = [python_executable, "-u", module_file]
         process_args.append(str(self._cache_callable))
@@ -103,33 +103,36 @@ class ProcessScheduler(Scheduler):
         process_args += source_paths
         # list of processes not in use, start the processes now
         self._free_processes = [subprocess.Popen(args=process_args,
-                                                 stdout=subprocess.PIPE, 
+                                                 stdout=subprocess.PIPE,
                                                  stdin=subprocess.PIPE)
                                 for _ in range(self._n_processes)]
-        # tag each process with its cached callable index
+        # tag each process with its cached callable task_index,
+        # this is compared with _last_callable_index to check if the cached
+        # task_callable is still up to date
         for process in self._free_processes:
             process._callable_index = -1
         if self.verbose:
             print ("scheduler initialized with %d processes" %
                    self._n_processes)
-        
+
     def _shutdown(self):
         """Shut down the slave processes.
-        
+
         If a process is still running a task then an exception is raised.
         """
         self._lock.acquire()
         if len(self._free_processes) < self._n_processes:
             raise Exception("some slave process is still working")
         for process in self._free_processes:
-            pickle.dump("EXIT", process.stdin) 
+            pickle.dump("EXIT", process.stdin)
+            process.stdin.flush()
         self._lock.release()
         if self.verbose:
             print "scheduler shutdown"
-        
+
     def _process_task(self, data, task_callable, task_index):
         """Add a task, if possible without blocking.
-        
+
         It blocks when the system is not able to start a new thread
         or when the processes are all in use.
         """
@@ -151,16 +154,16 @@ class ProcessScheduler(Scheduler):
                     task_started = True
                 except thread.error:
                     if self.verbose:
-                        print ("unable to create new task thread," 
+                        print ("unable to create new task thread,"
                                " waiting 2 seconds...")
                     time.sleep(2)
-                    
-    def _task_thread(self, process, data, task_callable, task_index): 
+
+    def _task_thread(self, process, data, task_callable, task_index):
         """Thread function which cares for a single task.
-        
+
         The task is pushed to the process via stdin, then we wait for the
         result on stdout, pass the result to the result container, free
-        the process and exit. 
+        the process and exit.
         """
         try:
             if self._cache_callable:
@@ -172,6 +175,7 @@ class ProcessScheduler(Scheduler):
             # push the task to the process
             pickle.dump((data, task_callable, task_index),
                         process.stdin, protocol=-1)
+            process.stdin.flush()
             # wait for result to arrive
             result = pickle.load(process.stdout)
         except:
@@ -185,11 +189,20 @@ class ProcessScheduler(Scheduler):
 
 def _process_run(cache_callable=True):
     """Run this function in a worker process to receive and run tasks.
-    
+
     It waits for tasks on stdin, and sends the results back via stdout.
     """
     # use sys.stdout only for pickled objects, everything else goes to stderr
-    pickle_out = sys.stdout
+    # NOTE: .buffer is the binary mode interface for stdin and out in py3k
+    try:
+        pickle_out = sys.stdout.buffer
+    except AttributeError:
+        pickle_out = sys.stdout
+    try:
+        pickle_in = sys.stdin.buffer
+    except AttributeError:
+        pickle_in = sys.stdin
+
     sys.stdout = sys.stderr
     exit_loop = False
     last_callable = None  # cached callable
@@ -197,26 +210,26 @@ def _process_run(cache_callable=True):
         task = None
         try:
             # wait for task to arrive
-            task = pickle.load(sys.stdin)
+            task = pickle.load(pickle_in)
             if task == "EXIT":
                 exit_loop = True
             else:
-                data, callable, task_index = task
-                if callable is None:
+                data, task_callable, task_index = task
+                if task_callable is None:
                     if last_callable is None:
                         err = ("No callable was provided and no cached "
                                "callable is available.")
                         raise Exception(err)
-                    callable = last_callable.fork()
+                    task_callable = last_callable.fork()
                 elif cache_callable:
                     # store callable in cache
-                    last_callable = callable
-                    callable.setup_environment()
-                    callable = callable.fork()
+                    last_callable = task_callable
+                    task_callable.setup_environment()
+                    task_callable = task_callable.fork()
                 else:
-                    callable.setup_environment()    
-                result = callable(data)
-                del callable  # free memory
+                    task_callable.setup_environment()
+                result = task_callable(data)
+                del task_callable  # free memory
                 pickle.dump(result, pickle_out, protocol=-1)
                 pickle_out.flush()
         except Exception, exception:
@@ -229,8 +242,7 @@ def _process_run(cache_callable=True):
             traceback.print_exc()
             sys.stdout.flush()
             sys.exit()
-        
-                    
+
 if __name__ == "__main__":
     # first argument is cache_callable flag
     if sys.argv[1] == "True":
@@ -244,6 +256,3 @@ if __name__ == "__main__":
                      if sys_arg not in sys.path]
         sys.path = new_paths + sys.path
     _process_run(cache_callable=cache_callable)
-    
-    
-    

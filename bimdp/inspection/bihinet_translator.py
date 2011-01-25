@@ -7,9 +7,9 @@ HiNetHTML class.
 
 import mdp
 
-from ..binode import BiNode
-from ..nodes import SenderBiNode
-from ..hinet import CloneBiLayer
+from bimdp import BiNode
+from bimdp.nodes import SenderBiNode
+from bimdp.hinet import CloneBiLayer
 
 # TODO: use <pre>   </pre> for whitespaces?
 
@@ -29,20 +29,20 @@ def _html_representation(self):
 #    html_repr = super(BiNode, self).html_representation()
 #    if self._stop_msg:
 #        html_repr = [html_repr,
-#                     '<span class="bicolor">stop_msg: %s </span><br>' 
-#                     % str(self._stop_msg)]  
+#                     '<span class="bicolor">stop_msg: %s </span><br>'
+#                     % str(self._stop_msg)]
 #    return html_repr
-    
+
 
 class BiHTMLTranslator(mdp.hinet.HiNetHTMLTranslator):
     """Special version of HiNetHTMLTranslator with BiNode support.
-    
+
     All bimdp attributes are highligthed via the span.bicolor css tag.
     """
-    
+
     def __init__(self, show_size=False):
         super(BiHTMLTranslator, self).__init__(show_size=show_size)
-        
+
     def _translate_clonelayer(self, clonelayer):
         """This specialized version checks for CloneBiLayer."""
         f = self._html_file
@@ -59,7 +59,7 @@ class BiHTMLTranslator(mdp.hinet.HiNetHTMLTranslator):
         self._translate_node(clonelayer.nodes[0])
         f.write('</td></tr>')
         self._close_node_env(clonelayer)
-        
+
     def _write_node_header(self, node, type_id="node"):
         """Write the header content for the node into the HTML file."""
         f = self._html_file
@@ -73,9 +73,8 @@ class BiHTMLTranslator(mdp.hinet.HiNetHTMLTranslator):
         else:
             f.write('<tr><td class="dim">in-dim: %s' % str(node.input_dim))
             if isinstance(node, BiNode):
-                f.write('&nbsp;&nbsp;<span class="bicolor">id: %s</span>' 
+                f.write('&nbsp;&nbsp;<span class="bicolor">id: %s</span>'
                         % node._node_id)
             f.write('</td></tr>')
         f.write('<tr><td>')
         f.write('<table class="nodestruct">')
-

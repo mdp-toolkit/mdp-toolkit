@@ -2,11 +2,9 @@ import mdp
 
 # import numeric module (scipy, Numeric or numarray)
 numx, numx_rand, numx_linalg  = mdp.numx, mdp.numx_rand, mdp.numx_linalg
+numx_description = mdp.numx_description
 import random
 import itertools
-
-class SymeigException(mdp.MDPException):
-    pass
 
 def timediff(data):
     """Returns the array of the time differences of data."""
@@ -34,7 +32,7 @@ def rotate(mat, angle, columns = (0, 1), units = 'radians'):
     for each data-point (unchanged elements omitted):
 
      [  cos(angle) -sin(angle)     [ x_i ]
-        sin(angle)  cos(angle) ] * [ x_j ] 
+        sin(angle)  cos(angle) ] * [ x_j ]
 
     If M=2, columns=[0,1].
     """
@@ -75,10 +73,10 @@ def hermitian(x):
 
 def symrand(dim_or_eigv, dtype="d"):
     """Return a random symmetric (Hermitian) matrix.
-    
+
     If 'dim_or_eigv' is an integer N, return a NxN matrix, with eigenvalues
         uniformly distributed on (-1,1).
-        
+
     If 'dim_or_eigv' is  1-D real array 'a', return a matrix whose
                       eigenvalues are 'a'.
     """
@@ -91,7 +89,7 @@ def symrand(dim_or_eigv, dtype="d"):
         d = dim_or_eigv
     else:
         raise mdp.MDPException("input type not supported.")
-    
+
     v = random_rot(dim)
     #h = mdp.utils.mult(mdp.utils.mult(hermitian(v), mdp.numx.diag(d)), v)
     h = mdp.utils.mult(mult_diag(d, hermitian(v), left=False), v)
@@ -132,7 +130,7 @@ def random_rot(dim, dtype='d'):
 def norm2(v):
     """Compute the 2-norm for 1D arrays.
     norm2(v) = sqrt(sum(v_i^2))"""
-    
+
     return numx.sqrt((v*v).sum())
 
 def cov2(x, y):
@@ -151,7 +149,7 @@ def cov_maxima(cov):
     maxs = []
     if dim >= 1:
         cov=abs(cov)
-        glob_max_idx = (cov.argmax()/dim, cov.argmax()%dim)
+        glob_max_idx = (cov.argmax()//dim, cov.argmax()%dim)
         maxs.append(cov[glob_max_idx[0], glob_max_idx[1]])
         cov_reduce = cov.copy()
         cov_reduce = cov_reduce[numx.arange(dim) != glob_max_idx[0], :]
@@ -160,12 +158,12 @@ def cov_maxima(cov):
         return maxs
     else:
         return []
-    
+
 
 def mult_diag(d, mtx, left=True):
     """Multiply a full matrix by a diagonal matrix.
     This function should always be faster than dot.
-    
+
     Input:
       d -- 1D (N,) array (contains the diagonal elements)
       mtx -- 2D (N,N) array
@@ -186,182 +184,35 @@ def comb(N, k):
     for mlt in xrange(N, N-k, -1):
         ret *= mlt
     for dv in xrange(1, k+1):
-        ret /= dv
+        ret //= dv
     return ret
 
-
-def get_dtypes(typecodes_key):
+# WARNING numpy.linalg.eigh does not support float sizes larger than 64 bits,
+# and complex numbers of size larger than 128 bits.
+# This is not a problem for MDP, as long as scipy.linalg.eigh is available.
+def get_dtypes(typecodes_key, _safe=True):
     """Return the list of dtypes corresponding to the set of
     typecodes defined in numpy.typecodes[typecodes_key].
     E.g., get_dtypes('Float') = [dtype('f'), dtype('d'), dtype('g')].
+    
+    If _safe is True (default), we remove large floating point types
+    if the numerical backend does not support them.
     """
     types = []
     for c in numx.typecodes[typecodes_key]:
         try:
             type_ = numx.dtype(c)
+            if (_safe and not mdp.config.has_symeig == 'scipy.linalg.eigh'
+                and type_ in _UNSAFE_DTYPES):
+                continue
             types.append(type_)
         except TypeError:
             pass
     return types
 
-# the following functions and classes were part of the scipy_emulation.py file
-
-_type_keys = ['f', 'd', 'F', 'D']
-_type_conv = {('f','d'): 'd', ('f','F'): 'F', ('f','D'): 'D',
-              ('d','F'): 'D', ('d','D'): 'D',
-              ('F','d'): 'D', ('F','D'): 'D'}
-
-def _greatest_common_dtype(alist):
-    """
-    Apply conversion rules to find the common conversion type
-    dtype 'd' is default for 'i' or unknown types
-    (known types: 'f','d','F','D').
-    """
-    dtype = 'f'
-    for array in alist:
-        if array is None:
-            continue
-        tc = array.dtype.char
-        if tc not in _type_keys:
-            tc = 'd'
-        transition = (dtype, tc)
-        if transition in _type_conv:
-            dtype = _type_conv[transition]
-    return dtype
-
-def _assert_eigenvalues_real_and_positive(w, dtype):
-    tol = numx.finfo(dtype.type).eps * 100
-    if abs(w.imag).max() > tol:
-        err = "Some eigenvalues have significant imaginary part: %s " % str(w)
-        raise SymeigException(err)
-    #if w.real.min() < 0:
-    #    err = "Got negative eigenvalues: %s" % str(w)
-    #    raise SymeigException(err)
-              
-def wrap_eigh(A, B = None, eigenvectors = True, turbo = "on", range = None,
-              type = 1, overwrite = False):
-    """Wrapper for scipy.linalg.eigh for scipy version > 0.7"""
-    args = {}
-    args['a'] = A
-    args['b'] = B
-    args['eigvals_only'] = not eigenvectors
-    args['overwrite_a'] = overwrite
-    args['overwrite_b'] = overwrite
-    if turbo == "on":
-        args['turbo'] = True
-    else:
-        args['turbo'] = False
-    args['type'] = type
-    if range is not None:
-        n = A.shape[0]
-        lo, hi = range
-        if lo < 1:
-            lo = 1
-        if lo > n:
-            lo = n
-        if hi > n:
-            hi = n
-        if lo > hi:
-            lo, hi = hi, lo
-        # in scipy.linalg.eigh the range starts from 0
-        lo -= 1
-        hi -= 1
-        range = (lo, hi)
-    args['eigvals'] = range
-    try:
-        return numx_linalg.eigh(**args)
-    except numx_linalg.LinAlgError, exception:
-        raise SymeigException(str(exception))
-
-def _symeig_fake(A, B = None, eigenvectors = True, turbo = "on", range = None,
-                 type = 1, overwrite = False):
-    """Solve standard and generalized eigenvalue problem for symmetric
-(hermitian) definite positive matrices.
-This function is a wrapper of LinearAlgebra.eigenvectors or
-numarray.linear_algebra.eigenvectors with an interface compatible with symeig.
-
-    Syntax:
-
-      w,Z = symeig(A) 
-      w = symeig(A,eigenvectors=0)
-      w,Z = symeig(A,range=(lo,hi))
-      w,Z = symeig(A,B,range=(lo,hi))
-
-    Inputs:
-
-      A     -- An N x N matrix.
-      B     -- An N x N matrix.
-      eigenvectors -- if set return eigenvalues and eigenvectors, otherwise
-                      only eigenvalues 
-      turbo -- not implemented
-      range -- the tuple (lo,hi) represent the indexes of the smallest and
-               largest (in ascending order) eigenvalues to be returned.
-               1 <= lo < hi <= N
-               if range = None, returns all eigenvalues and eigenvectors. 
-      type  -- not implemented, always solve A*x = (lambda)*B*x
-      overwrite -- not implemented
-      
-    Outputs:
-
-      w     -- (selected) eigenvalues in ascending order.
-      Z     -- if range = None, Z contains the matrix of eigenvectors,
-               normalized as follows:
-                  Z^H * A * Z = lambda and Z^H * B * Z = I
-               where ^H means conjugate transpose.
-               if range, an N x M matrix containing the orthonormal
-               eigenvectors of the matrix A corresponding to the selected
-               eigenvalues, with the i-th column of Z holding the eigenvector
-               associated with w[i]. The eigenvectors are normalized as above.
-    """
-
-    dtype = numx.dtype(_greatest_common_dtype([A, B]))
-    try:
-        if B is None:
-            w, Z = numx_linalg.eigh(A)
-        else:
-            # make B the identity matrix
-            wB, ZB = numx_linalg.eigh(B)
-            _assert_eigenvalues_real_and_positive(wB, dtype)
-            ZB = ZB.real / numx.sqrt(wB.real)
-            # transform A in the new basis: A = ZB^T * A * ZB
-            A = mdp.utils.mult(mdp.utils.mult(ZB.T, A), ZB)
-            # diagonalize A
-            w, ZA = numx_linalg.eigh(A)
-            Z = mdp.utils.mult(ZB, ZA)
-    except numx_linalg.LinAlgError, exception:
-        raise SymeigException(str(exception))
-
-    _assert_eigenvalues_real_and_positive(w, dtype)
-    w = w.real
-    Z = Z.real
-    
-    idx = w.argsort()
-    w = w.take(idx)
-    Z = Z.take(idx, axis=1)
-    
-    # sanitize range:
-    n = A.shape[0]
-    if range is not None:
-        lo, hi = range
-        if lo < 1:
-            lo = 1
-        if lo > n:
-            lo = n
-        if hi > n:
-            hi = n
-        if lo > hi:
-            lo, hi = hi, lo
-        
-        Z = Z[:, lo-1:hi]
-        w = w[lo-1:hi]
-
-    # the final call to refcast is necessary because of a bug in the casting
-    # behavior of Numeric and numarray: eigenvector does not wrap the LAPACK
-    # single precision routines
-    if eigenvectors:
-        return mdp.utils.refcast(w, dtype), mdp.utils.refcast(Z, dtype)
-    else:
-        return mdp.utils.refcast(w, dtype)
+_UNSAFE_DTYPES = [numx.typeDict[d] for d in
+                  ['float96', 'float128', 'complex192', 'complex256']
+                  if d in numx.typeDict]
 
 def nongeneral_svd(A, range=None, **kwargs):
     """SVD routine for simple eigenvalue problem, API is compatible with
@@ -376,7 +227,7 @@ def nongeneral_svd(A, range=None, **kwargs):
     if range is not None:
         lo, hi = range
         Z = Z[:, lo-1:hi]
-        w = w[lo-1:hi]    
+        w = w[lo-1:hi]
     return w, Z
 
 def sqrtm(A):
@@ -424,13 +275,13 @@ def orthogonal_permutations(a_dict):
     """
     Takes a dictionary with lists as keys and returns all permutations
     of these list elements in new dicts.
-    
+
     This function is useful, when a method with several arguments
     shall be tested and all of the arguments can take several values.
-    
+
     The order is not defined, therefore the elements should be
     orthogonal to each other.
-    
+
     >>> for i in orthogonal_permutations({'a': [1,2,3], 'b': [4,5]}):
             print i
     {'a': 1, 'b': 4}
@@ -452,21 +303,21 @@ def orthogonal_permutations(a_dict):
 
 def izip_stretched(*iterables):
     """Same as izip, except that for convenience non-iterables are repeated ad infinitum.
-    
+
     This is useful when trying to zip input data with respective labels
     and allows for having a single label for all data, as well as for
     havning a list of labels for each data vector.
     Note that this will take strings as an iterable (of course), so
     strings acting as a single value need to be wrapped in a repeat
     statement of their own.
-    
+
     Thus,
     >>> for zipped in izip_stretched([1, 2, 3], -1):
             print zipped
     (1, -1)
     (2, -1)
     (3, -1)
-    
+
     is equivalent to
     >>> for zipped in izip([1, 2, 3], [-1] * 3):
             print zipped
@@ -479,7 +330,7 @@ def izip_stretched(*iterables):
             return iter(val)
         except TypeError:
             return itertools.repeat(val)
-    
+
     iterables= map(iter_or_repeat, iterables)
     while iterables:
         # need to care about python < 2.6
@@ -490,12 +341,12 @@ def weighted_choice(a_dict, normalize=True):
     """Returns a key from a dictionary based on the weight that the value suggests.
     If 'normalize' is False, it is assumed the weights sum up to unity. Otherwise,
     the algorithm will take care of normalising.
-    
+
     Example:
     >>> d = {'a': 0.1, 'b': 0.5, 'c': 0.4}
     >>> weighted_choice(d)
     # draws 'b':'c':'a' with 5:4:1 probability
-    
+
     TODO: It might be good to either shuffle the order or explicitely specify it,
     before walking through the items, to minimise possible degeneration.
     """
@@ -520,7 +371,7 @@ def bool_to_sign(an_array):
 
 def sign_to_bool(an_array, zero=True):
     """Return False for each negative value, else True.
-    
+
     The value for 0 is specified with 'zero'.
     """
     if zero:
@@ -528,4 +379,96 @@ def sign_to_bool(an_array, zero=True):
     else:
         return numx.array(an_array) > 0
 
+def gabor(size, alpha, phi, freq, sgm, x0 = None, res = 1, ampl = 1.):
+    """Return a 2D array containing a Gabor wavelet.
 
+    Input arguments:
+    size -- (height, width) (pixels)
+    alpha -- orientation (rad)
+    phi -- phase (rad)
+    freq -- frequency (cycles/deg)
+    sgm -- (sigma_x, sigma_y) standard deviation along the axis
+           of the gaussian ellipse (pixel)
+    x0 -- (x,y) coordinates of the center of the wavelet (pixel)
+          Default: None, meaning the center of the array
+    res -- spatial resolution (deg/pixel)
+           Default: 1, so that 'freq' is measured in cycles/pixel
+    ampl -- constant multiplying the result
+            Default: 1.
+    """
+
+    # init
+    w, h = size
+    if x0 is None: x0 = (w//2, h//2)
+    y0, x0 = x0
+
+    # some useful quantities
+    freq *= res
+    sinalpha = numx.sin(alpha)
+    cosalpha = numx.cos(alpha)
+    v0, u0 = freq*cosalpha, freq*sinalpha
+
+    # coordinates
+    #x = numx.mgrid[-x0:w-x0, -y0:h-y0]
+    x = numx.meshgrid(numx.arange(w)-x0, numx.arange(h)-y0)
+    x = (x[0].T, x[1].T)
+    xr = x[0]*cosalpha - x[1]*sinalpha
+    yr = x[0]*sinalpha + x[1]*cosalpha
+
+    # gabor
+    im = ampl*numx.exp(-0.5*(xr*xr/(sgm[0]*sgm[0]) + yr*yr/(sgm[1]*sgm[1]))) \
+             *numx.cos(-2.*numx.pi*(u0*x[0]+v0*x[1]) - phi)
+
+    return im
+
+def residuals(app_x, y_noisy, exp_funcs, x_orig, k=0.0):
+    """Function used internally by invert_exp_funcs2 to approximate 
+    inverses in ConstantExpansionNode. """
+    app_x = app_x.reshape((1,len(app_x)))
+    app_exp_x =  numx.concatenate([func(app_x) for func in exp_funcs],axis=1)
+   
+    div_y = numx.sqrt(len(y_noisy))
+    div_x = numx.sqrt(len(x_orig))
+    return numx.append( (1-k)*(y_noisy-app_exp_x[0]) / div_y, k * (x_orig - app_x[0])/div_x )
+
+def invert_exp_funcs2(exp_x_noisy, dim_x, exp_funcs, use_hint=False, k=0.0):
+    """Approximates a preimage app_x of exp_x_noisy.
+
+    Returns an array app_x, such that each row of exp_x_noisy is close 
+    to each row of exp_funcs(app_x).   
+
+    use_hint: determines the starting point for the approximation of the
+    preimage. There are three possibilities.
+    if it equals False: starting point is generated with a normal distribution
+    if it equals True: starting point is the first dim_x elements of exp_x_noisy
+    otherwise: use the parameter use_hint itself as the first approximation
+
+    k: weighting factor in [0, 1] to balance between approximation error and 
+       closeness to the starting point. For instance:
+       objective function is to minimize:
+           (1-k) * |exp_funcs(app_x) - exp_x_noisy|/output_dim + 
+               k * |app_x - starting point|/input_dim
+
+    Note: this function requires scipy.
+    """
+    if numx_description != 'scipy':
+        raise NotImplementedError('This function requires scipy.')
+    else:
+        import scipy.optimize
+    num_samples = exp_x_noisy.shape[0]
+
+    if isinstance(use_hint, numx.ndarray):
+        app_x = use_hint.copy()
+    elif use_hint == True:
+        app_x = exp_x_noisy[:,0:dim_x].copy()
+    else:
+        app_x = numx.random.normal(size=(num_samples,dim_x))
+
+    for row in range(num_samples):
+        plsq = scipy.optimize.leastsq(residuals, app_x[row],
+                                      args=(exp_x_noisy[row], exp_funcs,
+                                            app_x[row], k), maxfev=50*dim_x)
+        app_x[row] = plsq[0]
+
+    app_exp_x = numx.concatenate([func(app_x) for func in exp_funcs],axis=1)
+    return app_x, app_exp_x
