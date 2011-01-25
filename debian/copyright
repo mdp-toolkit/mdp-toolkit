@@ -12,7 +12,7 @@ Upstream Authors:
 
 Copyright:
 
- 2003-2010, Pietro Berkes <berkes@gatsby.ucl.ac.uk>,
+ 2003-2011, Pietro Berkes <berkes@gatsby.ucl.ac.uk>,
             Rike-Benjamin Schuppner <rike.schuppner@bccn-berlin.de>,
             Niko Wilbert <mail@nikowilbert.de>, and
             Tiziano Zito  <tiziano.zito@bccn-berlin.de>
@@ -37,6 +37,6 @@ License:
 On Debian systems, the complete text of the GNU Lesser General
 Public License can be found in `/usr/share/common-licenses/LGPL-3'.
 
-The Debian packaging is (C) 2008-2010, Yaroslav Halchenko
+The Debian packaging is (C) 2008-2011, Yaroslav Halchenko
 <debian@onerussian.com> and is licensed under the same license as
 upstream sources.

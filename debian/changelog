@@ -1,3 +1,11 @@
+mdp (3.0+git8-g921253a-1) unstable; urgency=low
+
+  * New upstream release (with few post-release tune-ups).
+  * Boosted policy compliance to 3.9.1 (no changes needed)
+  * Adding joblib and scikits-learn into Recommends
+
+ -- Yaroslav Halchenko <debian@onerussian.com>  Tue, 25 Jan 2011 13:57:24 -0500
+
 mdp (2.6-1) unstable; urgency=low
 
   * New upstream release -- thanks!  Absorbed 5 patches from upstream git which
