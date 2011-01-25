@@ -119,14 +119,7 @@ class SleepSqrTestCallable(TaskCallable):
         time.sleep(data[1])
         return data[0]**2
     
-class MDPVersionCallable(TaskCallable):
-    """Callable For testing MDP version."""
 
-    def __call__(self, data):
-        """Ignore input data and return mdp.info()"""
-        import mdp
-        return mdp._info()
-        
 class TaskCallableWrapper(TaskCallable):
     """Wrapper to provide a fork method for simple callables like a function.
     

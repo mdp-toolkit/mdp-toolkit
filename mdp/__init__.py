@@ -166,14 +166,13 @@ __copyright__ = '(c) 2003-2010 Pietro Berkes, Rike-Benjamin Schuppner, Niko Wilb
 __license__ = 'LGPL v3, http://www.gnu.org/licenses/lgpl.html'
 __contact__ = 'mdp-toolkit-users@lists.sourceforge.net'
 
-# list of features
-__features__ = ('MDP Version', 'MDP Revision', 'Numerical Backend',
+# gather information about us
+def info():
+    import sys
+    # list of features
+    features = ('MDP Version', 'MDP Revision', 'Numerical Backend',
                 'Symeig Backend', 'Parallel Python Support',
                 'LibSVM', 'Shogun')
-
-# gather information about us
-def _info():
-    """Return dictionary containing info about MDP."""
     # keep stuff in a dictionary
     # as soon as odict becomes a builtin, we can keep features and
     # info in the same ordered dictionary!
@@ -203,16 +202,9 @@ def _info():
             else:
                 SYMEIG = 'unknown'
     info['Symeig Backend'] = SYMEIG
-    return info
 
-
-def info():
-    """Return nicely formatted info about MDP."""
-    import sys
-    info = _info()
-    for feature in __features__:
+    for feature in features:
         sys.stderr.write(feature+': '+info[feature]+'\n')
-
 
 # clean up namespace
 del signal_node

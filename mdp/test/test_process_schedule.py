@@ -69,21 +69,7 @@ class TestProcessScheduler(unittest.TestCase):
         y1 = flow.execute(x)
         y2 = parallel_flow.execute(x)
         testing_tools.assert_array_almost_equal(abs(y1), abs(y2), precision)
-
-    def test_scheduler_mdp_version(self):
-        """Test that we are running the same mdp in subprocesses"""
-        scheduler = parallel.ProcessScheduler(verbose=False,
-                                              n_processes=2,
-                                              source_paths=None,
-                                              cache_callable=False)
-        for i in range(2):
-            scheduler.add_task(i, parallel.MDPVersionCallable())
-        out = scheduler.get_results()
-        scheduler.shutdown()
-        # check that we get 2 identical dictionaries
-        self.assertTrue(out[0] == out[1], 'Subprocesses did not run' +
-                        'the same MDP as the parent:\n%s\n--\n%s'%(out[0],
-                                                                   out[1]))
+        
 
 def get_suite(testname=None):
     # this suite just ignores the testname argument

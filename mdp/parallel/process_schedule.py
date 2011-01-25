@@ -35,8 +35,8 @@ if __name__ == "__main__":
     mdp_index = mdp_path.rfind("mdp")
     if mdp_index:
         mdp_path =  mdp_path[:mdp_index-1]
-        # mdp path goes after sys.path
-        sys.path =  sys.path + [mdp_path]
+        # the mdp path takes precedence over PYTHONPATH
+        sys.path = [mdp_path] + sys.path
     
 import mdp
 from scheduling import Scheduler, cpu_count
