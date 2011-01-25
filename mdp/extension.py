@@ -21,8 +21,7 @@ This keeps the code readable and is compatible with automatic code checkers
 (like the background pylint checks in the Eclipse IDE with PyDev).
 """
 
-from mdp import MDPException, NodeMetaclass, utils
-all = utils.all
+from mdp import MDPException, NodeMetaclass
 
 # TODO: note the ParllelBiFlowNode purge_nodes method, which is not part
 #    of the ParallelNode interface. Allow this?
