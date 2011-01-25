@@ -1,17 +1,7 @@
 
-try:
-    from autogen_binodes import *
-    from autogen_biclassifiers import *
-    del autogen_binodes
-    del autogen_biclassifiers
-except:
-    print "No autogen modules found."
-    
+from autogen import binodes_code, biclassifiers_code
+exec binodes_code()
+exec biclassifiers_code()
+
 from miscnodes import IdentityBiNode, SenderBiNode
-
-del miscnodes
-
-
-
-
-    
+from gradient import NotDifferentiableException, GradientExtensionNode

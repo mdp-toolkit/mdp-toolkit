@@ -3,7 +3,7 @@ Extension Mechanism for nodes.
 
 The extension mechanism makes it possible to dynamically add class attributes,
 especially methods, for specific features to node classes
-(e.g. for parallelization nodes need a _fork and _join method).
+(e.g. nodes need a _fork and _join method for parallelization).
 It is also possible for users to define new extensions to provide new
 functionality for MDP nodes without having to modify any MDP code.
 
@@ -13,7 +13,7 @@ which is fine unless one wants to use multiple inheritance at the same time
 to use). The extension mechanism does not depend on inheritance, instead it
 adds the methods to the node classes dynamically at runtime. This makes it
 possible to activate extensions just when they are needed, reducing the risk
-of interference between different extensions.  
+of interference between different extensions.
 
 However, since the extension mechanism provides a special Metaclass it is
 still possible to define the extension nodes as classes derived from nodes.
@@ -22,9 +22,6 @@ This keeps the code readable and is compatible with automatic code checkers
 """
 
 from mdp import MDPException, NodeMetaclass
-
-# TODO: note the ParllelBiFlowNode purge_nodes method, which is not part
-#    of the ParallelNode interface. Allow this?
 
 # TODO: Register the node instances as well?
 #    This would allow instance initialization when an extension is activated.
@@ -38,7 +35,7 @@ from mdp import MDPException, NodeMetaclass
 
 # name prefix used for the original attributes when they are shadowed
 ORIGINAL_ATTR_PREFIX = "_non_extension_"
-# prefix used to store the current extension name for an attribute 
+# prefix used to store the current extension name for an attribute
 EXTENSION_ATTR_PREFIX = "_extension_for_"
 # list of attribute names that are not affected by extensions,
 NON_EXTENSION_ATTRIBUTES = ["__module__", "__doc__", "extension_name"]
@@ -59,22 +56,27 @@ class ExtensionException(MDPException):
 
 def _register_attribute(ext_name, node_cls, attr_name, attr_value):
     """Register an attribute as an extension attribute.
-    
+
     ext_name -- String with the name of the extension.
     node_cls -- Node class for which the method should be registered.
     """
     _extensions[ext_name][node_cls][attr_name] = attr_value
-    
+
 def extension_method(ext_name, node_cls, method_name=None):
     """Returns a function to register a function as extension method.
-    
+
     This function is intended to be used with the decorator syntax.
-    
-    ext_name -- String with the name of the extension.
-    node_cls -- Node class for which the method should be registered.
-    method_name -- Name of the extension method (default value is None).
+
+    :Parameters:
+      ext_name
+        String with the name of the extension.
+      node_cls
+        Node class for which the method should be registered.
+      method_name
+        Name of the extension method (default value is ``None``).
+
         If no value is provided then the name of the function is used.
-        
+
     Note that it is possible to directly call other extension functions, call
     extension methods in other node classes or to use super in the normal way
     (the function will be called as a method of the node class).
@@ -97,14 +99,14 @@ def extension_method(ext_name, node_cls, method_name=None):
 
 class ExtensionNodeMetaclass(NodeMetaclass):
     """This is the metaclass for node extension superclasses.
-    
+
     It takes care of registering extensions and the attributes in the
     extension.
     """
-    
+
     def __new__(cls, classname, bases, members):
         """Create new node classes and register extensions.
-        
+
         If a concrete extension node is created then a corresponding mixin
         class is automatically created and registered.
         """
@@ -140,8 +142,8 @@ class ExtensionNodeMetaclass(NodeMetaclass):
             # This new extension is not directly derived from another class,
             # so there is nothing to register (no default implementation).
             # We disable the doc method extension mechanism as this class
-            # is not a node subclass and adding eg. _execute methods would
-            # give problems.
+            # is not a node subclass and adding methods (e.g. _execute) would
+            # cause problems.
             cls.DOC_METHODS = []
             return super(ExtensionNodeMetaclass, cls).__new__(cls, classname,
                                                               bases, members)
@@ -176,28 +178,30 @@ class ExtensionNodeMetaclass(NodeMetaclass):
             if base == ExtensionNode:
                 extension_subtree = True
         return ext_node_cls
-                                                     
+
 
 class ExtensionNode(object):
     """Base class for extensions nodes.
-    
+
     A new extension node class should override the _extension_name.
     The concrete node implementations are then derived from this extension
     node class.
-    
+
     To call an instance method from a parent class you have multiple options:
-    
+
     - use super, but with the normal node class, e.g.:
-        super(mdp.nodes.SFA2Node, self).method()
+      >>>  super(mdp.nodes.SFA2Node, self).method()      # doctest: +SKIP
       Here SFA2Node was given instead of the extension node class for the
       SFA2Node.
       If the extensions node class is used directly (without the extension
-      mechanism) this may lead to problems. In this case you have to be
+      mechanism) this can cause problems. In that case you have to be
       careful about the inheritance order and the effect on the MRO.
-      
-    - call it explicitly using the im_func attribute:
-        parent_class.method.im_func(self)
-        
+
+    - call it explicitly using the __func__ attribute [python version < 3]:
+      >>> parent_class.method.__func__(self)             # doctest: +SKIP
+      or [python version >=3]:
+      >>> parent_class.method(self)                      # doctest: +SKIP
+
     To call the original (pre-extension) method in the same class use you
     simply prefix the method name with '_non_extension_' (this is the value
     of the ORIGINAL_ATTR_PREFIX constant in this module).
@@ -209,7 +213,7 @@ class ExtensionNode(object):
 
 def get_extensions():
     """Return a dictionary currently registered extensions.
-    
+
     Note that this is not a copy, so if you change anything in this dict
     the whole extension mechanism will be affected. If you just want the
     names of the available extensions use get_extensions().keys().
@@ -221,7 +225,7 @@ def get_active_extensions():
     # use copy to protect the original set, also important if the return
     # value is used in a for-loop (see deactivate_extensions function)
     return list(_active_extensions)
-    
+
 def activate_extension(extension_name, verbose=False):
     """Activate the extension by injecting the extension methods."""
     if extension_name not in _extensions.keys():
@@ -243,7 +247,7 @@ def activate_extension(extension_name, verbose=False):
                 if attr_name in dir(node_cls):
                     if ext_attr_name in node_cls.__dict__:
                         # two extensions override the same attribute
-                        err = ("Name collision for attribute '" + 
+                        err = ("Name collision for attribute '" +
                                attr_name + "' between extension '" +
                                getattr(node_cls, ext_attr_name)
                                + "' and newly activated extension '" +
@@ -290,7 +294,7 @@ def deactivate_extension(extension_name, verbose=False):
                 # Check if the attribute is defined by one of the super
                 # classes and test if the overwritten method is not that
                 # method, otherwise we would inject unwanted methods.
-                # Note: '==' tests identity for .im_func and .im_self,
+                # Note: '==' tests identity for .__func__ and .__self__,
                 #    but .im_class does not matter in Python 2.6.
                 if all(map(lambda x:getattr(x, attr_name, None) !=
                            original_attr, node_cls.__mro__[1:])):
@@ -312,7 +316,7 @@ def deactivate_extension(extension_name, verbose=False):
 
 def activate_extensions(extension_names, verbose=False):
     """Activate all the extensions for the given names.
-    
+
     extension_names -- Sequence of extension names.
     """
     try:
@@ -327,27 +331,73 @@ def activate_extensions(extension_names, verbose=False):
 
 def deactivate_extensions(extension_names, verbose=False):
     """Deactivate all the extensions for the given names.
-    
+
     extension_names -- Sequence of extension names.
     """
     for extension_name in extension_names:
         deactivate_extension(extension_name, verbose=verbose)
 
+# TODO: add check that only extensions are deactivated that were
+#    originally activcated by this extension (same in context manager)
+#    also add test for this
 def with_extension(extension_name):
     """Return a wrapper function to activate and deactivate the extension.
     
     This function is intended to be used with the decorator syntax.
+
+    The deactivation happens only if the extension was activated by the
+    decorator (not if it was already active before). So this decorator
+    ensures that the extensions is active and prevents unintended side effects.
     """
     def decorator(func):
         def wrapper(*args, **kwargs):
-            try:
-                activate_extension(extension_name)
+            # make sure that we don't deactive and extension that was
+            # not activated by the decorator (would be a strange sideeffect)
+            if extension_name not in get_active_extensions():
+                try:
+                    activate_extension(extension_name)
+                    result = func(*args, **kwargs)
+                finally:
+                    deactivate_extension(extension_name)
+            else:
                 result = func(*args, **kwargs)
-            finally:
-                deactivate_extension(extension_name)
             return result
         # now make sure that docstring and signature match the original
-        func_info = NodeMetaclass._get_infodict(func)
+        func_info = NodeMetaclass._function_infodict(func)
         return NodeMetaclass._wrap_function(wrapper, func_info)
     return decorator
+
+class extension(object):
+    """Context manager for MDP extension.
+    
+    This allows you to use extensions using a ``with`` statement, as in:
+
+    >>> with mdp.extension('extension_name'):
+    ...     # 'node' is executed with the extension activated
+    ...     node.execute(x)
+
+    It is also possible to activate multiple extensions at once:
+
+    >>> with mdp.extension(['ext1', 'ext2']):
+    ...     # 'node' is executed with the two extensions activated
+    ...     node.execute(x)
         
+    The deactivation at the end happens only for the extensions that were
+    activated by this context manager (not for those that were already active
+    when the context was entered). This prevents unintended side effects.
+    """
+
+    def __init__(self, ext_names):
+        if isinstance(ext_names, str):
+            ext_names = [ext_names]
+        self.ext_names = ext_names
+        self.deactivate_exts = []
+
+    def __enter__(self):
+        already_active = get_active_extensions()
+        self.deactivate_exts = [ext_name for ext_name in self.ext_names
+                                if ext_name not in already_active]
+        activate_extensions(self.ext_names)
+
+    def __exit__(self, type, value, traceback):
+        deactivate_extensions(self.deactivate_exts)

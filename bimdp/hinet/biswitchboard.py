@@ -5,19 +5,19 @@ n = mdp.numx
 
 from bimdp import BiNode
 
-        
+
 class BiSwitchboard(BiNode, hinet.Switchboard):
     """BiMDP version of the normal Switchboard.
-    
+
     It adds support for stop_message and also tries to apply the switchboard
     mapping to arrays in the message. The mapping is only applied if the
     array is at least two dimensional and the second dimension matches the
     switchboard dimension.
     """
-    
+
     def __init__(self, **kwargs):
         """Initialize BiSwitchboard.
-        
+
         args and kwargs are forwarded via super to the next __init__ method
         in the MRO.
         """
@@ -27,10 +27,10 @@ class BiSwitchboard(BiNode, hinet.Switchboard):
         else:
             # a stable (order preserving where possible) sort is
             # necessary here, therefore use mergesort
-            # otherwise channels (e.g. for a Rectangular2d...) are mixed up 
-            self.down_connections = n.argsort(self.connections, 
+            # otherwise channels (e.g. for a Rectangular2d...) are mixed up
+            self.down_connections = n.argsort(self.connections,
                                               kind="mergesort")
-    
+
     def _execute(self, x, msg=None):
         """Return the routed input data."""
         if x is not None:
@@ -42,7 +42,7 @@ class BiSwitchboard(BiNode, hinet.Switchboard):
             return y
         else:
             return y, msg
-    
+
     def _inverse(self, x, msg=None):
         """Return the routed input data."""
         if x is not None:
@@ -54,16 +54,12 @@ class BiSwitchboard(BiNode, hinet.Switchboard):
             return y
         else:
             return y, msg
-    
-    def _stop_message(self, msg=None):
-        """Return the message data routed like during execution."""
-        return self._execute_msg(msg)
-    
+
     def is_bi_training(self):
         return False
-    
+
     ## Helper methods ##
-            
+
     def _inverse_msg(self, msg):
         """Inverse routing for msg."""
         if not msg:
@@ -76,7 +72,7 @@ class BiSwitchboard(BiNode, hinet.Switchboard):
             else:
                 out_msg[key] = value
         return out_msg
-    
+
     def _execute_msg(self, msg):
         """Feed-forward routing for msg."""
         if not msg:
@@ -89,8 +85,8 @@ class BiSwitchboard(BiNode, hinet.Switchboard):
             else:
                 out_msg[key] = value
         return out_msg
-    
-    
+
+
 ## create BiSwitchboard versions of the standard MDP switchboards ##
 
 # corresponding methods for the switchboard_factory extension are
@@ -100,7 +96,7 @@ class BiSwitchboard(BiNode, hinet.Switchboard):
 def _binode_create_switchboard(cls, free_params, prev_switchboard,
                                prev_output_dim, node_id):
     """Modified version of create_switchboard to support node_id.
-    
+
     This method can be used as a substitute when using the switchboard_factory
     extension.
     """
@@ -146,5 +142,5 @@ def _create_bi_switchboards():
         mdp.extension_method("switchboard_factory",
                              current_module.__dict__[binode_name],
                              "create_switchboard")(_binode_create_switchboard)
-        
-_create_bi_switchboards()   
+
+_create_bi_switchboards()

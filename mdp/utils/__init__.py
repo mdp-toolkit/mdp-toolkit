@@ -1,11 +1,18 @@
-from routines import (timediff, refcast, scast, rotate, random_rot, wrap_eigh,
+from routines import (timediff, refcast, scast, rotate, random_rot,
                       permute, symrand, norm2, cov2,
                       mult_diag, comb, sqrtm, get_dtypes, nongeneral_svd,
-                      SymeigException, hermitian, _symeig_fake, cov_maxima,
-                      lrep, rrep, irep, orthogonal_permutations, izip_stretched,
-                      weighted_choice, bool_to_sign, sign_to_bool)
+                      hermitian, cov_maxima,
+                      lrep, rrep, irep, orthogonal_permutations,
+                      izip_stretched,
+                      weighted_choice, bool_to_sign, sign_to_bool, gabor,
+                      invert_exp_funcs2)
+try:
+    from collections import OrderedDict
+except ImportError:
+    ## Getting an Ordered Dict for Python < 2.7
+    from _ordered_dict import OrderedDict
 from introspection import dig_node, get_node_size, get_node_size_str
-from quad_forms import QuadraticForm
+from quad_forms import QuadraticForm, QuadraticFormException
 from covariance import (CovarianceMatrix, DelayCovarianceMatrix,
                         MultipleCovarianceMatrices,CrossCovarianceMatrix)
 from progress_bar import progressinfo
@@ -15,23 +22,9 @@ from slideshow import (BASIC_STYLE, SLIDESHOW_STYLE, HTMLSlideShow,
                        SectionHTMLSlideShow, SectionImageHTMLSlideShow,
                        image_slideshow, show_image_slideshow)
 
+from _symeig import SymeigException
 
 import mdp as _mdp
-import inspect as _inspect
-
-try:
-    # check if scipy.linalg.eigh is the new version
-    # if yes, just wrap it
-    args = _inspect.getargspec(_mdp.numx_linalg.eigh)[0]
-    if len(args) > 4:
-        symeig = wrap_eigh
-    else:
-        import symeig
-        SymeigException = symeig.SymeigException
-        symeig = symeig.symeig
-except ImportError:
-    symeig = routines._symeig_fake
-
 # matrix multiplication function
 # we use an alias to be able to use the wrapper for the 'gemm' Lapack
 # function in the future
@@ -52,7 +45,7 @@ if _mdp.numx_description == 'scipy':
             gemm,=_mdp.numx_linalg.get_blas_funcs(('gemm',),(a,b,c))
         else:
             gemm,=_mdp.numx_linalg.get_blas_funcs(('gemm',),(a,b))
-            
+
         return gemm(alpha, a, b, beta, c, trans_a, trans_b)
 
 # workaround to numpy issues with dtype behavior:
@@ -77,7 +70,7 @@ def svd(x, compute_uv = True):
             return refcast(s, tc)
     except _mdp.numx_linalg.LinAlgError, exc:
         raise SymeigException(str(exc))
-    
+
 # clean up namespace
 del routines
 del introspection
@@ -88,16 +81,55 @@ del slideshow
 del repo_revision
 
 __all__ = ['CovarianceMatrix', 'DelayCovarianceMatrix','CrossCovarianceMatrix',
-           'MultipleCovarianceMatrices', 'QuadraticForm', 'SymeigException',
+           'MultipleCovarianceMatrices', 'QuadraticForm',
+           'QuadraticFormException',
            'comb', 'cov2', 'dig_node', 'get_dtypes', 'get_node_size',
            'hermitian', 'inv', 'mult', 'mult_diag', 'nongeneral_svd',
            'norm2', 'permute', 'pinv', 'progressinfo',
            'random_rot', 'refcast', 'rotate', 'scast', 'solve', 'sqrtm',
-           'svd', 'symeig', 'symrand', 'timediff', 'matmult',
+           'svd', 'symrand', 'timediff', 'matmult',
            'get_git_revision', 'SLIDESHOW_STYLE', 'HTMLSlideShow',
            'ImageHTMLSlideShow', 'IMAGE_SLIDESHOW_STYLE',
            'SectionHTMLSlideShow',
            'SectionImageHTMLSlideShow', 'image_slideshow',
            'lrep', 'rrep', 'irep',
            'orthogonal_permutations', 'izip_stretched',
-           'weighted_choice', 'bool_to_sign', 'sign_to_bool']
+           'weighted_choice', 'bool_to_sign', 'sign_to_bool',
+           'OrderedDict', 'gabor', 'fixup_namespace']
+
+def without_prefix(name, prefix):
+    thelen = len(prefix)
+    if name.startswith(prefix):
+        return name[len(prefix):]
+    else:
+        return None
+
+import os
+FIXUP_DEBUG = os.getenv('MDPNSDEBUG')
+del os
+
+def fixup_namespace(mname, names, old_modules):
+    import sys
+    module = sys.modules[mname]
+    if names is None:
+        names = [name for name in dir(module) if not name.startswith('_')]
+    if FIXUP_DEBUG:
+        print 'NAMESPACE FIXUP: %s (%s)' % (module, mname)
+    for name in names:
+        item = getattr(module, name)
+        if (hasattr(item, '__module__') and
+            without_prefix(item.__module__, mname + '.') in old_modules):
+            if FIXUP_DEBUG:
+                print 'namespace fixup: {%s => %s}.%s'.format(
+                    item.__module__, mname, item.__name__)
+            item.__module__ = mname
+
+fixup_namespace(__name__, __all__,
+                ('routines',
+                 'introspection',
+                 'quad_forms',
+                 'covariance',
+                 'progress_bar',
+                 'slideshow',
+                 'repo_revision',
+                 ))

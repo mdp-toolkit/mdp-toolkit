@@ -14,7 +14,7 @@ class _Walk(object):
         self.arrays = {}
         self.start = None
         self.allobjs = {}
-        
+
     def __call__(self, x, start = None):
         arrays = self.arrays
         # loop through the object dictionary
@@ -71,10 +71,10 @@ def _format_dig(dict_):
     final = "Total %d arrays (%d bytes)" % (len(dict_), total_size)
     msgs.append(final)
     return '\n'.join(msgs)
-    
+
 def dig_node(x):
     """Crawl recursively an MDP Node looking for arrays.
-    
+
     Return (dictionary, string), where the dictionary is:
     { attribute_name: (size_in_bytes, array_reference)}
     and string is a nice string representation of it.
@@ -94,7 +94,7 @@ def dig_node(x):
 
 def get_node_size(x):
     """Return node total byte-size using cPickle with protocol=2.
-    
+
     The byte-size is related to the memory needed by the node).
     """
     # TODO: add check for problematic node types, like NoiseNode?
@@ -104,10 +104,10 @@ def get_node_size(x):
 
 def get_node_size_str(x, si_units=False):
     """Return node total byte-size as a well readable string.
-    
+
     si_units -- If True si-units like KB are used instead of KiB.
-    
-    The get_node_size function is used to get the size. 
+
+    The get_node_size function is used to get the size.
     """
     return _memory_size_str(get_node_size(x), si_units=si_units)
 
@@ -116,7 +116,7 @@ _IEC_MEMORY_PREFIXES = ("", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei")
 
 def _memory_size_str(size, si_units=False):
     """Convert the given memory size into a nicely formatted string.
-    
+
     si_units -- If True si-units like kB are used instead of kiB.
     """
     if si_units:
@@ -136,4 +136,3 @@ def _memory_size_str(size, si_units=False):
     else:
         size_str = "%d" % size
     return size_str + " " + unit
-

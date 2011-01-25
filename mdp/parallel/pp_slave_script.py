@@ -1,12 +1,12 @@
 """
 Script to be called on a remote machine for starting a pp network server.
 
-This script calls pp_slave_wrapper in a new process and returns the pid. 
+This script calls pp_slave_wrapper in a new process and returns the pid.
 The ssh connection stays open and can be used to kill the server process.
 
 The python_executable and the paths are send via stdin.
 The first sys.argv argument ist the nice value.
-The other arguments and the paths are then used as arguments for the 
+The other arguments and the paths are then used as arguments for the
 wrapper script.
 """
 
@@ -25,7 +25,7 @@ def main():
             else:
                 sys_paths.append(sys_path)
         # assemble the command line for the wrapper by forwarding the arguments and
-        cmd = ("nice %s %s pp_slave_wrapper.py" % 
+        cmd = ("nice %s %s pp_slave_wrapper.py" %
                (sys.argv[1], python_executable))
         for arg in sys.argv[2:]:
             cmd += " " + arg
@@ -42,11 +42,11 @@ def main():
         # return the pid via stdout
         print proc.pid
         sys.stdout.flush()
-    except:
+    except Exception, e:
         print "Error while starting the server process."
+        print e
         print -1
         sys.stdout.flush()
 
 if __name__ == "__main__":
     main()
-    

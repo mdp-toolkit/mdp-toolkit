@@ -3,9 +3,9 @@ import os
 from subprocess import Popen, PIPE, STDOUT
 
 def get_git_revision():
-    """When mdp is run from inside a git repository, this function 
+    """When mdp is run from inside a git repository, this function
     returns the current revision that git-describe gives us.
-    
+
     If mdp is installed (or git fails for some other reason),
     an empty string is returned.
     """

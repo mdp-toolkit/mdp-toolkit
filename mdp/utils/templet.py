@@ -125,7 +125,7 @@ import sys, re, inspect
 
 
 class _TemplateBuilder(object):
-    
+
     __pattern = re.compile(r"""\$(   # Directives begin with a $
                 \$                 | # $$ is an escape for $
                 [^\S\n]*\n         | # $\n is a line continuation
@@ -142,7 +142,7 @@ class _TemplateBuilder(object):
     def __realign(self, str, spaces=''):
         """Removes any leading empty columns of spaces and an initial
         empty line.
-        
+
         This is important for embedded Python code.
         """
         lines = str.splitlines()
@@ -176,7 +176,7 @@ class _TemplateBuilder(object):
 
 
 class _TemplateMetaClass(type):
-    
+
     __builder = _TemplateBuilder(
         'self.out.append(%s)', 'self.write(%s)', 'self.%s(vars())')
 
@@ -201,7 +201,7 @@ class _TemplateMetaClass(type):
 
 class StringTemplate(object):
     """A base class for string template classes."""
-    
+
     __metaclass__ = _TemplateMetaClass
 
     def __init__(self, *args, **kw):
@@ -221,7 +221,7 @@ Template = StringTemplate
 
 class UnicodeTemplate(object):
     """A base class for unicode template classes."""
-    
+
     __metaclass__ = _TemplateMetaClass
 
     def __init__(self, *args, **kw):

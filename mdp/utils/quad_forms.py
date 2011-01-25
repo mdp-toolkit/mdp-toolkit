@@ -6,6 +6,9 @@ numx_linalg = mdp.numx_linalg
 # 10 times machine eps
 epsilon = 10*numx.finfo(numx.double).eps
 
+class QuadraticFormException(mdp.MDPException):
+    pass
+
 class QuadraticForm(object):
     """
     Define an inhomogeneous quadratic form as 1/2 x'Hx + f'x + c .
@@ -25,8 +28,8 @@ class QuadraticForm(object):
         local_eps = 10*numx.finfo(numx.dtype(dtype)).eps
         # check that H is almost symmetric
         if not numx.allclose(H, H.T, rtol=100*local_eps, atol=local_eps):
-            raise mdp.MDPException('H does not seem to be symmetric')
-        
+            raise QuadraticFormException('H does not seem to be symmetric')
+
         self.H = refcast(H, dtype)
         if f is None:
             f = numx.zeros((H.shape[0],), dtype=dtype)
@@ -50,7 +53,7 @@ class QuadraticForm(object):
         E = E.take(idx)
         W = W.take(idx, axis=1)
         return E, W
-        
+
     def get_extrema(self, norm, tol = 1.E-4):
         """
         Find the input vectors xmax and xmin with norm 'nrm' that maximize
@@ -63,7 +66,7 @@ class QuadraticForm(object):
             E, W = self._eig_sort(H)
             xmax = W[:, -1]*norm
             xmin = W[:, 0]*norm
-        else:    
+        else:
             H_definite_positive, H_definite_negative = False, False
             E, W = self._eig_sort(H)
             if E[0] >= 0:
@@ -129,10 +132,10 @@ class QuadraticForm(object):
         """Compute invariances of the quadratic form at extremum 'xstar'.
         Outputs:
 
-         w  -- w[:,i] is the direction of the i-th invariance 
+         w  -- w[:,i] is the direction of the i-th invariance
          nu -- nu[i] second derivative on the sphere in the direction w[:,i]
         """
-        
+
         # find a basis for the tangential plane of the sphere in x+
         # e(1) ... e(N) is the canonical basis for R^N
         r = mdp.utils.norm2(xstar)
@@ -152,4 +155,3 @@ class QuadraticForm(object):
         w = w[:, idx]
         w = mdp.utils.mult(B, w)
         return w, nu
-        

@@ -5,15 +5,15 @@ import binode
 
 class BiClassifier(binode.BiNode, mdp.ClassifierNode):
     """BiMDP version of the ClassifierNode base class.
-    
+
     It enables that the classification results are returned by execute in the
     message.
     """
-    
+
     def _execute(self, x, return_labels=None, return_probs=None,
                  return_ranks=None):
         """Return the unaltered x and classification results when requested.
-        
+
         return_labels -- If True then the 'label' method is called on the x
             and the result is returned in the dict, with the key 'labels'. If
             return_labels is a string then this is used as a prefix for the
@@ -41,5 +41,3 @@ class BiClassifier(binode.BiNode, mdp.ClassifierNode):
             return x, msg
         else:
             return x
-                
-                
