@@ -50,8 +50,8 @@ def _open_custom_brower(open_browser, url):
         webbrowser.open(url)
 
 
-class NoTrainingTraceException(Exception):
-    """Exception for empty traces, due to an untrainable flow."""
+class EmptyTraceException(Exception):
+    """Exception for empty traces, i.e., when no slides where generated."""
     pass
 
 
@@ -107,7 +107,7 @@ def inspect_training(snapshot_path, x_samples, msg_samples=None,
         if not slide_filenames:
             err = ("No inspection slides were generated, probably because "
                    "there are no untrained nodes in the given flow.")
-            raise NoTrainingTraceException(err)
+            raise EmptyTraceException(err)
     except TraceDebugException, debug_exception:
         slide_filenames, slide_node_ids, index_table = debug_exception.result
     if index_table is None:
@@ -294,6 +294,9 @@ def inspect_execution(flow, x, msg=None, target=None, path=None, name=None,
         slide_filenames, slide_node_ids, section_ids = debug_exception.result
         result = None
     # create slideshow file
+    if not slide_filenames:
+        err = "For some reason no execution slides were generated."
+        raise EmptyTraceException(err)
     if not section_ids:
         slideshow = ExecuteHTMLSlideShow(filenames=slide_filenames,
                                          node_ids=slide_node_ids,
