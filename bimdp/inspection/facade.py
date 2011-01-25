@@ -2,6 +2,8 @@
 Module with simple functions for the complete inspection procedure.
 """
 
+from __future__ import with_statement
+
 import os
 import webbrowser
 import cPickle as pickle
@@ -209,9 +211,8 @@ def show_training(flow, data_iterables, msg_iterables=None, stop_messages=None,
             raise
     remove_inspection_residues(flow)
     # reload data samples
-    sample_file = open(os.path.join(path, "training_data_samples.pckl"), "rb")
-    x_samples, msg_samples, stop_messages = pickle.load(sample_file)
-    sample_file.close()
+    with open(os.path.join(path, "training_data_samples.pckl"), "rb") as sample_file:
+        x_samples, msg_samples, stop_messages = pickle.load(sample_file)
     # create slideshow
     slideshow = inspect_training(snapshot_path=path,
                                  inspection_path=path,

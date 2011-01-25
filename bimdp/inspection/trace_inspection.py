@@ -8,6 +8,8 @@ This module also supports (Bi)HiNet structures. Monkey patching is used to
 inject the tracing code into the Flow.
 """
 
+from __future__ import with_statement
+
 import os
 import cPickle as pickle
 import fnmatch
@@ -842,12 +844,9 @@ def _trace_biflow_training(snapshot_path, inspection_path, css_filename,
             for filename in files:
                 filename = os.path.join(file_path, filename)
                 # load the flow snapshot
-                pickle_file = open(filename, "rb")
                 biflow = None  # free memory
-                try:
+                with open(filename, "rb") as pickle_file:
                     biflow = pickle.load(pickle_file)
-                finally:
-                    pickle_file.close()
                 # determine which node is training and set the indices
                 for node in biflow[i_train_node:]:
                     if node.get_remaining_train_phase() > 0:

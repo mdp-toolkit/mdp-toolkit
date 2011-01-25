@@ -1,3 +1,5 @@
+from __future__ import with_statement
+
 import os
 import tempfile
 import cPickle
@@ -45,9 +47,8 @@ def test_Node_save():
     # test file save
     dummy_file = os.path.join(tempfile.gettempdir(),'removeme')
     generic_node.save(dummy_file, protocol=1)
-    flh = open(dummy_file, 'rb')
-    copy_node = cPickle.load(flh)
-    flh.close()
+    with open(dummy_file, 'rb') as flh:
+        copy_node = cPickle.load(flh)
     os.remove(dummy_file)
     assert generic_node.dummy_attr == copy_node.dummy_attr,\
            'Node save (file) method did not work'
