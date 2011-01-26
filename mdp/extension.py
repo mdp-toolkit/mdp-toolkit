@@ -345,9 +345,18 @@ def with_extension(extension_name):
     
     This function is intended to be used with the decorator syntax.
 
-    The deactivation happens only if the extension was activated by the
-    decorator (not if it was already active before). So this decorator
-    ensures that the extensions is active and prevents unintended side effects.
+    The deactivation happens only if the extension was activated by
+    the decorator (not if it was already active before). So this
+    decorator ensures that the extensions is active and prevents
+    unintended side effects.
+
+    If the generated function is a generator, the extension will be in
+    effect only when the generator object is created (that is when the
+    function is called, but its body is not actually immediately
+    executed). When the function body is executed (after ``next`` is
+    called on the generator object), the extension might not be in
+    effect anymore. Therefore, it is better to use the `extension`
+    context manager with a generator function.
     """
     def decorator(func):
         def wrapper(*args, **kwargs):
