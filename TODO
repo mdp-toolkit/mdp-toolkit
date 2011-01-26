@@ -1,7 +1,6 @@
 for MDP 3.1
 ===========
 
-- doctest parallel fails within sphinx but not in the console
 - docstrings should me migrated to rst everywhere (only class.__doc__ has
   been done for now)
 - example pages are still not good enough:
