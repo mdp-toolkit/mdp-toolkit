@@ -645,9 +645,12 @@ class TraceHTMLTranslator(BiHTMLTranslator):
             f.write('<tr><td><pre>x = </pre></td><td>' +
                     self._array_pretty_html(method_result) + '</td></tr>')
         elif isinstance(method_result, tuple):
+            f.write('<tr><td><pre>x = </pre></td><td>')
             if isinstance(method_result[0], n.ndarray):
                 f.write(self._array_pretty_html(method_result[0]) +
                         '</td></tr>')
+            else:
+                f.write(str(method_result[0]) + '</td></tr>')
             # second value is msg
             f.write('<tr><td><pre>msg = </pre></td><td>')
             if isinstance(method_result[1], dict):
