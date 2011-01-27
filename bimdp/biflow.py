@@ -273,7 +273,7 @@ class BiFlow(mdp.Flow):
         # only complain if the target was not found
         if isinstance(result, tuple) and len(result) == 3:
             target = result[2]
-            if not isinstance(target, int) and target != EXIT_TARGET:
+            if target not in [1, -1, EXIT_TARGET]:
                 err = ("Target node not found in flow during " +
                        "stop_training phase, last target value: " +
                        str(target))
@@ -316,7 +316,7 @@ class BiFlow(mdp.Flow):
                 msg = None
             elif (len(result) == 2):
                 y, msg = result
-            elif (len(result) == 3) and (result[2] in [EXIT_TARGET, -1]):
+            elif (len(result) == 3) and (result[2] in [1, -1, EXIT_TARGET]):
                 # target -1 is allowed for easier inverse handling
                 y, msg = result[:2]
             elif len(result) == 3:
