@@ -615,28 +615,27 @@ class TraceHTMLTranslator(BiHTMLTranslator):
         original method should still be called via super.
         """
         f = self._html_file
-        if not method_name == "stop_training":
-            f.write('<h3>%s arguments</h3>' % method_name)
-            f.write('<table class="inspect_io_data">')
-            if (method_name in ["execute", "train"]) and method_args:
-                # deal with x separately
-                x = method_args[0]
-                method_args = method_args[1:]
-                if isinstance(x, n.ndarray):
-                    f.write('<tr><td><pre>x = </pre></td>' +
-                            '<td>' + self._array_pretty_html(x) + '</td></tr>')
-                else:
-                    f.write('<tr><td><pre>x = </pre></td><td>' + str(x) +
-                            '</td></tr>')
-            # remaining arg is message
-            if method_args and method_args[0] is not None:
-                f.write('<tr><td><pre>msg = </pre></td><td>' +
-                        self._dict_pretty_html(method_args[0]) + '</td></tr>')
-            # normally the kwargs should be empty
-            for arg_key in method_kwargs:
-                f.write('<tr><td><pre>' + arg_key + ' = </pre></td><td>' +
-                        str(method_kwargs[arg_key]) + '</td></tr>')
-            f.write('</table>')
+        f.write('<h3>%s arguments</h3>' % method_name)
+        f.write('<table class="inspect_io_data">')
+        if (method_name != "stop_training") and method_args:
+            # deal with x separately
+            x = method_args[0]
+            method_args = method_args[1:]
+            if isinstance(x, n.ndarray):
+                f.write('<tr><td><pre>x = </pre></td>' +
+                        '<td>' + self._array_pretty_html(x) + '</td></tr>')
+            else:
+                f.write('<tr><td><pre>x = </pre></td><td>' + str(x) +
+                        '</td></tr>')
+        # remaining arg is message
+        if method_args and method_args[0] is not None:
+            f.write('<tr><td><pre>msg = </pre></td><td>' +
+                    self._dict_pretty_html(method_args[0]) + '</td></tr>')
+        # normally the kwargs should be empty
+        for arg_key in method_kwargs:
+            f.write('<tr><td><pre>' + arg_key + ' = </pre></td><td>' +
+                    str(method_kwargs[arg_key]) + '</td></tr>')
+        f.write('</table>')
         ## print results
         f.write("<h3>%s result</h3>" % method_name)
         f.write('<table class="inspect_io_data">')
@@ -645,26 +644,21 @@ class TraceHTMLTranslator(BiHTMLTranslator):
         elif isinstance(method_result, n.ndarray):
             f.write('<tr><td><pre>x = </pre></td><td>' +
                     self._array_pretty_html(method_result) + '</td></tr>')
-        elif isinstance(method_result, dict):
-            f.write('<tr><td><pre>msg = </pre></td><td>' +
-                    self._dict_pretty_html(method_result) + '</td></tr>')
         elif isinstance(method_result, tuple):
-            # interpret the results depending on the method name
-            if method_name == "execute" or method_name == "train":
-                result_names = ["x", "msg", "target"]
+            if isinstance(method_result[0], n.ndarray):
+                f.write(self._array_pretty_html(method_result[0]) +
+                        '</td></tr>')
+            # second value is msg
+            f.write('<tr><td><pre>msg = </pre></td><td>')
+            if isinstance(method_result[1], dict):
+                f.write(self._dict_pretty_html(method_result[1]) +
+                        '</td></tr>')
             else:
-                result_names = ["msg", "target"]
-            for i_result_part, result_part in enumerate(method_result):
-                f.write('<tr><td><pre>' + result_names[i_result_part] +
-                        ' = </pre></td><td>')
-                if isinstance(result_part, n.ndarray):
-                    f.write(self._array_pretty_html(result_part) +
-                            '</td></tr>')
-                elif isinstance(result_part, dict):
-                    f.write(self._dict_pretty_html(result_part) +
-                            '</td></tr>')
-                else:
-                    f.write(str(result_part) + '</td></tr>')
+                f.write(str(method_result[1]) + '</td></tr>')
+            # last value is target
+            if len(method_result) > 2:
+                f.write('<tr><td><pre>target = </pre></td><td>' +
+                        str(method_result[2]) + '</td></tr>')
         else:
             f.write('<tr><td><pre>unknown result type: </pre></td><td>' +
                     str(method_result) + '</td></tr>')
