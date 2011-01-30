@@ -26,7 +26,7 @@ class CrashRecoveryException(mdp.MDPException):
         # ?? python 2.5: super(CrashRecoveryException, self).__init__(errstr)
         mdp.MDPException.__init__(self, errstr)
 
-    def dump(self, filename = None):
+    def dump(self, filename=None):
         """
         Save a pickle dump of the crashing object on filename.
         If filename is None, the crash dump is saved on a file created by
@@ -34,6 +34,8 @@ class CrashRecoveryException(mdp.MDPException):
         Return the filename.
         """
         if filename is None:
+            # This 'temporary file' should actually stay 'forever', i.e. until
+            # deleted by the user.
             (fd, filename)=_tempfile.mkstemp(suffix=".pic", prefix="MDPcrash_")
             fl = _os.fdopen(fd, 'w+b', -1)
         else:
