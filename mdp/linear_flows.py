@@ -422,10 +422,7 @@ class Flow(object):
             return _cPickle.dumps(self, protocol)
         else:
             # if protocol != 0 open the file in binary mode
-            if protocol != 0:
-                mode = 'wb'
-            else:
-                mode = 'w'
+            mode = 'w' if protocol == 0 else 'wb'
             with open(filename, mode) as flh:
                 _cPickle.dump(self, flh, protocol)
 

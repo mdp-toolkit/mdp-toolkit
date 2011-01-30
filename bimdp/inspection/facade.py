@@ -223,16 +223,15 @@ def show_training(flow, data_iterables, msg_iterables=None, stop_messages=None,
                                  verbose=False)
     filename = os.path.join(path, "training_inspection.html")
     title = "Training Inspection"
-    html_file = open(filename, 'w')
-    html_file.write('<html>\n<head>\n<title>%s</title>\n' % title)
-    html_file.write('<style type="text/css" media="screen">')
-    html_file.write(INSPECTION_STYLE)
-    html_file.write(mdp.utils.BASIC_STYLE)
-    html_file.write('</style>\n</head>\n<body>\n')
-    html_file.write('<h3>%s</h3>\n' % title)
-    html_file.write(slideshow)
-    html_file.write('</body>\n</html>')
-    html_file.close()
+    with open(filename, 'w') as html_file:
+        html_file.write('<html>\n<head>\n<title>%s</title>\n' % title)
+        html_file.write('<style type="text/css" media="screen">')
+        html_file.write(INSPECTION_STYLE)
+        html_file.write(mdp.utils.BASIC_STYLE)
+        html_file.write('</style>\n</head>\n<body>\n')
+        html_file.write('<h3>%s</h3>\n' % title)
+        html_file.write(slideshow)
+        html_file.write('</body>\n</html>')
     if open_browser:
         _open_custom_brower(open_browser, os.path.abspath(filename))
     return filename
@@ -359,16 +358,15 @@ def show_execution(flow, x, msg=None, target=None, path=None, name=None,
                         show_size=show_size,
                         **kwargs)
     # inspect execution created the path if required, so no need to check here
-    html_file = open(filename, 'w')
-    html_file.write('<html>\n<head>\n<title>%s</title>\n' % title)
-    html_file.write('<style type="text/css" media="screen">')
-    html_file.write(INSPECTION_STYLE)
-    html_file.write(mdp.utils.BASIC_STYLE)
-    html_file.write('</style>\n</head>\n<body>\n')
-    html_file.write('<h3>%s</h3>\n' % title)
-    html_file.write(slideshow)
-    html_file.write('</body>\n</html>')
-    html_file.close()
+    with open(filename, 'w') as html_file:
+        html_file.write('<html>\n<head>\n<title>%s</title>\n' % title)
+        html_file.write('<style type="text/css" media="screen">')
+        html_file.write(INSPECTION_STYLE)
+        html_file.write(mdp.utils.BASIC_STYLE)
+        html_file.write('</style>\n</head>\n<body>\n')
+        html_file.write('<h3>%s</h3>\n' % title)
+        html_file.write(slideshow)
+        html_file.write('</body>\n</html>')
     if open_browser:
         _open_custom_brower(open_browser, os.path.abspath(filename))
     return filename, result

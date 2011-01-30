@@ -1,3 +1,5 @@
+from __future__ import with_statement
+
 __docformat__ = "restructuredtext en"
 
 import mdp
@@ -599,13 +601,9 @@ class NoiseNode(PreserveDimNode):
             return real_pickle.dumps(self, protocol)
         else:
             # if protocol != 0 open the file in binary mode
-            if protocol != 0:
-                mode = 'wb'
-            else:
-                mode = 'w'
-            flh = open(filename, mode)
-            real_pickle.dump(self, flh, protocol)
-            flh.close()
+            mode = 'w' if protocol == 0 else 'wb'
+            with open(filename, mode) as flh:
+                real_pickle.dump(self, flh, protocol)
 
 
 class NormalNoiseNode(PreserveDimNode):
