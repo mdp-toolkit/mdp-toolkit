@@ -306,7 +306,6 @@ def wrap_scikits_transformer(scikits_class):
 
     for mdp_name, scikits_name in methods_dict.items():
         mdp_method = getattr(ScikitsNode, mdp_name)
-        # Some (abstract) transformers do not implement e.g. fit.
         scikits_method = getattr(scikits_class, scikits_name, None)
         if hasattr(scikits_method, 'im_func'):
             # some scikits algorithms do not define an __init__ method
@@ -419,7 +418,8 @@ def wrap_scikits_algorithms(scikits_class, nodes_list):
 
     if issubclass(scikits_class, scikits.learn.base.ClassifierMixin):
         nodes_list.append(wrap_scikits_classifier(scikits_class))
-    elif hasattr(scikits_class, 'transform'):
+    # Some (abstract) transformers do not implement fit.
+    elif hasattr(scikits_class, 'transform') and hasattr(scikits_class, 'fit'):
         nodes_list.append(wrap_scikits_transformer(scikits_class))
     elif hasattr(scikits_class, 'predict'):
         nodes_list.append(wrap_scikits_predictor(scikits_class))
