@@ -306,7 +306,8 @@ def wrap_scikits_transformer(scikits_class):
 
     for mdp_name, scikits_name in methods_dict.items():
         mdp_method = getattr(ScikitsNode, mdp_name)
-        scikits_method = getattr(scikits_class, scikits_name)
+        # Some (abstract) transformers do not implement e.g. fit.
+        scikits_method = getattr(scikits_class, scikits_name, None)
         if hasattr(scikits_method, 'im_func'):
             # some scikits algorithms do not define an __init__ method
             # the one inherited from 'object' is a
