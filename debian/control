@@ -18,6 +18,7 @@ Recommends: python-scipy,
             python-scikits-learn,
             python-joblib
 Suggests: python-pp, python-py
+Conflicts: python-libsvm (<< 3.0)
 Enhances: python-mvpa
 Description: Modular toolkit for Data Processing
  Python data processing framework. Implemented algorithms include:
