@@ -263,8 +263,11 @@ def set_configuration():
     # libsvm
     try:
         import svm as libsvm
+        libsvm.libsvm
     except ImportError, exc:
         config.ExternalDepFailed('libsvm', exc)
+    except AttributeError, exc:
+        config.ExternalDepFailed('libsvm', 'libsvm version >= 2.91 required')
     else:
         if os.getenv('MDP_DISABLE_LIBSVM'):
             config.ExternalDepFailed('libsvm', 'disabled')
