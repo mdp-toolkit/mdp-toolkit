@@ -1,6 +1,7 @@
 for MDP 3.1
 ===========
 
+- document extension disable environment variables
 - docstrings should me migrated to rst everywhere (only class.__doc__ has
   been done for now)
 - example pages are still not good enough:
