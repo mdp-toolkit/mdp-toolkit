@@ -1,6 +1,9 @@
 for MDP 3.1
 ===========
 
+- add code for generating the plots in the tutorial (but we don't want the
+  doctests to fail if matplotlib is not installed: find a good way of
+  dealing with it, pymvpa already does it properly)
 - document extension disable environment variables
 - docstrings should me migrated to rst everywhere (only class.__doc__ has
   been done for now)
