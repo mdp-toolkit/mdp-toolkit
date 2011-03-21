@@ -7,8 +7,6 @@ Taken from numpy. Adapted to our needs.
 import shutil
 import os
 import sys
-import re
-import subprocess
 import fnmatch
 import lib2to3.main
 from io import StringIO

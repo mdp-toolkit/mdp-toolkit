@@ -3,8 +3,6 @@ __docformat__ = "restructuredtext en"
 import mdp
 from mdp import numx, utils, Node, NodeException, PreserveDimNode
 
-import warnings as _warnings
-import copy as _copy
 import cPickle as pickle
 import pickle as real_pickle
 

@@ -421,7 +421,6 @@ class HLLENode(LLENode):
             Qs, sig2s, nbrss = self._adjust_output_dim()
 
         d_out = self.output_dim
-        d_in = self.input_dim
 
         #dp = d_out + (d_out-1) + (d_out-2) + ...
         dp = d_out*(d_out+1)/2

@@ -14,8 +14,6 @@ PARMS = {'2.5': ('numpy', None),
 import os
 import sys
 import subprocess
-import time
-import random
 
 # get from sys.argv a directory to add to pythonpath
 # /path/to/pythonVERSION/dir

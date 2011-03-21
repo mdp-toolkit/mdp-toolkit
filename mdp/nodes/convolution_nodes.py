@@ -142,7 +142,7 @@ class Convolution2DNode(mdp.Node):
         This is because fftpack does not support floating point types larger
         than that.
         """
-        return [t for t in mdp.utils.get_dtypes('Float') if t.itemsize<=8]
+        return [t for t in utils.get_dtypes('Float') if t.itemsize<=8]
 
     def _pre_execution_checks(self, x):
         """This method contains all pre-execution checks.

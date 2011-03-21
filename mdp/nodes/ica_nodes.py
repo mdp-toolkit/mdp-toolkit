@@ -198,7 +198,6 @@ class CuBICANode(ICANode):
         # put here -2pi < -pi < +pi
         self.maxangle = [-2*numx.pi]
         verbose = self.verbose
-        telescope = self.telescope
 
         # we need to copy to avoid overwriting during rotation.
         x = data.copy()

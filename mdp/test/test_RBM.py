@@ -139,7 +139,7 @@ def test_RBM_stability():
     # see that w remains stable after learning
     for k in xrange(100):
         if k%5==0: spinner()
-        err = bm.train(v)
+        bm.train(v)
     bm.stop_training()
 
     assert_array_almost_equal(real_w, bm.w, 1)

@@ -88,8 +88,8 @@ __all__ = ['CovarianceMatrix', 'DelayCovarianceMatrix','CrossCovarianceMatrix',
            'norm2', 'permute', 'pinv', 'progressinfo',
            'random_rot', 'refcast', 'rotate', 'scast', 'solve', 'sqrtm',
            'svd', 'symrand', 'timediff', 'matmult',
-           'get_git_revision', 'SLIDESHOW_STYLE', 'HTMLSlideShow',
-           'ImageHTMLSlideShow', 'IMAGE_SLIDESHOW_STYLE',
+           'get_git_revision', 'HTMLSlideShow', 'ImageHTMLSlideShow',
+           'BASIC_STYLE', 'SLIDESHOW_STYLE', 'IMAGE_SLIDESHOW_STYLE',
            'SectionHTMLSlideShow',
            'SectionImageHTMLSlideShow', 'image_slideshow',
            'lrep', 'rrep', 'irep',
@@ -98,7 +98,6 @@ __all__ = ['CovarianceMatrix', 'DelayCovarianceMatrix','CrossCovarianceMatrix',
            'OrderedDict', 'gabor', 'fixup_namespace']
 
 def without_prefix(name, prefix):
-    thelen = len(prefix)
     if name.startswith(prefix):
         return name[len(prefix):]
     else:
