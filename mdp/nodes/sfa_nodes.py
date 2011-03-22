@@ -137,6 +137,14 @@ class SFANode(Node):
         self.dcov_mtx, self.davg, self.dtlen = self._dcov_mtx.fix()
         del self._dcov_mtx
 
+        # add the square of the mean to the derivative covariance
+        # matrix: we want the second moment matrix (centered about 0) and
+        # not the second central moment matrix (centered about the mean), i.e.
+        # the covariance matrix
+        T = self.dtlen
+        davg = self.davg
+        self.dcov_mtx += T**2/(T*(T-1.))*numx.outer(davg,davg)
+
         rng = self._set_range()
 
         #### solve the generalized eigenvalue problem
