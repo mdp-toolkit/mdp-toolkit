@@ -156,9 +156,10 @@ class SFANode(Node):
             errstr = str(exception)+"\n Covariance matrices may be singular."
             raise NodeException(errstr)
 
-        # delete covariance matrix if no exception occurred
-        del self.cov_mtx
-        del self.dcov_mtx
+        if not debug:
+            # delete covariance matrix if no exception occurred
+            del self.cov_mtx
+            del self.dcov_mtx
 
         # store bias
         self._bias = mult(self.avg, self.sf)
