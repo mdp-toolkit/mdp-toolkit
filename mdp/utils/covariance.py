@@ -88,10 +88,13 @@ class CovarianceMatrix(object):
         self._avg += x.sum(axis=0)
         self._tlen += x.shape[0]
 
-    def fix(self):
+    def fix(self, center=True):
         """Returns a triple containing the covariance matrix, the average and
         the number of observations. The covariance matrix is then reset to
-        a zero-state."""
+        a zero-state.
+
+        If center is false, the returned matrix is the matrix of the second moments,
+        i.e. the covariance matrix of the data without subtracting the mean."""
         # local variables
         type_ = self._dtype
         tlen = self._tlen
@@ -101,15 +104,19 @@ class CovarianceMatrix(object):
 
         ##### fix the training variables
         # fix the covariance matrix (try to do everything inplace)
-        avg_mtx = numx.outer(avg, avg)
-
         if self.bias:
-            avg_mtx /= tlen*(tlen)
             cov_mtx /= tlen
         else:
-            avg_mtx /= tlen*(tlen - 1)
             cov_mtx /= tlen - 1
-        cov_mtx -= avg_mtx
+
+        if center:
+            avg_mtx = numx.outer(avg, avg)
+            if self.bias:
+                avg_mtx /= tlen*(tlen)
+            else:
+                avg_mtx /= tlen*(tlen - 1)
+            cov_mtx -= avg_mtx
+
         # fix the average
         avg /= tlen
 
