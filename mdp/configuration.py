@@ -254,7 +254,8 @@ def set_configuration():
         else:
             if os.getenv('MDP_DISABLE_SHOGUN'):
                 config.ExternalDepFailed('shogun', 'disabled')
-            elif not (version.startswith('v0.9') or version.startswith('v1.')):
+            elif not (version.startswith('v0.9') or version.startswith('v1.') or
+                      version.startswith('v0.10.')):
                 config.ExternalDepFailed('shogun',
                                          'We need at least SHOGUN version 0.9.')
             else:
