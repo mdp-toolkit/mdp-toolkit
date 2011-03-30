@@ -124,7 +124,7 @@ import utils
 # set symeig
 utils.symeig = configuration.get_symeig(numx_linalg)
 
-__version__ = '3.1'
+__version__ = '3.2'
 __revision__ = utils.get_git_revision()
 __authors__ = 'MDP Developers'
 __copyright__ = '(c) 2003-2011 mdp-toolkit-devel@lists.sourceforge.net'
