@@ -7,6 +7,8 @@ LocalPPScheduler includes the creation of a local pp scheduler.
 NetworkPPScheduler includes the management of the remote slaves via SSH.
 """
 
+from __future__ import with_statement
+
 import sys
 import os
 import inspect
@@ -64,8 +66,7 @@ class PPScheduler(scheduling.Scheduler):
             data, task_callable, task_index = task
             task_callable.setup_environment()
             return task_callable(data), task_index
-        task_submitted = False
-        while not task_submitted:
+        while True:
             if len(self.ppserver._Server__queue) > self.max_queue_length:
                 # release lock for other threads and wait
                 self._lock.release()
@@ -78,7 +79,7 @@ class PPScheduler(scheduling.Scheduler):
                 # this forces pp to simply pickle the object
                 self.ppserver.submit(execute_task, args=(task,),
                                      callback=self._pp_result_callback)
-                task_submitted = True
+                break
 
     def _pp_result_callback(self, result):
         """Calback method for pp to unpack the result and the task id.
@@ -258,9 +259,7 @@ class NetworkPPScheduler(PPScheduler):
         The slaves that could be started are stored in a textfile, in the form
         name:port:pid
         """
-        slave_kill_file = open(self.slave_kill_file, 'w')
-        
-        try:
+        with open(self.slave_kill_file, 'w') as slave_kill_file:
             self._running_remote_slaves = []
             self._remote_pids = []
             self._ssh_procs = []
@@ -272,9 +271,6 @@ class NetworkPPScheduler(PPScheduler):
                 self._running_remote_slaves.append(address)
                 self._remote_pids.append(pid)
                 self._ssh_procs.append(ssh_proc)
-        finally:
-            slave_kill_file.close()
-
 
 def kill_slaves(slave_kill_filename):
     """Kill all remote slaves which are stored in the given file.
@@ -282,8 +278,7 @@ def kill_slaves(slave_kill_filename):
     This functions is only meant for emergency situations, when something
     went wrong and the slaves have to be killed manually.
     """
-    tempfile = open(slave_kill_filename)
-    try:
+    with open(slave_kill_filename) as tempfile:
         for line in tempfile:
             address, pid, ssh_pid = line.split(":")
             pid = int(pid)
@@ -304,8 +299,6 @@ def kill_slaves(slave_kill_filename):
             # os.kill(proc.pid, signal.SIGQUIT)
             print "killed slave " + address + " (pid %d)" % pid
         print "all slaves killed."
-    finally:
-        tempfile.close()
 
 
 if __name__ == "__main__":
