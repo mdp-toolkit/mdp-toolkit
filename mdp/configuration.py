@@ -162,11 +162,11 @@ def get_numx():
     # the test is for numx_description, not numx, because numx could
     # be imported successfully, but e.g. numx_rand could later fail.
     if numx_description is None:
-        msg = ("Could not import any of the numeric backends.\n"
-               "Import errors:\n"
-               + '\n'.join(label+': '+str(exc)
-                           for label, exc in numx_exception.items()))
-        raise ImportError(msg)
+        msg = ([ "Could not import any of the numeric backends.",
+                 "Import errors:" ] +
+               [ lab+': '+str(exc) for lab, exc in numx_exception.items() ]
+               + ["sys.path: " + str(sys.path)])
+        raise ImportError('\n'.join(msg))
 
     return (numx_description, numx, numx_linalg,
             numx_fft, numx_rand, numx_version)
