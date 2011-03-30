@@ -85,7 +85,9 @@ class PPScheduler(scheduling.Scheduler):
 
         This method then calls the normal _store_result method.
         """
-        self._store_result(result[0], result[1])
+        if result is None:
+            result = (None, None)
+        self._store_result(*result)
 
     def _shutdown(self):
         """Call destroy on the ppserver."""

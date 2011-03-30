@@ -281,14 +281,18 @@ class Scheduler(object):
     def _store_result(self, result, task_index):
         """Store a result in the internal result container.
 
-        result -- Tuple of result data and task index.
+        result -- Result data
+        task_index -- Task index. Can be None if an error occured.
 
         This function blocks to avoid any problems during result storage.
         """
         self._lock.acquire()
         self.result_container.add_result(result, task_index)
         if self.verbose:
-            print "    finished task no. %d" % task_index
+            if task_index is not None:
+                print "    finished task no. %d" % task_index
+            else:
+                print "    task failed"
         self._n_open_tasks -= 1
         self._lock.release()
 
