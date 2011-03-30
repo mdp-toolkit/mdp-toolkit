@@ -28,7 +28,7 @@ During release:
   but even better would be to edit the result to only keep the changes
   that are relevant for the user like incompatibilities, new features, etc..
 - update TODO and COPYRIGHT (date)
-- generate tutorial, website, and API documentation
+- generate tutorial, website, and API documentation [make website]
 - change homepage colors
 - short/long description should go: on SF.net description, tutorial,
   home page, modules __init__, software.incf.net.
