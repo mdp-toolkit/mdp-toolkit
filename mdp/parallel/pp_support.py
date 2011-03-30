@@ -302,5 +302,7 @@ def kill_slaves(slave_kill_filename):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) <= 1:
-        kill_slaves()
+    if len(sys.argv) == 2:
+        kill_slaves(sys.argv[1])
+    else:
+        sys.stderr.write("usage: %s slave_list.txt\n" % __file__)
