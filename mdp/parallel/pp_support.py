@@ -11,12 +11,6 @@ from __future__ import with_statement
 
 import sys
 import os
-import inspect
-
-if __name__ == "__main__":
-    module_file = os.path.abspath(inspect.getfile(sys._getframe(0)))
-    module_path = os.path.dirname(module_file)
-    sys.path.append(module_path.split("mdp")[0])
 
 import time
 import subprocess
@@ -179,7 +173,7 @@ class NetworkPPScheduler(PPScheduler):
         if remote_python_executable is None:
             remote_python_executable = sys.executable
         self._python_executable = remote_python_executable
-        module_file = os.path.abspath(inspect.getfile(sys._getframe(0)))
+        module_file = os.path.abspath(__file__)
         self._script_path = os.path.dirname(module_file)
         self.verbose = verbose
         # start ppserver
