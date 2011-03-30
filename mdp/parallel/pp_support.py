@@ -127,10 +127,10 @@ class NetworkPPScheduler(PPScheduler):
     """Scheduler which can manage pp remote servers (requires SSH).
 
     The remote slave servers are automatically started and killed at the end.
-    
+
     Since the slaves are started via SSH this schduler does not work on normal
     Windows systems. On such systems you can start the pp slaves
-    manually and then use the standard PPScheduler. 
+    manually and then use the standard PPScheduler.
     """
 
     def __init__(self, max_queue_length=1,
@@ -204,7 +204,7 @@ class NetworkPPScheduler(PPScheduler):
 
     def start_slave(self, address, ncpus="autodetect"):
         """Start a single remote slave.
-    
+
         The return value is a tuple of the ssh process handle and
         the remote pid.
         """
@@ -228,7 +228,7 @@ class NetworkPPScheduler(PPScheduler):
                 source_paths = [self._python_executable,] + source_paths
             else:
                 source_paths = [self._python_executable,]
-    
+
             proc.stdin.write("_done_" + "\n")
             # print status message from slave
             sys.stdout.write(address + ": " + proc.stdout.readline())
@@ -252,7 +252,7 @@ class NetworkPPScheduler(PPScheduler):
             print "Initialization of slave %s has failed." % address
             traceback.print_exc()
             return None
-        
+
     def _start_slaves(self):
         """Start remote slaves.
 
@@ -274,7 +274,7 @@ class NetworkPPScheduler(PPScheduler):
 
 def kill_slaves(slave_kill_filename):
     """Kill all remote slaves which are stored in the given file.
-    
+
     This functions is only meant for emergency situations, when something
     went wrong and the slaves have to be killed manually.
     """

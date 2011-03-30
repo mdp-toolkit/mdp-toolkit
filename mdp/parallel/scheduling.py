@@ -75,7 +75,7 @@ class OrderedResultContainer(ListResultContainer):
 
 class TaskCallable(object):
     """Abstract base class for task callables.
-    
+
     This class encapsulates the task behavior and the related fixed data
     (data which stays constant over multiple tasks).
     """
@@ -131,7 +131,7 @@ class SleepSqrTestCallable(TaskCallable):
 
 class MDPVersionCallable(TaskCallable):
     """Callable For testing MDP version.
-    
+
     Should return a unique comparable object which includes version information
     and installed/used modules.
     """
@@ -162,7 +162,7 @@ def cpu_count():
     """Return the number of CPU cores."""
     try:
         return multiprocessing.cpu_count()
-    # TODO: remove except clause once we support only python >= 2.6 
+    # TODO: remove except clause once we support only python >= 2.6
     except NameError:
         ## This code part is taken from parallel python.
         # Linux, Unix and MacOS
@@ -319,16 +319,16 @@ class Scheduler(object):
         error messages.
         """
         self._shutdown()
-        
+
     ## Context Manager interface ##
-    
+
     def __enter__(self):
         """Return self."""
         return self
-    
+
     def __exit__(self, type, value, traceback):
         """Shutdown the scheduler.
-        
+
         It is important that all the calculations have finished
         when this is called, otherwise the shutdown might fail.
         """
@@ -343,9 +343,9 @@ class Scheduler(object):
 
         Warning: When this method is entered is has the lock, the lock must be
         released here.
-        
+
         Warning: Note that fork has not been called yet, so the provided
-        task_callable must not be called. Only a forked version can be called. 
+        task_callable must not be called. Only a forked version can be called.
         """
         # IMPORTANT: always call fork, since it must be called at least once!
         task_callable = task_callable.fork()
