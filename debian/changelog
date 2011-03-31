@@ -1,3 +1,9 @@
+mdp (3.1-1) unstable; urgency=low
+
+  * Fresh upstream release
+
+ -- Yaroslav Halchenko <debian@onerussian.com>  Thu, 31 Mar 2011 08:37:07 -0400
+
 mdp (3.0+git8-g921253a-2) unstable; urgency=low
 
   * Conflict with libsvm << 3.0 since we cannot have versioned recommends.
