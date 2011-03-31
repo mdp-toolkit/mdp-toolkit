@@ -213,9 +213,9 @@ class NetworkPPScheduler(PPScheduler):
                    (self._slave_nice, self._port, self._timeout, self._secret,
                     ncpus))
             proc.stdin.write(cmd + "\n")
-            # send sys_paths
-            source_paths = [self._python_executable,] + self._source_paths
-            for sys_path in source_paths:
+            # send additional information to the remote process
+            proc.stdin.write(self._python_executable + "\n")
+            for sys_path in self._source_paths:
                 proc.stdin.write(sys_path + "\n")
             proc.stdin.write("_done_" + "\n")
             # print status message from slave
