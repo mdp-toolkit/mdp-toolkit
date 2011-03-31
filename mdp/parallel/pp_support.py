@@ -21,10 +21,6 @@ import tempfile
 import scheduling
 import pp
 
-# TODO: modify pythonpath when starting workers, then specify module mdp...
-#    write a python wrapper for starting the worker which modifies the sys.path
-
-# TODO: list of computers as dict with int for number of processes?
 
 class PPScheduler(scheduling.Scheduler):
     """Adaptor scheduler for the parallel python scheduler.
@@ -169,7 +165,10 @@ class NetworkPPScheduler(PPScheduler):
         self._secret = secret
         self._slave_nice = nice
         self._timeout = timeout
-        self._source_paths = source_paths
+        if not source_paths:
+            self._source_paths = []
+        else:
+            self._source_paths = source_paths
         if remote_python_executable is None:
             remote_python_executable = sys.executable
         self._python_executable = remote_python_executable
@@ -215,14 +214,9 @@ class NetworkPPScheduler(PPScheduler):
                     ncpus))
             proc.stdin.write(cmd + "\n")
             # send sys_paths
-            if self._source_paths is not None:
-                source_paths = [self._python_executable,] + self._source_paths
-                for sys_path in source_paths:
-                    proc.stdin.write(sys_path + "\n")
-                source_paths = [self._python_executable,] + source_paths
-            else:
-                source_paths = [self._python_executable,]
-
+            source_paths = [self._python_executable,] + self._source_paths
+            for sys_path in source_paths:
+                proc.stdin.write(sys_path + "\n")
             proc.stdin.write("_done_" + "\n")
             # print status message from slave
             sys.stdout.write(address + ": " + proc.stdout.readline())
