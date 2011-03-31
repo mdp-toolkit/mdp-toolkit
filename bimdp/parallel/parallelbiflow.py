@@ -34,9 +34,9 @@ class BiFlowTrainCallable(parallel.FlowTrainCallable):
             result = self._flownode.train(x, msg)
             if (result is None) or isinstance(result, dict):
                 break
-            elif len(result) == 4:
-                # discard global message and reenter
-                x, msg = result[:2]
+            elif (isinstance(result, tuple) and
+                (result[2] in [1, -1, EXIT_TARGET])):
+                break
             else:
                 err = ("Target node not found in flow during " +
                        "training, last result: " + str(result))
@@ -374,10 +374,14 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
                                 self._stop_messages[self._i_train_node])
         self._post_stop_training_hook()
         if (result is not None) and (not isinstance(result, dict)):
-            err = ("Target node not found in flow during " +
-                   "stop_training phase, last result: " +
-                   str(result))
-            raise BiFlowException(err)
+            if (isinstance(result, tuple) and
+                (result[2] in [1, -1, EXIT_TARGET])):
+                pass
+            else:
+                err = ("Target node not found in flow during " +
+                       "stop_training phase, last result: " +
+                       str(result))
+                raise BiFlowException(err)
         self._bi_reset()
 
     def _create_train_task(self):
@@ -538,9 +542,7 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
             if (result is not None):
                 target = result[2]
                 # values of +1, -1 and EXIT_TARGET are tolerated
-                if target in [1, -1, EXIT_TARGET]:
-                    pass
-                else:
+                if target not in [1, -1, EXIT_TARGET]:
                     err = ("Target node not found in flow during " +
                            "stop_training phase, last result: " +
                            str(result))

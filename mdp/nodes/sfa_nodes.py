@@ -134,7 +134,11 @@ class SFANode(Node):
         ##### request the covariance matrices and clean up
         self.cov_mtx, self.avg, self.tlen = self._cov_mtx.fix()
         del self._cov_mtx
-        self.dcov_mtx, self.davg, self.dtlen = self._dcov_mtx.fix()
+        # do not center around the mean:
+        # we want the second moment matrix (centered about 0) and
+        # not the second central moment matrix (centered about the mean), i.e.
+        # the covariance matrix
+        self.dcov_mtx, self.davg, self.dtlen = self._dcov_mtx.fix(center=False)
         del self._dcov_mtx
 
         rng = self._set_range()
@@ -156,9 +160,10 @@ class SFANode(Node):
             errstr = str(exception)+"\n Covariance matrices may be singular."
             raise NodeException(errstr)
 
-        # delete covariance matrix if no exception occurred
-        del self.cov_mtx
-        del self.dcov_mtx
+        if not debug:
+            # delete covariance matrix if no exception occurred
+            del self.cov_mtx
+            del self.dcov_mtx
 
         # store bias
         self._bias = mult(self.avg, self.sf)

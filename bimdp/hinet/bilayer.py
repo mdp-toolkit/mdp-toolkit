@@ -32,6 +32,9 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
     Note that a msg is always passed to the internal nodes, even if the Layer
     itself was targeted. Additional target resolution can then happen in the
     internal node (e.g. like it is done in the standard BiFlowNode).
+    
+    Both incomming and outgoing messages are automatically checked for the
+    the use_copies msg key.
     """
 
     def __init__(self, node, n_nodes=1, use_copies=False,
@@ -102,6 +105,8 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
 
     def _execute(self, x, msg=None):
         """Process the data through the internal nodes."""
+        if msg is not None:
+            self._extract_message_copy_flag(msg)
         y_results = []
         msg_results = []
         target = None
@@ -135,6 +140,9 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
             y = None
         else:
             y = n.hstack(y_results)
+        # check outgoing message for use_copies key
+        if msg is not None:
+            self._extract_message_copy_flag(msg)
         ## return result
         if target is not None:
             return (y, msg, target)
@@ -147,6 +155,8 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
         """Perform single training step by training the internal nodes."""
         ## this code is mostly identical to the execute code,
         ## currently the only difference is that train is called
+        if msg is not None:
+            self._extract_message_copy_flag(msg)
         y_results = []
         msg_results = []
         target = None
@@ -180,6 +190,9 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
             y = None
         else:
             y = n.hstack(y_results)
+        # check outgoing message for use_copies key
+        if msg is not None:
+            self._extract_message_copy_flag(msg)
         ## return result
         if target is not None:
             return (y, msg, target)
@@ -194,11 +207,13 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
         The outgoing result message is also searched for a use_copies key,
         which is then applied if found.
         """
+        if msg is not None:
+            self._extract_message_copy_flag(msg)
+        target = None
         if self.use_copies:
             ## have to call stop_training for each node
             y_results = []
             msg_results = []
-            target = None
             node_msgs = self._get_split_messages(msg)
             for i_node, node in enumerate(self.nodes):
                 node_msg = node_msgs[i_node]
@@ -223,8 +238,10 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
         else:  
             ## simple case of a single instance
             node_result = self.node.stop_training(msg)
-            if node_result is None:
-                return None
+            if not isinstance(node_result, tuple):
+                return node_result
+            elif len(node_result) == 2:
+                y, msg = node_result
             else:
                 y, msg, target = node_result
         # check outgoing message for use_copies key

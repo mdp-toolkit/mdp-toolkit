@@ -1,3 +1,5 @@
+from __future__ import with_statement
+
 import tempfile
 import pickle
 import cPickle
@@ -65,9 +67,8 @@ def testFlow_save():
     # test file save
     dummy_file = os.path.join(tempfile.gettempdir(),'removeme')
     flow.save(dummy_file, protocol=1)
-    flh = open(dummy_file, 'rb')
-    copy_flow = cPickle.load(flh)
-    flh.close()
+    with open(dummy_file, 'rb') as flh:
+        copy_flow = cPickle.load(flh)
     os.remove(dummy_file)
     assert flow[0].dummy_attr == copy_flow[0].dummy_attr, \
            'Flow save (file) method did not work'
@@ -285,9 +286,8 @@ def testCrashRecovery():
         flow.train(mdp.numx.zeros((1,2), 'd'))
     except Exception, e:
         assert isinstance(e,mdp.FlowExceptionCR)
-        fl = open(e.filename, 'rb')
-        pic_flow = pickle.load(fl)
-        fl.close()
+        with open(e.filename, 'rb') as fl:
+            pic_flow = pickle.load(fl)
         os.remove(e.filename)
         assert flow[0].bogus_attr == pic_flow[0].bogus_attr
     flow.set_crash_recovery(0)
@@ -308,9 +308,8 @@ def testCrashRecoveryException():
         assert isinstance(e.parent_exception, StandardError)
 
     for fname in [filename1,filename2]:
-        fl = open(fname, 'rb')
-        obj = pickle.load(fl)
-        fl.close()
+        with open(fname, 'rb') as fl:
+            obj = pickle.load(fl)
         os.remove(fname)
         assert obj == a
 

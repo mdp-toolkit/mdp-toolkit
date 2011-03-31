@@ -254,7 +254,8 @@ def set_configuration():
         else:
             if os.getenv('MDP_DISABLE_SHOGUN'):
                 config.ExternalDepFailed('shogun', 'disabled')
-            elif not (version.startswith('v0.9') or version.startswith('v1.')):
+            elif not (version.startswith('v0.9') or version.startswith('v1.') or
+                      version.startswith('v0.10.')):
                 config.ExternalDepFailed('shogun',
                                          'We need at least SHOGUN version 0.9.')
             else:
@@ -263,8 +264,11 @@ def set_configuration():
     # libsvm
     try:
         import svm as libsvm
+        libsvm.libsvm
     except ImportError, exc:
         config.ExternalDepFailed('libsvm', exc)
+    except AttributeError, exc:
+        config.ExternalDepFailed('libsvm', 'libsvm version >= 2.91 required')
     else:
         if os.getenv('MDP_DISABLE_LIBSVM'):
             config.ExternalDepFailed('libsvm', 'disabled')

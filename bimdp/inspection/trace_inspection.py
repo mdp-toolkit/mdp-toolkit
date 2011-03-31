@@ -8,6 +8,8 @@ This module also supports (Bi)HiNet structures. Monkey patching is used to
 inject the tracing code into the Flow.
 """
 
+from __future__ import with_statement
+
 import os
 import cPickle as pickle
 import fnmatch
@@ -613,28 +615,32 @@ class TraceHTMLTranslator(BiHTMLTranslator):
         original method should still be called via super.
         """
         f = self._html_file
-        if not method_name == "stop_training":
-            f.write('<h3>%s arguments</h3>' % method_name)
-            f.write('<table class="inspect_io_data">')
-            if (method_name in ["execute", "train"]) and method_args:
-                # deal with x separately
-                x = method_args[0]
-                method_args = method_args[1:]
-                if isinstance(x, n.ndarray):
-                    f.write('<tr><td><pre>x = </pre></td>' +
-                            '<td>' + self._array_pretty_html(x) + '</td></tr>')
-                else:
-                    f.write('<tr><td><pre>x = </pre></td><td>' + str(x) +
-                            '</td></tr>')
-            # remaining arg is message
-            if method_args and method_args[0] is not None:
-                f.write('<tr><td><pre>msg = </pre></td><td>' +
-                        self._dict_pretty_html(method_args[0]) + '</td></tr>')
-            # normally the kwargs should be empty
-            for arg_key in method_kwargs:
-                f.write('<tr><td><pre>' + arg_key + ' = </pre></td><td>' +
-                        str(method_kwargs[arg_key]) + '</td></tr>')
-            f.write('</table>')
+        f.write('<h3>%s arguments</h3>' % method_name)
+        f.write('<table class="inspect_io_data">')
+        if method_name == "stop_training":
+            # first argument is not x,
+            # if no arguments were given method_args == (None,)
+            if method_args == (None,):
+                f.write('<tr><td><pre>None</pre></tr></td>')
+        else:
+            # deal and remove x part of arguments
+            x = method_args[0]
+            method_args = method_args[1:]
+            if isinstance(x, n.ndarray):
+                f.write('<tr><td><pre>x = </pre></td>' +
+                        '<td>' + self._array_pretty_html(x) + '</td></tr>')
+            else:
+                f.write('<tr><td><pre>x = </pre></td><td>' + str(x) +
+                        '</td></tr>')
+        # remaining arg is message
+        if method_args[0] is not None:
+            f.write('<tr><td><pre>msg = </pre></td><td>' +
+                    self._dict_pretty_html(method_args[0]) + '</td></tr>')
+        # normally the kwargs should be empty
+        for arg_key in method_kwargs:
+            f.write('<tr><td><pre>' + arg_key + ' = </pre></td><td>' +
+                    str(method_kwargs[arg_key]) + '</td></tr>')
+        f.write('</table>')
         ## print results
         f.write("<h3>%s result</h3>" % method_name)
         f.write('<table class="inspect_io_data">')
@@ -643,26 +649,24 @@ class TraceHTMLTranslator(BiHTMLTranslator):
         elif isinstance(method_result, n.ndarray):
             f.write('<tr><td><pre>x = </pre></td><td>' +
                     self._array_pretty_html(method_result) + '</td></tr>')
-        elif isinstance(method_result, dict):
-            f.write('<tr><td><pre>msg = </pre></td><td>' +
-                    self._dict_pretty_html(method_result) + '</td></tr>')
         elif isinstance(method_result, tuple):
-            # interpret the results depending on the method name
-            if method_name == "execute" or method_name == "train":
-                result_names = ["x", "msg", "target"]
+            f.write('<tr><td><pre>x = </pre></td><td>')
+            if isinstance(method_result[0], n.ndarray):
+                f.write(self._array_pretty_html(method_result[0]) +
+                        '</td></tr>')
             else:
-                result_names = ["msg", "target"]
-            for i_result_part, result_part in enumerate(method_result):
-                f.write('<tr><td><pre>' + result_names[i_result_part] +
-                        ' = </pre></td><td>')
-                if isinstance(result_part, n.ndarray):
-                    f.write(self._array_pretty_html(result_part) +
-                            '</td></tr>')
-                elif isinstance(result_part, dict):
-                    f.write(self._dict_pretty_html(result_part) +
-                            '</td></tr>')
-                else:
-                    f.write(str(result_part) + '</td></tr>')
+                f.write(str(method_result[0]) + '</td></tr>')
+            # second value is msg
+            f.write('<tr><td><pre>msg = </pre></td><td>')
+            if isinstance(method_result[1], dict):
+                f.write(self._dict_pretty_html(method_result[1]) +
+                        '</td></tr>')
+            else:
+                f.write(str(method_result[1]) + '</td></tr>')
+            # last value is target
+            if len(method_result) > 2:
+                f.write('<tr><td><pre>target = </pre></td><td>' +
+                        str(method_result[2]) + '</td></tr>')
         else:
             f.write('<tr><td><pre>unknown result type: </pre></td><td>' +
                     str(method_result) + '</td></tr>')
@@ -842,12 +846,9 @@ def _trace_biflow_training(snapshot_path, inspection_path, css_filename,
             for filename in files:
                 filename = os.path.join(file_path, filename)
                 # load the flow snapshot
-                pickle_file = open(filename, "rb")
                 biflow = None  # free memory
-                try:
+                with open(filename, "rb") as pickle_file:
                     biflow = pickle.load(pickle_file)
-                finally:
-                    pickle_file.close()
                 # determine which node is training and set the indices
                 for node in biflow[i_train_node:]:
                     if node.get_remaining_train_phase() > 0:
@@ -897,6 +898,4 @@ def _trace_biflow_training(snapshot_path, inspection_path, css_filename,
             slide_node_ids += stop_ids
         debug_exception.result = (slide_filenames, slide_node_ids, index_table)
         raise
-    if i_snapshot == 0:
-        return None  # no snapshots were found
     return slide_filenames, slide_node_ids, index_table
