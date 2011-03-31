@@ -614,10 +614,10 @@ class KNNClassifier(ClassifierNode):
 
     def _label(self, x):
         """Label the data by comparison with the reference points."""
-        differences = x[:,:,numx.newaxis].repeat(self.n_samples, 2). \
-                        swapaxes(1,2) - self.samples
-        square_distances = (differences**2).sum(2)
-        min_inds = square_distances.argsort(1)
+        square_distances = (x*x).sum(1)[:, numx.newaxis] \
+                      + (self.samples*self.samples).sum(1)
+        square_distances -= 2 * numx.dot(x, self.samples.T)
+        min_inds = square_distances.argsort()
         win_inds = [numx.bincount(self.sample_label_indices[indices[0:self.k]]).
                     argmax(0) for indices in min_inds]
         labels = [self.ordered_labels[i] for i in win_inds]

@@ -22,8 +22,8 @@ from trace_slideshow import (
     TrainHTMLSlideShow, SectExecuteHTMLSlideShow, ExecuteHTMLSlideShow
 )
 from facade import (
-    INSPECTION_STYLE, SLIDE_CSS_FILENAME, inspect_training,
-    show_training, inspect_execution, show_execution
+    INSPECTION_STYLE, SLIDE_CSS_FILENAME, EmptyTraceException,
+    inspect_training, show_training, inspect_execution, show_execution
 )
 
 del bihinet_translator

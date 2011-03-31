@@ -2,6 +2,8 @@
 Module with simple functions for the complete inspection procedure.
 """
 
+from __future__ import with_statement
+
 import os
 import webbrowser
 import cPickle as pickle
@@ -48,6 +50,12 @@ def _open_custom_brower(open_browser, url):
             webbrowser.open(url)
     else:
         webbrowser.open(url)
+
+
+class EmptyTraceException(Exception):
+    """Exception for empty traces, i.e., when no slides where generated."""
+    pass
+
 
 def inspect_training(snapshot_path, x_samples, msg_samples=None,
                      stop_messages=None, inspection_path=None,
@@ -98,6 +106,10 @@ def inspect_training(snapshot_path, x_samples, msg_samples=None,
         del all_kwargs["all_kwargs"]
         slide_filenames, slide_node_ids, index_table = \
             _trace_biflow_training(**all_kwargs)
+        if not slide_filenames:
+            err = ("No inspection slides were generated, probably because "
+                   "there are no untrained nodes in the given flow.")
+            raise EmptyTraceException(err)
     except TraceDebugException, debug_exception:
         slide_filenames, slide_node_ids, index_table = debug_exception.result
     if index_table is None:
@@ -115,6 +127,8 @@ def show_training(flow, data_iterables, msg_iterables=None, stop_messages=None,
     """Perform both the flow training and the training inspection.
 
     The return value is the filename of the slideshow HTML file.
+    This function must be used with the untrained flow (no previous call
+    of Flow.train is required, the training happens here).
 
     This function is more convenient than inspect_training since it includes
     all required steps, but it is also less customizable. After everything
@@ -197,9 +211,8 @@ def show_training(flow, data_iterables, msg_iterables=None, stop_messages=None,
             raise
     remove_inspection_residues(flow)
     # reload data samples
-    sample_file = open(os.path.join(path, "training_data_samples.pckl"), "rb")
-    x_samples, msg_samples, stop_messages = pickle.load(sample_file)
-    sample_file.close()
+    with open(os.path.join(path, "training_data_samples.pckl"), "rb") as sample_file:
+        x_samples, msg_samples, stop_messages = pickle.load(sample_file)
     # create slideshow
     slideshow = inspect_training(snapshot_path=path,
                                  inspection_path=path,
@@ -282,6 +295,9 @@ def inspect_execution(flow, x, msg=None, target=None, path=None, name=None,
         slide_filenames, slide_node_ids, section_ids = debug_exception.result
         result = None
     # create slideshow file
+    if not slide_filenames:
+        err = "For some reason no execution slides were generated."
+        raise EmptyTraceException(err)
     if not section_ids:
         slideshow = ExecuteHTMLSlideShow(filenames=slide_filenames,
                                          node_ids=slide_node_ids,

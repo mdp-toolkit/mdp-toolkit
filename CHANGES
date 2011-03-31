@@ -1,3 +1,59 @@
+MDP-3.1:
+
+2011-03-29: FIX: fixed shogun version detection code. As I expected, explicit
+            version checking is bound to fail. I would prefer to just remove
+            it and rely on functional checks, i.e. is the feature we depend on
+            present or not?
+2011-03-24: ERF: CovarianceMatrix has the option of not centering the data;
+            SFANode modified accordingly
+2011-03-22: FIX: fix wrong normalization in SFANode SFANode was using the
+            covariance matrix of the derivatives, while the SFA algorithm
+            requires the non-centered second moment matrix of the derivatives.
+            This bug is probably irrelevant in most cases, but in some corner
+            cases the error scales with 1/sqrt(N) where N is the number of
+            samples. Many thanks to Sven Dähne for fishing this out ;-)
+2011-03-22: ERF: added new tests for SFANode Those tests are currently
+            failing.
+2011-03-22: ERF: really use the debug flag in SFANode.stop_training
+2011-03-02: FIX: old svm versions would break the import process Bug reported
+            by Philipp Meier.
+2011-03-03: DOC: updated TODO
+2011-03-03: DOC: updated TODO
+2011-02-23: DOC: updated CHECKLIST and TODO
+2011-02-23: ERF: performance and memory improvements for KNNClassifier. 
+            Transform array of  n_samples^2 * n_features array into
+            n_samples^2. Thanks to Fabian Pedregosa!
+2011-02-17: FIX: Small cosmetic fix in flow inspection for the case when
+            stop_training doesn't receive any argument.
+2011-02-17: FIX: Do not wrap abstract scikits.learn transformers
+2011-02-17: Robustify wrap_scikits_transformer. Fix for the case that a
+            transform does not implement some of the methods.
+2011-01-31: ERF: running self-contained test script is now blocking the prompt
+2011-01-27: FIX: Made the target checks more permissive when execution ends or
+            is aborted.
+2011-01-27: ERF: Added additional checks for copy flag in BiLayer.
+2011-01-27: FIX: Fixed regression in inspection method output.
+2011-01-27: FIX: BiLayer was not compatible with all return value options.
+2011-01-27: FIX: Fixed some leftover inconsistencies from BiMDP stop_training
+            interface changes.
+2011-01-26: DOC: with_extension doesn't work for coroutines, tell epydoc about
+            extension
+2011-01-25: ERF: remove unittest-style wrapper class from test_extension.py.
+2011-01-25: OTH: use context managers to open/close file for pickling
+2011-01-25: ERF: Check for empty slides in execution as well.
+2011-01-25: ERF: Improved the behavior of show_training if an already trained
+            flow is given (a special expection is now raised).
+2011-01-17: FIX: add trove classifiers for Python 2 and 3.
+2011-01-14: ERF: Updated the Parallel Python support, especially the
+            NetworkPPScheduler. It now works with pp 1.6, and there are some
+            refactoring and robustnes improvements as well.
+2011-01-13: FIX: really update CHECKLIST
+2011-01-13: NEW: mdp descriptions now defined in the module. They new
+            descriptions are used in the setup.py script and in generating the
+            web site.
+2011-01-13: ERF: get version and description in a robust way.
+
+-------------------------------------------------------------------------------
 MDP-3.0:
 
 2011-01-12: FIX: import NormalizeNode in mdp.nodes

@@ -28,7 +28,7 @@ During release:
   but even better would be to edit the result to only keep the changes
   that are relevant for the user like incompatibilities, new features, etc..
 - update TODO and COPYRIGHT (date)
-- generate tutorial, website, and API documentation
+- generate tutorial, website, and API documentation [make website]
 - change homepage colors
 - short/long description should go: on SF.net description, tutorial,
   home page, modules __init__, software.incf.net.
@@ -59,11 +59,29 @@ During release:
        - at that point the readme file should be automatically shown as release
          note file 
     - more info: https://sourceforge.net/apps/trac/sourceforge/wiki/Release%20files%20for%20download
-  web: 
-  cd mdp_html/html/
-  rsync -av --delete-after . username,mdp-toolkit@web.sourceforge.net:/home/groups/m/md/mdp-toolkit/htdocs/
-  more info: http://alexandria.wiki.sourceforge.net/Project+Web,+Shell,+VHOST+and+Database+Services
-- post news to sourceforge.
+- make the website within a clone of the docs repository with:
+ - make website
+ - be careful to read all warnings and messages, often things do not work as 
+   expected.
+ - upload the pdf tutorial, which is in build/latex/MDP-tutorial.pdf, to sf.net
+   as explained above for the source tarballs.
+ - synchronize the site with:
+   cd build/html
+   rsync -av --delete-after . username,mdp-toolkit@web.sourceforge.net:/home/project-web/mdp-toolkit/htdocs/
+ - more info: http://alexandria.wiki.sourceforge.net/Project+Web,+Shell,+VHOST+and+Database+Services
+- tag the docs repository:
+  git tag -a MDP-3.0
+  git push --tags
+- post news to sourceforge [the content may be the release notes file]:
+  https://sourceforge.net/news/submit.php?group_id=116959
+- update package information on mloss.org, pypi, and software.incf.net:
+  
+  - pypi [you need an account here: http://pypi.python.org/pypi]:
+     within a clone of the mdp-toolkit repo: python setup.py register
+  
+  - mloss.org: https://mloss.org/software/update/60/
+ 
+  - software.incf.org: http://software.incf.net/software/modular-toolkit-for-data-processing-mdp/
 
 After release:
 - update version number in __init__
@@ -74,17 +92,6 @@ After release:
 	Scipy users: scipy-user@scipy.org
 	mdp-users: mdp-toolkit-users@lists.sourceforge.net
         Python-announce: python-announce-list@python.org
-- update package information on mloss.org, pypi, and software.incf.net.
+
 - celebrate!!
 
-
------
-Short description
-setup.py
-SF.net
-Homepage, beginning
-
-Long description:
-setup.py
-__init__.py
-Tutorial, introduction

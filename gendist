@@ -5,6 +5,6 @@ python2.6 ./setup.py sdist --manifest-only
 python2.6 ./setup.py sdist --formats=zip,gztar
 python2.6 ./setup.py bdist_wininst --plat-name=Python2
 # for python 3 you need to do it under windows
-# C:\Python31\python.exe setup.py bdist_wininst --platname=Python3
+# C:\Python31\python.exe setup.py bdist_wininst --plat-name=Python3
 # then copy the resulting installer from build/py3k/dist
 rm -rf MANIFEST

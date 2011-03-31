@@ -124,7 +124,7 @@ import utils
 # set symeig
 utils.symeig = configuration.get_symeig(numx_linalg)
 
-__version__ = '3.0'
+__version__ = '3.1'
 __revision__ = utils.get_git_revision()
 __authors__ = 'MDP Developers'
 __copyright__ = '(c) 2003-2011 mdp-toolkit-devel@lists.sourceforge.net'
@@ -202,6 +202,7 @@ __all__ = ['config',
            'activate_extensions',
            'deactivate_extension',
            'deactivate_extensions',
+           'extension',
            'extension_method',
            'get_extensions',
            'graph',

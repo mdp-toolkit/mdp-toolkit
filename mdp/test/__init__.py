@@ -41,8 +41,12 @@ def subtest(script, args):
     # run the auto-generated script in a subprocess"
     import subprocess
     import sys
-    subprocess.Popen([sys.executable,script]+args, stdout = sys.stdout,
-                     stderr = sys.stderr)
+    subtest = subprocess.Popen([sys.executable,script]+args, stdout = sys.stdout,
+                               stderr = sys.stderr)
+    # wait for the subprocess to finish before returning the prompt
+    subtest.wait()
+    # ??? do we want to catch KeyboardInterrupt and send it to the
+    # ??? subprocess?
 
 def get_worker(loc):
     try:
