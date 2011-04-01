@@ -30,15 +30,17 @@ class PPScheduler(scheduling.Scheduler):
     """
 
     def __init__(self, ppserver, max_queue_length=1,
-                 result_container=scheduling.ListResultContainer(),
-                 verbose=False):
+                 result_container=None, verbose=False):
         """Initialize the scheduler.
 
         ppserver -- Parallel Python Server instance.
         max_queue_length -- How long the queue can get before add_task blocks.
         result_container -- ResultContainer used to store the results.
+            ListResultContainer by default.
         verbose -- If True to get progress reports from the scheduler.
         """
+        if result_container is None:
+            result_container = scheduling.ListResultContainer()
         super(PPScheduler, self).__init__(result_container=result_container,
                                           verbose=verbose)
         self.ppserver = ppserver
@@ -93,14 +95,14 @@ class LocalPPScheduler(PPScheduler):
     """
 
     def __init__(self, ncpus="autodetect", max_queue_length=1,
-                 result_container=scheduling.ListResultContainer(),
-                 verbose=False):
+                 result_container=None, verbose=False):
         """Create an internal pp server and initialize the scheduler.
 
         ncpus -- Integer or 'autodetect', specifies the number of processes
             used.
         max_queue_length -- How long the queue can get before add_task blocks.
         result_container -- ResultContainer used to store the results.
+            ListResultContainer by default.
         verbose -- If True to get progress reports from the scheduler.
         """
         ppserver = pp.Server(ncpus=ncpus)
@@ -124,7 +126,7 @@ class NetworkPPScheduler(PPScheduler):
     """
 
     def __init__(self, max_queue_length=1,
-                 result_container=scheduling.ListResultContainer(),
+                 result_container=None,
                  verbose=False,
                  remote_slaves=None,
                  source_paths=None,
@@ -138,6 +140,7 @@ class NetworkPPScheduler(PPScheduler):
         """Initialize the remote slaves and create the internal pp scheduler.
 
         result_container -- ResultContainer used to store the results.
+            ListResultContainer by default.
         verbose -- If True to get progress reports from the scheduler.
         remote_slaves -- List of tuples, the first tuple entry is a string
             containing the name or IP adress of the slave, the second entry
