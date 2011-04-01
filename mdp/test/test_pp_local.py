@@ -20,7 +20,7 @@ def test_simple():
     # check result
     results.sort()
     results = numx.array(results[:6])
-    assert(numx.all(results == numx.array([0,1,4,9,16,25])))
+    assert numx.all(results == numx.array([0,1,4,9,16,25]))
 
 @requires_parallel_python
 def test_scheduler_flow():
@@ -48,7 +48,7 @@ def test_scheduler_flow():
     scheduler.shutdown()
     # compare to normal flow
     flow.train(train_iterables)
-    assert(parallel_flow[0].tlen == flow[0].tlen)
+    assert parallel_flow[0].tlen == flow[0].tlen
     y1 = flow.execute(x)
     y2 = parallel_flow.execute(x)
     assert_array_almost_equal(abs(y1 - y2), precision)
