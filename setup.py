@@ -1,7 +1,6 @@
 from distutils.core import setup
 import os
 import sys
-import ast
 
 email = 'mdp-toolkit-devel@lists.sourceforge.net'
 
@@ -17,34 +16,69 @@ classifiers = ["Development Status :: 5 - Production/Stable",
                "Topic :: Scientific/Engineering :: Information Analysis",
                "Topic :: Scientific/Engineering :: Mathematics"]
 
-def get_extract_variable(tree, variable):
-    for node in ast.walk(tree):
-        if type(node) is ast.Assign:
-            try:
-                if node.targets[0].id == variable:
-                    return node.value.s
-            except:
-                pass
-    raise ValueError('Can not get MDP version!\n'
-                     'Please report a bug to %s' % email)
-
-def get_mdp_ast_tree():
+def get_module_code():
+    # keep old python compatibility, so no context managers
     mdp_init = open(os.path.join(os.getcwd(), 'mdp', '__init__.py'))
     module_code = mdp_init.read()
     mdp_init.close()
-    return ast.parse(module_code)
+    return module_code
 
-def get_version():
-    tree = get_mdp_ast_tree()
-    return get_extract_variable(tree, '__version__')
+def throw_bug():
+    raise ValueError('Can not get MDP version!\n'
+                     'Please report a bug to' + email)
 
-def get_short_description():
-    tree = get_mdp_ast_tree()
-    return get_extract_variable(tree, '__short_description__')
+try:
+    import ast
 
-def get_long_description():
-    tree = get_mdp_ast_tree()
-    return ast.get_docstring(tree)
+    def get_extract_variable(tree, variable):
+        for node in ast.walk(tree):
+            if type(node) is ast.Assign:
+                try:
+                    if node.targets[0].id == variable:
+                        return node.value.s
+                except:
+                    pass
+        throw_bug()
+
+    def get_mdp_ast_tree():
+        return ast.parse(get_module_code())
+
+    def get_version():
+        tree = get_mdp_ast_tree()
+        return get_extract_variable(tree, '__version__')
+
+    def get_short_description():
+        tree = get_mdp_ast_tree()
+        return get_extract_variable(tree, '__short_description__')
+
+    def get_long_description():
+        tree = get_mdp_ast_tree()
+        return ast.get_docstring(tree)
+except ImportError:
+    import re
+
+    def get_variable(pattern):
+        m = re.search(
+            pattern
+            , get_module_code(), re.M + re.S + re.X)
+        if not m:
+            throw_bug()
+        return m.group(1)
+
+    def get_version():
+        return get_variable(r'^__version__\s*=\s*[\'"](.+?)[\'"]')
+
+    def get_short_description():
+        return get_variable(r'''^__short_description__\s*=\s*  # variable name and =
+                            \\?\s*(?:"""|\'\'\')\\?\s*         # opening quote with backslash
+                            (.+?)
+                            \s*(?:"""|\'\'\')''')              # closing quote
+
+    def get_long_description():
+        return get_variable(r'''^(?:"""|\'\'\')\\?\s*          # opening quote with backslash
+                            (.+?)
+                            \s*(?:"""|\'\'\')''')              # closing quote
+
 
 def setup_package():
 

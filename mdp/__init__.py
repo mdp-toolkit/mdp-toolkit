@@ -1,5 +1,5 @@
 # Modular toolkit for Data Processing (MDP)
-"""
+"""\
 **The Modular toolkit for Data Processing (MDP)** package is a library
 of widely used data processing algorithms, and the possibility to
 combine them together to form pipelines for building more complex
@@ -67,18 +67,21 @@ http://mdp-toolkit.sourceforge.net
 """
 __docformat__ = "restructuredtext en"
 
-__short_description__ = (
-    "MDP is a Python library of widely used data processing algorithms "
-    "that can be combined according to a pipeline analogy to build more "
-    "complex data processing software. The base of available algorithms "
-    "includes signal processing methods (Principal Component Analysis, "
-    "Independent Component Analysis, Slow Feature Analysis), "
-    "manifold learning methods ([Hessian] Locally Linear Embedding), "
-    "several classifiers, probabilistic methods (Factor Analysis, RBM), "
-    "data pre-processing methods, and many others."
-    )
+# The descriptions strings below are parsed with a regexp in setup.py.
+# Don't do anything fancy, keep strings triple quoted and verify that
+# the get_*_description functions continue to work.
 
-__medium_description__ ="""
+__short_description__ = """\
+MDP is a Python library of widely used data processing algorithms
+that can be combined according to a pipeline analogy to build more
+complex data processing software. The base of available algorithms
+includes signal processing methods (Principal Component Analysis,
+Independent Component Analysis, Slow Feature Analysis),
+manifold learning methods ([Hessian] Locally Linear Embedding),
+several classifiers, probabilistic methods (Factor Analysis, RBM),
+data pre-processing methods, and many others."""
+
+__medium_description__ ="""\
 **Modular toolkit for Data Processing (MDP)** is a Python data processing framework.
 
 From the user's perspective, MDP is a collection of supervised and unsupervised
