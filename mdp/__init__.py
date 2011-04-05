@@ -71,15 +71,12 @@ __docformat__ = "restructuredtext en"
 # Don't do anything fancy, keep strings triple quoted and verify that
 # the get_*_description functions continue to work.
 
+# __short_description__ must be one line, 200 characters maximum.
+# C.f. http://docs.python.org/distutils/setupscript.html?highlight=description#meta-data
 __short_description__ = """\
-MDP is a Python library of widely used data processing algorithms
-that can be combined according to a pipeline analogy to build more
-complex data processing software. The base of available algorithms
-includes signal processing methods (Principal Component Analysis,
-Independent Component Analysis, Slow Feature Analysis),
-manifold learning methods ([Hessian] Locally Linear Embedding),
-several classifiers, probabilistic methods (Factor Analysis, RBM),
-data pre-processing methods, and many others."""
+MDP is a Python library for building complex data processing software \
+by combining widely used machine learning algorithms into pipelines \
+and networks."""
 
 __medium_description__ ="""\
 **Modular toolkit for Data Processing (MDP)** is a Python data processing framework.

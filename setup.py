@@ -1,3 +1,8 @@
+# This file must be runnable with all supported python versions:
+#    2.5, 2.6, 2.7, 3.1, and 3.2.
+# Things which might not be available:
+#    context managers, the print statement, some modules (e.g. ast).
+
 from distutils.core import setup
 import os
 import sys
@@ -25,7 +30,7 @@ def get_module_code():
 
 def throw_bug():
     raise ValueError('Can not get MDP version!\n'
-                     'Please report a bug to' + email)
+                     'Please report a bug to ' + email)
 
 try:
     import ast
@@ -58,9 +63,7 @@ except ImportError:
     import re
 
     def get_variable(pattern):
-        m = re.search(
-            pattern
-            , get_module_code(), re.M + re.S + re.X)
+        m = re.search(pattern, get_module_code(), re.M + re.S + re.X)
         if not m:
             throw_bug()
         return m.group(1)
@@ -69,10 +72,11 @@ except ImportError:
         return get_variable(r'^__version__\s*=\s*[\'"](.+?)[\'"]')
 
     def get_short_description():
-        return get_variable(r'''^__short_description__\s*=\s*  # variable name and =
+        text = get_variable(r'''^__short_description__\s*=\s*  # variable name and =
                             \\?\s*(?:"""|\'\'\')\\?\s*         # opening quote with backslash
                             (.+?)
                             \s*(?:"""|\'\'\')''')              # closing quote
+        return text.replace(' \\\n', ' ')
 
     def get_long_description():
         return get_variable(r'''^(?:"""|\'\'\')\\?\s*          # opening quote with backslash
