@@ -47,7 +47,7 @@ def set_cachedir(cachedir=None, verbose=0):
     # only reset if the directory changes
     if cachedir != _cachedir:
         _cachedir = cachedir
-        _memory = joblib.Memory(cachedir, verbose=0)
+        _memory = joblib.Memory(cachedir, verbose=verbose)
         # reset cached methods
         _cached_methods = {}
 
