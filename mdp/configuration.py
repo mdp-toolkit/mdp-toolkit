@@ -24,7 +24,20 @@ class config(object):
     so the output is predictable.
 
     The loading of a dependency can be inhibited by setting the
-    environment variable MDP_DISABLE_DEPNAME.
+    environment variable ``MDP_DISABLE_DEPNAME`` to a non-empty value.
+
+    The following variables are defined:
+      ``MDP_DISABLE_PARALLEL_PYTHON``
+        inhibit loading of `mdp.parallel` based on parallel python
+        (module ``pp``)
+      ``MDP_DISABLE_SHOGUN``
+        inhibit loading of the shogun classifier
+      ``MDP_DISABLE_LIBSVM``
+        inhibit loading of the svm classifier
+      ``MDP_DISABLE_JOBLIB``
+        inhibit loading of the ``joblib`` module and `mdp.caching`
+      ``MDP_DISABLE_SCIKITS``
+        inhibit loading of the ``scikits.learn`` module
     """
 
     _HAS_NUMBER = 0
