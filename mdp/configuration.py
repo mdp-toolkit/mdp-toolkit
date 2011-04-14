@@ -25,6 +25,9 @@ class config(object):
 
     The loading of a dependency can be inhibited by setting the
     environment variable MDP_DISABLE_DEPNAME.
+
+      ``MDP_DISABLE_MONKEYPATCH_PP``
+         do not monkeypatch pp
     """
 
     _HAS_NUMBER = 0
