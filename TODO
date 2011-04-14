@@ -20,7 +20,7 @@ for MDP 3.1
   [1] http://sphinx.pocoo.org/markup/code.html?highlight=include#literalinclude
 - parallel tests are generating a lot of thrash in /tmp: the temporary
   stuff should be cleaned after successfull completion of the test!
-- fix parallel_python support, currently tests are skipped always
+- remove _monkeypatch_pp when parallel python is fixed
 - let EtaConmputerNode match the new convention of SFA Node in terms of
   last sample.
 - add example of usage of MDP within PyMVPA. The code exists already:

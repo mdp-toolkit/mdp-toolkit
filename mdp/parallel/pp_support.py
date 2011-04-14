@@ -17,10 +17,49 @@ import subprocess
 import signal
 import traceback
 import tempfile
+import warnings
 
 import scheduling
 import pp
 
+def _monkeypatch_pp():
+    """Apply a hack for http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=620551.
+
+    Importing numpy fails because the parent directory of the slave
+    script (/usr/share/pyshared) is added to the begging of sys.path.
+    This is a temporary fix until parallel python or the way it is
+    packaged in debian is changed.
+
+    This function monkey-patches the ppworker module and changes the
+    path to the slave script. A temporary directory is created and the
+    worker script is copied there.
+
+    The temporary directory should be automatically removed when this
+    module is destroyed.
+
+    XXX: remove this when parallel python or the way it is packaged in debian is changed.
+    """
+    import os.path, shutil
+    from mdp.utils import TemporaryDirectory
+
+    # this part copied from pp.py, should give the same result hopefully
+    ppworker = os.path.join(os.path.dirname(os.path.abspath(pp.__file__)),
+                            'ppworker.py')
+    ppworker2 = os.path.realpath(ppworker)
+    if 'pyshared' not in ppworker2:
+        return
+    global _ppworker_dir
+    _ppworker_dir = TemporaryDirectory('pp4mdp')
+    ppworker3 = os.path.join(_ppworker_dir.name, 'ppworker.py')
+    shutil.copy(ppworker, ppworker3)
+
+    command = pp._Worker.command.replace(ppworker, ppworker3)
+    pp._Worker.command = command
+    warnings.warn('parallel python (module pp) was patched for debian bug 620551',
+                  mdp.MDPWarning)
+
+if not os.getenv('MDP_DISABLE_MONKEYPATCH_PP'):
+    _monkeypatch_pp()
 
 class PPScheduler(scheduling.Scheduler):
     """Adaptor scheduler for the parallel python scheduler.

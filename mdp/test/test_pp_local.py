@@ -4,7 +4,7 @@ from _tools import *
 
 requires_parallel_python = skip_on_condition(
     "not mdp.config.has_parallel_python",
-    "This test requires Parallel Python (which is broken)")
+    "This test requires Parallel Python")
 
 @requires_parallel_python
 def test_simple():
