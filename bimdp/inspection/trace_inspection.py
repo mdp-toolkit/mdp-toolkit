@@ -616,8 +616,13 @@ class TraceHTMLTranslator(BiHTMLTranslator):
         f = self._html_file
         f.write('<h3>%s arguments</h3>' % method_name)
         f.write('<table class="inspect_io_data">')
-        if (method_name != "stop_training") and method_args:
-            # deal with x separately
+        if method_name == "stop_training":
+            # first argument is not x,
+            # if no arguments were given method_args == (None,)
+            if method_args == (None,):
+                f.write('<tr><td><pre>None</pre></tr></td>')
+        else:
+            # deal and remove x part of arguments
             x = method_args[0]
             method_args = method_args[1:]
             if isinstance(x, n.ndarray):
@@ -627,7 +632,7 @@ class TraceHTMLTranslator(BiHTMLTranslator):
                 f.write('<tr><td><pre>x = </pre></td><td>' + str(x) +
                         '</td></tr>')
         # remaining arg is message
-        if method_args and method_args[0] is not None:
+        if method_args[0] is not None:
             f.write('<tr><td><pre>msg = </pre></td><td>' +
                     self._dict_pretty_html(method_args[0]) + '</td></tr>')
         # normally the kwargs should be empty

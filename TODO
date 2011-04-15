@@ -1,6 +1,10 @@
 for MDP 3.1
 ===========
 
+- add code for generating the plots in the tutorial (but we don't want the
+  doctests to fail if matplotlib is not installed: find a good way of
+  dealing with it, pymvpa already does it properly)
+- document extension disable environment variables
 - docstrings should me migrated to rst everywhere (only class.__doc__ has
   been done for now)
 - example pages are still not good enough:
@@ -16,6 +20,7 @@ for MDP 3.1
   [1] http://sphinx.pocoo.org/markup/code.html?highlight=include#literalinclude
 - parallel tests are generating a lot of thrash in /tmp: the temporary
   stuff should be cleaned after successfull completion of the test!
+- remove _monkeypatch_pp when parallel python is fixed
 - let EtaConmputerNode match the new convention of SFA Node in terms of
   last sample.
 - add example of usage of MDP within PyMVPA. The code exists already:

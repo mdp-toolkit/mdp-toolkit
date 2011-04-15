@@ -7,28 +7,59 @@ LocalPPScheduler includes the creation of a local pp scheduler.
 NetworkPPScheduler includes the management of the remote slaves via SSH.
 """
 
+from __future__ import with_statement
+
 import sys
 import os
-import inspect
-
-if __name__ == "__main__":
-    module_file = os.path.abspath(inspect.getfile(sys._getframe(0)))
-    module_path = os.path.dirname(module_file)
-    sys.path.append(module_path.split("mdp")[0])
 
 import time
 import subprocess
 import signal
 import traceback
 import tempfile
+import warnings
 
 import scheduling
 import pp
 
-# TODO: modify pythonpath when starting workers, then specify module mdp...
-#    write a python wrapper for starting the worker which modifies the sys.path
+def _monkeypatch_pp():
+    """Apply a hack for http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=620551.
 
-# TODO: list of computers as dict with int for number of processes?
+    Importing numpy fails because the parent directory of the slave
+    script (/usr/share/pyshared) is added to the begging of sys.path.
+    This is a temporary fix until parallel python or the way it is
+    packaged in debian is changed.
+
+    This function monkey-patches the ppworker module and changes the
+    path to the slave script. A temporary directory is created and the
+    worker script is copied there.
+
+    The temporary directory should be automatically removed when this
+    module is destroyed.
+
+    XXX: remove this when parallel python or the way it is packaged in debian is changed.
+    """
+    import os.path, shutil
+    from mdp.utils import TemporaryDirectory
+
+    # this part copied from pp.py, should give the same result hopefully
+    ppworker = os.path.join(os.path.dirname(os.path.abspath(pp.__file__)),
+                            'ppworker.py')
+    ppworker2 = os.path.realpath(ppworker)
+    if 'pyshared' not in ppworker2:
+        return
+    global _ppworker_dir
+    _ppworker_dir = TemporaryDirectory('pp4mdp')
+    ppworker3 = os.path.join(_ppworker_dir.name, 'ppworker.py')
+    shutil.copy(ppworker, ppworker3)
+
+    command = pp._Worker.command.replace(ppworker, ppworker3)
+    pp._Worker.command = command
+    warnings.warn('parallel python (module pp) was patched for debian bug 620551',
+                  mdp.MDPWarning)
+
+if not os.getenv('MDP_DISABLE_MONKEYPATCH_PP'):
+    _monkeypatch_pp()
 
 class PPScheduler(scheduling.Scheduler):
     """Adaptor scheduler for the parallel python scheduler.
@@ -38,15 +69,17 @@ class PPScheduler(scheduling.Scheduler):
     """
 
     def __init__(self, ppserver, max_queue_length=1,
-                 result_container=scheduling.ListResultContainer(),
-                 verbose=False):
+                 result_container=None, verbose=False):
         """Initialize the scheduler.
 
         ppserver -- Parallel Python Server instance.
         max_queue_length -- How long the queue can get before add_task blocks.
         result_container -- ResultContainer used to store the results.
+            ListResultContainer by default.
         verbose -- If True to get progress reports from the scheduler.
         """
+        if result_container is None:
+            result_container = scheduling.ListResultContainer()
         super(PPScheduler, self).__init__(result_container=result_container,
                                           verbose=verbose)
         self.ppserver = ppserver
@@ -64,8 +97,7 @@ class PPScheduler(scheduling.Scheduler):
             data, task_callable, task_index = task
             task_callable.setup_environment()
             return task_callable(data), task_index
-        task_submitted = False
-        while not task_submitted:
+        while True:
             if len(self.ppserver._Server__queue) > self.max_queue_length:
                 # release lock for other threads and wait
                 self._lock.release()
@@ -78,14 +110,16 @@ class PPScheduler(scheduling.Scheduler):
                 # this forces pp to simply pickle the object
                 self.ppserver.submit(execute_task, args=(task,),
                                      callback=self._pp_result_callback)
-                task_submitted = True
+                break
 
     def _pp_result_callback(self, result):
         """Calback method for pp to unpack the result and the task id.
 
         This method then calls the normal _store_result method.
         """
-        self._store_result(result[0], result[1])
+        if result is None:
+            result = (None, None)
+        self._store_result(*result)
 
     def _shutdown(self):
         """Call destroy on the ppserver."""
@@ -100,14 +134,14 @@ class LocalPPScheduler(PPScheduler):
     """
 
     def __init__(self, ncpus="autodetect", max_queue_length=1,
-                 result_container=scheduling.ListResultContainer(),
-                 verbose=False):
+                 result_container=None, verbose=False):
         """Create an internal pp server and initialize the scheduler.
 
         ncpus -- Integer or 'autodetect', specifies the number of processes
             used.
         max_queue_length -- How long the queue can get before add_task blocks.
         result_container -- ResultContainer used to store the results.
+            ListResultContainer by default.
         verbose -- If True to get progress reports from the scheduler.
         """
         ppserver = pp.Server(ncpus=ncpus)
@@ -124,14 +158,14 @@ class NetworkPPScheduler(PPScheduler):
     """Scheduler which can manage pp remote servers (requires SSH).
 
     The remote slave servers are automatically started and killed at the end.
-    
+
     Since the slaves are started via SSH this schduler does not work on normal
     Windows systems. On such systems you can start the pp slaves
-    manually and then use the standard PPScheduler. 
+    manually and then use the standard PPScheduler.
     """
 
     def __init__(self, max_queue_length=1,
-                 result_container=scheduling.ListResultContainer(),
+                 result_container=None,
                  verbose=False,
                  remote_slaves=None,
                  source_paths=None,
@@ -145,6 +179,7 @@ class NetworkPPScheduler(PPScheduler):
         """Initialize the remote slaves and create the internal pp scheduler.
 
         result_container -- ResultContainer used to store the results.
+            ListResultContainer by default.
         verbose -- If True to get progress reports from the scheduler.
         remote_slaves -- List of tuples, the first tuple entry is a string
             containing the name or IP adress of the slave, the second entry
@@ -172,11 +207,14 @@ class NetworkPPScheduler(PPScheduler):
         self._secret = secret
         self._slave_nice = nice
         self._timeout = timeout
-        self._source_paths = source_paths
+        if not source_paths:
+            self._source_paths = []
+        else:
+            self._source_paths = source_paths
         if remote_python_executable is None:
             remote_python_executable = sys.executable
         self._python_executable = remote_python_executable
-        module_file = os.path.abspath(inspect.getfile(sys._getframe(0)))
+        module_file = os.path.abspath(__file__)
         self._script_path = os.path.dirname(module_file)
         self.verbose = verbose
         # start ppserver
@@ -201,7 +239,7 @@ class NetworkPPScheduler(PPScheduler):
 
     def start_slave(self, address, ncpus="autodetect"):
         """Start a single remote slave.
-    
+
         The return value is a tuple of the ssh process handle and
         the remote pid.
         """
@@ -217,15 +255,10 @@ class NetworkPPScheduler(PPScheduler):
                    (self._slave_nice, self._port, self._timeout, self._secret,
                     ncpus))
             proc.stdin.write(cmd + "\n")
-            # send sys_paths
-            if self._source_paths is not None:
-                source_paths = [self._python_executable,] + self._source_paths
-                for sys_path in source_paths:
-                    proc.stdin.write(sys_path + "\n")
-                source_paths = [self._python_executable,] + source_paths
-            else:
-                source_paths = [self._python_executable,]
-    
+            # send additional information to the remote process
+            proc.stdin.write(self._python_executable + "\n")
+            for sys_path in self._source_paths:
+                proc.stdin.write(sys_path + "\n")
             proc.stdin.write("_done_" + "\n")
             # print status message from slave
             sys.stdout.write(address + ": " + proc.stdout.readline())
@@ -249,16 +282,14 @@ class NetworkPPScheduler(PPScheduler):
             print "Initialization of slave %s has failed." % address
             traceback.print_exc()
             return None
-        
+
     def _start_slaves(self):
         """Start remote slaves.
 
         The slaves that could be started are stored in a textfile, in the form
         name:port:pid
         """
-        slave_kill_file = open(self.slave_kill_file, 'w')
-        
-        try:
+        with open(self.slave_kill_file, 'w') as slave_kill_file:
             self._running_remote_slaves = []
             self._remote_pids = []
             self._ssh_procs = []
@@ -270,18 +301,14 @@ class NetworkPPScheduler(PPScheduler):
                 self._running_remote_slaves.append(address)
                 self._remote_pids.append(pid)
                 self._ssh_procs.append(ssh_proc)
-        finally:
-            slave_kill_file.close()
-
 
 def kill_slaves(slave_kill_filename):
     """Kill all remote slaves which are stored in the given file.
-    
+
     This functions is only meant for emergency situations, when something
     went wrong and the slaves have to be killed manually.
     """
-    tempfile = open(slave_kill_filename)
-    try:
+    with open(slave_kill_filename) as tempfile:
         for line in tempfile:
             address, pid, ssh_pid = line.split(":")
             pid = int(pid)
@@ -302,10 +329,10 @@ def kill_slaves(slave_kill_filename):
             # os.kill(proc.pid, signal.SIGQUIT)
             print "killed slave " + address + " (pid %d)" % pid
         print "all slaves killed."
-    finally:
-        tempfile.close()
 
 
 if __name__ == "__main__":
-    if len(sys.argv) <= 1:
-        kill_slaves()
+    if len(sys.argv) == 2:
+        kill_slaves(sys.argv[1])
+    else:
+        sys.stderr.write("usage: %s slave_list.txt\n" % __file__)

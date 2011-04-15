@@ -25,6 +25,9 @@ class config(object):
 
     The loading of a dependency can be inhibited by setting the
     environment variable MDP_DISABLE_DEPNAME.
+
+      ``MDP_DISABLE_MONKEYPATCH_PP``
+         do not monkeypatch pp
     """
 
     _HAS_NUMBER = 0
@@ -162,11 +165,11 @@ def get_numx():
     # the test is for numx_description, not numx, because numx could
     # be imported successfully, but e.g. numx_rand could later fail.
     if numx_description is None:
-        msg = ("Could not import any of the numeric backends.\n"
-               "Import errors:\n"
-               + '\n'.join(label+': '+str(exc)
-                           for label, exc in numx_exception.items()))
-        raise ImportError(msg)
+        msg = ([ "Could not import any of the numeric backends.",
+                 "Import errors:" ] +
+               [ lab+': '+str(exc) for lab, exc in numx_exception.items() ]
+               + ["sys.path: " + str(sys.path)])
+        raise ImportError('\n'.join(msg))
 
     return (numx_description, numx, numx_linalg,
             numx_fft, numx_rand, numx_version)
@@ -254,7 +257,8 @@ def set_configuration():
         else:
             if os.getenv('MDP_DISABLE_SHOGUN'):
                 config.ExternalDepFailed('shogun', 'disabled')
-            elif not (version.startswith('v0.9') or version.startswith('v1.')):
+            elif not (version.startswith('v0.9') or version.startswith('v1.') or
+                      version.startswith('v0.10.')):
                 config.ExternalDepFailed('shogun',
                                          'We need at least SHOGUN version 0.9.')
             else:
@@ -263,8 +267,11 @@ def set_configuration():
     # libsvm
     try:
         import svm as libsvm
+        libsvm.libsvm
     except ImportError, exc:
         config.ExternalDepFailed('libsvm', exc)
+    except AttributeError, exc:
+        config.ExternalDepFailed('libsvm', 'libsvm version >= 2.91 required')
     else:
         if os.getenv('MDP_DISABLE_LIBSVM'):
             config.ExternalDepFailed('libsvm', 'disabled')
