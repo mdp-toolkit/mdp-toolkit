@@ -23,10 +23,16 @@ class config(object):
     Dependency parameters are numbered in the order of creation,
     so the output is predictable.
 
-    The loading of a dependency can be inhibited by setting the
-    environment variable ``MDP_DISABLE_DEPNAME`` to a non-empty value.
+    The selection of the numerical backend (`numpy` or `scipy`) can be
+    forced by setting the environment variable MDPNUMX.  The loading
+    of an optional dependency can be inhibited by setting the
+    environment variables ``MDP_DISABLE_<DEPNAME>`` to a non-empty
+    value.
 
     The following variables are defined:
+      ``MDPNUMX``
+        either ``numpy`` or ``scipy``. By default the latter is used
+        if available.
       ``MDP_DISABLE_PARALLEL_PYTHON``
         inhibit loading of `mdp.parallel` based on parallel python
         (module ``pp``)
@@ -38,6 +44,8 @@ class config(object):
         inhibit loading of the ``joblib`` module and `mdp.caching`
       ``MDP_DISABLE_SCIKITS``
         inhibit loading of the ``scikits.learn`` module
+      ``MDPNSDEBUG``
+        print debugging information during the import process
     """
 
     _HAS_NUMBER = 0
