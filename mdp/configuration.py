@@ -314,7 +314,7 @@ def set_configuration():
     else:   
         if os.getenv('MDP_DISABLE_SCIKITS'):
             config.ExternalDepFailed('scikits', 'disabled')
-        elif _version_too_old(version, (0,5)):
+        elif _version_too_old(version, (0,6)):
             config.ExternalDepFailed('scikits',
                                      'version %s is too old' % version)
         else:
