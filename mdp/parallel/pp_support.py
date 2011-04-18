@@ -40,7 +40,6 @@ def _monkeypatch_pp():
     XXX: remove this when parallel python or the way it is packaged in debian is changed.
     """
     import os.path, shutil
-    from mdp.utils import TemporaryDirectory
 
     # this part copied from pp.py, should give the same result hopefully
     ppworker = os.path.join(os.path.dirname(os.path.abspath(pp.__file__)),
@@ -48,8 +47,10 @@ def _monkeypatch_pp():
     ppworker2 = os.path.realpath(ppworker)
     if 'pyshared' not in ppworker2:
         return
+
+    import mdp
     global _ppworker_dir
-    _ppworker_dir = TemporaryDirectory('pp4mdp')
+    _ppworker_dir = mdp.utils.TemporaryDirectory('pp4mdp')
     ppworker3 = os.path.join(_ppworker_dir.name, 'ppworker.py')
     shutil.copy(ppworker, ppworker3)
 
