@@ -70,7 +70,7 @@ def test_FlowNode_pretrained_node():
         flownode.train(x)
         flownode.stop_training()
     flownode.execute(x)
-    
+
 def test_FlowNode_fix_nodes_dimensions1():
     x = numx_rand.random([100,10])
     last_node = mdp.nodes.IdentityNode()
@@ -85,7 +85,7 @@ def test_FlowNode_fix_nodes_dimensions1():
     assert flownode.output_dim == 3
     assert last_node.input_dim == 3
     assert last_node.output_dim == 3
-    
+
 def test_FlowNode_fix_nodes_dimensions2():
     flow = mdp.Flow([mdp.nodes.IdentityNode(),
                      mdp.nodes.IdentityNode()])
@@ -96,7 +96,7 @@ def test_FlowNode_fix_nodes_dimensions2():
     x = numx_rand.random([100,10])
     flownode.execute(x)
     assert flownode.output_dim == 10
-    
+
 def test_FlowNode_fix_nodes_dimensions3():
     flow = mdp.Flow([mdp.nodes.IdentityNode()])
     flownode = mh.FlowNode(flow)
@@ -494,8 +494,8 @@ def testHiNetHTML(noisenode):
     flow = mdp.Flow([switchboard, sfa_layer])
     # create dummy file to write the HTML representation
     html_file = StringIO.StringIO()
-    hinet_html = mdp.hinet.HiNetHTMLTranslator()
-    hinet_html.write_flow_to_file(flow, html_file)
+    hinet_html = mdp.hinet.HiNetHTMLVisitor(html_file)
+    hinet_html.convert_flow(flow)
     html_file.close()
 
 def testHiNetXHTML():
@@ -504,6 +504,6 @@ def testHiNetXHTML():
     flow = mdp.Flow([sfa_node])
     # create dummy file to write the HTML representation
     html_file = StringIO.StringIO()
-    hinet_html = mdp.hinet.HiNetXHTMLTranslator()
-    hinet_html.write_flow_to_file(flow, html_file)
+    hinet_html = mdp.hinet.HiNetXHTMLVisitor(html_file)
+    hinet_html.convert_flow(flow)
     html_file.close()

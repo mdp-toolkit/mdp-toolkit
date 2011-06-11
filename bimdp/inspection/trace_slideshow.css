@@ -1,0 +1,40 @@
+/*
+Additional CSS for the inspection slideshow.
+*/
+
+div.slideshow {
+    text-align: center;
+}
+
+table.slideshow, table.slideshow td, table.slideshow th {
+    border-collapse: collapse;
+    padding: 1px 2px 1px 2px;
+    font-size: small;
+    border: 1px solid;
+}
+
+table.slideshow {
+    border: 2px solid;
+    margin: 0 auto;
+}
+
+table.slideshow td {
+    text-align: center;
+}
+
+/* style for slideshow with sections (like for training) */
+
+span.inactive_section:hover {
+    color: #6666FF;
+}
+
+span.active_section {
+    color: #0000EE;
+    background-color: #55FF55;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+span.active_section:hover {
+    color: #6666FF;
+}

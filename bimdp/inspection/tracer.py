@@ -1,12 +1,19 @@
 """
 Module to trace and document the training and execution of a BiFlow.
 
-The BiMDPTraceInspector class is used to decorate a flow for inspection, the
-snapshots are created with the TraceBiMDPHTMLTranslator class.
-
-This module also supports (Bi)HiNet structures. Monkey patching is used to
+This module supports (Bi)HiNet structures. Monkey patching is used to
 inject the tracing code into the Flow.
+
+InspectionHTMLTracer is the main class. It uses TraceDecorationVisitor to add
+the tracing decoration to the flow and TraceHTMLConverter to create HTML view
+of the flow state (which in turn uses TraceHTMLVisitor for the flow
+representation).
+
+Note that this module does not combine the trace views into a slideshow, this
+is done in the seperate slideshow module.
 """
+
+# TODO: wrap inner methods (e.g. _train) to document effective arguments?
 
 from __future__ import with_statement
 
@@ -24,86 +31,17 @@ from bimdp import BiNode
 from bimdp import BiFlow
 from bimdp.hinet import BiFlowNode, CloneBiLayer
 
-from bihinet_translator import BiHTMLTranslator
+from bimdp.hinet import BiHiNetHTMLVisitor
 from utils import robust_pickle
 
-# TODO: wrap inner methods (e.g. _train) to document effective arguments?
-
-PICKLE_EXT = ".pckl"
-PICKLE_PROTO = -1
-SNAPSHOT_FILENAME = "snapshot"
-
-SLIDE_CSS_FILENAME = "inspect.css"
 CLICKABLE_NODE_ID = "clickable_node_%d"
+# standard css filename for the complete CSS:
+STANDARD_CSS_FILENAME = "mdp.css"
 
 NODE_TRACE_METHOD_NAMES = ["execute", "train", "stop_training"]
 BINODE_TRACE_METHOD_NAMES = []  # methods that are only traced in binodes
 TRACING_WRAP_FLAG = "_insp_is_wrapped_for_tracing_"
 ORIGINAL_METHOD_PREFIX = "_insp_original_"
-
-# additions to the BINET_STYLE for marking the currently traced nodes
-INSPECT_TRACE_STYLE = """
-table.current_node {
-    background-color: #D1FFC7;
-}
-
-table.training_node {
-    background-color: #FFFFCC;
-}
-
-table.clickable {
-    cursor: pointer;
-}
-
-#inspect_biflow_td {
-    vertical-align: top;
-    padding: 0 100 0 0;
-}
-
-#inspect_result_td {
-    vertical-align: top;
-}
-
-#displayed {
-    border-top: 1px solid #003399;
-}
-
-table.inspect_io_data {
-    font-family: monospace;
-}
-
-table.inspect_io_data td {
-    vertical-align: top;
-}
-
-table.inspect_io_data pre {
-    font-weight: bold;
-}
-
-span.keyword {
-    background-color: #E8E8E8;
-}
-
-span.inactive_section {
-    color: #0000EE;
-    cursor: pointer;
-    font-weight: bold;
-}
-
-div.error {
-    color: #FF0000;
-    text-align: left;
-}
-
-div.error h3 {
-    font-size: large;
-    color: #FF0000;
-}
-
-html {
-    overflow-y : scroll;
-}
-"""
 
 
 class TraceDebugException(Exception):
@@ -117,10 +55,10 @@ class TraceDebugException(Exception):
         self.result = result
 
 
-class TraceHTMLInspector(hinet.HiNetTranslator):
+class InspectionHTMLTracer(object):
     """Class for inspecting a single pass through a provided flow.
 
-    This class is based on a translator that decorates the flow elements with
+    This class is based on a visitor that decorates the flow elements with
     tracing wrappers. It also provides a callback function for the tracers
     and stores everything else needed for the inspection.
 
@@ -128,29 +66,34 @@ class TraceHTMLInspector(hinet.HiNetTranslator):
     function.
 
     Note that a flow decorated for tracing is not compatible with pickling
-    or parallel training and execution. But normally the decorated flow is
+    or parallel training and execution. Normally the decorated flow is
     only used in trace_training or trace_execution anyway.
     """
 
-    def __init__(self, trace_translator, css_filename=SLIDE_CSS_FILENAME):
+    def __init__(self, html_converter=None, css_filename=STANDARD_CSS_FILENAME):
         """Prepare for tracing and create the HTML translator.
 
-        trace_translator -- TraceBiMDPHTMLTranslator instance, with a write
-            method to create the status visualization on each slide.
-        css_filename -- CSS file used for all the slides.
+        html_converter -- TraceHTMLConverter instance, with a convert_flow
+            method to create the flow visualization for each slide.
+        css_filename -- CSS file used for all the slides
+            (default 'inspect.css').
         """
-        super(TraceHTMLInspector, self).__init__()
+        if html_converter is None:
+            self._html_converter = TraceHTMLConverter()
+        else:
+            self._html_converter = html_converter
         self._css_filename = css_filename
+        self._tracing_decorator = TraceDecorationVisitor(
+                            decorator=self._standard_tracer_decorate,
+                            undecorator=self._standard_tracer_undecorate)
         self._trace_path = None  # path for the current trace
         self._trace_name = None  # name for the current trace
         self._flow = None  # needed for the callback HTML translation
-        self.trace_translator = trace_translator
         # step counter used in the callback, is reset automatically
         self._slide_index = None
         self._slide_filenames = None
         self._section_ids = None  # can be used during execution
         self._slide_node_ids = None  # active node for each slide index
-        self._undecorate_mode = None  # if True undecorate nodes
 
     def _reset(self):
         """Reset the internal variables for a new tracing.
@@ -162,8 +105,7 @@ class TraceHTMLInspector(hinet.HiNetTranslator):
         self._slide_filenames = []
         self._section_ids = []
         self._slide_node_ids = []
-        self._undecorate_mode = False
-        self.trace_translator.reset()
+        self._html_converter.reset()
 
     def trace_training(self, path, flow, x, msg=None, stop_msg=None,
                        trace_name="training", debug=False, **kwargs):
@@ -182,7 +124,7 @@ class TraceHTMLInspector(hinet.HiNetTranslator):
         # train and stop filenames must be different
         self._trace_name = trace_name + "_t"
         self._flow = flow
-        self._translate_flow(flow)
+        self._tracing_decorator.decorate_flow(flow)
         biflownode = BiFlowNode(BiFlow(flow.flow))
         try:
             biflownode.train(x=x, msg=msg, **kwargs)
@@ -218,9 +160,8 @@ class TraceHTMLInspector(hinet.HiNetTranslator):
                 raise
         stop_filenames = self._slide_filenames
         stop_node_ids = self._slide_node_ids
-        # restore undecoreted flow
-        self._undecorate_mode = True
-        self._translate_flow(flow)
+        # restore undecorated flow
+        self._tracing_decorator.decorate_flow(flow, undecorate_mode=True)
         return train_filenames, train_node_ids, stop_filenames, stop_node_ids
 
     def trace_execution(self, path, trace_name, flow, x, msg=None, target=None,
@@ -240,7 +181,7 @@ class TraceHTMLInspector(hinet.HiNetTranslator):
         self._trace_path = path
         self._trace_name = trace_name
         self._flow = flow
-        self._translate_flow(flow)
+        self._tracing_decorator.decorate_flow(flow)
         if (not (isinstance(flow, BiFlow) or isinstance(flow, BiNode)) and
             (msg is not None)):
             # a msg would be interpreted as nodenr by a Flow, so check this
@@ -266,8 +207,7 @@ class TraceHTMLInspector(hinet.HiNetTranslator):
                 raise TraceDebugException(result=result)
             else:
                 raise
-        self._undecorate_mode = True
-        self._translate_flow(flow)
+        self._tracing_decorator.decorate_flow(flow, undecorate_mode=True)
         if not self._section_ids:
             self._section_ids = None
         else:
@@ -293,7 +233,7 @@ class TraceHTMLInspector(hinet.HiNetTranslator):
         ## write visualization to html_file
         try:
             html_file = self._begin_HTML_frame()
-            section_id, node_id = self.trace_translator.write_flow_to_file(
+            section_id, node_id = self._html_converter.write_html(
                                             path=self._trace_path,
                                             html_file=html_file,
                                             flow=self._flow,
@@ -341,7 +281,8 @@ class TraceHTMLInspector(hinet.HiNetTranslator):
         html_file.write('<div class="error">')
         html_file.write('<h3>Encountered Exception</h3>')
         traceback_html = traceback.format_exc().replace('\n', '<br>')
-#        # get HTML traceback
+#        # get HTML traceback, didn't work due to legacy stuff
+#        TODO: retry this in the future
 #        import StringIO as stringio
 #        import cgitb
 #        import mdp
@@ -359,88 +300,7 @@ class TraceHTMLInspector(hinet.HiNetTranslator):
         html_file.write('</div>')
         self._end_HTML_frame(html_file)
 
-    ## translation methods ##
-
-    # note that via the _undecorate_mode flag the translation undecorates,
-    # this is required for clonelayer, where only one instance is decorated
-
-    def _translate_flow(self, flow):
-        """Wrap the flow in place and return it."""
-        super(TraceHTMLInspector, self)._translate_flow(flow)
-        return flow
-
-    # TODO: enable the use of a shallow copy to save memory,
-    #    but this requires to implement __copy__ in Node etc. for recursive
-    #    shallow copying
-
-    def _translate_clonelayer(self, clonelayer):
-        """Add a special wrapper for switch_to_copies."""
-        if self._undecorate_mode:
-            if isinstance(clonelayer, CloneBiLayer):
-                # check that clonelayer is actually decorated
-                if not hasattr(clonelayer, "_original_set_use_copies"):
-                    return
-                del clonelayer._set_use_copies
-                del clonelayer._original_set_use_copies
-                del clonelayer.__getstate__
-                self._translate_node(clonelayer.nodes[0])
-                if not clonelayer.use_copies:
-                    clonelayer.nodes = ((clonelayer.node,) *
-                                        len(clonelayer.nodes))
-            else:
-                self._translate_node(clonelayer.nodes[0])
-                clonelayer.nodes = (clonelayer.node,) * len(clonelayer.nodes)
-            # undecoration is complete
-            return
-        ## decorate clonelayer
-        if ((not isinstance(clonelayer, CloneBiLayer)) or
-            (not clonelayer.use_copies)):
-            # use a decorated deep copy for the first node
-            clonelayer.node = clonelayer.nodes[0].copy()
-            clonelayer.nodes = (clonelayer.node,) + clonelayer.nodes[1:]
-        # only decorate the first node
-        self._translate_node(clonelayer.nodes[0])
-        if isinstance(clonelayer, CloneBiLayer):
-            # add a wrapper to _set_use_copies,
-            # otherwise all nodes in layer would get decorated
-            clonelayer._original_set_use_copies = clonelayer._set_use_copies
-            trace_inspector = self
-            def wrapped_use_copies(self, use_copies):
-                # undecorate internal nodes to allow copy operation
-                trace_inspector._undecorate_mode = True
-                trace_inspector._translate_node(clonelayer.nodes[0])
-                trace_inspector._undecorate_mode = False
-                if use_copies and not self.use_copies:
-                    # switch to node copies, no problem
-                    clonelayer._original_set_use_copies(use_copies)
-                elif not use_copies and self.use_copies:
-                    # switch to a single node instance
-                    # but use a (decorated) deep copy for first node
-                    clonelayer._original_set_use_copies(use_copies)
-                    clonelayer.node = clonelayer.nodes[0].copy()
-                    clonelayer.nodes = ((clonelayer.node,) +
-                                        clonelayer.nodes[1:])
-                trace_inspector._translate_node(clonelayer.nodes[0])
-            clonelayer._set_use_copies = wrapped_use_copies.__get__(clonelayer)
-            # modify getstate to enable pickling
-            # (get rid of the instance methods)
-            def wrapped_getstate(self):
-                result = self.__dict__.copy()
-                # delete instance methods
-                del result["_original_set_use_copies"]
-                del result["_set_use_copies"]
-                del result["__getstate__"]
-                return result
-            clonelayer.__getstate__ = wrapped_getstate.__get__(clonelayer)
-
-    def _translate_standard_node(self, node):
-        """Wrap the node."""
-        if not self._undecorate_mode:
-            self._standard_tracer_decorate(node)
-        else:
-            self._standard_tracer_undecorate(node)
-
-    ## monkey patching methods ##
+    ## monkey patching tracing decorator wrapper methods ##
 
     def _standard_tracer_decorate(self, node):
         """Adds a tracer wrapper to the node via monkey patching."""
@@ -503,7 +363,179 @@ class TraceHTMLInspector(hinet.HiNetTranslator):
         delattr(node, "__getstate__")
 
 
-class TraceHTMLTranslator(BiHTMLTranslator):
+class TraceDecorationVisitor(object):
+    """Class to add tracing wrappers to nodes in a flow."""
+
+    def __init__(self, decorator, undecorator):
+        """Initialize.
+
+        decorator -- Callable decorator that wraps node methods.
+        undecorator -- Callable decorator that removes the wrapper from a
+            method.
+        """
+        self._decorator = decorator
+        self._undecorator = undecorator
+        # note that _visit_clonelayer uses the undecorate mode
+        self._undecorate_mode = None
+
+    def decorate_flow(self, flow, undecorate_mode=False):
+        """Adds or removes wrappers from the nodes in the given flow."""
+        self._undecorate_mode = undecorate_mode
+        for node in flow:
+            self._visit_node(node)
+
+    def _visit_node(self, node):
+        if hasattr(node, "flow"):
+            self._visit_flownode(node)
+        elif isinstance(node, mdp.hinet.CloneLayer):
+            self._visit_clonelayer(node)
+        elif isinstance(node, mdp.hinet.Layer):
+            self._visit_layer(node)
+        else:
+            self._visit_standard_node(node)
+
+    def _visit_standard_node(self, node):
+        """Wrap the node."""
+        if not self._undecorate_mode:
+            self._decorator(node)
+        else:
+            self._undecorator(node)
+
+    def _visit_flownode(self, flownode):
+        for node in flownode.flow:
+            self._visit_node(node)
+
+    def _visit_layer(self, layer):
+        for node in layer:
+            self._visit_node(node)
+
+    def _visit_clonelayer(self, clonelayer):
+        # TODO: enable the use of a shallow copy to save memory,
+        #    but this requires to implement __copy__ in Node etc. for recursive
+        #    shallow copying
+        if self._undecorate_mode:
+            if isinstance(clonelayer, CloneBiLayer):
+                # check that clonelayer is actually decorated
+                if not hasattr(clonelayer, "_original_set_use_copies"):
+                    return
+                del clonelayer._set_use_copies
+                del clonelayer._original_set_use_copies
+                del clonelayer.__getstate__
+                self._visit_node(clonelayer.nodes[0])
+                if not clonelayer.use_copies:
+                    clonelayer.nodes = ((clonelayer.node,) *
+                                        len(clonelayer.nodes))
+            else:
+                self._visit_node(clonelayer.nodes[0])
+                clonelayer.nodes = (clonelayer.node,) * len(clonelayer.nodes)
+            # undecoration is complete
+            return
+        ## decorate clonelayer
+        if ((not isinstance(clonelayer, CloneBiLayer)) or
+            (not clonelayer.use_copies)):
+            # use a decorated deep copy for the first node
+            clonelayer.node = clonelayer.nodes[0].copy()
+            clonelayer.nodes = (clonelayer.node,) + clonelayer.nodes[1:]
+        # only decorate the first node
+        self._visit_node(clonelayer.nodes[0])
+        if isinstance(clonelayer, CloneBiLayer):
+            # add a wrapper to _set_use_copies,
+            # otherwise all nodes in layer would get decorated
+            clonelayer._original_set_use_copies = clonelayer._set_use_copies
+            flow_decorator = self
+            def wrapped_use_copies(self, use_copies):
+                # undecorate internal nodes to allow copy operation
+                flow_decorator._undecorate_mode = True
+                flow_decorator._visit_node(clonelayer.nodes[0])
+                flow_decorator._undecorate_mode = False
+                if use_copies and not self.use_copies:
+                    # switch to node copies, no problem
+                    clonelayer._original_set_use_copies(use_copies)
+                elif not use_copies and self.use_copies:
+                    # switch to a single node instance
+                    # but use a (decorated) deep copy for first node
+                    clonelayer._original_set_use_copies(use_copies)
+                    clonelayer.node = clonelayer.nodes[0].copy()
+                    clonelayer.nodes = ((clonelayer.node,) +
+                                        clonelayer.nodes[1:])
+                flow_decorator._visit_node(clonelayer.nodes[0])
+            clonelayer._set_use_copies = wrapped_use_copies.__get__(clonelayer)
+            # modify getstate to enable pickling
+            # (get rid of the instance methods)
+            def wrapped_getstate(self):
+                result = self.__dict__.copy()
+                # delete instance methods
+                del result["_original_set_use_copies"]
+                del result["_set_use_copies"]
+                del result["__getstate__"]
+                return result
+            clonelayer.__getstate__ = wrapped_getstate.__get__(clonelayer)
+
+
+_INSPECTION_CSS_FILENAME = "trace.css"
+
+def inspection_css():
+    """Return the CSS for the inspection slides."""
+    css_filename = os.path.join(os.path.split(__file__)[0],
+                                _INSPECTION_CSS_FILENAME)
+    with open(css_filename, 'r') as css_file:
+        css = css_file.read()
+    return BiHiNetHTMLVisitor.hinet_css() + css
+
+
+class TraceHTMLVisitor(BiHiNetHTMLVisitor):
+    """Special BiHiNetHTMLVisitor to take into account runtime info.
+
+    It highlights the currently active node.
+    """
+
+    def __init__(self, html_file, show_size=False):
+        super(TraceHTMLVisitor, self).__init__(html_file,
+                                               show_size=show_size)
+        self._current_node = None
+        self._node_id_index = None
+        # this is the HTML node id, not the Node attribute
+        self._current_node_id = None
+
+    def convert_flow(self, flow, current_node=None):
+        self._current_node = current_node
+        self._node_id_index = 0
+        self._current_node_id = None
+        super(TraceHTMLVisitor, self).convert_flow(flow)
+
+    def _open_node_env(self, node, type_id="node"):
+        """Open the HTML environment for the node internals.
+
+        This special version highlights the nodes involved in the trace.
+
+        node -- The node itself.
+        type_id -- The id string as used in the CSS.
+        """
+        f = self._file
+        html_line = '<table class="'
+        trace_class = None
+        if node is self._current_node:
+            trace_class = "current_node"
+        elif type_id == "node" and node._train_phase_started:
+            trace_class = "training_node"
+        if trace_class:
+            html_line += ' %s' % trace_class
+        html_line += ' %s' % type_id
+        # assign id only to nodes which trigger a slide creation,
+        # i.e. only if the node can become active
+        if hasattr(node, TRACING_WRAP_FLAG):
+            node_id = CLICKABLE_NODE_ID % self._node_id_index
+            if node is self._current_node:
+                self._current_node_id = node_id
+            self._node_id_index += 1
+            html_line +=  ' clickable" id="%s">' % node_id
+        else:
+            html_line += '">'
+        f.write(html_line)
+        self._write_node_header(node, type_id)
+
+
+class TraceHTMLConverter(object):
     """Class to visualize the state of a BiFlow during execution or training.
 
     The single snapshot is a beefed up version of the standard HTML view.
@@ -511,16 +543,23 @@ class TraceHTMLTranslator(BiHTMLTranslator):
     class.
     """
 
-    def __init__(self, show_size=False):
+    def __init__(self, flow_html_converter=None):
         """Initialize the internal variables."""
-        super(TraceHTMLTranslator, self).__init__(show_size=show_size)
-        self._current_node = None
-        self._method_name = None
-        self._result = None
-        # this the HTML node id, not the Node attribute
-        # this might change in the future
-        self._current_node_id = None
-        self._node_id_index = None  # counter for nodes to give them an id
+        if flow_html_converter is None:
+            self.flow_html_converter = TraceHTMLVisitor(html_file=None)
+        else:
+            self.flow_html_converter= flow_html_converter
+
+    def reset(self):
+        """Reset internal variables for a new trace.
+
+        It is called (by TraceHTMLInspector) before calling 'train',
+        'stop_training' or 'execute' on the flow.
+
+        This method can be overridden by derived that need to keep track of the
+        training or execution phase.
+        """
+        pass
 
     @staticmethod
     def _array_pretty_html(ar):
@@ -531,8 +570,8 @@ class TraceHTMLTranslator(BiHTMLTranslator):
                     replace(']\n ...', ']<br>\n...'))
         return ar_str
 
-    @staticmethod
-    def _dict_pretty_html(dic):
+    @classmethod
+    def _dict_pretty_html(cls, dic):
         """Return a nice HTML representation of the given numpy array."""
         # TODO: use an stringio buffer for efficency
         # put array keys last, because arrays are typically rather large
@@ -550,25 +589,14 @@ class TraceHTMLTranslator(BiHTMLTranslator):
             if isinstance(value, str):
                 dic_str += repr(value)
             elif isinstance(value, n.ndarray):
-                dic_str += TraceHTMLTranslator._array_pretty_html(value)
+                dic_str += cls._array_pretty_html(value)
             else:
                 dic_str += str(value)
             dic_strs.append(dic_str)
         return '{' + ',<br>\n'.join(dic_strs) + '}'
 
-    def reset(self):
-        """Reset internal variables for a new trace.
-
-        It is called (by TraceHTMLInspector) before calling 'train',
-        'stop_training' or 'execute' on the flow.
-
-        This method can be overridden by derived that need to keep track of the
-        training or execution phase.
-        """
-        pass
-
-    def write_flow_to_file(self, path, html_file, flow, node, method_name,
-                           method_result, method_args, method_kwargs):
+    def write_html(self, path, html_file, flow, node, method_name,
+                    method_result, method_args, method_kwargs):
         """Write the HTML translation of the flow into the provided file.
 
         Return value is the section_id and the HTML/CSS id of the active node.
@@ -589,10 +617,11 @@ class TraceHTMLTranslator(BiHTMLTranslator):
         f.write('<br><br>')
         f.write('<table><tr><td id="inspect_biflow_td">')
         f.write("<h3>flow state</h3>")
-        self._translate_flow(flow, node)
+        self.flow_html_converter._file = f
+        self.flow_html_converter.convert_flow(flow, node)
         # now the argument / result part of the table
         f.write('</td><td id="inspect_result_td">')
-        section_id = self._write_right_side(
+        section_id = self._write_data_html(
                                path=path, html_file=html_file, flow=flow,
                                node=node, method_name=method_name,
                                method_result=method_result,
@@ -601,11 +630,11 @@ class TraceHTMLTranslator(BiHTMLTranslator):
         f.write('</table>')
         f.write('</td></tr>\n</table>')
         self._html_file = None
-        return section_id, self._current_node_id
+        return section_id, self.flow_html_converter._current_node_id
 
-    def _write_right_side(self, path, html_file, flow, node, method_name,
-                          method_result, method_args, method_kwargs):
-        """Write the result part of the translation.
+    def _write_data_html(self, path, html_file, flow, node, method_name,
+                         method_result, method_args, method_kwargs):
+        """Write the data part (right side of the slide).
 
         Return value can be a section_id or None. The section_id is ignored
         during training (since the slideshow sections are used for the
@@ -625,7 +654,6 @@ class TraceHTMLTranslator(BiHTMLTranslator):
         else:
             # deal and remove x part of arguments
             x = method_args[0]
-            method_args = method_args[1:]
             if isinstance(x, n.ndarray):
                 f.write('<tr><td><pre>x = </pre></td>' +
                         '<td>' + self._array_pretty_html(x) + '</td></tr>')
@@ -633,7 +661,8 @@ class TraceHTMLTranslator(BiHTMLTranslator):
                 f.write('<tr><td><pre>x = </pre></td><td>' + str(x) +
                         '</td></tr>')
         # remaining arg is message
-        if method_args[0] is not None:
+        method_args = method_args[1:]
+        if method_args:
             f.write('<tr><td><pre>msg = </pre></td><td>' +
                     self._dict_pretty_html(method_args[0]) + '</td></tr>')
         # normally the kwargs should be empty
@@ -671,58 +700,12 @@ class TraceHTMLTranslator(BiHTMLTranslator):
             f.write('<tr><td><pre>unknown result type: </pre></td><td>' +
                     str(method_result) + '</td></tr>')
 
-    # overwrite private methods
-
-    def _translate_flow(self, flow, current_node=None):
-        """Translate the flow into HTML and write it into the internal file.
-
-        Use write_flow_to_file instead of calling this method directly.
-        This method only takes care of the BiFlow structure graph (the left
-        part of the slide).
-
-        current_node -- The current_node that was called last.
-
-        These arguments are stored as attributes and are then used in
-        _open_node_env.
-        """
-        self._current_node = current_node
-        self._node_id_index = 0
-        self._current_node_id = None
-        super(TraceHTMLTranslator, self)._translate_flow(flow)
-
-    def _open_node_env(self, node, type_id="node"):
-        """Open the HTML environment for the node internals.
-
-        This special version highlights the nodes involved in the trace.
-
-        node -- The node itself.
-        type_id -- The id string as used in the CSS.
-        """
-        f = self._html_file
-        html_line = '<table class="'
-        trace_class = None
-        if node is self._current_node:
-            trace_class = "current_node"
-        elif type_id == "node" and node._train_phase_started:
-            trace_class = "training_node"
-        if trace_class:
-            html_line += ' %s' % trace_class
-        html_line += ' %s' % type_id
-        # assign id only to nodes which trigger a slide creation,
-        # i.e. only if the node can become active
-        if hasattr(node, TRACING_WRAP_FLAG):
-            node_id = CLICKABLE_NODE_ID % self._node_id_index
-            if node is self._current_node:
-                self._current_node_id = node_id
-            self._node_id_index += 1
-            html_line +=  ' clickable" id="%s">' % node_id
-        else:
-            html_line += '">'
-        f.write(html_line)
-        self._write_node_header(node, type_id)
-
 
 ## Functions to capture pickled biflow snapshots during training. ##
+
+PICKLE_EXT = ".pckl"
+PICKLE_PROTO = -1
+SNAPSHOT_FILENAME = "snapshot"
 
 def prepare_training_inspection(flow, path):
     """Use hook in the BiFlow to store a snapshot in each training phase.
@@ -797,11 +780,9 @@ def remove_inspection_residues(flow):
         # probably the hooks were already removed, so do nothing
         pass
 
-## Further helper functions ##
-
-def _trace_biflow_training(snapshot_path, inspection_path, css_filename,
+def _trace_biflow_training(snapshot_path, inspection_path,
                            x_samples, msg_samples=None, stop_messages=None,
-                           trace_inspector=None,
+                           tracer=None,
                            debug=False, show_size=False, verbose=True,
                            **kwargs):
     """Load flow snapshots and perform the inspection with the given data.
@@ -816,7 +797,7 @@ def _trace_biflow_training(snapshot_path, inspection_path, css_filename,
     css_filename -- Filename of the CSS file for the slides.
     x_samples, msg_samples -- Lists with the input data for the training trace.
     stop_messages -- The stop msg for the training trace.
-    trace_inspector -- Instance of HTMLTraceInspector, can be None for
+    tracer -- Instance of InspectionHTMLTracer, can be None for
         default class.
     debug -- If True (default is False) then any exception will be
         caught and the gathered data up to that point is returned in the
@@ -827,11 +808,9 @@ def _trace_biflow_training(snapshot_path, inspection_path, css_filename,
     **kwargs -- Additional arguments for flow.train can be specified
         as keyword arguments.
     """
-    if not trace_inspector:
-        trace_translator = TraceHTMLTranslator(show_size=show_size)
-        trace_inspector = TraceHTMLInspector(
-                                trace_translator=trace_translator,
-                                css_filename=css_filename)
+    if not tracer:
+        tracer = InspectionHTMLTracer()
+        tracer._html_converter.flow_html_converter.show_size = show_size
     i_train_node = 0  # index of the training node
     i_snapshot = 0 # snapshot counter
     index_table = [[]]  # last slide indexed by [node, phase, train 0 or stop 1]
@@ -868,13 +847,12 @@ def _trace_biflow_training(snapshot_path, inspection_path, css_filename,
                     stop_msg = None
                 trace_name = "%d_%d" % (i_snapshot, i_train_node)
                 train_files, train_ids, stop_files, stop_ids = \
-                    trace_inspector.trace_training(
-                                            trace_name=trace_name,
-                                            path=inspection_path,
-                                            flow=biflow,
-                                            x=x, msg=msg, stop_msg=stop_msg,
-                                            debug=debug,
-                                            **kwargs)
+                    tracer.trace_training(trace_name=trace_name,
+                                          path=inspection_path,
+                                          flow=biflow,
+                                          x=x, msg=msg, stop_msg=stop_msg,
+                                          debug=debug,
+                                          **kwargs)
                 slide_filenames += train_files
                 train_index = len(slide_filenames) - 1
                 slide_filenames += stop_files

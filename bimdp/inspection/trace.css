@@ -1,0 +1,65 @@
+/*
+CSS for inspection trace slides.
+*/
+
+
+table.current_node {
+    background-color: #D1FFC7;
+}
+
+table.training_node {
+    background-color: #FFFFCC;
+}
+
+table.clickable {
+    cursor: pointer;
+}
+
+#inspect_biflow_td {
+    vertical-align: top;
+    padding: 0 100 0 0;
+}
+
+#inspect_result_td {
+    vertical-align: top;
+}
+
+#displayed {
+    border-top: 1px solid #003399;
+}
+
+table.inspect_io_data {
+    font-family: monospace;
+}
+
+table.inspect_io_data td {
+    vertical-align: top;
+}
+
+table.inspect_io_data pre {
+    font-weight: bold;
+}
+
+span.keyword {
+    background-color: #E8E8E8;
+}
+
+span.inactive_section {
+    color: #0000EE;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+div.error {
+    color: #FF0000;
+    text-align: left;
+}
+
+div.error h3 {
+    font-size: large;
+    color: #FF0000;
+}
+
+html {
+    overflow-y : scroll;
+}

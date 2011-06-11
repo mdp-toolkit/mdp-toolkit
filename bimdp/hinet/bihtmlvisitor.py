@@ -1,8 +1,5 @@
 """
-Module to translate a bimdp node structure.
-
-Currently we only implement the translation into HTML. This is done via the
-HiNetHTML class.
+BiNet version of the htmlvisitor hinet module to convert a flow into HTML.
 """
 
 import tempfile
@@ -22,20 +19,20 @@ class BiHiNetHTMLVisitor(mdp.hinet.HiNetHTMLVisitor):
     All bimdp attributes are highligthed via the span.bicolor css tag.
     """
 
-    BIHINET_STYLE = """
+    _BIHINET_STYLE = """
     span.bicolor {
         color: #6633FC;
     }
     """
 
     @classmethod
-    def get_hinet_css(cls):
+    def hinet_css(cls):
         """Return the standard CSS string.
 
-        This should be embedded in the HTML.
+        The CSS should be embedded in the final HTML file.
         """
-        css = super(BiHiNetHTMLVisitor, cls).get_hinet_css()
-        return css + cls.BIHINET_STYLE
+        css = super(BiHiNetHTMLVisitor, cls).hinet_css()
+        return css + cls._BIHINET_STYLE
 
     def _translate_clonelayer(self, clonelayer):
         """This specialized version checks for CloneBiLayer."""
@@ -112,7 +109,7 @@ def show_biflow(flow, filename=None, title="MDP flow display",
     html_file.write('<html>\n<head>\n<title>%s</title>\n' % title)
     html_file.write('<style type="text/css" media="screen">')
     html_file.write(mdp.utils.BASIC_STYLE)
-    html_file.write(BiHiNetHTMLVisitor.get_hinet_css())
+    html_file.write(BiHiNetHTMLVisitor.hinet_css())
     html_file.write('</style>\n</head>\n<body>\n')
     html_file.write('<h3>%s</h3>\n' % title)
     explanation = '(data flows from top to bottom)'

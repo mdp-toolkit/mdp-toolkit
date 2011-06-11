@@ -1,7 +1,8 @@
 """
-Module to visit HiNet structures into other representations, like HTML.
+Module to convert a flow into an HTML representation.
 
-This module contains the HTML node extension.
+This is especially useful for hinet structures.
+The code uses the visitor pattern to reach and convert all the nodes in a flow.
 """
 
 import tempfile
@@ -62,16 +63,16 @@ class HiNetHTMLVisitor(object):
             f.write('</td></tr>')
         self._close_node_env(flow, "flow")
 
-    CSS_FILENAME = "hinet.css"
+    _CSS_FILENAME = "hinet.css"
 
     @classmethod
-    def get_hinet_css(cls):
+    def hinet_css(cls):
         """Return the standard CSS string.
 
-        This should be embedded in the HTML.
+        The CSS should be embedded in the final HTML file.
         """
         css_filename = os.path.join(os.path.split(__file__)[0],
-                                    cls.CSS_FILENAME)
+                                    cls._CSS_FILENAME)
         with open(css_filename, 'r') as css_file:
             css = css_file.read()
         return css
@@ -83,15 +84,15 @@ class HiNetHTMLVisitor(object):
         specific methods.
         """
         if hasattr(node, "flow"):
-            return self._visit_flownode(node)
+            self._visit_flownode(node)
         elif isinstance(node, mdp.hinet.CloneLayer):
-            return self._visit_clonelayer(node)
+            self._visit_clonelayer(node)
         elif isinstance(node, mdp.hinet.SameInputLayer):
-            return self._visit_sameinputlayer(node)
+            self._visit_sameinputlayer(node)
         elif isinstance(node, mdp.hinet.Layer):
-            return self._visit_layer(node)
+            self._visit_layer(node)
         else:
-            return self._visit_standard_node(node)
+            self._visit_standard_node(node)
 
     def _visit_flownode(self, flownode):
         f = self._file
@@ -318,8 +319,7 @@ def show_flow(flow, filename=None, title="MDP flow display",
         html_file = open(filename, 'w')
     html_file.write('<html>\n<head>\n<title>%s</title>\n' % title)
     html_file.write('<style type="text/css" media="screen">')
-    html_file.write(mdp.utils.BASIC_STYLE)
-    html_file.write(HiNetHTMLVisitor.get_hinet_css())
+    html_file.write(mdp.utils.basic_css() + HiNetHTMLVisitor.hinet_css())
     html_file.write('</style>\n</head>\n<body>\n')
     html_file.write('<h3>%s</h3>\n' % title)
     explanation = '(data flows from top to bottom)'

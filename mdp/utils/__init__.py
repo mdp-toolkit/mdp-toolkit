@@ -17,8 +17,8 @@ from covariance import (CovarianceMatrix, DelayCovarianceMatrix,
                         MultipleCovarianceMatrices,CrossCovarianceMatrix)
 from progress_bar import progressinfo
 from repo_revision import get_git_revision
-from slideshow import (BASIC_STYLE, SLIDESHOW_STYLE, HTMLSlideShow,
-                       IMAGE_SLIDESHOW_STYLE, ImageHTMLSlideShow,
+from slideshow import (basic_css, slideshow_css, HTMLSlideShow,
+                       image_slideshow_css, ImageHTMLSlideShow,
                        SectionHTMLSlideShow, SectionImageHTMLSlideShow,
                        image_slideshow, show_image_slideshow)
 
@@ -89,7 +89,7 @@ __all__ = ['CovarianceMatrix', 'DelayCovarianceMatrix','CrossCovarianceMatrix',
            'random_rot', 'refcast', 'rotate', 'scast', 'solve', 'sqrtm',
            'svd', 'symrand', 'timediff', 'matmult',
            'get_git_revision', 'HTMLSlideShow', 'ImageHTMLSlideShow',
-           'BASIC_STYLE', 'SLIDESHOW_STYLE', 'IMAGE_SLIDESHOW_STYLE',
+           'basic_css', 'slideshow_css', 'image_slideshow_css',
            'SectionHTMLSlideShow',
            'SectionImageHTMLSlideShow', 'image_slideshow',
            'lrep', 'rrep', 'irep',

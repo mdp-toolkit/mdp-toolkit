@@ -12,6 +12,8 @@ http://javascript.internet.com/miscellaneous/image-slideshow.html
 (which in turn seems to be based on something from http://www.ricocheting.com)
 """
 
+from __future__ import with_statement
+
 import random
 import tempfile
 import os
@@ -20,33 +22,24 @@ import warnings
 
 import templet
 
-# basic default style for MDP generated HTML files
-BASIC_STYLE = '''
-html, body {
-    font-family: sans-serif;
-    text-align: center;
-}
+_BASIC_CSS_FILENAME = "basic.css"
+_SLIDESHOW_CSS_FILENAME = "slideshow.css"
 
-h1, h2, h3, h4 {
-    color: #003399;
-}
+def basic_css():
+    """Return the basic default CSS."""
+    css_filename = os.path.join(os.path.split(__file__)[0],
+                                _BASIC_CSS_FILENAME)
+    with open(css_filename, 'r') as css_file:
+        css = css_file.read()
+    return css
 
-par.explanation {
-    color: #003399;
-    font-size: small;
-}
-
-table.flow {
-    margin-left: auto;
-    margin-right: auto;
-}
-'''
-
-# load CSS from style file
-_css_filename = os.path.join(os.path.split(__file__)[0], "slideshow.css")
-_css_file = open(_css_filename, 'r')
-SLIDESHOW_STYLE = _css_file.read()
-_css_file.close()
+def slideshow_css():
+    """Return the additional CSS for a slideshow."""
+    css_filename = os.path.join(os.path.split(__file__)[0],
+                                _SLIDESHOW_CSS_FILENAME)
+    with open(css_filename, 'r') as css_file:
+        css = css_file.read()
+    return css
 
 
 class HTMLSlideShow(templet.Template):
@@ -521,16 +514,20 @@ self.write(link + '\n')
 </td></tr>
 '''
 
-# Use nearest neighbour resampling in Firefox 3.6+ and IE.
-# TODO: Implement electric shock for people who actually use IE.
-# Webkit (Chrome, Safari) does not support this yet,
-# see http://code.google.com/p/chromium/issues/detail?id=1502
-IMAGE_SLIDESHOW_STYLE = SLIDESHOW_STYLE + '''
+
+def image_slideshow_css():
+    """Use nearest neighbour resampling in Firefox 3.6+ and IE.
+
+    Webkit (Chrome, Safari) does not support this yet.
+    (see http://code.google.com/p/chromium/issues/detail?id=1502)
+    """
+    return slideshow_css() + '''
 img.slideshow {
     image-rendering: -moz-crisp-edges;
     -ms-interpolation-mode: nearest-neighbor;
 }
 '''
+
 
 class ImageHTMLSlideShow(HTMLSlideShow):
     """Slideshow for images.
@@ -749,8 +746,7 @@ def show_image_slideshow(filenames, image_size, filename=None, title=None,
         html_file = open(filename, 'w')
     html_file.write('<html>\n<head>\n<title>%s</title>\n' % title)
     html_file.write('<style type="text/css" media="screen">')
-    html_file.write(BASIC_STYLE)
-    html_file.write(IMAGE_SLIDESHOW_STYLE)
+    html_file.write(basic_css() + image_slideshow_css())
     html_file.write('</style>\n</head>\n<body>\n')
     kwargs = vars()
     del kwargs['filename']
