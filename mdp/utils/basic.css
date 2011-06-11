@@ -1,0 +1,22 @@
+/*
+Basic default style used by MDP for a pleasant uniform appearance.
+*/
+
+html, body {
+    font-family: sans-serif;
+    text-align: center;
+}
+
+h1, h2, h3, h4 {
+    color: #003399;
+}
+
+par.explanation {
+    color: #003399;
+    font-size: small;
+}
+
+table.flow {
+    margin-left: auto;
+    margin-right: auto;
+}
