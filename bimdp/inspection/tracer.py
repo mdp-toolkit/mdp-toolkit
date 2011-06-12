@@ -662,7 +662,7 @@ class TraceHTMLConverter(object):
                         '</td></tr>')
         # remaining arg is message
         method_args = method_args[1:]
-        if method_args:
+        if method_args and method_args[0] is not None:
             f.write('<tr><td><pre>msg = </pre></td><td>' +
                     self._dict_pretty_html(method_args[0]) + '</td></tr>')
         # normally the kwargs should be empty
