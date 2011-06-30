@@ -82,13 +82,11 @@ class NodeMetaclass(type):
             orig_pubmethod = getattr(super(new_cls, new_cls), wrapper_name)
             # preserve the last non-empty docstring
             docstring = priv_info['doc']
-            if hasattr(orig_pubmethod, '_undecorated_'):
-                # make sure that we don't wrap repeatedly
-                if not docstring:
-                    docstring = orig_pubmethod.__doc__
-                orig_pubmethod = orig_pubmethod._undecorated_
             if not docstring:
                 docstring = orig_pubmethod.__doc__
+            if hasattr(orig_pubmethod, '_undecorated_'):
+                # make sure that we don't wrap repeatedly
+                orig_pubmethod = orig_pubmethod._undecorated_
             wrapped_info = cls._function_infodict(orig_pubmethod)
             priv_info['doc'] = docstring
             priv_info['name'] = wrapper_name
