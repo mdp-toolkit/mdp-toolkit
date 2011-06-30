@@ -6,7 +6,7 @@ X = mdp.numx_rand.random(size=(500,5))
 
 def get_signature(func):
     regargs, varargs, varkwargs, defaults = inspect.getargspec(func)
-    return inspect.formatargspec(regargs,varargs, varkwargs, defaults,
+    return inspect.formatargspec(regargs, varargs, varkwargs, defaults,
                                  formatvalue=lambda value: "")[1:-1]
 
 def test_docstrings():
