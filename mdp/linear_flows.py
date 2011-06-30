@@ -224,7 +224,7 @@ class Flow(object):
 
         Argumentes that have a default value are ignored.
         """
-        train_arg_spec = _inspect.getargspec(node.train)
+        train_arg_spec = _inspect.getargspec(node._train)
         train_arg_keys = train_arg_spec[0][2:]  # ignore self, x
         if train_arg_spec[3]:
             # subtract arguments with a default value
@@ -530,7 +530,7 @@ class Flow(object):
             err_str = ('can only concatenate flow or node'
                        ' (not \'%s\') to flow' % (type(other).__name__))
             raise TypeError(err_str)
-        
+
     def __iadd__(self, other):
         # append other to self
         if isinstance(other, Flow):
