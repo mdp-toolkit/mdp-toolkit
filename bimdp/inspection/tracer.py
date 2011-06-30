@@ -52,6 +52,7 @@ class TraceDebugException(Exception):
 
         result -- The result that would otherwise be returned by the method.
         """
+        super(TraceDebugException, self).__init__()
         self.result = result
 
 
@@ -549,6 +550,7 @@ class TraceHTMLConverter(object):
             self.flow_html_converter = TraceHTMLVisitor(html_file=None)
         else:
             self.flow_html_converter= flow_html_converter
+        self._html_file = None
 
     def reset(self):
         """Reset internal variables for a new trace.
@@ -642,6 +644,15 @@ class TraceHTMLConverter(object):
 
         This method can be overriden for custom visualisations. Usually this
         original method should still be called via super.
+
+        path -- Path of the slide (e.h. to store additional images).
+        html_file -- File of current slide, where the translation is written.
+        flow -- The overall flow.
+        node -- The node that was called last.
+        method_name -- The method that was called on the last node.
+        method_result -- The result from the last call.
+        method_args -- args that were given to the method
+        method_kwargs -- kwargs that were given to the method
         """
         f = self._html_file
         f.write('<h3>%s arguments</h3>' % method_name)
