@@ -67,7 +67,7 @@ class NodeMetaclass(type):
                 priv_info = cls._function_infodict(members[privname])
                 # if the docstring is empty, don't overwrite it
                 if not priv_info['doc']:
-                    continue
+                    priv_info.pop('doc')
                 # get the name of the corresponding public method
                 pubname = privname[1:]
                 # If the public method has been overwritten in this
@@ -156,7 +156,11 @@ class NodeMetaclass(type):
                wrapper_infodict)
         wrapped_func = eval(src, dict(_original_func_=original_func))
         wrapped_func.__name__ = wrapper_infodict['name']
-        wrapped_func.__doc__ = wrapper_infodict['doc']
+        # doc may not be there
+        try:
+            wrapped_func.__doc__ = wrapper_infodict['doc']
+        except KeyError:
+            pass
         wrapped_func.__module__ = wrapper_infodict['module']
         wrapped_func.__dict__.update(wrapper_infodict['dict'])
         wrapped_func.func_defaults = wrapper_infodict['defaults']
@@ -177,7 +181,11 @@ class NodeMetaclass(type):
                "%(name)s(%(signature)s)" % wrapper_infodict)
         wrapped_func = eval(src, {"_wrapper_class_": cls})
         wrapped_func.__name__ = wrapper_infodict['name']
-        wrapped_func.__doc__ = wrapper_infodict['doc']
+        # doc may not be there
+        try:
+            wrapped_func.__doc__ = wrapper_infodict['doc']
+        except KeyError:
+            pass
         wrapped_func.__module__ = wrapper_infodict['module']
         wrapped_func.__dict__.update(wrapper_infodict['dict'])
         wrapped_func.func_defaults = wrapper_infodict['defaults']
