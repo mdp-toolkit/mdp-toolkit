@@ -79,28 +79,3 @@ def test_Node_execution_without_training():
     node = BogusMultiNode()
     node.execute(x)
     assert node.visited == [1, 2, 3, 4]
-
-class AncestorNoDoc(mdp.Node):
-    def _train(self, x, foo=None):
-        print 'Ancestor Foo:', foo
-
-class ChildNoDoc(AncestorNoDoc):
-    def _train(self, x, foo=None, foo2=None):
-        print 'Child Foo:', foo2
-
-class AncestorDoc(mdp.Node):
-    def _train(self, x, foo=None):
-        """docs ancestor"""
-        print 'Ancestor Foo:', foo
-
-class ChildDoc(AncestorDoc):
-    def _train(self, x, foo=None, foo2=None):
-        """docs child"""
-        print 'Child Foo:', foo2
-
-def test_Node_docs_overwriting():
-    x = mdp.numx_rand.random((10,10))
-    AncestorNoDoc().train(x, foo='bar')
-    ChildNoDoc().train(x,foo2='bar2')
-    AncestorDoc().train(x, foo='bar')
-    ChildDoc().train(x,foo2='bar2')
