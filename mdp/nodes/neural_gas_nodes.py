@@ -1,8 +1,9 @@
+# -*- coding: utf-8 -*-
 __docformat__ = "restructuredtext en"
 
 from mdp import numx, numx_rand, utils, graph, Node
 
-class _GNGNodeData(object):
+class _NGNodeData(object):
     """Data associated to a node in a Growing Neural Gas graph."""
     def __init__(self, pos, error=0.0, hits=0, label=None):
         # reference vector (spatial position)
@@ -12,7 +13,7 @@ class _GNGNodeData(object):
         self.hits = 0
         self.label = label
 
-class _GNGEdgeData(object):
+class _NGEdgeData(object):
     """Data associated to an edge in a Growing Neural Gas graph."""
     def __init__(self, age=0):
         self.age = age
@@ -115,11 +116,11 @@ class GrowingNeuralGasNode(Node):
         self.output_dim = n
 
     def _add_node(self, pos):
-        node = self.graph.add_node(_GNGNodeData(pos))
+        node = self.graph.add_node(_NGNodeData(pos))
         return node
 
     def _add_edge(self, from_, to_):
-        self.graph.add_edge(from_, to_, _GNGEdgeData())
+        self.graph.add_edge(from_, to_, _NGEdgeData())
 
     def _get_nearest_nodes(self, x):
         """Return the two nodes in the graph that are nearest to x and their
@@ -252,3 +253,143 @@ class GrowingNeuralGasNode(Node):
             nodes.append(n0)
             dists.append(numx.sqrt(dist[0]))
         return nodes, dists
+
+class NeuralGasNode(GrowingNeuralGasNode):
+    """
+    Learn the topological structure of the input data by building a
+    corresponding graph approximation.
+
+    The Neural Gas algorithm was originally published in Martinetz, T. and
+    Schulten, K.: A "Neural-Gas" Network Learns Topologies. In Kohonen, T.,
+    Mäkisara, K., Simula, O., and Kangas, J. (eds.), Artificial Neural Networks.
+    Elsevier, North-Holland., 1991.
+
+    **Attributes and methods of interest**
+
+    - graph -- The corresponding `mdp.graph.Graph` object
+    - max_epochs - maximum number of epochs until which to train.
+    """
+    def __init__(self, num_nodes = 10,
+                       start_poss=None,
+                       step_size=0.7,               # epsilon
+                       neighborhood_factor=1.,      # lambda
+                       max_age=100,                 # len_data / num_nodes * 10?
+                       max_epochs=10000.,
+                       input_dim=None,
+                       dtype=None):
+        """
+        Neural Gas algorithm.
+
+        Parameters:
+          start_poss
+            sequence of two arrays containing the position of the
+            first two nodes in the GNG graph. In unspecified, the
+            initial nodes are chosen with a random position generated
+            from a gaussian distribution with zero mean and unit
+            variance.
+
+          num_nodes
+            number of nodes to use. Ignored if start_poss is given.
+
+          step_size
+            fraction of the distance between the closest node and the presented
+            data point by which the node moves towards the data point. Referred
+            to as epsilon in the original publication.
+
+          neighborhood_factor
+            Influences how the weight change of nodes in the ranking decreases
+            with lower rank. Referred to as lambda in the original publication.
+
+          max_age
+            Maximum age of an edge, after which it will be removed.
+
+          max_epochs
+            number of epochs to train.
+        """
+        self.graph = graph.Graph()
+
+        #copy parameters
+        (self.num_nodes, self.start_poss, self.step_size,
+        self.neighborhood_factor, self.max_age, self.max_epochs) = (num_nodes,
+        start_poss, step_size, neighborhood_factor, max_age, max_epochs)
+        super(GrowingNeuralGasNode, self).__init__(input_dim, None, dtype)
+
+        if start_poss is not None:
+            if self.num_nodes != len(start_poss):
+                self.num_nodes = len_start_pos
+                # print some warning?
+            if self.dtype is None:
+                self.dtype = start_poss[0].dtype
+            for node_ind in range(num_nodes):
+                node = self._add_node(self._refcast(start_poss[node_ind]))
+
+    def _train(self, input):
+        g = self.graph
+
+        if len(g.nodes)==0:
+            # if missing, generate num_nodes initial nodes at random
+            # assuming that the input data has zero mean and unit variance,
+            # choose the random position according to a gaussian distribution
+            # with zero mean and unit variance
+            normal = numx_rand.normal
+            for node_ind in range(self.num_nodes):
+                self._add_node(self._refcast(normal(0.0, 1.0, self.input_dim)))
+
+        epoch = 0
+
+        while epoch < self.max_epochs:
+            # Step 1 rank nodes according to their distance to a random data
+            #   point
+            x = input[numx.random.randint(len(input))]
+            ranked_nodes = self._rank_nodes_by_distance(x)
+             
+            # Step 2 move nodes
+            for rank,node in enumerate(ranked_nodes):
+                #TODO: consider cutting off at some rank when using many nodes
+                delta_w = self.step_size * \
+                                numx.exp(-rank / self.neighborhood_factor) * \
+                                (x - node.data.pos)
+                node.data.pos += delta_w
+
+            # Step 3 update edge weight
+            for e in g.edges:
+                e.data.inc_age()
+
+            # Step 4 set age of edge between first two nodes to zero
+            #  or create it if it doesn't exist.
+            n0 = ranked_nodes[0]
+            n1 = ranked_nodes[1]
+            nn = n0.neighbors()
+            if n1 in nn:
+                edges = n0.get_edges(neighbor=n1)
+                edges[0].data.age = 0 # should only be one edge
+            else:
+                self._add_edge(n0, n1)
+                
+            # step 5 delete edges with age > max_age
+            self._remove_old_edges()
+            epoch += 1
+        
+    def _rank_nodes_by_distance(self, x):
+        """Return the nodes in the graph in a list ranked by their squared
+        distance to x. """
+        #TODO: Refactor together with GNGNode._get_nearest_nodes
+        # distance function
+        def _distance_from_node(node):
+            tmp = node.data.pos - x
+            return utils.mult(tmp, tmp) # maps to mdp.numx.dot
+        g = self.graph
+        # distances of all graph nodes from x
+        distances = numx.array(map(_distance_from_node, g.nodes))
+        ids = distances.argsort()
+        ranked_nodes = [g.nodes[id] for id in ids]
+        return ranked_nodes
+
+    def _remove_old_edges(self):
+        """
+        Remove edges with age > max_age.
+        """
+        g, max_age = self.graph, self.max_age
+        for edge in self.graph.edges:
+            if edge.data.age > max_age:
+                g.remove_edge(edge)
