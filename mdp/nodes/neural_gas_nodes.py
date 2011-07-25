@@ -100,7 +100,6 @@ class GrowingNeuralGasNode(Node):
          self.d, self.max_nodes) = (eps_b, eps_n, max_age, lambda_, alpha,
                                     d, max_nodes)
 
-
         super(GrowingNeuralGasNode, self).__init__(input_dim, None, dtype)
 
         if start_poss is not None:
@@ -315,11 +314,11 @@ class NeuralGasNode(GrowingNeuralGasNode):
 
         if start_poss is not None:
             if self.num_nodes != len(start_poss):
-                self.num_nodes = len_start_pos
+                self.num_nodes = len(start_poss)
                 # print some warning?
             if self.dtype is None:
                 self.dtype = start_poss[0].dtype
-            for node_ind in range(num_nodes):
+            for node_ind in range(self.num_nodes):
                 node = self._add_node(self._refcast(start_poss[node_ind]))
 
     def _train(self, input):
@@ -364,11 +363,11 @@ class NeuralGasNode(GrowingNeuralGasNode):
                 edges[0].data.age = 0 # should only be one edge
             else:
                 self._add_edge(n0, n1)
-                
+
             # step 5 delete edges with age > max_age
             self._remove_old_edges()
             epoch += 1
-        
+
     def _rank_nodes_by_distance(self, x):
         """Return the nodes in the graph in a list ranked by their squared
         distance to x. """
