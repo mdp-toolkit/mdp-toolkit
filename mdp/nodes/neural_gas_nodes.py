@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 __docformat__ = "restructuredtext en"
 
 from mdp import numx, numx_rand, utils, graph, Node
@@ -46,7 +45,7 @@ class GrowingNeuralGasNode(Node):
 
           start_poss
             sequence of two arrays containing the position of the
-            first two nodes in the GNG graph. In unspecified, the
+            first two nodes in the GNG graph. If unspecified, the
             initial nodes are chosen with a random position generated
             from a gaussian distribution with zero mean and unit
             variance.
@@ -261,7 +260,7 @@ class NeuralGasNode(GrowingNeuralGasNode):
 
     The Neural Gas algorithm was originally published in Martinetz, T. and
     Schulten, K.: A "Neural-Gas" Network Learns Topologies. In Kohonen, T.,
-    Mäkisara, K., Simula, O., and Kangas, J. (eds.), Artificial Neural Networks.
+    Maekisara, K., Simula, O., and Kangas, J. (eds.), Artificial Neural Networks.
     Elsevier, North-Holland., 1991.
 
     **Attributes and methods of interest**
@@ -283,7 +282,7 @@ class NeuralGasNode(GrowingNeuralGasNode):
         Parameters:
           start_poss
             sequence of two arrays containing the position of the
-            first two nodes in the GNG graph. In unspecified, the
+            first two nodes in the GNG graph. If unspecified, the
             initial nodes are chosen with a random position generated
             from a gaussian distribution with zero mean and unit
             variance.
