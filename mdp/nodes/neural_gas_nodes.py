@@ -145,7 +145,7 @@ class GrowingNeuralGasNode(Node):
     def _remove_old_edges(self, edges):
         """Remove all edges older than the maximal age."""
         g, max_age = self.graph, self.max_age
-        for edge in self.graph.edges:
+        for edge in edges:
             if edge.data.age > max_age:
                 g.remove_edge(edge)
                 if edge.head.degree() == 0:
