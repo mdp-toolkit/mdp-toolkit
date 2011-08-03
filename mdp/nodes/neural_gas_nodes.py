@@ -324,25 +324,16 @@ class NeuralGasNode(GrowingNeuralGasNode):
         if n_epochs_to_train is None:
             n_epochs_to_train = max_epochs
         #copy parameters
-        (self.num_nodes,
-        self.start_poss,
-        self.epsilon_i,
-        self.epsilon_f,
-        self.lambda_i,
-        self.lambda_f,
-        self.max_age_i,
-        self.max_age_f,
-        self.max_epochs,
-        self.n_epochs_to_train) = (num_nodes,
-                                   start_poss,
-                                   epsilon_i,
-                                   epsilon_f,
-                                   lambda_i,
-                                   lambda_f,
-                                   max_age_i,
-                                   max_age_f,
-                                   max_epochs,
-                                   n_epochs_to_train)
+        self.num_nodes = num_nodes
+        self.start_poss = start_poss
+        self.epsilon_i = epsilon_i
+        self.epsilon_f = epsilon_f
+        self.lambda_i = lambda_i
+        self.lambda_f = lambda_f
+        self.max_age_i = max_age_i
+        self.max_age_f = max_age_f
+        self.max_epochs = max_epochs
+        self.n_epochs_to_train = n_epochs_to_train
         super(GrowingNeuralGasNode, self).__init__(input_dim, None, dtype)
 
         if start_poss is not None:
@@ -358,7 +349,7 @@ class NeuralGasNode(GrowingNeuralGasNode):
     def _train(self, input):
         g = self.graph
 
-        if len(g.nodes)==0:
+        if len(g.nodes) == 0:
             # if missing, generate num_nodes initial nodes at random
             # assuming that the input data has zero mean and unit variance,
             # choose the random position according to a gaussian distribution
