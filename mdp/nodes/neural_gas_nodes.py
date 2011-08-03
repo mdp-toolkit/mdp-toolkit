@@ -344,9 +344,9 @@ class NeuralGasNode(GrowingNeuralGasNode):
             # Step 2 move nodes
             for rank,node in enumerate(ranked_nodes):
                 #TODO: consider cutting off at some rank when using many nodes
-                delta_w = (self.step_size * 
-                           numx.exp(-rank / self.neighborhood_factor) *
-                           (x - node.data.pos))
+                delta_w = self.step_size * \
+                                numx.exp(-rank / self.neighborhood_factor) * \
+                                (x - node.data.pos)
                 node.data.pos += delta_w
 
             # Step 3 update edge weight
