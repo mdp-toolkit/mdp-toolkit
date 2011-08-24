@@ -551,7 +551,7 @@ class FastICANode(ICANode):
                             print 'Convergence after %d steps\n' % round
                         break
                 if stabilization:
-                    if (stroke != 0) and (convergence_fine[round] < limit):
+                    if (stroke == 0) and (convergence_fine[round] < limit):
                         if verbose:
                             print 'Stroke!\n'
                         stroke = mu
@@ -773,7 +773,7 @@ class FastICANode(ICANode):
                             wOld = numx.zeros(w.shape, dtype)
                             wOldF = numx.zeros(w.shape, dtype)
                             used_g = gFine
-                            mu *= self.mu
+                            mu = muK * self.mu
                             end_finetuning = max_it_fine + i
                         else:
                             nfail = 0
@@ -789,7 +789,7 @@ class FastICANode(ICANode):
                         conv_fine = min(utils.norm2(w-wOldF),
                                         utils.norm2(w+wOldF))
                         convergence_fine.append(conv_fine)
-                        if  (stroke != 0) and conv_fine < limit:
+                        if  (stroke == 0) and conv_fine < limit:
                             if verbose:
                                 print 'Stroke!'
                             stroke = mu
@@ -801,7 +801,7 @@ class FastICANode(ICANode):
                             stroke = 0
                             if (mu == 1) and (used_g % 2 != 0):
                                 used_g -= 1
-                        elif (not lng) and (round > max_it//2):
+                        elif (not lng) and (i > max_it//2):
                             if verbose:
                                 print 'Taking long (reducing step size)...'
                             lng = True
