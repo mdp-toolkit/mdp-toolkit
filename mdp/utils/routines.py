@@ -189,6 +189,7 @@ def comb(N, k):
 
 # WARNING numpy.linalg.eigh does not support float sizes larger than 64 bits,
 # and complex numbers of size larger than 128 bits.
+# Also float16 is not supported either.
 # This is not a problem for MDP, as long as scipy.linalg.eigh is available.
 def get_dtypes(typecodes_key, _safe=True):
     """Return the list of dtypes corresponding to the set of
@@ -211,7 +212,7 @@ def get_dtypes(typecodes_key, _safe=True):
     return types
 
 _UNSAFE_DTYPES = [numx.typeDict[d] for d in
-                  ['float96', 'float128', 'complex192', 'complex256']
+                  ['float16', 'float96', 'float128', 'complex192', 'complex256']
                   if d in numx.typeDict]
 
 def nongeneral_svd(A, range=None, **kwargs):
