@@ -15,11 +15,21 @@ class ScikitsException(mdp.NodeException):
     pass
 
 # import all submodules of scikits.learn (to work around lazy import)
-scikits_modules = ['ann', 'cluster', 'covariance', 'feature_extraction',
-                   'feature_selection', 'features', 'gaussian_process', 'glm',
-                   'linear_model', 'preprocessing', 'svm',
-                   'pca', 'lda', 'hmm', 'fastica', 'grid_search', 'mixture',
-                   'naive_bayes', 'neighbors', 'qda']
+from mdp.configuration import _version_too_old
+if _version_too_old(scikits.learn.__version__, (0, 8)):
+    scikits_modules = ['ann', 'cluster', 'covariance', 'feature_extraction',
+                       'feature_selection', 'features', 'gaussian_process', 'glm',
+                       'linear_model', 'preprocessing', 'svm',
+                       'pca', 'lda', 'hmm', 'fastica', 'grid_search', 'mixture',
+                       'naive_bayes', 'neighbors', 'qda']
+else:
+    # package structure has been changed in 0.8
+    scikits_modules = ['svm', 'linear_model', 'naive_bayes', 'neighbors',
+                       'mixture', 'hmm', 'cluster', 'decomposition', 'lda',
+                       'covariance', 'cross_val', 'grid_search',
+                       'feature_selection.rfe', 'feature_extraction.image',
+                       'feature_extraction.text', 'pipelines', 'pls',
+                       'gaussian_process', 'qda']
 for name in scikits_modules:
     # not all modules may be available due to missing dependencies
     # on the user system.
