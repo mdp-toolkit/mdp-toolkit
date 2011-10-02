@@ -17,7 +17,6 @@ import subprocess
 import signal
 import traceback
 import tempfile
-import warnings
 
 import scheduling
 import pp
@@ -56,10 +55,8 @@ def _monkeypatch_pp():
 
     command = pp._Worker.command.replace(ppworker, ppworker3)
     pp._Worker.command = command
-    warnings.warn('parallel python (module pp) was patched for debian bug 620551',
-                  mdp.MDPWarning)
 
-if not os.getenv('MDP_DISABLE_MONKEYPATCH_PP'):
+if os.getenv('MDP_MONKEYPATCH_PP'):
     _monkeypatch_pp()
 
 class PPScheduler(scheduling.Scheduler):
