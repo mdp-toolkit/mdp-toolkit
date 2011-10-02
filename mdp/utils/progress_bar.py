@@ -1,3 +1,5 @@
+from __future__ import with_statement
+
 from datetime import timedelta
 import sys
 import time
@@ -287,30 +289,31 @@ if __name__ == '__main__':
             raise Exception('Something wrong with progressinfo...' )
 
     # write random file
-    fl = tempfile.TemporaryFile(mode='r+')
-    for i in range(1000):
-        fl.write(str(i)+'\n')
-    fl.flush()
-    # rewind
-    fl.seek(0)
-    lines = []
-    for line in progressinfo(fl, 1000):
-        lines.append(int(line))
-        time.sleep(0.01)
-    if lines != range(1000):
-        raise Exception('Something wrong with progressinfo...' )
+    with tempfile.TemporaryFile(mode='r+') as fl:
+        for i in range(1000):
+            fl.write(str(i)+'\n')
+        fl.flush()
+        # rewind
+        fl.seek(0)
+        lines = []
+        for line in progressinfo(fl, 1000):
+            lines.append(int(line))
+            time.sleep(0.01)
+        if lines != range(1000):
+            raise Exception('Something wrong with progressinfo...' )
 
     # test iterate on items
-    fl = tempfile.TemporaryFile(mode='r+')
-    for i in range(10):
-        fl.write(str(i)+'\n')
-    fl.flush()
-    # rewind
-    fl.seek(0)
-    def gen():
-        for line_ in fl:
-            yield int(line_)
-    for line in progressinfo(gen(), -10, style='timer',
-                             custom={'speed':'last'}):
-        time.sleep(1)
+    with tempfile.TemporaryFile(mode='r+') as fl:
+        for i in range(10):
+            fl.write(str(i)+'\n')
+        fl.flush()
+        # rewind
+        fl.seek(0)
+        def gen():
+            for line_ in fl:
+                yield int(line_)
+        for line in progressinfo(gen(), -10, style='timer',
+                                 custom={'speed':'last'}):
+            time.sleep(1)
+
     print 'Done.'

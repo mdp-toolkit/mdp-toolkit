@@ -7,15 +7,20 @@ extension is based on joblib v. 0.4.6.
 __docformat__ = "restructuredtext en"
 
 import joblib
-from copy import deepcopy
-from tempfile import mkdtemp
 
+from ..utils import TemporaryDirectory
 from ..extension import ExtensionNode, activate_extension, deactivate_extension
 from ..signal_node import Node
 
 # -- global attributes for this extension
 
 _cachedir = None
+# If a temporary directory is used, a reference to the
+# TemporaryDirectory object is kept here. The directory will be
+# deleted when this object is destroyed, so either when this module is
+# destroyed, or when a new directory is set and it is temporary
+# directory again.
+_cacheobj = None
 # instance of joblib cache object (set with set_cachedir)
 _memory = None
 
@@ -30,26 +35,28 @@ def set_cachedir(cachedir=None, verbose=0):
 
     :Parameters:
      cachedir
-         the cache directory name; if None, a temporary directory
-         is created using tempfile.mkdtemp()
+         the cache directory name; if ``None``, a temporary directory
+         is created using `TemporaryDirectory`
      verbose
          an integer number, controls the verbosity of the cache
          (default is 0, i.e., not verbose)
     """
 
     global _cachedir
+    global _cacheobj
     global _cached_methods
     global _memory
 
     if cachedir is None:
-        cachedir = mkdtemp()
+        _cacheobj = TemporaryDirectory(prefix='mdp-joblib-cache.')
+        cachedir = _cacheobj.name
 
     # only reset if the directory changes
     if cachedir != _cachedir:
         _cachedir = cachedir
         _memory = joblib.Memory(cachedir, verbose=verbose)
         # reset cached methods
-        _cached_methods = {}
+        _cached_methods.clear()
 
 # initialize cache with temporary directory
 set_cachedir()

@@ -11,6 +11,12 @@ try:
 except ImportError:
     ## Getting an Ordered Dict for Python < 2.7
     from _ordered_dict import OrderedDict
+
+try:
+    from tempfile import TemporaryDirectory
+except ImportError:
+    from temporarydir import TemporaryDirectory
+
 from introspection import dig_node, get_node_size, get_node_size_str
 from quad_forms import QuadraticForm, QuadraticFormException
 from covariance import (CovarianceMatrix, DelayCovarianceMatrix,
@@ -95,7 +101,7 @@ __all__ = ['CovarianceMatrix', 'DelayCovarianceMatrix','CrossCovarianceMatrix',
            'lrep', 'rrep', 'irep',
            'orthogonal_permutations', 'izip_stretched',
            'weighted_choice', 'bool_to_sign', 'sign_to_bool',
-           'OrderedDict', 'gabor', 'fixup_namespace']
+           'OrderedDict', 'TemporaryDirectory', 'gabor', 'fixup_namespace']
 
 def without_prefix(name, prefix):
     if name.startswith(prefix):

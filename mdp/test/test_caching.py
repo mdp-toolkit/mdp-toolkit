@@ -201,14 +201,14 @@ def test_preexecution_problem():
 @requires_joblib
 def test_switch_cache():
     """Test changing cache directory while extension is active."""
-    from tempfile import mkdtemp
+    from mdp.utils import TemporaryDirectory
     global _counter
 
-    dir1 = mkdtemp()
-    dir2 = mkdtemp()
+    dir1 = TemporaryDirectory(prefix='mdp-tmp-joblib-cache.')
+    dir2 = TemporaryDirectory(prefix='mdp-tmp-joblib-cache.')
     x = mdp.numx.array([[10]], dtype='d')
 
-    mdp.caching.activate_caching(cachedir=dir1)
+    mdp.caching.activate_caching(cachedir=dir1.name)
 
     node = _CounterNode()
     _counter = 0
@@ -218,7 +218,7 @@ def test_switch_cache():
     assert _counter == 1
 
     # now change path
-    mdp.caching.set_cachedir(cachedir=dir2)
+    mdp.caching.set_cachedir(cachedir=dir2.name)
     node.execute(x)
     assert _counter == 2
     node.execute(x)

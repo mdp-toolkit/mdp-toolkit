@@ -65,11 +65,10 @@ def testFlow_save():
     assert flow[0].dummy_attr != copy_flow[0].dummy_attr, \
            'Flow save (string) method did not work'
     # test file save
-    dummy_file = os.path.join(tempfile.gettempdir(),'removeme')
-    flow.save(dummy_file, protocol=1)
-    with open(dummy_file, 'rb') as flh:
-        copy_flow = cPickle.load(flh)
-    os.remove(dummy_file)
+    with tempfile.NamedTemporaryFile(prefix='MDP_', suffix='.pic') as dummy_file:
+        flow.save(dummy_file.name, protocol=1)
+        with open(dummy_file.name, 'rb') as flh:
+            copy_flow = cPickle.load(flh)
     assert flow[0].dummy_attr == copy_flow[0].dummy_attr, \
            'Flow save (file) method did not work'
     copy_flow[0].dummy_attr[0] = 10
@@ -300,14 +299,13 @@ def testCrashRecovery():
 def testCrashRecoveryException():
     a = 3
     try:
-        raise mdp.CrashRecoveryException, \
-              ('bogus errstr',a,StandardError())
+        raise mdp.CrashRecoveryException('bogus errstr', a, StandardError())
     except mdp.CrashRecoveryException, e:
         filename1 = e.dump()
-        filename2 = e.dump(os.path.join(tempfile.gettempdir(),'removeme'))
+        filename2 = e.dump(tempfile.mkstemp(prefix='MDP_')[1])
         assert isinstance(e.parent_exception, StandardError)
 
-    for fname in [filename1,filename2]:
+    for fname in filename1, filename2:
         with open(fname, 'rb') as fl:
             obj = pickle.load(fl)
         os.remove(fname)

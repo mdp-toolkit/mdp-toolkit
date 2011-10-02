@@ -721,7 +721,9 @@ def show_image_slideshow(filenames, image_size, filename=None, title=None,
                          loop=True, slideshow_id=None,
                          magnification=1, mag_control=True, open_browser=True):
     """Write the slideshow into a HTML file, open it in the browser and
-    return the file name.
+    return a file object pointing to the file. If the filename is not given,
+    a temporary file is used, and will be deleted when the returned file object
+    is closed or destroyed.
 
     filenames -- Sequence of the image filenames.
     image_size -- Tuple (x,y) with the original image size, or enter
@@ -740,8 +742,7 @@ def show_image_slideshow(filenames, image_size, filename=None, title=None,
     For additional keyword arguments see the ImageHTMLSlideShow class.
     """
     if filename is None:
-        fd, filename = tempfile.mkstemp(suffix=".html", prefix="MDP_")
-        html_file = os.fdopen(fd, 'w')
+        html_file = tempfile.NamedTemporaryFile(suffix=".html", prefix="MDP_")
     else:
         html_file = open(filename, 'w')
     html_file.write('<html>\n<head>\n<title>%s</title>\n' % title)
@@ -754,7 +755,8 @@ def show_image_slideshow(filenames, image_size, filename=None, title=None,
     del kwargs['html_file']
     html_file.write(image_slideshow(**kwargs))
     html_file.write('</body>\n</html>')
-    html_file.close()
+    html_file.flush()
+
     if open_browser:
         if isinstance(open_browser, str):
             try:
@@ -767,4 +769,4 @@ def show_image_slideshow(filenames, image_size, filename=None, title=None,
                 webbrowser.open(os.path.abspath(filename))
         else:
             webbrowser.open(os.path.abspath(filename))
-    return filename
+    return html_file

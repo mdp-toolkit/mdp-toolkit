@@ -46,6 +46,9 @@ class config(object):
         inhibit loading of the ``scikits.learn`` module
       ``MDPNSDEBUG``
         print debugging information during the import process
+      ``MDP_MONKEYPATCH_PP``
+        if set to a non-empty value, pp_support will be monkey-patched
+        to work around debian bug #620551.
     """
 
     _HAS_NUMBER = 0
@@ -250,6 +253,10 @@ def set_configuration():
     else:
         if os.getenv('MDP_DISABLE_PARALLEL_PYTHON'):
             config.ExternalDepFailed('parallel_python', 'disabled')
+        elif (not os.getenv('MDP_MONKEYPATCH_PP') and
+              'pyshared' in os.path.realpath(os.path.join(
+                    os.path.dirname(os.path.abspath(pp.__file__)), 'ppworker.py'))):
+            config.ExternalDepFailed('parallel_python', 'broken')
         else:
             config.ExternalDepFound('parallel_python', pp.version)
 

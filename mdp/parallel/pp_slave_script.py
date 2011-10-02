@@ -22,8 +22,7 @@ def main():
             sys_path = sys.stdin.readline()[:-1] # remove newline character
             if sys_path == "_done_":
                 break
-            else:
-                sys_paths.append(sys_path)
+            sys_paths.append(sys_path)
         # assemble the command line for the wrapper by forwarding the arguments and
         cmd = ("nice %s %s pp_slave_wrapper.py" %
                (sys.argv[1], python_executable))

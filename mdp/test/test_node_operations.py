@@ -45,11 +45,10 @@ def test_Node_save():
     assert generic_node.dummy_attr != copy_node.dummy_attr,\
            'Node save (string) method did not work'
     # test file save
-    dummy_file = os.path.join(tempfile.gettempdir(),'removeme')
-    generic_node.save(dummy_file, protocol=1)
-    with open(dummy_file, 'rb') as flh:
-        copy_node = cPickle.load(flh)
-    os.remove(dummy_file)
+    with tempfile.NamedTemporaryFile(prefix='MDP_', suffix='.pic') as dummy_file:
+        generic_node.save(dummy_file.name, protocol=1)
+        with open(dummy_file.name, 'rb') as flh:
+            copy_node = cPickle.load(flh)
     assert generic_node.dummy_attr == copy_node.dummy_attr,\
            'Node save (file) method did not work'
     copy_node.dummy_attr[0] = 10
