@@ -50,7 +50,7 @@ def _monkeypatch_pp():
 
     import mdp
     global _ppworker_dir
-    _ppworker_dir = mdp.utils.TemporaryDirectory('pp4mdp')
+    _ppworker_dir = mdp.utils.TemporaryDirectory(prefix='pp4mdp.')
     ppworker3 = os.path.join(_ppworker_dir.name, 'ppworker.py')
     shutil.copy(ppworker, ppworker3)
 

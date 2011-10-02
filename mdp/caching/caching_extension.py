@@ -49,7 +49,7 @@ def set_cachedir(cachedir=None, verbose=0):
     global _memory
 
     if cachedir is None:
-        _cacheobj = TemporaryDirectory('mdp-joblib-cache')
+        _cacheobj = TemporaryDirectory(prefix='mdp-joblib-cache.')
         cachedir = _cacheobj.name
 
     # only reset if the directory changes
