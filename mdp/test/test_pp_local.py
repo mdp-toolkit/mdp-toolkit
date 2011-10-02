@@ -1,4 +1,3 @@
-import py.test
 import mdp.parallel as parallel
 from _tools import *
 

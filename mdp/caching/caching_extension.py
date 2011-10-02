@@ -7,7 +7,6 @@ extension is based on joblib v. 0.4.6.
 __docformat__ = "restructuredtext en"
 
 import joblib
-from copy import deepcopy
 
 from ..utils import TemporaryDirectory
 from ..extension import ExtensionNode, activate_extension, deactivate_extension
@@ -57,7 +56,7 @@ def set_cachedir(cachedir=None, verbose=0):
         _cachedir = cachedir
         _memory = joblib.Memory(cachedir, verbose=0)
         # reset cached methods
-        _cached_methods = {}
+        _cached_methods.clear()
 
 # initialize cache with temporary directory
 set_cachedir()
