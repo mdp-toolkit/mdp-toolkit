@@ -53,10 +53,15 @@ def _monkeypatch_pp():
     ppworker3 = os.path.join(_ppworker_dir.name, 'ppworker.py')
     shutil.copy(ppworker, ppworker3)
 
-    pp._Worker.command[pp._Worker.command.index(ppworker)] = ppworker3
+    try:
+        pp._Worker.command[pp._Worker.command.index(ppworker)] = ppworker3
+    except TypeError:
+        # pp 1.6.0 compatibility
+        pp._Worker.command = pp._Worker.command.replace(ppworker, ppworker3)
 
 if os.getenv('MDP_MONKEYPATCH_PP'):
     _monkeypatch_pp()
+
 
 class PPScheduler(scheduling.Scheduler):
     """Adaptor scheduler for the parallel python scheduler.
