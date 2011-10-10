@@ -65,10 +65,12 @@ def testFlow_save():
     assert flow[0].dummy_attr != copy_flow[0].dummy_attr, \
            'Flow save (string) method did not work'
     # test file save
-    with tempfile.NamedTemporaryFile(prefix='MDP_', suffix='.pic') as dummy_file:
+    with tempfile.NamedTemporaryFile(prefix='MDP_', suffix='.pic',
+                                     dir=py.test.tempdirname) as dummy_file:
         flow.save(dummy_file.name, protocol=1)
-        with open(dummy_file.name, 'rb') as flh:
-            copy_flow = cPickle.load(flh)
+        dummy_file.flush()
+        dummy_file.seek(0)
+        copy_flow = cPickle.load(dummy_file)
     assert flow[0].dummy_attr == copy_flow[0].dummy_attr, \
            'Flow save (file) method did not work'
     copy_flow[0].dummy_attr[0] = 10
@@ -302,13 +304,18 @@ def testCrashRecoveryException():
         raise mdp.CrashRecoveryException('bogus errstr', a, StandardError())
     except mdp.CrashRecoveryException, e:
         filename1 = e.dump()
-        filename2 = e.dump(tempfile.mkstemp(prefix='MDP_')[1])
+        filename2 = e.dump(tempfile.mkstemp(prefix='MDP_',
+                                            dir=py.test.tempdirname)[1])
         assert isinstance(e.parent_exception, StandardError)
 
     for fname in filename1, filename2:
-        with open(fname, 'rb') as fl:
-            obj = pickle.load(fl)
-        os.remove(fname)
+        fl = open(fname, 'rb')
+        obj = pickle.load(fl)
+        fl.close()
+        try:
+            os.remove(fname)
+        except Exception:
+            pass
         assert obj == a
 
 def testMultiplePhases():

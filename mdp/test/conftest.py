@@ -1,4 +1,6 @@
 # global hooks for py.test
+import tempfile
+import shutil
 import mdp
 import py.test
 
@@ -26,6 +28,9 @@ def pytest_configure(config):
     seed = config.getvalue("seed")
     if seed is None or seed == ('NO', 'DEFAULT'):
         config.option.seed = int(mdp.numx_rand.randint(2**31-1))
+
+def pytest_unconfigure(config):
+    shutil.rmtree(py.test.tempdirname, ignore_errors=True)
 
 def pytest_runtest_setup(item):
     # set random seed
@@ -58,4 +63,7 @@ except AttributeError:
             t.write_line(_err_str)
 
     def pytest_namespace():
-        return dict(mdp_toolkit_reporting_configured=True)
+        # get temporary directory to put temporary files
+        # will be deleted at the end of the test run
+        dirname = tempfile.mkdtemp(suffix='.tmp', prefix='MDPtestdir')
+        return dict(mdp_toolkit_reporting_configured=True, tempdirname=dirname)

@@ -204,8 +204,8 @@ def test_switch_cache():
     from mdp.utils import TemporaryDirectory
     global _counter
 
-    dir1 = TemporaryDirectory(prefix='mdp-tmp-joblib-cache.')
-    dir2 = TemporaryDirectory(prefix='mdp-tmp-joblib-cache.')
+    dir1 = TemporaryDirectory(prefix='mdp-tmp-joblib-cache.', dir=py.test.tempdirname)
+    dir2 = TemporaryDirectory(prefix='mdp-tmp-joblib-cache.', dir=py.test.tempdirname)
     x = mdp.numx.array([[10]], dtype='d')
 
     mdp.caching.activate_caching(cachedir=dir1.name)
