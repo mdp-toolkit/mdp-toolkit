@@ -46,7 +46,7 @@ def test_Node_save():
            'Node save (string) method did not work'
     # test file save
     with tempfile.NamedTemporaryFile(prefix='MDP_', suffix='.pic',
-                                     dir=py.test.tempdirname) as dummy_file:
+                                     dir=py.test.mdp_tempdirname) as dummy_file:
         generic_node.save(dummy_file.name, protocol=1)
         dummy_file.flush()
         dummy_file.seek(0)

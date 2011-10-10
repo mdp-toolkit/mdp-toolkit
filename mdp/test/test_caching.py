@@ -44,7 +44,7 @@ def test_caching_extension():
     _counter = 0
     # activate the extension
     cachedir = tempfile.mkdtemp(prefix='mdp-tmp-joblib-cache.',
-                                dir=py.test.tempdirname)
+                                dir=py.test.mdp_tempdirname)
     mdp.caching.activate_caching(cachedir=cachedir)
     assert mdp.get_active_extensions() == ['cache_execute']
 
@@ -75,7 +75,7 @@ def test_different_instances_same_content():
     x = mdp.numx.array([[100.]], dtype='d')
 
     cachedir = tempfile.mkdtemp(prefix='mdp-tmp-joblib-cache.',
-                                dir=py.test.tempdirname)
+                                dir=py.test.mdp_tempdirname)
     mdp.caching.activate_caching(cachedir=cachedir)
     node = _CounterNode()
     _counter = 0
@@ -108,7 +108,7 @@ def test_caching_context_manager():
 
     assert mdp.get_active_extensions() == []
     cachedir = tempfile.mkdtemp(prefix='mdp-tmp-joblib-cache.',
-                                dir=py.test.tempdirname)
+                                dir=py.test.mdp_tempdirname)
     with mdp.caching.cache(cachedir=cachedir):
         assert mdp.get_active_extensions() == ['cache_execute']
 
@@ -211,9 +211,9 @@ def test_switch_cache():
     global _counter
 
     dir1 = tempfile.mkdtemp(prefix='mdp-tmp-joblib-cache.',
-                            dir=py.test.tempdirname)
+                            dir=py.test.mdp_tempdirname)
     dir2 = tempfile.mkdtemp(prefix='mdp-tmp-joblib-cache.',
-                            dir=py.test.tempdirname)
+                            dir=py.test.mdp_tempdirname)
     x = mdp.numx.array([[10]], dtype='d')
 
     mdp.caching.activate_caching(cachedir=dir1)

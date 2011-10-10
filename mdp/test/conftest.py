@@ -30,7 +30,7 @@ def pytest_configure(config):
         config.option.seed = int(mdp.numx_rand.randint(2**31-1))
 
 def pytest_unconfigure(config):
-    shutil.rmtree(py.test.tempdirname, ignore_errors=True)
+    shutil.rmtree(py.test.mdp_tempdirname, ignore_errors=True)
 
 def pytest_runtest_setup(item):
     # set random seed
@@ -44,9 +44,9 @@ def pytest_addoption(parser):
                          help='set random seed')
 
 try:
-    py.test.mdp_toolkit_reporting_configured
+    py.test.mdp_configured
 except AttributeError:
-    # Global variable py.test.mdp_toolkit_reporting_configured is necessary
+    # Global variable py.test.mdp_configured is necessary
     # to not create the pytest_* functions. Otherwise the terminal
     # report would be printed twice: once for mdp/ and the second time
     # for bimdp/test. When running tests just for one of the
@@ -66,4 +66,4 @@ except AttributeError:
         # get temporary directory to put temporary files
         # will be deleted at the end of the test run
         dirname = tempfile.mkdtemp(suffix='.tmp', prefix='MDPtestdir_')
-        return dict(mdp_toolkit_reporting_configured=True, tempdirname=dirname)
+        return dict(mdp_configured=True, mdp_tempdirname=dirname)
