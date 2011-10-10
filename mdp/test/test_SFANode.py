@@ -1,3 +1,4 @@
+from __future__ import with_statement
 from _tools import *
 mult = mdp.utils.mult
 
@@ -40,8 +41,8 @@ def testSFANode_one_time_samples():
     # the covmatrix is updated with zeros!
     node = mdp.nodes.SFANode()
     x = numx.random.random((1,5))
-    py.test.raises(mdp.TrainingException, "node.train(x)")
-
+    with py.test.raises(mdp.TrainingException):
+        node.train(x)
 
 def testSFANode_include_last_sample():
     # check that the default behaviour is True

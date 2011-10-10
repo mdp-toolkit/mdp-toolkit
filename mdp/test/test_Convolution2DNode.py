@@ -1,3 +1,4 @@
+from __future__ import with_statement
 from _tools import *
 import py.test
 
@@ -118,16 +119,17 @@ def testConvolution2DNode_arguments():
                    "mdp.nodes.Convolution2DNode(filters)")
  
     filters = numx.random.random((1,1,1))
-    py.test.raises(mdp.NodeException,
-                   "mdp.nodes.Convolution2DNode(filters, approach='bug')")
-    py.test.raises(mdp.NodeException,
-                   "mdp.nodes.Convolution2DNode(filters, mode='bug')")
-    py.test.raises(mdp.NodeException,
-                   "mdp.nodes.Convolution2DNode(filters, boundary='bug')")
+    with py.test.raises(mdp.NodeException):
+        mdp.nodes.Convolution2DNode(filters, approach='bug')
+    with py.test.raises(mdp.NodeException):
+        mdp.nodes.Convolution2DNode(filters, mode='bug')
+    with py.test.raises(mdp.NodeException):
+        mdp.nodes.Convolution2DNode(filters, boundary='bug')
 
 @requires_signal
 def testConvolution2DNode_shape_mismatch():
     x = numx.random.random((10,60))
     filters = numx.random.random((3,5,4))
     node = mdp.nodes.Convolution2DNode(filters, input_shape=(3,2))
-    py.test.raises(mdp.NodeException, "node.execute(x)")
+    with py.test.raises(mdp.NodeException):
+        node.execute(x)
