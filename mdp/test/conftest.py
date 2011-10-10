@@ -65,5 +65,5 @@ except AttributeError:
     def pytest_namespace():
         # get temporary directory to put temporary files
         # will be deleted at the end of the test run
-        dirname = tempfile.mkdtemp(suffix='.tmp', prefix='MDPtestdir')
+        dirname = tempfile.mkdtemp(suffix='.tmp', prefix='MDPtestdir_')
         return dict(mdp_toolkit_reporting_configured=True, tempdirname=dirname)
