@@ -2,7 +2,7 @@
 """
 
 import mdp
-from mdp.utils import symeig
+#from mdp.utils import symeig
 from mdp.utils import matmult as mult
 
 numx = mdp.numx
@@ -17,7 +17,7 @@ def matmult_c_MDP_benchmark(dim):
     First argument matrix dimensionality"""
     a = numx_rand.random((dim,dim))
     b = numx_rand.random((dim,dim))
-    out = mult(a,b)
+    mult(a,b)
 
 def matmult_c_scipy_benchmark(dim):
     """    This benchmark multiplies two contiguous matrices using the
@@ -25,7 +25,7 @@ def matmult_c_scipy_benchmark(dim):
     First argument matrix dimensionality"""
     a = numx_rand.random((dim,dim))
     b = numx_rand.random((dim,dim))
-    out = numx.dot(a,b)
+    numx.dot(a,b)
 
 def matmult_n_MDP_benchmark(dim):
     """    This benchmark multiplies two non-contiguous matrices using the
@@ -33,7 +33,7 @@ def matmult_n_MDP_benchmark(dim):
     First argument matrix dimensionality"""
     a = numx_rand.random((dim,dim)).T
     b = numx_rand.random((dim,dim)).T
-    out = mult(a,b)
+    mult(a,b)
 
 def matmult_n_scipy_benchmark(dim):
     """    This benchmark multiplies two non-contiguous matrices using the
@@ -41,7 +41,7 @@ def matmult_n_scipy_benchmark(dim):
     First argument matrix dimensionality"""
     a = numx_rand.random((dim,dim)).T
     b = numx_rand.random((dim,dim)).T
-    out = numx.dot(a,b)
+    numx.dot(a,b)
 
 def matmult_cn_MDP_benchmark(dim):
     """    This benchmark multiplies a contiguous matrix with a
@@ -50,7 +50,7 @@ def matmult_cn_MDP_benchmark(dim):
     First argument matrix dimensionality"""
     a = numx_rand.random((dim,dim)).T
     b = numx_rand.random((dim,dim))
-    out = mult(a,b)
+    mult(a,b)
 
 def matmult_cn_scipy_benchmark(dim):
     """    This benchmark multiplies a contiguous matrix with a
@@ -59,7 +59,7 @@ def matmult_cn_scipy_benchmark(dim):
     First argument matrix dimensionality"""
     a = numx_rand.random((dim,dim)).T
     b = numx_rand.random((dim,dim))
-    out = numx.dot(a,b)
+    numx.dot(a,b)
 
 def quadratic_expansion_benchmark(dim, len, times):
     """    This benchmark expands random data of shape (len, dim)

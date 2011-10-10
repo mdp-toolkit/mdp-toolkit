@@ -4,7 +4,7 @@ import os
 import tempfile
 import cPickle
 import mdp
-from _tools import BogusNode, BogusMultiNode, BogusNodeTrainable
+from _tools import BogusMultiNode, BogusNodeTrainable
 uniform = mdp.numx_rand.random
 MAT_DIM = (500,5)
 
@@ -30,7 +30,7 @@ def test_Node_copy_with_arrays_and_subnodes():
 def test_Node_copy_with_lambdas():
     generic_node = mdp.Node()
     generic_node.lambda_function = lambda: 1
-    copy_node = generic_node.copy()
+    generic_node.copy()
     
 def test_Node_save():
     test_list = [1,2,3]
