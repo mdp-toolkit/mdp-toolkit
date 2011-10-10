@@ -59,7 +59,7 @@ def set_cachedir(cachedir=None, verbose=0):
         _cached_methods.clear()
 
 # initialize cache with temporary directory
-set_cachedir()
+#set_cachedir()
 
 class CacheExecuteExtensionNode(ExtensionNode, Node):
     """MDP extension for caching execution results.
