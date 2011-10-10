@@ -53,8 +53,7 @@ def _monkeypatch_pp():
     ppworker3 = os.path.join(_ppworker_dir.name, 'ppworker.py')
     shutil.copy(ppworker, ppworker3)
 
-    command = pp._Worker.command.replace(ppworker, ppworker3)
-    pp._Worker.command = command
+    pp._Worker.command[pp._Worker.command.index(ppworker)] = ppworker3
 
 if os.getenv('MDP_MONKEYPATCH_PP'):
     _monkeypatch_pp()
