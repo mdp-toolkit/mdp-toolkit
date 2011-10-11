@@ -21,6 +21,7 @@ class TemporaryDirectory(object):
 
     def __init__(self, suffix="", prefix=template, dir=None):
         self._closed = False
+        self._ENOENT = errno.ENOENT
         self.name = None # Handle mkdtemp throwing an exception
         self.name = mkdtemp(suffix, prefix, dir)
 
@@ -42,13 +43,10 @@ class TemporaryDirectory(object):
                     raise
                 print >>_sys.stderr, "ERROR: %r while cleaning up %r" % (ex, self)
                 return
-            except Exception, ex:
+            except OSError, ex:
                 # ignore if the directory has been deleted already
-                # actually we should check for OSError.errno = errno.ENOENT
-                # but because this method is called asynchronously when
-                # most global names are gone, it does not work
-                # we are forced to catch everything...
-                pass
+                if ex.errno != self._ENOENT:
+                    raise
             self._closed = True
 
     def __exit__(self, exc, value, tb):
