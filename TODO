@@ -3,6 +3,7 @@ for MDP 3.1
 
 - clearify documentation on Flow.train as suggested by Fabian Schoenfeld in
   http://sourceforge.net/mailarchive/message.php?msg_id=27926167
+- checkout windows 64bit binaries from http://www.lfd.uci.edu/~gohlke/pythonlibs/ maybe point to it from the documentation?
 - add code for generating the plots in the tutorial (but we don't want the
   doctests to fail if matplotlib is not installed: find a good way of
   dealing with it, pymvpa already does it properly)
