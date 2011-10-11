@@ -22,7 +22,6 @@ from quad_forms import QuadraticForm, QuadraticFormException
 from covariance import (CovarianceMatrix, DelayCovarianceMatrix,
                         MultipleCovarianceMatrices,CrossCovarianceMatrix)
 from progress_bar import progressinfo
-from repo_revision import get_git_revision
 from slideshow import (basic_css, slideshow_css, HTMLSlideShow,
                        image_slideshow_css, ImageHTMLSlideShow,
                        SectionHTMLSlideShow, SectionImageHTMLSlideShow,
@@ -84,7 +83,6 @@ del quad_forms
 del covariance
 del progress_bar
 del slideshow
-del repo_revision
 
 __all__ = ['CovarianceMatrix', 'DelayCovarianceMatrix','CrossCovarianceMatrix',
            'MultipleCovarianceMatrices', 'QuadraticForm',
@@ -94,7 +92,7 @@ __all__ = ['CovarianceMatrix', 'DelayCovarianceMatrix','CrossCovarianceMatrix',
            'norm2', 'permute', 'pinv', 'progressinfo',
            'random_rot', 'refcast', 'rotate', 'scast', 'solve', 'sqrtm',
            'svd', 'symrand', 'timediff', 'matmult',
-           'get_git_revision', 'HTMLSlideShow', 'ImageHTMLSlideShow',
+           'HTMLSlideShow', 'ImageHTMLSlideShow',
            'basic_css', 'slideshow_css', 'image_slideshow_css',
            'SectionHTMLSlideShow',
            'SectionImageHTMLSlideShow', 'image_slideshow',
@@ -136,5 +134,4 @@ fixup_namespace(__name__, __all__,
                  'covariance',
                  'progress_bar',
                  'slideshow',
-                 'repo_revision',
                  ))

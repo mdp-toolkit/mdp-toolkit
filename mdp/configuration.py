@@ -4,6 +4,7 @@ import os
 import tempfile
 import inspect
 import mdp
+from repo_revision import get_git_revision
 
 class config(object):
     """Provide information about optional dependencies.
@@ -247,6 +248,7 @@ def set_configuration():
     # set python version
     config.ExternalDepFound('python', '.'.join([str(x)
                                                 for x in sys.version_info]))
+    config.ExternalDepFound('mdp', mdp.__revision__)
 
     # parallel python dependency
     config.pp_monkeypatch_dirname = None
@@ -270,7 +272,7 @@ def set_configuration():
                 else:
                     if not os.path.isdir(dirname):
                         os.mkdir(dirname)
-                mdp.config.pp_monkeypatch_dirname = dirname
+                config.pp_monkeypatch_dirname = dirname
             
 
     # shogun
