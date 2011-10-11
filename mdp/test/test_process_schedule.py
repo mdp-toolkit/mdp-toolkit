@@ -94,5 +94,5 @@ def test_process_scheduler_mdp_version():
     out = scheduler.get_results()
     scheduler.shutdown()
     # check that we get 2 identical dictionaries
-    assert out[0] == out[1], 'Subprocesses did not run'
-    'the same MDP as the parent:\n%s\n--\n%s'%(out[0], out[1])
+    assert out[0] == out[1], 'Subprocesses did not run '\
+        'the same MDP as the parent:\n%s\n--\n%s'%(out[0], out[1])
