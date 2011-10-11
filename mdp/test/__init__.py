@@ -57,7 +57,16 @@ def get_worker(loc):
     try:
         # use py.test module interface if it's installed
         import py.test
-        return py.test.cmdline.main
+        # check that we have at least version 2.1.2
+        try:
+            py.test.__version__
+        except AttributeError:
+            raise ImportError
+        if py.test.__version__.split(".") < "2.1.2".split("."):
+            print '---------------------No way'
+            raise ImportError
+        else:
+            return py.test.cmdline.main
     except ImportError:
         # try to locate the script
         script = os.path.join(loc, SCRIPT)
