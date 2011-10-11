@@ -1,7 +1,8 @@
 import os
 SCRIPT="run_tests.py"
 
-def test(filename=None, keyword=None, seed=None, mod_loc=None, script_loc=None):
+def test(filename=None, keyword=None, seed=None, options=None, mod_loc=None,
+         script_loc=None):
     """Run tests.
 
        filename -- only run tests in filename. If not set run all tests.
@@ -14,6 +15,8 @@ def test(filename=None, keyword=None, seed=None, mod_loc=None, script_loc=None):
                    a signal to run all subsequent tests.
 
        seed     -- set random seed
+
+       options  -- options to be passed to the underlaying py.test script (as a string) 
 
        mod_loc  -- don't use it, it's for internal usage
 
@@ -32,7 +35,9 @@ def test(filename=None, keyword=None, seed=None, mod_loc=None, script_loc=None):
         args.extend(('-k', str(keyword)))
     if seed is not None:
         args.extend(('--seed', str(seed)))
-
+    if options is not None:
+        args.extend(options.split())
+        
     args.append(loc)
     _worker = get_worker(script_loc)
     return _worker(args)
