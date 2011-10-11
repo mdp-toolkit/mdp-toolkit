@@ -16,7 +16,8 @@ def get_git_revision():
         mdp_dir = os.path.dirname(mdp.__file__)
         # --tags ensures that most revisions have a name even without
         # annotated tags
-        command = ["git", "describe", "--tags"]
+        # --dirty=+ appends a plus if the working copy is modified
+        command = ["git", "describe", "--tags", "--dirty=+"]
         proc = Popen(command, stdout=PIPE, stderr=STDOUT, cwd=mdp_dir)
         exit_status = proc.wait()
         # only get the revision if command succeded
