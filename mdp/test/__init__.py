@@ -1,5 +1,6 @@
 import os
 SCRIPT="run_tests.py"
+from mdp.configuration import _version_too_old
 
 def test(filename=None, keyword=None, seed=None, options=None, mod_loc=None,
          script_loc=None):
@@ -62,7 +63,7 @@ def get_worker(loc):
             py.test.__version__
         except AttributeError:
             raise ImportError
-        if py.test.__version__.split(".") < "2.1.2".split("."):
+        if _version_too_old(py.test.__version__, (2,1,2)):
             print '---------------------No way'
             raise ImportError
         else:
