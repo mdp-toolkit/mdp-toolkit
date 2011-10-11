@@ -22,6 +22,8 @@ import scheduling
 import pp
 import mdp
 
+TEMPDIR_PREFIX='pp4mdp-monkeypatch.'
+
 def _monkeypatch_pp(container_dir):
     """Apply a hack for http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=620551.
 
@@ -49,7 +51,7 @@ def _monkeypatch_pp(container_dir):
         return
 
     global _ppworker_dir
-    _ppworker_dir = mdp.utils.TemporaryDirectory(prefix='pp4mdp.', dir=container_dir)
+    _ppworker_dir = mdp.utils.TemporaryDirectory(prefix=TEMPDIR_PREFIX, dir=container_dir)
     ppworker3 = os.path.join(_ppworker_dir.name, 'ppworker.py')
     shutil.copy(ppworker, ppworker3)
 
