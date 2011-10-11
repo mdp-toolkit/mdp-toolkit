@@ -20,8 +20,9 @@ import tempfile
 
 import scheduling
 import pp
+import mdp
 
-def _monkeypatch_pp():
+def _monkeypatch_pp(container_dir):
     """Apply a hack for http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=620551.
 
     Importing numpy fails because the parent directory of the slave
@@ -47,9 +48,8 @@ def _monkeypatch_pp():
     if 'pyshared' not in ppworker2:
         return
 
-    import mdp
     global _ppworker_dir
-    _ppworker_dir = mdp.utils.TemporaryDirectory(prefix='pp4mdp.')
+    _ppworker_dir = mdp.utils.TemporaryDirectory(prefix='pp4mdp.', dir=container_dir)
     ppworker3 = os.path.join(_ppworker_dir.name, 'ppworker.py')
     shutil.copy(ppworker, ppworker3)
 
@@ -59,9 +59,8 @@ def _monkeypatch_pp():
         # pp 1.6.0 compatibility
         pp._Worker.command = pp._Worker.command.replace(ppworker, ppworker3)
 
-if os.getenv('MDP_MONKEYPATCH_PP'):
-    _monkeypatch_pp()
-
+if mdp.config.pp_monkeypatch_dirname:
+    _monkeypatch_pp(mdp.config.pp_monkeypatch_dirname)
 
 class PPScheduler(scheduling.Scheduler):
     """Adaptor scheduler for the parallel python scheduler.

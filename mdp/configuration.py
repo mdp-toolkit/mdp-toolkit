@@ -1,7 +1,9 @@
 __docformat__ = "restructuredtext en"
 import sys
 import os
+import tempfile
 import inspect
+import mdp
 
 class config(object):
     """Provide information about optional dependencies.
@@ -47,8 +49,9 @@ class config(object):
       ``MDPNSDEBUG``
         print debugging information during the import process
       ``MDP_MONKEYPATCH_PP``
-        if set to a non-empty value, pp_support will be monkey-patched
-        to work around debian bug #620551.
+        set a path to create a temporary directory to store a monkey-patched
+        parallel python worker script to work around debian bug #620551. If
+        set to 1, the value returned by tempfile.gettempdir() is used.
     """
 
     _HAS_NUMBER = 0
@@ -246,6 +249,7 @@ def set_configuration():
                                                 for x in sys.version_info]))
 
     # parallel python dependency
+    config.pp_monkeypatch_dirname = None
     try:
         import pp
     except ImportError, exc:
@@ -259,6 +263,15 @@ def set_configuration():
             config.ExternalDepFailed('parallel_python', 'broken')
         else:
             config.ExternalDepFound('parallel_python', pp.version)
+            if os.getenv('MDP_MONKEYPATCH_PP'):
+                dirname = os.getenv('MDP_MONKEYPATCH_PP')
+                if dirname == '1':
+                    dirname = tempfile.gettempdir()
+                else:
+                    if not os.path.isdir(dirname):
+                        os.mkdir(dirname)
+                mdp.config.pp_monkeypatch_dirname = dirname
+            
 
     # shogun
     try:
