@@ -64,7 +64,6 @@ def get_worker(loc):
         except AttributeError:
             raise ImportError
         if _version_too_old(py.test.__version__, (2,1,2)):
-            print '---------------------No way'
             raise ImportError
         else:
             return py.test.cmdline.main
