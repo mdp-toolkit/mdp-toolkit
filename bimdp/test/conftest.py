@@ -1,6 +1,8 @@
 # global hooks for py.test
 import tempfile
+import os
 import shutil
+import glob
 import mdp
 import py.test
 
@@ -31,6 +33,11 @@ def pytest_configure(config):
 
 def pytest_unconfigure(config):
     shutil.rmtree(py.test.mdp_tempdirname, ignore_errors=True)
+    # if pp was monkey-patched, remove any stale pp4mdp directories
+    if mdp.config.pp_monkeypatch_dirname:
+        monkey_dirs = os.path.join(mdp.config.pp_monkeypatch_dirname,
+                                   mdp.parallel.pp_support.TEMPDIR_PREFIX) 
+        [shutil.rmtree(d, ignore_errors=True) for d in glob.glob(monkey_dirs+'*')]
 
 def pytest_runtest_setup(item):
     # set random seed
