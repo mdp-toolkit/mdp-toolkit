@@ -248,7 +248,7 @@ def set_configuration():
     # set python version
     config.ExternalDepFound('python', '.'.join([str(x)
                                                 for x in sys.version_info]))
-    config.ExternalDepFound('mdp', mdp.__revision__)
+    config.ExternalDepFound('mdp', mdp.__version__+', '+mdp.__revision__)
 
     # parallel python dependency
     config.pp_monkeypatch_dirname = None
