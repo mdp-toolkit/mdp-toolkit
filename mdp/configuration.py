@@ -6,6 +6,15 @@ import inspect
 import mdp
 from repo_revision import get_git_revision
 
+class MetaConfig(type):
+    """Meta class for config object to allow for pretty printing
+    of class config (as we never instantiate it)"""
+    def __str__(self):
+        return self.info()
+
+    def __repr__(self):
+        return self.info()
+
 class config(object):
     """Provide information about optional dependencies.
 
@@ -54,6 +63,8 @@ class config(object):
         parallel python worker script to work around debian bug #620551. If
         set to 1, the value returned by tempfile.gettempdir() is used.
     """
+
+    __metaclass__ = MetaConfig
 
     _HAS_NUMBER = 0
 
