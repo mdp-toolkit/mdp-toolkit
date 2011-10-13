@@ -4,7 +4,6 @@ import tempfile
 import pickle
 import cPickle
 import os
-import inspect
 from _tools import *
 
 uniform = numx_rand.random
@@ -50,7 +49,7 @@ def test_Flow_copy_with_lambda():
     generic_node = mdp.Node()
     generic_node.lambda_function = lambda: 1
     generic_flow = mdp.Flow([generic_node])
-    copy_flow = generic_flow.copy()
+    generic_flow.copy()
     
 def testFlow_save():
     dummy_list = [1,2,3]

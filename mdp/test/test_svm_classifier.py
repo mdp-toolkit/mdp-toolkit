@@ -84,10 +84,6 @@ def test_ShogunSVMClassifier():
     # TODO: Implement parameter ranges
     num_train = 100
     num_test = 50
-    dist = 1
-    width = 2.1
-    C = 1
-    epsilon = 1e-5
     for positions in [((1,), (-1,)),
                       ((1,1), (-1,-1)),
                       ((1,1,1), (-1,-1,1)),
@@ -223,8 +219,6 @@ class TestLibSVMClassifier(object):
     def test_linear_separable_data(self):
         num_train = 100
         num_test = 50
-        dist = 0.4
-        width = 2.1
         C = 1.01
         epsilon = 1e-5
         for positions in [((1,), (-1,)),
@@ -235,9 +229,9 @@ class TestLibSVMClassifier(object):
             radius = 0.3
 
             traindata_real, trainlab = _separable_data(positions, (-1, 1),
-                                                              radius, num_train, True)
+                                                       radius, num_train, True)
             testdata_real, testlab = _separable_data(positions, (-1, 1),
-                                                            radius, num_test, True)
+                                                     radius, num_test, True)
 
             for comb in utils.orthogonal_permutations(self.combinations):
                 # Take out non-working cases

@@ -8,7 +8,7 @@ from functools import wraps
 import py.test
 
 import mdp
-from mdp import numx, numx_rand, numx_fft, utils
+from mdp import numx, numx_rand, numx_fft, numx_linalg, utils
 from numpy.testing import (assert_array_equal, assert_array_almost_equal,
                            assert_equal, assert_almost_equal)
 

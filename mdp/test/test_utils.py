@@ -1,13 +1,8 @@
 """These are test functions for MDP utilities.
 """
 import py.test
-import pickle
-import os
-import tempfile
-import platform
-import inspect
 from _tools import *
-from mdp import numx, utils, numx_rand, numx_linalg, Node, nodes, MDPException
+from mdp import Node, nodes
 
 class BogusClass(object):
     def __init__(self):

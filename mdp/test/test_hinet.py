@@ -1,3 +1,4 @@
+from __future__ import with_statement
 """These are test functions for hinet.
 """
 
@@ -311,8 +312,8 @@ def test_Rect2d_exception_1():
                     field_spacing_xy=2,
                     in_channel_dim=3,
                     ignore_cover=False)
-    py.test.raises(mh.Rectangular2dSwitchboardException,
-                   'mh.Rectangular2dSwitchboard(**bad_args)')
+    with py.test.raises(mh.Rectangular2dSwitchboardException):
+        mh.Rectangular2dSwitchboard(**bad_args)
 
 def test_Rect2d_exception_2():
     bad_args = dict(in_channels_xy=(12,8),
@@ -321,8 +322,8 @@ def test_Rect2d_exception_2():
                     field_spacing_xy=2,
                     in_channel_dim=3,
                     ignore_cover=False)
-    py.test.raises(mh.Rectangular2dSwitchboardException,
-                   'mh.Rectangular2dSwitchboard(**bad_args)')
+    with py.test.raises(mh.Rectangular2dSwitchboardException):
+        mh.Rectangular2dSwitchboard(**bad_args)
 
 def test_Rect2d_exception_3():
     bad_args = dict(in_channels_xy=(12,8),
@@ -331,8 +332,8 @@ def test_Rect2d_exception_3():
                     field_spacing_xy=2,
                     in_channel_dim=3,
                     ignore_cover=True)
-    py.test.raises(mh.Rectangular2dSwitchboardException,
-                   'mh.Rectangular2dSwitchboard(**bad_args)')
+    with py.test.raises(mh.Rectangular2dSwitchboardException):
+        mh.Rectangular2dSwitchboard(**bad_args)
 
 ## Tests for DoubleRect2dSwitchboard ##
 

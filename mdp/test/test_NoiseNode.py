@@ -22,4 +22,4 @@ def testNormalNoiseNode():
 def testNoiseNodePickling():
     node = mdp.nodes.NoiseNode()
     node.copy()
-    dummy = node.save(None)
+    node.save(None)

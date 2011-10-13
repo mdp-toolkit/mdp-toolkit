@@ -66,7 +66,6 @@ def testdtypeDelayCovarianceMatrix():
 
 def testdtypeCrossCovarianceMatrix():
     for type in TESTYPES:
-        dt = 5
         mat,mix,inp = get_random_mix(type='d')
         cov = utils.CrossCovarianceMatrix(dtype=type)
         cov.update(inp, inp)
