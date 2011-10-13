@@ -275,14 +275,13 @@ class InspectionHTMLTracer(object):
         The method should always be used after _begin_HTML_frame.
         """
         html_file.write('</body>\n</html>')
-        html_file.close()
 
     def _write_error_frame(self):
-        html_file = self._begin_HTML_frame()
-        html_file.write('<div class="error">')
-        html_file.write('<h3>Encountered Exception</h3>')
-        traceback_html = traceback.format_exc().replace('\n', '<br>')
-#        # get HTML traceback, didn't work due to legacy stuff
+        with self._begin_HTML_frame() as html_file:
+            html_file.write('<div class="error">')
+            html_file.write('<h3>Encountered Exception</h3>')
+            traceback_html = traceback.format_exc().replace('\n', '<br>')
+#        get HTML traceback, didn't work due to legacy stuff
 #        TODO: retry this in the future
 #        import StringIO as stringio
 #        import cgitb
@@ -297,9 +296,9 @@ class InspectionHTMLTracer(object):
 #        handler = cgitb.Hook(file=buffer)
 #        handler.handle((exception_type, exception, tb))
 #        traceback_html = buffer.getvalue()
-        html_file.write(traceback_html)
-        html_file.write('</div>')
-        self._end_HTML_frame(html_file)
+            html_file.write(traceback_html)
+            html_file.write('</div>')
+            self._end_HTML_frame(html_file)
 
     ## monkey patching tracing decorator wrapper methods ##
 

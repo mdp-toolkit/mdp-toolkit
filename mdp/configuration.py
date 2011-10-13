@@ -1,7 +1,19 @@
 __docformat__ = "restructuredtext en"
 import sys
 import os
+import tempfile
 import inspect
+import mdp
+from repo_revision import get_git_revision
+
+class MetaConfig(type):
+    """Meta class for config object to allow for pretty printing
+    of class config (as we never instantiate it)"""
+    def __str__(self):
+        return self.info()
+
+    def __repr__(self):
+        return self.info()
 
 class config(object):
     """Provide information about optional dependencies.
@@ -46,7 +58,13 @@ class config(object):
         inhibit loading of the ``scikits.learn`` module
       ``MDPNSDEBUG``
         print debugging information during the import process
+      ``MDP_MONKEYPATCH_PP``
+        set a path to create a temporary directory to store a monkey-patched
+        parallel python worker script to work around debian bug #620551. If
+        set to 1, the value returned by tempfile.gettempdir() is used.
     """
+
+    __metaclass__ = MetaConfig
 
     _HAS_NUMBER = 0
 
@@ -241,8 +259,10 @@ def set_configuration():
     # set python version
     config.ExternalDepFound('python', '.'.join([str(x)
                                                 for x in sys.version_info]))
+    config.ExternalDepFound('mdp', mdp.__version__+', '+mdp.__revision__)
 
     # parallel python dependency
+    config.pp_monkeypatch_dirname = None
     try:
         import pp
     except ImportError, exc:
@@ -250,8 +270,21 @@ def set_configuration():
     else:
         if os.getenv('MDP_DISABLE_PARALLEL_PYTHON'):
             config.ExternalDepFailed('parallel_python', 'disabled')
+        elif (not os.getenv('MDP_MONKEYPATCH_PP') and
+              'pyshared' in os.path.realpath(os.path.join(
+                    os.path.dirname(os.path.abspath(pp.__file__)), 'ppworker.py'))):
+            config.ExternalDepFailed('parallel_python', 'broken')
         else:
             config.ExternalDepFound('parallel_python', pp.version)
+            if os.getenv('MDP_MONKEYPATCH_PP'):
+                dirname = os.getenv('MDP_MONKEYPATCH_PP')
+                if dirname == '1':
+                    dirname = tempfile.gettempdir()
+                else:
+                    if not os.path.isdir(dirname):
+                        os.mkdir(dirname)
+                config.pp_monkeypatch_dirname = dirname
+            
 
     # shogun
     try:

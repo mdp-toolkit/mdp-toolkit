@@ -4,7 +4,7 @@ import os
 import tempfile
 import cPickle
 import mdp
-from _tools import BogusNode, BogusMultiNode, BogusNodeTrainable
+from _tools import BogusNode, BogusMultiNode, BogusNodeTrainable, py
 uniform = mdp.numx_rand.random
 MAT_DIM = (500,5)
 
@@ -45,11 +45,11 @@ def test_Node_save():
     assert generic_node.dummy_attr != copy_node.dummy_attr,\
            'Node save (string) method did not work'
     # test file save
-    dummy_file = os.path.join(tempfile.gettempdir(),'removeme')
+    dummy_file = tempfile.mktemp(prefix='MDP_', suffix=".pic",
+                                 dir=py.test.mdp_tempdirname)
     generic_node.save(dummy_file, protocol=1)
-    with open(dummy_file, 'rb') as flh:
-        copy_node = cPickle.load(flh)
-    os.remove(dummy_file)
+    dummy_file = open(dummy_file, 'rb')
+    copy_node = cPickle.load(dummy_file)
     assert generic_node.dummy_attr == copy_node.dummy_attr,\
            'Node save (file) method did not work'
     copy_node.dummy_attr[0] = 10

@@ -1,5 +1,6 @@
 """Test caching extension."""
 from __future__ import with_statement
+import tempfile
 from _tools import *
 
 requires_joblib = skip_on_condition(
@@ -42,7 +43,9 @@ def test_caching_extension():
     # reset counter
     _counter = 0
     # activate the extension
-    mdp.caching.activate_caching()
+    cachedir = tempfile.mkdtemp(prefix='mdp-tmp-joblib-cache.',
+                                dir=py.test.mdp_tempdirname)
+    mdp.caching.activate_caching(cachedir=cachedir)
     assert mdp.get_active_extensions() == ['cache_execute']
 
     # after decoration the global counter is incremented for each new 'x'
@@ -71,7 +74,9 @@ def test_different_instances_same_content():
     global _counter
     x = mdp.numx.array([[100.]], dtype='d')
 
-    mdp.caching.activate_caching()
+    cachedir = tempfile.mkdtemp(prefix='mdp-tmp-joblib-cache.',
+                                dir=py.test.mdp_tempdirname)
+    mdp.caching.activate_caching(cachedir=cachedir)
     node = _CounterNode()
     _counter = 0
 
@@ -102,7 +107,9 @@ def test_caching_context_manager():
     _counter = 0
 
     assert mdp.get_active_extensions() == []
-    with mdp.caching.cache():
+    cachedir = tempfile.mkdtemp(prefix='mdp-tmp-joblib-cache.',
+                                dir=py.test.mdp_tempdirname)
+    with mdp.caching.cache(cachedir=cachedir):
         assert mdp.get_active_extensions() == ['cache_execute']
 
         for i in range(3):
@@ -201,11 +208,12 @@ def test_preexecution_problem():
 @requires_joblib
 def test_switch_cache():
     """Test changing cache directory while extension is active."""
-    from tempfile import mkdtemp
     global _counter
 
-    dir1 = mkdtemp()
-    dir2 = mkdtemp()
+    dir1 = tempfile.mkdtemp(prefix='mdp-tmp-joblib-cache.',
+                            dir=py.test.mdp_tempdirname)
+    dir2 = tempfile.mkdtemp(prefix='mdp-tmp-joblib-cache.',
+                            dir=py.test.mdp_tempdirname)
     x = mdp.numx.array([[10]], dtype='d')
 
     mdp.caching.activate_caching(cachedir=dir1)

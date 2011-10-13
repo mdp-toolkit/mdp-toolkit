@@ -113,25 +113,24 @@ class MDPDeprecationWarning(DeprecationWarning, MDPWarning):
 
 import configuration
 
-config = configuration.config
-(numx_description, numx, numx_linalg, numx_fft,
- numx_rand, numx_version) = configuration.get_numx()
-
-configuration.set_configuration()
-
-# import the utils module (used by other modules)
-import utils
-# set symeig
-utils.symeig = configuration.get_symeig(numx_linalg)
-
 __version__ = '3.2'
-__revision__ = utils.get_git_revision()
+__revision__ = configuration.get_git_revision()
 __authors__ = 'MDP Developers'
 __copyright__ = '(c) 2003-2011 mdp-toolkit-devel@lists.sourceforge.net'
 __license__ = 'BSD License, see COPYRIGHT'
 __contact__ = 'mdp-toolkit-users@lists.sourceforge.net'
 __homepage__ = 'http://mdp-toolkit.sourceforge.net'
 
+configuration.set_configuration()
+
+config = configuration.config
+(numx_description, numx, numx_linalg, numx_fft,
+ numx_rand, numx_version) = configuration.get_numx()
+
+# import the utils module (used by other modules)
+import utils
+# set symeig
+utils.symeig = configuration.get_symeig(numx_linalg)
 
 # import exceptions from nodes and flows
 from signal_node import (NodeException, InconsistentDimException,
@@ -174,6 +173,7 @@ del linear_flows
 del classifier_node
 del helper_funcs
 del configuration
+del repo_revision
 
 # explicitly set __all__, mainly needed for epydoc
 __all__ = ['config',

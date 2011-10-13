@@ -11,12 +11,17 @@ try:
 except ImportError:
     ## Getting an Ordered Dict for Python < 2.7
     from _ordered_dict import OrderedDict
+
+try:
+    from tempfile import TemporaryDirectory
+except ImportError:
+    from temporarydir import TemporaryDirectory
+
 from introspection import dig_node, get_node_size, get_node_size_str
 from quad_forms import QuadraticForm, QuadraticFormException
 from covariance import (CovarianceMatrix, DelayCovarianceMatrix,
                         MultipleCovarianceMatrices,CrossCovarianceMatrix)
 from progress_bar import progressinfo
-from repo_revision import get_git_revision
 from slideshow import (basic_css, slideshow_css, HTMLSlideShow,
                        image_slideshow_css, ImageHTMLSlideShow,
                        SectionHTMLSlideShow, SectionImageHTMLSlideShow,
@@ -78,7 +83,6 @@ del quad_forms
 del covariance
 del progress_bar
 del slideshow
-del repo_revision
 
 __all__ = ['CovarianceMatrix', 'DelayCovarianceMatrix','CrossCovarianceMatrix',
            'MultipleCovarianceMatrices', 'QuadraticForm',
@@ -88,14 +92,14 @@ __all__ = ['CovarianceMatrix', 'DelayCovarianceMatrix','CrossCovarianceMatrix',
            'norm2', 'permute', 'pinv', 'progressinfo',
            'random_rot', 'refcast', 'rotate', 'scast', 'solve', 'sqrtm',
            'svd', 'symrand', 'timediff', 'matmult',
-           'get_git_revision', 'HTMLSlideShow', 'ImageHTMLSlideShow',
+           'HTMLSlideShow', 'ImageHTMLSlideShow',
            'basic_css', 'slideshow_css', 'image_slideshow_css',
            'SectionHTMLSlideShow',
            'SectionImageHTMLSlideShow', 'image_slideshow',
            'lrep', 'rrep', 'irep',
            'orthogonal_permutations', 'izip_stretched',
            'weighted_choice', 'bool_to_sign', 'sign_to_bool',
-           'OrderedDict', 'gabor', 'fixup_namespace']
+           'OrderedDict', 'TemporaryDirectory', 'gabor', 'fixup_namespace']
 
 def without_prefix(name, prefix):
     if name.startswith(prefix):
@@ -130,5 +134,4 @@ fixup_namespace(__name__, __all__,
                  'covariance',
                  'progress_bar',
                  'slideshow',
-                 'repo_revision',
                  ))
