@@ -273,7 +273,8 @@ def set_configuration():
         elif (not os.getenv('MDP_MONKEYPATCH_PP') and
               'pyshared' in os.path.realpath(os.path.join(
                     os.path.dirname(os.path.abspath(pp.__file__)), 'ppworker.py'))):
-            config.ExternalDepFailed('parallel_python', 'broken')
+            config.ExternalDepFailed('parallel_python', 
+                                     'broken on Debian, and MDP_MONKEYPATCH_PP unset')
         else:
             config.ExternalDepFound('parallel_python', pp.version)
             if os.getenv('MDP_MONKEYPATCH_PP'):
