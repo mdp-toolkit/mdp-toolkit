@@ -50,7 +50,6 @@ def test_Node_save():
     generic_node.save(dummy_file, protocol=1)
     dummy_file = open(dummy_file, 'rb')
     copy_node = cPickle.load(dummy_file)
-    os.remove(dummy_file.name)
     assert generic_node.dummy_attr == copy_node.dummy_attr,\
            'Node save (file) method did not work'
     copy_node.dummy_attr[0] = 10

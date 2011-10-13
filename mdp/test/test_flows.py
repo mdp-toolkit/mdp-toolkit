@@ -70,7 +70,6 @@ def testFlow_save():
     flow.save(dummy_file, protocol=1)
     dummy_file = open(dummy_file, 'rb')
     copy_flow = cPickle.load(dummy_file)
-    os.remove(dummy_file.name)
     assert flow[0].dummy_attr == copy_flow[0].dummy_attr, \
            'Flow save (file) method did not work'
     copy_flow[0].dummy_attr[0] = 10
