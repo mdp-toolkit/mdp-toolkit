@@ -6,3 +6,4 @@ include mdp/utils/slideshow.css
 include mdp/hinet/hinet.css
 include py3tool.py
 include conftest.py
+include pytest.ini
