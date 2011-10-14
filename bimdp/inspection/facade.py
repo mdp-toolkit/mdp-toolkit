@@ -12,30 +12,20 @@ import traceback
 import warnings
 
 import mdp
-from mdp import hinet
 from mdp import numx
 
 from bimdp import BiFlow
 
-from bihinet_translator import BIHINET_STYLE
-from trace_inspection import (
-    _trace_biflow_training, TraceDebugException,
-    INSPECT_TRACE_STYLE, SLIDE_CSS_FILENAME, PICKLE_EXT,
-    TraceHTMLTranslator, TraceHTMLInspector,
-    prepare_training_inspection, remove_inspection_residues
+from tracer import (
+    InspectionHTMLTracer, TraceDebugException, inspection_css,
+    prepare_training_inspection, remove_inspection_residues,
+    _trace_biflow_training, PICKLE_EXT, STANDARD_CSS_FILENAME
 )
-from trace_slideshow import (
-    INSPECT_SLIDESHOW_STYLE, TrainHTMLSlideShow, ExecuteHTMLSlideShow,
+from slideshow import (
+    TrainHTMLSlideShow, ExecuteHTMLSlideShow,
     SectExecuteHTMLSlideShow)
 from utils import robust_write_file, robust_pickle, first_iterable_elem
 
-# style for slides, used when the slides are not viewed in a slideshow
-SLIDE_STYLE = (hinet.HINET_STYLE + BIHINET_STYLE +
-               INSPECT_TRACE_STYLE)
-
-# style for slideshow, can be used when embedding the slideshow
-INSPECTION_STYLE = (hinet.HINET_STYLE + BIHINET_STYLE +
-                    INSPECT_TRACE_STYLE + INSPECT_SLIDESHOW_STYLE)
 
 def _open_custom_brower(open_browser, url):
     """Helper function to support opening a custom browser."""
@@ -51,6 +41,11 @@ def _open_custom_brower(open_browser, url):
     else:
         webbrowser.open(url)
 
+def standard_css():
+    """Return the standard CSS for inspection."""
+    return (mdp.utils.basic_css() + inspection_css() +
+            TrainHTMLSlideShow.slideshow_css())
+
 
 class EmptyTraceException(Exception):
     """Exception for empty traces, i.e., when no slides where generated."""
@@ -59,8 +54,8 @@ class EmptyTraceException(Exception):
 
 def inspect_training(snapshot_path, x_samples, msg_samples=None,
                      stop_messages=None, inspection_path=None,
-                     trace_inspector=None, debug=False,
-                     slide_style=SLIDE_STYLE, show_size=False,
+                     tracer=None, debug=False,
+                     slide_style=None, show_size=False,
                      verbose=True, **kwargs):
     """Return the HTML code for an inspection slideshow of the training.
 
@@ -72,12 +67,11 @@ def inspect_training(snapshot_path, x_samples, msg_samples=None,
     be in the snapshot_path.
 
     snapshot_path -- Path were the flow training snapshots are stored.
-    css_filename -- Filename of the CSS file for the slides.
     x_samples, msg_samples -- Lists with the input data for the training trace.
     stop_messages -- The stop msg for the training trace.
     inspection_path -- Path were the slides will be stored. If None (default
         value) then the snapshot_path is used.
-    trace_inspector -- Instance of HTMLTraceInspector, can be None for
+    tracer -- Instance of InspectionHTMLTracer, can be None for
         default class.
     debug -- If True (default is False) then any exception will be
         caught and the gathered data up to that point is returned in the
@@ -93,19 +87,24 @@ def inspect_training(snapshot_path, x_samples, msg_samples=None,
     if not inspection_path:
         inspection_path = snapshot_path
     ## create CSS file for the slides
-    css_filename = SLIDE_CSS_FILENAME
-    robust_write_file(path=inspection_path, filename=css_filename,
-                       content=slide_style)
+    if not slide_style:
+        slide_style = standard_css()
+    robust_write_file(path=inspection_path, filename=STANDARD_CSS_FILENAME,
+                      content=slide_style)
     del slide_style
     ## create slides
     try:
-        # combine all the arguments to be used as kwargs
-        all_kwargs = kwargs
-        all_kwargs.update(vars())
-        del all_kwargs["kwargs"]
-        del all_kwargs["all_kwargs"]
         slide_filenames, slide_node_ids, index_table = \
-            _trace_biflow_training(**all_kwargs)
+            _trace_biflow_training(snapshot_path=snapshot_path,
+                                   inspection_path=inspection_path,
+                                   x_samples=x_samples,
+                                   msg_samples=msg_samples,
+                                   stop_messages=stop_messages,
+                                   tracer=tracer,
+                                   debug=debug,
+                                   show_size=show_size,
+                                   verbose=verbose,
+                                   **kwargs )
         if not slide_filenames:
             err = ("No inspection slides were generated, probably because "
                    "there are no untrained nodes in the given flow.")
@@ -122,8 +121,9 @@ def inspect_training(snapshot_path, x_samples, msg_samples=None,
     return str(slideshow)
 
 def show_training(flow, data_iterables, msg_iterables=None, stop_messages=None,
-                  path=None, trace_inspector=None, debug=False,
-                  show_size=False, open_browser=True, **kwargs):
+                  path=None, tracer=None,
+                  debug=False,  show_size=False, open_browser=True,
+                  **kwargs):
     """Perform both the flow training and the training inspection.
 
     The return value is the filename of the slideshow HTML file.
@@ -141,7 +141,7 @@ def show_training(flow, data_iterables, msg_iterables=None, stop_messages=None,
     path -- Path were both the training snapshots and the inspection slides
         will be stored. If None (default value) a temporary directory will be
         used.
-    trace_inspector -- Instance of HTMLTraceInspector, can be None for
+    tracer -- Instance of InspectionHTMLTracer, can be None for
         default class.
     debug -- Ignore exception during training and try to complete the slideshow
         (default value is False).
@@ -219,27 +219,26 @@ def show_training(flow, data_iterables, msg_iterables=None, stop_messages=None,
                                  x_samples=x_samples,
                                  msg_samples=msg_samples,
                                  stop_messages=stop_messages,
+                                 tracer=tracer,
                                  debug=debug, show_size=show_size,
                                  verbose=False)
     filename = os.path.join(path, "training_inspection.html")
     title = "Training Inspection"
-    html_file = open(filename, 'w')
-    html_file.write('<html>\n<head>\n<title>%s</title>\n' % title)
-    html_file.write('<style type="text/css" media="screen">')
-    html_file.write(INSPECTION_STYLE)
-    html_file.write(mdp.utils.BASIC_STYLE)
-    html_file.write('</style>\n</head>\n<body>\n')
-    html_file.write('<h3>%s</h3>\n' % title)
-    html_file.write(slideshow)
-    html_file.write('</body>\n</html>')
-    html_file.close()
+    with open(filename, 'w') as html_file:
+        html_file.write('<html>\n<head>\n<title>%s</title>\n' % title)
+        html_file.write('<style type="text/css" media="screen">')
+        html_file.write(standard_css())
+        html_file.write('</style>\n</head>\n<body>\n')
+        html_file.write('<h3>%s</h3>\n' % title)
+        html_file.write(slideshow)
+        html_file.write('</body>\n</html>')
     if open_browser:
         _open_custom_brower(open_browser, os.path.abspath(filename))
     return filename
 
-def inspect_execution(flow, x, msg=None, target=None, path=None, name=None,
-                      trace_inspector=None, debug=False,
-                      slide_style=SLIDE_STYLE, show_size=False,
+def inspect_execution(flow, x, msg=None, target=None, path=None,
+                      name=None, tracer=None, debug=False,
+                      slide_style=None, show_size=False,
                       **kwargs):
     """Return the HTML code for an inspection slideshow of the execution
     and the return value of the execution (in a tuple).
@@ -253,7 +252,8 @@ def inspect_execution(flow, x, msg=None, target=None, path=None, name=None,
     path -- Path were the slideshow will be stored, if None (default value)
         a temporary directory will be used.
     name -- Name string to be used for the slide files.
-    trace_inspector -- Optionally provide a custom HTMLTraceInspector instance.
+    tracer -- Instance of InspectionHTMLTracer, can be None for
+        default class.
     debug -- If True (default is False) then any exception will be
         caught and the gathered data up to that point is returned in the
         normal way. This is useful for bimdp debugging.
@@ -268,24 +268,23 @@ def inspect_execution(flow, x, msg=None, target=None, path=None, name=None,
     if not name:
         name = "execution_inspection"
     # create CSS file for the slides
-    css_filename = SLIDE_CSS_FILENAME
-    robust_write_file(path=path, filename=css_filename,
+    if not slide_style:
+        slide_style = standard_css()
+    robust_write_file(path=path, filename=STANDARD_CSS_FILENAME,
                       content=slide_style)
     del slide_style
-    if not trace_inspector:
-        trace_translator = TraceHTMLTranslator(show_size=show_size)
-        trace_inspector = TraceHTMLInspector(
-                                trace_translator=trace_translator,
-                                css_filename=css_filename)
+    if not tracer:
+        tracer = InspectionHTMLTracer()
+        tracer._html_converter.flow_html_converter.show_size = show_size
     # create slides
     try:
         slide_filenames, slide_node_ids, section_ids, result = \
-            trace_inspector.trace_execution(path=path,
-                                            trace_name=name,
-                                            flow=flow,
-                                            x=x, msg=msg, target=target,
-                                            debug=debug,
-                                            **kwargs)
+            tracer.trace_execution(path=path,
+                                   trace_name=name,
+                                   flow=flow,
+                                   x=x, msg=msg, target=target,
+                                   debug=debug,
+                                   **kwargs)
     except TraceDebugException, debug_exception:
         if not debug_exception.result:
             return None
@@ -315,8 +314,9 @@ def inspect_execution(flow, x, msg=None, target=None, path=None, name=None,
     return str(slideshow), result
 
 def show_execution(flow, x, msg=None, target=None, path=None, name=None,
-                   trace_inspector=None, debug=False, show_size=False,
-                   open_browser=True, **kwargs):
+                   tracer=None,
+                   debug=False, show_size=False, open_browser=True,
+                   **kwargs):
     """Write the inspection slideshow into an HTML file and open it in the
     browser.
 
@@ -329,7 +329,8 @@ def show_execution(flow, x, msg=None, target=None, path=None, name=None,
     path -- Path were the slideshow will be stored, if None (default value)
         a temporary directory will be used.
     name -- A name for the slideshow.
-    trace_inspector -- Optionally provide a custom HTMLTraceInspector instance.
+    tracer -- Instance of InspectionHTMLTracer, can be None for
+        default class.
     debug -- If True (default is False) then any exception will be
         caught and the gathered data up to that point is returned in the
         normal way. This is useful for bimdp debugging.
@@ -354,21 +355,20 @@ def show_execution(flow, x, msg=None, target=None, path=None, name=None,
                         path=path,
                         x=x, msg=msg, target=target,
                         name=name,
-                        trace_inspector=trace_inspector,
+                        tracer=tracer,
                         debug=debug,
                         show_size=show_size,
                         **kwargs)
     # inspect execution created the path if required, so no need to check here
-    html_file = open(filename, 'w')
-    html_file.write('<html>\n<head>\n<title>%s</title>\n' % title)
-    html_file.write('<style type="text/css" media="screen">')
-    html_file.write(INSPECTION_STYLE)
-    html_file.write(mdp.utils.BASIC_STYLE)
-    html_file.write('</style>\n</head>\n<body>\n')
-    html_file.write('<h3>%s</h3>\n' % title)
-    html_file.write(slideshow)
-    html_file.write('</body>\n</html>')
-    html_file.close()
+    with open(filename, 'w') as html_file:
+        html_file = open(filename, 'w')
+        html_file.write('<html>\n<head>\n<title>%s</title>\n' % title)
+        html_file.write('<style type="text/css" media="screen">')
+        html_file.write(standard_css())
+        html_file.write('</style>\n</head>\n<body>\n')
+        html_file.write('<h3>%s</h3>\n' % title)
+        html_file.write(slideshow)
+        html_file.write('</body>\n</html>')
     if open_browser:
         _open_custom_brower(open_browser, os.path.abspath(filename))
     return filename, result

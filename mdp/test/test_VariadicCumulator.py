@@ -30,4 +30,3 @@ def test_VariadicCumulator():
     for i in range(NREP):
         ab.train(x[i], y[i])
     ab.stop_training()
-    

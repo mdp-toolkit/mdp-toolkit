@@ -190,21 +190,27 @@ class ExtensionNode(object):
     To call an instance method from a parent class you have multiple options:
 
     - use super, but with the normal node class, e.g.:
+
       >>>  super(mdp.nodes.SFA2Node, self).method()      # doctest: +SKIP
+
       Here SFA2Node was given instead of the extension node class for the
       SFA2Node.
+
       If the extensions node class is used directly (without the extension
       mechanism) this can cause problems. In that case you have to be
       careful about the inheritance order and the effect on the MRO.
 
     - call it explicitly using the __func__ attribute [python version < 3]:
+
       >>> parent_class.method.__func__(self)             # doctest: +SKIP
+
       or [python version >=3]:
+
       >>> parent_class.method(self)                      # doctest: +SKIP
 
     To call the original (pre-extension) method in the same class use you
     simply prefix the method name with '_non_extension_' (this is the value
-    of the ORIGINAL_ATTR_PREFIX constant in this module).
+    of the `ORIGINAL_ATTR_PREFIX` constant in this module).
     """
     __metaclass__ = ExtensionNodeMetaclass
     # override this name in a concrete extension node base class

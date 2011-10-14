@@ -11,14 +11,19 @@ try:
 except ImportError:
     ## Getting an Ordered Dict for Python < 2.7
     from _ordered_dict import OrderedDict
+
+try:
+    from tempfile import TemporaryDirectory
+except ImportError:
+    from temporarydir import TemporaryDirectory
+
 from introspection import dig_node, get_node_size, get_node_size_str
 from quad_forms import QuadraticForm, QuadraticFormException
 from covariance import (CovarianceMatrix, DelayCovarianceMatrix,
                         MultipleCovarianceMatrices,CrossCovarianceMatrix)
 from progress_bar import progressinfo
-from repo_revision import get_git_revision
-from slideshow import (BASIC_STYLE, SLIDESHOW_STYLE, HTMLSlideShow,
-                       IMAGE_SLIDESHOW_STYLE, ImageHTMLSlideShow,
+from slideshow import (basic_css, slideshow_css, HTMLSlideShow,
+                       image_slideshow_css, ImageHTMLSlideShow,
                        SectionHTMLSlideShow, SectionImageHTMLSlideShow,
                        image_slideshow, show_image_slideshow)
 
@@ -78,7 +83,6 @@ del quad_forms
 del covariance
 del progress_bar
 del slideshow
-del repo_revision
 
 __all__ = ['CovarianceMatrix', 'DelayCovarianceMatrix','CrossCovarianceMatrix',
            'MultipleCovarianceMatrices', 'QuadraticForm',
@@ -88,17 +92,16 @@ __all__ = ['CovarianceMatrix', 'DelayCovarianceMatrix','CrossCovarianceMatrix',
            'norm2', 'permute', 'pinv', 'progressinfo',
            'random_rot', 'refcast', 'rotate', 'scast', 'solve', 'sqrtm',
            'svd', 'symrand', 'timediff', 'matmult',
-           'get_git_revision', 'SLIDESHOW_STYLE', 'HTMLSlideShow',
-           'ImageHTMLSlideShow', 'IMAGE_SLIDESHOW_STYLE',
+           'HTMLSlideShow', 'ImageHTMLSlideShow',
+           'basic_css', 'slideshow_css', 'image_slideshow_css',
            'SectionHTMLSlideShow',
            'SectionImageHTMLSlideShow', 'image_slideshow',
            'lrep', 'rrep', 'irep',
            'orthogonal_permutations', 'izip_stretched',
            'weighted_choice', 'bool_to_sign', 'sign_to_bool',
-           'OrderedDict', 'gabor', 'fixup_namespace']
+           'OrderedDict', 'TemporaryDirectory', 'gabor', 'fixup_namespace']
 
 def without_prefix(name, prefix):
-    thelen = len(prefix)
     if name.startswith(prefix):
         return name[len(prefix):]
     else:
@@ -120,7 +123,7 @@ def fixup_namespace(mname, names, old_modules):
         if (hasattr(item, '__module__') and
             without_prefix(item.__module__, mname + '.') in old_modules):
             if FIXUP_DEBUG:
-                print 'namespace fixup: {%s => %s}.%s'.format(
+                print 'namespace fixup: {%s => %s}.%s' % (
                     item.__module__, mname, item.__name__)
             item.__module__ = mname
 
@@ -131,5 +134,4 @@ fixup_namespace(__name__, __all__,
                  'covariance',
                  'progress_bar',
                  'slideshow',
-                 'repo_revision',
                  ))

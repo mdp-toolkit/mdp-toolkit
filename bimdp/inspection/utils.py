@@ -74,6 +74,7 @@ class PeekIterator(object):
         exception is passed.
         """
         next_elem = self.next()
+        # TODO: use a dequeue for better efficiency
         self.cache = [next_elem] + self.cache
         return next_elem
 

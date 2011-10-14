@@ -1,18 +1,18 @@
-import inspect
 from mdp import graph
 
 def testAddNode():
     # add_node
     g = graph.Graph()
     nnodes = 5
-    nds = [g.add_node() for i in xrange(nnodes)]
+    for i in xrange(nnodes):
+        g.add_node()
     assert len(g.nodes)==nnodes, "Wrong number of nodes, expected: %d, got :%d" % (nnodes, len(g.nodes))
     # add nodes
     g = graph.Graph()
-    nds = g.add_nodes(5)
+    g.add_nodes(5)
     assert len(g.nodes)==nnodes, "Wrong number of nodes, expected: %d, got :%d" % (nnodes, len(g.nodes))
     g = graph.Graph()
-    nds = g.add_nodes([None]*nnodes)
+    g.add_nodes([None] * nnodes)
     assert len(g.nodes)==nnodes, "Wrong number of nodes, expected: %d, got :%d" % (nnodes, len(g.nodes))
 
 def testAddEdge():

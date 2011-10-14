@@ -1,3 +1,4 @@
+from __future__ import with_statement
 """These are test functions for hinet.
 """
 
@@ -70,7 +71,7 @@ def test_FlowNode_pretrained_node():
         flownode.train(x)
         flownode.stop_training()
     flownode.execute(x)
-    
+
 def test_FlowNode_fix_nodes_dimensions1():
     x = numx_rand.random([100,10])
     last_node = mdp.nodes.IdentityNode()
@@ -85,7 +86,7 @@ def test_FlowNode_fix_nodes_dimensions1():
     assert flownode.output_dim == 3
     assert last_node.input_dim == 3
     assert last_node.output_dim == 3
-    
+
 def test_FlowNode_fix_nodes_dimensions2():
     flow = mdp.Flow([mdp.nodes.IdentityNode(),
                      mdp.nodes.IdentityNode()])
@@ -96,7 +97,7 @@ def test_FlowNode_fix_nodes_dimensions2():
     x = numx_rand.random([100,10])
     flownode.execute(x)
     assert flownode.output_dim == 10
-    
+
 def test_FlowNode_fix_nodes_dimensions3():
     flow = mdp.Flow([mdp.nodes.IdentityNode()])
     flownode = mh.FlowNode(flow)
@@ -311,8 +312,8 @@ def test_Rect2d_exception_1():
                     field_spacing_xy=2,
                     in_channel_dim=3,
                     ignore_cover=False)
-    py.test.raises(mh.Rectangular2dSwitchboardException,
-                   'mh.Rectangular2dSwitchboard(**bad_args)')
+    with py.test.raises(mh.Rectangular2dSwitchboardException):
+        mh.Rectangular2dSwitchboard(**bad_args)
 
 def test_Rect2d_exception_2():
     bad_args = dict(in_channels_xy=(12,8),
@@ -321,8 +322,8 @@ def test_Rect2d_exception_2():
                     field_spacing_xy=2,
                     in_channel_dim=3,
                     ignore_cover=False)
-    py.test.raises(mh.Rectangular2dSwitchboardException,
-                   'mh.Rectangular2dSwitchboard(**bad_args)')
+    with py.test.raises(mh.Rectangular2dSwitchboardException):
+        mh.Rectangular2dSwitchboard(**bad_args)
 
 def test_Rect2d_exception_3():
     bad_args = dict(in_channels_xy=(12,8),
@@ -331,8 +332,8 @@ def test_Rect2d_exception_3():
                     field_spacing_xy=2,
                     in_channel_dim=3,
                     ignore_cover=True)
-    py.test.raises(mh.Rectangular2dSwitchboardException,
-                   'mh.Rectangular2dSwitchboard(**bad_args)')
+    with py.test.raises(mh.Rectangular2dSwitchboardException):
+        mh.Rectangular2dSwitchboard(**bad_args)
 
 ## Tests for DoubleRect2dSwitchboard ##
 
@@ -494,8 +495,8 @@ def testHiNetHTML(noisenode):
     flow = mdp.Flow([switchboard, sfa_layer])
     # create dummy file to write the HTML representation
     html_file = StringIO.StringIO()
-    hinet_html = mdp.hinet.HiNetHTMLTranslator()
-    hinet_html.write_flow_to_file(flow, html_file)
+    hinet_html = mdp.hinet.HiNetHTMLVisitor(html_file)
+    hinet_html.convert_flow(flow)
     html_file.close()
 
 def testHiNetXHTML():
@@ -504,6 +505,6 @@ def testHiNetXHTML():
     flow = mdp.Flow([sfa_node])
     # create dummy file to write the HTML representation
     html_file = StringIO.StringIO()
-    hinet_html = mdp.hinet.HiNetXHTMLTranslator()
-    hinet_html.write_flow_to_file(flow, html_file)
+    hinet_html = mdp.hinet.HiNetXHTMLVisitor(html_file)
+    hinet_html.convert_flow(flow)
     html_file.close()

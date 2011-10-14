@@ -5,46 +5,10 @@ The individual slides are the HTML files generated via the trace_inspection
 module (the body of the HTML files is extracted and makes up a slide).
 """
 
+import os
+
 from mdp.utils import HTMLSlideShow, SectionHTMLSlideShow
 
-INSPECT_SLIDESHOW_STYLE = """
-div.slideshow {
-    text-align: center;
-}
-
-table.slideshow, table.slideshow td, table.slideshow th {
-    border-collapse: collapse;
-    padding: 1 2 1 2;
-    font-size: small;
-    border: 1px solid;
-}
-
-table.slideshow {
-    border: 2px solid;
-    margin: 0 auto;
-}
-
-table.slideshow td {
-    text-align: center;
-}
-
-/* style for slideshow with sections (like for training) */
-
-span.inactive_section:hover {
-    color: #6666FF;
-}
-
-span.active_section {
-    color: #0000EE;
-    background-color: #55FF55;
-    cursor: pointer;
-    font-weight: bold;
-}
-
-span.active_section:hover {
-    color: #6666FF;
-}
-"""
 
 class ExecuteHTMLSlideShow(HTMLSlideShow):
 
@@ -61,6 +25,16 @@ class ExecuteHTMLSlideShow(HTMLSlideShow):
         kwargs["unique_node_ids"] = unique_node_ids
         del kwargs["self"]
         super(ExecuteHTMLSlideShow, self).__init__(**kwargs)
+
+    _SLIDESHOW_CSS_FILENAME = "trace_slideshow.css"
+
+    @classmethod
+    def slideshow_css(cls):
+        css_filename = os.path.join(os.path.split(__file__)[0],
+                                    cls._SLIDESHOW_CSS_FILENAME)
+        with open(css_filename, 'r') as css_file:
+            css = css_file.read()
+        return css
 
     js_loadslide_template = r'''
 

@@ -173,7 +173,6 @@ class JADENode(ICANode):
                 print "jade -> Sweep #%3d" % sweep ,
             sweep += 1
             upds  = 0
-            Vkeep = V
 
             for p in xrange(m-1):
                 for q in xrange(p+1, m):

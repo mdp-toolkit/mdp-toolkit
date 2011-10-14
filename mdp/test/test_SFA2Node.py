@@ -50,7 +50,7 @@ def test_input_dim_bug():
     mat = mult(mat,uniform((2,2))) + uniform(2)
     sfa = mdp.nodes.SFA2Node(input_dim=2)
     sfa.train(mat)
-    out = sfa.execute(mat)
+    sfa.execute(mat)
 
 def test_output_dim_bug():
     dim = 10000
@@ -58,9 +58,8 @@ def test_output_dim_bug():
     t =  numx.linspace(0,1,num=dim)
     mat = numx.array([numx.sin(freqs[0]*t),numx.sin(freqs[1]*t)]).T
     mat += normal(0., 1e-10, size=(dim, 2))
-    mat = (mat - mean(mat[:-1,:],axis=0))\
-          /std(mat[:-1,:],axis=0)
-    des_mat = mat.copy()
+    mat = (mat - mean(mat[:-1,:],axis=0)) \
+          / std(mat[:-1,:],axis=0)
     mat = mult(mat,uniform((2,2))) + uniform(2)
     sfa = mdp.nodes.SFA2Node(output_dim=3)
     sfa.train(mat)

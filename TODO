@@ -1,6 +1,9 @@
 for MDP 3.1
 ===========
 
+- clearify documentation on Flow.train as suggested by Fabian Schoenfeld in
+  http://sourceforge.net/mailarchive/message.php?msg_id=27926167
+- checkout windows 64bit binaries from http://www.lfd.uci.edu/~gohlke/pythonlibs/ maybe point to it from the documentation?
 - add code for generating the plots in the tutorial (but we don't want the
   doctests to fail if matplotlib is not installed: find a good way of
   dealing with it, pymvpa already does it properly)
@@ -20,7 +23,7 @@ for MDP 3.1
   [1] http://sphinx.pocoo.org/markup/code.html?highlight=include#literalinclude
 - parallel tests are generating a lot of thrash in /tmp: the temporary
   stuff should be cleaned after successfull completion of the test!
-- fix parallel_python support, currently tests are skipped always
+- remove _monkeypatch_pp when parallel python is fixed
 - let EtaConmputerNode match the new convention of SFA Node in terms of
   last sample.
 - add example of usage of MDP within PyMVPA. The code exists already:

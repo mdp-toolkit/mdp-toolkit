@@ -2,15 +2,12 @@
 
 """These are test functions for MDP classifiers.
 """
-import inspect
-
 from _tools import *
 
 from mdp import ClassifierNode
 from mdp.nodes import (SignumClassifier, PerceptronClassifier,
                        SimpleMarkovClassifier, DiscreteHopfieldClassifier,
                        KMeansClassifier)
-from mdp.utils import weighted_choice
 
 def _sigmoid(t):
     return 1.0 / (1.0 + numx.exp(-t))

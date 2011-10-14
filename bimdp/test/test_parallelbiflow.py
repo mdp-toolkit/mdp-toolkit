@@ -1,7 +1,6 @@
 import mdp
 from mdp import numx as n
 from bimdp.nodes import SFABiNode, SFA2BiNode
-from bimdp import BiFlow
 from bimdp.parallel import ParallelBiFlow
 
 # TODO: maybe test the helper classes as well, e.g. the new callable
@@ -80,4 +79,3 @@ class TestParallelBiFlow(object):
         iterator = [n.random.random((20,10)) for _ in range(6)]
         flow.execute(iterator, scheduler=scheduler)
         scheduler.shutdown()
-

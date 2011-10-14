@@ -1,7 +1,19 @@
 __docformat__ = "restructuredtext en"
 import sys
 import os
+import tempfile
 import inspect
+import mdp
+from repo_revision import get_git_revision
+
+class MetaConfig(type):
+    """Meta class for config object to allow for pretty printing
+    of class config (as we never instantiate it)"""
+    def __str__(self):
+        return self.info()
+
+    def __repr__(self):
+        return self.info()
 
 class config(object):
     """Provide information about optional dependencies.
@@ -23,9 +35,36 @@ class config(object):
     Dependency parameters are numbered in the order of creation,
     so the output is predictable.
 
-    The loading of a dependency can be inhibited by setting the
-    environment variable MDP_DISABLE_DEPNAME.
+    The selection of the numerical backend (`numpy` or `scipy`) can be
+    forced by setting the environment variable MDPNUMX.  The loading
+    of an optional dependency can be inhibited by setting the
+    environment variables ``MDP_DISABLE_<DEPNAME>`` to a non-empty
+    value.
+
+    The following variables are defined:
+      ``MDPNUMX``
+        either ``numpy`` or ``scipy``. By default the latter is used
+        if available.
+      ``MDP_DISABLE_PARALLEL_PYTHON``
+        inhibit loading of `mdp.parallel` based on parallel python
+        (module ``pp``)
+      ``MDP_DISABLE_SHOGUN``
+        inhibit loading of the shogun classifier
+      ``MDP_DISABLE_LIBSVM``
+        inhibit loading of the svm classifier
+      ``MDP_DISABLE_JOBLIB``
+        inhibit loading of the ``joblib`` module and `mdp.caching`
+      ``MDP_DISABLE_SCIKITS``
+        inhibit loading of the ``scikits.learn`` module
+      ``MDPNSDEBUG``
+        print debugging information during the import process
+      ``MDP_MONKEYPATCH_PP``
+        set a path to create a temporary directory to store a monkey-patched
+        parallel python worker script to work around debian bug #620551. If
+        set to 1, the value returned by tempfile.gettempdir() is used.
     """
+
+    __metaclass__ = MetaConfig
 
     _HAS_NUMBER = 0
 
@@ -162,11 +201,11 @@ def get_numx():
     # the test is for numx_description, not numx, because numx could
     # be imported successfully, but e.g. numx_rand could later fail.
     if numx_description is None:
-        msg = ("Could not import any of the numeric backends.\n"
-               "Import errors:\n"
-               + '\n'.join(label+': '+str(exc)
-                           for label, exc in numx_exception.items()))
-        raise ImportError(msg)
+        msg = ([ "Could not import any of the numeric backends.",
+                 "Import errors:" ] +
+               [ lab+': '+str(exc) for lab, exc in numx_exception.items() ]
+               + ["sys.path: " + str(sys.path)])
+        raise ImportError('\n'.join(msg))
 
     return (numx_description, numx, numx_linalg,
             numx_fft, numx_rand, numx_version)
@@ -220,8 +259,10 @@ def set_configuration():
     # set python version
     config.ExternalDepFound('python', '.'.join([str(x)
                                                 for x in sys.version_info]))
+    config.ExternalDepFound('mdp', mdp.__version__+', '+mdp.__revision__)
 
     # parallel python dependency
+    config.pp_monkeypatch_dirname = None
     try:
         import pp
     except ImportError, exc:
@@ -229,8 +270,22 @@ def set_configuration():
     else:
         if os.getenv('MDP_DISABLE_PARALLEL_PYTHON'):
             config.ExternalDepFailed('parallel_python', 'disabled')
+        elif (not os.getenv('MDP_MONKEYPATCH_PP') and
+              'pyshared' in os.path.realpath(os.path.join(
+                    os.path.dirname(os.path.abspath(pp.__file__)), 'ppworker.py'))):
+            config.ExternalDepFailed('parallel_python', 
+                                     'broken on Debian, and MDP_MONKEYPATCH_PP unset')
         else:
             config.ExternalDepFound('parallel_python', pp.version)
+            if os.getenv('MDP_MONKEYPATCH_PP'):
+                dirname = os.getenv('MDP_MONKEYPATCH_PP')
+                if dirname == '1':
+                    dirname = tempfile.gettempdir()
+                else:
+                    if not os.path.isdir(dirname):
+                        os.mkdir(dirname)
+                config.pp_monkeypatch_dirname = dirname
+            
 
     # shogun
     try:
@@ -241,23 +296,19 @@ def set_configuration():
     except ImportError, exc:
         config.ExternalDepFailed('shogun', exc)
     else:
-        # We need to have at least SHOGUN 0.9, as we rely on
-        # SHOGUN's CClassifier::classify() method.
-        # (It makes our code much nicer, by the way.)
-        #
-        if not hasattr(sgClassifier.Classifier, 'classify'):
-            config.ExternalDepFailed('shogun', "CClassifier::classify not found")
+        if os.getenv('MDP_DISABLE_SHOGUN'):
+            config.ExternalDepFailed('shogun', 'disabled')
+        # From now on just support shogun >= 1.0
+        # Between 0.10 to 1.0 there are too many API changes...
         try:
-            version = sgKernel._Kernel.Version_get_version_release()
+            version = sgKernel.Version_get_version_release()
         except AttributeError, msg:
-            config.ExternalDepFailed('shogun', msg)
+            config.ExternalDepFailed('shogun',
+                                     'too old, upgrade to at least version 1.0')
         else:
-            if os.getenv('MDP_DISABLE_SHOGUN'):
-                config.ExternalDepFailed('shogun', 'disabled')
-            elif not (version.startswith('v0.9') or version.startswith('v1.') or
-                      version.startswith('v0.10.')):
+            if not version.startswith('v1.'):
                 config.ExternalDepFailed('shogun',
-                                         'We need at least SHOGUN version 0.9.')
+                                         'too old, upgrade to at least version 1.0.')
             else:
                 config.ExternalDepFound('shogun', version)
 
@@ -293,13 +344,15 @@ def set_configuration():
     # scikits.learn
     try:
         import scikits.learn
+        version = scikits.learn.__version__
     except ImportError, exc:
         config.ExternalDepFailed('scikits', exc)
-    else:
-        version = scikits.learn.__version__
+    except AttributeError, exc:
+        config.ExternalDepFailed('scikits', exc)
+    else:   
         if os.getenv('MDP_DISABLE_SCIKITS'):
             config.ExternalDepFailed('scikits', 'disabled')
-        elif _version_too_old(version, (0,5)):
+        elif _version_too_old(version, (0,6)):
             config.ExternalDepFailed('scikits',
                                      'version %s is too old' % version)
         else:

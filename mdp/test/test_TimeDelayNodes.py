@@ -1,4 +1,3 @@
-import mdp
 from _tools import *
 from mdp.nodes import TimeDelayNode, TimeDelaySlidingWindowNode
 

@@ -5,7 +5,6 @@ from shogun import (Kernel as sgKernel,
                     Classifier as sgClassifier)
 
 import mdp
-from mdp import numx
 from mdp.utils import OrderedDict as _OrderedDict
 
 from svm_classifiers import _SVMClassifier, _LabelNormalizer
@@ -20,7 +19,7 @@ warnings.filterwarnings('ignore',
 def is_shogun_classifier(test_classifier):
     """Check, if a class is a subclass of a SHOGUN classifier."""
     try:
-        return issubclass(test_classifier, sgClassifier.Classifier)
+        return issubclass(test_classifier, sgClassifier.Machine)
     except (TypeError, NameError):
         # need to fetch NameError for some swig reasons
         return False
@@ -66,7 +65,7 @@ class Classifier(object):
         self._instance = None
 
         # If name is a classifier instance: Take it
-        if isinstance(classifier, sgClassifier.Classifier):
+        if isinstance(classifier, sgClassifier.Machine):
             self._class = classifier.__class__
             self._instance = classifier
 
@@ -80,7 +79,7 @@ class Classifier(object):
                     msg = "Library '%s' could not be instantiated. Abstract class?" % classifier
                     raise mdp.NodeException(msg)
             else:
-                msg = "The classifier '%s' is no subclass of CClassifier." % self._class.__name__
+                msg = "The classifier '%s' is no subclass of Machine." % self._class.__name__
                 raise mdp.NodeException(msg)
 
         # If classifier is a string: Check, if it's the name of a default library
@@ -89,7 +88,7 @@ class Classifier(object):
                                if labels.__name__.lower() == classifier.lower()]
 
             if not len(possibleClasses):
-                msg = "Library '%s' is not a known subclass of CClassifier." % classifier
+                msg = "Library '%s' is not a known subclass of Machine." % classifier
                 raise mdp.NodeException(msg)
 
             # Take the first classifier which works
@@ -142,9 +141,9 @@ class Classifier(object):
         return meth(*args)
 
     def set_train_features(self, features, labels):
-        if issubclass(self._class, sgClassifier.LinearClassifier):
+        if issubclass(self._class, sgClassifier.LinearMachine):
             self._instance.set_features(features)
-        elif issubclass(self._class, sgClassifier.CKernelMachine):
+        elif issubclass(self._class, sgClassifier.KernelMachine):
             try:
                 self.kernel.init(features, features)
             except AttributeError:
@@ -161,12 +160,13 @@ class Classifier(object):
         self._instance.train()
 
     def label(self, test_features):
-        return self._instance.classify(test_features).get_labels()
+        #return self._instance.classify(test_features).get_labels()
+        return self._instance.apply(test_features).get_labels()
 
     @property
     def takes_kernel(self):
         """Returns true, if the current classifier is a kernel machine."""
-        return issubclass(self._class, sgClassifier.CKernelMachine)
+        return issubclass(self._class, sgClassifier.KernelMachine)
 
     def _get_kernel(self):
         """Retrieve the currently set kernel from the classifier instance."""

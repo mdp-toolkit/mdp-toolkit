@@ -1,5 +1,5 @@
 /*
-CSS for the slideshow control table.
+Additional CSS for the inspection slideshow.
 */
 
 div.slideshow {
@@ -22,19 +22,17 @@ table.slideshow td {
     text-align: center;
 }
 
-span.inactive_section {
-    color: #0000FF;
-    cursor: pointer;
-}
+/* style for slideshow with sections (like for training) */
 
 span.inactive_section:hover {
     color: #6666FF;
 }
 
 span.active_section {
-    color: #0000FF;
-    background-color: #BBDDFF;
+    color: #0000EE;
+    background-color: #55FF55;
     cursor: pointer;
+    font-weight: bold;
 }
 
 span.active_section:hover {

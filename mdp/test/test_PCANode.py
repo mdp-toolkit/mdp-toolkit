@@ -40,7 +40,7 @@ def testPCANode_total_variance():
     des_var = ((std(mat, axis=0)**2)*1000/999.).sum()
     pca = mdp.nodes.PCANode(output_dim=2)
     pca.train(mat)
-    out = pca.execute(mat)
+    pca.execute(mat)
     assert_almost_equal(des_var, pca.total_variance, decimal)
 
 def testPCANode_desired_variance():

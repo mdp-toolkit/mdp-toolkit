@@ -26,7 +26,7 @@ class CrashRecoveryException(mdp.MDPException):
         # ?? python 2.5: super(CrashRecoveryException, self).__init__(errstr)
         mdp.MDPException.__init__(self, errstr)
 
-    def dump(self, filename = None):
+    def dump(self, filename=None):
         """
         Save a pickle dump of the crashing object on filename.
         If filename is None, the crash dump is saved on a file created by
@@ -34,6 +34,8 @@ class CrashRecoveryException(mdp.MDPException):
         Return the filename.
         """
         if filename is None:
+            # This 'temporary file' should actually stay 'forever', i.e. until
+            # deleted by the user.
             (fd, filename)=_tempfile.mkstemp(suffix=".pic", prefix="MDPcrash_")
             fl = _os.fdopen(fd, 'w+b', -1)
         else:
@@ -224,7 +226,7 @@ class Flow(object):
 
         Argumentes that have a default value are ignored.
         """
-        train_arg_spec = _inspect.getargspec(node.train)
+        train_arg_spec = _inspect.getargspec(node._train)
         train_arg_keys = train_arg_spec[0][2:]  # ignore self, x
         if train_arg_spec[3]:
             # subtract arguments with a default value
@@ -422,10 +424,7 @@ class Flow(object):
             return _cPickle.dumps(self, protocol)
         else:
             # if protocol != 0 open the file in binary mode
-            if protocol != 0:
-                mode = 'wb'
-            else:
-                mode = 'w'
+            mode = 'w' if protocol == 0 else 'wb'
             with open(filename, mode) as flh:
                 _cPickle.dump(self, flh, protocol)
 
@@ -530,7 +529,7 @@ class Flow(object):
             err_str = ('can only concatenate flow or node'
                        ' (not \'%s\') to flow' % (type(other).__name__))
             raise TypeError(err_str)
-        
+
     def __iadd__(self, other):
         # append other to self
         if isinstance(other, Flow):

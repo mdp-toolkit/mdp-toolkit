@@ -193,10 +193,8 @@ class GrowingNeuralGasNode(Node):
             # choose the random position according to a gaussian distribution
             # with zero mean and unit variance
             normal = numx_rand.normal
-            node1 = self._add_node(self._refcast(
-                normal(0.0, 1.0, self.input_dim)))
-            node2 = self._add_node(self._refcast(
-                normal(0.0, 1.0, self.input_dim)))
+            self._add_node(self._refcast(normal(0.0, 1.0, self.input_dim)))
+            self._add_node(self._refcast(normal(0.0, 1.0, self.input_dim)))
 
         # loop on single data points
         for x in input:

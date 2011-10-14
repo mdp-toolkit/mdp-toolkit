@@ -245,10 +245,8 @@ def _process_run(cache_callable=True):
 
 if __name__ == "__main__":
     # first argument is cache_callable flag
-    if sys.argv[1] == "True":
-        cache_callable = True
-    else:
-        cache_callable = False
+    cache_callable = sys.argv[1] == "True"
+
     if len(sys.argv) > 2:
         # remaining arguments are code paths,
         # put them in front so that they take precedence over PYTHONPATH

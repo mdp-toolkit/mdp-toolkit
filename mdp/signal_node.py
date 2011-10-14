@@ -65,9 +65,6 @@ class NodeMetaclass(type):
         for privname in cls.DOC_METHODS:
             if privname in members:
                 priv_info = cls._function_infodict(members[privname])
-                # if the docstring is empty, don't overwrite it
-                if not priv_info['doc']:
-                    continue
                 # get the name of the corresponding public method
                 pubname = privname[1:]
                 # If the public method has been overwritten in this
@@ -82,19 +79,28 @@ class NodeMetaclass(type):
         # now add the wrappers
         for wrapper_name, priv_info in zip(wrapper_names, priv_infos):
             # Note: super works because we never wrap in the defining class
-            wrapped_method = getattr(super(new_cls, new_cls), wrapper_name)
-            wrapped_info = cls._function_infodict(wrapped_method)
+            orig_pubmethod = getattr(super(new_cls, new_cls), wrapper_name)
+            # preserve the last non-empty docstring
+            docstring = priv_info['doc']
+            if not docstring:
+                docstring = orig_pubmethod.__doc__
+            if hasattr(orig_pubmethod, '_undecorated_'):
+                # make sure that we don't wrap repeatedly
+                orig_pubmethod = orig_pubmethod._undecorated_
+            wrapped_info = cls._function_infodict(orig_pubmethod)
+            priv_info['doc'] = docstring
             priv_info['name'] = wrapper_name
-            # Preserve the signature only if it does not end with kwargs
+            # Preserve the signature if it still does not end with kwargs
             # (this is important for binodes).
             # Note that this relies on the exact name 'kwargs', if this causes
             # problems we could switch to looking for ** in the signature.
-            if not wrapped_info['argnames'][-1] == "kwargs":
+            if wrapped_info['argnames'][-1] != "kwargs":
                 priv_info['signature'] = wrapped_info['signature']
                 priv_info['argnames'] = wrapped_info['argnames']
                 priv_info['defaults'] = wrapped_info['defaults']
-            setattr(new_cls, wrapper_name,
-                    cls._wrap_method(priv_info, new_cls))
+            wrapper_method = cls._wrap_method(priv_info, new_cls)
+            wrapper_method._undecorated_ = orig_pubmethod
+            setattr(new_cls, wrapper_name, wrapper_method)
         return new_cls
 
     # The next two functions (originally called get_info, wrapper)
@@ -160,7 +166,6 @@ class NodeMetaclass(type):
         wrapped_func.__module__ = wrapper_infodict['module']
         wrapped_func.__dict__.update(wrapper_infodict['dict'])
         wrapped_func.func_defaults = wrapper_infodict['defaults']
-        wrapped_func.undecorated = wrapper_infodict
         return wrapped_func
 
     @staticmethod
@@ -181,7 +186,6 @@ class NodeMetaclass(type):
         wrapped_func.__module__ = wrapper_infodict['module']
         wrapped_func.__dict__.update(wrapper_infodict['dict'])
         wrapped_func.func_defaults = wrapper_infodict['defaults']
-        wrapped_func.undecorated = wrapper_infodict
         return wrapped_func
 
 

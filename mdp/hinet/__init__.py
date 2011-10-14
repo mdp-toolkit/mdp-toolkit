@@ -36,9 +36,8 @@ from switchboard import (
     DoubleRect2dSwitchboard, DoubleRect2dSwitchboardException,
     DoubleRhomb2dSwitchboard, DoubleRhomb2dSwitchboardException
 )
-from hinet_translator import (
-    HiNetTranslator, HiNetHTMLTranslator, HiNetXHTMLTranslator,
-    HINET_STYLE, NewlineWriteFile, show_flow
+from htmlvisitor import (
+    HiNetHTMLVisitor, HiNetXHTMLVisitor, NewlineWriteFile, show_flow
 )
 from switchboard_factory import (
     get_2d_image_switchboard, FactoryExtensionChannelSwitchboard,
@@ -51,9 +50,8 @@ __all__ = ['FlowNode', 'Layer', 'SameInputLayer', 'CloneLayer',
            'Rectangular2dSwitchboard', 'Rectangular2dSwitchboardException',
            'DoubleRect2dSwitchboard', 'DoubleRect2dSwitchboardException',
            'DoubleRhomb2dSwitchboard', 'DoubleRhomb2dSwitchboardException',
-           'HiNetTranslator', 'HiNetHTMLTranslator', 'HiNetXHTMLTranslator',
-           'HINET_STYLE', 'NewlineWriteFile', 'show_flow',
-           'get_2d_image_switchboard'
+           'HiNetHTMLVisitor', 'HiNetXHTMLVisitor', 'NewlineWriteFile',
+           'show_flow', 'get_2d_image_switchboard'
            ]
 
 from mdp.utils import fixup_namespace
@@ -62,6 +60,6 @@ fixup_namespace(__name__, __all__,
                 ('flownode',
                  'layer',
                  'switchboard',
-                 'hinet_translator',
+                 'hinet_Visitor',
                  'switchboard_factory',
                  ))

@@ -4,7 +4,6 @@ import tempfile
 import pickle
 import cPickle
 import os
-import inspect
 from _tools import *
 
 uniform = numx_rand.random
@@ -50,7 +49,7 @@ def test_Flow_copy_with_lambda():
     generic_node = mdp.Node()
     generic_node.lambda_function = lambda: 1
     generic_flow = mdp.Flow([generic_node])
-    copy_flow = generic_flow.copy()
+    generic_flow.copy()
     
 def testFlow_save():
     dummy_list = [1,2,3]
@@ -65,11 +64,11 @@ def testFlow_save():
     assert flow[0].dummy_attr != copy_flow[0].dummy_attr, \
            'Flow save (string) method did not work'
     # test file save
-    dummy_file = os.path.join(tempfile.gettempdir(),'removeme')
+    dummy_file = tempfile.mktemp(prefix='MDP_', suffix=".pic",
+                                 dir=py.test.mdp_tempdirname)
     flow.save(dummy_file, protocol=1)
-    with open(dummy_file, 'rb') as flh:
-        copy_flow = cPickle.load(flh)
-    os.remove(dummy_file)
+    dummy_file = open(dummy_file, 'rb')
+    copy_flow = cPickle.load(dummy_file)
     assert flow[0].dummy_attr == copy_flow[0].dummy_attr, \
            'Flow save (file) method did not work'
     copy_flow[0].dummy_attr[0] = 10
@@ -300,17 +299,21 @@ def testCrashRecovery():
 def testCrashRecoveryException():
     a = 3
     try:
-        raise mdp.CrashRecoveryException, \
-              ('bogus errstr',a,StandardError())
+        raise mdp.CrashRecoveryException('bogus errstr', a, StandardError())
     except mdp.CrashRecoveryException, e:
         filename1 = e.dump()
-        filename2 = e.dump(os.path.join(tempfile.gettempdir(),'removeme'))
+        filename2 = e.dump(tempfile.mkstemp(prefix='MDP_',
+                                            dir=py.test.mdp_tempdirname)[1])
         assert isinstance(e.parent_exception, StandardError)
 
-    for fname in [filename1,filename2]:
-        with open(fname, 'rb') as fl:
-            obj = pickle.load(fl)
-        os.remove(fname)
+    for fname in filename1, filename2:
+        fl = open(fname, 'rb')
+        obj = pickle.load(fl)
+        fl.close()
+        try:
+            os.remove(fname)
+        except Exception:
+            pass
         assert obj == a
 
 def testMultiplePhases():
