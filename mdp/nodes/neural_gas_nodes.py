@@ -274,7 +274,7 @@ class NeuralGasNode(GrowingNeuralGasNode):
                        lambda_f=0.01,               # final lambda
                        max_age_i=20,                # initial edge lifetime
                        max_age_f=200,               # final edge lifetime
-                       max_epochs=40000.,
+                       max_epochs=100.,             # different from original default!
                        n_epochs_to_train=None,
                        input_dim=None,
                        dtype=None):
@@ -314,11 +314,14 @@ class NeuralGasNode(GrowingNeuralGasNode):
 
           max_epochs
             number of epochs to train. One epoch has passed when all data points
-            from the input have been presented once.
+            from the input have been presented once. The default in the original 
+            publication was 40000, but since this has proven to be impractically
+            high too high for many real-world data sets, we adopted a default
+            value of 100.
 
           epochs_to_train
-            number of epochs to train. If None, train until max_epochs is
-            reached. Useful e.g. for visualization of the training process."""
+            number of epochs to train. Useful e.g. for visualization of the
+            training process. Default is to train until max_epochs is reached."""
         self.graph = graph.Graph()
 
         if n_epochs_to_train is None:
@@ -367,12 +370,17 @@ class NeuralGasNode(GrowingNeuralGasNode):
         T_f = float(self.max_age_f)
         max_epochs = float(self.max_epochs)
         remaining_epochs = self.n_epochs_to_train
-        while (epoch < max_epochs) and (remaining_epochs > 0):
+        while remaining_epochs > 0:
             # reset permutation of data points
             di = numx.random.permutation(input)
-            epsilon = e_i * ((e_f/e_i)**(epoch/max_epochs))
-            lmbda = l_i * ((l_f/l_i)**(epoch/max_epochs))
-            T = T_i * ((T_f/T_i)**(epoch/max_epochs))
+            if epoch < max_epochs:
+                denom = epoch/max_epochs
+            else:
+                denom = 1.
+            epsilon = e_i * ((e_f/e_i)**denom)
+            lmbda = l_i * ((l_f/l_i)**denom)
+            T = T_i * ((T_f/T_i)**denom)
+            epoch += 1
             for x in di:
                 # Step 1 rank nodes according to their distance to a random data
                 #   point
@@ -403,7 +411,6 @@ class NeuralGasNode(GrowingNeuralGasNode):
 
                 # step 5 delete edges with age > max_age
                 self._remove_old_edges(max_age=T)
-            epoch += 1
             remaining_epochs -= 1
         self.epoch = epoch
 
