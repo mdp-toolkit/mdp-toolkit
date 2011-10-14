@@ -334,7 +334,7 @@ def set_configuration():
         # Between 0.10 to 1.0 there are too many API changes...
         try:
             version = sgKernel.Version_get_version_release()
-        except AttributeError, msg:
+        except AttributeError:
             config.ExternalDepFailed('shogun',
                                      'too old, upgrade to at least version 1.0')
         else:
