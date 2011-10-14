@@ -46,9 +46,6 @@ def _monkeypatch_pp(container_dir):
     # this part copied from pp.py, should give the same result hopefully
     ppworker = os.path.join(os.path.dirname(os.path.abspath(pp.__file__)),
                             'ppworker.py')
-    ppworker2 = os.path.realpath(ppworker)
-    if 'pyshared' not in ppworker2:
-        return
 
     global _ppworker_dir
     _ppworker_dir = mdp.utils.TemporaryDirectory(prefix=TEMPDIR_PREFIX, dir=container_dir)
