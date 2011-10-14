@@ -1,10 +1,14 @@
-__docformat__ = "restructuredtext en"
+from __future__ import with_statement
 import sys
 import os
 import tempfile
 import inspect
 import mdp
 from repo_revision import get_git_revision
+import cStringIO as StringIO
+
+
+__docformat__ = "restructuredtext en"
 
 class MetaConfig(type):
     """Meta class for config object to allow for pretty printing
@@ -254,6 +258,15 @@ def _version_too_old(version, known_good):
             break
     return False
 
+class _sys_stdout_replaced(object):
+    "Replace systdout temporarily"
+    def __enter__(self):
+        self.sysstdout = sys.stdout
+        sys.stdout = StringIO.StringIO()
+        return sys.stdout
+    def __exit__(self, *args):
+        sys.stdout = self.sysstdout
+
 def _pp_needs_monkeypatching():
     # check if we are on one of those broken system were
     # parallel python is affected by
@@ -263,27 +276,20 @@ def _pp_needs_monkeypatching():
     # This function only works once, i.e. at import
     # if you attempt to call it again afterwards,
     # it does not work [pp does not print the error twice]
-    import sys
 
     # we need to hijack stdout here, because pp does not raise
     # exceptions: it writes to stdout directly!!!
-    import StringIO
-    sysstdout = sys.stdout
-    sys.stdout = StringIO.StringIO()
 
     # pp stuff
     import pp
     server = pp.Server()
-    server.submit(lambda: None, (), (), ('numpy',))()
-    server.destroy()
+    with _sys_stdout_replaced() as capture:
+        server.submit(lambda: None, (), (), ('numpy',))()
+        server.destroy()
 
-    # rewind hijacked stdout and read error
-    sys.stdout.seek(0)
-    error = sys.stdout.read()
+    # read error from hijacked stdout
+    error = capture.getvalue()
 
-    # set back system stdout
-    sys.stdout = sysstdout
-    
     return 'ImportError' in error
 
 def set_configuration():
