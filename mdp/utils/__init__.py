@@ -123,7 +123,7 @@ def fixup_namespace(mname, names, old_modules):
         if (hasattr(item, '__module__') and
             without_prefix(item.__module__, mname + '.') in old_modules):
             if FIXUP_DEBUG:
-                print 'namespace fixup: {%s => %s}.%s'.format(
+                print 'namespace fixup: {%s => %s}.%s' % (
                     item.__module__, mname, item.__name__)
             item.__module__ = mname
 
