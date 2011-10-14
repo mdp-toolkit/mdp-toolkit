@@ -58,10 +58,9 @@ class config(object):
         inhibit loading of the ``scikits.learn`` module
       ``MDPNSDEBUG``
         print debugging information during the import process
-      ``MDP_MONKEYPATCH_PP``
-        set a path to create a temporary directory to store a monkey-patched
-        parallel python worker script to work around debian bug #620551. If
-        set to 1, the value returned by tempfile.gettempdir() is used.
+      ``MDP_DISABLE_MONKEYPATCH_PP``
+        disable automatic monkeypatching of parallel python worker script,
+        otherwise a work around for debian bug #620551 is activated.
     """
 
     __metaclass__ = MetaConfig
@@ -255,6 +254,38 @@ def _version_too_old(version, known_good):
             break
     return False
 
+def _pp_needs_monkeypatching():
+    # check if we are on one of those broken system were
+    # parallel python is affected by
+    # http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=620551
+    # this is a minimal example to reproduce the problem
+    # XXX IMPORTANT XXX
+    # This function only works once, i.e. at import
+    # if you attempt to call it again afterwards,
+    # it does not work [pp does not print the error twice]
+    import sys
+
+    # we need to hijack stdout here, because pp does not raise
+    # exceptions: it writes to stdout directly!!!
+    import StringIO
+    sysstdout = sys.stdout
+    sys.stdout = StringIO.StringIO()
+
+    # pp stuff
+    import pp
+    server = pp.Server()
+    server.submit(lambda: None, (), (), ('numpy',))()
+    server.destroy()
+
+    # rewind hijacked stdout and read error
+    sys.stdout.seek(0)
+    error = sys.stdout.read()
+
+    # set back system stdout
+    sys.stdout = sysstdout
+    
+    return 'ImportError' in error
+
 def set_configuration():
     # set python version
     config.ExternalDepFound('python', '.'.join([str(x)
@@ -270,22 +301,17 @@ def set_configuration():
     else:
         if os.getenv('MDP_DISABLE_PARALLEL_PYTHON'):
             config.ExternalDepFailed('parallel_python', 'disabled')
-        elif (not os.getenv('MDP_MONKEYPATCH_PP') and
-              'pyshared' in os.path.realpath(os.path.join(
-                    os.path.dirname(os.path.abspath(pp.__file__)), 'ppworker.py'))):
-            config.ExternalDepFailed('parallel_python', 
-                                     'broken on Debian, and MDP_MONKEYPATCH_PP unset')
         else:
-            config.ExternalDepFound('parallel_python', pp.version)
-            if os.getenv('MDP_MONKEYPATCH_PP'):
-                dirname = os.getenv('MDP_MONKEYPATCH_PP')
-                if dirname == '1':
-                    dirname = tempfile.gettempdir()
+            if _pp_needs_monkeypatching():
+                if os.getenv('MDP_DISABLE_MONKEYPATCH_PP'):
+                    config.ExternalDepFailed('parallel_python', pp.version +
+                                             ' broken on Debian')
                 else:
-                    if not os.path.isdir(dirname):
-                        os.mkdir(dirname)
-                config.pp_monkeypatch_dirname = dirname
-            
+                    config.ExternalDepFound('parallel_python', pp.version +
+                                            '-monkey-patched')
+                    config.pp_monkeypatch_dirname = tempfile.gettempdir()
+            else:
+                config.ExternalDepFound('parallel_python', pp.version)
 
     # shogun
     try:
