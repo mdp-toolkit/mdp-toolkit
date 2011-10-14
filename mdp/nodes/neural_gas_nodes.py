@@ -24,6 +24,12 @@ class GrowingNeuralGasNode(Node):
     """Learn the topological structure of the input data by building a
     corresponding graph approximation.
 
+    The algorithm expands on the original Neural Gas algorithm
+    (see mdp.nodes NeuralGasNode) in that the algorithm adds new nodes are
+    added to the graph as more data becomes available. Im this way,
+    if the growth rate is appropriate, one can avoid overfitting  or
+    underfitting the data.
+
     More information about the Growing Neural Gas algorithm can be found in
     B. Fritzke, A Growing Neural Gas Network Learns Topologies, in G. Tesauro,
     D. S. Touretzky, and T. K. Leen (editors), Advances in Neural Information
@@ -258,8 +264,8 @@ class NeuralGasNode(GrowingNeuralGasNode):
 
     The Neural Gas algorithm was originally published in Martinetz, T. and
     Schulten, K.: A "Neural-Gas" Network Learns Topologies. In Kohonen, T.,
-    Maekisara, K., Simula, O., and Kangas, J. (eds.), Artificial Neural Networks.
-    Elsevier, North-Holland., 1991.
+    Maekisara, K., Simula, O., and Kangas, J. (eds.), Artificial Neural
+    Networks. Elsevier, North-Holland., 1991.
 
     **Attributes and methods of interest**
 
@@ -274,7 +280,7 @@ class NeuralGasNode(GrowingNeuralGasNode):
                        lambda_f=0.01,               # final lambda
                        max_age_i=20,                # initial edge lifetime
                        max_age_f=200,               # final edge lifetime
-                       max_epochs=100.,             # different from original default!
+                       max_epochs=100,
                        n_epochs_to_train=None,
                        input_dim=None,
                        dtype=None):
@@ -282,7 +288,8 @@ class NeuralGasNode(GrowingNeuralGasNode):
 
         Default parameters taken from the original publication.
 
-        Parameters:
+        :Parameters:
+
           start_poss
             sequence of two arrays containing the position of the
             first two nodes in the GNG graph. In unspecified, the
@@ -297,8 +304,8 @@ class NeuralGasNode(GrowingNeuralGasNode):
             initial and final values of epsilon. Fraction of the distance
             between the closest node and the presented data point by which the
             node moves towards the data point in an adaptation step. Epsilon
-            decays during training by e(t) = e_i(e_f/e_i)^(t/t_max) with t being
-            the epoch.
+            decays during training by e(t) = e_i(e_f/e_i)^(t/t_max) with t
+            being the epoch.
 
           lambda_i, lambda_f
             initial and final values of lambda. Lambda influences how the
@@ -309,8 +316,8 @@ class NeuralGasNode(GrowingNeuralGasNode):
           max_age_i, max_age_f
             Initial and final lifetime, after which an edge will be removed.
             Lifetime is measured in terms of adaptation steps, i.e.,
-            presentations of data points. It decays during training like epsilon
-            does.
+            presentations of data points. It decays during training like
+            epsilon does.
 
           max_epochs
             number of epochs to train. One epoch has passed when all data points
@@ -319,13 +326,17 @@ class NeuralGasNode(GrowingNeuralGasNode):
             high too high for many real-world data sets, we adopted a default
             value of 100.
 
-          epochs_to_train
-            number of epochs to train. Useful e.g. for visualization of the
-            training process. Default is to train until max_epochs is reached."""
+          n_epochs_to_train
+            number of epochs to train on each call. Useful for batch learning
+            and for visualization of the training process. Default is to
+            train once until max_epochs is reached.
+        """
+
         self.graph = graph.Graph()
 
         if n_epochs_to_train is None:
             n_epochs_to_train = max_epochs
+
         #copy parameters
         self.num_nodes = num_nodes
         self.start_poss = start_poss
@@ -337,17 +348,18 @@ class NeuralGasNode(GrowingNeuralGasNode):
         self.max_age_f = max_age_f
         self.max_epochs = max_epochs
         self.n_epochs_to_train = n_epochs_to_train
+
         super(GrowingNeuralGasNode, self).__init__(input_dim, None, dtype)
 
         if start_poss is not None:
             if self.num_nodes != len(start_poss):
                 self.num_nodes = len(start_poss)
-                # print some warning?
             if self.dtype is None:
                 self.dtype = start_poss[0].dtype
             for node_ind in range(num_nodes):
-                node = self._add_node(self._refcast(start_poss[node_ind]))
+                self._add_node(self._refcast(start_poss[node_ind]))
         self.epoch = 0
+
 
     def _train(self, input):
         g = self.graph
@@ -382,13 +394,12 @@ class NeuralGasNode(GrowingNeuralGasNode):
             T = T_i * ((T_f/T_i)**denom)
             epoch += 1
             for x in di:
-                # Step 1 rank nodes according to their distance to a random data
-                #   point
+                # Step 1 rank nodes according to their distance to random point
                 ranked_nodes = self._rank_nodes_by_distance(x)
 
                 # Step 2 move nodes
                 for rank,node in enumerate(ranked_nodes):
-                    #TODO: consider cutting off at some rank when using many nodes
+                    #TODO: cut off at some rank when using many nodes
                     #TODO: check speedup by vectorizing 
                     delta_w = epsilon * numx.exp(-rank / lmbda) * \
                                     (x - node.data.pos)
@@ -405,7 +416,7 @@ class NeuralGasNode(GrowingNeuralGasNode):
                 nn = n0.neighbors()
                 if n1 in nn:
                     edges = n0.get_edges(neighbor=n1)
-                    edges[0].data.age = 0 # should only be one edge
+                    edges[0].data.age = 0  # should only be one edge
                 else:
                     self._add_edge(n0, n1)
 
@@ -414,20 +425,27 @@ class NeuralGasNode(GrowingNeuralGasNode):
             remaining_epochs -= 1
         self.epoch = epoch
 
+
     def _rank_nodes_by_distance(self, x):
         """Return the nodes in the graph in a list ranked by their squared
         distance to x. """
+
         #TODO: Refactor together with GNGNode._get_nearest_nodes
         # distance function
+
         def _distance_from_node(node):
             tmp = node.data.pos - x
             return utils.mult(tmp, tmp) # maps to mdp.numx.dot
+
         g = self.graph
+
         # distances of all graph nodes from x
         distances = numx.array(map(_distance_from_node, g.nodes))
         ids = distances.argsort()
         ranked_nodes = [g.nodes[id] for id in ids]
+
         return ranked_nodes
+
 
     def _remove_old_edges(self, max_age):
         """Remove edges with age > max_age."""
