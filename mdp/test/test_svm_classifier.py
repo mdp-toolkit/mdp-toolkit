@@ -107,8 +107,8 @@ def test_ShogunSVMClassifier():
                                                         radius, num_test)
 
 
-        classifiers = ['GMNPSVM', 'GNPPSVM', 'GPBTSVM', 'KernelPerceptron',
-                       'LDA', 'LibSVM', # 'LibSVMOneClass',# 'MPDSVM',
+        classifiers = ['GMNPSVM', 'GNPPSVM', 'GPBTSVM', #'KernelPerceptron',
+                       'LDA', 'LibSVM', #'LibSVMOneClass', 'MPDSVM',
                        'Perceptron', 'SVMLin']
         kernels = ['PolyKernel', 'LinearKernel', 'SigmoidKernel', 'GaussianKernel']
 
@@ -160,7 +160,7 @@ def test_ShogunSVMClassifier():
 
             should_fail = False
             if len(positions) == 2:
-                if comb['classifier'] in ['LibSVMOneClass', 'KernelPerceptron',
+                if comb['classifier'] in ['LibSVMOneClass',
                                           'GMNPSVM']:
                     should_fail = True
                 if comb['classifier'] == 'GPBTSVM' and \
@@ -170,7 +170,7 @@ def test_ShogunSVMClassifier():
             # xor problem
             if len(positions) == 4:
                 if comb['classifier'] in ['LibSVMOneClass', 'SVMLin', 'Perceptron',
-                                          'LDA', 'KernelPerceptron', 'GMNPSVM']:
+                                          'LDA', 'GMNPSVM']:
                     should_fail = True
                 if comb['classifier'] == 'LibSVM' and \
                    comb['kernel'] in ['LinearKernel', 'SigmoidKernel']:

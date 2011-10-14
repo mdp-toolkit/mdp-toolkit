@@ -298,24 +298,19 @@ def set_configuration():
     else:
         if os.getenv('MDP_DISABLE_SHOGUN'):
             config.ExternalDepFailed('shogun', 'disabled')
-        # We need to have at least SHOGUN 0.9, as we rely on
-        # SHOGUN's CClassifier::classify() method.
-        # (It makes our code much nicer, by the way.)
-        #
-        elif not hasattr(sgClassifier.Classifier, 'classify'):
-            config.ExternalDepFailed('shogun', "CClassifier::classify not found")
+        # From now on just support shogun >= 1.0
+        # Between 0.10 to 1.0 there are too many API changes...
+        try:
+            version = sgKernel.Version_get_version_release()
+        except AttributeError, msg:
+            config.ExternalDepFailed('shogun',
+                                     'too old, upgrade to at least version 1.0')
         else:
-            try:
-                version = sgKernel._Kernel.Version_get_version_release()
-            except AttributeError, msg:
-                config.ExternalDepFailed('shogun', msg)
+            if not version.startswith('v1.'):
+                config.ExternalDepFailed('shogun',
+                                         'too old, upgrade to at least version 1.0.')
             else:
-                if not (version.startswith('v0.9') or version.startswith('v1.') or
-                        version.startswith('v0.10.')):
-                    config.ExternalDepFailed('shogun',
-                                             'We need at least SHOGUN version 0.9.')
-                else:
-                    config.ExternalDepFound('shogun', version)
+                config.ExternalDepFound('shogun', version)
 
     # libsvm
     try:
