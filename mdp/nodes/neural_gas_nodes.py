@@ -356,7 +356,7 @@ class NeuralGasNode(GrowingNeuralGasNode):
                 self.num_nodes = len(start_poss)
             if self.dtype is None:
                 self.dtype = start_poss[0].dtype
-            for node_ind in range(num_nodes):
+            for node_ind in range(self.num_nodes):
                 self._add_node(self._refcast(start_poss[node_ind]))
         self.epoch = 0
 
