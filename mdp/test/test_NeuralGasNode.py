@@ -17,7 +17,7 @@ def test_NeuralGasNode():
     num_nodes = 10
     ng = mdp.nodes.NeuralGasNode(start_poss=[data[n,:]
                                              for n in range(num_nodes)],
-                                 max_epochs=10000,)
+                                 max_epochs=100,)
     ng.train(data)
     ng.stop_training()
     # control that the nodes in the graph lie on the line
@@ -47,12 +47,13 @@ def test_NeuralGasNode():
     poss = numx.array(map(lambda n: n.data.pos, nodes))
     dists = numx.sqrt(numx.sum((poss[:-1,:]-poss[1:,:])**2, axis=1))
     assert_almost_equal(dist, mean(dists), 1)
-    #
+
+def test_NeuralGasNode_nearest_neighbor():
     # test the nearest_neighbor function
     start_poss = [numx.asarray([2.,0]), numx.asarray([-2.,0])]
     ng = mdp.nodes.NeuralGasNode(start_poss=start_poss)
     x = numx.asarray([[2.,0]])
     ng.train(x)
-    nodes, dists = ng.nearest_neighbor(numx.asarray([[1.,0]]))
+    nodes, dists = ng.nearest_neighbor(numx.asarray([[3.,0]]))
     assert_almost_equal(dists[0], 1., 7)
     assert_almost_equal(nodes[0].data.pos, numx.asarray([2., 0.]), 7)
