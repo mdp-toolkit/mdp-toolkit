@@ -400,7 +400,7 @@ class NeuralGasNode(GrowingNeuralGasNode):
                 # Step 2 move nodes
                 for rank,node in enumerate(ranked_nodes):
                     #TODO: cut off at some rank when using many nodes
-                    #TODO: check speedup by vectorizing 
+                    #TODO: check speedup by vectorizing
                     delta_w = epsilon * numx.exp(-rank / lmbda) * \
                                     (x - node.data.pos)
                     node.data.pos += delta_w
@@ -431,8 +431,8 @@ class NeuralGasNode(GrowingNeuralGasNode):
         distance to x. """
 
         #TODO: Refactor together with GNGNode._get_nearest_nodes
-        # distance function
 
+        # distance function
         def _distance_from_node(node):
             tmp = node.data.pos - x
             return utils.mult(tmp, tmp) # maps to mdp.numx.dot
