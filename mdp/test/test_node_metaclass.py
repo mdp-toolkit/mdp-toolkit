@@ -132,6 +132,8 @@ def test_signatures_different_no_of_arguments():
             pass
     class ChildNode(AncestorNode):
         def _train(self, x, foo=None):
-            pass
-
-    ChildNode().train(X, foo=42)
+            self.foo = foo
+    cnode = ChildNode() 
+    assert get_signature(cnode.train) == 'self, x, foo'
+    cnode.train(X, foo=42)
+    assert cnode.foo == 42
