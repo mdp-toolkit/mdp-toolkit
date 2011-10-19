@@ -125,3 +125,13 @@ def test_signatures_with_doc_in_child():
     cnode.train(X, foo2='abc')
     assert cnode.foo2 == 42
     assert get_signature(cnode.train) == 'self, x, foo2'
+
+def test_signatures_different_no_of_arguments():
+    class AncestorNode(mdp.Node):
+        def _train(self, x):
+            pass
+    class ChildNode(AncestorNode):
+        def _train(self, x, foo=None):
+            pass
+
+    ChildNode().train(X, foo=42)
