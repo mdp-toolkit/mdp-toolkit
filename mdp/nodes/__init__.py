@@ -3,7 +3,7 @@ __docformat__ = "restructuredtext en"
 from pca_nodes import WhiteningNode, PCANode
 from sfa_nodes import SFANode, SFA2Node
 from ica_nodes import ICANode, CuBICANode, FastICANode, TDSEPNode
-from neural_gas_nodes import GrowingNeuralGasNode
+from neural_gas_nodes import GrowingNeuralGasNode, NeuralGasNode
 from expansion_nodes import (QuadraticExpansionNode, PolynomialExpansionNode,
                              RBFExpansionNode, GrowingNeuralGasExpansionNode,
                              GeneralExpansionNode)
