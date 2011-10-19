@@ -60,11 +60,9 @@ class NodeMetaclass(type):
 
     def __new__(cls, classname, bases, members):
         # select private methods that can overwrite the docstring
-        wrapper_names = []
-        priv_infos = []
+        priv_infos = {}
         for privname in cls.DOC_METHODS:
             if privname in members:
-                priv_info = cls._function_infodict(members[privname])
                 # get the name of the corresponding public method
                 pubname = privname[1:]
                 # If the public method has been overwritten in this
@@ -72,12 +70,11 @@ class NodeMetaclass(type):
                 # This is also important because we use super in the wrapper
                 # (so the public method in this class would be missed).
                 if pubname not in members:
-                    wrapper_names.append(pubname)
-                    priv_infos.append(priv_info)
+                    priv_infos[pubname] = cls._function_infodict(members[privname])
         new_cls = super(NodeMetaclass, cls).__new__(cls, classname,
                                                     bases, members)
         # now add the wrappers
-        for wrapper_name, priv_info in zip(wrapper_names, priv_infos):
+        for wrapper_name, priv_info in priv_infos.iteritems():
             # Note: super works because we never wrap in the defining class
             orig_pubmethod = getattr(super(new_cls, new_cls), wrapper_name)
             # preserve the last non-empty docstring
