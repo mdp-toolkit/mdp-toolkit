@@ -5,13 +5,16 @@ include /usr/share/cdbs/1/class/python-distutils.mk
 
 DEB_INSTALL_CHANGELOGS_ALL := CHANGES
 
-override_dh_auto_install:
-	dh_auto_install
+install/python-mdp:: test-build
+
+#$(CURDIR)/debian/python-mdp$(INSTALL_PATH)/usr/lib/$$PYTHON/site-packages;
+
+test-build:
 ifeq (,$(findstring nocheck,$(DEB_BUILD_OPTIONS)))
-        for PYTHON in $(shell pyversions -r); do \
-                echo "I: Runnig MDP unittests using $$PYTHON"; \
-                MDPPATH=$(INSTALL_PATH)/usr/lib/$$PYTHON/site-packages; \
-            $$PYTHON $(MDPPATH)/mdp/test/run_tests.py $(MDPPATH)/mdp \
-                        $(MDPPATH)/bimdp; \
-        done
+	for buildver in $(cdbs_python_build_versions); do \
+        echo "I: Runnig MDP unittests using $$PYTHON"; \
+        MDPPATH=$(cdbs_python_destdir)/$(call cdbs_expand_python_distutils_installdir,python$$buildver); \
+        python$$buildver $$MDPPATH/mdp/test/run_tests.py $$MDPPATH/mdp \
+                         $$MDPPATH/bimdp; \
+    done
 endif
