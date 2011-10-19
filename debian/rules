@@ -2,6 +2,16 @@
 
 include /usr/share/cdbs/1/rules/debhelper.mk
 include /usr/share/cdbs/1/class/python-distutils.mk
-include /usr/share/cdbs/1/rules/simple-patchsys.mk
 
 DEB_INSTALL_CHANGELOGS_ALL := CHANGES
+
+override_dh_auto_install:
+	dh_auto_install
+ifeq (,$(findstring nocheck,$(DEB_BUILD_OPTIONS)))
+        for PYTHON in $(shell pyversions -r); do \
+                echo "I: Runnig MDP unittests using $$PYTHON"; \
+                MDPPATH=$(INSTALL_PATH)/usr/lib/$$PYTHON/site-packages; \
+            $$PYTHON $(MDPPATH)/mdp/test/run_tests.py $(MDPPATH)/mdp \
+                        $(MDPPATH)/bimdp; \
+        done
+endif
