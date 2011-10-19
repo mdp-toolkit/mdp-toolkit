@@ -1,8 +1,10 @@
 mdp (3.2-1) unstable; urgency=low
 
-  * New upstream release 
-
- -- Tiziano Zito <opossumnano@gmail.com>  Fri, 14 Oct 2011 22:32:39 +0200
+  * New upstream release
+  * New release adds support for shogun 1.0 (Closes: #645583)
+  * Use dh_python2 instead of deprecated python-support (Closes: #645585)
+  
+ -- Tiziano Zito <opossumnano@gmail.com>  Wed, 19 Oct 2011 14:19:16 +0200
 
 mdp (3.1-1) unstable; urgency=low
 
