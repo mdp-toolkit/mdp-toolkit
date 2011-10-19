@@ -13,17 +13,17 @@ Package: python-mdp
 Architecture: all
 Depends: ${misc:Depends}, ${python:Depends}, python-numpy
 Recommends: python-scipy,
-            shogun-python-modular, 
-            python-libsvm, 
-            python-joblib, 
-            python-scikits-learn, 
+            shogun-python-modular,
+            python-libsvm,
+            python-joblib,
+            python-scikits-learn,
             python-pp
 Suggests: python-py
 Enhances: python-mvpa
 Description: Modular toolkit for Data Processing
  Python data processing framework for building complex data processing software
- by combining widely used machine learning algorithms into pipelines and 
+ by combining widely used machine learning algorithms into pipelines and
  networks. Implemented algorithms include: Principal Component Analysis (PCA),
  Independent Component Analysis (ICA), Slow Feature Analysis (SFA), Independent
- Slow Feature Analysis (ISFA), Growing Neural Gas (GNG), Factor Analysis, 
+ Slow Feature Analysis (ISFA), Growing Neural Gas (GNG), Factor Analysis,
  Fisher Discriminant Analysis (FDA), and Gaussian Classifiers.
