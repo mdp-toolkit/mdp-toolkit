@@ -5,6 +5,8 @@ This is especially useful for hinet structures.
 The code uses the visitor pattern to reach and convert all the nodes in a flow.
 """
 
+from __future__ import with_statement
+
 import tempfile
 import os
 import webbrowser
