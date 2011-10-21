@@ -187,8 +187,7 @@ class NodeMetaclass(type):
         :param cls: Class to which the wrapper method will be added, this is
             used for the super call.
         """
-        src = ("lambda %(signature)s: " % wrapper_infodict +
-               "super(_wrapper_class_, _wrapper_class_)." +
+        src = ("lambda %(signature)s: super(_wrapper_class_, _wrapper_class_)."
                "%(name)s(%(signature)s)" % wrapper_infodict)
         wrapped_func = eval(src, {"_wrapper_class_": cls})
         wrapped_func.__name__ = wrapper_infodict['name']
