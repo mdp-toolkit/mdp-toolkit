@@ -87,6 +87,9 @@ class NodeMetaclass(type):
             if hasattr(orig_pubmethod, '_undecorated_'):
                 # make sure that we don't wrap repeatedly
                 orig_pubmethod = orig_pubmethod._undecorated_
+                recursed = True
+            else:
+                recursed = False
             wrapped_info = cls._function_infodict(orig_pubmethod)
             priv_info['doc'] = docstring
             priv_info['name'] = wrapper_name
@@ -98,7 +101,10 @@ class NodeMetaclass(type):
                 priv_info['signature'] = wrapped_info['signature']
                 priv_info['argnames'] = wrapped_info['argnames']
                 priv_info['defaults'] = wrapped_info['defaults']
-            wrapper_method = cls._wrap_method(priv_info, new_cls)
+            if recursed:
+                wrapper_method = cls._wrap_function(orig_pubmethod, priv_info)
+            else:
+                wrapper_method = cls._wrap_method(priv_info, new_cls)
             wrapper_method._undecorated_ = orig_pubmethod
             setattr(new_cls, wrapper_name, wrapper_method)
         return new_cls
