@@ -26,6 +26,7 @@ def test_signatures_same_no_arguments():
             self.foo = foo
     cnode = ChildNode() 
     assert get_signature(cnode.train) == 'self, x, foo'
+    assert get_signature(cnode._train) == 'self, x, foo'
     cnode.train(X, foo=42)
     assert cnode.foo == 42
     py.test.raises(AttributeError, 'cnode.foo2')
@@ -33,14 +34,19 @@ def test_signatures_same_no_arguments():
 def test_signatures_different_no_of_arguments():
     class AncestorNode(mdp.Node):
         def _train(self, x):
-            pass
+            self.foo2 = None
     class ChildNode(AncestorNode):
         def _train(self, x, foo=None):
             self.foo = foo
-    cnode = ChildNode() 
+    cnode = ChildNode()
     assert get_signature(cnode.train) == 'self, x, foo'
+    assert get_signature(cnode.train._undecorated_) == 'self, x, *args, **kwargs'
+    assert get_signature(cnode._train) == 'self, x, foo'
+    # next two lines should give the same:
+    cnode.train._undecorated_(cnode, X, foo=42)
     cnode.train(X, foo=42)
     assert cnode.foo == 42
+    py.test.raises(AttributeError, 'cnode.foo2')
 
 def test_simple_extension():
     
