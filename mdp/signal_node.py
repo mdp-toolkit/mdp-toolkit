@@ -92,9 +92,7 @@ class NodeMetaclass(type):
             priv_info['name'] = wrapper_name
             # Preserve the signature if it still does not end with kwargs
             # (this is important for binodes).
-            # Note that this relies on the exact name 'kwargs', if this causes
-            # problems we could switch to looking for ** in the signature.
-            if wrapped_info['argnames'][-1] != "kwargs":
+            if wrapped_info['kwargs_name'] is None:
                 priv_info['signature'] = wrapped_info['signature']
                 priv_info['argnames'] = wrapped_info['argnames']
                 priv_info['defaults'] = wrapped_info['defaults']
@@ -125,6 +123,7 @@ class NodeMetaclass(type):
         - doc (the docstring : str)
         - module (the module name : str)
         - dict (the function __dict__ : str)
+        - kwargs_name (the name of the kwargs argument, if present, else None)
 
         >>> def f(self, x=1, y=2, *args, **kw): pass
         >>> info = getinfo(f)
@@ -136,6 +135,8 @@ class NodeMetaclass(type):
         (1, 2)
         >>> info["signature"]
         'self, x, y, *args, **kw'
+        >>> info["kwargs_name"]
+        kw
         """
         regargs, varargs, varkwargs, defaults = inspect.getargspec(func)
         argnames = list(regargs)
@@ -148,10 +149,16 @@ class NodeMetaclass(type):
                                           varkwargs,
                                           defaults,
                                           formatvalue=lambda value: "")[1:-1]
-        return dict(name=func.__name__, argnames=argnames, signature=signature,
-                    defaults=func.func_defaults, doc=func.__doc__,
-                    module=func.__module__, dict=func.__dict__,
-                    globals=func.func_globals, closure=func.func_closure)
+        return dict(name=func.__name__,
+                    signature=signature,
+                    argnames=argnames,
+                    kwargs_name=varkwargs,
+                    defaults=func.func_defaults,
+                    doc=func.__doc__,
+                    module=func.__module__,
+                    dict=func.__dict__,
+                    globals=func.func_globals,
+                    closure=func.func_closure)
 
     @staticmethod
     def _wrap_function(original_func, wrapper_infodict):
