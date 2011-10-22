@@ -59,8 +59,8 @@ class config(object):
         inhibit loading of the svm classifier
       ``MDP_DISABLE_JOBLIB``
         inhibit loading of the ``joblib`` module and `mdp.caching`
-      ``MDP_DISABLE_SCIKITS``
-        inhibit loading of the ``scikits.learn`` module
+      ``MDP_DISABLE_SKLEARN``
+        inhibit loading of the ``sklearn`` module
       ``MDPNSDEBUG``
         print debugging information during the import process
       ``MDP_PP_SECRET``
@@ -390,14 +390,14 @@ def set_configuration():
             import scikits.learn as sklearn
         version = sklearn.__version__
     except ImportError, exc:
-        config.ExternalDepFailed('scikits', exc)
+        config.ExternalDepFailed('sklearn', exc)
     except AttributeError, exc:
-        config.ExternalDepFailed('scikits', exc)
+        config.ExternalDepFailed('sklearn', exc)
     else:   
-        if os.getenv('MDP_DISABLE_SCIKITS'):
-            config.ExternalDepFailed('scikits', 'disabled')
+        if os.getenv('MDP_DISABLE_SKLEARN'):
+            config.ExternalDepFailed('sklearn', 'disabled')
         elif _version_too_old(version, (0,6)):
-            config.ExternalDepFailed('scikits',
+            config.ExternalDepFailed('sklearn',
                                      'version %s is too old' % version)
         else:
-            config.ExternalDepFound('scikits', version)
+            config.ExternalDepFound('sklearn', version)

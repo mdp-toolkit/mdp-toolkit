@@ -63,7 +63,7 @@ if config.has_libsvm:
     __all__ += ['LibSVMClassifier']
     del libsvm_classifier
 
-if config.has_scikits:
+if config.has_sklearn:
     import scikits_nodes
     for name in scikits_nodes.DICT_:
         if name.endswith('Node'):

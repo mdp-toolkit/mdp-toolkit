@@ -348,7 +348,7 @@ NODES = [
 
 EXCLUDE_NODES = [nodes.ICANode]
 
-if config.has_scikits:
+if config.has_sklearn:
     # XXX
     # remove all non classifier nodes from the scikits nodes
     # they do not have a common API that would allow
