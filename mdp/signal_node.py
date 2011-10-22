@@ -59,12 +59,60 @@ class NodeMetaclass(type):
                    '_label', '_prob']
 
     def __new__(cls, classname, bases, members):
-        # select private methods that can overwrite the docstring
-        wrapper_names = []
-        priv_infos = []
+        new_cls = super(NodeMetaclass, cls).__new__(cls, classname,
+                                                    bases, members)
+
+        priv_infos = cls._select_private_methods_to_wrap(cls, members)
+
+        # now add the wrappers
+        for wrapper_name, priv_info in priv_infos.iteritems():
+            # Note: super works because we never wrap in the defining class
+            orig_pubmethod = getattr(super(new_cls, new_cls), wrapper_name)
+
+            priv_info['name'] = wrapper_name
+            # preserve the last non-empty docstring
+            if not priv_info['doc']:
+                priv_info['doc'] = orig_pubmethod.__doc__
+
+            recursed = hasattr(orig_pubmethod, '_undecorated_')
+            if recursed:
+                undec_pubmethod = orig_pubmethod._undecorated_
+                priv_info.update(NodeMetaclass._get_infos(undec_pubmethod))
+                wrapper_method = cls._wrap_function(undec_pubmethod,
+                                                    priv_info)
+                wrapper_method._undecorated_ = undec_pubmethod
+            else:
+                priv_info.update(NodeMetaclass._get_infos(orig_pubmethod))
+                wrapper_method = cls._wrap_method(priv_info, new_cls)
+                wrapper_method._undecorated_ = orig_pubmethod
+
+            setattr(new_cls, wrapper_name, wrapper_method)
+        return new_cls
+
+    @staticmethod
+    def _get_infos(pubmethod):
+        infos = {}
+        wrapped_info = NodeMetaclass._function_infodict(pubmethod)
+        # Preserve the signature if it still does not end with kwargs
+        # (this is important for binodes).
+        if wrapped_info['kwargs_name'] is None:
+            infos['signature'] = wrapped_info['signature']
+            infos['argnames'] = wrapped_info['argnames']
+            infos['defaults'] = wrapped_info['defaults']
+        return infos
+
+    @staticmethod
+    def _select_private_methods_to_wrap(cls, members):
+        """Select private methods that can overwrite the public docstring.
+
+        Return a dictionary priv_infos[pubname], where the keys are the
+        public name of the private method to be wrapped,
+        and the values are dictionaries with the signature, doc,
+        ... informations of the private methods (see `_function_infodict`).
+        """
+        priv_infos = {}
         for privname in cls.DOC_METHODS:
             if privname in members:
-                priv_info = cls._function_infodict(members[privname])
                 # get the name of the corresponding public method
                 pubname = privname[1:]
                 # If the public method has been overwritten in this
@@ -72,42 +120,8 @@ class NodeMetaclass(type):
                 # This is also important because we use super in the wrapper
                 # (so the public method in this class would be missed).
                 if pubname not in members:
-                    wrapper_names.append(pubname)
-                    priv_infos.append(priv_info)
-        new_cls = super(NodeMetaclass, cls).__new__(cls, classname,
-                                                    bases, members)
-        # now add the wrappers
-        for wrapper_name, priv_info in zip(wrapper_names, priv_infos):
-            # Note: super works because we never wrap in the defining class
-            orig_pubmethod = getattr(super(new_cls, new_cls), wrapper_name)
-            # preserve the last non-empty docstring
-            docstring = priv_info['doc']
-            if not docstring:
-                docstring = orig_pubmethod.__doc__
-            if hasattr(orig_pubmethod, '_undecorated_'):
-                # make sure that we don't wrap repeatedly
-                orig_pubmethod = orig_pubmethod._undecorated_
-                recursed = True
-            else:
-                recursed = False
-            wrapped_info = cls._function_infodict(orig_pubmethod)
-            priv_info['doc'] = docstring
-            priv_info['name'] = wrapper_name
-            # Preserve the signature if it still does not end with kwargs
-            # (this is important for binodes).
-            # Note that this relies on the exact name 'kwargs', if this causes
-            # problems we could switch to looking for ** in the signature.
-            if wrapped_info['argnames'][-1] != "kwargs":
-                priv_info['signature'] = wrapped_info['signature']
-                priv_info['argnames'] = wrapped_info['argnames']
-                priv_info['defaults'] = wrapped_info['defaults']
-            if recursed:
-                wrapper_method = cls._wrap_function(orig_pubmethod, priv_info)
-            else:
-                wrapper_method = cls._wrap_method(priv_info, new_cls)
-            wrapper_method._undecorated_ = orig_pubmethod
-            setattr(new_cls, wrapper_name, wrapper_method)
-        return new_cls
+                    priv_infos[pubname] = cls._function_infodict(members[privname])
+        return priv_infos
 
     # The next two functions (originally called get_info, wrapper)
     # are adapted versions of functions in the
@@ -128,6 +142,7 @@ class NodeMetaclass(type):
         - doc (the docstring : str)
         - module (the module name : str)
         - dict (the function __dict__ : str)
+        - kwargs_name (the name of the kwargs argument, if present, else None)
 
         >>> def f(self, x=1, y=2, *args, **kw): pass
         >>> info = getinfo(f)
@@ -139,6 +154,8 @@ class NodeMetaclass(type):
         (1, 2)
         >>> info["signature"]
         'self, x, y, *args, **kw'
+        >>> info["kwargs_name"]
+        kw
         """
         regargs, varargs, varkwargs, defaults = inspect.getargspec(func)
         argnames = list(regargs)
@@ -151,10 +168,16 @@ class NodeMetaclass(type):
                                           varkwargs,
                                           defaults,
                                           formatvalue=lambda value: "")[1:-1]
-        return dict(name=func.__name__, argnames=argnames, signature=signature,
-                    defaults=func.func_defaults, doc=func.__doc__,
-                    module=func.__module__, dict=func.__dict__,
-                    globals=func.func_globals, closure=func.func_closure)
+        return dict(name=func.__name__,
+                    signature=signature,
+                    argnames=argnames,
+                    kwargs_name=varkwargs,
+                    defaults=func.func_defaults,
+                    doc=func.__doc__,
+                    module=func.__module__,
+                    dict=func.__dict__,
+                    globals=func.func_globals,
+                    closure=func.func_closure)
 
     @staticmethod
     def _wrap_function(original_func, wrapper_infodict):
@@ -183,8 +206,7 @@ class NodeMetaclass(type):
         :param cls: Class to which the wrapper method will be added, this is
             used for the super call.
         """
-        src = ("lambda %(signature)s: " % wrapper_infodict +
-               "super(_wrapper_class_, _wrapper_class_)." +
+        src = ("lambda %(signature)s: super(_wrapper_class_, _wrapper_class_)."
                "%(name)s(%(signature)s)" % wrapper_infodict)
         wrapped_func = eval(src, {"_wrapper_class_": cls})
         wrapped_func.__name__ = wrapper_infodict['name']

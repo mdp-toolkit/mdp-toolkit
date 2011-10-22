@@ -5,6 +5,8 @@ The individual slides are the HTML files generated via the trace_inspection
 module (the body of the HTML files is extracted and makes up a slide).
 """
 
+from __future__ import with_statement
+
 import os
 
 from mdp.utils import HTMLSlideShow, SectionHTMLSlideShow

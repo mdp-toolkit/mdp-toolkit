@@ -1,8 +1,8 @@
 from _tools import *
 
 requires_scikits = skip_on_condition(
-    "not mdp.config.has_scikits or mdp.numx_description != 'scipy'",
-    "This test requires Scikits and SciPy")
+    "not mdp.config.has_sklearn or mdp.numx_description != 'scipy'",
+    "This test requires sklearn and SciPy")
 
 @requires_scikits
 def test_scikits_PCANode_training():

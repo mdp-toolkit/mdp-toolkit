@@ -272,6 +272,9 @@ def SFA2Node_inp_arg_gen():
     inp = mat.astype('d')
     return inp
 
+def NeuralGasNode_inp_arg_gen():
+    return numx.asarray([[2.,0,0],[-2,0,0],[0,0,0]])
+
 def LinearRegressionNode_inp_arg_gen():
     return uniform(size=(1000, 5))
 
@@ -280,6 +283,9 @@ def _rand_1d(x):
 
 
 NODES = [
+    dict(klass='NeuralGasNode',
+         init_args=[3,NeuralGasNode_inp_arg_gen()],
+         inp_arg_gen=NeuralGasNode_inp_arg_gen),
     dict(klass='SFA2Node',
          inp_arg_gen=SFA2Node_inp_arg_gen),
     dict(klass='PolynomialExpansionNode',
@@ -348,7 +354,7 @@ NODES = [
 
 EXCLUDE_NODES = [nodes.ICANode]
 
-if config.has_scikits:
+if config.has_sklearn:
     # XXX
     # remove all non classifier nodes from the scikits nodes
     # they do not have a common API that would allow
