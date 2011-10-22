@@ -6,8 +6,10 @@ __docformat__ = "restructuredtext en"
 
 try:
     import sklearn
+    _sklearn_prefix = 'sklearn'
 except ImportError:
     import scikits.learn as sklearn
+    _sklearn_prefix = 'scikits.learn'
 
 import inspect
 import re
@@ -39,7 +41,7 @@ for name in scikits_modules:
     # on the user system.
     # we just ignore failing imports
     try:
-        __import__('sklearn.' + name)
+        __import__(_sklearn_prefix + '.' + name)
     except ImportError:
         pass
 
@@ -159,8 +161,8 @@ def apply_to_scikits_algorithms(current_module, action,
                     action(member)
 
             # other modules
-            elif (inspect.ismodule(member)
-                  and member.__name__.startswith('sklearn')):
+            elif (inspect.ismodule(member) and
+                  member.__name__.startswith(_sklearn_prefix)):
                 apply_to_scikits_algorithms(member, action, processed_modules,
                                             processed_classes)
     return processed_classes
