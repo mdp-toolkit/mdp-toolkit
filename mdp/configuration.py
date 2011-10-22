@@ -373,10 +373,13 @@ def set_configuration():
         else:
             config.ExternalDepFound('joblib', version)
 
-    # scikits.learn
+    # sklearn
     try:
-        import scikits.learn
-        version = scikits.learn.__version__
+        try:
+            import sklearn
+        except ImportError:
+            import scikits.learn as sklearn
+        version = sklearn.__version__
     except ImportError, exc:
         config.ExternalDepFailed('scikits', exc)
     except AttributeError, exc:
