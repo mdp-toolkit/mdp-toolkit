@@ -3,6 +3,7 @@ import sys
 import os
 import tempfile
 import inspect
+import user
 import mdp
 from repo_revision import get_git_revision
 import cStringIO as StringIO
@@ -62,6 +63,9 @@ class config(object):
         inhibit loading of the ``scikits.learn`` module
       ``MDPNSDEBUG``
         print debugging information during the import process
+      ``MDP_PP_SECRET``
+        set parallel python (pp) secret. If not set, and no secret is known
+        to pp, a default secret will be used.
       ``MDP_DISABLE_MONKEYPATCH_PP``
         disable automatic monkeypatching of parallel python worker script,
         otherwise a work around for debian bug #620551 is activated.
@@ -302,6 +306,11 @@ def set_configuration():
     config.pp_monkeypatch_dirname = None
     try:
         import pp
+        # set pp secret if not there already
+        # (workaround for debian patch to pp that disables pp's default password)
+        pp_secret = os.getenv('MDP_PP_SECRET') or 'mdp-pp-support-password'
+        if not hasattr(user, 'pp_secret'):
+            user.pp_secret = pp_secret
     except ImportError, exc:
         config.ExternalDepFailed('parallel_python', exc)
     else:
