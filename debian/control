@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: Yaroslav Halchenko <debian@onerussian.com>
 Build-Depends: cdbs (>=0.4.90~),
                debhelper (>= 5.0.38),
-			   python-all (>=2.6.6-3~),
+               python-all (>=2.6.6-3~),
                python-numpy,
                shogun-python-modular,
                python-libsvm,
