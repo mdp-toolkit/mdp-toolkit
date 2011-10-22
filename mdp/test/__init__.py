@@ -2,7 +2,7 @@ import os
 SCRIPT="run_tests.py"
 from mdp.configuration import _version_too_old
 
-def test(filename=None, keyword=None, seed=None, options=None, mod_loc=None,
+def test(filename=None, keyword=None, seed=None, options='', mod_loc=None,
          script_loc=None):
     """Run tests.
 
