@@ -36,8 +36,11 @@ def test(filename=None, keyword=None, seed=None, options=None, mod_loc=None,
         args.extend(('-k', str(keyword)))
     if seed is not None:
         args.extend(('--seed', str(seed)))
-    if options is not None:
-        args.extend(options.split())
+    # add --assert=reiterp option to work around permissions problem
+    # with __pycache__ directory when MDP is installed on a normal
+    # user non-writable directory
+    options = "--assert=reinterp "+options
+    args.extend(options.split())
         
     args.append(loc)
     _worker = get_worker(script_loc)
