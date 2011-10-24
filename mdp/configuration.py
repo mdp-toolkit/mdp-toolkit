@@ -3,7 +3,6 @@ import sys
 import os
 import tempfile
 import inspect
-import user
 import mdp
 from repo_revision import get_git_revision
 import cStringIO as StringIO
@@ -309,6 +308,10 @@ def set_configuration():
         # set pp secret if not there already
         # (workaround for debian patch to pp that disables pp's default password)
         pp_secret = os.getenv('MDP_PP_SECRET') or 'mdp-pp-support-password'
+        # module 'user' has been deprecated since python 2.6 and deleted
+        # completely as of python 3.0.
+        # Basically pp can not work on python 3 at the moment.
+        import user
         if not hasattr(user, 'pp_secret'):
             user.pp_secret = pp_secret
     except ImportError, exc:
