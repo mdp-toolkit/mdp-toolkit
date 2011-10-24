@@ -1,5 +1,10 @@
 mdp (3.2-1) unstable; urgency=low
 
+  [ Yaroslav Halchenko ]
+  * Boosted policy compliance to 3.9.2 (no changes needed)
+  * Tiziano now maintains -- I upload
+
+  [ Tiziano Zito ]
   * New upstream release
   * New release adds support for shogun 1.0 (Closes: #645583)
   * Use dh_python2 instead of deprecated python-support (Closes: #645585)
