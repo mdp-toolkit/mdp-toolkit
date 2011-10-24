@@ -57,7 +57,9 @@ During release:
        - select the tar.gz for linux and set it as 
          default for linux and mac
        - at that point the readme file should be automatically shown as release
-         note file 
+         note file
+		 if README.txt is not shown, delete it and upload it through the web interface.
+		 make sure that it is shown.
     - more info: https://sourceforge.net/apps/trac/sourceforge/wiki/Release%20files%20for%20download
 - make the website within a clone of the docs repository with:
  - make website
