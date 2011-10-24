@@ -28,7 +28,7 @@ if _version_too_old(sklearn.__version__, (0, 8)):
                        'linear_model', 'preprocessing', 'svm',
                        'pca', 'lda', 'hmm', 'fastica', 'grid_search', 'mixture',
                        'naive_bayes', 'neighbors', 'qda']
-else:
+elif _version_too_old(sklearn.__version__, (0, 9)):
     # package structure has been changed in 0.8
     scikits_modules = ['svm', 'linear_model', 'naive_bayes', 'neighbors',
                        'mixture', 'hmm', 'cluster', 'decomposition', 'lda',
@@ -36,6 +36,15 @@ else:
                        'feature_selection.rfe', 'feature_extraction.image',
                        'feature_extraction.text', 'pipelines', 'pls',
                        'gaussian_process', 'qda']
+else:
+    # from release 0.9 cross_val becomes cross_validation and hmm is deprecated
+    scikits_modules = ['svm', 'linear_model', 'naive_bayes', 'neighbors',
+                       'mixture', 'cluster', 'decomposition', 'lda',
+                       'covariance', 'cross_validation', 'grid_search',
+                       'feature_selection.rfe', 'feature_extraction.image',
+                       'feature_extraction.text', 'pipelines', 'pls',
+                       'gaussian_process', 'qda']    
+
 for name in scikits_modules:
     # not all modules may be available due to missing dependencies
     # on the user system.
