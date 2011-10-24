@@ -1,3 +1,308 @@
+MDP-3.2:
+2011-10-24: FIX: do not complain when failing to remove temporary directory. 
+            The error warning breaks doctests. On top of that, I do not think
+            the error message is really useful.
+
+2011-10-22: FIX: fix previous commit (options can not be None)
+2011-10-22: FIX: fix bug with pytest when MDP is installed on user
+            non-writable directory.
+2011-10-22: ENH: make NeuralGasNode automatic tests faster
+2011-10-22: ENH: call scklearn with its name whenever possible without too
+            much disruption
+2011-10-22: FIX: workaround for debian patch to pp that disables pp's default
+            password.
+2011-10-22: FIX: could not find submodules and classes in old versions of
+            sklearn the problem was that we build names of sub-modules from
+            strings, and we need to take into account two possible prefixes
+            "sklearn" or "scikits.learn"
+
+2011-10-22: FIX: accomodate new name for scikits.learn 0.9 aka sklearn
+2011-10-22: RF: extract two methods and simplify logic of metaclass wrapping
+2011-10-22: OTH: one more metaclass test also cleand up whitespaces
+
+2011-10-21: FIX/python2.5: forgotten __future__ imports
+2011-10-21: ERF: rewrite one format string to make is clearer
+2011-10-21: FIX: extend infodict with **kwargs name, to avoid guessing later
+2011-10-19: ENH: metaclass: use dict to replace two lists and avoid infodict 
+            No functional changes.
+
+2011-10-21: FIX: finally fig bug in metaclass signature overwriting
+2011-10-21: OTH: make test_metaclass more stringent
+2011-10-21: OTH: added self contained test for metaclass and extensions
+            issues.
+2011-10-19: OTH: added more detailed failing test for metaclass
+2011-10-19: OTH: another bug in signature overwriting. commited a failing
+            test. Thanks to Alberto Escalante!
+
+2011-10-16: ENH: make tests for NeuralGasNode shorter
+2011-10-15: FIX: chmod -x mdp/test/test_NeuralGasNode.py
+2011-10-15: DOC: tiny changes in comments
+2011-10-15: FIX: tests for neural gas node
+2011-10-15: FIX: when start positions for the nodes was set, the number of
+            nodes default is discarded
+2011-10-14: DOC+RF: slight improvements to documentation, comments, and
+            spacing
+2011-10-14: FIX: NeuralGas fixes by Michael Schmucker
+2011-08-03: ENH: remove tuple unpacking init: it took twice as much lines
+2011-08-03: FIX: NeuralGas fixed by Michael Schmuker
+2011-08-03: FIX: remove \ line breaks
+2011-07-25: FIX: remove \ line breaks
+2011-07-25: NEW, FIX: tests for NeuralGasNode and two fixes
+2011-07-25: FIX: _remove_old_edges makes use of its argument
+2011-07-25: DOC, FIX: Typos in docstrings and whitespaces
+2011-07-25: NEW: NeuralGasNode by Michael Schmuker
+2011-10-14: FIX: remove unused variable
+2011-10-14: FIX: py3k bytes/str issue in subprocess input
+2011-10-14: FIX: remove unused variable
+2011-10-14: ENH: use a context manager for sys.stdout stealing
+2011-10-14: FIX: add pytest ini file to manifest
+2011-10-14: NEW: really check if pp needs monkey-patching
+2011-10-14: NEW: be compatible with shogun 1.0. Drop support for older
+            releases.
+2011-10-14: FIX: fix handling of MDP_DISABLE_SHOGUN variable
+2011-10-14: Fix KeyError with NSDEBUG=1 Commit 7345d4a changed old-style
+            formatting to new-style formatting, or at least the format string,
+            but .format was not replaced with %!
+
+2011-10-13: DOC: make it a bit easier to see that you can use pp on debian too
+2011-10-13: FIX: remove (now) useless duplicated test in bimdp
+2011-10-13: FIX: windows does not allow me to remove a file
+2011-10-13: FIX: no with statement in tests {flow,node}.save Apparently
+            windows does not allow one process to open a file multiple times.
+            As {flow,node}.save use internally the with statement to open the
+            dump file, we can not use the with statement in the test of these 
+            methods: nesting with statement means opening the same file
+            multiple times.
+
+2011-10-12: NEW: allow for pretty printing of mdp.config. now config.info() is
+            printed on stdout when you type
+
+            >>> print mdp.config
+
+            or
+
+            >>> mdp.config
+
+            don't think about the fact that this is only achievable by a
+            metaclass ;-)
+
+2011-10-12: ERF: also add mdp.__version__ in config.info
+            __revision__ is not enough, when mdp is installed and does not 
+            load from a git repository that string is empty (by the way: we
+            should fix it!)
+
+2011-10-11: FIX: remove forgotten print statement
+2011-10-11: NEW: add tempfile test to help diagnose win7 problems
+2011-10-11: FIX: make py.test.__version__ check more robust
+2011-10-11: Add mdp.__revision__ to mdp.config.info() output This changes the
+            order of initialization a bit: first mdp.configuration is fully
+            imported, then mdp.utils. Because of this change, 
+            mdp.utils.repo_revision was renamed to mdp.repo_revision. It is
+            imported only in mdp.configuration and then deleted from the
+            visible namespace. get_git_revision was available as
+            utils.get_git_revision, and now it's gone, but mdp.__revision__
+            contains the same value, so there little need to export the
+            function. I hope nobody used it.
+
+            >>> print mdp.config.info()
+                     python: 2.7.2.final.0
+                        mdp: MDP-3.1-74-gbaca2a8+
+            parallel python: 1.6.0
+                     shogun: NOT AVAILABLE: No module named shogun
+                     libsvm: libsvm.so.3
+                     joblib: 0.4.6
+                    scikits: 0.8.1
+                       numx: scipy 0.9.0
+                     symeig: scipy.linalg.eigh
+
+2011-10-11: NEW: append + to mdp.__revision__ in modified repo
+2011-10-11: FIX: half of an assert message was lost
+2011-10-11: ERF: use py.test 2 ini-file configuration. we can now check for
+            py.test version, and get finally rid of the redundant conftest.py
+            files. we now have only one conftest.py file for bimdp and mdp.
+
+2011-10-11: FIX: check if we have ENOENT in TemporaryDir.__del__
+2011-10-11: FIX: stop complaining if dir is gone already in TemporaryDirectory
+2011-10-11: ERF: get rid of the pp monkey patch dirs the hard way. 
+            TemporaryDirectory does not manage to delete itself when created
+            in a subprocess
+
+2011-10-11: ERF: make the pp monkeypatch dir prefix more explicit
+2011-10-11: ERF: change the interpretation of MDP_MONKEYPATCH_PP now you can
+            specify a container directory for the patching.  it defaults to
+            tempfile.gettempdir(), i.e. /tmp on unix and something else on  
+            windows
+2011-10-11: FIX: only allow py.test version >= 2.1.2 py.test version > 2 are
+            subtly incompatible with versions < 2. just settle on the new
+            ones. problem: debian still does not package a reasonably recent
+            version of py.test. in this case, just use the standalone script.
+            thanks to 8a5b2e272de4230f15d09f85b7d35b0aeee3078e it's as 
+            flexible as py.test itself.
+2011-10-11: ERF: pass options to py.test in mdp.test. this way using the
+            standalone script run_tests.py is as flexible as using py.test
+            directly
+
+2011-10-11: ERF: updated standalone py.test script to version 2.1.2
+2011-10-11: DOC: added pointer to win64 binaries distributor
+2011-10-10: ENH: use with statement for better readability in a couple of
+            tests No functional changes.
+
+2011-10-10: ENH: make pyflakes happy by not defining unused names No
+            functional changes.
+
+2011-10-10: FIX: make monkeypatch_pp compatible with both pp 1.6 and 1.6.1
+            >>> import pp
+            >>> pp.version
+            '1.6.0'
+            >>> pp._Worker.command
+            '"/usr/bin/python" -u "/usr/lib/pymodules/python2.6/ppworker.py" >
+            2>/dev/null'
+
+            >>> import pp
+            >>> pp.version
+            '1.6.1'
+            >>> pp._Worker.command
+            ['/usr/bin/python2.6', '-u',
+            '/usr/lib/pymodules/python2.6/ppworker.py', '2>/dev/null']
+
+2011-10-10: FIX: temporary directory for tests was not managed properly sed
+            's/mdp_toolkit_reporting_configured/mdp_configured/g' because the 
+            existence of this variable guards not only reporting
+            configuration, but also the temporary directory stuff (and also
+            the name was kind of long).
+
+            sed 's/tempdirname/mdp_tempdirname/' because it goes in the
+            py.test namespace and should have a prefix like the other
+            variable.
+
+            sed -r 's+bimdp/+TMP\/+g; s+mdp/+bimdp/+g; s+TMP\/+mdp/+g'
+            <mdp/test/conftest.py >bimdp/test/conftest.py because bimdp should
+            be kept in sync. In my installation bimdp is actually configured
+            first, so tests in the temporary directory were failing with 
+            AttributeError on py.test.tempdirname.
+
+2011-10-10: FIX: tempdirs in cacheing tests were shortlived A temporary
+            directory created with TemporaryDirectory can go at any time, so a
+            construct like
+             dirname = TemporaryDirectory().name is broken.
+
+            Since the directories are created in the master temporary
+            directory anyway, they don't have to be deleted separately.
+
+2011-10-10: FIX: do not set the cachedir by default on import mdp.caching 
+            setting it by default was creating a lot of bogus temporary
+            directories when parallel processes where started using
+            process_scheduler. I see no side effects for not setting it
+
+2011-10-10: FIX: better name for global temp dir
+2011-10-10: FIX: fix pp monkey patching. pp._Worker.command.replace(ppworker,
+            ppworker3) did not work, as pp._Worker.command is a list and not a
+            string!
+
+2011-10-10: FIX: put joblib caching stuff in the new global test tempdir
+2011-10-10: ERF: added a container directory for temporary test files. the
+            directory gets deleted (no matter its contents) at the end of the
+            test run. This should fix stale temp files.
+
+2011-10-05: FIX: partially revert 569cbe7 Changing 'except Exception:' clauses
+            to bare 'except:' would catch and swallow ^C and the like.
+
+2011-10-02: ENH: revert the condition for pp monkeypatching It's better to
+            only enable it when explicitely requested. The warning is also
+            removed, because it doesn't make sense to warn about something
+            that was explicitely requested. If the option to monkey patch is
+            not given, check if pp is likely to be broken, and if so, disable
+            it at configuration time.
+
+2011-10-02: FIX: remove some unused imports and one allocation
+2011-10-02: ENH: make temporary directory names more readable tmpxayPZEpp4mdp/
+            => pp4mdp.tmpxayPZE/
+
+2011-09-08: FIX: new module structure in scikits.learn 0.8
+2011-09-07: BF: Exclude float16 dtypes in numpy.linalg.eigh.
+2011-08-24: Fixes to FastICA node Fine tuning and stabilisation are now used
+            correctly, and the result closely resembles the original matlab
+            version for the deflation/gaussian case with prewhitened data. The
+            results are not numerically identical because there are still some
+            differences in stopping criteria, but it's close. To verify, see 
+            original Matlab implementation.
+
+2011-08-10: DOC: added documentation item to TODO list
+2011-06-30: ERF: PEP8 fix (da pignolo)
+2011-06-30: ERF: simplify metaclass wrapping code
+2011-06-30: FIX: Fixed the node metaclass to correctly handle signatures and
+            docstrings for  inheritance chains.
+2011-06-30: ERF: Some small pylint-motivated updates.
+2011-06-30: ERF: wrap private methods in meteclass even if no docstring is
+            defined.
+2011-06-30: ERF: Made the _get_required_train_args method more robust.
+2011-06-30: OTH: refactored metaclass tests, again.
+2011-06-30: OTH: refactored metaclass tests
+2011-06-16: DOC: added proper git format for changelog
+2011-06-16: OTH: commit failing test for docstring overwriting Thanks to
+            Alberto Escalante to point this bug out.
+
+2011-04-07: FIX: verbose argument in set_cachedir was ignored.
+2011-06-12: FIX: Fixed a regression that broke the DBN example.
+2011-06-11: ERF: Major refactoring of the binet inspection code. This follows
+            the refactoring of the flow-to-HTML conversion. Smaller
+            refactorings in realted parts (slideshow) were also done.
+2011-06-11: ERF: Prepare large refactoring by renaming the files first.
+2011-05-31: ERF: Refactored the flow-to-HTML conversion. Threw out useless
+            code, fixed style issues and now use the proper vocabulary
+            (visitor pattern). The bimdp inspection has not yet been updated
+            and is therefore broken in this commit.
+2011-04-18: FIX: monkeypatch_pp was broken I made some changes without
+            actually testing if stuff works...
+
+2011-04-15: FIX: delete main joblib cache directory at mdp exit The directory
+            is of course only deleted if we created it ourselves, i.e. if it
+            is a temporary directory.
+
+2011-04-15: FIX: delete joblib cache directory after tests
+2011-04-15: DOC: describe MDPNUMX and MDPNSDEBUG env. vars.
+2011-04-15: FIX: bump supported scikits-learn version number Setting >=0.6 is
+            pretty conservative, but Debian's 0.5-1 is bad for sure.
+
+2011-04-14: DOC: document MDP_DISABLE_MONKEYPATCH_PP
+2011-04-14: DOC: document MDP_DISABLE_* variables
+2011-01-12: DOC: improve rst in mdp/extension.py
+2011-03-21: FIX: drop some unused variables & imports Wanted to test pyflakes
+            on something. This is the result.
+
+2011-04-14: FIX: apply a temporary workaround to the pp import problem For
+            details see
+            http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=620551.
+
+            ppworker.py must be run from some safe place. A temporary dir
+            seems a good option. Unfortunately a temporary file is not enough,
+            because parent directory should be empty. TemporaryDirectory is so
+            complicated, because the code is run during Python shutdown
+            procedure and some modules are not available.
+
+2011-04-05: FIX: make short description fit within 200 char limit Tiziano
+            proposed the text, nobody protested... I guess that this signifies
+            a consensus. :)
+
+            Some small formatting fixes in source code and output were
+            applied.
+
+2011-04-01: OTH: remove unnecessary parentheses around assert
+2011-04-04: FIX: restore python2.4, 2.5 support in setup.py Module ast is not
+            available in python < 2.6.
+
+            The format of docstrings is slightly changed: removed empty lines
+            at the top.
+
+            Tested with python 2.4, 2.5, 2.6, 2.7, 3.1, 3.2. Output looks 
+            identical.
+
+2011-04-01: FIX: [pp] Result container was shared between invocations
+2011-04-01: ERF: improved scikits.learn detection code.
+2011-03-31: ERF: Some small code  improvements, no functional changes.
+2011-03-31: FIX: Fixed source path handling.
+
+-------------------------------------------------------------------------------
 MDP-3.1:
 
 2011-03-29: FIX: fixed shogun version detection code. As I expected, explicit

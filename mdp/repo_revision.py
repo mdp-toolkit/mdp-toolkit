@@ -18,12 +18,12 @@ def get_git_revision():
         # annotated tags
         # --dirty=+ appends a plus if the working copy is modified
         command = ["git", "describe", "--tags", "--dirty=+"]
-        proc = Popen(command, stdout=PIPE, stderr=STDOUT, cwd=mdp_dir)
+        proc = Popen(command, stdout=PIPE, stderr=STDOUT, cwd=mdp_dir,
+                     universal_newlines=True)
         exit_status = proc.wait()
         # only get the revision if command succeded
         if exit_status == 0:
             revision = proc.stdout.read().strip()
     except OSError:
         pass
-    # we need to 'decode', because otherwise py3k thinks it's bytes
-    return revision.decode()
+    return revision

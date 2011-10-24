@@ -1,4 +1,4 @@
-for MDP 3.1
+for MDP 3.3
 ===========
 
 - clearify documentation on Flow.train as suggested by Fabian Schoenfeld in
@@ -21,8 +21,6 @@ for MDP 3.1
   doctest to run properly and to avoid magic tricks with sys.path,
   which are not exactly elegant and prone to fail 
   [1] http://sphinx.pocoo.org/markup/code.html?highlight=include#literalinclude
-- parallel tests are generating a lot of thrash in /tmp: the temporary
-  stuff should be cleaned after successfull completion of the test!
 - remove _monkeypatch_pp when parallel python is fixed
 - let EtaConmputerNode match the new convention of SFA Node in terms of
   last sample.
