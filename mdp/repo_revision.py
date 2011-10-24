@@ -25,5 +25,4 @@ def get_git_revision():
             revision = proc.stdout.read().strip()
     except OSError:
         pass
-    # we need to 'decode', because otherwise py3k thinks it's bytes
-    return revision.decode()
+    return revision
