@@ -17,4 +17,7 @@ ifeq (,$(findstring nocheck,$(DEB_BUILD_OPTIONS)))
         python$$buildver $$MDPPATH/mdp/test/run_tests.py $$MDPPATH/mdp \
                          $$MDPPATH/bimdp; \
     done
+	: # Prune compiled code which could have been generated during testing
+	/usr/bin/find -iname __pycache__ -print0 -o -iname \*.pyc -print0 \
+	| xargs -r -0 rm -fr
 endif
