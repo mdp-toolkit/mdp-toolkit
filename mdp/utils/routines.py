@@ -222,9 +222,7 @@ def nongeneral_svd(A, range=None, **kwargs):
     # sort eigenvalues and corresponding eigenvectors
     idx = w.argsort()
     w = w.take(idx)
-    Z = Z.take(idx, axis=1)
-    # sort eigenvectors
-    Z = (Z[-1::-1, -1::-1]).T
+    Z = Z.take(idx, axis=0).T
     if range is not None:
         lo, hi = range
         Z = Z[:, lo-1:hi]
