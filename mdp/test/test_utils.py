@@ -133,3 +133,13 @@ def test_QuadraticForm_non_symmetric_raises():
     H = numx_rand.random((10,10))
     py.test.raises(mdp.utils.QuadraticFormException,
                    utils.QuadraticForm, H)
+
+def test_nongeneral_svd_bug():
+    a = numx.array([[ 0.73083003,  0.        ,  0.7641788 ,  0.        ],
+                    [ 0.        ,  0.        ,  0.        ,  0.        ],
+                    [ 0.7641788 ,  0.        ,  0.79904932,  0.        ],
+                    [ 0.        ,  0.        ,  0.        ,  0.        ]])
+    w, z = utils.nongeneral_svd(a)
+    diag = numx.diagonal(utils.mult(utils.hermitian(z),
+                                    utils.mult(a, z))).real
+    assert_array_almost_equal(diag, w, 12)
