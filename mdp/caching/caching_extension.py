@@ -70,7 +70,7 @@ class CacheExecuteExtensionNode(ExtensionNode, Node):
     or
     3) the instance is registered to be cached
 
-    *Warning: this extension might brake the algorithms if nodes rely
+    *Warning: this extension might break the algorithms if nodes rely
     on side effects.*
 
     See `activate_caching`, `deactivate_caching`, and the `cache` context
