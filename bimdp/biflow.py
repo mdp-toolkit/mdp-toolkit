@@ -281,7 +281,7 @@ class BiFlow(mdp.Flow):
 
     def execute(self, iterable, msg_iterable=None, target_iterable=None):
         """Execute the flow and return (y, msg).
-        
+
         Note that the returned msg can be an empty dict, but not None.
 
         iterable -- Can be an iterable or iterator for arrays, a single array
@@ -363,7 +363,6 @@ class BiFlow(mdp.Flow):
 
     def _bi_reset(self):
         """Reset the nodes and internal flow variables."""
-        self._global_message_emitter = None
         for node in self.flow:
             if isinstance(node, BiNode):
                 node.bi_reset()
