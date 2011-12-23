@@ -52,17 +52,14 @@ from mdp import config, numx_description, MDPException
 if numx_description == 'scipy':
     from convolution_nodes import Convolution2DNode
     __all__ += ['Convolution2DNode']
-    del convolution_nodes
 
 if config.has_shogun:
     from shogun_svm_classifier import ShogunSVMClassifier
     __all__ += ['ShogunSVMClassifier']
-    del shogun_svm_classifier
 
 if config.has_libsvm:
     from libsvm_classifier import LibSVMClassifier
     __all__ += ['LibSVMClassifier']
-    del libsvm_classifier
 
 if config.has_sklearn:
     import scikits_nodes
@@ -74,33 +71,6 @@ if config.has_sklearn:
         del name
     except:
         pass
-    del scikits_nodes
-try:
-    del svm_classifiers
-except NameError:
-    pass
-
-
-# clean up namespace
-del expansion_nodes
-del pca_nodes
-del sfa_nodes
-del ica_nodes
-del neural_gas_nodes
-del fda_nodes
-del em_nodes
-del misc_nodes
-del isfa_nodes
-del rbm_nodes
-del nipals
-del numx_description
-del config
-del MDPException
-del jade
-del lle_nodes
-del xsfa_nodes
-del regression_nodes
-del classifier_nodes
 
 from mdp import utils
 utils.fixup_namespace(__name__, __all__,
@@ -124,8 +94,10 @@ utils.fixup_namespace(__name__, __all__,
                        'shogun_svm_classifier',
                        'svm_classifiers',
                        'libsvm_classifier',
-                       'svn_classifiers',
                        'regression_nodes',
                        'classifier_nodes',
+                       'utils',
+                       'scikits_nodes',
+                       'numx_description',
+                       'config',
                        ))
-del utils

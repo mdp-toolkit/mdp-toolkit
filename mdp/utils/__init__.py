@@ -76,14 +76,6 @@ def svd(x, compute_uv = True):
     except _mdp.numx_linalg.LinAlgError, exc:
         raise SymeigException(str(exc))
 
-# clean up namespace
-del routines
-del introspection
-del quad_forms
-del covariance
-del progress_bar
-del slideshow
-
 __all__ = ['CovarianceMatrix', 'DelayCovarianceMatrix','CrossCovarianceMatrix',
            'MultipleCovarianceMatrices', 'QuadraticForm',
            'QuadraticFormException',
@@ -109,9 +101,8 @@ def without_prefix(name, prefix):
 
 import os
 FIXUP_DEBUG = os.getenv('MDPNSDEBUG')
-del os
 
-def fixup_namespace(mname, names, old_modules):
+def fixup_namespace(mname, names, old_modules, keep_modules=()):
     import sys
     module = sys.modules[mname]
     if names is None:
@@ -126,6 +117,19 @@ def fixup_namespace(mname, names, old_modules):
                 print 'namespace fixup: {%s => %s}.%s' % (
                     item.__module__, mname, item.__name__)
             item.__module__ = mname
+    # take care of removing the module filenames
+    for filename in old_modules:
+        # skip names in keep modules
+        if filename in keep_modules:
+            continue
+        try:
+            delattr(module, filename)
+            if FIXUP_DEBUG:
+                print 'NAMESPACE FIXUP: deleting %s from %s' % (filename, module)
+        except AttributeError:
+            # if the name is not there, we are in a reload, so do not
+            # do anything
+            pass
 
 fixup_namespace(__name__, __all__,
                 ('routines',
@@ -134,4 +138,8 @@ fixup_namespace(__name__, __all__,
                  'covariance',
                  'progress_bar',
                  'slideshow',
+                 '_ordered_dict',
+                 'templet',
+                 'temporarydir',
+                 'os',
                  ))

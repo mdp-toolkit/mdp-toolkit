@@ -62,4 +62,6 @@ fixup_namespace(__name__, __all__,
                  'switchboard',
                  'hinet_Visitor',
                  'switchboard_factory',
+                 'utils',
+                 'fixup_namespace'
                  ))

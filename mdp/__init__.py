@@ -167,14 +167,6 @@ import hinet
 import parallel
 from test import test
 
-# clean up namespace
-del signal_node
-del linear_flows
-del classifier_node
-del helper_funcs
-del configuration
-del repo_revision
-
 # explicitly set __all__, mainly needed for epydoc
 __all__ = ['config',
            'CheckpointFlow',
@@ -223,7 +215,8 @@ utils.fixup_namespace(__name__, __all__,
                       ('signal_node',
                        'linear_flows',
                        'helper_funcs',
-                       'extension',
                        'classifier_node',
                        'configuration',
-                       ))
+                       'repo_revision',
+                       'extension',
+                       ),('extension',))
