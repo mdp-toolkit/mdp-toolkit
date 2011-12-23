@@ -1,3 +1,4 @@
+# -*- coding:utf-8; -*-
 """Wraps the algorithms defined in scikits.learn in MDP Nodes.
 
 This module is based on the 0.6.X branch of scikits.learn .

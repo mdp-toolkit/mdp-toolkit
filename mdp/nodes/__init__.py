@@ -1,3 +1,4 @@
+# -*- coding:utf-8 -*-
 __docformat__ = "restructuredtext en"
 
 from pca_nodes import WhiteningNode, PCANode
