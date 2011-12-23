@@ -120,7 +120,7 @@ def _gen_docstring(object, docsource=None):
                     next = therest[i+1][prefix:]
                     quoteind = len(_WS_PREFIX_RE.match(next).group(1))
 
-    return _DOC_TEMPLATE % ('\n'.join(header), module, name, '\n'.join(body))
+    return _DOC_TEMPLATE % (u'\n'.join(unicode(header)), unicode(module), unicode(name), u'\n'.join(unicode(body)))
 
 # TODO: generalize dtype support
 # TODO: have a look at predict_proba for Classifier.prob
