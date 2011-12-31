@@ -74,7 +74,7 @@ if config.has_sklearn:
         pass
 
 from mdp import utils
-utils.fixup_namespace(__name__, __all__,
+utils.fixup_namespace(__name__, __all__ + ['ICANode'],
                       ('pca_nodes',
                        'sfa_nodes',
                        'ica_nodes',
