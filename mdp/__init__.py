@@ -219,4 +219,5 @@ utils.fixup_namespace(__name__, __all__,
                        'configuration',
                        'repo_revision',
                        'extension',
-                       ),('extension',))
+                       ),('extension',
+                          'configuration'))
