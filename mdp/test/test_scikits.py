@@ -4,7 +4,12 @@ requires_scikits = skip_on_condition(
     "not mdp.config.has_sklearn or mdp.numx_description != 'scipy'",
     "This test requires sklearn and SciPy")
 
+requires_pcasikitslearnnode = skip_on_condition(
+    "'PCAScikitsLearnNode' not in dir(mdp.nodes)",
+    "This test requires sklearn.decomposition.pca.PCA to be available")
+
 @requires_scikits
+@requires_pcasikitslearnnode
 def test_scikits_PCANode_training():
     """Check functionality of scikits' PCANode."""
     node = mdp.nodes.PCAScikitsLearnNode(n_components=2)
