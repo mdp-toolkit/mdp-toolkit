@@ -29,7 +29,7 @@ class CovarianceMatrix(object):
     For a start see the Python recipe by Raymond Hettinger at
     http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/393090
     For a review about floating point arithmetic and its pitfalls see
-    http://docs.sun.com/source/806-3568/ncg_goldberg.html
+    http://docs.oracle.com/cd/E19957-01/806-3568/ncg_goldberg.html
     """
 
     def __init__(self, dtype=None, bias=False):

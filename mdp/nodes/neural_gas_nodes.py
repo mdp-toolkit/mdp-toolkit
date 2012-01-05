@@ -35,9 +35,6 @@ class GrowingNeuralGasNode(Node):
     D. S. Touretzky, and T. K. Leen (editors), Advances in Neural Information
     Processing Systems 7, pages 625-632. MIT Press, Cambridge MA, 1995.
 
-    A java implementation is available at:
-    http://www.neuroinformatik.ruhr-uni-bochum.de/ini/VDM/research/gsn/DemoGNG/GNG.html
-
     **Attributes and methods of interest**
 
     - graph -- The corresponding `mdp.graph.Graph` object
