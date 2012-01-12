@@ -230,5 +230,5 @@ def test_PCANode_no_eigenvalues_left():
     mat = numx.zeros((100,4), dtype='d')
     pca = mdp.nodes.PCANode(svd=True, reduce=True)
     pca.train(mat)
-    pca.stop_training()
+    py.test.raises(mdp.NodeException, 'pca.stop_training()')
     
