@@ -225,3 +225,10 @@ def testPCANode_negative_eigenvalues():
     pca.train(uniform((10,10)))
     pca.stop_training()
     assert pca.output_dim == 1, 'PCA did not remove non-positive eigenvalues!'
+
+def test_PCANode_no_eigenvalues_left():
+    mat = numx.zeros((100,4), dtype='d')
+    pca = mdp.nodes.PCANode(svd=True, reduce=True)
+    pca.train(mat)
+    pca.stop_training()
+    
