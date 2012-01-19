@@ -250,8 +250,8 @@ class Flow(object):
 
         if not isinstance(data_iterables, list):
             err_str = ("'data_iterables' must be either a list of "
-                       "iterables or an array, but got %s" %
-                       str(type(data_iterables)))
+                       "iterables or an array, and not %s" %
+                       type(data_iterables))
             raise FlowException(err_str)
 
         # check that all elements are iterable

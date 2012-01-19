@@ -44,7 +44,8 @@ else:
                        'covariance', 'cross_validation', 'grid_search',
                        'feature_selection.rfe', 'feature_extraction.image',
                        'feature_extraction.text', 'pipelines', 'pls',
-                       'gaussian_process', 'qda']    
+                       'gaussian_process', 'qda', 'ensemble', 'manifold',
+                       'metrics', 'preprocessing', 'tree']    
 
 for name in scikits_modules:
     # not all modules may be available due to missing dependencies
@@ -443,7 +444,7 @@ def wrap_scikits_algorithms(scikits_class, nodes_list):
         return
 
     if issubclass(scikits_class, sklearn.base.ClassifierMixin) and \
-        hasattr(scikits_class, 'fit'):
+        hasattr(scikits_class, 'fit') and not hasattr(scikits_class, 'predict'):
         nodes_list.append(wrap_scikits_classifier(scikits_class))
     # Some (abstract) transformers do not implement fit.
     elif hasattr(scikits_class, 'transform') and hasattr(scikits_class, 'fit'):
