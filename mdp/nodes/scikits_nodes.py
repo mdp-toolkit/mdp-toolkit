@@ -44,7 +44,8 @@ else:
                        'covariance', 'cross_validation', 'grid_search',
                        'feature_selection.rfe', 'feature_extraction.image',
                        'feature_extraction.text', 'pipelines', 'pls',
-                       'gaussian_process', 'qda']    
+                       'gaussian_process', 'qda', 'ensemble', 'manifold',
+                       'metrics', 'preprocessing', 'tree']    
 
 for name in scikits_modules:
     # not all modules may be available due to missing dependencies
