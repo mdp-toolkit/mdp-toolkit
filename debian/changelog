@@ -2,6 +2,7 @@ mdp (3.2-2) unstable; urgency=low
 
   [Tiziano Zito]
   * New git snapshot
+  * More sklearn wrappers
   * Fix sklearn wrappers for version 0.10
   * Fix reload support
   * Fix wrong sorting of eigenvectors in degenerate case for SVD
@@ -11,7 +12,7 @@ mdp (3.2-2) unstable; urgency=low
     on all major platforms
   * Updated debian-branch name in gbp.conf 
 
- -- Tiziano Zito <opossumnano@gmail.com>  Thu, 19 Jan 2012 13:16:27 +0100
+ -- Tiziano Zito <opossumnano@gmail.com>  Thu, 19 Jan 2012 18:32:19 +0100
 
 mdp (3.2-1) unstable; urgency=low
 
