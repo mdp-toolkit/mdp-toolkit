@@ -1,3 +1,4 @@
+# -*- coding:utf-8; -*-
 """Wraps the algorithms defined in scikits.learn in MDP Nodes.
 
 This module is based on the 0.6.X branch of scikits.learn .
@@ -28,7 +29,7 @@ if _version_too_old(sklearn.__version__, (0, 8)):
                        'linear_model', 'preprocessing', 'svm',
                        'pca', 'lda', 'hmm', 'fastica', 'grid_search', 'mixture',
                        'naive_bayes', 'neighbors', 'qda']
-else:
+elif _version_too_old(sklearn.__version__, (0, 9)):
     # package structure has been changed in 0.8
     scikits_modules = ['svm', 'linear_model', 'naive_bayes', 'neighbors',
                        'mixture', 'hmm', 'cluster', 'decomposition', 'lda',
@@ -36,6 +37,15 @@ else:
                        'feature_selection.rfe', 'feature_extraction.image',
                        'feature_extraction.text', 'pipelines', 'pls',
                        'gaussian_process', 'qda']
+else:
+    # from release 0.9 cross_val becomes cross_validation and hmm is deprecated
+    scikits_modules = ['svm', 'linear_model', 'naive_bayes', 'neighbors',
+                       'mixture', 'cluster', 'decomposition', 'lda',
+                       'covariance', 'cross_validation', 'grid_search',
+                       'feature_selection.rfe', 'feature_extraction.image',
+                       'feature_extraction.text', 'pipelines', 'pls',
+                       'gaussian_process', 'qda']    
+
 for name in scikits_modules:
     # not all modules may be available due to missing dependencies
     # on the user system.
@@ -432,12 +442,13 @@ def wrap_scikits_algorithms(scikits_class, nodes_list):
     if (name[:4] == 'Base' or name == 'LinearModel'):
         return
 
-    if issubclass(scikits_class, sklearn.base.ClassifierMixin):
+    if issubclass(scikits_class, sklearn.base.ClassifierMixin) and \
+        hasattr(scikits_class, 'fit'):
         nodes_list.append(wrap_scikits_classifier(scikits_class))
     # Some (abstract) transformers do not implement fit.
     elif hasattr(scikits_class, 'transform') and hasattr(scikits_class, 'fit'):
         nodes_list.append(wrap_scikits_transformer(scikits_class))
-    elif hasattr(scikits_class, 'predict'):
+    elif hasattr(scikits_class, 'predict') and hasattr(scikits_class, 'fit'):
         nodes_list.append(wrap_scikits_predictor(scikits_class))
 
 scikits_nodes = []

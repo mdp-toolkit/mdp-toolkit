@@ -217,6 +217,10 @@ class PCANode(mdp.Node):
             # remove entries that are smaller then var_abs and
             # smaller then var_rel relative to the maximum
             d = d[ d > self.var_abs ]
+            # check that we did not throw away everything
+            if len(d) == 0:
+                raise mdp.NodeException('No eigenvalues larger than'
+                                        ' var_abs=%e!'%self.var_abs)
             d = d[ d / d.max() > self.var_rel ]
 
             # filter for variance relative to total variance

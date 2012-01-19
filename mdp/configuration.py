@@ -137,15 +137,15 @@ class config(object):
         """Return nicely formatted info about MDP.
 
         >>> print mdp.config.info()                           # doctest: +SKIP
-                  python: 2.6.6.final.0
-                   scipy: 0.7.2
-            scipy signal: 0.7.2
-         parallel python: 1.6.0
-                  shogun: v0.9.3_r4889_2010-05-27_20:52_
-                  libsvm: NOT AVAILABLE: No module named svm
-              new symeig: NOT AVAILABLE: symeig version too old
-                  symeig: wrap_eigh
-                  joblib: 0.4.6
+                  python: 2.7.2.final.0
+                     mdp: 3.3, MDP-3.2-9-g4bc7356+
+         parallel python: 1.6.1-monkey-patched
+                  shogun: v1.1.0_02ce3cd_2011-12-12_08:17_
+                  libsvm: libsvm.so.3
+                  joblib: 0.5.4
+                 sklearn: 0.9
+                    numx: scipy 0.9.0
+                  symeig: scipy.linalg.eigh
 
         This function is used to provide the py.test report header and
         footer.
@@ -299,7 +299,10 @@ def set_configuration():
     # set python version
     config.ExternalDepFound('python', '.'.join([str(x)
                                                 for x in sys.version_info]))
-    config.ExternalDepFound('mdp', mdp.__version__+', '+mdp.__revision__)
+    version = mdp.__version__
+    if mdp.__revision__:
+        version += ', ' + mdp.__revision__
+    config.ExternalDepFound('mdp', version)
 
     # parallel python dependency
     config.pp_monkeypatch_dirname = None

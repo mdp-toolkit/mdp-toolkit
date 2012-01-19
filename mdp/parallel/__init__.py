@@ -51,13 +51,6 @@ from mdp.utils import fixup_namespace
 if config.has_parallel_python:
     import pp_support
 
-del scheduling
-del process_schedule
-del thread_schedule
-del parallelnodes
-del parallelflows
-del parallelhinet
-
 # Note: the modules with the actual extension node classes are still available
 
 __all__ = [
@@ -83,4 +76,7 @@ fixup_namespace(__name__, __all__,
                  'parallelnodes',
                  'parallelflows',
                  'parallelhinet',
+                 'parallelclassifiers',
+                 'config',
+                 'fixup_namespace'
                  ))

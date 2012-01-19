@@ -24,7 +24,7 @@ def scast(scalar, dtype):
     """Convert a scalar in a 0D array of the given dtype."""
     return numx.array(scalar, dtype=dtype)
 
-def rotate(mat, angle, columns = (0, 1), units = 'radians'):
+def rotate(mat, angle, columns=(0, 1), units='radians'):
     """
     Rotate in-place data matrix (NxM) in the plane defined by the columns=[i,j]
     when observation are stored on rows. Observations are rotated
@@ -195,7 +195,7 @@ def get_dtypes(typecodes_key, _safe=True):
     """Return the list of dtypes corresponding to the set of
     typecodes defined in numpy.typecodes[typecodes_key].
     E.g., get_dtypes('Float') = [dtype('f'), dtype('d'), dtype('g')].
-    
+
     If _safe is True (default), we remove large floating point types
     if the numerical backend does not support them.
     """
@@ -222,9 +222,7 @@ def nongeneral_svd(A, range=None, **kwargs):
     # sort eigenvalues and corresponding eigenvectors
     idx = w.argsort()
     w = w.take(idx)
-    Z = Z.take(idx, axis=1)
-    # sort eigenvectors
-    Z = (Z[-1::-1, -1::-1]).T
+    Z = Z.take(idx, axis=0).T
     if range is not None:
         lo, hi = range
         Z = Z[:, lo-1:hi]
@@ -380,7 +378,7 @@ def sign_to_bool(an_array, zero=True):
     else:
         return numx.array(an_array) > 0
 
-def gabor(size, alpha, phi, freq, sgm, x0 = None, res = 1, ampl = 1.):
+def gabor(size, alpha, phi, freq, sgm, x0=None, res=1, ampl=1.):
     """Return a 2D array containing a Gabor wavelet.
 
     Input arguments:
@@ -423,11 +421,11 @@ def gabor(size, alpha, phi, freq, sgm, x0 = None, res = 1, ampl = 1.):
     return im
 
 def residuals(app_x, y_noisy, exp_funcs, x_orig, k=0.0):
-    """Function used internally by invert_exp_funcs2 to approximate 
+    """Function used internally by invert_exp_funcs2 to approximate
     inverses in ConstantExpansionNode. """
     app_x = app_x.reshape((1,len(app_x)))
     app_exp_x =  numx.concatenate([func(app_x) for func in exp_funcs],axis=1)
-   
+
     div_y = numx.sqrt(len(y_noisy))
     div_x = numx.sqrt(len(x_orig))
     return numx.append( (1-k)*(y_noisy-app_exp_x[0]) / div_y, k * (x_orig - app_x[0])/div_x )
@@ -435,8 +433,8 @@ def residuals(app_x, y_noisy, exp_funcs, x_orig, k=0.0):
 def invert_exp_funcs2(exp_x_noisy, dim_x, exp_funcs, use_hint=False, k=0.0):
     """Approximates a preimage app_x of exp_x_noisy.
 
-    Returns an array app_x, such that each row of exp_x_noisy is close 
-    to each row of exp_funcs(app_x).   
+    Returns an array app_x, such that each row of exp_x_noisy is close
+    to each row of exp_funcs(app_x).
 
     use_hint: determines the starting point for the approximation of the
     preimage. There are three possibilities.
@@ -444,10 +442,10 @@ def invert_exp_funcs2(exp_x_noisy, dim_x, exp_funcs, use_hint=False, k=0.0):
     if it equals True: starting point is the first dim_x elements of exp_x_noisy
     otherwise: use the parameter use_hint itself as the first approximation
 
-    k: weighting factor in [0, 1] to balance between approximation error and 
+    k: weighting factor in [0, 1] to balance between approximation error and
        closeness to the starting point. For instance:
        objective function is to minimize:
-           (1-k) * |exp_funcs(app_x) - exp_x_noisy|/output_dim + 
+           (1-k) * |exp_funcs(app_x) - exp_x_noisy|/output_dim +
                k * |app_x - starting point|/input_dim
 
     Note: this function requires scipy.

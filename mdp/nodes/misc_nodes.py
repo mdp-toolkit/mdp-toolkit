@@ -328,7 +328,7 @@ class TimeDelayNode(TimeFramesNode):
     See ``TimeDelaySlidingWindowNode`` for a sliding window delay node for
     application in a non-batch manner.
 
-    Original code contributed by Sebastian Hoefer <mail@sebastianhoefer.de>
+    Original code contributed by Sebastian Hoefer.
     Dec 31, 2010
     """
 
@@ -368,7 +368,7 @@ class TimeDelaySlidingWindowNode(TimeDelayNode):
     ``TimeDelaySlidingWindowNode`` is equivalent to the result of the
     ``TimeDelayNode``.
 
-    Original code contributed by Sebastian Hoefer <mail@sebastianhoefer.de>
+    Original code contributed by Sebastian Hoefer.
     Dec 31, 2010
     """
     def __init__(self, time_frames, gap=1, input_dim=None, dtype=None):
