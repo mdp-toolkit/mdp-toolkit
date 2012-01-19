@@ -442,12 +442,13 @@ def wrap_scikits_algorithms(scikits_class, nodes_list):
     if (name[:4] == 'Base' or name == 'LinearModel'):
         return
 
-    if issubclass(scikits_class, sklearn.base.ClassifierMixin):
+    if issubclass(scikits_class, sklearn.base.ClassifierMixin) and \
+        hasattr(scikits_class, 'fit'):
         nodes_list.append(wrap_scikits_classifier(scikits_class))
     # Some (abstract) transformers do not implement fit.
     elif hasattr(scikits_class, 'transform') and hasattr(scikits_class, 'fit'):
         nodes_list.append(wrap_scikits_transformer(scikits_class))
-    elif hasattr(scikits_class, 'predict'):
+    elif hasattr(scikits_class, 'predict') and hasattr(scikits_class, 'fit'):
         nodes_list.append(wrap_scikits_predictor(scikits_class))
 
 scikits_nodes = []
