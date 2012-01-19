@@ -443,7 +443,7 @@ def wrap_scikits_algorithms(scikits_class, nodes_list):
         return
 
     if issubclass(scikits_class, sklearn.base.ClassifierMixin) and \
-        hasattr(scikits_class, 'fit'):
+        hasattr(scikits_class, 'fit') and not hasattr(scikits_class, 'predict'):
         nodes_list.append(wrap_scikits_classifier(scikits_class))
     # Some (abstract) transformers do not implement fit.
     elif hasattr(scikits_class, 'transform') and hasattr(scikits_class, 'fit'):
