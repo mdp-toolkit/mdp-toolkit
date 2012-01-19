@@ -7,6 +7,6 @@ repository, no dh_wraporig is used any longer.
 Upstream git repository at sourceforge could be added to
 debcheckout'ed Debian packaging with something like
 
-git remote add sf git://mdp-toolkit.git.sourceforge.net/gitroot/mdp-toolkit/mdp-toolkit
-git fetch sf
+git remote add github git@github.com:mdp-toolkit/mdp-toolkit.git
+git fetch github
 
