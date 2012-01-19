@@ -18,6 +18,5 @@ ifeq (,$(findstring nocheck,$(DEB_BUILD_OPTIONS)))
                          $$MDPPATH/bimdp; \
     done
 	: # Prune compiled code which could have been generated during testing
-	/usr/bin/find -iname __pycache__ -print0 -o -iname \*.pyc -print0 \
-	| xargs -r -0 rm -fr
+	/usr/bin/find \( -name __pycache__ -o -name \*.pyc \) -delete
 endif
