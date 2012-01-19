@@ -1,4 +1,4 @@
-mdp (3.2-2) unstable; urgency=low
+mdp (3.2+git28-g4243e9c-1) unstable; urgency=low
 
   [Tiziano Zito]
   * New git snapshot
