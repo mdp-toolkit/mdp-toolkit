@@ -9,7 +9,7 @@ Build-Depends: cdbs (>=0.4.90~),
                python-numpy,
                python-libsvm,
                python-joblib,
-               python-scikits-learn,
+               python-scikits-learn | python-sklearn,
                python-pp,
                shogun-python-modular
 Standards-Version: 3.9.2
@@ -25,7 +25,7 @@ Recommends: python-scipy,
             shogun-python-modular,
             python-libsvm,
             python-joblib,
-            python-scikits-learn,
+            python-scikits-learn | python-sklearn,
             python-pp
 Suggests: python-py
 Enhances: python-mvpa
