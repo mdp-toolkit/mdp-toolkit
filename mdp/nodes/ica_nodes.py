@@ -218,7 +218,6 @@ class CuBICANode(ICANode):
 
         # maximum number of sweeps through all possible pairs of signals
         num = int(1+round(numx.sqrt(comp)))
-        count = 0
 
         # start sweeping
         for k in range(num):
@@ -271,7 +270,6 @@ class CuBICANode(ICANode):
                     # keep track of maximum angle of rotation
                     maxangle = max(maxangle, abs(float(phi_max)))
 
-                count += 1
             self.maxangle.append(maxangle)
             if maxangle <= limit:
                 break
@@ -429,7 +427,6 @@ class FastICANode(ICANode):
 
     def _get_rsamples(self, X):
         tlen = X.shape[1]
-        comp = X.shape[0]
         mask = numx.where(numx_rand.random(tlen) < self.sample_size)[0]
         return X[:, mask]
 
