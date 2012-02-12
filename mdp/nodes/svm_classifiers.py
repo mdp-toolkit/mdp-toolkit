@@ -1,6 +1,5 @@
 import mdp
 from mdp import ClassifierCumulator
-from mdp import numx
 from itertools import count
 
 """General routines and base classes for Support Vector Machine classifiers.

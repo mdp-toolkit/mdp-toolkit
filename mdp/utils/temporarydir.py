@@ -1,6 +1,5 @@
 # This is a backport of tempfile.TemporaryDirectory from Python 3.2
 
-import sys as _sys
 import os as _os
 from tempfile import mkdtemp
 import errno
@@ -41,7 +40,6 @@ class TemporaryDirectory(object):
                 # up due to missing globals
                 if "None" not in str(ex):
                     raise
-                #print >>_sys.stderr, "ERROR: %r while cleaning up %r" % (ex, self)
                 return
             except OSError, ex:
                 # ignore if the directory has been deleted already
