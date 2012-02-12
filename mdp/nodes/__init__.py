@@ -68,10 +68,7 @@ if config.has_sklearn:
         if name.endswith('Node'):
             globals()[name] = scikits_nodes.DICT_[name]
             __all__.append(name)
-    try:
         del name
-    except:
-        pass
 
 from mdp import utils
 utils.fixup_namespace(__name__, __all__ + ['ICANode'],

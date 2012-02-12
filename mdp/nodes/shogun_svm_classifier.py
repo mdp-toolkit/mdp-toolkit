@@ -267,7 +267,7 @@ class ShogunSVMClassifier(_SVMClassifier):
         for p in self.classifier_options.keys():
             try:
                 self.set_classifier_param(p, self.classifier_options[p])
-            except:
+            except Exception:
                 pass
 
         self._num_threads = num_threads
