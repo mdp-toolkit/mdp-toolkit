@@ -9,7 +9,7 @@ class _NGNodeData(object):
         self.pos = pos
         # cumulative error
         self.cum_error = error
-        self.hits = 0
+        self.hits = hits
         self.label = label
 
 class _NGEdgeData(object):
