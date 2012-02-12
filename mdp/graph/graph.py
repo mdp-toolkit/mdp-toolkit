@@ -147,7 +147,7 @@ class Graph(object):
     def remove_node(self, node):
         # the node is not in this graph
         if node not in self.nodes:
-            errstr = 'This node is not part of the graph (%s)' % str(node_id)
+            errstr = 'This node is not part of the graph (%s)' % node
             raise GraphException(errstr)
 
         # remove all edges containing this node
