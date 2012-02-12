@@ -12,7 +12,7 @@ profile=no
 
 # Add files or directories to the blacklist. They should be base names, not
 # paths.
-ignore=CVS
+ignore=test,run_tests.py
 
 # Pickle collected data for later comparisons.
 persistent=yes
@@ -38,7 +38,9 @@ load-plugins=
 # W0221 (Arguments number differs from %s method): This is by design, sinve methods
 # 	like _execute are explicitly allowed to take additional arguments.
 # W0142 (Used * or ** magic): This isn't really a problem.
-disable=W0221,W0142
+# W0622 (Redefining built-in 'str')
+disable=W0221,W0142,W0622
+
 
 
 [REPORTS]
@@ -76,7 +78,7 @@ comment=no
 required-attributes=
 
 # List of builtins function names that should not be used, separated by a comma
-bad-functions=map,filter,apply,input
+bad-functions=apply,input
 
 # Regular expression which should only match correct module names
 module-rgx=(([a-z_][a-z0-9_]*)|([A-Z][a-zA-Z0-9]+))$
@@ -142,7 +144,7 @@ notes=FIXME,XXX,TODO
 [SIMILARITIES]
 
 # Minimum lines number of a similarity.
-min-similarity-lines=4
+min-similarity-lines=12
 
 # Ignore comments when computing similarities.
 ignore-comments=yes
@@ -201,35 +203,35 @@ valid-classmethod-first-arg=cls
 [DESIGN]
 
 # Maximum number of arguments for function / method
-max-args=5
+max-args=20
 
 # Argument names that match this expression will be ignored. Default to name
 # with leading underscore
 ignored-argument-names=_.*
 
 # Maximum number of locals for function / method body
-max-locals=15
+max-locals=50
 
 # Maximum number of return / yield for function / method body
 max-returns=6
 
 # Maximum number of branch for function / method body
-max-branchs=12
+max-branchs=20
 
 # Maximum number of statements in function / method body
-max-statements=50
+max-statements=100
 
 # Maximum number of parents for a class (see R0901).
 max-parents=7
 
 # Maximum number of attributes for a class (see R0902).
-max-attributes=7
+max-attributes=20
 
 # Minimum number of public methods for a class (see R0903).
-min-public-methods=2
+min-public-methods=0
 
 # Maximum number of public methods for a class (see R0904).
-max-public-methods=20
+max-public-methods=30
 
 
 [IMPORTS]
