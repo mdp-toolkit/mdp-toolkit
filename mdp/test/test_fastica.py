@@ -9,9 +9,9 @@ def _fastica_test_factory(metafunc):
     # generate FastICANode testcases
     fica_parm = {'approach': ['symm', 'defl'],
                  'g': ['pow3', 'tanh', 'gaus', 'skew'],
-                 'fine_g': [ None, 'pow3', 'tanh', 'gaus', 'skew'],
-                 'sample_size': [ 1, 0.99999 ],
-                 'mu': [1, 0.999999 ],
+                 'fine_g': [None, 'pow3', 'tanh', 'gaus', 'skew'],
+                 'sample_size': [1, 0.99999],
+                 'mu': [1, 0.999999],
                  }
 
     for parms in mdp.utils.orthogonal_permutations(fica_parm):
@@ -48,13 +48,11 @@ def test_FastICA(parms):
         rand_func = uniform
 
     # try two times just to clear failures due to randomness
-    try:
-        ica = mdp.nodes.FastICANode(limit=10**(-decimal),**parms)
-        ica2 = ica.copy()
-        verify_ICANode(ica, rand_func=rand_func, vars=2)
-        verify_ICANodeMatrices(ica2, rand_func=rand_func, vars=2)
-    except Exception:
-        ica = mdp.nodes.FastICANode(limit=10**(-decimal),**parms)
-        ica2 = ica.copy()
-        verify_ICANode(ica, rand_func=rand_func, vars=2)
-        verify_ICANodeMatrices(ica2, rand_func=rand_func, vars=2)
+    for exc in (Exception, ()):
+        try:
+            ica = mdp.nodes.FastICANode(limit=10**(-decimal),**parms)
+            ica2 = ica.copy()
+            verify_ICANode(ica, rand_func=rand_func, vars=2)
+            verify_ICANodeMatrices(ica2, rand_func=rand_func, vars=2)
+        except exc:
+            pass

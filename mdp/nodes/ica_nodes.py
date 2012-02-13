@@ -312,7 +312,7 @@ class FastICANode(ICANode):
           The value of the convergence threshold.
 
     History:
-    
+
     - 1.4.1998 created for Matlab by Jarmo Hurri, Hugo Gavert, Jaakko Sarela,
       and Aapo Hyvarinen
     - 7.3.2003  modified for Python by Thomas Wendler
@@ -323,7 +323,7 @@ class FastICANode(ICANode):
     """
 
     def __init__(self, approach = 'defl', g = 'pow3', guess = None,
-                 fine_g = 'pow3', mu = 1, 
+                 fine_g = 'pow3', mu = 1,
                  sample_size = 1, fine_tanh = 1, fine_gaus = 1,
                  max_it = 1000, max_it_fine = 100,
                  failures = 5, limit = 0.001, verbose = False,
@@ -412,10 +412,7 @@ class FastICANode(ICANode):
             raise mdp.NodeException('0<sample_size<1, %f given' % sample_size)
 
         self.mu = mu
-        if mu != 1:
-            self.stabilization = True
-        else:
-            self.stabilization = False
+        self.stabilization = mu != 1
         self.fine_tanh = fine_tanh
         self.fine_gaus = fine_gaus
         self.max_it = max_it
