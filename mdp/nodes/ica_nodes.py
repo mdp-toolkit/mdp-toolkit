@@ -323,7 +323,7 @@ class FastICANode(ICANode):
     """
 
     def __init__(self, approach = 'defl', g = 'pow3', guess = None,
-                 fine_g = 'pow3', mu = 1, stabilization = False,
+                 fine_g = 'pow3', mu = 1, 
                  sample_size = 1, fine_tanh = 1, fine_gaus = 1,
                  max_it = 1000, max_it_fine = 100,
                  failures = 5, limit = 0.001, verbose = False,
@@ -364,14 +364,12 @@ class FastICANode(ICANode):
                      are the same as for 'g'. Set it to None to disable fine
                      tuning.
 
-               mu -- Step size
-
-    stabilization -- Enable stabilization procedure: the value of mu can
-                     momentarily be halved if the algorithm is stuck between
-                     two points (this is called a stroke). Also if there is no
-                     convergence before half of the maximum number of
-                     iterations has been reached then mu will be halved for
-                     the rest of the rounds.
+               mu -- Step size. If mu != 1, a stabilization procedure is used:
+                     the value of mu can momentarily be halved if the algorithm
+                     is stuck between two points (this is called a stroke).
+                     Also if there is no convergence before half of the maximum
+                     number of iterations has been reached then mu will be halved
+                     for the rest of the rounds.
 
       sample_size -- Percentage of samples used in one iteration. If
                      sample_size < 1, samples are chosen in random order.
