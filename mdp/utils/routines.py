@@ -122,7 +122,7 @@ def random_rot(dim, dtype='d'):
         mat[n-1:, n-1:] = Hx
         H = mdp.utils.mult(H, mat)
     # Fix the last sign such that the determinant is 1
-    D[-1] = -D.prod()
+    D[-1] = (-1)**(1-dim%2)*D.prod()
     # Equivalent to mult(numx.diag(D), H) but faster
     H = (D*H.T).T
     return H
