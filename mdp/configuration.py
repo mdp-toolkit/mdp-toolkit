@@ -305,7 +305,6 @@ def set_configuration():
     config.ExternalDepFound('mdp', version)
 
     # parallel python dependency
-    config.pp_monkeypatch_dirname = None
     try:
         import pp
         # set pp secret if not there already
