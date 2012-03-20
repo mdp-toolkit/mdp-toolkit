@@ -6,7 +6,9 @@ Uploaders: Yaroslav Halchenko <debian@onerussian.com>
 Build-Depends:
                debhelper (>= 5.0.38),
                python-all (>=2.6.6-3~),
+	       python3-all,
                python-numpy,
+	       python3-numpy,
                python-libsvm,
                python-joblib,
                python-scikits-learn | python-sklearn,
@@ -14,6 +16,7 @@ Build-Depends:
                shogun-python-modular
 Standards-Version: 3.9.2
 X-Python-Version: >= 2.5
+# X-Python3-Version: >= 3.1
 Vcs-Browser: http://git.onerussian.com/?p=deb/mdp.git
 Vcs-git: http://git.onerussian.com/vcs/deb/mdp.git
 Homepage: http://mdp-toolkit.sourceforge.net/
@@ -36,3 +39,16 @@ Description: Modular toolkit for Data Processing
  Independent Component Analysis (ICA), Slow Feature Analysis (SFA), Independent
  Slow Feature Analysis (ISFA), Growing Neural Gas (GNG), Factor Analysis,
  Fisher Discriminant Analysis (FDA), and Gaussian Classifiers.
+
+Package: python3-mdp
+Architecture: all
+Depends: ${misc:Depends}, ${python3:Depends}, python3-numpy
+Description: Modular toolkit for Data Processing
+ Python data processing framework for building complex data processing software
+ by combining widely used machine learning algorithms into pipelines and
+ networks. Implemented algorithms include: Principal Component Analysis (PCA),
+ Independent Component Analysis (ICA), Slow Feature Analysis (SFA), Independent
+ Slow Feature Analysis (ISFA), Growing Neural Gas (GNG), Factor Analysis,
+ Fisher Discriminant Analysis (FDA), and Gaussian Classifiers.
+ .
+ This package contains MDP for Python 3.

@@ -2,12 +2,23 @@
 export DH_VERBOSE=1
 
 PYVERS=$(shell pyversions -r)
+PY3VERS=$(shell py3versions -r)
 
 %:
-	dh $@ --with python2
+	dh $@ --with python2,python3
+
+override_dh_auto_build:
+	dh_auto_build
 
 override_dh_auto_install:
 	dh_auto_install
+	set -ex; for python in $(PY3VERS); do \
+	  $$python setup.py install --root=$(CURDIR)/debian/tmp --install-layout=deb; \
+	done
+
+override_dh_install:
+	dh_install --fail-missing
+
 ifeq (,$(findstring nocheck,$(DEB_BUILD_OPTIONS)))
 	set -e ; \
 	for python in $(PYVERS); do ( \
