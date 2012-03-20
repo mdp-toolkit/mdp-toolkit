@@ -3,7 +3,7 @@ Section: python
 Priority: optional
 Maintainer: Tiziano Zito <opossumnano@gmail.com>
 Uploaders: Yaroslav Halchenko <debian@onerussian.com>
-Build-Depends: cdbs (>=0.4.90~),
+Build-Depends:
                debhelper (>= 5.0.38),
                python-all (>=2.6.6-3~),
                python-numpy,

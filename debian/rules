@@ -1,22 +1,20 @@
 #!/usr/bin/make -f
+export DH_VERBOSE=1
 
-include /usr/share/cdbs/1/rules/debhelper.mk
-include /usr/share/cdbs/1/class/python-distutils.mk
+PYVERS=$(shell pyversions -vr debian/control)
 
-DEB_INSTALL_CHANGELOGS_ALL := CHANGES
+%:
+	dh $@ --with python2
 
-install/python-mdp:: test-build
-
-#$(CURDIR)/debian/python-mdp$(INSTALL_PATH)/usr/lib/$$PYTHON/site-packages;
-
-test-build:
+override_dh_auto_install:
+	dh_auto_install
 ifeq (,$(findstring nocheck,$(DEB_BUILD_OPTIONS)))
-	for buildver in $(cdbs_python_build_versions); do \
-        echo "I: Runnig MDP unittests using $$PYTHON"; \
-        MDPPATH=$(cdbs_python_destdir)/$(call cdbs_expand_python_distutils_installdir,python$$buildver); \
-        python$$buildver $$MDPPATH/mdp/test/run_tests.py $$MDPPATH/mdp \
-                         $$MDPPATH/bimdp; \
-    done
+	set -e ; \
+	for pyver in $(PYVERS); do ( \
+	echo "I: Runnig MDP unittests using python$$pyver"; \
+	cd debian/python-mdp/usr/lib/python$$pyver/dist-packages; \
+	python$$pyver mdp/test/run_tests.py mdp bimdp; \
+	) done
 	: # Prune compiled code which could have been generated during testing
-	/usr/bin/find \( -name __pycache__ -o -name \*.pyc \) -delete
+	find \( -name __pycache__ -o -name \*.pyc \) -delete
 endif
