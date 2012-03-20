@@ -1,7 +1,7 @@
 #!/usr/bin/make -f
 export DH_VERBOSE=1
 
-PYVERS=$(shell pyversions -vr debian/control)
+PYVERS=$(shell pyversions -r)
 
 %:
 	dh $@ --with python2
@@ -10,10 +10,10 @@ override_dh_auto_install:
 	dh_auto_install
 ifeq (,$(findstring nocheck,$(DEB_BUILD_OPTIONS)))
 	set -e ; \
-	for pyver in $(PYVERS); do ( \
-	echo "I: Runnig MDP unittests using python$$pyver"; \
-	cd debian/python-mdp/usr/lib/python$$pyver/dist-packages; \
-	python$$pyver mdp/test/run_tests.py mdp bimdp; \
+	for python in $(PYVERS); do ( \
+	echo "I: Runnig MDP unittests using $$python"; \
+	cd debian/python-mdp/usr/lib/$$python/dist-packages; \
+	$$python mdp/test/run_tests.py mdp bimdp; \
 	) done
 	: # Prune compiled code which could have been generated during testing
 	find \( -name __pycache__ -o -name \*.pyc \) -delete
