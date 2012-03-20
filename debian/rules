@@ -16,5 +16,5 @@ ifeq (,$(findstring nocheck,$(DEB_BUILD_OPTIONS)))
 	$$python mdp/test/run_tests.py mdp bimdp; \
 	) done
 	: # Prune compiled code which could have been generated during testing
-	find \( -name __pycache__ -o -name \*.pyc \) -delete
+	find debian/python-mdp \( -name __pycache__ -o -name \*.pyc \) -delete
 endif
