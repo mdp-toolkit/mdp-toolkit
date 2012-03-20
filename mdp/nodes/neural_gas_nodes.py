@@ -9,7 +9,7 @@ class _NGNodeData(object):
         self.pos = pos
         # cumulative error
         self.cum_error = error
-        self.hits = 0
+        self.hits = hits
         self.label = label
 
 class _NGEdgeData(object):
@@ -250,7 +250,7 @@ class GrowingNeuralGasNode(Node):
         nodes = []
         dists = []
         for x in input:
-            (n0, n1), dist = self._get_nearest_nodes(x)
+            (n0, _), dist = self._get_nearest_nodes(x)
             nodes.append(n0)
             dists.append(numx.sqrt(dist[0]))
         return nodes, dists
@@ -367,7 +367,7 @@ class NeuralGasNode(GrowingNeuralGasNode):
             # choose the random position according to a gaussian distribution
             # with zero mean and unit variance
             normal = numx_rand.normal
-            for node_ind in range(self.num_nodes):
+            for _ in range(self.num_nodes):
                 self._add_node(self._refcast(normal(0.0, 1.0, self.input_dim)))
 
         epoch = self.epoch

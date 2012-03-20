@@ -470,16 +470,3 @@ class TestBiNodeCoroutine(object):
         x = n.random.random((3,2))
         node1.execute(x, {"a": 2})
         assert node1._coroutine_instances == {}
-
-
-def get_suite():
-    suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(TestBiNode))
-    suite.addTest(unittest.makeSuite(TestBiClassifierNode))
-    suite.addTest(unittest.makeSuite(TestIdentityBiNode))
-    suite.addTest(unittest.makeSuite(TestJumpBiNode))
-    suite.addTest(unittest.makeSuite(TestBiNodeCoroutine))
-    return suite
-
-if __name__ == '__main__':
-    unittest.main()

@@ -6,7 +6,6 @@ import inspect as _inspect
 import warnings as _warnings
 import traceback as _traceback
 import cPickle as _cPickle
-import warnings as _warnings
 import tempfile as _tempfile
 import copy as _copy
 

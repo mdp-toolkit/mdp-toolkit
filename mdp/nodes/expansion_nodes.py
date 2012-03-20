@@ -1,7 +1,7 @@
 __docformat__ = "restructuredtext en"
 
 import mdp
-from mdp import numx, numx_linalg, utils
+from mdp import numx
 from mdp.utils import mult, matmult, invert_exp_funcs2
 from mdp.nodes import GrowingNeuralGasNode
 

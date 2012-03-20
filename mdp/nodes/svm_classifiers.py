@@ -1,13 +1,11 @@
-import mdp
-from mdp import ClassifierCumulator
-from mdp import numx
-from itertools import count
-
 """General routines and base classes for Support Vector Machine classifiers.
 
-    TODO: Implement some scaling. Either by special Scaling Node or internally.
+TODO: Implement some scaling. Either by special Scaling Node or internally.
 """
 
+import mdp
+from mdp import ClassifierCumulator
+from itertools import count
 
 class _LabelNormalizer(object):
     """This class provides a transparent mapping from arbitrary labels

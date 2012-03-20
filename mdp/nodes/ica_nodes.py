@@ -218,7 +218,6 @@ class CuBICANode(ICANode):
 
         # maximum number of sweeps through all possible pairs of signals
         num = int(1+round(numx.sqrt(comp)))
-        count = 0
 
         # start sweeping
         for k in range(num):
@@ -271,7 +270,6 @@ class CuBICANode(ICANode):
                     # keep track of maximum angle of rotation
                     maxangle = max(maxangle, abs(float(phi_max)))
 
-                count += 1
             self.maxangle.append(maxangle)
             if maxangle <= limit:
                 break
@@ -314,7 +312,7 @@ class FastICANode(ICANode):
           The value of the convergence threshold.
 
     History:
-    
+
     - 1.4.1998 created for Matlab by Jarmo Hurri, Hugo Gavert, Jaakko Sarela,
       and Aapo Hyvarinen
     - 7.3.2003  modified for Python by Thomas Wendler
@@ -325,7 +323,7 @@ class FastICANode(ICANode):
     """
 
     def __init__(self, approach = 'defl', g = 'pow3', guess = None,
-                 fine_g = 'pow3', mu = 1, stabilization = False,
+                 fine_g = 'pow3', mu = 1,
                  sample_size = 1, fine_tanh = 1, fine_gaus = 1,
                  max_it = 1000, max_it_fine = 100,
                  failures = 5, limit = 0.001, verbose = False,
@@ -366,14 +364,12 @@ class FastICANode(ICANode):
                      are the same as for 'g'. Set it to None to disable fine
                      tuning.
 
-               mu -- Step size
-
-    stabilization -- Enable stabilization procedure: the value of mu can
-                     momentarily be halved if the algorithm is stuck between
-                     two points (this is called a stroke). Also if there is no
-                     convergence before half of the maximum number of
-                     iterations has been reached then mu will be halved for
-                     the rest of the rounds.
+               mu -- Step size. If mu != 1, a stabilization procedure is used:
+                     the value of mu can momentarily be halved if the algorithm
+                     is stuck between two points (this is called a stroke).
+                     Also if there is no convergence before half of the maximum
+                     number of iterations has been reached then mu will be halved
+                     for the rest of the rounds.
 
       sample_size -- Percentage of samples used in one iteration. If
                      sample_size < 1, samples are chosen in random order.
@@ -416,10 +412,7 @@ class FastICANode(ICANode):
             raise mdp.NodeException('0<sample_size<1, %f given' % sample_size)
 
         self.mu = mu
-        if mu != 1:
-            self.stabilization = True
-        else:
-            self.stabilization = False
+        self.stabilization = mu != 1
         self.fine_tanh = fine_tanh
         self.fine_gaus = fine_gaus
         self.max_it = max_it
@@ -429,7 +422,6 @@ class FastICANode(ICANode):
 
     def _get_rsamples(self, X):
         tlen = X.shape[1]
-        comp = X.shape[0]
         mask = numx.where(numx_rand.random(tlen) < self.sample_size)[0]
         return X[:, mask]
 

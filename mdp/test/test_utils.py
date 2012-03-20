@@ -45,6 +45,13 @@ def test_random_rot():
         assert_almost_equal(numx_linalg.det(x), 1., 4)
         assert_array_almost_equal(y, numx.eye(dim), 4)
 
+def test_random_rot_determinant_sign():
+    x = utils.random_rot(4)
+    assert_almost_equal(numx_linalg.det(x), 1., 4)
+    x = utils.random_rot(5)
+    assert_almost_equal(numx_linalg.det(x), 1., 4)
+
+
 def test_casting():
     x = numx_rand.random((5,3)).astype('d')
     y = 3*x

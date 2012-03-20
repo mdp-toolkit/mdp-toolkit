@@ -25,7 +25,7 @@ def pytest_unconfigure(config):
     # that all garbage is removed, expacially because we use subprocesses
     shutil.rmtree(py.test.mdp_tempdirname, ignore_errors=True)
     # if pp was monkey-patched, remove any stale pp4mdp directories
-    if mdp.config.pp_monkeypatch_dirname:
+    if hasattr(mdp.config, 'pp_monkeypatch_dirname'):
         monkey_dirs = os.path.join(mdp.config.pp_monkeypatch_dirname,
                                    mdp.parallel.pp_support.TEMPDIR_PREFIX) 
         [shutil.rmtree(d, ignore_errors=True) for d in glob.glob(monkey_dirs+'*')]
