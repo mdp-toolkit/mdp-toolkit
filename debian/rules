@@ -1,22 +1,39 @@
 #!/usr/bin/make -f
+#DH_VERBOSE=1
 
-include /usr/share/cdbs/1/rules/debhelper.mk
-include /usr/share/cdbs/1/class/python-distutils.mk
+PYTHON2:=$(shell pyversions -vr)
+PYTHON3:=$(shell py3versions -vr)
+PYTHONALL:=$(PYTHON2) $(PYTHON3)
 
-DEB_INSTALL_CHANGELOGS_ALL := CHANGES
+include /usr/share/python/python.mk
 
-install/python-mdp:: test-build
+INSTALLPATH:=$(CURDIR)/debian/tmp
+	
+%:
+	dh $@ --with python2,python3
 
-#$(CURDIR)/debian/python-mdp$(INSTALL_PATH)/usr/lib/$$PYTHON/site-packages;
-
-test-build:
-ifeq (,$(findstring nocheck,$(DEB_BUILD_OPTIONS)))
-	for buildver in $(cdbs_python_build_versions); do \
-        echo "I: Runnig MDP unittests using $$PYTHON"; \
-        MDPPATH=$(cdbs_python_destdir)/$(call cdbs_expand_python_distutils_installdir,python$$buildver); \
-        python$$buildver $$MDPPATH/mdp/test/run_tests.py $$MDPPATH/mdp \
-                         $$MDPPATH/bimdp; \
+# override dh_auto_install is not needed once dh_python3 knows
+# how to install python3 modules... 
+override_dh_auto_install: 
+	dh_auto_install
+	set -e && for v in $(PYTHON3); do \
+        python$$v setup.py install $(py_setup_install_args) \
+                                   --root=$(INSTALLPATH); \
     done
+ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
+	set -e && for v in $(PYTHONALL); do \
+		 LOCPATH=$(INSTALLPATH)$(call py_libdir_sh, $$v) ; \
+	     python$$v $$LOCPATH/mdp/test/run_tests.py $$LOCPATH/mdp \
+		                                           $$LOCPATH/bimdp; \
+	done
 	: # Prune compiled code which could have been generated during testing
-	/usr/bin/find \( -name __pycache__ -o -name \*.pyc \) -delete
+	/usr/bin/find \( -name __pycache__ -o -name \*.pyc -o -name \*.egg-info \) -delete
 endif
+
+override_dh_installchangelogs:
+	dh_installchangelogs -k CHANGES
+
+override_dh_auto_clean:
+	dh_auto_clean
+	/usr/bin/find -name build -type d -print0 | xargs -0 /bin/rm -r -f
+	/usr/bin/find \( -name __pycache__ -o -name \*.pyc -o -name \*.egg-info \) -delete

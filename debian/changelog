@@ -1,3 +1,15 @@
+mdp (3.2+git53-g5aac89b-1) unstable; urgency=low
+
+  * New upstream git snapshot
+  * Add package for Python 3 (Closes :#645584) 
+  * Drop 'watch' file, as packaging is done directly from
+    upstream git
+  * Drop cdbs, use dh_python2 and dh_python3 instead
+  * Depend on debhelper >= 7 (squeeze) to be able to use dh_python2
+  * Upload sponsored by Yaroslav Halchenko
+
+ -- Tiziano Zito <opossumnano@gmail.com>  Wed, 21 Mar 2012 14:21:08 +0100
+
 mdp (3.2+git28-g4243e9c-1) unstable; urgency=low
 
   * New git snapshot
