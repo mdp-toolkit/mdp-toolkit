@@ -4,9 +4,10 @@ mdp (3.2+git53-g5aac89b-1) unstable; urgency=low
   * Add package for Python 3 (Closes: #645584)
   * Switch from cdbs to debhelper (>= 7, squeeze) and
     dh_python* tools
+  * Updated Vcs-* fields in source package
   * Upload sponsored by Yaroslav Halchenko
 
- -- Tiziano Zito <opossumnano@gmail.com>  Wed, 21 Mar 2012 14:21:08 +0100
+ -- Tiziano Zito <opossumnano@gmail.com>  Thu, 22 Mar 2012 11:30:50 +0100
 
 mdp (3.2+git28-g4243e9c-1) unstable; urgency=low
 
