@@ -8,7 +8,7 @@ PYTHONALL:=$(PYTHON2) $(PYTHON3)
 include /usr/share/python/python.mk
 
 INSTALLPATH:=$(CURDIR)/debian/tmp
-	
+
 %:
 	dh $@ --with python2,python3
 
@@ -17,17 +17,16 @@ INSTALLPATH:=$(CURDIR)/debian/tmp
 override_dh_auto_install: 
 	dh_auto_install
 	set -e && for v in $(PYTHON3); do \
-        python$$v setup.py install $(py_setup_install_args) \
-                                   --root=$(INSTALLPATH); \
-    done
+	  python$$v setup.py install $(py_setup_install_args) \
+	      --root=$(INSTALLPATH); \
+	done
 ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
-	set -e && for v in $(PYTHONALL); do \
-		 LOCPATH=$(INSTALLPATH)$(call py_libdir_sh, $$v) ; \
-	     python$$v $$LOCPATH/mdp/test/run_tests.py $$LOCPATH/mdp \
-		                                           $$LOCPATH/bimdp; \
+	set -xe && for v in $(PYTHONALL); do \
+	  LOC=$(INSTALLPATH)$(call py_libdir_sh, $$v); \
+	  python$$v $$LOC/mdp/test/run_tests.py $$LOC/mdp $$LOC/bimdp; \
 	done
 	: # Prune compiled code which could have been generated during testing
-	/usr/bin/find \( -name __pycache__ -o -name \*.pyc -o -name \*.egg-info \) -delete
+	find \( -name __pycache__ -o -name \*.pyc -o -name \*.egg-info \) -delete
 endif
 
 override_dh_installchangelogs:
@@ -35,5 +34,5 @@ override_dh_installchangelogs:
 
 override_dh_auto_clean:
 	dh_auto_clean
-	/usr/bin/find -name build -type d -print0 | xargs -0 /bin/rm -r -f
-	/usr/bin/find \( -name __pycache__ -o -name \*.pyc -o -name \*.egg-info \) -delete
+	find -name build -type d -print0 | xargs -0 /bin/rm -r -f
+	find \( -name __pycache__ -o -name \*.pyc -o -name \*.egg-info \) -delete
