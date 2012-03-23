@@ -15,7 +15,7 @@ INSTALLPATH:=$(CURDIR)/debian/tmp
 # override dh_auto_install is not needed once dh_python3 knows
 # how to install python3 modules... 
 override_dh_auto_install: 
-	dh_auto_install
+	dh_auto_install --destdir=$(INSTALLPATH)
 	set -e && for v in $(PYTHON3); do \
 	  python$$v setup.py install $(py_setup_install_args) \
 	      --root=$(INSTALLPATH); \
