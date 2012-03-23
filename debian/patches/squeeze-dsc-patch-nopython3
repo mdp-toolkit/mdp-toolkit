@@ -1,0 +1,46 @@
+diff --git a/debian/control b/debian/control
+index 99c3be4..1e6cdaf 100644
+--- a/debian/control
++++ b/debian/control
+@@ -11,11 +11,8 @@ Build-Depends: debhelper (>= 7.0.50~),
+                python-scikits-learn | python-sklearn,
+                python-pp,
+                shogun-python-modular,
+-               python3-all,
+-               python3-numpy
+ Standards-Version: 3.9.3
+ X-Python-Version: >= 2.5
+-X-Python3-Version: >= 3.1
+ Vcs-Browser: https://github.com/mdp-toolkit/mdp-toolkit/tree/debian
+ Vcs-git: git://github.com/mdp-toolkit/mdp-toolkit.git
+ Homepage: http://mdp-toolkit.sourceforge.net/
+@@ -40,16 +37,3 @@ Description: Modular toolkit for Data Processing
+  Fisher Discriminant Analysis (FDA), and Gaussian Classifiers.
+  .
+  This package contains MDP for Python 2.
+-
+-Package: python3-mdp
+-Architecture: all
+-Depends: ${python3:Depends}, ${misc:Depends}, python3-numpy
+-Description: Modular toolkit for Data Processing
+- Python data processing framework for building complex data processing software
+- by combining widely used machine learning algorithms into pipelines and
+- networks. Implemented algorithms include: Principal Component Analysis (PCA),
+- Independent Component Analysis (ICA), Slow Feature Analysis (SFA), Independent
+- Slow Feature Analysis (ISFA), Growing Neural Gas (GNG), Factor Analysis,
+- Fisher Discriminant Analysis (FDA), and Gaussian Classifiers.
+- .
+- This package contains MDP for Python 3.
+diff --git a/debian/rules b/debian/rules
+index 7def309..99b3ebb 100755
+--- a/debian/rules
++++ b/debian/rules
+@@ -10,7 +10,7 @@ include /usr/share/python/python.mk
+ INSTALLPATH:=$(CURDIR)/debian/tmp
+ 
+ %:
+-	dh $@ --with python2,python3
++	dh $@ --with python2
+ 
+ # override dh_auto_install is not needed once dh_python3 knows
+ # how to install python3 modules... 
