@@ -1,19 +1,17 @@
 diff --git a/debian/control b/debian/control
-index 99c3be4..1e6cdaf 100644
+index 8998e00..5dae37d 100644
 --- a/debian/control
 +++ b/debian/control
-@@ -11,11 +11,8 @@ Build-Depends: debhelper (>= 7.0.50~),
+@@ -11,9 +11,6 @@ Build-Depends: debhelper (>= 7.0.50~),
                 python-scikits-learn | python-sklearn,
                 python-pp,
                 shogun-python-modular,
 -               python3-all,
 -               python3-numpy
- Standards-Version: 3.9.3
- X-Python-Version: >= 2.5
 -X-Python3-Version: >= 3.1
+ X-Python-Version: >= 2.5
+ Standards-Version: 3.9.3
  Vcs-Browser: https://github.com/mdp-toolkit/mdp-toolkit/tree/debian
- Vcs-git: git://github.com/mdp-toolkit/mdp-toolkit.git
- Homepage: http://mdp-toolkit.sourceforge.net/
 @@ -40,16 +37,3 @@ Description: Modular toolkit for Data Processing
   Fisher Discriminant Analysis (FDA), and Gaussian Classifiers.
   .
