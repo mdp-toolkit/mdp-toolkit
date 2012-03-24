@@ -149,7 +149,7 @@ def testDiscreteHopfieldClassifier():
         # check, if a noisy pattern is recreated
         noisy = numx.array(p)
         for i in xrange(len(noisy)):
-            if numx.random.random() > 0.9:
+            if numx.random.random() > 0.95:
                 noisy[i] = not noisy[i]
         retrieved = h.label(numx.array([noisy]))
         # Hopfield nets are blind for inversion, need to check either case
