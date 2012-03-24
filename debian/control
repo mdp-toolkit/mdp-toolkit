@@ -13,9 +13,9 @@ Build-Depends: debhelper (>= 7.0.50~),
                shogun-python-modular,
                python3-all,
                python3-numpy
-Standards-Version: 3.9.3
-X-Python-Version: >= 2.5
 X-Python3-Version: >= 3.1
+X-Python-Version: >= 2.5
+Standards-Version: 3.9.3
 Vcs-Browser: https://github.com/mdp-toolkit/mdp-toolkit/tree/debian
 Vcs-git: git://github.com/mdp-toolkit/mdp-toolkit.git
 Homepage: http://mdp-toolkit.sourceforge.net/
