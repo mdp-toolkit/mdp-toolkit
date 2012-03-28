@@ -58,7 +58,7 @@ def _monkeypatch_pp(container_dir):
         # pp 1.6.0 compatibility
         pp._Worker.command = pp._Worker.command.replace(ppworker, ppworker3)
 
-if mdp.config.pp_monkeypatch_dirname:
+if hasattr(mdp.config, 'pp_monkeypatch_dirname'):
     _monkeypatch_pp(mdp.config.pp_monkeypatch_dirname)
 
 class PPScheduler(scheduling.Scheduler):
