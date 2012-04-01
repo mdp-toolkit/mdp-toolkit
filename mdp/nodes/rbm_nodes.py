@@ -90,7 +90,7 @@ class RBMNode(mdp.Node):
         return probs, v
 
     def _train(self, v, n_updates=1, epsilon=0.1, decay=0., momentum=0.,
-               verbose=False):
+               update_with_ph=True, verbose=False):
         """Update the internal structures according to the input data `v`.
         The training is performed using Contrastive Divergence (CD).
 
@@ -106,6 +106,11 @@ class RBMNode(mdp.Node):
             weight decay term. Default value: 0.
           momentum
             momentum term. Default value: 0.
+          update_with_ph
+            In his code, G.Hinton updates the hidden biases using the
+            probability of the hidden unit activations instead of a
+            sample from it. This is in order to speed up sequential
+            learning of RBMs. Set this to False to use the samples instead.
         """
         if not self._initialized:
             self._init_weights()
@@ -138,8 +143,12 @@ class RBMNode(mdp.Node):
         bv += dbv
 
         # update bh
-        data_term = ph_data.sum(axis=0)
-        model_term = ph_model.sum(axis=0)
+        if update_with_ph:
+            data_term = ph_data.sum(axis=0)
+            model_term = ph_model.sum(axis=0)
+        else:
+            data_term = h_data.sum(axis=0)
+            model_term = h_model.sum(axis=0)
         dbh = momentum*dbh + epsilon*((data_term - model_term)/n)
         bh += dbh
 

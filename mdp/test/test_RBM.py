@@ -175,6 +175,88 @@ def test_RBM_learning():
 
     assert bm._train_err / N < 0.1
 
+def _generate_data(bm, I, N):
+    data = []
+    h = numx.ones(I, dtype='d')
+    for t in range(N):
+        prob, v = bm._sample_v(h)
+        prob, h = bm._sample_h(v)
+        if (t > 500):
+            data.append(v)
+
+    return numx.asarray(data, dtype='d')
+
+def test_RBM_bv_learning():
+    # number of visible and hidden units
+    I, J = 4, 4
+
+    bm = mdp.nodes.RBMNode(J, I)
+    bm._init_weights()
+    # init to random biases, unit generation matrix
+    bm.w = numx.eye(I, dtype='d')
+    bm.bh *= 0.0
+    bm.bv = numx.linspace(0.1, 0.9, I) * 5
+
+    #### generate training data
+    data = _generate_data(bm, I, 5000)
+
+    #### learn from generated data
+    train_bm = mdp.nodes.RBMNode(J, I)
+
+    train_bm.train(data)
+    train_bm.w = numx.eye(I, dtype='d')
+
+    N = data.shape[0]
+    for k in xrange(5000):
+        if k%5==0: spinner()
+
+        train_bm.train(data, epsilon=0.6, momentum=0.7)
+        if abs(train_bm.bv - bm.bv).max() < 0.5: break
+
+        # bv, bh, and w are dependent, so we need to keep one of them clamped
+        train_bm.w = numx.eye(I, dtype='d')
+
+    assert abs(train_bm.bv - bm.bv).max() < 0.5
+
+def _test_RBM_bh_learning():
+    # This one is tricky, as hidden biases are a very indirect parameter
+    # of the input. We need to keep the rest of the weights clamped or there
+    # would be alternative ways to explain the data
+
+    # number of visible and hidden units
+    I, J = 4, 4
+
+    bm = mdp.nodes.RBMNode(J, I)
+    bm._init_weights()
+    # init to random biases, unit generation matrix
+    bm.w = numx.eye(I, dtype='d')
+    bm.bv *= 0.0
+    bm.bh = numx.linspace(0.1, 0.9, I) * 5
+
+    #### generate training data
+    data = _generate_data(bm, I, 10000)
+
+    #### learn from generated data
+    train_bm = mdp.nodes.RBMNode(J, I)
+
+    train_bm.train(data)
+    train_bm.w = bm.w.copy()
+    train_bm.bv *= 0.0
+
+    N = data.shape[0]
+    for k in xrange(5000):
+        if k%5==0: spinner()
+
+        train_bm.train(data, epsilon=3.0, momentum=0.8, update_with_ph=False)
+        if abs(train_bm.bh - bm.bh).max() < 0.75: break
+
+        # keep other weights clamped
+        train_bm.w = bm.w.copy()
+        train_bm.bv *= 0.0
+
+    assert abs(train_bm.bh - bm.bh).max() < 0.75
+
+
 def test_RBMWithLabelsNode():
     I, J, L = 4, 4, 2
     bm = mdp.nodes.RBMWithLabelsNode(J,L,I)
