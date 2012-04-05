@@ -2,7 +2,16 @@
 #DH_VERBOSE=1
 
 PYTHON2:=$(shell pyversions -vr)
-PYTHON3:=$(shell py3versions -vr)
+
+# Check if python3-numpy is available
+# This is needed until python3-numpy is uploaded to sid to
+# simplify backporting to squeeze and older ubuntus
+DH_PYTHON3_STR:=$(shell python3 -c 'import numpy' > /dev/null 2>&1 && \
+                  echo ",python3" || echo "")
+PYTHON3:=$(shell python3 -c 'import numpy' > /dev/null 2>&1 && \
+           py3versions -vr || echo "")
+
+
 PYTHONALL:=$(PYTHON2) $(PYTHON3)
 
 include /usr/share/python/python.mk
@@ -10,7 +19,7 @@ include /usr/share/python/python.mk
 INSTALLPATH:=$(CURDIR)/debian/tmp
 
 %:
-	dh $@ --with python2,python3
+	dh $@ --with python2$(DH_PYTHON3_STR)
 
 # override dh_auto_install is not needed once dh_python3 knows
 # how to install python3 modules... 
