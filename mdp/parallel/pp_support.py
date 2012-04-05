@@ -52,6 +52,7 @@ def _monkeypatch_pp(container_dir):
     ppworker3 = os.path.join(_ppworker_dir.name, 'ppworker.py')
     shutil.copy(ppworker, ppworker3)
 
+    mdp._pp_worker_command = pp._Worker.command[:]
     try:
         pp._Worker.command[pp._Worker.command.index(ppworker)] = ppworker3
     except TypeError:
