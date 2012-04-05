@@ -1,4 +1,4 @@
-mdp (3.2+git70-g37c01f6-1) experimental; urgency=low
+mdp (3.2+git78-g7db3c50-1) neurodebian; urgency=low
 
   * New upstream git snapshot
   * Add package for Python 3 (Closes: #645584)
