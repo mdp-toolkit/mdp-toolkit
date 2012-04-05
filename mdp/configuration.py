@@ -271,29 +271,34 @@ class _sys_stdout_replaced(object):
         sys.stdout = self.sysstdout
 
 def _pp_needs_monkeypatching():
-    # check if we are on one of those broken system were
-    # parallel python is affected by
-    # http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=620551
-    # this is a minimal example to reproduce the problem
-    # XXX IMPORTANT XXX
-    # This function only works once, i.e. at import
-    # if you attempt to call it again afterwards,
-    # it does not work [pp does not print the error twice]
+    # only run this function the first time mdp is imported
+    # otherwise reload(mdp) breaks
 
-    # we need to hijack stdout here, because pp does not raise
-    # exceptions: it writes to stdout directly!!!
+    if not hasattr(mdp, '_pp_needs_monkeypatching'):
+        # check if we are on one of those broken system were
+        # parallel python is affected by
+        # http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=620551
+        # this is a minimal example to reproduce the problem
+        # XXX IMPORTANT XXX
+        # This function only works once, i.e. at import
+        # if you attempt to call it again afterwards,
+        # it does not work [pp does not print the error twice]
 
-    # pp stuff
-    import pp
-    server = pp.Server()
-    with _sys_stdout_replaced() as capture:
-        server.submit(lambda: None, (), (), ('numpy',))()
-        server.destroy()
+        # we need to hijack stdout here, because pp does not raise
+        # exceptions: it writes to stdout directly!!!
 
-    # read error from hijacked stdout
-    error = capture.getvalue()
+        # pp stuff
+        import pp
+        server = pp.Server()
+        with _sys_stdout_replaced() as capture:
+            server.submit(lambda: None, (), (), ('numpy',))()
+            server.destroy()
 
-    return 'ImportError' in error
+        # read error from hijacked stdout
+        error = capture.getvalue()
+        mdp._pp_needs_monkeypatching = 'ImportError' in error 
+        
+    return mdp._pp_needs_monkeypatching
 
 def set_configuration():
     # set python version

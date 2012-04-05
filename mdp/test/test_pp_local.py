@@ -5,6 +5,19 @@ requires_parallel_python = skip_on_condition(
     "not mdp.config.has_parallel_python",
     "This test requires Parallel Python")
 
+
+@requires_parallel_python
+def test_reverse_patching():
+    # revert pp patching
+    # XXX This is needed to avoid failures of the other
+    # XXX pp tests when run more then once in the same interpreter
+    # XXX session
+    if hasattr(mdp.config, 'pp_monkeypatch_dirname'):
+        import pp
+        pp._Worker.command = mdp._pp_worker_command[:]
+        parallel.pp_support._monkeypatch_pp(mdp.config.pp_monkeypatch_dirname)
+
+
 @requires_parallel_python
 def test_simple():
     """Test local pp scheduling."""
