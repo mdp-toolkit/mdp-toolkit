@@ -1,4 +1,4 @@
-mdp (3.2+git78-g7db3c50-1) neurodebian; urgency=low
+mdp (3.2+git78-g7db3c50-2) neurodebian; urgency=low
 
   * New upstream git snapshot
   * Add package for Python 3 (Closes: #645584)
@@ -8,9 +8,8 @@ mdp (3.2+git78-g7db3c50-1) neurodebian; urgency=low
   * Added patches for easier backporting to squeeze and
     several Ubuntu releases
   * Upload sponsored by Yaroslav Halchenko
-  * 
 
- -- Tiziano Zito <opossumnano@gmail.com>  Wed, 28 Mar 2012 19:31:17 +0200
+ -- Tiziano Zito <opossumnano@gmail.com>  Fri, 06 Apr 2012 10:19:38 +0200
 
 mdp (3.2+git28-g4243e9c-1) unstable; urgency=low
 
