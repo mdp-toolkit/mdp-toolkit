@@ -1,15 +1,16 @@
-mdp (3.2+git78-g7db3c50-2) neurodebian; urgency=low
+mdp (3.2+git78-g7db3c50-3) neurodebian; urgency=low
 
   * New upstream git snapshot
   * Add package for Python 3 (Closes: #645584)
   * Switch from cdbs to debhelper (>= 7, squeeze) and
     dh_python* tools
+  * Do not build depend on shogun-python-modular
   * Updated Vcs-* fields in source package
   * Added patches for easier backporting to squeeze and
     several Ubuntu releases
   * Upload sponsored by Yaroslav Halchenko
 
- -- Tiziano Zito <opossumnano@gmail.com>  Fri, 06 Apr 2012 10:19:38 +0200
+ -- Tiziano Zito <opossumnano@gmail.com>  Sat, 14 Apr 2012 14:22:00 +0200
 
 mdp (3.2+git28-g4243e9c-1) unstable; urgency=low
 
