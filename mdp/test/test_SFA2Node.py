@@ -17,7 +17,7 @@ def test_basic_training():
     correlation = mult(des_mat[:-1,:].T,
                        numx.take(out[:-1,:], (0,2), axis=1))/(dim-2)
     assert_array_almost_equal(abs(correlation),
-                              numx.eye(2), decimal-2)
+                              numx.eye(2), 3)
     for nr in xrange(sfa.output_dim):
         qform = sfa.get_quadratic_form(nr)
         outq = qform.apply(mat)
@@ -29,7 +29,7 @@ def test_basic_training():
     assert out.shape[1]==2, 'Wrong output_dim'
     correlation = mult(des_mat[:-1,:1].T,out[:-1,:1])/(dim-2)
     assert_array_almost_equal(abs(correlation),
-                              numx.eye(1), decimal-2)
+                              numx.eye(1), 3)
 
 def test_range_argument():
     node = mdp.nodes.SFA2Node()
