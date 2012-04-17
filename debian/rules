@@ -1,6 +1,8 @@
 #!/usr/bin/make -f
 #DH_VERBOSE=1
 
+RSEED:=1029384756
+
 PYTHON2:=$(shell pyversions -vr)
 
 # Check if python3-numpy is available
@@ -32,7 +34,7 @@ override_dh_auto_install:
 ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
 	set -xe && for v in $(PYTHONALL); do \
 	  LOC=$(INSTALLPATH)$(call py_libdir_sh, $$v); \
-	  python$$v $$LOC/mdp/test/run_tests.py $$LOC/mdp $$LOC/bimdp; \
+	  python$$v $$LOC/mdp/test/run_tests.py --seed $(RSEED) $$LOC/mdp $$LOC/bimdp; \
 	done
 	: # Prune compiled code which could have been generated during testing
 	find \( -name __pycache__ -o -name \*.pyc -o -name \*.egg-info \) -delete
