@@ -116,7 +116,7 @@ import configuration
 __version__ = '3.3'
 __revision__ = configuration.get_git_revision()
 __authors__ = 'MDP Developers'
-__copyright__ = '(c) 2003-2011 mdp-toolkit-devel@lists.sourceforge.net'
+__copyright__ = '(c) 2003-2012 mdp-toolkit-devel@lists.sourceforge.net'
 __license__ = 'BSD License, see COPYRIGHT'
 __contact__ = 'mdp-toolkit-users@lists.sourceforge.net'
 __homepage__ = 'http://mdp-toolkit.sourceforge.net'
