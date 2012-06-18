@@ -440,11 +440,13 @@ def wrap_scikits_algorithms(scikits_class, nodes_list):
     """NEED DOCSTRING."""
 
     name = scikits_class.__name__
-    if (name[:4] == 'Base' or name == 'LinearModel'):
+    if (name[:4] == 'Base' or name == 'LinearModel'
+        or name.startswith('EllipticEnvelop')
+        or name.startswith('ForestClassifier')):
         return
 
     if issubclass(scikits_class, sklearn.base.ClassifierMixin) and \
-        hasattr(scikits_class, 'fit') and not hasattr(scikits_class, 'predict'):
+        hasattr(scikits_class, 'fit'):
         nodes_list.append(wrap_scikits_classifier(scikits_class))
     # Some (abstract) transformers do not implement fit.
     elif hasattr(scikits_class, 'transform') and hasattr(scikits_class, 'fit'):
