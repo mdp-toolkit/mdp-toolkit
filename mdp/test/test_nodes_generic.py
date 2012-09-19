@@ -354,20 +354,6 @@ NODES = [
 
 EXCLUDE_NODES = [nodes.ICANode]
 
-if config.has_sklearn:
-    # XXX
-    # remove all non classifier nodes from the scikits nodes
-    # they do not have a common API that would allow
-    # automatic testing
-    # XXX
-    for node_name in mdp.nodes.__dict__:
-        node = mdp.nodes.__dict__[node_name]
-        if inspect.isclass(node) and node_name.endswith('ScikitsLearnNode'):
-            if issubclass(node, ClassifierNode):
-                NODES.append(dict(klass=node_name,
-                                  sup_arg_gen=_rand_labels))
-            else:
-                EXCLUDE_NODES.append(node)
 
 def generate_nodes_list(nodes_dicts):
     nodes_list = []
@@ -381,8 +367,29 @@ def generate_nodes_list(nodes_dicts):
             # transform class name into class (needed by automatic tests)
             klass = getattr(nodes, klass)
             dct['klass'] = klass
-        nodes_list.append(dct)
-        visited.append(klass)
+        # only append to list if the node is present in MDP
+        # in case some of the nodes in NODES are optional
+        if hasattr(nodes, klass.__name__):
+            nodes_list.append(dct)
+            visited.append(klass)
+    # append sklearn nodes if supported
+    # XXX
+    # remove all non classifier nodes from the scikits nodes
+    # they do not have a common API that would allow
+    # automatic testing
+    # XXX
+    for node_name in mdp.nodes.__dict__:
+        node = mdp.nodes.__dict__[node_name]
+        if (inspect.isclass(node)
+            and node_name.endswith('ScikitsLearnNode')
+            and (node not in visited)):
+            if issubclass(node, ClassifierNode):
+                nodes_list.append(dict(klass=node,
+                                       sup_arg_gen=_rand_labels))
+                visited.append(node)
+            else:
+                EXCLUDE_NODES.append(node)
+
     # append all other nodes in mdp.nodes
     for attr in dir(nodes):
         if attr[0] == '_':
