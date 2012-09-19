@@ -42,6 +42,9 @@ def _rand_array_single_rows():
 def _contrib_get_random_mix():
     return get_random_mix(type='d', mat_dim=(100, 3))[2]
 
+def _positive_get_random_mix():
+    return abs(get_random_mix()[2])
+
 def _train_if_necessary(inp, node, sup_arg_gen):
     if node.is_trainable():
         while True:
@@ -348,8 +351,11 @@ NODES = [
     dict(klass='LibSVMClassifier',
         sup_arg_gen=_rand_labels_array,
         init_args=["LINEAR","C_SVC"]),
-    dict(klass='NeighborsScikitsNode',
-        sup_arg_gen=_rand_1d)
+    dict(klass='MultinomialNBScikitsLearnNode',
+         inp_arg_gen=_positive_get_random_mix,
+         sup_arg_gen=_rand_labels),
+    dict(klass='NeighborsScikitsLearnNode',
+        sup_arg_gen=_rand_1d),
     ]
 
 EXCLUDE_NODES = [nodes.ICANode]
