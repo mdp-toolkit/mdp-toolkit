@@ -296,8 +296,8 @@ def _pp_needs_monkeypatching():
 
         # read error from hijacked stdout
         error = capture.getvalue()
-        mdp._pp_needs_monkeypatching = 'ImportError' in error 
-        
+        mdp._pp_needs_monkeypatching = 'ImportError' in error
+
     return mdp._pp_needs_monkeypatching
 
 def set_configuration():
@@ -327,16 +327,27 @@ def set_configuration():
         if os.getenv('MDP_DISABLE_PARALLEL_PYTHON'):
             config.ExternalDepFailed('parallel_python', 'disabled')
         else:
-            if _pp_needs_monkeypatching():
-                if os.getenv('MDP_DISABLE_MONKEYPATCH_PP'):
-                    config.ExternalDepFailed('parallel_python', pp.version +
-                                             ' broken on Debian')
-                else:
-                    config.ExternalDepFound('parallel_python', pp.version +
-                                            '-monkey-patched')
-                    config.pp_monkeypatch_dirname = tempfile.gettempdir()
+            # even if we can import pp, starting the server may still fail
+            # for example with:
+            # OSError: [Errno 12] Cannot allocate memory
+            try:
+                server = pp.Server()
+                server.destroy()
+            except Exception, exc:
+                # no idea what exception the pp server may raise
+                # we need to catch all here...
+                config.ExternalDepFailed('parallel_python', exc)
             else:
-                config.ExternalDepFound('parallel_python', pp.version)
+                if _pp_needs_monkeypatching():
+                    if os.getenv('MDP_DISABLE_MONKEYPATCH_PP'):
+                        config.ExternalDepFailed('parallel_python', pp.version +
+                                                 ' broken on Debian')
+                    else:
+                        config.ExternalDepFound('parallel_python', pp.version +
+                                                '-monkey-patched')
+                        config.pp_monkeypatch_dirname = tempfile.gettempdir()
+                else:
+                    config.ExternalDepFound('parallel_python', pp.version)
 
     # shogun
     try:
@@ -404,7 +415,7 @@ def set_configuration():
         config.ExternalDepFailed('sklearn', exc)
     except AttributeError, exc:
         config.ExternalDepFailed('sklearn', exc)
-    else:   
+    else:
         if os.getenv('MDP_DISABLE_SKLEARN'):
             config.ExternalDepFailed('sklearn', 'disabled')
         elif _version_too_old(version, (0,6)):
