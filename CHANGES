@@ -1,3 +1,148 @@
+MDP-3.3:
+2012-09-19: FIX: fix error in automatic testing for MultinomialNB.
+2012-09-19: ERF: make sklearn nodes automatic testing more robust The previous
+            solution was actually ignoring the special definitions in NODES.
+
+2012-09-19: FIX: disable pp support if server can not start Being able to
+            import pp is not enough to be sure that pp works. For example in a
+            low memory situation, the following can happen:
+
+            >>> import pp
+            >>> server = pp.Server()
+            [...] OSError: [Errno 12] Cannot allocate memory
+
+            This fix just disables pp support if the server can not be
+            started.
+
+2012-06-18: FIX: Fix wrapping of sklearn 0.11 classifiers
+2012-04-17: FIX: make test_SFA2Node even more robust
+2012-04-16: FIX: make FastICANode test more robust
+2012-04-16: FIX: make test_SFA2Node more robust
+2012-04-05: FIX: fix pp_tests when run multiple times. pp tests were failing
+            when run twice in a row. hugly work-around, but it seems to
+            work...
+
+2012-04-05: FIX: fixed broken test_reload. test_reload was failing when called
+            twice in a row.
+
+2012-04-05: FIX: fix random seed tests. The tests were failing when called
+            twice in a row:
+            >>> import mdp
+            >>> mdp.test()
+            >>> mdp.test() the first call was working, the second one was
+            giving failures.
+
+2012-04-01: ERF: added tests for learning of bias parameters
+2012-03-26: FIX: replace third remaing test for pp_monkeypatch_dirname 
+            Hopefully this will fix test suite failures.
+
+2012-03-22: FIX: Decrease the noise level in the DiscreteHopfieldClassifier.
+2012-03-22: FIX: honor MDP_DISABLE_SHOGUN env variable
+2012-03-19: FIX: fix left-over directories from testing pp. I do not know why,
+            but this simple change fixes the leftover directories problem when
+            testig with python-pp and pp monkey-patching. It should have
+            worked even as it was before, but apparently some race condition 
+            happens.
+
+2012-03-06: FIX: fix determinant of random rotation matrix determinant sign
+            was wrong if dimensions of rotation matrix were odd. Thanks to
+            Philip DeBoer. Actual Fix.
+
+2012-03-06: FIX: fix determinant of random rotation matrix determinant sign
+            was wrong if dimensions of rotation matrix were odd. Thanks to
+            Philip DeBoer. Failing Test.
+
+2012-02-13: ENH: remove duplicated and overly verbose code
+2012-02-13: FIX: remove FastICA stabilization from tests
+2012-02-13: FIX: remove unused parameter stabilization in FastICA.
+2012-01-19: NEW: added new sklearn algorithms wrapping We now wrap 93 sklearn
+            algorithms!
+
+2012-01-19: FIX: fix another imcompatibility with sklearn 0.10 Although
+            EllipticEnvelop is derived from sklearn.base.ClassifierMixin, it
+            is not a classifier. It is actually a "predictor". Added a check 
+            in the sklearn wrappers.
+
+2012-01-19: FIX: fix sklearn wrappers for version 0.10 New sklearn version
+            introduces classifiers and predictors mixin classes that do not
+            have a 'fit' method. Typical error:
+
+            AttributeError: type object 'OutlierDetectionMixin' has no
+            attribute 'fit'
+
+            Just added a check that the method is really present before
+            wrapping.
+
+2012-01-12: FIX: fix failing test for no eigenvalues left problem Check that
+            PCANode now raises the right exception.
+
+2012-01-12: FIX: add useful exception in case of no eigenvalues left. Check
+            for the condition explained in
+            b0810d72ce11925e1db6204c3a20bdfc77741a82 and raise a nicely
+            formatted exception:
+
+            Traceback:
+            [...] File ".../mdp/nodes/pca_nodes.py", line 223, in
+            _stop_training
+               ' var_abs=%e!'%self.var_abs) NodeException: No eigenvalues
+            larger than var_abs=1.000000e-15!
+
+2012-01-12: OTH: added failing test for no eigenvalues left problem. When
+            PCANode is set to use SVD and automatic dimensionality reduction 
+            it may happen that after removing directions corresponding to 
+            eigenvalues smaller than var_abs (1e-12 default), nothing is left. 
+            This happens for example if the data is a matrix of (almost)
+            zeros. The error looks like this: Traceback (most recent call
+            last):
+            [...] File ".../mdp/nodes/pca_nodes.py", line 220, in
+            _stop_training
+               d = d[ d / d.max() > self.var_rel ] ValueError: zero-size array
+            to ufunc.reduce without identity
+
+2012-01-03: FIX: old joblib breaks imports from sklearn.decomposition
+            >>> import sklearn.decomposition Traceback (most recent call
+            last):
+             File "<stdin>", line 1, in <module>
+             File
+            "/usr/lib/pymodules/python2.6/sklearn/decomposition/__init__.py",
+            line 8, in <module>
+               from .sparse_pca import SparsePCA, MiniBatchSparsePCA
+             File
+            "/usr/lib/pymodules/python2.6/sklearn/decomposition/sparse_pca.py",
+            line 10, in <module>
+               from .dict_learning import dict_learning, dict_learning_online
+             File
+            "/usr/lib/pymodules/python2.6/sklearn/decomposition/dict_learning.py",
+            line 17, in <module>
+               from ..externals.joblib import Parallel, delayed, cpu_count 
+            ImportError: cannot import name cpu_count
+            >>> joblib.__version__
+            '0.4.3'
+
+2012-01-02: FIX: py3k compatibility for reload reload() is moved to
+            imp.reload().
+
+            It also seems that Python 3 behaves slightly differently wrt.
+            reloads. For some reason, mdp.configuration is not imported
+            properly on reload. Let's just not remove the name from the
+            namespace, as this is the easiest fix.
+
+2011-12-23: ERF: added a failing test for reload MDP does not work with
+            reload. See https://github.com/mdp-toolkit/mdp-toolkit/issues/1
+            for details.
+
+            Thanks to Yaroslav Halchenko for reporting it.
+
+2011-12-18: FIX: Removed the leftover _global_message_emitter attribute (as
+            reported by Tiziano and Hannah).
+2011-12-09: FIX: fix wrong sorting of eigenvectors in degenerate case for SVD. 
+            Thanks to Yaroslav Halchenko for reporting and fixing!
+
+2011-12-09: NEW: added failing test for wrong sorting of SVDs
+2011-10-24: FIX: updated sklearn wrappers to silence warnings for version >=
+            0.9
+
+-------------------------------------------------------------------------------
 MDP-3.2:
 2011-10-24: FIX: do not complain when failing to remove temporary directory. 
             The error warning breaks doctests. On top of that, I do not think
