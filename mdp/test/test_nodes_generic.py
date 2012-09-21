@@ -38,7 +38,7 @@ def _rand_array_single_rows():
             for row in range(x.shape[0]):
                 yield x[numx.newaxis,row,:]
     return _Iter()
-    
+
 def _contrib_get_random_mix():
     return get_random_mix(type='d', mat_dim=(100, 3))[2]
 
@@ -102,7 +102,7 @@ def generic_test_factory(big_nodes, metafunc):
 
     `inp_arg_gen=...a call to get_random_mix('d')`
       Used to construct the `inp` data argument used for training and
-      execution. It can be an iterable. 
+      execution. It can be an iterable.
 
     `sup_arg_gen=None`
       A function taking a single argument (`inp`)
@@ -201,7 +201,7 @@ def test_outputdim_consistency(klass, init_args, inp_arg_gen,
         # case 1: output dim set in the constructor
         node = klass(output_dim=output_dim, *args)
         _test(node)
-        
+
         # case 2: output_dim set explicitly
         node = klass(*args)
         node.output_dim = output_dim
@@ -224,7 +224,7 @@ def test_outputdim_consistency(klass, init_args, inp_arg_gen,
             node.output_dim = output_dim
             py.test.raises(InconsistentDimException,
                            'node.input_dim = inp.shape[1]')
-            
+
         # check that output_dim is set to whatever the output dim is
         node = klass(*args)
         _train_if_necessary(inp, node, sup_arg_gen)
@@ -358,13 +358,16 @@ NODES = [
         sup_arg_gen=_rand_1d),
     ]
 
-EXCLUDE_NODES = [nodes.ICANode]
+# LabelSpreadingScikitsLearnNode is broken in sklearn version 0.11
+# It works fine in version 0.12
+EXCLUDE_NODES = ['ICANode', 'LabelSpreadingScikitsLearnNode']
 
 
 def generate_nodes_list(nodes_dicts):
     nodes_list = []
     # append nodes with additional arguments or supervised if they exist
     visited = []
+    excluded = []
     for dct in nodes_dicts:
         klass = dct['klass']
         if type(klass) is str:
@@ -378,6 +381,9 @@ def generate_nodes_list(nodes_dicts):
         if hasattr(nodes, klass.__name__):
             nodes_list.append(dct)
             visited.append(klass)
+    for node_name in EXCLUDE_NODES:
+        if hasattr(nodes, node_name):
+            excluded.append(getattr(nodes, node_name))
     # append sklearn nodes if supported
     # XXX
     # remove all non classifier nodes from the scikits nodes
@@ -388,13 +394,14 @@ def generate_nodes_list(nodes_dicts):
         node = mdp.nodes.__dict__[node_name]
         if (inspect.isclass(node)
             and node_name.endswith('ScikitsLearnNode')
-            and (node not in visited)):
+            and (node not in visited)
+            and (node not in excluded)):
             if issubclass(node, ClassifierNode):
                 nodes_list.append(dict(klass=node,
                                        sup_arg_gen=_rand_labels))
                 visited.append(node)
             else:
-                EXCLUDE_NODES.append(node)
+                excluded.append(node)
 
     # append all other nodes in mdp.nodes
     for attr in dir(nodes):
@@ -404,7 +411,7 @@ def generate_nodes_list(nodes_dicts):
         if (inspect.isclass(attr)
             and issubclass(attr, mdp.Node)
             and attr not in visited
-            and attr not in EXCLUDE_NODES):
+            and attr not in excluded):
             nodes_list.append(attr)
     return nodes_list
 
