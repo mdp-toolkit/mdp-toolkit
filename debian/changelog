@@ -1,3 +1,20 @@
+mdp (3.3-1) unstable; urgency=low
+
+  * New upstream bug-fix release
+    (list only changes not already in Debian)
+    - Make random failing SFA2Node tests more robust
+    - Make random failing FastICANode tests more robust
+    - Fix sklearn wrappers for version 0.11 (sid) and 0.12 (experimental)
+      (Closes: #689028)
+    - Disable pp support if pp server can not be started
+      (Closes: #689027)
+  * Fix seed in built-time testing of Debian package (Closes: #687408)
+  * Add back shogun to BuildDep
+  * Updated patch for squeeze and Ubuntu backports 
+  * Upload sponsored by Yaroslav Halchenko
+
+ -- Tiziano Zito <opossumnano@gmail.com>  Wed, 26 Sep 2012 10:28:55 +0200
+
 mdp (3.2+git78-g7db3c50-3) unstable; urgency=low
 
   * New upstream git snapshot
