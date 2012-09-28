@@ -37,7 +37,7 @@ elif _version_too_old(sklearn.__version__, (0, 9)):
                        'feature_selection.rfe', 'feature_extraction.image',
                        'feature_extraction.text', 'pipelines', 'pls',
                        'gaussian_process', 'qda']
-else:
+elif _version_too_old(sklearn.__version__, (0, 11)):
     # from release 0.9 cross_val becomes cross_validation and hmm is deprecated
     scikits_modules = ['svm', 'linear_model', 'naive_bayes', 'neighbors',
                        'mixture', 'cluster', 'decomposition', 'lda',
@@ -46,6 +46,15 @@ else:
                        'feature_extraction.text', 'pipelines', 'pls',
                        'gaussian_process', 'qda', 'ensemble', 'manifold',
                        'metrics', 'preprocessing', 'tree']    
+else:
+    scikits_modules = ['svm', 'linear_model', 'naive_bayes', 'neighbors',
+                       'mixture', 'cluster', 'decomposition', 'lda',
+                       'covariance', 'cross_validation', 'grid_search',
+                       'feature_selection', 'feature_extraction',
+                       'pipeline', 'pls', 'gaussian_process', 'qda',
+                       'ensemble', 'manifold', 'metrics', 'preprocessing',
+                       'semi_supervised', 'tree', 'hmm']
+
 
 for name in scikits_modules:
     # not all modules may be available due to missing dependencies
@@ -440,11 +449,13 @@ def wrap_scikits_algorithms(scikits_class, nodes_list):
     """NEED DOCSTRING."""
 
     name = scikits_class.__name__
-    if (name[:4] == 'Base' or name == 'LinearModel'):
+    if (name[:4] == 'Base' or name == 'LinearModel'
+        or name.startswith('EllipticEnvelop')
+        or name.startswith('ForestClassifier')):
         return
 
     if issubclass(scikits_class, sklearn.base.ClassifierMixin) and \
-        hasattr(scikits_class, 'fit') and not hasattr(scikits_class, 'predict'):
+        hasattr(scikits_class, 'fit'):
         nodes_list.append(wrap_scikits_classifier(scikits_class))
     # Some (abstract) transformers do not implement fit.
     elif hasattr(scikits_class, 'transform') and hasattr(scikits_class, 'fit'):

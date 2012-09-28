@@ -47,8 +47,8 @@ def test_FastICA(parms):
     else:
         rand_func = uniform
 
-    # try two times just to clear failures due to randomness
-    for exc in (Exception, ()):
+    # try three times just to clear failures due to randomness
+    for exc in (Exception, Exception, ()):
         try:
             ica = mdp.nodes.FastICANode(limit=10**(-decimal),**parms)
             ica2 = ica.copy()
