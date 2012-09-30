@@ -10,7 +10,6 @@ Build-Depends: debhelper (>= 7.0.50~),
                python-joblib,
                python-scikits-learn | python-sklearn,
                python-pp,
-               shogun-python-modular,
                python3-all,
                python3-numpy
 X-Python3-Version: >= 3.1
@@ -27,9 +26,8 @@ Recommends: python-scipy,
             python-libsvm,
             python-joblib,
             python-scikits-learn | python-sklearn,
-            python-pp,
-            shogun-python-modular
-Suggests: python-py
+            python-pp
+Suggests: python-py, shogun-python-modular
 Enhances: python-mvpa
 Description: Modular toolkit for Data Processing
  Python data processing framework for building complex data processing software
