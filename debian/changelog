@@ -9,8 +9,6 @@ mdp (3.3-1) unstable; urgency=low
     - Disable pp support if pp server can not be started
       (Closes: #689027)
   * Fix seed in built-time testing of Debian package (Closes: #687408)
-  * Add back shogun to BuildDep
-  * Updated patch for squeeze and Ubuntu backports 
   * Upload sponsored by Yaroslav Halchenko
 
  -- Tiziano Zito <opossumnano@gmail.com>  Wed, 26 Sep 2012 10:28:55 +0200
