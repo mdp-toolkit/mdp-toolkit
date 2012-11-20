@@ -320,13 +320,14 @@ class FastICANode(ICANode):
     - 25.5.2005 now independent from scipy. Requires Numeric or numarray
     - 26.6.2006 converted to numpy
     - 14.9.2007 updated to Matlab version 2.5
+    - 26.6.2012 added ability to run two stages of optimization [PK]
     """
 
     def __init__(self, approach = 'defl', g = 'pow3', guess = None,
                  fine_g = 'pow3', mu = 1,
                  sample_size = 1, fine_tanh = 1, fine_gaus = 1,
                  max_it = 5000, max_it_fine = 100,
-                 failures = 5, primary_limit=0.01, limit = 0.001,  verbose = False,
+                 failures = 5, coarse_limit=None, limit = 0.001,  verbose = False,
                  whitened = False, white_comp = None, white_parm = None,
                  input_dim = None, dtype=None):
         """
@@ -346,9 +347,13 @@ class FastICANode(ICANode):
                       It is passed directly to the WhiteningNode constructor.
                       Ex: white_parm = { 'svd' : True }
 
-        limit -- final convergence threshold.
+        coarse_limit -- initial convergence threshold, to switch to
+                        fine_g function (i.e. linear to non-linear)
+                        even before reaching the limit and final
+                        tuning. Set it to a value higher than limit to
+                        be in effect. PK 26-6-12.
 
-	primary_limit -- initial convergence threshold, to switch to fine function, (i.e. linear to non-linear). PK 26-6-12.
+        limit -- convergence threshold.
 
         Specific for FastICA:
 
@@ -419,7 +424,7 @@ class FastICANode(ICANode):
         self.fine_gaus = fine_gaus
         self.max_it = max_it
         self.max_it_fine = max_it_fine
-        self.primary_limit = primary_limit
+        self.coarse_limit = coarse_limit
         self.failures = failures
         self.guess = guess
 
@@ -461,7 +466,7 @@ class FastICANode(ICANode):
                 guess = mult(guess, self.white.get_recmatrix(transposed=1))
 
         limit = self.limit
-        primary_limit = self.primary_limit
+        coarse_limit = self.coarse_limit
         max_it = self.max_it
         max_it_fine = self.max_it_fine
         failures = self.failures
@@ -505,7 +510,7 @@ class FastICANode(ICANode):
         used_g = gOrig
         stroke = 0
         fine_tuned = False
-        in_secondary = False
+        coarse_limit_reached = False
         lng = False
 
         # SYMMETRIC APPROACH
@@ -534,16 +539,19 @@ class FastICANode(ICANode):
                 v2 = 1.-abs((mult(Q.T, QOldF)).diagonal()).min(axis=0)
                 convergence_fine.append(v2)
 
-                if self.g!=self.fine_g and convergence[round] < primary_limit and not in_secondary:
+                if self.g != self.fine_g \
+                   and coarse_limit is not None \
+                   and convergence[round] < coarse_limit \
+                   and not coarse_limit_reached:
                     if verbose:
-                        print 'Primary convergence, switching to fine cost...'
+                        print 'Coarse convergence, switching to fine cost...'
                     used_g = gFine
-                    in_secondary = True
+                    coarse_limit_reached = True
 
                 if convergence[round] < limit:
                     if fine_tuning and (not fine_tuned):
                         if verbose:
-                            print 'Secondary convergence, fine-tuning...'
+                            print 'Initial convergence, fine-tuning...'
                         fine_tuned = True
                         used_g = gFine
                         mu = muK * self.mu
