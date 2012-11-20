@@ -325,8 +325,8 @@ class FastICANode(ICANode):
     def __init__(self, approach = 'defl', g = 'pow3', guess = None,
                  fine_g = 'pow3', mu = 1,
                  sample_size = 1, fine_tanh = 1, fine_gaus = 1,
-                 max_it = 1000, max_it_fine = 100,
-                 failures = 5, limit = 0.001, verbose = False,
+                 max_it = 5000, max_it_fine = 100,
+                 failures = 5, primary_limit=0.01, limit = 0.001,  verbose = False,
                  whitened = False, white_comp = None, white_parm = None,
                  input_dim = None, dtype=None):
         """
@@ -346,7 +346,9 @@ class FastICANode(ICANode):
                       It is passed directly to the WhiteningNode constructor.
                       Ex: white_parm = { 'svd' : True }
 
-        limit -- convergence threshold.
+        limit -- final convergence threshold.
+
+	primary_limit -- initial convergence threshold, to switch to fine function, (i.e. linear to non-linear). PK 26-6-12.
 
         Specific for FastICA:
 
@@ -417,6 +419,7 @@ class FastICANode(ICANode):
         self.fine_gaus = fine_gaus
         self.max_it = max_it
         self.max_it_fine = max_it_fine
+        self.primary_limit = primary_limit
         self.failures = failures
         self.guess = guess
 
@@ -458,6 +461,7 @@ class FastICANode(ICANode):
                 guess = mult(guess, self.white.get_recmatrix(transposed=1))
 
         limit = self.limit
+        primary_limit = self.primary_limit
         max_it = self.max_it
         max_it_fine = self.max_it_fine
         failures = self.failures
@@ -501,6 +505,7 @@ class FastICANode(ICANode):
         used_g = gOrig
         stroke = 0
         fine_tuned = False
+        in_secondary = False
         lng = False
 
         # SYMMETRIC APPROACH
@@ -529,10 +534,16 @@ class FastICANode(ICANode):
                 v2 = 1.-abs((mult(Q.T, QOldF)).diagonal()).min(axis=0)
                 convergence_fine.append(v2)
 
+                if self.g!=self.fine_g and convergence[round] < primary_limit and not in_secondary:
+                    if verbose:
+                        print 'Primary convergence, switching to fine cost...'
+                    used_g = gFine
+                    in_secondary = True
+
                 if convergence[round] < limit:
                     if fine_tuning and (not fine_tuned):
                         if verbose:
-                            print 'Initial convergence, fine-tuning...'
+                            print 'Secondary convergence, fine-tuning...'
                         fine_tuned = True
                         used_g = gFine
                         mu = muK * self.mu
@@ -569,7 +580,7 @@ class FastICANode(ICANode):
                 # Show the progress...
                 if verbose:
                     msg = ('Step no. %d,'
-                           ' convergence: %.3f' % (round+1,convergence[round]))
+                           ' convergence: %.7f' % (round+1,convergence[round]))
                     print msg
 
 
