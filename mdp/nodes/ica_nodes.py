@@ -347,12 +347,6 @@ class FastICANode(ICANode):
                       It is passed directly to the WhiteningNode constructor.
                       Ex: white_parm = { 'svd' : True }
 
-        coarse_limit -- initial convergence threshold, to switch to
-                        fine_g function (i.e. linear to non-linear)
-                        even before reaching the limit and final
-                        tuning. Set it to a value higher than limit to
-                        be in effect. PK 26-6-12.
-
         limit -- convergence threshold.
 
         Specific for FastICA:
@@ -380,6 +374,11 @@ class FastICANode(ICANode):
 
       sample_size -- Percentage of samples used in one iteration. If
                      sample_size < 1, samples are chosen in random order.
+
+     coarse_limit -- initial convergence threshold, to switch to
+                     fine_g function (i.e. linear to non-linear) even
+                     before reaching the limit and final tuning. Set
+                     it to a value higher than limit to be in effect.
 
         fine_tanh -- parameter for 'tanh' nonlinearity
         fine_gaus -- parameter for 'gaus' nonlinearity
