@@ -1,3 +1,12 @@
+mdp (3.3+git6-g7bbd889-1) experimental; urgency=low
+
+  * New upstream git snapshot
+  * Introduce coarse_limit to trigger switching to fine_g before
+    reaching target limit
+  * Upload sponsored by Yaroslav Halchenko
+
+ -- Tiziano Zito <opossumnano@gmail.com>  Wed, 21 Nov 2012 10:19:15 +0100
+
 mdp (3.3-1) unstable; urgency=low
 
   * New upstream bug-fix release
