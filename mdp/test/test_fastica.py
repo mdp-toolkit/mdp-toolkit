@@ -12,6 +12,7 @@ def _fastica_test_factory(metafunc):
                  'fine_g': [None, 'pow3', 'tanh', 'gaus', 'skew'],
                  'sample_size': [1, 0.99999],
                  'mu': [1, 0.999999],
+                 'coarse_limit': [None, 0.01],
                  }
 
     for parms in mdp.utils.orthogonal_permutations(fica_parm):
@@ -20,7 +21,11 @@ def _fastica_test_factory(metafunc):
             continue
         if parms['g'] == 'skew' and parms['fine_g'] != 'skew':
             continue
-
+        # skip testing coarse_limit if g's are the same --
+        # it should not be in effect
+        if parms['coarse_limit'] is not None \
+          and parms['g'] == parms['fine_g']:
+          continue
         funcargs = dict(parms=parms)
         theid = fastICA_id(parms)
         metafunc.addcall(funcargs, id=theid)
@@ -29,6 +34,7 @@ def fastICA_id(parms):
     app =     'AP:'+parms['approach']
     nl =      'NL:'+parms['g']
     fine_nl = 'FT:'+str(parms['fine_g'])
+    coarse_l = 'CL:'+str(parms['coarse_limit'])
     if parms['sample_size'] == 1:
         compact = 'SA:01 '
     else:
@@ -37,7 +43,7 @@ def fastICA_id(parms):
         compact += 'S:01'
     else:
         compact += 'S:<1'
-    desc = ' '.join([app, nl, fine_nl, compact])
+    desc = ' '.join([app, nl, fine_nl, compact, coarse_l])
     return desc
 
 
