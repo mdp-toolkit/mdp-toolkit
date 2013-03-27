@@ -300,14 +300,18 @@ class ProjectionNode(mdp.Node):
 class NormalizeNode(mdp.PreserveDimNode):
     """Make input signal meanfree and unit variance"""
     def __init__(self, input_dim=None, output_dim=None, dtype=None):
-        self._cov_mtx = mdp.utils.CovarianceMatrix(dtype)
         super(NormalizeNode, self).__init__(input_dim, output_dim, dtype)
 
     @staticmethod
     def is_trainable():
         return True
 
+    def _new_covariance_matrix(self):
+        return CovarianceMatrix(dtype=self.dtype)
+
     def _train(self, x):
+        if not hasattr(self, '_cov_mtx'):
+            self._cov_mtx = self._new_covariance_matrix()
         self._cov_mtx.update(x)
 
     def _stop_training(self):

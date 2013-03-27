@@ -379,9 +379,12 @@ class GaussianClassifier(ClassifierNode):
                    "datapoints (%d != %d)" % (len(labels), x.shape[0]))
             raise mdp.TrainingException(msg)
 
+    def _new_covariance_matrix(self):
+        return utils.CovarianceMatrix(dtype=self.dtype)
+
     def _update_covs(self, x, lbl):
         if lbl not in self._cov_objs:
-            self._cov_objs[lbl] = utils.CovarianceMatrix(dtype=self.dtype)
+            self._cov_objs[lbl] = self._new_covariance_matrix()
         self._cov_objs[lbl].update(x)
 
     def _train(self, x, labels):

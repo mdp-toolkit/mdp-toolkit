@@ -77,12 +77,6 @@ class SFANode(Node):
         super(SFANode, self).__init__(input_dim, output_dim, dtype)
         self._include_last_sample = include_last_sample
 
-        # init two covariance matrices
-        # one for the input data
-        self._cov_mtx = CovarianceMatrix(dtype)
-        # one for the derivatives
-        self._dcov_mtx = CovarianceMatrix(dtype)
-
         # set routine for eigenproblem
         self._symeig = symeig
 
@@ -116,6 +110,9 @@ class SFANode(Node):
             raise TrainingException('Need at least 2 time samples to '
                                     'compute time derivative (%d given)'%s)
         
+    def _new_covariance_matrix(self):
+        return CovarianceMatrix(dtype=self.dtype)
+
     def _train(self, x, include_last_sample=None):
         """
         For the ``include_last_sample`` switch have a look at the
@@ -127,6 +124,12 @@ class SFANode(Node):
         last_sample_index = None if include_last_sample else -1
 
         # update the covariance matrices
+        if not hasattr(self, '_cov_mtx'):
+            # init two covariance matrices
+            # one for the input data
+            self._cov_mtx = self._new_covariance_matrix()
+            # one for the derivatives
+            self._dcov_mtx = self._new_covariance_matrix()
         self._cov_mtx.update(x[:last_sample_index, :])
         self._dcov_mtx.update(self.time_derivative(x))
 

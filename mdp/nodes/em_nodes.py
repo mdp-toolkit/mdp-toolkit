@@ -63,9 +63,13 @@ class FANode(mdp.Node):
         self.tol = tol
         self.max_cycles = max_cycles
         self.verbose = verbose
-        self._cov_mtx = CovarianceMatrix(dtype, bias=True)
+
+    def _new_covariance_matrix(self):
+        return CovarianceMatrix(dtype=self.dtype, bias=True)
 
     def _train(self, x):
+        if not hasattr(self, '_cov_mtx'):
+            self._cov_mtx = self._new_covariance_matrix()
         # update the covariance matrix
         self._cov_mtx.update(x)
 
