@@ -21,8 +21,9 @@ except ImportError:
 
 from introspection import dig_node, get_node_size, get_node_size_str
 from quad_forms import QuadraticForm, QuadraticFormException
-from covariance import (CovarianceMatrix, DelayCovarianceMatrix,
-                        MultipleCovarianceMatrices,CrossCovarianceMatrix)
+from covariance import (CovarianceMatrix, MaskedCovarianceMatrix,
+                        DelayCovarianceMatrix, MultipleCovarianceMatrices,
+                        CrossCovarianceMatrix)
 from progress_bar import progressinfo
 from slideshow import (basic_css, slideshow_css, HTMLSlideShow,
                        image_slideshow_css, ImageHTMLSlideShow,
@@ -78,7 +79,8 @@ def svd(x, compute_uv = True):
     except _mdp.numx_linalg.LinAlgError, exc:
         raise SymeigException(str(exc))
 
-__all__ = ['CovarianceMatrix', 'DelayCovarianceMatrix','CrossCovarianceMatrix',
+__all__ = ['CovarianceMatrix', 'MaskedCovarianceMatrix',
+           'DelayCovarianceMatrix','CrossCovarianceMatrix',
            'MultipleCovarianceMatrices', 'QuadraticForm',
            'QuadraticFormException',
            'comb', 'cov2', 'dig_node', 'get_dtypes', 'get_node_size',

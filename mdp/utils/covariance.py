@@ -131,6 +131,54 @@ class CovarianceMatrix(object):
         return cov_mtx, avg, tlen
 
 
+class MaskedCovarianceMatrix(CovarianceMatrix):
+    """An extended CovarianceMatrix that can handle masked input
+
+    This class stores all training data in memory, but it can
+    appropriately handle masked input data.
+    """
+
+    def _init_internals(self, x):
+        """Init the internal structures.
+
+        The reason this is not done in the constructor is that we want to be
+        able to derive the input dimension and the dtype directly from the
+        data this class receives.
+        """
+        super(MaskedCovarianceMatrix, self)._init_internals(x=x)
+        self._update_data = []
+
+    def update(self, x):
+        """Update internal structures.
+
+        Note that no consistency checks are performed on the data (this is
+        typically done in the enclosing node).
+        """
+        if self._cov_mtx is None:
+            self._init_internals(x)
+        x = mdp.utils.refcast(x, self._dtype)
+        self._update_data.append(x)
+
+    def fix(self, center=True):
+        """Returns a triple containing the covariance matrix, the average and
+        the number of observations. The covariance matrix is then reset to
+        a zero-state.
+
+        If center is false, the returned matrix is the matrix of the second moments,
+        i.e. the covariance matrix of the data without subtracting the mean."""
+        ddof = 0
+        if self.bias:
+            ddof = 1
+        x = numx.ma.concatenate(self._update_data)
+        self._cov_mtx += numx.ma.cov(x, rowvar=False, ddof=ddof)
+        self._avg += x.mean(axis=0)
+        self._tlen += x.shape[0]
+        if ((hasattr(self._cov_mtx, 'mask') and self._cov_mtx.mask.any()) or
+                (hasattr(self._avg, 'mask') and self._avg.mask.any())):
+            raise ValueError('excessively masked training data')
+        return (self._cov_mtx, self._avg, self._tlen)
+
+
 class DelayCovarianceMatrix(object):
     """This class stores an empirical covariance matrix between the signal and
     time delayed signal that can be updated incrementally.
