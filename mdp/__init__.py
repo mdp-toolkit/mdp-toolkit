@@ -164,6 +164,7 @@ from classifier_node import (ClassifierNode, ClassifierCumulator)
 # import our modules
 import nodes
 import hinet
+import masked
 import parallel
 from test import test
 
@@ -199,6 +200,7 @@ __all__ = ['config',
            'get_extensions',
            'graph',
            'hinet',
+           'masked',
            'nodes',
            'parallel',
            'pca',
