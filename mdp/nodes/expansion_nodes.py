@@ -369,7 +369,7 @@ class GeneralExpansionNode(_ExpansionNode):
                                                     self.input_dim,
                                                     self.funcs,
                                                     use_hint=use_hint,
-                                                    k=0.001)
+                                                    k=0.000001)
             return app_x_2.astype(self.dtype)
         except NotImplementedError, exc:
             raise mdp.MDPException(exc)
