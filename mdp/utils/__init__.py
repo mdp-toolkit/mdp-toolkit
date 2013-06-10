@@ -35,7 +35,7 @@ import mdp as _mdp
 # matrix multiplication function
 # we use an alias to be able to use the wrapper for the 'gemm' Lapack
 # function in the future
-mult = _mdp.numx.dot
+mult = gputils.theano_multiply#_mdp.numx.dot
 matmult = mult
 
 if _mdp.numx_description == 'scipy':
