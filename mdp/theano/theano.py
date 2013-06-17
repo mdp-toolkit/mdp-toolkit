@@ -20,7 +20,6 @@ def activate_theano():
     # Declare theano symbolic variables and function
     a, b = T.matrices('a','b')
     mult = function([a,b], T.dot(a,b),allow_input_downcast=True)
-    
     activate_extension('theano')
     
 def deactivate_theano():

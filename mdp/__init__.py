@@ -165,6 +165,7 @@ from classifier_node import (ClassifierNode, ClassifierCumulator)
 import nodes
 import hinet
 import parallel
+import theano
 from test import test
 
 # explicitly set __all__, mainly needed for epydoc
@@ -201,6 +202,7 @@ __all__ = ['config',
            'hinet',
            'nodes',
            'parallel',
+           'theano',
            'pca',
            'fastica',
            'utils',
