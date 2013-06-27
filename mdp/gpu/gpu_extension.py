@@ -8,25 +8,25 @@ import os
 
 standard_mult = mult
 
+# Set an environment variable before importing theano so theano knows to use the GPU
+os.environ['THEANO_FLAGS'] = 'device=gpu,floatX=float32,mode=FAST_RUN'
+
 def activate_gpu():
     """Activate theano extension.
     
     Swaps in a Theano-enabled GPU dot product instead of numx.dot for utils.mult.
     """
-    # Set an environment variable before importing theano so theano knows to use the GPU
-    os.environ['THEANO_FLAGS'] = 'device=gpu,floatX=float32,mode=FAST_RUN'
-    from theano import function, config
+    
+    from theano import function
     import theano.tensor as T
     # Declare theano symbolic variables and function
     a, b = T.matrices('a','b')
     mult = function([a,b], T.dot(a,b),allow_input_downcast=True)
-    activate_extension('gpu')
+    #activate_extension('gpu')
     
 def deactivate_gpu():
-    mult = standard_mult
-    del os.environ['THEANO_FLAGS']
-    del function, config, T    
-    deactivate_extension('gpu')
+    mult = standard_mult 
+    #deactivate_extension('gpu')
     
 class gpuify(object):
     """Context manager for the theano extension.
@@ -35,5 +35,5 @@ class gpuify(object):
     def __enter__(self):
         activate_gpu()
         
-    def __exit__(self):
+    def __exit__(self, type, value, traceback):
         deactivate_gpu()
