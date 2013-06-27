@@ -6,13 +6,13 @@ to make sure the latest GPU code is available to us.
 """
 __docformat__="restructuredtext en"
 
-from ..utils import mult
+import mdp.utils
 from ..extension import ExtensionNode, activate_extension, deactivate_extension
 from theano import function
 import theano.tensor as T
 
 # Save the default dot product behavior
-standard_mult = mult
+standard_mult = mdp.utils.mult
 # Declare theano symbolic variables and function
 a, b = T.matrices('a','b')
 gpu_mult = function([a,b], T.dot(a,b),allow_input_downcast=True)
@@ -23,12 +23,12 @@ def activate_gpu():
     Swaps in a Theano-enabled GPU dot product instead of numx.dot for utils.mult.
     """
     
-    mult = gpu_mult
+    mdp.utils.mult = gpu_mult
     #activate_extension('gpu')
     
 def deactivate_gpu():
     """De-activate gpu extension."""
-    mult = standard_mult 
+    mdp.utils.mult = standard_mult 
     #deactivate_extension('gpu')
     
 class gpuify(object):
