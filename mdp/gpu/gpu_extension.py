@@ -4,12 +4,10 @@ __docformat__="restructuredtext en"
 
 from ..utils import mult
 from ..extension import ExtensionNode, activate_extension, deactivate_extension
-import os
+from theano import function
+import theano.tensor as T
 
 standard_mult = mult
-
-# Set an environment variable before importing theano so theano knows to use the GPU
-os.environ['THEANO_FLAGS'] = 'device=gpu,floatX=float32,mode=FAST_RUN'
 
 def activate_gpu():
     """Activate theano extension.
@@ -17,8 +15,6 @@ def activate_gpu():
     Swaps in a Theano-enabled GPU dot product instead of numx.dot for utils.mult.
     """
     
-    from theano import function
-    import theano.tensor as T
     # Declare theano symbolic variables and function
     a, b = T.matrices('a','b')
     mult = function([a,b], T.dot(a,b),allow_input_downcast=True)

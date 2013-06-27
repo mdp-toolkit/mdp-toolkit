@@ -166,7 +166,6 @@ import nodes
 import hinet
 import parallel
 import graph
-import gpu
 from test import test
 
 # explicitly set __all__, mainly needed for epydoc
@@ -203,7 +202,6 @@ __all__ = ['config',
            'hinet',
            'nodes',
            'parallel',
-           'gpu',
            'pca',
            'fastica',
            'utils',
@@ -213,6 +211,10 @@ __all__ = ['config',
 if config.has_joblib:
     import caching
     __all__ += ['caching']
+    
+if config.has_theano:
+    import gpu
+    __all__ += ['gpu']
 
 utils.fixup_namespace(__name__, __all__,
                       ('signal_node',
