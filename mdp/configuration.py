@@ -423,3 +423,17 @@ def set_configuration():
                                      'version %s is too old' % version)
         else:
             config.ExternalDepFound('sklearn', version)
+    
+    # theano
+    try:
+        # Set an environment variable before importing theano so theano knows to use the GPU
+        os.environ['THEANO_FLAGS'] = 'device=gpu,floatX=float32,mode=FAST_RUN'
+        import theano
+    except ImportError, exc:
+        config.ExternalDepFailed('theano', exc)
+    else:
+        version = theano.__version__
+        if _version_too_old(version, (0,5,0)):
+            config.ExternalDepFailed('theano','version %s is too old' % version)
+        else:
+            config.ExternalDepFound('theano', version)
