@@ -38,7 +38,7 @@ class theanoize(object):
     through this custom context manager. You can use this extension with the following
     syntax:
     
-    >>> with mdp.theano.theanoize():
+    >>> with mdp.gputheano.theanoize():
     ...     # let 'a' and 'b' be numpy arrays of appropriate dimension
     ...     utils.mult(a,b)
     ...     # more complex MDP operations make use of utils.mult

@@ -124,7 +124,7 @@ def setup_package():
                       'mdp.test', 'mdp.graph', 'mdp.caching',
                       'mdp.parallel', 'bimdp', 'bimdp.hinet', 'bimdp.inspection',
                       'bimdp.nodes', 'bimdp.parallel', 'bimdp.test',
-                      'mdp.gpu'],
+                      'mdp.gputheano'],
           package_data = {'mdp.hinet': ['hinet.css'],
                           'mdp.utils': ['slideshow.css']}
           )
