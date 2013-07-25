@@ -213,8 +213,8 @@ if config.has_joblib:
     __all__ += ['caching']
     
 if config.has_theano:
-    import gpu
-    __all__ += ['gpu']
+    import gputheano
+    __all__ += ['gputheano']
 
 utils.fixup_namespace(__name__, __all__,
                       ('signal_node',

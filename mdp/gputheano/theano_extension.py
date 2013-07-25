@@ -15,30 +15,30 @@ import theano.tensor as T
 standard_mult = mdp.utils.mult
 # Declare theano symbolic variables and function
 a, b = T.matrices('a','b')
-gpu_mult = function([a,b], T.dot(a,b),allow_input_downcast=True)
+theano_mult = function([a,b], T.dot(a,b),allow_input_downcast=True)
 
-def activate_gpu():
-    """Activate gpu extension.
+def activate_theano():
+    """Activate theano extension.
     
     Swaps in a Theano-enabled GPU dot product instead of numx.dot for utils.mult.
     """
     
-    mdp.utils.mult = gpu_mult
-    #activate_extension('gpu')
+    mdp.utils.mult = theano_mult
+    #activate_extension('theano')
     
-def deactivate_gpu():
-    """De-activate gpu extension."""
+def deactivate_theano():
+    """De-activate theano extension."""
     mdp.utils.mult = standard_mult 
-    #deactivate_extension('gpu')
+    #deactivate_extension('theano')
     
-class gpuify(object):
-    """Context manager for the 'gpu' extension.
+class theanoize(object):
+    """Context manager for the theano extension.
     
-    Because the gpu extension does not use an ExtensionNode, it can only be activated
+    Because the theano extension does not use an ExtensionNode, it can only be activated
     through this custom context manager. You can use this extension with the following
     syntax:
     
-    >>> with mdp.gpu.gpuify():
+    >>> with mdp.theano.theanoize():
     ...     # let 'a' and 'b' be numpy arrays of appropriate dimension
     ...     utils.mult(a,b)
     ...     # more complex MDP operations make use of utils.mult
@@ -46,7 +46,7 @@ class gpuify(object):
     """
     
     def __enter__(self):
-        activate_gpu()
+        activate_theano()
         
     def __exit__(self, type, value, traceback):
-        deactivate_gpu()
+        deactivate_theano()
