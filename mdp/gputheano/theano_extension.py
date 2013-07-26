@@ -24,12 +24,12 @@ def activate_theano():
     """
     
     mdp.utils.mult = theano_mult
-    activate_extension('theano')
+    #activate_extension('theano')
     
 def deactivate_theano():
     """De-activate theano extension."""
     mdp.utils.mult = standard_mult 
-    deactivate_extension('theano')
+    #deactivate_extension('theano')
     
 class theanoize(object):
     """Context manager for the theano extension.
