@@ -15,10 +15,10 @@ def test_mult_remapping():
 
 @requires_theano
 def test_random_matrix_mult():
-    random_matrix_1 = numx_rand.rand(4,4)
-    random_matrix_2 = numx_rand.rand(4,4)
+    random_matrix_1 = numx_rand.rand(4, 4).astype('float32')
+    random_matrix_2 = numx_rand.rand(4, 4).astype('float32')
     cpu_result = mdp.utils.mult(random_matrix_1, random_matrix_2)
     with mdp.gputheano.theanoize():
         gpu_result = mdp.utils.mult(random_matrix_1, random_matrix_2)
-    assert_array_almost_equal_diff(cpu_result, gpu_result, 12, 
-                                   'GPU not equal CPU result to 12 digits.')
+    assert_array_almost_equal_diff(cpu_result, gpu_result, 6, 
+                                   'GPU not equal CPU result to 6 digits.')
