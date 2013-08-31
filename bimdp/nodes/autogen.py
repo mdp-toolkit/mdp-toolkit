@@ -6,7 +6,7 @@ Run this module to overwrite the autogen_binodes module with a new version.
 
 import inspect
 import mdp
-from cStringIO import StringIO
+from StringIO import StringIO
 
 # Blacklist of nodes that cause problems with autogeneration
 NOAUTOGEN_MDP_NODES = [
