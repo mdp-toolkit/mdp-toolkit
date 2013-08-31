@@ -174,10 +174,9 @@ def apply_to_scikits_algorithms(current_module, action,
             if (inspect.isclass(member) and
                 member not in processed_classes):
                 processed_classes.append(member)
-                if ((hasattr(member, 'fit')
-                     or hasattr(member, 'predict')
-                     or hasattr(member, 'transform'))
-                    and not member.__module__.endswith('_')):
+                if (hasattr(member, 'fit')
+                    or hasattr(member, 'predict')
+                    or hasattr(member, 'transform')):
                     action(member)
 
             # other modules
