@@ -35,15 +35,24 @@ from mdp import MDPException, NodeMetaclass
 
 # name prefix used for the original attributes when they are shadowed
 ORIGINAL_ATTR_PREFIX = "_non_extension_"
-# prefix used to store the current extension name for an attribute
-EXTENSION_ATTR_PREFIX = "_extension_for_"
+# prefix used to store the current extension name for an attribute,
+# the value stored in this attribute is the extension name
+_EXTENSION_ATTR_PREFIX = "_extension_for_"
 # list of attribute names that are not affected by extensions,
-NON_EXTENSION_ATTRIBUTES = ["__module__", "__doc__", "extension_name"]
+_NON_EXTENSION_ATTRIBUTES = ["__module__", "__doc__", "extension_name"]
+
+# keys under which the global activation and deactivation functions
+# for extensions can be stored in the extension registry
+_SETUP_FUNC_ATTR = "_extension_setup"
+_TEARDOWN_FUNC_ATTR = "_extension_teardown"
 
 # dict of dicts of dicts, contains a key for each extension,
 # the inner dict maps the node types to their extension node,
 # the innermost dict then maps attribute names to values
 # (e.g. a method name to the actual function)
+#
+# For each extension there are also the special _SETUP_FUNC_ATTR and
+# _TEARDOWN_FUNC_ATTR keys.
 _extensions = dict()
 # set containing the names of the currently activated extensions
 _active_extensions = set()
@@ -62,13 +71,12 @@ def _register_attribute(ext_name, node_cls, attr_name, attr_value):
     """
     _extensions[ext_name][node_cls][attr_name] = attr_value
 
-def extension_method(ext_name, node_cls, method_name=None):
-    """Returns a function to register a function as extension method.
 
-    This function is intended to be used with the decorator syntax.
+def extension_method(extension_name, node_cls, method_name=None):
+    """Returns a decorator to register a function as an extension method.
 
     :Parameters:
-      ext_name
+      extension_name
         String with the name of the extension.
       node_cls
         Node class for which the method should be registered.
@@ -85,16 +93,60 @@ def extension_method(ext_name, node_cls, method_name=None):
         _method_name = method_name
         if not _method_name:
             _method_name = func.__name__
-        if not ext_name in _extensions:
-            err = ("No ExtensionNode base class has been defined for this "
-                   "extension.")
-            raise ExtensionException(err)
-        if not node_cls in _extensions[ext_name]:
+        if not extension_name in _extensions:
+            # creation of a new extension, add entry in dict
+            _extensions[extension_name] = dict()
+        if not node_cls in _extensions[extension_name]:
             # register this node
-            _extensions[ext_name][node_cls] = dict()
-        _register_attribute(ext_name, node_cls, _method_name, func)
+            _extensions[extension_name][node_cls] = dict()
+        _register_attribute(extension_name, node_cls, _method_name, func)
         return func
     return register_function
+
+
+def extension_setup(extension_name):
+    """Returns a decorator to register a setup function for an extension.
+
+    :Parameters:
+      extension_name
+        String with the name of the extension.
+
+    The decorated function will be called when the extension is activated.
+    
+    Note that there is also the extension_teardown decorator, which should
+    probably defined as well if there is a setup procedure.
+    """
+    def register_setup_function(func):
+        if not extension_name in _extensions:
+            # creation of a new extension, add entry in dict
+            _extensions[extension_name] = dict()
+        if _SETUP_FUNC_ATTR in _extensions[extension_name]:
+            err = "There is already a setup function for this extension."
+            raise ExtensionException(err)
+        _extensions[extension_name][_SETUP_FUNC_ATTR] = func
+        return func
+    return register_setup_function
+
+
+def extension_teardown(extension_name):
+    """Returns a decorator to register a teardown function for an extension.
+
+    :Parameters:
+      extension_name
+        String with the name of the extension.
+
+    The decorated function will be called when the extension is deactivated.
+    """
+    def register_teardown_function(func):
+        if not extension_name in _extensions:
+            # creation of a new extension, add entry in dict
+            _extensions[extension_name] = dict()
+        if _TEARDOWN_FUNC_ATTR in _extensions[extension_name]:
+            err = "There is already a teardown function for this extension."
+            raise ExtensionException(err)
+        _extensions[extension_name][_TEARDOWN_FUNC_ATTR] = func
+        return func
+    return register_teardown_function
 
 
 class ExtensionNodeMetaclass(NodeMetaclass):
@@ -162,7 +214,7 @@ class ExtensionNodeMetaclass(NodeMetaclass):
             # ExtensionNode as superclass
             if extension_subtree and ExtensionNode in base.__mro__:
                 for attr_name, attr_value in base.__dict__.items():
-                    if attr_name not in NON_EXTENSION_ATTRIBUTES:
+                    if attr_name not in _NON_EXTENSION_ATTRIBUTES:
                         # check if this attribute has not already been
                         # extended in one of the base classes
                         already_active = False
@@ -243,13 +295,17 @@ def activate_extension(extension_name, verbose=False):
         return
     _active_extensions.add(extension_name)
     try:
+        if _SETUP_FUNC_ATTR in _extensions[extension_name]:
+            _extensions[extension_name][_SETUP_FUNC_ATTR]()
         for node_cls, attributes in _extensions[extension_name].items():
+            if node_cls == _SETUP_FUNC_ATTR or node_cls == _TEARDOWN_FUNC_ATTR:
+                continue
             for attr_name, attr_value in attributes.items():
                 if verbose:
                     print ("extension %s: adding %s to %s" %
                            (extension_name, attr_name, node_cls.__name__))
                 ## store the original attribute / make it available
-                ext_attr_name = EXTENSION_ATTR_PREFIX + attr_name
+                ext_attr_name = _EXTENSION_ATTR_PREFIX + attr_name
                 if attr_name in dir(node_cls):
                     if ext_attr_name in node_cls.__dict__:
                         # two extensions override the same attribute
@@ -272,7 +328,7 @@ def activate_extension(extension_name, verbose=False):
                 # store to which extension this attribute belongs, this is also
                 # used as a flag that this is an extension attribute
                 setattr(node_cls, ext_attr_name, extension_name)
-    except:
+    except Exception:
         # make sure that an incomplete activation is reverted
         deactivate_extension(extension_name)
         raise
@@ -285,6 +341,8 @@ def deactivate_extension(extension_name, verbose=False):
     if extension_name not in _active_extensions:
         return
     for node_cls, attributes in _extensions[extension_name].items():
+        if node_cls == _SETUP_FUNC_ATTR or node_cls == _TEARDOWN_FUNC_ATTR:
+            continue
         for attr_name in attributes.keys():
             original_name = ORIGINAL_ATTR_PREFIX + attr_name
             if verbose:
@@ -315,9 +373,11 @@ def deactivate_extension(extension_name, verbose=False):
                     pass
             try:
                 # might be missing if the activation failed
-                delattr(node_cls, EXTENSION_ATTR_PREFIX + attr_name)
+                delattr(node_cls, _EXTENSION_ATTR_PREFIX + attr_name)
             except AttributeError:
                 pass
+    if _TEARDOWN_FUNC_ATTR in _extensions[extension_name]:
+        _extensions[extension_name][_TEARDOWN_FUNC_ATTR]()
     _active_extensions.remove(extension_name)
 
 def activate_extensions(extension_names, verbose=False):

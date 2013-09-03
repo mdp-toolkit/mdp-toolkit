@@ -55,7 +55,6 @@ def testContextDecorator():
 
 def testContextManager1():
     """Test that the context manager activates extensions."""
-
     class Test1ExtensionNode(mdp.ExtensionNode):
         extension_name = "__test1"
         def _testtest(self):
@@ -64,7 +63,6 @@ def testContextManager1():
         extension_name = "__test2"
         def _testtest(self):
             pass
-
     assert mdp.get_active_extensions() == []
     with mdp.extension('__test1'):
         assert mdp.get_active_extensions() == ['__test1']
@@ -85,10 +83,6 @@ def testContextManager1():
 
 def testDecoratorExtension():
     """Test extension decorator with a single new extension."""
-    class TestExtensionNode(mdp.ExtensionNode):
-        extension_name = "__test"
-        def _testtest(self):
-            pass
     @mdp.extension_method("__test", mdp.nodes.SFANode, "_testtest")
     def _sfa_testtest(self):
         return 42
@@ -337,3 +331,38 @@ def testExtensionInheritanceTwoExtensions():
     mdp.activate_extensions(['__test1', '__test3'])
     assert test_node._execute() == 1
     mdp.deactivate_extensions(['__test2', '__test1'])
+    
+def testExtensionSetupTeardown():
+    """Test defining setup and teardown functions."""
+    setup_calls = []
+    teardown_calls = []
+    @mdp.extension_setup("__test")
+    def dummy_setup():
+        setup_calls.append(True)
+    @mdp.extension_teardown("__test")
+    def dummy_setup():
+        teardown_calls.append(True)
+    mdp.activate_extension("__test")
+    assert len(setup_calls) == 1
+    mdp.deactivate_extension("__test")
+    assert len(teardown_calls) == 1
+
+def testExtensionDuplicateSetup():
+    """Test that you can define the setup function only once."""
+    def dummy_setup1():
+        pass
+    def dummy_setup2():
+        pass
+    mdp.extension_setup("__test")(dummy_setup1)
+    py.test.raises(mdp.ExtensionException,
+                   lambda: mdp.extension_setup("__test")(dummy_setup2))
+
+def testExtensionDuplicateTeardown():
+    """Test that you can define the teardown function only once."""
+    def dummy_setup1():
+        pass
+    def dummy_setup2():
+        pass
+    mdp.extension_teardown("__test")(dummy_setup1)
+    py.test.raises(mdp.ExtensionException,
+                   lambda: mdp.extension_teardown("__test")(dummy_setup2))
