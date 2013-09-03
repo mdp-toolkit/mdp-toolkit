@@ -42,11 +42,6 @@ This is described in more detail in the BiNode module.
 
 ### T O D O ###
 
-# ------------- optional ----------------
-
-# TODO: maybe also allow target==EXIT_TARGET during training
-#     would have to modify _train_node_single_phase
-
 # TODO: add a target seperator that does not remove the key. Could use
 #    -> remove key
 #    --> remove one '-' on entry
@@ -70,7 +65,7 @@ This is described in more detail in the BiNode module.
 #    is in place.
 
 # TODO: Implement more internal checks for node output result?
-#    Check that last element is not None? Use assume?
+#    Check that last element is not None?
 
 # TODO: implement switchlayer, a layer where each column represents a different
 #    target, so the target value determines which nodes are used

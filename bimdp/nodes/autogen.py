@@ -1,7 +1,5 @@
 """
 Module to automatically create a module with BiMDP versions of MDP nodes.
-
-Run this module to overwrite the autogen_binodes module with a new version.
 """
 
 import inspect
