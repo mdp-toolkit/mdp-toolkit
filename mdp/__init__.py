@@ -166,6 +166,7 @@ from classifier_node import (ClassifierNode, ClassifierCumulator)
 import nodes
 import hinet
 import parallel
+import graph
 from test import test
 
 # explicitly set __all__, mainly needed for epydoc
@@ -213,6 +214,10 @@ __all__ = ['config',
 if config.has_joblib:
     import caching
     __all__ += ['caching']
+    
+if config.has_theano:
+    import gputheano
+    __all__ += ['gputheano']
 
 utils.fixup_namespace(__name__, __all__,
                       ('signal_node',
