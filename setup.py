@@ -101,6 +101,9 @@ def setup_package():
     version = get_version()
     short_description = get_short_description()
     long_description = get_long_description()
+    # create download url:
+    dl = ('http://sourceforge.net/projects/mdp-toolkit/files/mdp-toolkit/' +
+          get_version()+'/MDP-'+get_version()+'.tar.gz')
     # Run build
     os.chdir(src_path)
     sys.path.insert(0, src_path)
@@ -113,7 +116,7 @@ def setup_package():
           license = "http://mdp-toolkit.sourceforge.net/license.html",
           platforms = ["Any"],
           url = 'http://mdp-toolkit.sourceforge.net',
-          download_url = 'http://sourceforge.net/projects/mdp-toolkit/files',
+          download_url = dl,
           description = short_description,
           long_description = long_description,
           classifiers = classifiers,

@@ -60,8 +60,7 @@ keywords are treated in a special way:
  'target' -- If any template method like execute finds a 'target' keyword in
      the message then this is used as the target value in the return value.
      However, if _execute then also returns a target value this overwrites the
-     target value. In global_message calls 'target' has no special meaning and
-     can be used like any other keyword.
+     target value.
 
   'method' -- Specify the name of the method that should be used instead of
       the standard one (e.g. in execute the standard method is _execute).

@@ -21,12 +21,12 @@ def testGeneralExpansionNode():
     input = numx.random.normal(size=(samples, input_dim))
     out = cen.execute(input)
     assert_array_almost_equal(out[:, 0:input_dim], input,
-                              6, "incorrect constant expansion")
+                              6, "incorrect identity expansion")
     assert_array_almost_equal(out[:, input_dim:2*input_dim],
-                              input ** 2, 6, "incorrect constant expansion")
+                              input ** 2, 6, "incorrect squares expansion")
     assert_array_almost_equal(out[:, 2*input_dim:],
                               dumb_quadratic_expansion(input), 6,
-                              "incorrect constant expansion")
+                              "incorrect quadratic expansion")
     assert cen.expanded_dim(input_dim) == 2 * input_dim + input_dim**2, "expanded_dim failed"
     assert_array_almost_equal(cen.output_sizes(input_dim),
                               numx.array([input_dim, input_dim,

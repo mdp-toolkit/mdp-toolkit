@@ -151,6 +151,7 @@ from helper_funcs import pca, fastica
 
 # import extension mechanism
 from extension import (ExtensionException, extension_method,
+                       extension_setup, extension_teardown,
                        ExtensionNodeMetaclass,
                        ExtensionNode, get_extensions,
                        get_active_extensions, with_extension,
@@ -196,6 +197,8 @@ __all__ = ['config',
            'deactivate_extensions',
            'extension',
            'extension_method',
+           'extension_setup',
+           'extension_teardown',
            'get_extensions',
            'graph',
            'hinet',
