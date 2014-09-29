@@ -3,6 +3,8 @@ mdp (3.3+git19-g4ec2f29-1) unstable; urgency=medium
   * "New" upstream git snapshot
     - resolves FTBFS by a workaround of faulty unicode encoding in
       sklearn docstrings (Closes: #724146)
+  * debian/rules 
+    - run tests from within a corresponding tests directory
 
  -- Yaroslav Halchenko <debian@onerussian.com>  Mon, 29 Sep 2014 08:46:33 -0400
 
