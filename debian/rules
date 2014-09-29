@@ -34,7 +34,8 @@ override_dh_auto_install:
 ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
 	set -xe && for v in $(PYTHONALL); do \
 	  LOC=$(INSTALLPATH)$(call py_libdir_sh, $$v); \
-	  python$$v $$LOC/mdp/test/run_tests.py --seed $(RSEED) $$LOC/mdp $$LOC/bimdp; \
+	  cd $$LOC/mdp/test   && python$$v $$LOC/mdp/test/run_tests.py --seed $(RSEED) && \
+	  cd $$LOC/bimdp/test && python$$v $$LOC/mdp/test/run_tests.py --seed $(RSEED) ; \
 	done
 	: # Prune compiled code which could have been generated during testing
 	find \( -name __pycache__ -o -name \*.pyc -o -name \*.egg-info \) -delete
