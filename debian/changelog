@@ -16,11 +16,11 @@ mdp (3.3-2) unstable; urgency=low
     - Fix inclusion of CSS data in bimdp. The corresponding commit
       in upstream git is the quilt patch:
       changeset_4ec2f2940fda4f4fec9db184dbb1b93053040159.diff
-
   * debian/rules
-  - run tests from within a corresponding tests directory to work around
-    new py.test conftest.py autodiscovery features in python-pytest 
-    version 2.6.3
+   - run tests from within a corresponding tests directory to work around
+     new py.test conftest.py autodiscovery features in python-pytest 
+     version 2.6.3
+  * Upload sponsored by Yaroslav Halchenko
 
  -- Tiziano Zito <opossumnano@gmail.com>  Wed, 12 Nov 2014 15:53:57 +0100
 
