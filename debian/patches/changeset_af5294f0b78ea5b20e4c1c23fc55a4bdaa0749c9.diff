@@ -1,0 +1,26 @@
+From: Tiziano Zito <opossumnano@gmail.com>
+Subject: FIX: wrap sklearn algs in modules ending with "_"
+  For historical reasons we were not wrapping sklearn algs in modules with names
+ending with "_". This restriction prevented us from wrapping algs that we could
+have wrapped. We lift it now, since it does not seem to have any bad side
+effects anymore. A proper validation would be to really test that we can run the
+algs.
+
+Index: mdp-toolkit/mdp/nodes/scikits_nodes.py
+===================================================================
+--- mdp-toolkit.orig/mdp/nodes/scikits_nodes.py
++++ mdp-toolkit/mdp/nodes/scikits_nodes.py
+@@ -174,10 +174,9 @@ def apply_to_scikits_algorithms(current_
+             if (inspect.isclass(member) and
+                 member not in processed_classes):
+                 processed_classes.append(member)
+-                if ((hasattr(member, 'fit')
+-                     or hasattr(member, 'predict')
+-                     or hasattr(member, 'transform'))
+-                    and not member.__module__.endswith('_')):
++                if (hasattr(member, 'fit')
++                    or hasattr(member, 'predict')
++                    or hasattr(member, 'transform')):
+                     action(member)
+ 
+             # other modules
