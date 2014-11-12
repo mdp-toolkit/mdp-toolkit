@@ -1,0 +1,85 @@
+From: Alberto Escalante <alberto.nicolas.escalante@gmail.com>
+Subject: DOC: added an example to GeneralExpansionNode and made the documentation more explicit
+
+Index: mdp-toolkit/mdp/nodes/expansion_nodes.py
+===================================================================
+--- mdp-toolkit.orig/mdp/nodes/expansion_nodes.py
++++ mdp-toolkit/mdp/nodes/expansion_nodes.py
+@@ -283,14 +283,38 @@ class GrowingNeuralGasExpansionNode(Grow
+ 
+ 
+ class GeneralExpansionNode(_ExpansionNode):
+-    """Expands the input signal x according to a list [f_0, ... f_k]
+-    of functions.
+-
+-    Each function f_i should take the whole two-dimensional array x as input and
+-    output another two-dimensional array. Moreover the output dimension should
+-    depend only on the input dimension.
+-    The output of the node is [f_0[x], ... f_k[x]], that is, the concatenation
+-    of each one of the outputs f_i[x].
++    """Expands the input samples by applying to them one or more functions provided.
++    
++    The functions to be applied are specified by a list [f_0, ..., f_k], where 
++    f_i, for 0 <= i <= k, denotes a particular function. 
++    The input data given to these functions is a two-dimensional array and
++    the output is another two-dimensional array. The dimensionality of the output 
++    should depend only on the dimensionality of the input.
++    Given a two-dimensional input array x, the output of the node 
++    is then [f_0(x), ..., f_k(x)], that is, the concatenation of each one of 
++    the computed arrays f_i(x).
++
++    This node has been designed to facilitate nonlinear, fixed but arbitrary  
++    transformations of the data samples within MDP flows.
++        
++    **Example**::
++   
++        >>> import mdp
++        >>> from mdp import numx
++        
++        >>> def identity(x): return x
++        
++        >>> def u3(x): return numx.absolute(x)**3 #A simple nonlinear transformation
++        
++        >>> def norm2(x): #Computes the norm of each sample returning an Nx1 array
++        >>>     return ((x**2).sum(axis=1)**0.5).reshape((-1,1)) 
++          
++        >>> x = numx.array([[-2., 2.], [0.2, 0.3], [0.6, 1.2]])
++        >>> gen = mdp.nodes.GeneralExpansionNode(funcs=[identity, u3, norm2])
++        >>> print(gen.execute(x))
++        >>> [[-2.          2.          8.          8.          2.82842712]
++        >>>  [ 0.2         0.3         0.008       0.027       0.36055513]
++        >>>  [ 0.6         1.2         0.216       1.728       1.34164079]]
+ 
+     Original code contributed by Alberto Escalante.
+     """
+@@ -299,7 +323,7 @@ class GeneralExpansionNode(_ExpansionNod
+         Short argument description:
+ 
+           ``funcs``
+-               list of functions f_i that realize the expansion
++               list of functions f_i that realize the expansion.
+         """
+         self.funcs = funcs
+         super(GeneralExpansionNode, self).__init__(input_dim, dtype)
+@@ -312,7 +336,7 @@ class GeneralExpansionNode(_ExpansionNod
+     
+     def output_sizes(self, n):
+         """Return the individual output sizes of each expansion function
+-        when the input has lenght n"""
++        when the input has lenght n."""
+         sizes = numx.zeros(len(self.funcs))
+         x = numx.zeros((1,n))
+         for i, func in enumerate(self.funcs):
+@@ -333,8 +357,10 @@ class GeneralExpansionNode(_ExpansionNod
+         scipy.optimize.
+ 
+         ``use_hint``
+-               when calculating the pseudo inverse of the expansion,
+-               the hint determines the starting point for the approximation
++               when calculating a pseudo inverse of the expansion,
++               the hint determines the starting point for the approximation.
++               For details on this parameter see the function 
++               ``invert_exp_funcs2`` in ``mdp.utils.routines.py``.
+ 
+         This method requires scipy."""
+ 
