@@ -1,0 +1,54 @@
+From: Niko Wilbert <niko.wilbert@tngtech.com>
+Subject: DOC: some small updates and fixes in docstrings and comments
+
+Index: mdp-toolkit/bimdp/__init__.py
+===================================================================
+--- mdp-toolkit.orig/bimdp/__init__.py
++++ mdp-toolkit/bimdp/__init__.py
+@@ -42,11 +42,6 @@ This is described in more detail in the
+ 
+ ### T O D O ###
+ 
+-# ------------- optional ----------------
+-
+-# TODO: maybe also allow target==EXIT_TARGET during training
+-#     would have to modify _train_node_single_phase
+-
+ # TODO: add a target seperator that does not remove the key. Could use
+ #    -> remove key
+ #    --> remove one '-' on entry
+@@ -70,7 +65,7 @@ This is described in more detail in the
+ #    is in place.
+ 
+ # TODO: Implement more internal checks for node output result?
+-#    Check that last element is not None? Use assume?
++#    Check that last element is not None?
+ 
+ # TODO: implement switchlayer, a layer where each column represents a different
+ #    target, so the target value determines which nodes are used
+Index: mdp-toolkit/bimdp/binode.py
+===================================================================
+--- mdp-toolkit.orig/bimdp/binode.py
++++ mdp-toolkit/bimdp/binode.py
+@@ -60,8 +60,7 @@ keywords are treated in a special way:
+  'target' -- If any template method like execute finds a 'target' keyword in
+      the message then this is used as the target value in the return value.
+      However, if _execute then also returns a target value this overwrites the
+-     target value. In global_message calls 'target' has no special meaning and
+-     can be used like any other keyword.
++     target value.
+ 
+   'method' -- Specify the name of the method that should be used instead of
+       the standard one (e.g. in execute the standard method is _execute).
+Index: mdp-toolkit/bimdp/nodes/autogen.py
+===================================================================
+--- mdp-toolkit.orig/bimdp/nodes/autogen.py
++++ mdp-toolkit/bimdp/nodes/autogen.py
+@@ -1,7 +1,5 @@
+ """
+ Module to automatically create a module with BiMDP versions of MDP nodes.
+-
+-Run this module to overwrite the autogen_binodes module with a new version.
+ """
+ 
+ import inspect
