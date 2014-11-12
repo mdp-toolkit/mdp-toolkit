@@ -1,0 +1,18 @@
+From: Pietro Berkes <pberkes@enthought.com>
+Subject: FIX: cStringIO does not support Unicode
+  `autogen` was breaking in nodes with Unicode characters in their docstring. We
+traced this down to cStringIO, which unlike StringIO does not support unicode.
+
+Index: mdp-toolkit/bimdp/nodes/autogen.py
+===================================================================
+--- mdp-toolkit.orig/bimdp/nodes/autogen.py
++++ mdp-toolkit/bimdp/nodes/autogen.py
+@@ -6,7 +6,7 @@ Run this module to overwrite the autogen
+ 
+ import inspect
+ import mdp
+-from cStringIO import StringIO
++from StringIO import StringIO
+ 
+ # Blacklist of nodes that cause problems with autogeneration
+ NOAUTOGEN_MDP_NODES = [
