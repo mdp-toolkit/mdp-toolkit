@@ -1,3 +1,29 @@
+mdp (3.3-2) unstable; urgency=low
+
+  * New upstream git snapshot
+    - resolves FTBFS by a workaround of faulty unicode encoding in
+      sklearn docstrings (Closes: #768675). The corresponding
+      commits in upstream git are the quilt patches:
+      changeset_af5294f0b78ea5b20e4c1c23fc55a4bdaa0749c9.diff
+      changeset_4fc2b74375701dcabde0e3368841ce31a52c4529.diff
+      changeset_324cb9b963a7e9d1bb22b5934eaa9f17974f5b11.diff
+    - Documentation fixes. The corresponding commits in upstream
+      git are the quilt patches:
+      changeset_f4a84b7186289027410abe116f5487f800869be2.diff
+      changeset_4d05f0adafcc770277f36d30894a5c6aefe8a58b.diff
+      changeset_2b1048b980748366dd6439317fccc99f728056a7.diff
+      changeset_17202a65f7608e550c52953ef4026cf8fe623c16.diff
+    - Fix inclusion of CSS data in bimdp. The corresponding commit
+      in upstream git is the quilt patch:
+      changeset_4ec2f2940fda4f4fec9db184dbb1b93053040159.diff
+
+  * debian/rules
+  - run tests from within a corresponding tests directory to work around
+    new py.test conftest.py autodiscovery features in python-pytest 
+    version 2.6.3
+
+ -- Tiziano Zito <opossumnano@gmail.com>  Wed, 12 Nov 2014 15:53:57 +0100
+
 mdp (3.3-1) unstable; urgency=low
 
   * New upstream bug-fix release
