@@ -1,7 +1,7 @@
 import mdp
 
 def pca(x, **kwargs):
-    """Filters multidimensioanl input data through its principal components.
+    """Filters multidimensional input data through its principal components.
 
     Observations of the same variable are stored on rows, different variables
     are stored on columns.
