@@ -48,7 +48,6 @@ class FDANode(mdp.Node):
         # is deleted after training
         self._S_W = None
         # covariance matrix of the full data distribution
-        self._allcov = mdp.utils.CovarianceMatrix(dtype=self.dtype)
         self.means = {}  # maps class labels to the class means
         self.tlens = {}  # maps class labels to number of training points
         self.v = None  # transposed of the projection matrix
@@ -91,6 +90,9 @@ class FDANode(mdp.Node):
         self.means[label] += x.sum(axis=0)
         self.tlens[label] += x.shape[0]
 
+    def _new_covariance_matrix(self):
+        return mdp.utils.CovarianceMatrix(dtype=self.dtype)
+
     # Training step 2: compute the overall and within-class covariance
     # matrices and solve the FDA problem
 
@@ -100,6 +102,8 @@ class FDANode(mdp.Node):
             self._S_W = numx.zeros((self.input_dim, self.input_dim),
                                    dtype=self.dtype)
         # update the covariance matrix of all classes
+        if not hasattr(self, '_allcov'):
+            self._allcov = self._new_covariance_matrix()
         self._allcov.update(x)
         # if labels is a number, all x's belong to the same class
         if isinstance(labels, (list, tuple, numx.ndarray)):

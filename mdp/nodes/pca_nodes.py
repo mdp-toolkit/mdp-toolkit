@@ -69,8 +69,6 @@ class PCANode(mdp.Node):
         self.var_rel = var_rel
         self.var_part = var_part
         self.reduce = reduce
-        # empirical covariance matrix, updated during the training phase
-        self._cov_mtx = CovarianceMatrix(dtype)
         # attributes that defined in stop_training
         self.d = None  # eigenvalues
         self.v = None  # eigenvectors, first index for coordinates
@@ -107,7 +105,12 @@ class PCANode(mdp.Node):
         """
         return self.explained_variance
 
+    def _new_covariance_matrix(self):
+        return CovarianceMatrix(dtype=self.dtype)
+
     def _train(self, x):
+        if not hasattr(self, '_cov_mtx'):
+            self._cov_mtx = self._new_covariance_matrix()
         # update the covariance matrix
         self._cov_mtx.update(x)
 
