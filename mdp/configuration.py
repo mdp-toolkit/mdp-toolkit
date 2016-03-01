@@ -294,7 +294,13 @@ def _pp_needs_monkeypatching():
         import pp
         server = pp.Server()
         with _sys_stdout_replaced() as capture:
-            server.submit(lambda: None, (), (), ('numpy',))()
+            try:
+                server.submit(lambda: None, (), (), ('numpy',))()
+            except TypeError:
+                # our py2&3 futurize compatibility breaks this
+                # But given that bug 620551 has been fixed,
+                # we can safely ignore this error
+                pass
             server.destroy()
 
         # read error from hijacked stdout
