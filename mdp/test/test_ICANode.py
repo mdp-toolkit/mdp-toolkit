@@ -1,4 +1,5 @@
-from _tools import *
+from __future__ import absolute_import
+from ._tools import *
 
 def verify_ICANode(icanode, rand_func = uniform, vars = 3, N=8000,
                  prec = 3):

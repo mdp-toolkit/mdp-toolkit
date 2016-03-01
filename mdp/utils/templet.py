@@ -120,6 +120,7 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
+from __future__ import print_function
 
 import sys, re, inspect
 
@@ -188,7 +189,7 @@ class _TemplateMetaClass(type):
         def expand(self, __dict = None, **kw):
             if __dict: kw.update([i for i in __dict.iteritems() if i[0] not in kw])
             kw['self'] = self
-            exec code in globals, kw
+            exec(code, globals, kw)
         return expand
 
     def __init__(cls, *args):
@@ -251,7 +252,7 @@ def _templatefunction(func, listname, stringtype):
         builder.build(func.__doc__, filename, ' '),
         ' return "".join(%s)' % listname]
     code = compile('\n'.join(code), filename, 'exec')
-    exec code in globals, locals
+    exec(code, globals, locals)
     return locals[func.__name__]
 
 def stringfunction(func):
@@ -269,7 +270,7 @@ if __name__ == '__main__':
     def expect(actual, expected):
         global ok
         if expected != actual:
-            print "error - got:\n%s" % repr(actual)
+            print("error - got:\n%s" % repr(actual))
             ok = False
     class TestAll(Template):
         """A test of all the $ forms"""
@@ -327,7 +328,7 @@ if __name__ == '__main__':
     except SyntaxError:
         goterror = True
     if not goterror:
-        print 'TestError failed'
+        print('TestError failed')
         ok = False
     @stringfunction
     def testBasic(name):
@@ -347,4 +348,4 @@ if __name__ == '__main__':
     expect(
         testUnicode(count=10),
         u"\N{BLACK STAR}" * 10)
-    if ok: print "OK"
+    if ok: print("OK")

@@ -1,6 +1,7 @@
 """
 Classes for tracing BiNode behavior in flows.
 """
+from __future__ import print_function
 
 import mdp
 from bimdp.nodes import IdentityBiNode
@@ -110,7 +111,7 @@ class TraceJumpBiNode(JumpBiNode):
         else:
             self._tracelog.append((self._node_id, "train"))
         if self._verbose:
-            print self._tracelog[-1]
+            print(self._tracelog[-1])
         return super(TraceJumpBiNode, self).train(x, msg)
 
     def execute(self, x, msg=None):
@@ -119,19 +120,19 @@ class TraceJumpBiNode(JumpBiNode):
         else:
             self._tracelog.append((self._node_id, "execute"))
         if self._verbose:
-            print self._tracelog[-1]
+            print(self._tracelog[-1])
         return super(TraceJumpBiNode, self).execute(x, msg)
 
     def stop_training(self, msg=None):
         self._tracelog.append((self._node_id, "stop_training"))
         if self._verbose:
-            print self._tracelog[-1]
+            print(self._tracelog[-1])
         return super(TraceJumpBiNode, self).stop_training(msg)
 
     def _bi_reset(self):
         self._tracelog.append((self._node_id, "bi_reset"))
         if self._verbose:
-            print self._tracelog[-1]
+            print(self._tracelog[-1])
         return super(TraceJumpBiNode, self)._bi_reset()
 
 

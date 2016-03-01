@@ -39,6 +39,7 @@ that would not fit well into the standard x array. The dict keys also support
 target specifications and other magic for more convenient usage.
 This is described in more detail in the BiNode module.
 """
+from __future__ import absolute_import
 
 ### T O D O ###
 
@@ -74,22 +75,22 @@ This is described in more detail in the BiNode module.
 #    or enable some kind of folding (might be possible via CSS like suckerfish)
 
 
-from binode import (
+from .binode import (
     BiNodeException, BiNode, PreserveDimBiNode, MSG_ID_SEP, binode_coroutine
 )
-from biclassifier import BiClassifier
-from biflow import (
+from .biclassifier import BiClassifier
+from .biflow import (
     MessageResultContainer, BiFlowException, BiFlow, BiCheckpointFlow,
     EXIT_TARGET
 )
 # the inspection stuff is considered a core functionality
-from inspection import *
+from .inspection import *
 
-from test import test
+from .test import test
 
-import nodes
-import hinet
-import parallel
+from . import nodes
+from . import hinet
+from . import parallel
 
 del binode
 del biflow

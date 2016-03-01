@@ -112,10 +112,10 @@ class BogusNodeTrainable(mdp.Node):
 class BogusExceptNode(mdp.Node):
     def _train(self,x):
         self.bogus_attr = 1
-        raise Exception, "Bogus Exception"
+        raise Exception("Bogus Exception")
 
     def _execute(self,x):
-        raise Exception, "Bogus Exception"
+        raise Exception("Bogus Exception")
 
 class BogusMultiNode(mdp.Node):
 
@@ -143,7 +143,7 @@ _spinner = itertools.cycle((' .\b\b', ' o\b\b', ' 0\b\b', ' O\b\b',
 #                           [' !\b\b']*2)
 
 def spinner():
-    sys.stderr.write(_spinner.next())
+    sys.stderr.write(next(_spinner))
     sys.stderr.flush()
 
 class skip_on_condition(object):

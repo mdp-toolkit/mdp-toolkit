@@ -8,6 +8,8 @@ NetworkPPScheduler includes the management of the remote slaves via SSH.
 """
 
 from __future__ import with_statement
+from __future__ import print_function
+from __future__ import absolute_import
 
 import sys
 import os
@@ -18,7 +20,7 @@ import signal
 import traceback
 import tempfile
 
-import scheduling
+from . import scheduling
 import pp
 import mdp
 
@@ -236,7 +238,7 @@ class NetworkPPScheduler(PPScheduler):
             os.kill(ssh_proc.pid, signal.SIGQUIT)
         super(NetworkPPScheduler, self)._shutdown()
         if self.verbose:
-            print "All slaves shut down."
+            print("All slaves shut down.")
 
     def start_slave(self, address, ncpus="autodetect"):
         """Start a single remote slave.
@@ -245,7 +247,7 @@ class NetworkPPScheduler(PPScheduler):
         the remote pid.
         """
         try:
-            print "starting slave " + address + " ..."
+            print("starting slave " + address + " ...")
             proc = subprocess.Popen(["ssh","-T", "%s" % address],
                                     stdin=subprocess.PIPE,
                                     stdout=subprocess.PIPE,
@@ -266,21 +268,21 @@ class NetworkPPScheduler(PPScheduler):
             # get PID for remote slave process
             pid = None
             if self.verbose:
-                print "*** output from slave %s ***" % address
+                print("*** output from slave %s ***" % address)
             while pid is None:
                 # the slave process might first output some hello message
                 try:
                     value = proc.stdout.readline()
                     if self.verbose:
-                        print value
+                        print(value)
                     pid = int(value)
                 except ValueError:
                     pass
             if self.verbose:
-                print "*** output end ***"
+                print("*** output end ***")
             return (proc, pid)
         except:
-            print "Initialization of slave %s has failed." % address
+            print("Initialization of slave %s has failed." % address)
             traceback.print_exc()
             return None
 
@@ -328,8 +330,8 @@ def kill_slaves(slave_kill_filename):
                 pass
             # a kill might prevent the kill command transmission
             # os.kill(proc.pid, signal.SIGQUIT)
-            print "killed slave " + address + " (pid %d)" % pid
-        print "all slaves killed."
+            print("killed slave " + address + " (pid %d)" % pid)
+        print("all slaves killed.")
 
 
 if __name__ == "__main__":

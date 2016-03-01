@@ -16,6 +16,8 @@ is done in the seperate slideshow module.
 # TODO: wrap inner methods (e.g. _train) to document effective arguments?
 
 from __future__ import with_statement
+from __future__ import print_function
+from __future__ import absolute_import
 
 import os
 import cPickle as pickle
@@ -32,7 +34,7 @@ from bimdp import BiFlow
 from bimdp.hinet import BiFlowNode, CloneBiLayer
 
 from bimdp.hinet import BiHiNetHTMLVisitor
-from utils import robust_pickle
+from .utils import robust_pickle
 
 CLICKABLE_NODE_ID = "clickable_node_%d"
 # standard css filename for the complete CSS:
@@ -871,9 +873,9 @@ def _trace_biflow_training(snapshot_path, inspection_path,
                 slide_node_ids += train_ids
                 slide_node_ids += stop_ids
                 if verbose:
-                    print "got traces for snapshot %d" % (i_snapshot + 1)
+                    print("got traces for snapshot %d" % (i_snapshot + 1))
                 i_snapshot += 1
-    except TraceDebugException, debug_exception:
+    except TraceDebugException as debug_exception:
         train_files, train_ids, stop_files, stop_ids = debug_exception.result
         slide_filenames += train_files
         train_index = len(slide_filenames) - 1

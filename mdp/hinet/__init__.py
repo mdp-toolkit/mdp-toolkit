@@ -26,20 +26,21 @@ for special routing situations. One such subclass for 2d image data is provided.
 It maps the data according to rectangular overlapping 2d input areas. One can
 then feed the output into a Layer and each Node will get the correct input.
 """
+from __future__ import absolute_import
 
-from flownode import FlowNode
-from layer import Layer, SameInputLayer, CloneLayer
-from switchboard import (
+from .flownode import FlowNode
+from .layer import Layer, SameInputLayer, CloneLayer
+from .switchboard import (
     Switchboard, SwitchboardException, MeanInverseSwitchboard,
     ChannelSwitchboard,
     Rectangular2dSwitchboard, Rectangular2dSwitchboardException,
     DoubleRect2dSwitchboard, DoubleRect2dSwitchboardException,
     DoubleRhomb2dSwitchboard, DoubleRhomb2dSwitchboardException
 )
-from htmlvisitor import (
+from .htmlvisitor import (
     HiNetHTMLVisitor, HiNetXHTMLVisitor, NewlineWriteFile, show_flow
 )
-from switchboard_factory import (
+from .switchboard_factory import (
     get_2d_image_switchboard, FactoryExtensionChannelSwitchboard,
     FactoryRectangular2dSwitchboard, FactoryDoubleRect2dSwitchboard,
     FactoryDoubleRhomb2dSwitchboard

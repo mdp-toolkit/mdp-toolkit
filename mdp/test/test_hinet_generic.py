@@ -1,7 +1,8 @@
 from __future__ import with_statement
+from __future__ import absolute_import
 import mdp.hinet as mh
-from _tools import *
-from test_nodes_generic import (
+from ._tools import *
+from .test_nodes_generic import (
     generic_test_factory,
     test_dtype_consistency,
     # this test fails due to the checks in _set_output_dim

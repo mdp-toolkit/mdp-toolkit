@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 __docformat__ = "restructuredtext en"
 
 from shogun import (Kernel as sgKernel,
@@ -7,7 +8,7 @@ from shogun import (Kernel as sgKernel,
 import mdp
 from mdp.utils import OrderedDict as _OrderedDict
 
-from svm_classifiers import _SVMClassifier, _LabelNormalizer
+from .svm_classifiers import _SVMClassifier, _LabelNormalizer
 
 # switch off spurious warnings from shogun
 import warnings
@@ -333,7 +334,7 @@ class ShogunSVMClassifier(_SVMClassifier):
         kernel_meth = getattr(sgKernel, kernel_name)
         try:
             kernel = kernel_meth(*options)
-        except NotImplementedError, msg:
+        except NotImplementedError as msg:
             msg = ("Tried to call %s with arguments %s\n" %
                    (kernel_meth.__module__ + '.' + kernel_meth.__name__,
                     tuple(options).__repr__()) +

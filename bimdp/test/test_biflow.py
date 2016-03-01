@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import py.test
 
 import mdp
@@ -6,7 +7,7 @@ from mdp import numx as np
 from bimdp import (
     MessageResultContainer, BiFlow, BiFlowException, EXIT_TARGET, nodes
 )
-from _tools import TraceJumpBiNode, IdNode
+from ._tools import TraceJumpBiNode, IdNode
 
 
 class TestMessageResultContainer(object):

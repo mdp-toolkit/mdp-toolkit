@@ -1,3 +1,4 @@
+from __future__ import print_function
 __docformat__ = "restructuredtext en"
 
 import mdp
@@ -156,9 +157,9 @@ class RBMNode(mdp.Node):
         self._train_err = float(((v-v_model)**2.).sum())
 
         if verbose:
-            print 'training error', self._train_err/v.shape[0]
+            print('training error', self._train_err/v.shape[0])
             ph, h = self._sample_h(v)
-            print 'energy', self._energy(v, ph).sum()
+            print('energy', self._energy(v, ph).sum())
 
     def _stop_training(self):
         #del self._delta

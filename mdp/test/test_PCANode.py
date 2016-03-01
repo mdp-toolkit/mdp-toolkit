@@ -1,4 +1,5 @@
-from _tools import *
+from __future__ import absolute_import
+from ._tools import *
 
 def testPCANode():
     line_x = numx.zeros((1000,2),"d")
@@ -118,7 +119,7 @@ def testPCANode_SVD():
     pca.train(inp)
     try:
         pca.stop_training()
-        raise Exception, "PCANode didn't catch singular covariance matrix: degenerate"
+        raise Exception("PCANode didn't catch singular covariance matrix: degenerate")
     except mdp.NodeException:
         pass
     # now try the SVD version
@@ -133,7 +134,7 @@ def testPCANode_SVD():
     pca.train(inp)
     try:
         pca.stop_training()
-        raise Exception, "PCANode didn't catch singular covariance matrix: undetermined"
+        raise Exception("PCANode didn't catch singular covariance matrix: undetermined")
     except mdp.NodeException:
         pass
     # now try the SVD version
@@ -198,7 +199,7 @@ def testPCANode_negative_eigenvalues():
     try:
         pca.stop_training()
         assert False, "PCA did not catch negative eigenvalues!"
-    except mdp.NodeException, e:
+    except mdp.NodeException as e:
         if "Got negative eigenvalues" in str(e):
             pass
         else:

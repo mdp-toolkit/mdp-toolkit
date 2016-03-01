@@ -1,5 +1,6 @@
+from __future__ import absolute_import
 import mdp.parallel as parallel
-from _tools import *
+from ._tools import *
 
 def test_ParallelGaussianClassifier():
     """Test ParallelGaussianClassifier."""

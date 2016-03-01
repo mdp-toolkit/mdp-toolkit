@@ -4,12 +4,14 @@ Module for parallel flows that can handle the parallel training / execution.
 Corresponding classes for task callables and ResultContainer are defined here
 as well.
 """
+from __future__ import print_function
+from __future__ import absolute_import
 
 import mdp
 from mdp import numx as n
 
-from parallelnodes import NotForkableParallelException
-from scheduling import (
+from .parallelnodes import NotForkableParallelException
+from .scheduling import (
     TaskCallable, ResultContainer, OrderedResultContainer, Scheduler
 )
 from mdp.hinet import FlowNode
@@ -318,20 +320,20 @@ class ParallelFlow(mdp.Flow):
                     # scheduler contains an iterable with the schedulers
                     # self._i_train_node was set in setup_parallel_training
                     schedulers = iter(scheduler)
-                    scheduler = schedulers.next()
+                    scheduler = next(schedulers)
                     if self._i_train_node > 0:
                         # dispose schedulers for pretrained nodes
                         for _ in range(self._i_train_node):
                             if scheduler is not None:
                                 scheduler.shutdown()
-                            scheduler = schedulers.next()
+                            scheduler = next(schedulers)
                     elif self._i_train_node is None:
                         # all nodes are already trained, dispose schedulers
                         for _ in range(len(self.flow) - 1):
                             if scheduler is not None:
                                 scheduler.shutdown()
                             # the last scheduler will be shutdown in finally
-                            scheduler = schedulers.next()
+                            scheduler = next(schedulers)
                     last_trained_node = self._i_train_node
                 else:
                     schedulers = None
@@ -361,7 +363,7 @@ class ParallelFlow(mdp.Flow):
                         for _ in range(self._i_train_node - last_trained_node):
                             if scheduler is not None:
                                 scheduler.shutdown()
-                            scheduler = schedulers.next()
+                            scheduler = next(schedulers)
                         last_trained_node = self._i_train_node
                         # check that the scheduler is compatible
                         if ((scheduler is not None) and
@@ -451,7 +453,7 @@ class ParallelFlow(mdp.Flow):
                 self._next_task = (task_data_chunk,
                                    self._train_callable_class(self._flownode))
                 break
-            except NotForkableParallelException, exception:
+            except NotForkableParallelException as exception:
                 if self.verbose:
                     print ("could not fork node no. %d: %s" %
                            (self._i_train_node+1, str(exception)))
@@ -511,7 +513,7 @@ class ParallelFlow(mdp.Flow):
         Returns None if data iterator end is reached.
         """
         try:
-            return (self._train_data_iterator.next(), None)
+            return (next(self._train_data_iterator), None)
         except StopIteration:
             return None
 
@@ -626,7 +628,7 @@ class ParallelFlow(mdp.Flow):
         """
         try:
             # TODO: check if forked task is forkable before enforcing caching
-            return (self._exec_data_iterator.next(), None)
+            return (next(self._exec_data_iterator), None)
         except StopIteration:
             return None
 

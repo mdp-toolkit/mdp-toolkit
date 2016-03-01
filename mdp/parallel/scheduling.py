@@ -1,6 +1,7 @@
 """
 This module contains the basic classes for task processing via a scheduler.
 """
+from __future__ import print_function
 
 import threading
 import time
@@ -290,9 +291,9 @@ class Scheduler(object):
         self.result_container.add_result(result, task_index)
         if self.verbose:
             if task_index is not None:
-                print "    finished task no. %d" % task_index
+                print("    finished task no. %d" % task_index)
             else:
-                print "    task failed"
+                print("    task failed")
         self._n_open_tasks -= 1
         self._lock.release()
 

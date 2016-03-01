@@ -2,7 +2,8 @@
 
 """These are test functions for MDP classifiers.
 """
-from _tools import *
+from __future__ import absolute_import
+from ._tools import *
 
 from mdp import ClassifierNode
 from mdp.nodes import (SignumClassifier, PerceptronClassifier,

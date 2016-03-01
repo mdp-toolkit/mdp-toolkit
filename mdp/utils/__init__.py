@@ -1,6 +1,8 @@
+from __future__ import print_function
+from __future__ import absolute_import
 __docformat__ = "restructuredtext en"
 
-from routines import (timediff, refcast, scast, rotate, random_rot,
+from .routines import (timediff, refcast, scast, rotate, random_rot,
                       permute, symrand, norm2, cov2,
                       mult_diag, comb, sqrtm, get_dtypes, nongeneral_svd,
                       hermitian, cov_maxima,
@@ -12,24 +14,24 @@ try:
     from collections import OrderedDict
 except ImportError:
     ## Getting an Ordered Dict for Python < 2.7
-    from _ordered_dict import OrderedDict
+    from ._ordered_dict import OrderedDict
 
 try:
     from tempfile import TemporaryDirectory
 except ImportError:
-    from temporarydir import TemporaryDirectory
+    from .temporarydir import TemporaryDirectory
 
-from introspection import dig_node, get_node_size, get_node_size_str
-from quad_forms import QuadraticForm, QuadraticFormException
-from covariance import (CovarianceMatrix, DelayCovarianceMatrix,
+from .introspection import dig_node, get_node_size, get_node_size_str
+from .quad_forms import QuadraticForm, QuadraticFormException
+from .covariance import (CovarianceMatrix, DelayCovarianceMatrix,
                         MultipleCovarianceMatrices,CrossCovarianceMatrix)
-from progress_bar import progressinfo
-from slideshow import (basic_css, slideshow_css, HTMLSlideShow,
+from .progress_bar import progressinfo
+from .slideshow import (basic_css, slideshow_css, HTMLSlideShow,
                        image_slideshow_css, ImageHTMLSlideShow,
                        SectionHTMLSlideShow, SectionImageHTMLSlideShow,
                        image_slideshow, show_image_slideshow)
 
-from _symeig import SymeigException
+from ._symeig import SymeigException
 
 import mdp as _mdp
 # matrix multiplication function
@@ -75,7 +77,7 @@ def svd(x, compute_uv = True):
         else:
             s = _mdp.numx_linalg.svd(x, compute_uv=False)
             return refcast(s, tc)
-    except _mdp.numx_linalg.LinAlgError, exc:
+    except _mdp.numx_linalg.LinAlgError as exc:
         raise SymeigException(str(exc))
 
 __all__ = ['CovarianceMatrix', 'DelayCovarianceMatrix','CrossCovarianceMatrix',
@@ -150,7 +152,7 @@ def fixup_namespace(mname, names, old_modules, keep_modules=()):
     if names is None:
         names = [name for name in dir(module) if not name.startswith('_')]
     if FIXUP_DEBUG:
-        print 'NAMESPACE FIXUP: %s (%s)' % (module, mname)
+        print('NAMESPACE FIXUP: %s (%s)' % (module, mname))
     for name in names:
         _fixup_namespace_item(module, mname, name, old_modules, '')
 
@@ -162,7 +164,7 @@ def fixup_namespace(mname, names, old_modules, keep_modules=()):
         try:
             delattr(module, filename)
             if FIXUP_DEBUG:
-                print 'NAMESPACE FIXUP: deleting %s from %s' % (filename, module)
+                print('NAMESPACE FIXUP: deleting %s from %s' % (filename, module))
         except AttributeError:
             # if the name is not there, we are in a reload, so do not
             # do anything
@@ -180,16 +182,16 @@ def _fixup_namespace_item(parent, mname, name, old_modules, path):
     if (current_name is not None and
         _without_prefix(current_name, mname + '.') in old_modules):
         if FIXUP_DEBUG:
-            print 'namespace fixup: {%s => %s}%s.%s' % (
-                current_name, mname, path, name)
+            print('namespace fixup: {%s => %s}%s.%s' % (
+                current_name, mname, path, name))
         try:
             item.__module__ = mname
         except AttributeError:
             try:
-                item.im_func.__module__ = mname
-            except AttributeError, e:
+                item.__func__.__module__ = mname
+            except AttributeError as e:
                 if FIXUP_DEBUG:
-                    print 'namespace fixup failed: ', e
+                    print('namespace fixup failed: ', e)
             # don't recurse into functions anyway
             return
         subitems = [_name for _name in dir(item)

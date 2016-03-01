@@ -1,5 +1,6 @@
+from __future__ import absolute_import
 import mdp
-from _tools import *
+from ._tools import *
 
 def test_RBM_sample_h():
     # number of visible and hidden units

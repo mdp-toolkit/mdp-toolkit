@@ -1,8 +1,9 @@
 """These are test functions for MDP contributed nodes.
 """
+from __future__ import absolute_import
 
-from _tools import *
-from test_ICANode import verify_ICANode, verify_ICANodeMatrices
+from ._tools import *
+from .test_ICANode import verify_ICANode, verify_ICANodeMatrices
 
 requires_joblib = skip_on_condition(
     "not mdp.config.has_caching",

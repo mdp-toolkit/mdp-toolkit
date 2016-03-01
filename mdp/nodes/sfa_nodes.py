@@ -156,7 +156,7 @@ class SFANode(Node):
                            " or prepend the SFANode with a PCANode(reduce=True)"
                            " or PCANode(svd=True)"% str(d))
                 raise NodeException(err_msg)
-        except SymeigException, exception:
+        except SymeigException as exception:
             errstr = str(exception)+"\n Covariance matrices may be singular."
             raise NodeException(errstr)
 

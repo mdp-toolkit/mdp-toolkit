@@ -1,4 +1,5 @@
-from _tools import *
+from __future__ import absolute_import
+from ._tools import *
 
 def testGaussianClassifier_train():
     nclasses = 10

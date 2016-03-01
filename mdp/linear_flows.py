@@ -1,4 +1,5 @@
 from __future__ import with_statement
+from __future__ import print_function
 import mdp
 import sys as _sys
 import os as _os
@@ -195,13 +196,13 @@ class Flow(object):
                     node.stop_training()
                 else:
                     break
-        except mdp.TrainingFinishedException, e:
+        except mdp.TrainingFinishedException as e:
             # attempted to train a node although its training phase is already
             # finished. raise a warning and continue with the next node.
             wrnstr = ("\n! Node %d training phase already finished"
                       " Continuing anyway." % nodenr)
             _warnings.warn(wrnstr, mdp.MDPWarning)
-        except FlowExceptionCR, e:
+        except FlowExceptionCR as e:
             # this exception was already propagated,
             # probably during the execution  of a node upstream in the flow
             (exc_type, val) = _sys.exc_info()[:2]
@@ -211,7 +212,7 @@ class Flow(object):
                                                          str(self.flow[nodenr]))
             err_str = ''.join(('\n', 40*'=', act, prev, 40*'='))
             raise FlowException(err_str)
-        except Exception, e:
+        except Exception as e:
             # capture any other exception occured during training.
             self._propagate_exception(e, nodenr)
 
@@ -270,12 +271,12 @@ class Flow(object):
 
     def _close_last_node(self):
         if self.verbose:
-            print "Close the training phase of the last node"
+            print("Close the training phase of the last node")
         try:
             self.flow[-1].stop_training()
         except mdp.TrainingFinishedException:
             pass
-        except Exception, e:
+        except Exception as e:
             self._propagate_exception(e, len(self.flow)-1)
 
     def set_crash_recovery(self, state = True):
@@ -326,10 +327,10 @@ class Flow(object):
         # train each Node successively
         for i in range(len(self.flow)):
             if self.verbose:
-                print "Training node #%d (%s)" % (i, str(self.flow[i]))
+                print("Training node #%d (%s)" % (i, str(self.flow[i])))
             self._train_node(data_iterables[i], i)
             if self.verbose:
-                print "Training finished"
+                print("Training finished")
 
         self._close_last_node()
 
@@ -341,7 +342,7 @@ class Flow(object):
         for i in range(nodenr+1):
             try:
                 x = flow[i].execute(x)
-            except Exception, e:
+            except Exception as e:
                 self._propagate_exception(e, i)
         return x
 
@@ -373,7 +374,7 @@ class Flow(object):
         for i in range(len(flow)-1, -1, -1):
             try:
                 x = flow[i].inverse(x)
-            except Exception, e:
+            except Exception as e:
                 self._propagate_exception(e, i)
         return x
 
@@ -607,14 +608,14 @@ class CheckpointFlow(Flow):
         for i in range(len(self.flow)):
             node = self.flow[i]
             if self.verbose:
-                print "Training node #%d (%s)" % (i, type(node).__name__)
+                print("Training node #%d (%s)" % (i, type(node).__name__))
             self._train_node(data_iterables[i], i)
             if (i <= len(checkpoints)) and (checkpoints[i] is not None):
                 dic = checkpoints[i](node)
                 if dic:
                     self.__dict__.update(dic)
             if self.verbose:
-                print "Training finished"
+                print("Training finished")
 
         self._close_last_node()
 

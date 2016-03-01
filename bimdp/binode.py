@@ -519,7 +519,7 @@ def binode_coroutine(args=None, defaults=()):
         def _coroutine_interface(self, *args):
             try:
                 return self._coroutine_instances[original_name].send(args)
-            except StopIteration, exception:
+            except StopIteration as exception:
                 delattr(self, original_name)
                 del self._coroutine_instances[original_name]
                 if len(exception.args):
@@ -542,8 +542,8 @@ def binode_coroutine(args=None, defaults=()):
             self._coroutine_instances[original_name] = coroutine_instance
             setattr(self, original_name, bound_coroutine_interface)
             try:
-                return coroutine_instance.next()
-            except StopIteration, exception:
+                return next(coroutine_instance)
+            except StopIteration as exception:
                 delattr(self, original_name)
                 del self._coroutine_instances[original_name]
                 if len(exception.args):

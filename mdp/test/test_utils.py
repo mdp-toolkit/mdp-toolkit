@@ -1,7 +1,8 @@
 """These are test functions for MDP utilities.
 """
+from __future__ import absolute_import
 import py.test
-from _tools import *
+from ._tools import *
 from mdp import Node, nodes
 
 class BogusClass(object):
@@ -62,10 +63,10 @@ def test_casting():
     x = (10*numx_rand.random((5,3))).astype('i')
     y = 3.*x
     assert_type_equal(y.dtype, 'd')
-    y = 3L*x
+    y = 3*x
     assert_type_equal(y.dtype, 'i')
     x = numx_rand.random((5,3)).astype('f')
-    y = 3L*x
+    y = 3*x
     assert_type_equal(y.dtype, 'f')
 
 def test_mult_diag():

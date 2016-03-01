@@ -1,7 +1,8 @@
 """Test caching extension."""
 from __future__ import with_statement
+from __future__ import absolute_import
 import tempfile
-from _tools import *
+from ._tools import *
 
 requires_joblib = skip_on_condition(
     "not mdp.config.has_joblib",

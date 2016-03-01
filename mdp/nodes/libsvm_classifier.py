@@ -1,9 +1,10 @@
+from __future__ import absolute_import
 __docformat__ = "restructuredtext en"
 
 import mdp
 from mdp import numx
 
-from svm_classifiers import _SVMClassifier, _LabelNormalizer
+from .svm_classifiers import _SVMClassifier, _LabelNormalizer
 
 import svmutil as libsvmutil
 

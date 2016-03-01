@@ -1,16 +1,17 @@
 """
 Package to inspect biflow training or execution by creating an HTML slideshow.
 """
+from __future__ import absolute_import
 
-from tracer import (
+from .tracer import (
     InspectionHTMLTracer, TraceHTMLConverter, TraceHTMLVisitor,
     TraceDebugException, inspection_css,
     prepare_training_inspection, remove_inspection_residues,
 )
-from slideshow import (
+from .slideshow import (
     TrainHTMLSlideShow, SectExecuteHTMLSlideShow, ExecuteHTMLSlideShow
 )
-from facade import (
+from .facade import (
     standard_css, EmptyTraceException,
     inspect_training, show_training, inspect_execution, show_execution
 )

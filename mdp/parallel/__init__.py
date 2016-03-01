@@ -18,30 +18,31 @@ processes). So they are designed to deal with the more technical
 aspects of the parallelization, but do not have to know anything about
 flows or nodes.
 """
+from __future__ import absolute_import
 
 
-from scheduling import (
+from .scheduling import (
     ResultContainer, ListResultContainer, OrderedResultContainer, TaskCallable,
     SqrTestCallable, SleepSqrTestCallable, TaskCallableWrapper, Scheduler,
     cpu_count, MDPVersionCallable
 )
-from process_schedule import ProcessScheduler
-from thread_schedule import ThreadScheduler
-from parallelnodes import (
+from .process_schedule import ProcessScheduler
+from .thread_schedule import ThreadScheduler
+from .parallelnodes import (
     ParallelExtensionNode, NotForkableParallelException, JoinParallelException,
     ParallelPCANode, ParallelSFANode, ParallelFDANode, ParallelHistogramNode
 )
-from parallelclassifiers import (
+from .parallelclassifiers import (
     ParallelGaussianClassifier, ParallelNearestMeanClassifier,
     ParallelKNNClassifier
 )
-from parallelflows import (
+from .parallelflows import (
     _purge_flownode, FlowTaskCallable, FlowTrainCallable, FlowExecuteCallable,
     TrainResultContainer, ExecuteResultContainer,
     ParallelFlowException, NoTaskException,
     ParallelFlow, ParallelCheckpointFlow
 )
-from parallelhinet import (
+from .parallelhinet import (
     ParallelFlowNode, ParallelLayer, ParallelCloneLayer
 )
 
@@ -49,7 +50,7 @@ from mdp import config
 from mdp.utils import fixup_namespace
 
 if config.has_parallel_python:
-    import pp_support
+    from . import pp_support
 
 # Note: the modules with the actual extension node classes are still available
 

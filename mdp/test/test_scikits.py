@@ -1,4 +1,5 @@
-from _tools import *
+from __future__ import absolute_import
+from ._tools import *
 
 requires_scikits = skip_on_condition(
     "not mdp.config.has_sklearn or mdp.numx_description != 'scipy'",

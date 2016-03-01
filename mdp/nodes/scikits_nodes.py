@@ -3,6 +3,7 @@
 
 This module is based on the 0.6.X branch of scikits.learn .
 """
+from __future__ import print_function
 __docformat__ = "restructuredtext en"
 
 try:
@@ -211,7 +212,7 @@ def wrap_scikits_classifier(scikits_class):
 
             if output_dim is not None:
                 # output_dim and n_components cannot be defined at the same time
-                if kwargs.has_key('n_components'):
+                if 'n_components' in kwargs:
                     msg = ("Dimensionality set both by "
                            "output_dim=%d and n_components=%d""")
                     raise ScikitsException(msg % (output_dim,
@@ -272,11 +273,11 @@ def wrap_scikits_classifier(scikits_class):
             # the one inherited from 'object' is a
             # "<slot wrapper '__init__' of 'object' objects>"
             # which does not have a 'im_func' attribute
-            mdp_method.im_func.__doc__ = _gen_docstring(scikits_class,
-                                                        scikits_method.im_func)
+            mdp_method.__func__.__doc__ = _gen_docstring(scikits_class,
+                                                        scikits_method.__func__)
 
     if scikits_class.__init__.__doc__ is None:
-        ScikitsNode.__init__.im_func.__doc__ = _gen_docstring(scikits_class)
+        ScikitsNode.__init__.__func__.__doc__ = _gen_docstring(scikits_class)
 
     return ScikitsNode
 
@@ -347,11 +348,11 @@ def wrap_scikits_transformer(scikits_class):
             # the one inherited from 'object' is a
             # "<slot wrapper '__init__' of 'object' objects>"
             # which does not have a 'im_func' attribute
-            mdp_method.im_func.__doc__ = _gen_docstring(scikits_class,
-                                                        scikits_method.im_func)
+            mdp_method.__func__.__doc__ = _gen_docstring(scikits_class,
+                                                        scikits_method.__func__)
 
     if scikits_class.__init__.__doc__ is None:
-        ScikitsNode.__init__.im_func.__doc__ = _gen_docstring(scikits_class)
+        ScikitsNode.__init__.__func__.__doc__ = _gen_docstring(scikits_class)
     return ScikitsNode
 
 
@@ -421,11 +422,11 @@ def wrap_scikits_predictor(scikits_class):
             # the one inherited from 'object' is a
             # "<slot wrapper '__init__' of 'object' objects>"
             # which does not have a 'im_func' attribute
-            mdp_method.im_func.__doc__ = _gen_docstring(scikits_class,
-                                                        scikits_method.im_func)
+            mdp_method.__func__.__doc__ = _gen_docstring(scikits_class,
+                                                        scikits_method.__func__)
 
     if scikits_class.__init__.__doc__ is None:
-        ScikitsNode.__init__.im_func.__doc__ = _gen_docstring(scikits_class)
+        ScikitsNode.__init__.__func__.__doc__ = _gen_docstring(scikits_class)
     return ScikitsNode
 
 
@@ -433,13 +434,13 @@ def wrap_scikits_predictor(scikits_class):
 def print_public_members(class_):
     """Print methods of sklearn algorithm.
     """
-    print '\n', '-' * 15
-    print '%s (%s)' % (class_.__name__, class_.__module__)
+    print('\n', '-' * 15)
+    print('%s (%s)' % (class_.__name__, class_.__module__))
     for attr_name in dir(class_):
         attr = getattr(class_, attr_name)
         #print attr_name, type(attr)
         if not attr_name.startswith('_') and inspect.ismethod(attr):
-            print ' -', attr_name
+            print(' -', attr_name)
 
 #apply_to_scikits_algorithms(sklearn, print_public_members)
 

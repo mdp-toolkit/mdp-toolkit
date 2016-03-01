@@ -1,10 +1,11 @@
 from __future__ import with_statement
+from __future__ import absolute_import
 import py.test
 import inspect
 
 from mdp import (config, nodes, ClassifierNode,
                  PreserveDimNode, InconsistentDimException)
-from _tools import *
+from ._tools import *
 
 uniform = numx_rand.random
 

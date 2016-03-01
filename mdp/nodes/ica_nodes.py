@@ -1,8 +1,10 @@
+from __future__ import print_function
+from __future__ import absolute_import
 __docformat__ = "restructuredtext en"
 
 import math
 import mdp
-from isfa_nodes import ISFANode
+from .isfa_nodes import ISFANode
 numx, numx_rand, numx_linalg = mdp.numx, mdp.numx_rand, mdp.numx_linalg
 
 utils = mdp.utils
@@ -127,14 +129,14 @@ class ICANode(mdp.Cumulator, mdp.Node, ProjectMatrixMixin):
             for tel in range(minpow, maxpow+1):
                 index = 2**tel
                 if verbose:
-                    print "--\nUsing %d inputs" % index
+                    print("--\nUsing %d inputs" % index)
                 convergence = core(data[:index, :])
                 if convergence <= limit:
                     break
         else:
             convergence = core(data)
         if verbose:
-            print "Convergence criterium: ", convergence
+            print("Convergence criterium: ", convergence)
         self.convergence = convergence
 
     def core(self, data):
@@ -276,7 +278,7 @@ class CuBICANode(ICANode):
 
         self.iter = k
         if verbose:
-            print "\nSweeps: ", k
+            print("\nSweeps: ", k)
         self.filters = Qt
 
         # return the convergence criterium
@@ -543,14 +545,14 @@ class FastICANode(ICANode):
                    and convergence[round] < coarse_limit \
                    and not coarse_limit_reached:
                     if verbose:
-                        print 'Coarse convergence, switching to fine cost...'
+                        print('Coarse convergence, switching to fine cost...')
                     used_g = gFine
                     coarse_limit_reached = True
 
                 if convergence[round] < limit:
                     if fine_tuning and (not fine_tuned):
                         if verbose:
-                            print 'Initial convergence, fine-tuning...'
+                            print('Initial convergence, fine-tuning...')
                         fine_tuned = True
                         used_g = gFine
                         mu = muK * self.mu
@@ -558,12 +560,12 @@ class FastICANode(ICANode):
                         QoldF = numx.zeros(Q.shape, dtype)
                     else:
                         if verbose:
-                            print 'Convergence after %d steps\n' % round
+                            print('Convergence after %d steps\n' % round)
                         break
                 if stabilization:
                     if (stroke == 0) and (convergence_fine[round] < limit):
                         if verbose:
-                            print 'Stroke!\n'
+                            print('Stroke!\n')
                         stroke = mu
                         mu = 0.5*mu
                         if used_g % 2 == 0:
@@ -575,7 +577,7 @@ class FastICANode(ICANode):
                             used_g -= 1
                     elif (not lng) and (round > max_it//2):
                         if verbose:
-                            print 'Taking long (reducing step size)...'
+                            print('Taking long (reducing step size)...')
                         lng = True
                         mu = 0.5*mu
                         if used_g % 2 == 0:
@@ -588,7 +590,7 @@ class FastICANode(ICANode):
                 if verbose:
                     msg = ('Step no. %d,'
                            ' convergence: %.7f' % (round+1,convergence[round]))
-                    print msg
+                    print(msg)
 
 
                 # First calculate the independent components (u_i's).
@@ -756,7 +758,7 @@ class FastICANode(ICANode):
                                        'converge in %d iterations.' % (round,
                                                                        max_it))
                             if verbose:
-                                print err_msg
+                                print(err_msg)
                             if round == 0:
                                 raise mdp.NodeException(err_msg)
                             nfail += 1
@@ -777,7 +779,7 @@ class FastICANode(ICANode):
                     if conv < limit:
                         if fine_tuning and (not fine_tuned):
                             if verbose:
-                                print 'Initial convergence, fine-tuning...'
+                                print('Initial convergence, fine-tuning...')
                             fine_tuned = True
                             gabba = max_it_fine
                             wOld = numx.zeros(w.shape, dtype)
@@ -792,8 +794,8 @@ class FastICANode(ICANode):
                             Q[:, round] = w.copy()
                             # Show the progress...
                             if verbose:
-                                print 'IC %d computed ( %d steps )' % (round+1,
-                                                                       i+1)
+                                print('IC %d computed ( %d steps )' % (round+1,
+                                                                       i+1))
                             break
                     elif stabilization:
                         conv_fine = min(utils.norm2(w-wOldF),
@@ -801,7 +803,7 @@ class FastICANode(ICANode):
                         convergence_fine.append(conv_fine)
                         if  (stroke == 0) and conv_fine < limit:
                             if verbose:
-                                print 'Stroke!'
+                                print('Stroke!')
                             stroke = mu
                             mu = 0.5*mu
                             if used_g % 2 == 0:
@@ -813,7 +815,7 @@ class FastICANode(ICANode):
                                 used_g -= 1
                         elif (not lng) and (i > max_it//2):
                             if verbose:
-                                print 'Taking long (reducing step size)...'
+                                print('Taking long (reducing step size)...')
                             lng = True
                             mu = 0.5*mu
                             if used_g % 2 == 0:

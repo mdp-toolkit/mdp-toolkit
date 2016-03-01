@@ -34,14 +34,14 @@ class TemporaryDirectory(object):
         if self.name and not self._closed:
             try:
                 self._rmtree(self.name)
-            except (TypeError, AttributeError), ex:
+            except (TypeError, AttributeError) as ex:
                 # Issue #10188: Emit a warning on stderr
                 # if the directory could not be cleaned
                 # up due to missing globals
                 if "None" not in str(ex):
                     raise
                 return
-            except OSError, ex:
+            except OSError as ex:
                 # ignore if the directory has been deleted already
                 if ex.errno != self._ENOENT:
                     raise

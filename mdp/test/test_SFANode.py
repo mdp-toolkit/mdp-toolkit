@@ -1,5 +1,6 @@
 from __future__ import with_statement
-from _tools import *
+from __future__ import absolute_import
+from ._tools import *
 mult = mdp.utils.mult
 
 def testSFANode():

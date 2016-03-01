@@ -159,7 +159,7 @@ class RBFExpansionNode(mdp.Node):
             # check number of sizes correct
             if sizes.shape[0] != self._output_dim:
                 msg = "There must be as many RBF sizes as centers"
-                raise mdp.NodeException, msg
+                raise mdp.NodeException(msg)
 
         if numx.isscalar(sizes[0]):
             # isotropic RBFs
@@ -174,7 +174,7 @@ class RBFExpansionNode(mdp.Node):
                 msg = ("Dimensionality of size matrices should be the same " +
                        "as input dimensionality (%d != %d)"
                        % (sizes.shape[1], self._input_dim))
-                raise mdp.NodeException, msg
+                raise mdp.NodeException(msg)
 
             # compute inverse covariance matrix
             for i in range(sizes.shape[0]):
@@ -371,7 +371,7 @@ class GeneralExpansionNode(_ExpansionNode):
                                                     use_hint=use_hint,
                                                     k=0.000001)
             return app_x_2.astype(self.dtype)
-        except NotImplementedError, exc:
+        except NotImplementedError as exc:
             raise mdp.MDPException(exc)
 
     def _execute(self, x):

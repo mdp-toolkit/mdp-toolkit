@@ -6,6 +6,7 @@ The code uses the visitor pattern to reach and convert all the nodes in a flow.
 """
 
 from __future__ import with_statement
+from __future__ import absolute_import
 
 import tempfile
 import os
@@ -14,7 +15,7 @@ import cStringIO as StringIO
 
 import mdp
 
-import switchboard
+from . import switchboard
 
 # TODO: use <pre>   </pre> for whitespaces?
 

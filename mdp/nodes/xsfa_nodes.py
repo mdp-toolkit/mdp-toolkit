@@ -1,3 +1,4 @@
+from __future__ import print_function
 __docformat__ = "restructuredtext en"
 
 import mdp
@@ -151,7 +152,7 @@ class XSFANode(mdp.Node):
         if self._flow is None:
             self._initialize_internal_flow()
             if self.verbose:
-                print "Extracting source 1..."
+                print("Extracting source 1...")
 
     def _initialize_internal_flow(self):
         # create the initial flow if it's not there already
@@ -203,7 +204,7 @@ class XSFANode(mdp.Node):
                                              self.n_extracted_src)
             self._flow.append(mod)
             if self.verbose:
-                print "Extracting source %d..." % (self.n_extracted_src+1)
+                print("Extracting source %d..." % (self.n_extracted_src+1))
 
     def _execute(self, x):
         return self._flow(x)[:,:self.output_dim]

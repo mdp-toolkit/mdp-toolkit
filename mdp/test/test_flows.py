@@ -1,10 +1,11 @@
 from __future__ import with_statement
+from __future__ import absolute_import
 
 import tempfile
 import pickle
 import cPickle
 import os
-from _tools import *
+from ._tools import *
 
 uniform = numx_rand.random
 
@@ -147,7 +148,7 @@ def testFlow_container_listmethods():
     try:
         newnode = BogusNode(input_dim=11)
         flow.append(newnode)
-        raise Exception, 'flow.append appended inconsistent node'
+        raise Exception('flow.append appended inconsistent node')
     except ValueError:
         assert_equal(len(flow), length)
     # extend
@@ -164,7 +165,7 @@ def testFlow_container_listmethods():
                 newflow[idx].input_dim = 10
             newflow[idx].output_dim = 10
         flow.extend(newflow)
-        raise Exception, 'flow.extend appended inconsistent flow'
+        raise Exception('flow.extend appended inconsistent flow')
     except ValueError:
         assert_equal(len(flow), length)
     # insert
@@ -175,7 +176,7 @@ def testFlow_container_listmethods():
     try:
         newnode = BogusNode(output_dim=11)
         flow.insert(2, newnode)
-        raise Exception, 'flow.insert inserted inconsistent node'
+        raise Exception('flow.insert inserted inconsistent node')
     except ValueError:
         assert_equal(len(flow), length)
     # pop
@@ -193,7 +194,7 @@ def testFlow_container_listmethods():
     flow._check_nodes_consistency(flow.flow)
     try:
         nottobepopped = flow.pop(4)
-        raise Exception, 'flow.pop left inconsistent flow'
+        raise Exception('flow.pop left inconsistent flow')
     except ValueError:
         assert_equal(len(flow), length)
 
@@ -283,7 +284,7 @@ def testCrashRecovery():
     flow.set_crash_recovery(1)
     try:
         flow.train(mdp.numx.zeros((1,2), 'd'))
-    except Exception, e:
+    except Exception as e:
         assert isinstance(e,mdp.FlowExceptionCR)
         with open(e.filename, 'rb') as fl:
             pic_flow = pickle.load(fl)
@@ -292,19 +293,19 @@ def testCrashRecovery():
     flow.set_crash_recovery(0)
     try:
         flow.execute([None])
-    except Exception, e:
+    except Exception as e:
         assert isinstance(e,mdp.FlowExceptionCR)
         assert not hasattr(e,'filename')
 
 def testCrashRecoveryException():
     a = 3
     try:
-        raise mdp.CrashRecoveryException('bogus errstr', a, StandardError())
-    except mdp.CrashRecoveryException, e:
+        raise mdp.CrashRecoveryException('bogus errstr', a, Exception())
+    except mdp.CrashRecoveryException as e:
         filename1 = e.dump()
         filename2 = e.dump(tempfile.mkstemp(prefix='MDP_',
                                             dir=py.test.mdp_tempdirname)[1])
-        assert isinstance(e.parent_exception, StandardError)
+        assert isinstance(e.parent_exception, Exception)
 
     for fname in filename1, filename2:
         fl = open(fname, 'rb')

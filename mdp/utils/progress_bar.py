@@ -1,4 +1,5 @@
 from __future__ import with_statement
+from __future__ import print_function
 
 from datetime import timedelta
 import sys
@@ -253,7 +254,7 @@ if __name__ == '__main__':
     #import random
     import mdp
     import tempfile
-    print 'Testing progressinfo...'
+    print('Testing progressinfo...')
     # test various customized layouts
     cust_list = [ {'position' : 'left',
                    'indent': 'Progress: ',
@@ -316,4 +317,4 @@ if __name__ == '__main__':
                                  custom={'speed':'last'}):
             time.sleep(1)
 
-    print 'Done.'
+    print('Done.')

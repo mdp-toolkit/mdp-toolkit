@@ -20,6 +20,7 @@ still possible to define the extension nodes as classes derived from nodes.
 This keeps the code readable and is compatible with automatic code checkers
 (like the background pylint checks in the Eclipse IDE with PyDev).
 """
+from __future__ import print_function
 
 from mdp import MDPException, NodeMetaclass
 
@@ -291,7 +292,7 @@ def activate_extension(extension_name, verbose=False):
         raise ExtensionException(err)
     if extension_name in _active_extensions:
         if verbose:
-            print 'Extension %s is already active!' % extension_name
+            print('Extension %s is already active!' % extension_name)
         return
     _active_extensions.add(extension_name)
     try:

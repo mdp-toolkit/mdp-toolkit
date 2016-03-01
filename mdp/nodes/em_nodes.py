@@ -1,3 +1,4 @@
+from __future__ import print_function
 __docformat__ = "restructuredtext en"
 
 import mdp
@@ -143,7 +144,7 @@ class FANode(mdp.Node):
             # this is actually likelihood/tlen.
             lhood = const - 0.5*log_det_B - 0.5*trace_B_cov
             if verbose:
-                print 'cycle', t, 'log-lhood:', lhood
+                print('cycle', t, 'log-lhood:', lhood)
 
             ##### convergence criterion
             if base_lhood is None:

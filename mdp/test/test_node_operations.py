@@ -1,9 +1,10 @@
 from __future__ import with_statement
+from __future__ import absolute_import
 
 import tempfile
 import cPickle
 import mdp
-from _tools import BogusMultiNode, BogusNodeTrainable
+from ._tools import BogusMultiNode, BogusNodeTrainable
 import py.test
 
 uniform = mdp.numx_rand.random

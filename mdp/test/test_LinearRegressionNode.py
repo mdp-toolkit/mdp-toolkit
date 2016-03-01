@@ -1,5 +1,6 @@
+from __future__ import absolute_import
 import py.test
-from _tools import *
+from ._tools import *
 
 INDIM, OUTDIM, TLEN = 5, 3, 10000
 

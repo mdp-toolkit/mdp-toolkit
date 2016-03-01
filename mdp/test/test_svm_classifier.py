@@ -1,4 +1,5 @@
-from _tools import *
+from __future__ import absolute_import
+from ._tools import *
 
 def _randomly_filled_hypercube(widths, num_elem=1000):
     """Fills a hypercube with given widths, centred at the origin.

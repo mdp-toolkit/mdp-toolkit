@@ -172,12 +172,12 @@ class NodeMetaclass(type):
                     signature=signature,
                     argnames=argnames,
                     kwargs_name=varkwargs,
-                    defaults=func.func_defaults,
+                    defaults=func.__defaults__,
                     doc=func.__doc__,
                     module=func.__module__,
                     dict=func.__dict__,
-                    globals=func.func_globals,
-                    closure=func.func_closure)
+                    globals=func.__globals__,
+                    closure=func.__closure__)
 
     @staticmethod
     def _wrap_function(original_func, wrapper_infodict):
@@ -194,7 +194,7 @@ class NodeMetaclass(type):
         wrapped_func.__doc__ = wrapper_infodict['doc']
         wrapped_func.__module__ = wrapper_infodict['module']
         wrapped_func.__dict__.update(wrapper_infodict['dict'])
-        wrapped_func.func_defaults = wrapper_infodict['defaults']
+        wrapped_func.__defaults__ = wrapper_infodict['defaults']
         return wrapped_func
 
     @staticmethod
@@ -213,7 +213,7 @@ class NodeMetaclass(type):
         wrapped_func.__doc__ = wrapper_infodict['doc']
         wrapped_func.__module__ = wrapper_infodict['module']
         wrapped_func.__dict__.update(wrapper_infodict['dict'])
-        wrapped_func.func_defaults = wrapper_infodict['defaults']
+        wrapped_func.__defaults__ = wrapper_infodict['defaults']
         return wrapped_func
 
 

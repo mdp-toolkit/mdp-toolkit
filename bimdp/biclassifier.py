@@ -1,6 +1,7 @@
+from __future__ import absolute_import
 
 import mdp
-import binode
+from . import binode
 
 
 class BiClassifier(binode.BiNode, mdp.ClassifierNode):

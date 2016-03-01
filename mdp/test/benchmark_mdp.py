@@ -1,5 +1,6 @@
 """These are some benchmark functions for MDP.
 """
+from __future__ import print_function
 
 import mdp
 #from mdp.utils import symeig
@@ -176,22 +177,22 @@ def run_benchmarks(bench_funcs, time_digits=15):
                 # print summary table header
                 descrlen = len(descr)+6
                 results_strlen = time_digits+descrlen+7
-                print '\nTiming results (%s, %d cases):' % (funcname, ncases)
-                print func.__doc__
-                print '+'+'-'*(results_strlen-2)+'+'
-                print label_str % 'Description'.center(descrlen)
-                print '+'+'-'*(results_strlen-2)+'+'
+                print('\nTiming results (%s, %d cases):' % (funcname, ncases))
+                print(func.__doc__)
+                print('+'+'-'*(results_strlen-2)+'+')
+                print(label_str % 'Description'.center(descrlen))
+                print('+'+'-'*(results_strlen-2)+'+')
 
             # execute function
             t = timeit(func, *args)
 
             # print summary table entry
-            print results_str % (descr.center(descrlen), t)
+            print(results_str % (descr.center(descrlen), t))
 
         # print summary table tail
-        print '+'+'-'*(results_strlen-2)+'+'
+        print('+'+'-'*(results_strlen-2)+'+')
 
-    print '\nTotal running time:', (TIMEFUNC()-tstart)*100.
+    print('\nTotal running time:', (TIMEFUNC()-tstart)*100.)
 
 ####### /benchmark function
 
@@ -217,5 +218,5 @@ def get_benchmarks():
     return BENCH_FUNCS
 
 if __name__ == "__main__":
-    print "Running benchmarks: "
+    print("Running benchmarks: ")
     run_benchmarks(get_benchmarks())

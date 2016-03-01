@@ -1,10 +1,11 @@
 from __future__ import with_statement
+from __future__ import absolute_import
 import sys
 import os
 import tempfile
 import inspect
 import mdp
-from repo_revision import get_git_revision
+from .repo_revision import get_git_revision
 import cStringIO as StringIO
 
 
@@ -183,7 +184,7 @@ def get_numx():
                                version as numx_version)
             numx_description = 'scipy'
             config.ExternalDepFound('numx', 'scipy ' + numx_version.version)
-        except ImportError, exc:
+        except ImportError as exc:
             if USR_LABEL:
                 raise ImportError(exc)
             else:
@@ -199,7 +200,7 @@ def get_numx():
                                version as numx_version)
             numx_description = 'numpy'
             config.ExternalDepFound('numx', 'numpy ' + numx_version.version)
-        except ImportError, exc:
+        except ImportError as exc:
             config.ExternalDepFailed('numx', exc)
             numx_exception['numpy'] = exc
 
@@ -222,12 +223,12 @@ def get_symeig(numx_linalg):
     args = inspect.getargspec(numx_linalg.eigh)[0]
     if len(args) > 4:
         # if yes, just wrap it
-        from utils._symeig import wrap_eigh as symeig
+        from .utils._symeig import wrap_eigh as symeig
         config.ExternalDepFound('symeig', 'scipy.linalg.eigh')
     else:
         # either we have numpy, or we have an old scipy
         # we need to use our own rich wrapper
-        from utils._symeig import _symeig_fake as symeig
+        from .utils._symeig import _symeig_fake as symeig
         config.ExternalDepFound('symeig', 'symeig_fake')
     return symeig
 
@@ -321,7 +322,7 @@ def set_configuration():
         import user
         if not hasattr(user, 'pp_secret'):
             user.pp_secret = pp_secret
-    except ImportError, exc:
+    except ImportError as exc:
         config.ExternalDepFailed('parallel_python', exc)
     else:
         if os.getenv('MDP_DISABLE_PARALLEL_PYTHON'):
@@ -333,7 +334,7 @@ def set_configuration():
             try:
                 server = pp.Server()
                 server.destroy()
-            except Exception, exc:
+            except Exception as exc:
                 # no idea what exception the pp server may raise
                 # we need to catch all here...
                 config.ExternalDepFailed('parallel_python', exc)
@@ -355,7 +356,7 @@ def set_configuration():
         from shogun import (Kernel as sgKernel,
                             Features as sgFeatures,
                             Classifier as sgClassifier)
-    except ImportError, exc:
+    except ImportError as exc:
         config.ExternalDepFailed('shogun', exc)
     else:
         if os.getenv('MDP_DISABLE_SHOGUN'):
@@ -369,7 +370,7 @@ def set_configuration():
                 config.ExternalDepFailed('shogun',
                                          'too old, upgrade to at least version 1.0')
             else:
-                if not version.startswith('v1.'):
+                if not version.startswith('v3.'):
                     config.ExternalDepFailed('shogun',
                                              'too old, upgrade to at least version 1.0.')
                 else:
@@ -379,9 +380,9 @@ def set_configuration():
     try:
         import svm as libsvm
         libsvm.libsvm
-    except ImportError, exc:
+    except ImportError as exc:
         config.ExternalDepFailed('libsvm', exc)
-    except AttributeError, exc:
+    except AttributeError as exc:
         config.ExternalDepFailed('libsvm', 'libsvm version >= 2.91 required')
     else:
         if os.getenv('MDP_DISABLE_LIBSVM'):
@@ -392,7 +393,7 @@ def set_configuration():
     # joblib
     try:
         import joblib
-    except ImportError, exc:
+    except ImportError as exc:
         config.ExternalDepFailed('joblib', exc)
     else:
         version = joblib.__version__
@@ -411,9 +412,9 @@ def set_configuration():
         except ImportError:
             import scikits.learn as sklearn
         version = sklearn.__version__
-    except ImportError, exc:
+    except ImportError as exc:
         config.ExternalDepFailed('sklearn', exc)
-    except AttributeError, exc:
+    except AttributeError as exc:
         config.ExternalDepFailed('sklearn', exc)
     else:
         if os.getenv('MDP_DISABLE_SKLEARN'):

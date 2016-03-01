@@ -109,7 +109,7 @@ class LinearRegressionNode(Node):
             else:
                 invfun = utils.inv
             inv_xTx = invfun(self._xTx)
-        except numx_linalg.LinAlgError, exception:
+        except numx_linalg.LinAlgError as exception:
             errstr = (str(exception) +
                       "\n Input data may be redundant (i.e., some of the " +
                       "variables may be linearly dependent).")

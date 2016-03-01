@@ -1,11 +1,12 @@
 from __future__ import with_statement
 """These are test functions for hinet.
 """
+from __future__ import absolute_import
 
 import py.test
 import StringIO
 import mdp.hinet as mh
-from _tools import *
+from ._tools import *
 
 
 _get_new_flow = lambda: mdp.Flow([

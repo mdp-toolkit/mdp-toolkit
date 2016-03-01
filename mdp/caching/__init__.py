@@ -1,4 +1,5 @@
-from caching_extension import (activate_caching, deactivate_caching,
+from __future__ import absolute_import
+from .caching_extension import (activate_caching, deactivate_caching,
                                cache, set_cachedir,
                                __doc__, __docformat__)
 

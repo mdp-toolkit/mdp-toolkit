@@ -1,5 +1,6 @@
+from __future__ import absolute_import
 import mdp
-from routines import refcast
+from .routines import refcast
 numx = mdp.numx
 numx_linalg = mdp.numx_linalg
 

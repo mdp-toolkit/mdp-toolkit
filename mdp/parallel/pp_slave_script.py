@@ -9,6 +9,7 @@ The first sys.argv argument ist the nice value.
 The other arguments and the paths are then used as arguments for the
 wrapper script.
 """
+from __future__ import print_function
 
 import sys
 import subprocess
@@ -39,12 +40,12 @@ def main():
         sys.stdout.write(proc.stdout.readline())
         sys.stdout.flush()
         # return the pid via stdout
-        print proc.pid
+        print(proc.pid)
         sys.stdout.flush()
-    except Exception, e:
-        print "Error while starting the server process."
-        print e
-        print -1
+    except Exception as e:
+        print("Error while starting the server process.")
+        print(e)
+        print(-1)
         sys.stdout.flush()
 
 if __name__ == "__main__":

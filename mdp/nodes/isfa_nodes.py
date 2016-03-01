@@ -1,3 +1,4 @@
+from __future__ import print_function
 __docformat__ = "restructuredtext en"
 
 import sys as _sys
@@ -565,7 +566,7 @@ class ISFANode(Node):
                                  'TOT': sfa + ica}
         # info headers
         if self.verbose:
-            print self._info['header']+self._info['line']
+            print(self._info['header']+self._info['line'])
 
         # initialize control variables
         # contrast
@@ -669,9 +670,9 @@ class ISFANode(Node):
         contrast = sfa+ica
         # print final information
         if self.verbose:
-            print self._fmt_prog_info(sweep, perturbed,
-                                      contrast, sfa, ica)
-            print self._info['line']
+            print(self._fmt_prog_info(sweep, perturbed,
+                                      contrast, sfa, ica))
+            print(self._info['line'])
 
         self.final_contrast = {'SFA': sfa,
                                'ICA': ica,

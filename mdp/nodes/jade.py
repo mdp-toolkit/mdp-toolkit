@@ -1,7 +1,9 @@
+from __future__ import print_function
+from __future__ import absolute_import
 __docformat__ = "restructuredtext en"
 
 import mdp
-from ica_nodes import ICANode
+from .ica_nodes import ICANode
 numx, numx_rand, numx_linalg = mdp.numx, mdp.numx_rand, mdp.numx_linalg
 
 mult = mdp.utils.mult
@@ -87,7 +89,7 @@ class JADENode(ICANode):
         X = data
 
         if verbose:
-            print "jade -> Estimating cumulant matrices"
+            print("jade -> Estimating cumulant matrices")
 
         # Dim. of the space of real symm matrices
         dimsymm = (m*(m+1)) // 2
@@ -165,12 +167,12 @@ class JADENode(ICANode):
         # Joint diagonalization proper
         # ============================
         if verbose:
-            print "jade -> Contrast optimization by joint diagonalization"
+            print("jade -> Contrast optimization by joint diagonalization")
 
         while encore:
             encore = False
             if verbose:
-                print "jade -> Sweep #%3d" % sweep ,
+                print("jade -> Sweep #%3d" % sweep, end=' ')
             sweep += 1
             upds  = 0
 
@@ -208,14 +210,14 @@ class JADENode(ICANode):
                         Off = Off - Gain
 
             if verbose:
-                print "completed in %d rotations" % upds
+                print("completed in %d rotations" % upds)
             updates += upds
             if updates > max_it:
                 err_msg = 'No convergence after %d iterations.' % max_it
                 raise mdp.NodeException(err_msg)
 
         if verbose:
-            print "jade -> Total of %d Givens rotations" % updates
+            print("jade -> Total of %d Givens rotations" % updates)
 
         # A separating matrix
         # ===================
@@ -229,13 +231,13 @@ class JADENode(ICANode):
         # columns of A = pinv(B)
 
         if verbose:
-            print "jade -> Sorting the components"
+            print("jade -> Sorting the components")
 
         A = numx_linalg.pinv(B)
         B =  B[numx.argsort((A*A).sum(axis=0))[::-1], :]
 
         if verbose:
-            print "jade -> Fixing the signs"
+            print("jade -> Fixing the signs")
         b = B[:, 0]
         # just a trick to deal with sign == 0
         signs = numx.sign(numx.sign(b)+0.1)

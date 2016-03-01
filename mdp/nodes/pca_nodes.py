@@ -183,7 +183,7 @@ class PCANode(mdp.Node):
                         "Got negative eigenvalues: %s.\n"
                         "You may either set output_dim to be smaller, "
                         "or set reduce=True and/or svd=True" % str(d))
-        except SymeigException, exception:
+        except SymeigException as exception:
             err = str(exception)+("\nCovariance matrix may be singular."
                                   "Try setting svd=True.")
             raise mdp.NodeException(err)

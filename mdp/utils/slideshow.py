@@ -13,6 +13,7 @@ http://javascript.internet.com/miscellaneous/image-slideshow.html
 """
 
 from __future__ import with_statement
+from __future__ import absolute_import
 
 import random
 import tempfile
@@ -20,7 +21,7 @@ import os
 import webbrowser
 import warnings
 
-import templet
+from . import templet
 
 _BASIC_CSS_FILENAME = "basic.css"
 _SLIDESHOW_CSS_FILENAME = "slideshow.css"

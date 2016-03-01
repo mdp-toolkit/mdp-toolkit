@@ -1,5 +1,6 @@
+from __future__ import absolute_import
 import mdp
-from _tools import *
+from ._tools import *
 
 def test_VariadicCumulator():
     # create random data

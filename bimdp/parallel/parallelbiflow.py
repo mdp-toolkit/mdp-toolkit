@@ -4,6 +4,7 @@ Module for parallel flow training and execution.
 Not that this module depends on bihinet, since it uses a BiFlowNode to
 encapsulate the BiFlow in the tasks.
 """
+from __future__ import print_function
 
 import itertools
 
@@ -179,20 +180,20 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
                     # scheduler contains an iterable with the schedulers
                     # self._i_train_node was set in setup_parallel_training
                     schedulers = iter(scheduler)
-                    scheduler = schedulers.next()
+                    scheduler = next(schedulers)
                     if self._i_train_node > 0:
                         # dispose schedulers for pretrained nodes
                         for _ in range(self._i_train_node):
                             if scheduler is not None:
                                 scheduler.shutdown()
-                            scheduler = schedulers.next()
+                            scheduler = next(schedulers)
                     elif self._i_train_node is None:
                         # all nodes are already trained, dispose schedulers
                         for _ in range(len(self.flow) - 1):
                             if scheduler is not None:
                                 scheduler.shutdown()
                             # the last scheduler will be shutdown in finally
-                            scheduler = schedulers.next()
+                            scheduler = next(schedulers)
                     last_trained_node = self._i_train_node
                 else:
                     schedulers = None
@@ -221,7 +222,7 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
                         for _ in range(self._i_train_node - last_trained_node):
                             if scheduler is not None:
                                 scheduler.shutdown()
-                            scheduler = schedulers.next()
+                            scheduler = next(schedulers)
                         last_trained_node = self._i_train_node
                         # check that the scheduler is compatible
                         if ((scheduler is not None) and
@@ -335,7 +336,7 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
                             self._train_callable_class(self._flownode,
                                                        purge_nodes=True))
                 break
-            except parallel.NotForkableParallelException, exception:
+            except parallel.NotForkableParallelException as exception:
                 if self.verbose:
                     print ("could not fork node no. %d: %s" %
                            (self._i_train_node + 1, str(exception)))
@@ -391,8 +392,8 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
         Raises NoTaskException if any other problem arises.
         """
         try:
-            x = self._train_data_iterator.next()
-            msg = self._train_msg_iterator.next()
+            x = next(self._train_data_iterator)
+            msg = next(self._train_msg_iterator)
             return ((x, msg), None)
         except StopIteration:
             return None
@@ -513,9 +514,9 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
         Raises NoTaskException if no task is available.
         """
         try:
-            x = self._exec_data_iterator.next()
-            msg = self._exec_msg_iterator.next()
-            target = self._exec_target_iterator.next()
+            x = next(self._exec_data_iterator)
+            msg = next(self._exec_msg_iterator)
+            target = next(self._exec_target_iterator)
             return ((x, msg, target), None)
         except StopIteration:
             return None

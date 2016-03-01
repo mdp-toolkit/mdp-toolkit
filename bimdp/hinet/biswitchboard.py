@@ -136,8 +136,8 @@ def _create_bi_switchboards():
         docstring = ("Automatically created BiSwitchboard version of %s." %
                      node_name)
         docstring = "Automatically created BiNode version of %s." % node_name
-        exec ('class %s(BiSwitchboard, mdp.hinet.%s): "%s"' %
-              (binode_name, node_name, docstring)) in current_module.__dict__
+        exec(('class %s(BiSwitchboard, mdp.hinet.%s): "%s"' %
+              (binode_name, node_name, docstring)), current_module.__dict__)
         # create appropriate FactoryExtension nodes
         mdp.extension_method("switchboard_factory",
                              current_module.__dict__[binode_name],
