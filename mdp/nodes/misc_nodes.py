@@ -795,11 +795,11 @@ class AdaptiveCutoffNode(HistogramNode):
             sorted_data.sort(axis=0)
             if self.lower_cutoff_fraction:
                 index = self.lower_cutoff_fraction * len(sorted_data)
-                self.lower_bounds = sorted_data[index]
+                self.lower_bounds = sorted_data[int(index)]
             if self.upper_cutoff_fraction:
                 index = (len(sorted_data) -
                          self.upper_cutoff_fraction * len(sorted_data))
-                self.upper_bounds = sorted_data[index]
+                self.upper_bounds = sorted_data[int(index)]
         super(AdaptiveCutoffNode, self)._stop_training()
 
     def _execute(self, x):
