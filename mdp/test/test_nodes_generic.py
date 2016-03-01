@@ -341,6 +341,7 @@ NODES = [
          init_args=[10, 0.001, True]),
     dict(klass='KMeansClassifier',
          init_args=[2, 3]),
+
     dict(klass='PerceptronClassifier',
          sup_arg_gen=_rand_classification_labels_array),
     dict(klass='SimpleMarkovClassifier',
@@ -360,7 +361,9 @@ NODES = [
 
 # LabelSpreadingScikitsLearnNode is broken in sklearn version 0.11
 # It works fine in version 0.12
-EXCLUDE_NODES = ['ICANode', 'LabelSpreadingScikitsLearnNode']
+EXCLUDE_NODES = ['ICANode', 'LabelSpreadingScikitsLearnNode', 
+        'OutputCodeClassifierScikitsLearnNode', 'OneVsOneClassifierScikitsLearnNode',
+        'OneVsRestClassifierScikitsLearnNode', 'VotingClassifierScikitsLearnNode']
 
 
 def generate_nodes_list(nodes_dicts):
