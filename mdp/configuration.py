@@ -370,17 +370,17 @@ def set_configuration():
         if os.getenv('MDP_DISABLE_SHOGUN'):
             config.ExternalDepFailed('shogun', 'disabled')
         else:
-            # From now on just support shogun >= 1.0
-            # Between 0.10 to 1.0 there are too many API changes...
+            # From now on just support shogun < 2.0
+            # Between 0.10 to 1.0 or beyond there are too many API changes...
             try:
                 version = sgKernel.Version_get_version_release()
             except AttributeError:
                 config.ExternalDepFailed('shogun',
-                                         'too old, upgrade to at least version 1.0')
+                                         'only shogun v1 is supported')
             else:
-                if not version.startswith('v3.'):
+                if not version.startswith('v1.'):
                     config.ExternalDepFailed('shogun',
-                                             'too old, upgrade to at least version 1.0.')
+                                             'only shogun v1 is supported')
                 else:
                     config.ExternalDepFound('shogun', version)
 
