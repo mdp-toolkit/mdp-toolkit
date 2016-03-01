@@ -1,8 +1,3 @@
-# This file must be runnable with all supported python versions:
-#    2.5, 2.6, 2.7, 3.1, and 3.2.
-# Things which might not be available:
-#    context managers, the print statement, some modules (e.g. ast).
-
 from distutils.core import setup
 import os
 import sys
@@ -59,43 +54,9 @@ try:
     def get_long_description():
         tree = get_mdp_ast_tree()
         return ast.get_docstring(tree)
-except ImportError:
-    import re
-
-    def get_variable(pattern):
-        m = re.search(pattern, get_module_code(), re.M + re.S + re.X)
-        if not m:
-            throw_bug()
-        return m.group(1)
-
-    def get_version():
-        return get_variable(r'^__version__\s*=\s*[\'"](.+?)[\'"]')
-
-    def get_short_description():
-        text = get_variable(r'''^__short_description__\s*=\s*  # variable name and =
-                            \\?\s*(?:"""|\'\'\')\\?\s*         # opening quote with backslash
-                            (.+?)
-                            \s*(?:"""|\'\'\')''')              # closing quote
-        return text.replace(' \\\n', ' ')
-
-    def get_long_description():
-        return get_variable(r'''^(?:"""|\'\'\')\\?\s*          # opening quote with backslash
-                            (.+?)
-                            \s*(?:"""|\'\'\')''')              # closing quote
 
 
 def setup_package():
-
-    # Perform 2to3 if needed
-    local_path = os.path.dirname(os.path.abspath(sys.argv[0]))
-    src_path = local_path
-
-    if sys.version_info[0] == 3:
-        src_path = os.path.join(local_path, 'build', 'py3k')
-        import py3tool
-        print("Converting to Python3 via 2to3...")
-        py3tool.sync_2to3('mdp', os.path.join(src_path, 'mdp'))
-        py3tool.sync_2to3('bimdp', os.path.join(src_path, 'bimdp'))
 
     # check that we have a version
     version = get_version()
@@ -104,9 +65,6 @@ def setup_package():
     # create download url:
     dl = ('http://sourceforge.net/projects/mdp-toolkit/files/mdp-toolkit/' +
           get_version()+'/MDP-'+get_version()+'.tar.gz')
-    # Run build
-    os.chdir(src_path)
-    sys.path.insert(0, src_path)
 
     setup(name = 'MDP', version=version,
           author = 'MDP Developers',
