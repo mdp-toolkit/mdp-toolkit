@@ -1,4 +1,7 @@
 from __future__ import print_function
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 __docformat__ = "restructuredtext en"
 
 import mdp
@@ -317,7 +320,7 @@ class NormalizeNode(mdp.PreserveDimNode):
         self.s = mdp.numx.sqrt(mdp.numx.diag(cov_mtx))
 
     def _execute(self, x):
-        return (x - self.m)/self.s
+        return old_div((x - self.m),self.s)
 
     def _inverse(self, y):
         return y*self.s + self.m

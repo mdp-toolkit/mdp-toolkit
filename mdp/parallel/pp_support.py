@@ -7,9 +7,7 @@ LocalPPScheduler includes the creation of a local pp scheduler.
 NetworkPPScheduler includes the management of the remote slaves via SSH.
 """
 
-from __future__ import with_statement
 from __future__ import print_function
-from __future__ import absolute_import
 
 import sys
 import os

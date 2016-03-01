@@ -121,8 +121,12 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 from __future__ import print_function
+from builtins import str
+from past.builtins import basestring
+from builtins import object
 
 import sys, re, inspect
+from future.utils import with_metaclass
 
 
 class _TemplateBuilder(object):
@@ -187,23 +191,21 @@ class _TemplateMetaClass(type):
         else: filename = '%s: <%s %s>' % (globals['__file__'], cls.__name__, n)
         code = compile(cls.__builder.build(template, filename), filename, 'exec')
         def expand(self, __dict = None, **kw):
-            if __dict: kw.update([i for i in __dict.iteritems() if i[0] not in kw])
+            if __dict: kw.update([i for i in __dict.items() if i[0] not in kw])
             kw['self'] = self
             exec(code, globals, kw)
         return expand
 
     def __init__(cls, *args):
-        for attr, val in cls.__dict__.items():
+        for attr, val in list(cls.__dict__.items()):
             if attr == 'template' or attr.endswith('_template'):
                 if isinstance(val, basestring):
                     setattr(cls, attr, cls.__compile(val, attr))
         type.__init__(cls, *args)
 
 
-class StringTemplate(object):
+class StringTemplate(with_metaclass(_TemplateMetaClass, object)):
     """A base class for string template classes."""
-
-    __metaclass__ = _TemplateMetaClass
 
     def __init__(self, *args, **kw):
         self.out = []
@@ -220,23 +222,21 @@ class StringTemplate(object):
 Template = StringTemplate
 
 
-class UnicodeTemplate(object):
+class UnicodeTemplate(with_metaclass(_TemplateMetaClass, object)):
     """A base class for unicode template classes."""
-
-    __metaclass__ = _TemplateMetaClass
 
     def __init__(self, *args, **kw):
         self.out = []
         self.template(*args, **kw)
 
     def write(self, *args):
-        self.out.extend([unicode(a) for a in args])
+        self.out.extend([str(a) for a in args])
 
     def __unicode__(self):
         return u''.join(self.out)
 
     def __str__(self):
-        return unicode(self).encode('utf-8')
+        return str(self).encode('utf-8')
 
 
 def _templatefunction(func, listname, stringtype):
@@ -319,7 +319,7 @@ if __name__ == '__main__':
             \N{Greek Small Letter Pi} = $pi
         """
     expect(
-        unicode(TestUnicode(pi = 3.14)),
+        str(TestUnicode(pi = 3.14)),
         u"\N{Greek Small Letter Pi} = 3.14\n")
     goterror = False
     try:

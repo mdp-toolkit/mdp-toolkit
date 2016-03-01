@@ -1,11 +1,15 @@
-from __future__ import absolute_import
+from __future__ import division
+from builtins import zip
+from builtins import range
+from builtins import object
+from past.utils import old_div
 from ._tools import *
 
 def _randomly_filled_hypercube(widths, num_elem=1000):
     """Fills a hypercube with given widths, centred at the origin.
     """
     p = []
-    for i in xrange(num_elem):
+    for i in range(num_elem):
         rand_data = numx_rand.random(len(widths))
         rand_data = [w*(d - 0.5) for d, w in zip(rand_data, widths)]
         p.append(tuple(rand_data))
@@ -16,9 +20,9 @@ def _randomly_filled_hyperball(dim, radius, num_elem=1000):
     """
     r = numx_rand.random(num_elem)
     points = numx_rand.random((num_elem, dim))
-    for i in xrange(len(points)):
+    for i in range(len(points)):
         norm = numx.linalg.norm(points[i])
-        scale = pow(r[i], 1./dim)
+        scale = pow(r[i], old_div(1.,dim))
         points[i] = points[i] * radius * scale / norm
     return points
 
@@ -53,9 +57,9 @@ def _separable_data(positions, labels, radius=1, num_elem=1000, shuffled=False):
     data = numx.vstack( _random_clusters(positions, radius, num_elem) )
     #data = numx.vstack( (numx_rand.random( (num_elem,2) ) - dist,
     #                     numx_rand.random( (num_elem,2) ) + dist) )
-    a_labels = numx.hstack(map(lambda x: [x] * num_elem, labels))
+    a_labels = numx.hstack([[x] * num_elem for x in labels])
     if shuffled:
-        ind = range(len(data))
+        ind = list(range(len(data)))
         numx_rand.shuffle(ind)
         return data[ind], a_labels[ind]
     return data, a_labels

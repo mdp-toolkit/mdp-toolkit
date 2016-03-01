@@ -65,7 +65,7 @@ class BiSwitchboard(BiNode, hinet.Switchboard):
         if not msg:
             return None
         out_msg = {}
-        for (key, value) in msg.items():
+        for (key, value) in list(msg.items()):
             if (type(value) is n.ndarray and
                 len(value.shape) >= 2 and value.shape[1] == self.output_dim):
                 out_msg[key] = super(BiSwitchboard, self)._inverse(value)
@@ -78,7 +78,7 @@ class BiSwitchboard(BiNode, hinet.Switchboard):
         if not msg:
             return None
         out_msg = {}
-        for (key, value) in msg.items():
+        for (key, value) in list(msg.items()):
             if (type(value) is n.ndarray and
                 len(value.shape) >= 2 and value.shape[1] == self.input_dim):
                 out_msg[key] = super(BiSwitchboard, self)._execute(value)
@@ -110,7 +110,7 @@ def _binode_create_switchboard(cls, free_params, prev_switchboard,
                " is not compatible with this switchboard class" +
                " '%s'." % cls.__name__)
         raise mdp.hinet.SwitchboardException(err)
-    for key, value in free_params.items():
+    for key, value in list(free_params.items()):
         if key.endswith('_xy') and isinstance(value, int):
             free_params[key] = (value, value)
     kwargs = cls._get_switchboard_kwargs(free_params, prev_switchboard,

@@ -2,6 +2,7 @@
 Classes for tracing BiNode behavior in flows.
 """
 from __future__ import print_function
+from builtins import range
 
 import mdp
 from bimdp.nodes import IdentityBiNode

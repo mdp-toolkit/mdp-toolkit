@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 from ._tools import *
 
 def test_CutoffNode():

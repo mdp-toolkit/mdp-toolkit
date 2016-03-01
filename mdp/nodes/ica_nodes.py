@@ -1,5 +1,8 @@
 from __future__ import print_function
-from __future__ import absolute_import
+from __future__ import division
+from builtins import range
+from past.utils import old_div
+from builtins import object
 __docformat__ = "restructuredtext en"
 
 import math
@@ -125,7 +128,7 @@ class ICANode(mdp.Cumulator, mdp.Node, ProjectMatrixMixin):
         # call 'core' in telescope mode if needed
         if self.telescope:
             minpow = math.frexp(self.input_dim*10)[1]
-            maxpow = int(numx.log(data.shape[0])/numx.log(2))
+            maxpow = int(old_div(numx.log(data.shape[0]),numx.log(2)))
             for tel in range(minpow, maxpow+1):
                 index = 2**tel
                 if verbose:
@@ -212,8 +215,8 @@ class CuBICANode(ICANode):
         # some constants
         ct_c34 = 0.0625
         ct_s34 = 0.25
-        ct_c44 = 1./384
-        ct_s44 = 1./96
+        ct_c44 = old_div(1.,384)
+        ct_s44 = old_div(1.,96)
 
         # initial transposed rotation matrix == identity matrix
         Qt = numx.identity(comp, dtype=self.dtype)
@@ -232,15 +235,15 @@ class CuBICANode(ICANode):
                     sq2 = x[:, j]*x[:, j]
 
                     # calculate the cumulants of 3rd and 4th order.
-                    C111  = mult(sq1, u1)/tlen
-                    C112  = mult(sq1, u2)/tlen
-                    C122  = mult(sq2, u1)/tlen
-                    C222  = mult(sq2, u2)/tlen
-                    C1111 = mult(sq1, sq1)/tlen - 3.
-                    C1112 = mult(sq1*u1, u2)/tlen
-                    C1122 = mult(sq1, sq2)/tlen - 1.
-                    C1222 = mult(sq2*u2, u1)/tlen
-                    C2222 = mult(sq2, sq2)/tlen - 3.
+                    C111  = old_div(mult(sq1, u1),tlen)
+                    C112  = old_div(mult(sq1, u2),tlen)
+                    C122  = old_div(mult(sq2, u1),tlen)
+                    C222  = old_div(mult(sq2, u2),tlen)
+                    C1111 = old_div(mult(sq1, sq1),tlen) - 3.
+                    C1112 = old_div(mult(sq1*u1, u2),tlen)
+                    C1122 = old_div(mult(sq1, sq2),tlen) - 1.
+                    C1222 = old_div(mult(sq2*u2, u1),tlen)
+                    C2222 = old_div(mult(sq2, sq2),tlen) - 3.
 
                     c_34 = ct_c34 * (    (C111*C111+C222*C222)-
                                       3.*(C112*C112+C122*C122)-
@@ -598,37 +601,37 @@ class FastICANode(ICANode):
                 # non linearity
                 if used_g == 10:
                     u = mult(X.T, Q)
-                    Q = mult(X, u*u*u)/tlen - 3.*Q
+                    Q = old_div(mult(X, u*u*u),tlen) - 3.*Q
                 elif used_g == 11:
                     u = mult(X.T, Q)
                     Gpow3 = u*u*u
                     Beta = (u*Gpow3).sum(axis=0)
-                    D = numx.diag((1/(Beta - 3*tlen)))
+                    D = numx.diag((old_div(1,(Beta - 3*tlen))))
                     Q = Q + mu * mult(Q, mult((mult(u.T, Gpow3) -
                                                numx.diag(Beta)), D))
                 elif used_g == 12:
                     Xsub = self._get_rsamples(X)
                     u = mult(Xsub.T, Q)
-                    Q = mult(Xsub, u*u*u)/Xsub.shape[1] - 3.*Q
+                    Q = old_div(mult(Xsub, u*u*u),Xsub.shape[1]) - 3.*Q
                 elif used_g == 13:
                     Xsub = self._get_rsamples(X)
                     u = mult(Xsub.T, Q)
                     Gpow3 = u*u*u
                     Beta = (u*Gpow3).sum(axis=0)
-                    D = numx.diag((1/(Beta - 3*Xsub.shape[1])))
+                    D = numx.diag((old_div(1,(Beta - 3*Xsub.shape[1]))))
                     Q = Q + mu * mult(Q, mult((mult(u.T, Gpow3) -
                                                numx.diag(Beta)), D))
                 elif used_g == 20:
                     u = mult(X.T, Q)
                     tang = numx.tanh(fine_tanh * u)
-                    temp = (1.-tang*tang).sum(axis=0)/tlen
-                    Q = mult(X, tang)/tlen - temp * Q * fine_tanh
+                    temp = old_div((1.-tang*tang).sum(axis=0),tlen)
+                    Q = old_div(mult(X, tang),tlen) - temp * Q * fine_tanh
                 elif used_g == 21:
                     u = mult(X.T, Q)
                     tang = numx.tanh(fine_tanh * u)
                     Beta = (u*tang).sum(axis=0)
-                    D = numx.diag(1/(Beta -
-                                     fine_tanh*(1.-tang*tang).sum(axis=0)))
+                    D = numx.diag(old_div(1,(Beta -
+                                     fine_tanh*(1.-tang*tang).sum(axis=0))))
                     Q = Q + mu * mult(Q,
                                  mult((mult(u.T, tang)-
                                        numx.diag(Beta)), D))
@@ -636,15 +639,15 @@ class FastICANode(ICANode):
                     Xsub = self._get_rsamples(X)
                     u = mult(Xsub.T, Q)
                     tang = numx.tanh(fine_tanh * u)
-                    temp = (1.-tang*tang).sum(axis=0)/Xsub.shape[1]
-                    Q = mult(Xsub, tang)/Xsub.shape[1] - temp * Q * fine_tanh
+                    temp = old_div((1.-tang*tang).sum(axis=0),Xsub.shape[1])
+                    Q = old_div(mult(Xsub, tang),Xsub.shape[1]) - temp * Q * fine_tanh
                 elif used_g == 23:
                     Xsub = self._get_rsamples(X)
                     u = mult(Xsub.T, Q)
                     tang = numx.tanh(fine_tanh * u)
                     Beta = (u*tang).sum(axis=0)
-                    D = numx.diag(1/(Beta -
-                                     fine_tanh*(1.-tang*tang).sum(axis=0)))
+                    D = numx.diag(old_div(1,(Beta -
+                                     fine_tanh*(1.-tang*tang).sum(axis=0))))
                     Q = Q + mu * mult(Q,
                                  mult((mult(u.T, tang)-
                                        numx.diag(Beta)), D))
@@ -654,15 +657,15 @@ class FastICANode(ICANode):
                     ex = numx.exp(-fine_gaus*u2*0.5)
                     gauss =  u*ex
                     dgauss = (1. - fine_gaus*u2)*ex
-                    Q = (mult(X, gauss)-dgauss.sum(axis=0)*Q)/tlen
+                    Q = old_div((mult(X, gauss)-dgauss.sum(axis=0)*Q),tlen)
                 elif used_g == 31:
                     u = mult(X.T, Q)
                     u2 = u*u
                     ex = numx.exp(-fine_gaus*u2*0.5)
                     gaus =  u*ex
                     Beta = (u*gaus).sum(axis=0)
-                    D = numx.diag(1/(Beta -
-                                     ((1-fine_gaus*u2)*ex).sum(axis=0)))
+                    D = numx.diag(old_div(1,(Beta -
+                                     ((1-fine_gaus*u2)*ex).sum(axis=0))))
                     Q = Q + mu * mult(Q,
                                  mult((mult(u.T, gaus)-
                                        numx.diag(Beta)), D))
@@ -673,7 +676,7 @@ class FastICANode(ICANode):
                     ex = numx.exp(-fine_gaus*u2*0.5)
                     gauss =  u*ex
                     dgauss = (1. - fine_gaus*u2)*ex
-                    Q = (mult(Xsub, gauss)-dgauss.sum(axis=0)*Q)/Xsub.shape[1]
+                    Q = old_div((mult(Xsub, gauss)-dgauss.sum(axis=0)*Q),Xsub.shape[1])
                 elif used_g == 33:
                     Xsub = self._get_rsamples(X)
                     u = mult(Xsub.T, Q)
@@ -681,30 +684,30 @@ class FastICANode(ICANode):
                     ex = numx.exp(-fine_gaus*u2*0.5)
                     gaus = u*ex
                     Beta = (u*gaus).sum(axis=0)
-                    D = numx.diag(1/(Beta -
-                                     ((1-fine_gaus*u2)*ex).sum(axis=0)))
+                    D = numx.diag(old_div(1,(Beta -
+                                     ((1-fine_gaus*u2)*ex).sum(axis=0))))
                     Q = Q + mu * mult(Q, mult((mult(u.T, gaus)-
                                                numx.diag(Beta)), D))
                 elif used_g == 40:
                     u = mult(X.T, Q)
-                    Q = mult(X, u*u)/tlen
+                    Q = old_div(mult(X, u*u),tlen)
                 elif used_g == 41:
                     u = mult(X.T, Q)
                     Gskew = u*u
                     Beta = (u*Gskew).sum(axis=0)
-                    D = numx.diag(1/Beta)
+                    D = numx.diag(old_div(1,Beta))
                     Q =  Q + mu * mult(Q, mult((mult(u.T, Gskew)-
                                                 numx.diag(Beta)), D))
                 elif used_g == 42:
                     Xsub = self._get_rsamples(X)
                     u = mult(Xsub.T, Q)
-                    Q = mult(Xsub, u*u)/Xsub.shape[1]
+                    Q = old_div(mult(Xsub, u*u),Xsub.shape[1])
                 elif used_g == 43:
                     Xsub = self._get_rsamples(X)
                     u = mult(Xsub.T, Q)
                     Gskew = u*u
                     Beta = (u*Gskew).sum(axis=0)
-                    D = numx.diag(1/Beta)
+                    D = numx.diag(old_div(1,Beta))
                     Q =  Q + mu * mult(Q, mult((mult(u.T, Gskew)-
                                                 numx.diag(Beta)), D))
                 else:
@@ -825,54 +828,54 @@ class FastICANode(ICANode):
                     wOld = w
                     if used_g == 10:
                         u = mult(X.T, w)
-                        w = mult(X, u*u*u)/tlen - 3.*w
+                        w = old_div(mult(X, u*u*u),tlen) - 3.*w
                     elif used_g == 11:
                         u = mult(X.T, w)
-                        EXGpow3 = mult(X, u*u*u)/tlen
+                        EXGpow3 = old_div(mult(X, u*u*u),tlen)
                         Beta = mult(w.T, EXGpow3)
                         w = w - mu * (EXGpow3 - Beta*w)/(3-Beta)
                     elif used_g == 12:
                         Xsub = self._get_rsamples(X)
                         u = mult(Xsub.T, w)
-                        w = mult(Xsub, u*u*u)/Xsub.shape[1] - 3.*w
+                        w = old_div(mult(Xsub, u*u*u),Xsub.shape[1]) - 3.*w
                     elif used_g == 13:
                         Xsub = self._get_rsamples(X)
                         u = mult(Xsub.T, w)
-                        EXGpow3 = mult(Xsub, u*u*u)/Xsub.shape[1]
+                        EXGpow3 = old_div(mult(Xsub, u*u*u),Xsub.shape[1])
                         Beta = mult(w.T, EXGpow3)
                         w = w - mu * (EXGpow3 - Beta*w)/(3-Beta)
                     elif used_g == 20:
                         u = mult(X.T, w)
                         tang = numx.tanh(fine_tanh * u)
                         temp = mult((1. - tang*tang).sum(axis=0), w)
-                        w = (mult(X, tang) - fine_tanh*temp)/tlen
+                        w = old_div((mult(X, tang) - fine_tanh*temp),tlen)
                     elif used_g == 21:
                         u = mult(X.T, w)
                         tang = numx.tanh(fine_tanh * u)
                         Beta = mult(u.T, tang)
                         temp = (1. - tang*tang).sum(axis=0)
-                        w = w-mu*((mult(X, tang)-Beta*w)/(fine_tanh*temp-Beta))
+                        w = w-mu*(old_div((mult(X, tang)-Beta*w),(fine_tanh*temp-Beta)))
                     elif used_g == 22:
                         Xsub = self._get_rsamples(X)
                         u = mult(Xsub.T, w)
                         tang = numx.tanh(fine_tanh * u)
                         temp = mult((1. - tang*tang).sum(axis=0), w)
-                        w = (mult(Xsub, tang) - fine_tanh*temp)/Xsub.shape[1]
+                        w = old_div((mult(Xsub, tang) - fine_tanh*temp),Xsub.shape[1])
                     elif used_g == 23:
                         Xsub = self._get_rsamples(X)
                         u = mult(Xsub.T, w)
                         tang = numx.tanh(fine_tanh * u)
                         Beta = mult(u.T, tang)
-                        w = w - mu * ((mult(Xsub, tang)-Beta*w) /
+                        w = w - mu * (old_div((mult(Xsub, tang)-Beta*w),
                                       (fine_tanh*(1. - tang*tang).sum(axis=0) -
-                                       Beta))
+                                       Beta)))
                     elif used_g == 30:
                         u = mult(X.T, w)
                         u2 = u*u
                         ex = numx.exp(-fine_gaus*u2*0.5)
                         gauss =  u*ex
                         dgauss = (1. - fine_gaus *u2)*ex
-                        w = (mult(X, gauss)-mult(dgauss.sum(axis=0), w))/tlen
+                        w = old_div((mult(X, gauss)-mult(dgauss.sum(axis=0), w)),tlen)
                     elif used_g == 31:
                         u = mult(X.T, w)
                         u2 = u*u
@@ -880,8 +883,8 @@ class FastICANode(ICANode):
                         gauss =  u*ex
                         dgauss = (1. - fine_gaus *u2)*ex
                         Beta = mult(u.T, gauss)
-                        w = w - mu*((mult(X, gauss)-Beta*w)/
-                                    (dgauss.sum(axis=0)-Beta))
+                        w = w - mu*(old_div((mult(X, gauss)-Beta*w),
+                                    (dgauss.sum(axis=0)-Beta)))
                     elif used_g == 32:
                         Xsub = self._get_rsamples(X)
                         u = mult(Xsub.T, w)
@@ -889,8 +892,8 @@ class FastICANode(ICANode):
                         ex = numx.exp(-fine_gaus*u2*0.5)
                         gauss =  u*ex
                         dgauss = (1. - fine_gaus *u2)*ex
-                        w = (mult(Xsub, gauss)-
-                             mult(dgauss.sum(axis=0), w))/Xsub.shape[1]
+                        w = old_div((mult(Xsub, gauss)-
+                             mult(dgauss.sum(axis=0), w)),Xsub.shape[1])
                     elif used_g == 33:
                         Xsub = self._get_rsamples(X)
                         u = mult(Xsub.T, w)
@@ -899,24 +902,24 @@ class FastICANode(ICANode):
                         gauss =  u*ex
                         dgauss = (1. - fine_gaus *u2)*ex
                         Beta = mult(u.T, gauss)
-                        w = w - mu*((mult(Xsub, gauss)-Beta*w)/
-                                    (dgauss.sum(axis=0)-Beta))
+                        w = w - mu*(old_div((mult(Xsub, gauss)-Beta*w),
+                                    (dgauss.sum(axis=0)-Beta)))
                     elif used_g == 40:
                         u = mult(X.T, w)
-                        w = mult(X, u*u)/tlen
+                        w = old_div(mult(X, u*u),tlen)
                     elif used_g == 41:
                         u = mult(X.T, w)
-                        EXGskew = mult(X, u*u) / tlen
+                        EXGskew = old_div(mult(X, u*u), tlen)
                         Beta = mult(w.T, EXGskew)
                         w = w - mu * (EXGskew - mult(Beta, w))/(-Beta)
                     elif used_g == 42:
                         Xsub = self._get_rsamples(X)
                         u = mult(Xsub.T, w)
-                        w = mult(Xsub, u*u)/Xsub.shape[1]
+                        w = old_div(mult(Xsub, u*u),Xsub.shape[1])
                     elif used_g == 43:
                         Xsub = self._get_rsamples(X)
                         u = mult(Xsub.T, w)
-                        EXGskew = mult(Xsub, u*u) / Xsub.shape[1]
+                        EXGskew = old_div(mult(Xsub, u*u), Xsub.shape[1])
                         Beta = mult(w.T, EXGskew)
                         w = w - mu * (EXGskew - Beta*w)/(-Beta)
                     else:

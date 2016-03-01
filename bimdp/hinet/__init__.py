@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 
 from .biflownode import BiFlowNode
 from .bilayer import CloneBiLayerException, CloneBiLayer

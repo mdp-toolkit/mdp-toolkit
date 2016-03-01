@@ -1,7 +1,6 @@
 """
 Package to inspect biflow training or execution by creating an HTML slideshow.
 """
-from __future__ import absolute_import
 
 from .tracer import (
     InspectionHTMLTracer, TraceHTMLConverter, TraceHTMLVisitor,

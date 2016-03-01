@@ -5,6 +5,7 @@ This module contains both the parallel base class and some parallel
 implementations of MDP nodes. Note that such ParallelNodes are only needed for
 training, parallel execution works with any Node that can be pickled.
 """
+from builtins import str
 
 # WARNING: There is a problem with unpickled arrays in NumPy < 1.1.x, see
 # http://projects.scipy.org/scipy/numpy/ticket/551

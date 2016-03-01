@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+from builtins import range
 from ._tools import *
 
 def testGaussianClassifier_train():
@@ -9,7 +9,7 @@ def testGaussianClassifier_train():
     means = []
 
     node = mdp.nodes.GaussianClassifier()
-    for i in xrange(nclasses):
+    for i in range(nclasses):
         cov = utils.symrand(uniform((dim,))*dim+1)
         mn = uniform((dim,))*10.
         x = normal(0., 1., size=(npoints, dim))
@@ -30,7 +30,7 @@ def testGaussianClassifier_train():
 
     node.stop_training()
 
-    for i in xrange(nclasses):
+    for i in range(nclasses):
         lbl_idx = node.labels.index(i)
         assert_array_almost_equal_diff(means[i],
                                   node.means[lbl_idx],

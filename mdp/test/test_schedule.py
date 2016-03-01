@@ -1,5 +1,4 @@
-from __future__ import with_statement
-from __future__ import absolute_import
+from builtins import range
 from ._tools import *
 
 import mdp.parallel as parallel
@@ -10,7 +9,7 @@ n = numx
 def test_scheduler():
     """Test scheduler with 6 tasks."""
     scheduler = parallel.Scheduler()
-    for i in xrange(6):
+    for i in range(6):
         scheduler.add_task(i, lambda x: x**2)
     results = scheduler.get_results()
     scheduler.shutdown()
@@ -21,7 +20,7 @@ def test_scheduler():
 def test_scheduler_manager():
     """Test context manager interface for scheduler."""
     with parallel.Scheduler() as scheduler:
-        for i in xrange(6):
+        for i in range(6):
             scheduler.add_task(i, lambda x: x**2)
         results = scheduler.get_results()
     assert n.all(results == n.array([0,1,4,9,16,25]))
@@ -37,7 +36,7 @@ def test_scheduler_manager_exception():
             raise TestSchedulerException()
     try:
         with TestScheduler() as scheduler:
-            for i in xrange(6):
+            for i in range(6):
                 scheduler.add_task(i, lambda x: x**2)
             scheduler.get_results()
     except TestSchedulerException:
@@ -65,12 +64,12 @@ def test_thread_scheduler_flow():
     scale_matrix = mdp.numx.diag(scales)
     train_iterables = [n.dot(mdp.numx_rand.random((5, 100, input_dim)),
                              scale_matrix)
-                       for _ in xrange(3)]
+                       for _ in range(3)]
     parallel_flow.train(train_iterables, scheduler=scheduler)
     x = mdp.numx.random.random((10, input_dim))
     # test that parallel execution works as well
     # note that we need more chungs then processes to test caching
-    parallel_flow.execute([x for _ in xrange(8)], scheduler=scheduler)
+    parallel_flow.execute([x for _ in range(8)], scheduler=scheduler)
     scheduler.shutdown()
     # compare to normal flow
     flow.train(train_iterables)

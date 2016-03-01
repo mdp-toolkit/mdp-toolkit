@@ -18,7 +18,6 @@ processes). So they are designed to deal with the more technical
 aspects of the parallelization, but do not have to know anything about
 flows or nodes.
 """
-from __future__ import absolute_import
 
 
 from .scheduling import (

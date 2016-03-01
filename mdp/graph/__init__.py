@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 from .graph import ( Graph, GraphEdge, GraphException, GraphNode,
                     GraphTopologicalException, is_sequence,
                     recursive_map, recursive_reduce)

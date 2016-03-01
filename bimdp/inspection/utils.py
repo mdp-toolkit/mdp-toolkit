@@ -1,9 +1,13 @@
 """
 Some helper functions and classes for inspection.
 """
+from future import standard_library
+standard_library.install_aliases()
+from builtins import next
+from builtins import object
 
 import os
-import cPickle as pickle
+import pickle as pickle
 
 
 def robust_pickle(path, filename, obj):
@@ -78,7 +82,7 @@ class PeekIterator(object):
         self.cache = [next_elem] + self.cache
         return next_elem
 
-    def next(self):
+    def __next__(self):
         if self.cache:
             return self.cache.pop()
         else:

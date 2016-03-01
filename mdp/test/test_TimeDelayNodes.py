@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+from builtins import range
 from ._tools import *
 from mdp.nodes import TimeDelayNode, TimeDelaySlidingWindowNode
 

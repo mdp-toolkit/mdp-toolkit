@@ -1,5 +1,9 @@
-from __future__ import with_statement
 from __future__ import print_function
+from __future__ import division
+from builtins import chr
+from builtins import str
+from builtins import range
+from past.utils import old_div
 
 from datetime import timedelta
 import sys
@@ -66,7 +70,7 @@ def _progress(percent, last, style, layout):
             elapsed = now - layout['t_start']
             # Estimated total time
             if layout['speed'] == 'mean':
-                e_t_a = elapsed/percent - elapsed
+                e_t_a = old_div(elapsed,percent) - elapsed
             else:
                 # instantaneous speed
                 progress = percent-_progress.last_percent
@@ -236,16 +240,16 @@ def progressinfo(sequence, length = None, style = 'bar', custom = None):
     for count, value in enumerate(sequence):
         # generate progress info
         if iterate_on_items:
-            last = _progress(value/length, last, style, layout)
+            last = _progress(old_div(value,length), last, style, layout)
         else:
-            last = _progress(count/length, last, style, layout)
+            last = _progress(old_div(count,length), last, style, layout)
         yield value
     else:
         # we need this for the 100% notice
         if iterate_on_items:
             last = _progress(1., last, style, layout)
         else:
-            last = _progress((count+1)/length, last, style, layout)
+            last = _progress(old_div((count+1),length), last, style, layout)
     # clean up terminal
     sys.stdout.write('\n\r')
 
@@ -265,7 +269,7 @@ if __name__ == '__main__':
                    'width': 50} ]
     for cust in cust_list:
         test = 0
-        for i in progressinfo(range(100, 600), style = 'bar', custom = cust):
+        for i in progressinfo(list(range(100, 600)), style = 'bar', custom = cust):
             test += i
             time.sleep(0.001)
         if test != 174750:
@@ -300,7 +304,7 @@ if __name__ == '__main__':
         for line in progressinfo(fl, 1000):
             lines.append(int(line))
             time.sleep(0.01)
-        if lines != range(1000):
+        if lines != list(range(1000)):
             raise Exception('Something wrong with progressinfo...' )
 
     # test iterate on items

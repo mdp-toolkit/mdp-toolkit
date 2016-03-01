@@ -1,4 +1,4 @@
-from __future__ import with_statement
+from builtins import object
 
 import mdp
 import sys

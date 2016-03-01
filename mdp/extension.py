@@ -21,8 +21,11 @@ This keeps the code readable and is compatible with automatic code checkers
 (like the background pylint checks in the Eclipse IDE with PyDev).
 """
 from __future__ import print_function
+from builtins import str
+from builtins import object
 
 from mdp import MDPException, NodeMetaclass
+from future.utils import with_metaclass
 
 # TODO: Register the node instances as well?
 #    This would allow instance initialization when an extension is activated.
@@ -214,7 +217,7 @@ class ExtensionNodeMetaclass(NodeMetaclass):
             # make sure we only inject methods in classes which have
             # ExtensionNode as superclass
             if extension_subtree and ExtensionNode in base.__mro__:
-                for attr_name, attr_value in base.__dict__.items():
+                for attr_name, attr_value in list(base.__dict__.items()):
                     if attr_name not in _NON_EXTENSION_ATTRIBUTES:
                         # check if this attribute has not already been
                         # extended in one of the base classes
@@ -233,7 +236,7 @@ class ExtensionNodeMetaclass(NodeMetaclass):
         return ext_node_cls
 
 
-class ExtensionNode(object):
+class ExtensionNode(with_metaclass(ExtensionNodeMetaclass, object)):
     """Base class for extensions nodes.
 
     A new extension node class should override the _extension_name.
@@ -265,7 +268,6 @@ class ExtensionNode(object):
     simply prefix the method name with '_non_extension_' (this is the value
     of the `ORIGINAL_ATTR_PREFIX` constant in this module).
     """
-    __metaclass__ = ExtensionNodeMetaclass
     # override this name in a concrete extension node base class
     extension_name = None
 
@@ -287,8 +289,8 @@ def get_active_extensions():
 
 def activate_extension(extension_name, verbose=False):
     """Activate the extension by injecting the extension methods."""
-    if extension_name not in _extensions.keys():
-        err = "Unknown extension name: %s" + str(extension_name)
+    if extension_name not in list(_extensions.keys()):
+        err = "Unknown extension name: %s"%str(extension_name)
         raise ExtensionException(err)
     if extension_name in _active_extensions:
         if verbose:
@@ -298,10 +300,10 @@ def activate_extension(extension_name, verbose=False):
     try:
         if _SETUP_FUNC_ATTR in _extensions[extension_name]:
             _extensions[extension_name][_SETUP_FUNC_ATTR]()
-        for node_cls, attributes in _extensions[extension_name].items():
+        for node_cls, attributes in list(_extensions[extension_name].items()):
             if node_cls == _SETUP_FUNC_ATTR or node_cls == _TEARDOWN_FUNC_ATTR:
                 continue
-            for attr_name, attr_value in attributes.items():
+            for attr_name, attr_value in list(attributes.items()):
                 if verbose:
                     print ("extension %s: adding %s to %s" %
                            (extension_name, attr_name, node_cls.__name__))
@@ -336,15 +338,15 @@ def activate_extension(extension_name, verbose=False):
 
 def deactivate_extension(extension_name, verbose=False):
     """Deactivate the extension by removing the injected methods."""
-    if extension_name not in _extensions.keys():
+    if extension_name not in list(_extensions.keys()):
         err = "Unknown extension name: " + str(extension_name)
         raise ExtensionException(err)
     if extension_name not in _active_extensions:
         return
-    for node_cls, attributes in _extensions[extension_name].items():
+    for node_cls, attributes in list(_extensions[extension_name].items()):
         if node_cls == _SETUP_FUNC_ATTR or node_cls == _TEARDOWN_FUNC_ATTR:
             continue
-        for attr_name in attributes.keys():
+        for attr_name in list(attributes.keys()):
             original_name = ORIGINAL_ATTR_PREFIX + attr_name
             if verbose:
                 print ("extension %s: removing %s from %s" %
@@ -361,8 +363,8 @@ def deactivate_extension(extension_name, verbose=False):
                 # method, otherwise we would inject unwanted methods.
                 # Note: '==' tests identity for .__func__ and .__self__,
                 #    but .im_class does not matter in Python 2.6.
-                if all(map(lambda x:getattr(x, attr_name, None) !=
-                           original_attr, node_cls.__mro__[1:])):
+                if all([getattr(x, attr_name, None) !=
+                           original_attr for x in node_cls.__mro__[1:]]):
                     setattr(node_cls, attr_name, original_attr)
                 delattr(node_cls, original_name)
             else:
@@ -464,7 +466,7 @@ class extension(object):
     """
 
     def __init__(self, ext_names):
-        if isinstance(ext_names, str):
+        if isinstance(ext_names, __builtins__['str']):
             ext_names = [ext_names]
         self.ext_names = ext_names
         self.deactivate_exts = []

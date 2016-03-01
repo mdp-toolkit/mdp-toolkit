@@ -2,13 +2,14 @@
 Module with simple functions for the complete inspection procedure.
 """
 
-from __future__ import with_statement
 from __future__ import print_function
-from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
 
 import os
 import webbrowser
-import cPickle as pickle
+import pickle as pickle
 import tempfile
 import traceback
 import warnings

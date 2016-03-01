@@ -1,5 +1,7 @@
 from __future__ import print_function
-from __future__ import absolute_import
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 __docformat__ = "restructuredtext en"
 
 import mdp
@@ -110,16 +112,16 @@ class JADENode(ICANode):
         # will index the columns of CM where to store the cum. mats.
         Range = arange(m)
 
-        for im in xrange(m):
+        for im in range(m):
             Xim = X[:, im]
             Xijm = Xim*Xim
             # Note to myself: the -R on next line can be removed: it does not
             # affect the joint diagonalization criterion
-            Qij = ( mult(Xijm*X.T, X) / float(T)
+            Qij = ( old_div(mult(Xijm*X.T, X), float(T))
                     - R - 2 * numx.outer(R[:,im], R[:,im]) )
             CM[:, Range] = Qij
             Range += m
-            for jm in xrange(im):
+            for jm in range(im):
                 Xijm = Xim*X[:, jm]
                 Qij = ( sqrt(2) * mult(Xijm*X.T, X) / T
                         - numx.outer(R[:,im], R[:,jm]) - numx.outer(R[:,jm],
@@ -138,14 +140,14 @@ class JADENode(ICANode):
         Diag = numx.zeros(m, dtype=dtype)
         On = 0.0
         Range = arange(m)
-        for im in xrange(nbcm):
+        for im in range(nbcm):
             Diag = numx.diag(CM[:, Range])
             On = On + (Diag*Diag).sum(axis=0)
             Range += m
 
         Off = (CM*CM).sum(axis=0) - On
         # A statistically scaled threshold on `small" angles
-        seuil = (self.limit*self.limit) / sqrt(T)
+        seuil = old_div((self.limit*self.limit), sqrt(T))
         # sweep number
         encore = True
         sweep = 0
@@ -176,8 +178,8 @@ class JADENode(ICANode):
             sweep += 1
             upds  = 0
 
-            for p in xrange(m-1):
-                for q in xrange(p+1, m):
+            for p in range(m-1):
+                for q in range(p+1, m):
 
                     Ip = arange(p, m*nbcm, m)
                     Iq = arange(q, m*nbcm, m)
@@ -189,7 +191,7 @@ class JADENode(ICANode):
                     ton = gg[0, 0] - gg[1, 1]
                     toff = gg[0, 1] + gg[1, 0]
                     theta = 0.5 * arctan2(toff, ton + sqrt(ton*ton+toff*toff))
-                    Gain = (sqrt(ton * ton + toff * toff) - ton) / 4.0
+                    Gain = old_div((sqrt(ton * ton + toff * toff) - ton), 4.0)
 
                     # Givens update
                     if abs(theta) > seuil:

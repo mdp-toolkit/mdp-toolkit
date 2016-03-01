@@ -1,4 +1,6 @@
-from __future__ import absolute_import
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 import mdp
 from ._tools import *
 
@@ -20,7 +22,7 @@ def test_RBM_sample_h():
     # ### test 1
     v = numx.array([[0,0],[1,0],[0,1],[1,1.]])
     h = []
-    for n in xrange(1000):
+    for n in range(1000):
         prob, sample = bm.sample_h(v)
         h.append(sample)
 
@@ -33,14 +35,14 @@ def test_RBM_sample_h():
 
     # check sampled units
     h = numx.array(h)
-    for n in xrange(4):
+    for n in range(4):
         distr = h[:,n,:].mean(axis=0)
         assert_array_almost_equal(distr, expected_probs[n,:], 1)
 
     # ### test 2, with bias
     bm.bh -= 1e2
     h = []
-    for n in xrange(100):
+    for n in range(100):
         prob, sample = bm.sample_h(v)
         h.append(sample)
 
@@ -53,7 +55,7 @@ def test_RBM_sample_h():
 
     # check sampled units
     h = numx.array(h)
-    for n in xrange(4):
+    for n in range(4):
         distr = h[:,n,:].mean(axis=0)
         assert_array_almost_equal(distr, expected_probs[n,:], 1)
 
@@ -75,7 +77,7 @@ def test_RBM_sample_v():
     # test 1
     h = numx.array([[0,0],[1,0],[0,1],[1,1.]])
     v = []
-    for n in xrange(1000):
+    for n in range(1000):
         prob, sample = bm.sample_v(h)
         v.append(sample)
 
@@ -88,14 +90,14 @@ def test_RBM_sample_v():
 
     # check sampled units
     v = numx.array(v)
-    for n in xrange(4):
+    for n in range(4):
         distr = v[:,n,:].mean(axis=0)
         assert_array_almost_equal(distr, expected_probs[n,:], 1)
 
     # test 2, with bias
     bm.bv -= 1e2
     v = []
-    for n in xrange(1000):
+    for n in range(1000):
         prob, sample = bm.sample_v(h)
         v.append(sample)
 
@@ -108,7 +110,7 @@ def test_RBM_sample_v():
 
     # check sampled units
     v = numx.array(v)
-    for n in xrange(4):
+    for n in range(4):
         distr = v[:,n,:].mean(axis=0)
         assert_array_almost_equal(distr, expected_probs[n,:], 1)
 
@@ -132,13 +134,13 @@ def test_RBM_stability():
     # Gibbs sample to reach the equilibrium distribution
     N = int(1e4)
     v = numx_rand.randint(0,2,(N,I)).astype('d')
-    for k in xrange(100):
+    for k in range(100):
         if k%5==0: spinner()
         p, h = bm._sample_h(v)
         p, v = bm._sample_v(h)
 
     # see that w remains stable after learning
-    for k in xrange(100):
+    for k in range(100):
         if k%5==0: spinner()
         bm.train(v)
     bm.stop_training()
@@ -158,12 +160,12 @@ def test_RBM_learning():
     # never appear together
     N = int(1e4)
     v = numx.zeros((N,I))
-    for n in xrange(int(N)):
+    for n in range(int(N)):
         r = numx_rand.random()
         if r>0.666: v[n,:] = [0,1,0,1]
         elif r>0.333: v[n,:] = [1,0,1,0]
 
-    for k in xrange(1500):
+    for k in range(1500):
         if k%5==0: spinner()
 
         if k>5:
@@ -171,10 +173,10 @@ def test_RBM_learning():
         else:
             mom = 0.5
         bm.train(v, epsilon=0.3, momentum=mom)
-        if bm._train_err/N<0.1: break
+        if old_div(bm._train_err,N)<0.1: break
         #print '-------', bm._train_err
 
-    assert bm._train_err / N < 0.1
+    assert old_div(bm._train_err, N) < 0.1
 
 def _generate_data(bm, I, N):
     data = []
@@ -208,7 +210,7 @@ def test_RBM_bv_learning():
     train_bm.w = numx.eye(I, dtype='d')
 
     N = data.shape[0]
-    for k in xrange(5000):
+    for k in range(5000):
         if k%5==0: spinner()
 
         train_bm.train(data, epsilon=0.6, momentum=0.7)
@@ -245,7 +247,7 @@ def _test_RBM_bh_learning():
     train_bm.bv *= 0.0
 
     N = data.shape[0]
-    for k in xrange(5000):
+    for k in range(5000):
         if k%5==0: spinner()
 
         train_bm.train(data, epsilon=3.0, momentum=0.8, update_with_ph=False)
@@ -267,19 +269,19 @@ def test_RBMWithLabelsNode():
     N = 2500
     v = numx.zeros((2*N,I))
     l = numx.zeros((2*N,L))
-    for n in xrange(N):
+    for n in range(N):
         r = numx_rand.random()
         if r>0.1:
             v[n,:] = [1,0,1,0]
             l[n,:] = [1,0]
-    for n in xrange(N):
+    for n in range(N):
         r = numx_rand.random()
         if r>0.1:
             v[n,:] = [0,1,0,1]
             l[n,:] = [1,0]
 
     x = numx.concatenate((v, l), axis=1)
-    for k in xrange(2500):
+    for k in range(2500):
         if k%5==0: spinner()
 
         if k>200:
@@ -295,11 +297,11 @@ def test_RBMWithLabelsNode():
 
         v_train_err = float(((v-sv)**2.).sum())
         #print '-------', k, v_train_err/(2*N)
-        if v_train_err / (2*N) < 0.1:
+        if old_div(v_train_err, (2*N)) < 0.1:
             break
 
     # visible units are reconstructed
-    assert v_train_err / (2*N) < 0.1
+    assert old_div(v_train_err, (2*N)) < 0.1
 
     # units with 0 input have 50/50 labels
     idxzeros = v.sum(axis=1)==0

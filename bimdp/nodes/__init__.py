@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 
 from .autogen import binodes_code, biclassifiers_code
 exec(binodes_code())

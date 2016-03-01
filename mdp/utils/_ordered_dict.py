@@ -1,3 +1,4 @@
+from builtins import next
 ## {{{ http://code.activestate.com/recipes/576693/ (r6)
 from UserDict import DictMixin as _DictMixin
 
@@ -80,7 +81,7 @@ class OrderedDict(dict, _DictMixin):
     def __repr__(self):
         if not self:
             return '%s()' % (self.__class__.__name__,)
-        return '%s(%r)' % (self.__class__.__name__, self.items())
+        return '%s(%r)' % (self.__class__.__name__, list(self.items()))
 
     def copy(self):
         return self.__class__(self)
@@ -94,7 +95,7 @@ class OrderedDict(dict, _DictMixin):
 
     def __eq__(self, other):
         if isinstance(other, OrderedDict):
-            return len(self)==len(other) and self.items() == other.items()
+            return len(self)==len(other) and list(self.items()) == list(other.items())
         return dict.__eq__(self, other)
 
     def __ne__(self, other):

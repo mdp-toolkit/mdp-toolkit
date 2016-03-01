@@ -12,8 +12,7 @@ http://javascript.internet.com/miscellaneous/image-slideshow.html
 (which in turn seems to be based on something from http://www.ricocheting.com)
 """
 
-from __future__ import with_statement
-from __future__ import absolute_import
+from builtins import str
 
 import random
 import tempfile

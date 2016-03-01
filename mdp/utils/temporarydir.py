@@ -1,3 +1,5 @@
+from builtins import str
+from builtins import object
 # This is a backport of tempfile.TemporaryDirectory from Python 3.2
 
 import os as _os

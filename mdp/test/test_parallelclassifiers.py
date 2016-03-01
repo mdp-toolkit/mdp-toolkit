@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+from builtins import range
 import mdp.parallel as parallel
 from ._tools import *
 

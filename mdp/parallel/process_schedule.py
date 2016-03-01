@@ -2,6 +2,10 @@
 Process based scheduler for distribution across multiple CPU cores.
 """
 from __future__ import print_function
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import range
 
 # TODO: use a queue instead of sleep?
 #    http://docs.python.org/library/queue.html
@@ -21,7 +25,7 @@ from __future__ import print_function
 
 import sys
 import os
-import cPickle as pickle
+import pickle as pickle
 import threading
 import subprocess
 import time

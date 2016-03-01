@@ -2,6 +2,8 @@
 This module contains the basic classes for task processing via a scheduler.
 """
 from __future__ import print_function
+from builtins import zip
+from builtins import object
 
 import threading
 import time

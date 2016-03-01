@@ -1,12 +1,16 @@
-from __future__ import with_statement
-from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import zip
+from builtins import str
+from builtins import object
 import sys
 import os
 import tempfile
 import inspect
 import mdp
 from .repo_revision import get_git_revision
-import cStringIO as StringIO
+import io as StringIO
+from future.utils import with_metaclass
 
 
 __docformat__ = "restructuredtext en"
@@ -20,7 +24,7 @@ class MetaConfig(type):
     def __repr__(self):
         return self.info()
 
-class config(object):
+class config(with_metaclass(MetaConfig, object)):
     """Provide information about optional dependencies.
 
     This class should not be instantiated, it serves as a namespace
@@ -71,8 +75,6 @@ class config(object):
         otherwise a work around for debian bug #620551 is activated.
     """
 
-    __metaclass__ = MetaConfig
-
     _HAS_NUMBER = 0
 
     class _ExternalDep(object):
@@ -87,7 +89,7 @@ class config(object):
             config._HAS_NUMBER += 1
             setattr(config, 'has_' + name, self)
 
-        def __nonzero__(self):
+        def __bool__(self):
             return self.failmsg is None
 
         def __repr__(self):
@@ -210,7 +212,7 @@ def get_numx():
     if numx_description is None:
         msg = ([ "Could not import any of the numeric backends.",
                  "Import errors:" ] +
-               [ lab+': '+str(exc) for lab, exc in numx_exception.items() ]
+               [ lab+': '+str(exc) for lab, exc in list(numx_exception.items()) ]
                + ["sys.path: " + str(sys.path)])
         raise ImportError('\n'.join(msg))
 

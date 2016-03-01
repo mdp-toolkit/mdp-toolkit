@@ -15,12 +15,14 @@ is done in the seperate slideshow module.
 
 # TODO: wrap inner methods (e.g. _train) to document effective arguments?
 
-from __future__ import with_statement
 from __future__ import print_function
-from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import object
 
 import os
-import cPickle as pickle
+import pickle as pickle
 import fnmatch
 import copy
 import traceback
@@ -578,10 +580,10 @@ class TraceHTMLConverter(object):
         """Return a nice HTML representation of the given numpy array."""
         # TODO: use an stringio buffer for efficency
         # put array keys last, because arrays are typically rather large
-        keys = [key for key, value in dic.items()
+        keys = [key for key, value in list(dic.items())
                 if not isinstance(value, n.ndarray)]
         keys.sort()
-        ar_keys = [key for key, value in dic.items()
+        ar_keys = [key for key, value in list(dic.items())
                    if isinstance(value, n.ndarray)]
         ar_keys.sort()
         keys += ar_keys

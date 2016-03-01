@@ -70,6 +70,8 @@ keywords are treated in a special way:
       and if no target is provided it will be set to -1.
 
 """
+from builtins import next
+from builtins import str
 
 import inspect
 
@@ -206,7 +208,7 @@ class BiNode(mdp.Node):
                     self._check_train_args(x, **arg_dict)
                 except TypeError:
                     err = ("The given additional arguments %s " %
-                                str(arg_dict.keys()) +
+                                str(list(arg_dict.keys())) +
                            "are not compatible with training %s." % str(self))
                     raise BiNodeException(err)
                 self._train_phase_started = True

@@ -4,6 +4,7 @@ This extension is based on the **joblib** library by Gael Varoquaux,
 available at http://packages.python.org/joblib/. At the moment, the
 extension is based on joblib v. 0.4.6.
 """
+from builtins import object
 __docformat__ = "restructuredtext en"
 
 import joblib

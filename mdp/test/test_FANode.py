@@ -1,4 +1,5 @@
-from __future__ import absolute_import
+from __future__ import division
+from past.utils import old_div
 from ._tools import *
 
 def test_FANode():
@@ -29,7 +30,7 @@ def test_FANode():
     # A and its estimation span the same subspace
     AA = numx.concatenate((A,fa.A.T),axis=0)
     u,s,vh = utils.svd(AA)
-    assert sum(s/max(s)>1e-2)==k, \
+    assert sum(old_div(s,max(s))>1e-2)==k, \
            'A and its estimation do not span the same subspace'
 
     y = fa.execute(x)

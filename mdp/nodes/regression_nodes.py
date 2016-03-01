@@ -1,3 +1,4 @@
+from builtins import str
 __docformat__ = "restructuredtext en"
 
 from mdp import numx, numx_linalg, utils, Node, NodeException, TrainingException

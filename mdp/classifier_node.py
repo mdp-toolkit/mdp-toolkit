@@ -69,9 +69,9 @@ class ClassifierNode(PreserveDimNode):
         prob = self.prob(x)
         for p in prob:
             if threshold is None:
-                ranking = p.items()
+                ranking = list(p.items())
             else:
-                ranking = ((k, v) for k, v in p.items() if v > threshold)
+                ranking = ((k, v) for k, v in list(p.items()) if v > threshold)
             result = [k for k, v in
                       sorted(ranking, key=operator.itemgetter(1), reverse=True)]
             all_ranking.append(result)

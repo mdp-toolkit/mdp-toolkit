@@ -1,3 +1,5 @@
+from builtins import range
+from builtins import object
 import mdp
 from mdp import numx as n
 from bimdp.nodes import SFABiNode, SFA2BiNode

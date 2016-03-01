@@ -1,4 +1,9 @@
 """Tools for the test- and benchmark functions."""
+from __future__ import division
+from builtins import next
+from builtins import str
+from builtins import object
+from past.utils import old_div
 
 import sys
 import time
@@ -31,9 +36,9 @@ def assert_array_almost_equal_diff(x,y,digits,err_msg=''):
                numx.alltrue(numx.equal(numx.shape(x),numx.shape(y)))),\
                msg + ' (shapes %s, %s mismatch):\n\t' \
                % (numx.shape(x),numx.shape(y)) + err_msg
-    maxdiff = max(numx.ravel(abs(x-y)))/\
-              max(max(abs(numx.ravel(x))),max(abs(numx.ravel(y))))
-    if numx.iscomplexobj(x) or numx.iscomplexobj(y): maxdiff = maxdiff/2
+    maxdiff = old_div(max(numx.ravel(abs(x-y))),\
+              max(max(abs(numx.ravel(x))),max(abs(numx.ravel(y)))))
+    if numx.iscomplexobj(x) or numx.iscomplexobj(y): maxdiff = old_div(maxdiff,2)
     cond =  maxdiff< 10**(-digits)
     msg = msg+'\n\t Relative maximum difference: %e'%(maxdiff)+'\n\t'+\
           'Array1: '+str(x)+'\n\t'+\
@@ -77,7 +82,7 @@ def verify_ICANode(icanode, rand_func = uniform, vars=3, N=8000, prec=3):
     mat,mix,inp = get_random_mix(rand_func=rand_func,mat_dim=dim)
     icanode.train(inp)
     act_mat = icanode.execute(inp)
-    cov = mdp.utils.cov2((mat-mean(mat,axis=0))/std(mat,axis=0), act_mat)
+    cov = mdp.utils.cov2(old_div((mat-mean(mat,axis=0)),std(mat,axis=0)), act_mat)
     maxima = numx.amax(abs(cov), axis=0)
     assert_array_almost_equal(maxima,numx.ones(vars), prec)
 

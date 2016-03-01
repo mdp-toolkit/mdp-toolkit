@@ -1,4 +1,6 @@
-from __future__ import absolute_import
+from __future__ import division
+from builtins import object
+from past.utils import old_div
 import mdp
 from .routines import refcast
 numx = mdp.numx
@@ -108,11 +110,11 @@ class QuadraticForm(object):
         # left bound for lambda
         ll = mu[-1] # eigenvalue's maximum
         # right bound for lambda
-        lr = mdp.utils.norm2(f)/norm + ll
+        lr = old_div(mdp.utils.norm2(f),norm) + ll
         # search by bisection until norm(x)**2 = norm**2
         norm_2 = norm**2
         norm_x_2 = 0
-        while abs(norm_x_2-norm_2) > tol and (lr-ll)/lr > epsilon:
+        while abs(norm_x_2-norm_2) > tol and old_div((lr-ll),lr) > epsilon:
             # bisection of the lambda-interval
             lambd = 0.5*(lr-ll)+ll
             # eigenvalues of (lambda*Id - H)^-1
@@ -149,8 +151,8 @@ class QuadraticForm(object):
         Ht = mdp.utils.mult(B.T, mdp.utils.mult(self.H, B))
         # compute the invariances
         nu, w = self._eig_sort(Ht)
-        nu -= ((mdp.utils.mult(self.H, xstar)*xstar).sum()
-               +(self.f*xstar).sum())/(r*r)
+        nu -= old_div(((mdp.utils.mult(self.H, xstar)*xstar).sum()
+               +(self.f*xstar).sum()),(r*r))
         idx = abs(nu).argsort()
         nu = nu[idx]
         w = w[:, idx]

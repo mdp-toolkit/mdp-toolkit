@@ -168,7 +168,7 @@ def apply_to_scikits_algorithms(current_module, action,
         return
     processed_modules.append(current_module)
 
-    for member_name, member in current_module.__dict__.items():
+    for member_name, member in list(current_module.__dict__.items()):
         if not member_name.startswith('_'):
 
             # classes
@@ -265,7 +265,7 @@ def wrap_scikits_classifier(scikits_class):
     if hasattr(scikits_class, 'predict_proba'):
         methods_dict['prob'] = 'predict_proba'
 
-    for mdp_name, scikits_name in methods_dict.items():
+    for mdp_name, scikits_name in list(methods_dict.items()):
         mdp_method = getattr(ScikitsNode, mdp_name)
         scikits_method = getattr(scikits_class, scikits_name)
         if hasattr(scikits_method, 'im_func'):
@@ -340,7 +340,7 @@ def wrap_scikits_transformer(scikits_class):
                     'stop_training': 'fit',
                     'execute': 'transform'}
 
-    for mdp_name, scikits_name in methods_dict.items():
+    for mdp_name, scikits_name in list(methods_dict.items()):
         mdp_method = getattr(ScikitsNode, mdp_name)
         scikits_method = getattr(scikits_class, scikits_name, None)
         if hasattr(scikits_method, 'im_func'):
@@ -414,7 +414,7 @@ def wrap_scikits_predictor(scikits_class):
                     'stop_training': 'fit',
                     'execute': 'predict'}
 
-    for mdp_name, scikits_name in methods_dict.items():
+    for mdp_name, scikits_name in list(methods_dict.items()):
         mdp_method = getattr(ScikitsNode, mdp_name)
         scikits_method = getattr(scikits_class, scikits_name)
         if hasattr(scikits_method, 'im_func'):

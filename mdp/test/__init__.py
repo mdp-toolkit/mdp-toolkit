@@ -1,3 +1,4 @@
+from builtins import str
 import os
 SCRIPT="run_tests.py"
 from mdp.configuration import _version_too_old

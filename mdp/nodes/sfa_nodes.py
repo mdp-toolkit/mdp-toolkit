@@ -1,3 +1,5 @@
+from builtins import str
+from builtins import range
 __docformat__ = "restructuredtext en"
 
 import mdp

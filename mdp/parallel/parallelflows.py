@@ -5,7 +5,10 @@ Corresponding classes for task callables and ResultContainer are defined here
 as well.
 """
 from __future__ import print_function
-from __future__ import absolute_import
+from builtins import zip
+from builtins import str
+from builtins import next
+from builtins import range
 
 import mdp
 from mdp import numx as n
@@ -204,7 +207,7 @@ class ExecuteResultContainer(OrderedResultContainer):
         excecute_results = super(ExecuteResultContainer, self).get_results()
         flownode_results = ([self._flownode,]
                               + ([None] * (len(excecute_results)-1)))
-        return zip(excecute_results, flownode_results)
+        return list(zip(excecute_results, flownode_results))
 
 ### ParallelFlow Class ###
 

@@ -1,4 +1,5 @@
-from __future__ import absolute_import
+from __future__ import division
+from past.utils import old_div
 from ._tools import *
 
 requires_scikits = skip_on_condition(
@@ -32,6 +33,6 @@ def test_scikits_PCANode_training():
     # arrays should be equal up to sign
     if (y[:,0]*x[:,3]).mean() < 0.: y[:,0] *= -1.
     if (y[:,1]*x[:,1]).mean() < 0.: y[:,1] *= -1.
-    assert_array_almost_equal(y[:,0]/100., x[:,3]/100., 1)
-    assert_array_almost_equal(y[:,1]/10., x[:,1]/10., 1)
+    assert_array_almost_equal(old_div(y[:,0],100.), old_div(x[:,3],100.), 1)
+    assert_array_almost_equal(old_div(y[:,1],10.), old_div(x[:,1],10.), 1)
 

@@ -5,7 +5,10 @@ The central class is a BiFlow, which implements all the flow handling options
 offered by the BiNode class (see binode.py for a description).
 """
 from __future__ import print_function
-from __future__ import absolute_import
+from builtins import zip
+from builtins import str
+from builtins import range
+from builtins import object
 
 # NOTE: make sure that isinstance(str, target) is never used, so that in
 #    principle any object could be used.
@@ -171,7 +174,7 @@ class BiFlow(mdp.Flow):
         This method should be only called internally in BiFlow.
         """
         empty_iterator = True
-        for (x, msg) in itertools.izip(iterable, msg_iterable):
+        for (x, msg) in zip(iterable, msg_iterable):
             empty_iterator = False
             ## execute the flow until the nodes return value is right
             i_node = 0
@@ -305,7 +308,7 @@ class BiFlow(mdp.Flow):
         y_results = None
         msg_results = MessageResultContainer()
         empty_iterator = True
-        for (x, msg, target) in itertools.izip(iterable, msg_iterable,
+        for (x, msg, target) in zip(iterable, msg_iterable,
                                                target_iterable):
             empty_iterator = False
             if not target:

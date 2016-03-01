@@ -1,6 +1,7 @@
 """
 BiNet version of the htmlvisitor hinet module to convert a flow into HTML.
 """
+from builtins import str
 
 import tempfile
 import os

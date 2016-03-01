@@ -2,11 +2,12 @@
 Thread based scheduler for distribution across multiple CPU cores.
 """
 from __future__ import print_function
-from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
 
 import threading
 import time
-import cPickle as pickle
+import pickle as pickle
 
 from .scheduling import Scheduler, cpu_count
 

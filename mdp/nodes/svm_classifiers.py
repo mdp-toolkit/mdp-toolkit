@@ -2,6 +2,9 @@
 
 TODO: Implement some scaling. Either by special Scaling Node or internally.
 """
+from builtins import map
+from builtins import zip
+from builtins import object
 
 import mdp
 from mdp import ClassifierCumulator
@@ -31,11 +34,11 @@ class _LabelNormalizer(object):
             if len(self._labels) > 2:
                 msg = "In dual mode only two labels can be given"
                 raise mdp.NodeException(msg)
-            t_label_norm = zip(self._labels, [1, -1])
+            t_label_norm = list(zip(self._labels, [1, -1]))
             self._set_label_dicts(t_label_norm)
         elif mode == "multi":
             # enumerate from zero to len
-            t_label_norm = zip(self._labels, count())
+            t_label_norm = list(zip(self._labels, count()))
             self._set_label_dicts(t_label_norm)
         else:
             msg = "Remapping mode not known"
@@ -51,10 +54,10 @@ class _LabelNormalizer(object):
             raise mdp.NodeException(msg)
 
     def normalize(self, labels):
-        return map(self._mapping.get, labels)
+        return list(map(self._mapping.get, labels))
 
     def revert(self, norm_labels):
-        return map(self._inverse.get, norm_labels)
+        return list(map(self._inverse.get, norm_labels))
 
     def _id(self, labels):
         return labels

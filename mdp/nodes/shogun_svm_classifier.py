@@ -1,4 +1,6 @@
-from __future__ import absolute_import
+from builtins import zip
+from past.builtins import basestring
+from builtins import object
 __docformat__ = "restructuredtext en"
 
 from shogun import (Kernel as sgKernel,
@@ -265,7 +267,7 @@ class ShogunSVMClassifier(_SVMClassifier):
         self.classifier_options = self.default_parameters
         self.classifier_options.update(classifier_options)
 
-        for p in self.classifier_options.keys():
+        for p in list(self.classifier_options.keys()):
             try:
                 self.set_classifier_param(p, self.classifier_options[p])
             except Exception:
@@ -329,7 +331,7 @@ class ShogunSVMClassifier(_SVMClassifier):
             and not isinstance(kernel_options, list):
             default_opts = _OrderedDict(ShogunSVMClassifier.kernel_parameters[kernel_name])
             default_opts.update(kernel_options)
-            options = default_opts.values()
+            options = list(default_opts.values())
 
         kernel_meth = getattr(sgKernel, kernel_name)
         try:
@@ -365,7 +367,7 @@ class ShogunSVMClassifier(_SVMClassifier):
                 data[k].append(v)
             return data
         else:
-            return zip(self.labels, self.data)
+            return list(zip(self.labels, self.data))
 
     def _label(self, x):
         """Classify the input data 'x'

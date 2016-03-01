@@ -1,12 +1,16 @@
-from __future__ import with_statement
 from __future__ import print_function
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import range
+from builtins import object
 import mdp
 import sys as _sys
 import os as _os
 import inspect as _inspect
 import warnings as _warnings
 import traceback as _traceback
-import cPickle as _cPickle
+import pickle as _cPickle
 import tempfile as _tempfile
 import copy as _copy
 

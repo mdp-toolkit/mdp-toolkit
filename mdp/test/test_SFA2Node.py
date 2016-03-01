@@ -1,4 +1,6 @@
-from __future__ import absolute_import
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 from ._tools import *
 
 def test_basic_training():
@@ -7,19 +9,18 @@ def test_basic_training():
     t =  numx.linspace(0,1,num=dim)
     mat = numx.array([numx.sin(freqs[0]*t),numx.sin(freqs[1]*t)]).T
     mat += normal(0., 1e-10, size=(dim, 2))
-    mat = (mat - mean(mat[:-1,:],axis=0))\
-          /std(mat[:-1,:],axis=0)
+    mat = old_div((mat - mean(mat[:-1,:],axis=0)),std(mat[:-1,:],axis=0))
     des_mat = mat.copy()
     mat = mult(mat,uniform((2,2))) + uniform(2)
     sfa = mdp.nodes.SFA2Node()
     sfa.train(mat)
     out = sfa.execute(mat)
     assert out.shape[1]==5, "Wrong output_dim"
-    correlation = mult(des_mat[:-1,:].T,
-                       numx.take(out[:-1,:], (0,2), axis=1))/(dim-2)
+    correlation = old_div(mult(des_mat[:-1,:].T,
+                       numx.take(out[:-1,:], (0,2), axis=1)),(dim-2))
     assert_array_almost_equal(abs(correlation),
                               numx.eye(2), 3)
-    for nr in xrange(sfa.output_dim):
+    for nr in range(sfa.output_dim):
         qform = sfa.get_quadratic_form(nr)
         outq = qform.apply(mat)
         assert_array_almost_equal(outq, out[:,nr], decimal-1)
@@ -28,7 +29,7 @@ def test_basic_training():
     sfa.train(mat)
     out = sfa.execute(mat)
     assert out.shape[1]==2, 'Wrong output_dim'
-    correlation = mult(des_mat[:-1,:1].T,out[:-1,:1])/(dim-2)
+    correlation = old_div(mult(des_mat[:-1,:1].T,out[:-1,:1]),(dim-2))
     assert_array_almost_equal(abs(correlation),
                               numx.eye(1), 3)
 
@@ -46,8 +47,7 @@ def test_input_dim_bug():
     t =  numx.linspace(0,1,num=dim)
     mat = numx.array([numx.sin(freqs[0]*t),numx.sin(freqs[1]*t)]).T
     mat += normal(0., 1e-10, size=(dim, 2))
-    mat = (mat - mean(mat[:-1,:],axis=0))\
-          /std(mat[:-1,:],axis=0)
+    mat = old_div((mat - mean(mat[:-1,:],axis=0)),std(mat[:-1,:],axis=0))
     mat = mult(mat,uniform((2,2))) + uniform(2)
     sfa = mdp.nodes.SFA2Node(input_dim=2)
     sfa.train(mat)
@@ -59,8 +59,7 @@ def test_output_dim_bug():
     t =  numx.linspace(0,1,num=dim)
     mat = numx.array([numx.sin(freqs[0]*t),numx.sin(freqs[1]*t)]).T
     mat += normal(0., 1e-10, size=(dim, 2))
-    mat = (mat - mean(mat[:-1,:],axis=0)) \
-          / std(mat[:-1,:],axis=0)
+    mat = old_div((mat - mean(mat[:-1,:],axis=0)), std(mat[:-1,:],axis=0))
     mat = mult(mat,uniform((2,2))) + uniform(2)
     sfa = mdp.nodes.SFA2Node(output_dim=3)
     sfa.train(mat)

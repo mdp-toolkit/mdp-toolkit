@@ -1,4 +1,6 @@
-from __future__ import absolute_import
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 from ._tools import *
 
 def _std(x):
@@ -6,27 +8,27 @@ def _std(x):
     # standard deviation without bias
     mx = mean(x, axis=0)
     mx2 = mean(x*x, axis=0)
-    return numx.sqrt((mx2-mx)/(x.shape[0]-1))
+    return numx.sqrt(old_div((mx2-mx),(x.shape[0]-1)))
 
 def _cov(x,y=None):
     #return covariance matrix for x and y
     if y is None:
         y = x.copy()
     x = x - mean(x,0)
-    x = x / _std(x)
+    x = old_div(x, _std(x))
     y = y - mean(y,0)
-    y = y  / _std(y)
+    y = old_div(y, _std(y))
     #return mult(numx.transpose(x),y)/(x.shape[0]-1)
-    return mult(numx.transpose(x),y)/(x.shape[0])
+    return old_div(mult(numx.transpose(x),y),(x.shape[0]))
 
 def testISFANodeGivensRotations():
     ncovs = 5
     dim = 7
     ratio = uniform(2).tolist()
-    covs = [uniform((dim,dim)) for j in xrange(ncovs)]
+    covs = [uniform((dim,dim)) for j in range(ncovs)]
     covs= mdp.utils.MultipleCovarianceMatrices(covs)
     covs.symmetrize()
-    i = mdp.nodes.ISFANode(range(1, ncovs+1),sfa_ica_coeff=ratio,
+    i = mdp.nodes.ISFANode(list(range(1, ncovs+1)),sfa_ica_coeff=ratio,
                            icaweights=uniform(ncovs),
                            sfaweights=uniform(ncovs),
                            output_dim = dim-1, dtype="d")
@@ -53,7 +55,7 @@ def testISFANodeGivensRotations():
         cp = covs.copy()
         cp.rotate(angle,[0,1])
         cont2.append(numx.sum(i._get_contrast(cp,ratio)))
-    assert abs(min_) < numx.pi/4, 'Estimated Minimum out of bounds'
+    assert abs(min_) < old_div(numx.pi,4), 'Estimated Minimum out of bounds'
     assert_array_almost_equal(cont1,cont2,decimal)
 
 def testISFANode_SFAPart():
@@ -61,7 +63,7 @@ def testISFANode_SFAPart():
     mat = uniform((100000,3))*2-1
     fmat = numx_fft.rfft(mat,axis=0)
     # enforce different speeds
-    for i in xrange(3):
+    for i in range(3):
         fmat[(i+1)*5000:,i] = 0.
     mat = numx_fft.irfft(fmat,axis=0)
     _sfanode = mdp.nodes.SFANode()
@@ -86,7 +88,7 @@ def testISFANode_ICAPart():
     src = uniform((100000,3))*2-1
     fsrc = numx_fft.rfft(src,axis=0)
     # enforce different speeds
-    for i in xrange(3):
+    for i in range(3):
         fsrc[(i+1)*5000:,i] = 0.
     src = numx_fft.irfft(fsrc,axis=0)
     # enforce time-lag-1-independence
@@ -110,7 +112,7 @@ def testISFANode_3Complete():
     lag = 25
     src = numx.zeros((1001,3),"d")
     idx = [(2,4),(80,1),(2+lag,6)]
-    for i in xrange(len(idx)):
+    for i in range(len(idx)):
         i0, il = idx[i]
         src[i0:i0+il,i] = 1.
         src[i0+il:i0+2*il,i] = -1.
@@ -157,7 +159,7 @@ def _ISFA_analytical_solution( nsources, nmat, dim, ica_ambiguity):
     #   - modify diagonal elements order to allow for a
     #     different solution for isfa:
     #     create index array
-    idx = range(0,dim)
+    idx = list(range(0,dim))
     #     take the second slowest element and put it at the end
     idx = [idx[0]]+idx[2:]+[idx[1]]
     diag = numx.take(diag, idx)
@@ -167,7 +169,7 @@ def _ISFA_analytical_solution( nsources, nmat, dim, ica_ambiguity):
     matrices[0] = matrices[0]*diag
     # build other matrices
     diag_dim = nsources+ica_ambiguity
-    for i in xrange(1,nmat):
+    for i in range(1,nmat):
         # get a random symmetric matrix
         matrices[i] = mdp.utils.symrand(dim)
         # diagonalize the subspace diag_dim
@@ -198,7 +200,7 @@ def testISFANode_AnalyticalSolution():
     dim = mdp.nodes._expanded_dim(deg, nsources)
     assert (nsources+ica_ambiguity) < dim, 'Too much ica ambiguity.'
     trials = 20
-    for trial in xrange(trials):
+    for trial in range(trials):
         # get analytical solution:
         # prepared matrices, solution for sfa, solution for isf
         covs,sfa_solution,isfa_solution=_ISFA_analytical_solution(

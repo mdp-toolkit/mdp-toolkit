@@ -65,7 +65,6 @@ implemented nodes also make it a useful educational tool.
 
 http://mdp-toolkit.sourceforge.net
 """
-from __future__ import absolute_import
 __docformat__ = "restructuredtext en"
 
 # The descriptions strings below are parsed with a regexp in setup.py.

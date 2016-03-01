@@ -26,7 +26,6 @@ for special routing situations. One such subclass for 2d image data is provided.
 It maps the data according to rectangular overlapping 2d input areas. One can
 then feed the output into a Layer and each Node will get the correct input.
 """
-from __future__ import absolute_import
 
 from .flownode import FlowNode
 from .layer import Layer, SameInputLayer, CloneLayer

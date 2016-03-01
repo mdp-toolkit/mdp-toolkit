@@ -5,6 +5,10 @@ Not that this module depends on bihinet, since it uses a BiFlowNode to
 encapsulate the BiFlow in the tasks.
 """
 from __future__ import print_function
+from builtins import zip
+from builtins import str
+from builtins import next
+from builtins import range
 
 import itertools
 
@@ -362,7 +366,7 @@ class ParallelBiFlow(BiFlow, parallel.ParallelFlow):
         task_callable = self._train_callable_class(self._flownode,
                                                    purge_nodes=False)
         i_task = 0
-        for (x, msg) in itertools.izip(iterable, msg_iterable):
+        for (x, msg) in zip(iterable, msg_iterable):
             i_task += 1
             # Note: if x contains additional args assume that the
             # callable can handle this

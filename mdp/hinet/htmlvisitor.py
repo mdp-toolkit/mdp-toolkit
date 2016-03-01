@@ -5,13 +5,15 @@ This is especially useful for hinet structures.
 The code uses the visitor pattern to reach and convert all the nodes in a flow.
 """
 
-from __future__ import with_statement
-from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import object
 
 import tempfile
 import os
 import webbrowser
-import cStringIO as StringIO
+import io as StringIO
 
 import mdp
 
@@ -31,7 +33,7 @@ class NewlineWriteFile(object):
 
     def write(self, str_obj):
         """Write a string to the file object and append a newline character."""
-        self.file_obj.write(str_obj + "\n")
+        self.file_obj.write(str(str_obj+ "\n"))
 
     # forward all other methods
     def __getattr__(self, attr):

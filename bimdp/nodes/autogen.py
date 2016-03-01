@@ -1,10 +1,13 @@
 """
 Module to automatically create a module with BiMDP versions of MDP nodes.
 """
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
 
 import inspect
 import mdp
-from StringIO import StringIO
+from io import StringIO
 
 # Blacklist of nodes that cause problems with autogeneration
 NOAUTOGEN_MDP_NODES = [
@@ -105,10 +108,10 @@ def _binode_module(write, node_classes, modulename="mdp.nodes",
 
 def _get_unicode_write(fid):
     def write(txt):
-        if type(txt) is unicode:
+        if type(txt) is str:
             fid.write(txt)
         else:
-            fid.write(unicode(txt, encoding='utf-8'))
+            fid.write(str(txt, encoding='utf-8'))
     return write
 
 
@@ -126,10 +129,10 @@ def biclassifiers_code():
     """Generate and import the BiClassifier wrappers for ClassifierNodes."""
     fid = StringIO()
     def write(txt):
-        if type(txt) is unicode:
+        if type(txt) is str:
             fid.write(txt)
         else:
-            fid.write(unicode(txt, encoding='utf-8'))
+            fid.write(str(txt, encoding='utf-8'))
     nodes = (node for node in
                 _get_node_subclasses(node_class=mdp.ClassifierNode,
                                      module=mdp.nodes)

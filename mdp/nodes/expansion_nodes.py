@@ -1,3 +1,6 @@
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 __docformat__ = "restructuredtext en"
 
 import mdp
@@ -189,7 +192,7 @@ class RBFExpansionNode(mdp.Node):
         for i in range(self._output_dim):
             dist = x - c[i,:]
             if self._isotropic:
-                tmp = (dist**2.).sum(axis=1) / s[i]
+                tmp = old_div((dist**2.).sum(axis=1), s[i])
             else:
                 tmp = (dist*matmult(dist, s[i,:,:])).sum(axis=1)
             y[:,i] = numx.exp(-0.5*tmp)

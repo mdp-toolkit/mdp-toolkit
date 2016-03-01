@@ -1,3 +1,7 @@
+from __future__ import division
+from builtins import str
+from builtins import range
+from past.utils import old_div
 __docformat__ = "restructuredtext en"
 
 import mdp
@@ -193,7 +197,7 @@ class PCANode(mdp.Node):
             del self.cov_mtx
 
         # sort by descending order
-        d = numx.take(d, range(d.shape[0]-1, -1, -1))
+        d = numx.take(d, list(range(d.shape[0]-1, -1, -1)))
         v = v[:, ::-1]
 
         if self.desired_variance is not None:
@@ -201,7 +205,7 @@ class PCANode(mdp.Node):
             d = d[ d > 0 ]
             # the number of principal components to keep has
             # been specified by the fraction of variance to be explained
-            varcum = (d / vartot).cumsum(axis=0)
+            varcum = (old_div(d, vartot)).cumsum(axis=0)
             # select only the relevant eigenvalues
             # number of relevant eigenvalues
             neigval = int(varcum.searchsorted(self.desired_variance) + 1.)
@@ -221,17 +225,17 @@ class PCANode(mdp.Node):
             if len(d) == 0:
                 raise mdp.NodeException('No eigenvalues larger than'
                                         ' var_abs=%e!'%self.var_abs)
-            d = d[ d / d.max() > self.var_rel ]
+            d = d[ old_div(d, d.max()) > self.var_rel ]
 
             # filter for variance relative to total variance
             if self.var_part:
-                d = d[ d / vartot > self.var_part ]
+                d = d[ old_div(d, vartot) > self.var_part ]
 
             v = v[:, 0:d.shape[0]]
             self._output_dim = d.shape[0]
 
         # set explained variance
-        self.explained_variance = d.sum() / vartot
+        self.explained_variance = old_div(d.sum(), vartot)
 
         # store the eigenvalues
         self.d = d
@@ -306,7 +310,7 @@ class WhiteningNode(PCANode):
 
         ##### whiten the filters
         # self.v is now the _whitening_ matrix
-        self.v = self.v / numx.sqrt(self.d)
+        self.v = old_div(self.v, numx.sqrt(self.d))
 
     def get_eigenvectors(self):
         """Return the eigenvectors of the covariance matrix."""

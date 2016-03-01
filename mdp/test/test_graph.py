@@ -1,10 +1,11 @@
+from builtins import range
 from mdp import graph
 
 def testAddNode():
     # add_node
     g = graph.Graph()
     nnodes = 5
-    for i in xrange(nnodes):
+    for i in range(nnodes):
         g.add_node()
     assert len(g.nodes)==nnodes, "Wrong number of nodes, expected: %d, got :%d" % (nnodes, len(g.nodes))
     # add nodes
@@ -18,12 +19,12 @@ def testAddNode():
 def testAddEdge():
     g = graph.Graph()
     nnodes = 5
-    nds = [g.add_node() for i in xrange(nnodes)]
-    eds = [g.add_edge(nds[i], nds[i+1]) for i in xrange(nnodes-1)]
+    nds = [g.add_node() for i in range(nnodes)]
+    eds = [g.add_edge(nds[i], nds[i+1]) for i in range(nnodes-1)]
     assert len(g.edges)==nnodes-1, "Wrong number of edges, expected: %d, got :%d" % (nnodes-1, len(g.edges))
     # the last nnodes-1 nodes should have in_degree==1,
     # and the first nnodes-1 out_degree==1
-    for i in xrange(nnodes):
+    for i in range(nnodes):
         if i>0: assert nds[i].in_degree()==1, "Wrong in_degree, expected: 1, got: %d." % nds[i].in_degree()
         if i<nnodes-1: assert nds[i].out_degree()==1, "Wrong out_degree, expected: 1, got: %d." % nds[i].out_degree()
 
@@ -79,8 +80,8 @@ def testAddFullConnectivity():
     layer1 = g.add_nodes(5)
     g.add_full_connectivity(layer0, layer1)
     assert len(g.edges)==5*10
-    assert map(lambda x: x.out_degree(), layer0)==[5]*10
-    assert map(lambda x: x.in_degree(), layer1)==[10]*5
+    assert [x.out_degree() for x in layer0]==[5]*10
+    assert [x.in_degree() for x in layer1]==[10]*5
 
 def testTopologicalSort():
     g = graph.Graph()
@@ -89,7 +90,7 @@ def testTopologicalSort():
     g.add_edge(nds[2], nds[1])
     g.add_edge(nds[2], nds[3])
     g.add_edge(nds[3], nds[1])
-    data = map(lambda x: x.data, g.topological_sort())
+    data = [x.data for x in g.topological_sort()]
     assert data==[0,1,2,3]
     # make graph cyclic
     g.add_edge(nds[1], nds[0])
@@ -102,31 +103,31 @@ def testTopologicalSort():
 def testDFS():
     g = graph.Graph()
     nodes = g.add_tree( (1,(2,3),(2,3)) )
-    data = map(lambda x: x.data, g.dfs(nodes[0]))
+    data = [x.data for x in g.dfs(nodes[0])]
     assert data==[1,2,3,2,3]
     # test undirected version
-    data = map(lambda x: x.data, g.undirected_dfs(nodes[2][1]))
+    data = [x.data for x in g.undirected_dfs(nodes[2][1])]
     assert data==[3,2,1,2,3]
     # test node with two ingoing edges
     g = graph.Graph()
     nodes = g.add_tree( (1,2,(2,3)) )
     g.add_edge(nodes[1],nodes[2][1])
-    data = map(lambda x: x.data, g.dfs(nodes[0]))
+    data = [x.data for x in g.dfs(nodes[0])]
     assert data==[1,2,3,2]
 
 def testBFS():
     g = graph.Graph()
     nodes = g.add_tree( (1,(2,3),(2,3)) )
-    data = map(lambda x: x.data, g.bfs(nodes[0]))
+    data = [x.data for x in g.bfs(nodes[0])]
     assert data==[1,2,2,3,3]
     # test undirected version
-    data = map(lambda x: x.data, g.undirected_bfs(nodes[2][1]))
+    data = [x.data for x in g.undirected_bfs(nodes[2][1])]
     assert data==[3,2,1,2,3]
     # test node with two ingoing edges
     g = graph.Graph()
     nodes = g.add_tree( (1,2,(2,3)) )
     g.add_edge(nodes[1],nodes[2][1])
-    data = map(lambda x: x.data, g.bfs(nodes[0]))
+    data = [x.data for x in g.bfs(nodes[0])]
     assert data==[1,2,2,3]
 
 def testConnectedComponents():

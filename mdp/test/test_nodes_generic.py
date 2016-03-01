@@ -1,5 +1,5 @@
-from __future__ import with_statement
-from __future__ import absolute_import
+from builtins import range
+from builtins import object
 import py.test
 import inspect
 
@@ -374,7 +374,7 @@ def generate_nodes_list(nodes_dicts):
     excluded = []
     for dct in nodes_dicts:
         klass = dct['klass']
-        if type(klass) is str:
+        if type(klass) is __builtins__['str']:
             # some of the nodes on the list may be optional
             if not hasattr(nodes, klass): continue
             # transform class name into class (needed by automatic tests)

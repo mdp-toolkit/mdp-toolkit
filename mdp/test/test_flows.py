@@ -1,9 +1,11 @@
-from __future__ import with_statement
-from __future__ import absolute_import
+from future import standard_library
+standard_library.install_aliases()
+from builtins import range
+from builtins import object
 
 import tempfile
 import pickle
-import cPickle
+import pickle
 import os
 from ._tools import *
 
@@ -26,7 +28,7 @@ class _CheckpointCollectFunction(mdp.CheckpointFunction):
 def testFlow():
     inp = numx.ones((100,3))
     flow = _get_default_flow()
-    for i in xrange(len(flow)):
+    for i in range(len(flow)):
         assert not flow.flow[i].is_training(), \
                'Training of node #%d has not been closed.' % i
 
@@ -58,7 +60,7 @@ def testFlow_save():
     flow[0].dummy_attr = dummy_list
     # test string save
     copy_flow_pic = flow.save(None)
-    copy_flow = cPickle.loads(copy_flow_pic)
+    copy_flow = pickle.loads(copy_flow_pic)
     assert flow[0].dummy_attr == copy_flow[0].dummy_attr, \
            'Flow save (string) method did not work'
     copy_flow[0].dummy_attr[0] = 10
@@ -69,7 +71,7 @@ def testFlow_save():
                                  dir=py.test.mdp_tempdirname)
     flow.save(dummy_file, protocol=1)
     dummy_file = open(dummy_file, 'rb')
-    copy_flow = cPickle.load(dummy_file)
+    copy_flow = pickle.load(dummy_file)
     assert flow[0].dummy_attr == copy_flow[0].dummy_attr, \
            'Flow save (file) method did not work'
     copy_flow[0].dummy_attr[0] = 10
@@ -82,7 +84,7 @@ def testFlow_container_privmethods():
     # test __len__
     assert_equal(len(flow), len(flow.flow))
     # test __?etitem__, integer key
-    for i in xrange(len(flow)):
+    for i in range(len(flow)):
         assert flow[i]==flow.flow[i], \
                '__getitem__  returned wrong node %d' % i
         new_node = BogusNode()
@@ -111,7 +113,7 @@ def testFlow_container_privmethods():
     copy_flow = mdp.Flow(flow[:])
     del copy_flow[0]
     assert len(copy_flow) == len(flow)-1, '__delitem__ did not del'
-    for i in xrange(len(copy_flow)):
+    for i in range(len(copy_flow)):
         assert copy_flow[i] == flow[i+1], '__delitem__ deleted wrong node'
     # test __delitem__, normal slice
     copy_flow = mdp.Flow(flow[:])
@@ -158,7 +160,7 @@ def testFlow_container_listmethods():
     length = len(flow)
     try:
         newflow = _get_default_flow()
-        for idx in xrange(len(newflow)):
+        for idx in range(len(newflow)):
             if idx == 0:
                 newflow[idx].input_dim = 11
             else:
@@ -276,7 +278,7 @@ def testCheckpointFunction():
                                   node_class = BogusNodeTrainable)
     flow.train(inp, cfunc)
     #
-    for i in xrange(len(flow)):
+    for i in range(len(flow)):
         assert flow[i].__class__==cfunc.classes[i], 'Wrong class collected'
 
 def testCrashRecovery():
@@ -323,7 +325,7 @@ def testMultiplePhases():
     flow.train(mdp.numx.zeros((1,2), 'd'))
     assert flow[0].visited == [1,2,3,4]
     # try to use an iterable to train it, check for rewinds
-    class TestIterable:
+    class TestIterable(object):
         def __init__(self):
             self.used = 0
         def __iter__(self):

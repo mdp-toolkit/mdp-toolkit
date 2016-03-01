@@ -4,6 +4,10 @@ Module for Switchboards.
 Note that additional args and kwargs for train or execute are currently not
 supported.
 """
+from __future__ import division
+from builtins import range
+from builtins import object
+from past.utils import old_div
 
 
 import mdp
@@ -109,9 +113,9 @@ class MeanInverseSwitchboard(Switchboard):
         while True:
             n_cons = n_y_cons[i_y]
             if n_cons > 0:
-                y[:,i_y] = numx.sum(x[:,y_cons[i_x_counter:
+                y[:,i_y] = old_div(numx.sum(x[:,y_cons[i_x_counter:
                                                i_x_counter + n_cons]],
-                                    axis=1) / n_cons
+                                    axis=1), n_cons)
                 i_x_counter += n_cons
                 if i_x_counter >= self.output_dim:
                     break
@@ -319,7 +323,7 @@ class Rectangular2dSwitchboard(ChannelSwitchboard):
                                         in_channel_dim)
                         connections[first_out_con:
                                     first_out_con + in_channel_dim] = \
-                            range(first_in_con, first_in_con + in_channel_dim)
+                            list(range(first_in_con, first_in_con + in_channel_dim))
                         first_out_con += in_channel_dim
         super(Rectangular2dSwitchboard, self).__init__(
                                 input_dim=(in_channel_dim *
@@ -468,8 +472,8 @@ class DoubleRect2dSwitchboard(ChannelSwitchboard):
                                         in_channel_dim)
                         connections[first_out_con:
                                     first_out_con + in_channel_dim] = \
-                            range(first_in_con,
-                                  first_in_con + in_channel_dim)
+                            list(range(first_in_con,
+                                  first_in_con + in_channel_dim))
                         first_out_con += in_channel_dim
         ## create the uneven connections
         for y_out_chan in range(even_y_out_channels - 1):
@@ -488,8 +492,8 @@ class DoubleRect2dSwitchboard(ChannelSwitchboard):
                                         in_channel_dim)
                         connections[first_out_con:
                                     first_out_con + in_channel_dim] = \
-                            range(first_in_con,
-                                  first_in_con + in_channel_dim)
+                            list(range(first_in_con,
+                                  first_in_con + in_channel_dim))
                         first_out_con += in_channel_dim
         super(DoubleRect2dSwitchboard, self).__init__(
                                 input_dim=in_channel_dim *
@@ -619,8 +623,8 @@ class DoubleRhomb2dSwitchboard(ChannelSwitchboard):
                                  + short_in_offset) * self.in_channel_dim)
                         connections[first_out_con:
                                     first_out_con + self.in_channel_dim] = \
-                            range(first_in_con,
-                                  first_in_con + self.in_channel_dim)
+                            list(range(first_in_con,
+                                  first_in_con + self.in_channel_dim))
                         first_out_con += self.in_channel_dim
         super(DoubleRhomb2dSwitchboard, self).__init__(
                                         input_dim=input_dim,

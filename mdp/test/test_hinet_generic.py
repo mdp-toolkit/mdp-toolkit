@@ -1,5 +1,3 @@
-from __future__ import with_statement
-from __future__ import absolute_import
 import mdp.hinet as mh
 from ._tools import *
 from .test_nodes_generic import (

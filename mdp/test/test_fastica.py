@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+from builtins import str
 import mdp
 from ._tools import *
 uniform = mdp.numx_rand.random

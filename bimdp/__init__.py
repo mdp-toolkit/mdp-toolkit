@@ -39,7 +39,6 @@ that would not fit well into the standard x array. The dict keys also support
 target specifications and other magic for more convenient usage.
 This is described in more detail in the BiNode module.
 """
-from __future__ import absolute_import
 
 ### T O D O ###
 

@@ -1,4 +1,6 @@
-from __future__ import absolute_import
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 import mdp
 from ._tools import *
 
@@ -56,8 +58,8 @@ def testGeneralExpansionNode_inverse():
         input = numx.random.normal(size=(samples, input_dim))
         out = cen.execute(input)
         app_input = cen.pseudo_inverse(out, use_hint=False)
-        maxdiff = max(numx.ravel(abs(app_input-input)))/\
-                  max(max(abs(numx.ravel(app_input))),max(abs(numx.ravel(input))))
+        maxdiff = old_div(max(numx.ravel(abs(app_input-input))),\
+                  max(max(abs(numx.ravel(app_input))),max(abs(numx.ravel(input)))))
         cond = maxdiff < 10** (-4)
         if cond:
             break

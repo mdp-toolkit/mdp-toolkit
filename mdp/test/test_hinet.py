@@ -1,10 +1,12 @@
-from __future__ import with_statement
+from future import standard_library
+standard_library.install_aliases()
+from builtins import zip
+from builtins import range
 """These are test functions for hinet.
 """
-from __future__ import absolute_import
 
 import py.test
-import StringIO
+import io
 import mdp.hinet as mh
 from ._tools import *
 
@@ -251,8 +253,8 @@ def testRect2dRouting1():
     assert numx.all(sboard.connections ==
                            numx.array([0, 1, 2, 3, 2, 3, 4, 5, 6, 7,
                                        8, 9, 8, 9, 10, 11]))
-    x = numx.array([range(0, sboard.input_dim),
-                    range(101, 101+sboard.input_dim)])
+    x = numx.array([list(range(0, sboard.input_dim)),
+                    list(range(101, 101+sboard.input_dim))])
     sboard.execute(x)
     # test generated switchboard
     channel_sboard = sboard.get_out_channel_node(0)
@@ -265,8 +267,8 @@ def testRect2dRouting2():
                                          field_spacing_xy=(1,2))
     assert numx.all(sboard.connections ==
                     numx.array([0, 2, 1, 3, 4, 6, 5, 7]))
-    x = numx.array([range(0, sboard.input_dim),
-                    range(101, 101+sboard.input_dim)])
+    x = numx.array([list(range(0, sboard.input_dim)),
+                    list(range(101, 101+sboard.input_dim))])
     sboard.execute(x)
     # test generated switchboard
     channel_sboard = sboard.get_out_channel_node(0)
@@ -296,12 +298,12 @@ def testRect2d_get_out_channel_node():
                                          in_channel_dim=2,
                                          field_channels_xy=(3,2),
                                          field_spacing_xy=(1,2))
-    x = numx.array([range(0, sboard.input_dim),
-                    range(101, 101+sboard.input_dim)])
+    x = numx.array([list(range(0, sboard.input_dim)),
+                    list(range(101, 101+sboard.input_dim))])
     y = sboard.execute(x)
     # routing layer
     nodes = [sboard.get_out_channel_node(index)
-             for index in xrange(sboard.output_channels)]
+             for index in range(sboard.output_channels)]
     layer = mh.SameInputLayer(nodes)
     layer_y = layer.execute(x)
     assert (y == layer_y).all()
@@ -346,8 +348,8 @@ def test_Rect_double_routing_1():
             numx.array([0,1,4,5, 2,3,6,7, 8,9,12,13, 10,11,14,15,
                         # uneven fields
                         5,6,9,10])).all()
-    x = numx.array([range(0, sboard.input_dim),
-                    range(101, 101+sboard.input_dim)])
+    x = numx.array([list(range(0, sboard.input_dim)),
+                    list(range(101, 101+sboard.input_dim))])
     sboard.execute(x)
 
 def test_Rect_double_routing_2():
@@ -359,8 +361,8 @@ def test_Rect_double_routing_2():
                         14,15,20,21, 16,17,22,23,
                         # uneven fields
                         7,8,13,14, 9,10,15,16])).all()
-    x = numx.array([range(0, sboard.input_dim),
-                    range(101, 101+sboard.input_dim)])
+    x = numx.array([list(range(0, sboard.input_dim)),
+                    list(range(101, 101+sboard.input_dim))])
     sboard.execute(x)
 
 def test_Rect_double_routing_3():
@@ -372,8 +374,8 @@ def test_Rect_double_routing_3():
                         16,17,20,21, 18,19,22,23,
                         # uneven fields
                         5,6,9,10, 13,14,17,18])).all()
-    x = numx.array([range(0, sboard.input_dim),
-                    range(101, 101+sboard.input_dim)])
+    x = numx.array([list(range(0, sboard.input_dim)),
+                    list(range(101, 101+sboard.input_dim))])
     sboard.execute(x)
 
 ## Tests for DoubleRhomb2dSwitchboard ##
@@ -384,8 +386,8 @@ def test_DoubleRhomb_routing_1():
                                          in_channel_dim=1)
     assert (sboard.connections ==
             numx.array([1,6,7,4])).all()
-    x = numx.array([range(0, sboard.input_dim),
-                    range(101, 101+sboard.input_dim)])
+    x = numx.array([list(range(0, sboard.input_dim)),
+                    list(range(101, 101+sboard.input_dim))])
     sboard.execute(x)
 
 def test_DoubleRhomd_routing_2():
@@ -394,8 +396,8 @@ def test_DoubleRhomd_routing_2():
                                          in_channel_dim=1)
     assert (sboard.connections ==
             numx.array([6,2,3,7])).all()
-    x = numx.array([range(0, sboard.input_dim),
-                    range(101, 101+sboard.input_dim)])
+    x = numx.array([list(range(0, sboard.input_dim)),
+                    list(range(101, 101+sboard.input_dim))])
     sboard.execute(x)
 
 def test_DoubleRhomd_routing_3():
@@ -404,8 +406,8 @@ def test_DoubleRhomd_routing_3():
                                          in_channel_dim=1)
     assert (sboard.connections ==
             numx.array([1,8,9,5, 2,9,10,6])).all()
-    x = numx.array([range(0, sboard.input_dim),
-                    range(101, 101+sboard.input_dim)])
+    x = numx.array([list(range(0, sboard.input_dim)),
+                    list(range(101, 101+sboard.input_dim))])
     sboard.execute(x)
 
 def test_DoubleRhomd_routing_4():
@@ -414,8 +416,8 @@ def test_DoubleRhomd_routing_4():
                                          in_channel_dim=1)
     assert (sboard.connections ==
             numx.array([8,2,3,9, 9,4,5,10])).all()
-    x = numx.array([range(0, sboard.input_dim),
-                    range(101, 101+sboard.input_dim)])
+    x = numx.array([list(range(0, sboard.input_dim)),
+                    list(range(101, 101+sboard.input_dim))])
     sboard.execute(x)
 
 def test_DoubleRhomd_routing_5():
@@ -429,32 +431,32 @@ def test_DoubleRhomd_routing_5():
                         6,20,21,10,
                         9,22,23,13,
                         10,23,24,14])).all()
-    x = numx.array([range(0, sboard.input_dim),
-                    range(101, 101+sboard.input_dim)])
+    x = numx.array([list(range(0, sboard.input_dim)),
+                    list(range(101, 101+sboard.input_dim))])
     sboard.execute(x)
 
 def test_DoubleRhomd_routing_6():
     sboard = mh.DoubleRhomb2dSwitchboard(long_in_channels_xy=(7,4),
                                          diag_field_channels=4,
                                          in_channel_dim=1)
-    x = numx.array([range(0, sboard.input_dim),
-                    range(101, 101+sboard.input_dim)])
+    x = numx.array([list(range(0, sboard.input_dim)),
+                    list(range(101, 101+sboard.input_dim))])
     sboard.execute(x)
 
 def test_DoubleRhomd_routing_7():
     sboard = mh.DoubleRhomb2dSwitchboard(long_in_channels_xy=(4,7),
                                          diag_field_channels=4,
                                          in_channel_dim=1)
-    x = numx.array([range(0, sboard.input_dim),
-                    range(101, 101+sboard.input_dim)])
+    x = numx.array([list(range(0, sboard.input_dim)),
+                    list(range(101, 101+sboard.input_dim))])
     sboard.execute(x)
 
 def test_DoubleRhomd_routing_8():
     sboard = mh.DoubleRhomb2dSwitchboard(long_in_channels_xy=(6,7),
                                          diag_field_channels=4,
                                          in_channel_dim=1)
-    x = numx.array([range(0, sboard.input_dim),
-                    range(101, 101+sboard.input_dim)])
+    x = numx.array([list(range(0, sboard.input_dim)),
+                    list(range(101, 101+sboard.input_dim))])
     sboard.execute(x)
 
 def test_hinet_simple_net():
@@ -495,7 +497,7 @@ def testHiNetHTML(noisenode):
     sfa_layer = mh.CloneLayer(flownode, switchboard.output_channels)
     flow = mdp.Flow([switchboard, sfa_layer])
     # create dummy file to write the HTML representation
-    html_file = StringIO.StringIO()
+    html_file = io.StringIO()
     hinet_html = mdp.hinet.HiNetHTMLVisitor(html_file)
     hinet_html.convert_flow(flow)
     html_file.close()
@@ -505,7 +507,7 @@ def testHiNetXHTML():
     sfa_node = mdp.nodes.SFANode(input_dim=20*20, output_dim=10)
     flow = mdp.Flow([sfa_node])
     # create dummy file to write the HTML representation
-    html_file = StringIO.StringIO()
+    html_file = io.StringIO()
     hinet_html = mdp.hinet.HiNetXHTMLVisitor(html_file)
     hinet_html.convert_flow(flow)
     html_file.close()

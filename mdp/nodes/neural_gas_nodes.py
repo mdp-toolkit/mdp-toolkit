@@ -1,3 +1,8 @@
+from __future__ import division
+from builtins import map
+from builtins import range
+from past.utils import old_div
+from builtins import object
 __docformat__ = "restructuredtext en"
 
 from mdp import numx, numx_rand, utils, graph, Node
@@ -133,7 +138,7 @@ class GrowingNeuralGasNode(Node):
             return utils.mult(tmp, tmp)
         g = self.graph
         # distances of all graph nodes from x
-        distances = numx.array(map(_distance_from_node, g.nodes))
+        distances = numx.array(list(map(_distance_from_node, g.nodes)))
         ids = distances.argsort()[:2]
         #nearest = [g.nodes[idx] for idx in ids]
         #return nearest, distances[ids]
@@ -160,11 +165,11 @@ class GrowingNeuralGasNode(Node):
         where the error is the largest)."""
         g = self.graph
         # determine the node with the highest error
-        errors = map(lambda x: x.data.cum_error, g.nodes)
+        errors = [x.data.cum_error for x in g.nodes]
         qnode = g.nodes[numx.argmax(errors)]
         # determine the neighbour with the highest error
         neighbors = qnode.neighbors()
-        errors = map(lambda x: x.data.cum_error, neighbors)
+        errors = [x.data.cum_error for x in neighbors]
         fnode = neighbors[numx.argmax(errors)]
         # new node, halfway between the worst node and the worst of
         # its neighbors
@@ -182,7 +187,7 @@ class GrowingNeuralGasNode(Node):
                                        fnode.data.cum_error)
 
     def get_nodes_position(self):
-        return numx.array(map(lambda n: n.data.pos, self.graph.nodes),
+        return numx.array([n.data.pos for n in self.graph.nodes],
                           dtype = self.dtype)
 
     def _train(self, input):
@@ -383,12 +388,12 @@ class NeuralGasNode(GrowingNeuralGasNode):
             # reset permutation of data points
             di = numx.random.permutation(input)
             if epoch < max_epochs:
-                denom = epoch/max_epochs
+                denom = old_div(epoch,max_epochs)
             else:
                 denom = 1.
-            epsilon = e_i * ((e_f/e_i)**denom)
-            lmbda = l_i * ((l_f/l_i)**denom)
-            T = T_i * ((T_f/T_i)**denom)
+            epsilon = e_i * ((old_div(e_f,e_i))**denom)
+            lmbda = l_i * ((old_div(l_f,l_i))**denom)
+            T = T_i * ((old_div(T_f,T_i))**denom)
             epoch += 1
             for x in di:
                 # Step 1 rank nodes according to their distance to random point
@@ -398,7 +403,7 @@ class NeuralGasNode(GrowingNeuralGasNode):
                 for rank,node in enumerate(ranked_nodes):
                     #TODO: cut off at some rank when using many nodes
                     #TODO: check speedup by vectorizing
-                    delta_w = epsilon * numx.exp(-rank / lmbda) * \
+                    delta_w = epsilon * numx.exp(old_div(-rank, lmbda)) * \
                                     (x - node.data.pos)
                     node.data.pos += delta_w
 
@@ -437,7 +442,7 @@ class NeuralGasNode(GrowingNeuralGasNode):
         g = self.graph
 
         # distances of all graph nodes from x
-        distances = numx.array(map(_distance_from_node, g.nodes))
+        distances = numx.array(list(map(_distance_from_node, g.nodes)))
         ids = distances.argsort()
         ranked_nodes = [g.nodes[id] for id in ids]
 

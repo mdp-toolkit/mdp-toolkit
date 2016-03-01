@@ -1,4 +1,4 @@
-from __future__ import absolute_import
+from builtins import range
 from ._tools import *
 
 # These tests are basically taken from the GaussianClassifier.
@@ -10,7 +10,7 @@ def testKNNClassifier_train():
     covs = []
     means = []
     node = mdp.nodes.KNNClassifier()
-    for i in xrange(nclasses):
+    for i in range(nclasses):
         cov = utils.symrand(uniform((dim,))*dim+1)
         mn = uniform((dim,))*10.
         x = normal(0., 1., size=(npoints, dim))

@@ -1,3 +1,6 @@
+from __future__ import division
+from builtins import str
+from past.utils import old_div
 import mdp
 from mdp import numx, numx_linalg
 
@@ -122,7 +125,7 @@ numarray.linear_algebra.eigenvectors with an interface compatible with symeig.
             # make B the identity matrix
             wB, ZB = numx_linalg.eigh(B)
             _assert_eigenvalues_real_and_positive(wB, dtype)
-            ZB = ZB.real / numx.sqrt(wB.real)
+            ZB = old_div(ZB.real, numx.sqrt(wB.real))
             # transform A in the new basis: A = ZB^T * A * ZB
             A = mdp.utils.mult(mdp.utils.mult(ZB.T, A), ZB)
             # diagonalize A

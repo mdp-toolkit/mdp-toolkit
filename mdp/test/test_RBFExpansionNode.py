@@ -1,4 +1,6 @@
-from __future__ import absolute_import
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 import mdp
 from ._tools import *
 
@@ -12,15 +14,15 @@ def testRBFExpansionNode():
     grid = numx.array([grid[0].flatten(), grid[1].flatten()]).T
     # compute covariance for each point of the grid
     grid_cov = numx.zeros((grid.shape[0], dim, dim))
-    for i in xrange(dim):
-        for j in xrange(dim):
+    for i in range(dim):
+        for j in range(dim):
             grid_cov[:,i,j] = grid[:,i]*grid[:,j]
 
     def check_mn_cov(rbf, real_covs):
         y = rbf(grid)
         # verify means, sizes
-        for i in xrange(n):
-            p = y[:,i]/y[:,i].sum()
+        for i in range(n):
+            p = old_div(y[:,i],y[:,i].sum())
             # check mean
             mn = (rrep(p,dim)*grid).sum(0)
             assert_array_almost_equal(mn, centers[i,:], 2)
@@ -32,7 +34,7 @@ def testRBFExpansionNode():
     def scalar_to_covs(x, n):
         if numx.isscalar(x):
             x = [x]*n
-        return [numx.array([[x[i],0],[0,x[i]]]) for i in xrange(n)]
+        return [numx.array([[x[i],0],[0,x[i]]]) for i in range(n)]
 
     # 1: sizes is a scalar
     sizes = 0.32
@@ -51,7 +53,7 @@ def testRBFExpansionNode():
 
     # 4: sizes is many covariances
     sizes = [mdp.utils.symrand(numx.array([0.2, 0.4]))
-             for i in xrange(n)]
+             for i in range(n)]
     rbf = mdp.nodes.RBFExpansionNode(centers, sizes)
     check_mn_cov(rbf, sizes)
 

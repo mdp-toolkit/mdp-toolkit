@@ -4,7 +4,6 @@ Parallel versions of hinet nodes.
 Note that internal nodes are referenced instead of copied, in order to save
 memory.
 """
-from __future__ import absolute_import
 
 import mdp.hinet as hinet
 

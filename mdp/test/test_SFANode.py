@@ -1,5 +1,5 @@
-from __future__ import with_statement
-from __future__ import absolute_import
+from __future__ import division
+from past.utils import old_div
 from ._tools import *
 mult = mdp.utils.mult
 
@@ -8,14 +8,13 @@ def testSFANode():
     freqs = [2*numx.pi*1, 2*numx.pi*5]
     t =  numx.linspace(0,1,num=dim)
     mat = numx.array([numx.sin(freqs[0]*t), numx.sin(freqs[1]*t)]).T
-    mat = ((mat - mean(mat[:-1,:], axis=0))
-           / std(mat[:-1,:],axis=0))
+    mat = (old_div((mat - mean(mat[:-1,:], axis=0)), std(mat[:-1,:],axis=0)))
     des_mat = mat.copy()
     mat = mult(mat,uniform((2,2))) + uniform(2)
     sfa = mdp.nodes.SFANode()
     sfa.train(mat)
     out = sfa.execute(mat)
-    correlation = mult(des_mat[:-1,:].T,out[:-1,:])/(dim - 2)
+    correlation = old_div(mult(des_mat[:-1,:].T,out[:-1,:]),(dim - 2))
     assert sfa.get_eta_values(t=0.5) is not None, 'get_eta is None'
     assert_array_almost_equal(abs(correlation),
                               numx.eye(2), decimal-3)
@@ -23,7 +22,7 @@ def testSFANode():
     sfa.train(mat)
     out = sfa.execute(mat)
     assert out.shape[1]==1, 'Wrong output_dim'
-    correlation = mult(des_mat[:-1,:1].T,out[:-1,:])/(dim - 2)
+    correlation = old_div(mult(des_mat[:-1,:1].T,out[:-1,:]),(dim - 2))
     assert_array_almost_equal(abs(correlation),
                               numx.eye(1), decimal - 3)
 
@@ -90,7 +89,7 @@ def testSFANode_derivative_bug1D():
     sfa.stop_training(debug=True)
     xdot = sfa.time_derivative(x)
     tlen = xdot.shape[0]
-    correct_dcov_mtx = (xdot*xdot).sum()/(tlen-1)
+    correct_dcov_mtx = old_div((xdot*xdot).sum(),(tlen-1))
     sfa_dcov_mtx = sfa.dcov_mtx
     # quantify the error
     error = abs(correct_dcov_mtx-sfa_dcov_mtx)[0,0]
@@ -114,7 +113,7 @@ def testSFANode_derivative_bug2D():
     sfa.stop_training(debug=True)
     xdot = sfa.time_derivative(x)
     tlen = xdot.shape[0]
-    correct_dcov_mtx = mdp.utils.mult(xdot.T, xdot)/(tlen-1)
+    correct_dcov_mtx = old_div(mdp.utils.mult(xdot.T, xdot),(tlen-1))
     sfa_dcov_mtx = sfa.dcov_mtx
     # the bug was that we were calculating the covariance matrix
     # of the derivative, i.e.
@@ -142,7 +141,7 @@ def testSFANode_derivative_bug2D_eigen():
     sfa.stop_training(debug=True)
     xdot = sfa.time_derivative(x)
     tlen = xdot.shape[0]
-    correct_dcov_mtx = mdp.utils.mult(xdot.T, xdot)/(tlen-1)
+    correct_dcov_mtx = old_div(mdp.utils.mult(xdot.T, xdot),(tlen-1))
     eigvalues, eigvectors = sfa._symeig(correct_dcov_mtx,
                                         sfa.cov_mtx,
                                         range=None,
