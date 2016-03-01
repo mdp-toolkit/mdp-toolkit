@@ -268,16 +268,16 @@ def wrap_scikits_classifier(scikits_class):
     for mdp_name, scikits_name in list(methods_dict.items()):
         mdp_method = getattr(ScikitsNode, mdp_name)
         scikits_method = getattr(scikits_class, scikits_name)
-        if hasattr(scikits_method, 'im_func'):
-            # some scikits algorithms do not define an __init__ method
-            # the one inherited from 'object' is a
-            # "<slot wrapper '__init__' of 'object' objects>"
-            # which does not have a 'im_func' attribute
+        if hasattr(scikits_method, '__func__'):
             mdp_method.__func__.__doc__ = _gen_docstring(scikits_class,
                                                         scikits_method.__func__)
 
     if scikits_class.__init__.__doc__ is None:
-        ScikitsNode.__init__.__func__.__doc__ = _gen_docstring(scikits_class)
+        try:
+            ScikitsNode.__init__.__func__.__doc__ = _gen_docstring(scikits_class)
+        except AttributeError:
+            # we are in Python3
+            ScikitsNode.__init__.__doc__ = _gen_docstring(scikits_class)
 
     return ScikitsNode
 
@@ -343,16 +343,17 @@ def wrap_scikits_transformer(scikits_class):
     for mdp_name, scikits_name in list(methods_dict.items()):
         mdp_method = getattr(ScikitsNode, mdp_name)
         scikits_method = getattr(scikits_class, scikits_name, None)
-        if hasattr(scikits_method, 'im_func'):
-            # some scikits algorithms do not define an __init__ method
-            # the one inherited from 'object' is a
-            # "<slot wrapper '__init__' of 'object' objects>"
-            # which does not have a 'im_func' attribute
+        if hasattr(scikits_method, '__func__'):
             mdp_method.__func__.__doc__ = _gen_docstring(scikits_class,
                                                         scikits_method.__func__)
 
     if scikits_class.__init__.__doc__ is None:
-        ScikitsNode.__init__.__func__.__doc__ = _gen_docstring(scikits_class)
+        try:
+            ScikitsNode.__init__.__func__.__doc__ = _gen_docstring(scikits_class)
+        except AttributeError:
+            # we are in Python3
+            ScikitsNode.__init__.__doc__ = _gen_docstring(scikits_class)
+
     return ScikitsNode
 
 
@@ -417,16 +418,17 @@ def wrap_scikits_predictor(scikits_class):
     for mdp_name, scikits_name in list(methods_dict.items()):
         mdp_method = getattr(ScikitsNode, mdp_name)
         scikits_method = getattr(scikits_class, scikits_name)
-        if hasattr(scikits_method, 'im_func'):
-            # some scikits algorithms do not define an __init__ method
-            # the one inherited from 'object' is a
-            # "<slot wrapper '__init__' of 'object' objects>"
-            # which does not have a 'im_func' attribute
+        if hasattr(scikits_method, '__func__'):
             mdp_method.__func__.__doc__ = _gen_docstring(scikits_class,
                                                         scikits_method.__func__)
 
     if scikits_class.__init__.__doc__ is None:
-        ScikitsNode.__init__.__func__.__doc__ = _gen_docstring(scikits_class)
+        try:
+            ScikitsNode.__init__.__func__.__doc__ = _gen_docstring(scikits_class)
+        except AttributeError:
+            # we are in Python3
+            ScikitsNode.__init__.__doc__ = _gen_docstring(scikits_class)
+
     return ScikitsNode
 
 
