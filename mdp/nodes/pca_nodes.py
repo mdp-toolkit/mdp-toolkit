@@ -204,7 +204,7 @@ class PCANode(mdp.Node):
             varcum = (d / vartot).cumsum(axis=0)
             # select only the relevant eigenvalues
             # number of relevant eigenvalues
-            neigval = varcum.searchsorted(self.desired_variance) + 1.
+            neigval = int(varcum.searchsorted(self.desired_variance) + 1.)
             #self.explained_variance = varcum[neigval-1]
             # cut
             d = d[0:neigval]

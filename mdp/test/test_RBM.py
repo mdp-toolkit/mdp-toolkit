@@ -129,7 +129,7 @@ def test_RBM_stability():
     real_bh = bm.bh.copy()
 
     # Gibbs sample to reach the equilibrium distribution
-    N = 1e4
+    N = int(1e4)
     v = numx_rand.randint(0,2,(N,I)).astype('d')
     for k in xrange(100):
         if k%5==0: spinner()
@@ -155,7 +155,7 @@ def test_RBM_learning():
 
     # the observations consist of two disjunct patterns that
     # never appear together
-    N = 1e4
+    N = int(1e4)
     v = numx.zeros((N,I))
     for n in xrange(int(N)):
         r = numx_rand.random()

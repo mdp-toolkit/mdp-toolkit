@@ -72,7 +72,7 @@ class PolynomialExpansionNode(_ExpansionNode):
 
         k = n
         prec_end = 0
-        next_lens = numx.ones((dim+1, ))
+        next_lens = numx.ones((dim+1, ), dtype=numx.int64)
         next_lens[0] = 0
         for i in range(2, degree+1):
             prec_start = prec_end
@@ -80,7 +80,7 @@ class PolynomialExpansionNode(_ExpansionNode):
             prec = dexp[prec_start:prec_end, :]
 
             lens = next_lens[:-1].cumsum(axis=0)
-            next_lens = numx.zeros((dim+1, ))
+            next_lens = numx.zeros((dim+1, ), dtype=numx.int64)
             for j in range(dim):
                 factor = prec[lens[j]:, :]
                 len_ = factor.shape[0]
@@ -337,7 +337,7 @@ class GeneralExpansionNode(_ExpansionNode):
     def output_sizes(self, n):
         """Return the individual output sizes of each expansion function
         when the input has lenght n."""
-        sizes = numx.zeros(len(self.funcs))
+        sizes = numx.zeros(len(self.funcs), dtype=numx.int64)
         x = numx.zeros((1,n))
         for i, func in enumerate(self.funcs):
             outx = func(x)
