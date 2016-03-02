@@ -27,33 +27,32 @@ def throw_bug():
     raise ValueError('Can not get MDP version!\n'
                      'Please report a bug to ' + email)
 
-try:
-    import ast
+import ast
 
-    def get_extract_variable(tree, variable):
-        for node in ast.walk(tree):
-            if type(node) is ast.Assign:
-                try:
-                    if node.targets[0].id == variable:
-                        return node.value.s
-                except:
-                    pass
-        throw_bug()
+def get_extract_variable(tree, variable):
+    for node in ast.walk(tree):
+        if type(node) is ast.Assign:
+            try:
+                if node.targets[0].id == variable:
+                    return node.value.s
+            except:
+                pass
+    throw_bug()
 
-    def get_mdp_ast_tree():
-        return ast.parse(get_module_code())
+def get_mdp_ast_tree():
+    return ast.parse(get_module_code())
 
-    def get_version():
-        tree = get_mdp_ast_tree()
-        return get_extract_variable(tree, '__version__')
+def get_version():
+    tree = get_mdp_ast_tree()
+    return get_extract_variable(tree, '__version__')
 
-    def get_short_description():
-        tree = get_mdp_ast_tree()
-        return get_extract_variable(tree, '__short_description__')
+def get_short_description():
+    tree = get_mdp_ast_tree()
+    return get_extract_variable(tree, '__short_description__')
 
-    def get_long_description():
-        tree = get_mdp_ast_tree()
-        return ast.get_docstring(tree)
+def get_long_description():
+    tree = get_mdp_ast_tree()
+    return ast.get_docstring(tree)
 
 
 def setup_package():
