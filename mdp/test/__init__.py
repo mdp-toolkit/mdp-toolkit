@@ -30,7 +30,6 @@ def test(filename=None, seed=None, options='', mod_loc=None):
     options = "--assert=reinterp "+options
     args.extend(options.split())
     args.append(loc)
-    print(args)
     _worker = get_worker()
     return _worker(args)
 
