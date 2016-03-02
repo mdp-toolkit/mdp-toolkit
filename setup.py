@@ -1,4 +1,5 @@
-from distutils.core import setup
+from setuptools import setup
+from setuptools.command.test import test as _test
 import os
 import sys
 
@@ -54,6 +55,18 @@ def get_long_description():
     tree = get_mdp_ast_tree()
     return ast.get_docstring(tree)
 
+class MDPTest(_test):
+    def run_tests(self):
+        import mdp
+        import bimdp
+        # Fix random seed here, as we want reproducible failures in
+        # automatic builds using "python setup.py test"
+        # If the tests are run manually with py.test or
+        # using the mdp.test and bimdp.test functions, the seed
+        # is not set
+        errno = mdp.test(seed=725021957)
+        errno += bimdp.test(seed=725021957)
+        sys.exit(errno)
 
 def setup_package():
 
@@ -82,7 +95,16 @@ def setup_package():
                       'mdp.parallel', 'bimdp', 'bimdp.hinet', 'bimdp.inspection',
                       'bimdp.nodes', 'bimdp.parallel', 'bimdp.test'],
           package_data = {'mdp.hinet': ['hinet.css'],
-                          'mdp.utils': ['slideshow.css']}
+                          'mdp.utils': ['slideshow.css']},
+          install_requires = ['numpy', 'future'],
+          tests_require = ['pytest'],
+          # define optional dependencies here, so that they can be installed
+          # for example using the "pip -e MDP[scipy] syntax"
+          extras_require = {'pp' : 'pp',
+                            'joblib' : 'joblib',
+                            'scikit-learn' : 'scikit-learn',
+                            'scipy' : 'scipy'},
+          cmdclass = {'test': MDPTest}
           )
 
 
