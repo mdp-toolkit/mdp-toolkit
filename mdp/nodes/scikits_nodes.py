@@ -47,7 +47,7 @@ elif _version_too_old(sklearn.__version__, (0, 11)):
                        'feature_extraction.text', 'pipelines', 'pls',
                        'gaussian_process', 'qda', 'ensemble', 'manifold',
                        'metrics', 'preprocessing', 'tree']    
-else:
+elif _version_too_old(sklearn.__version__, (0, 17)):
     scikits_modules = ['svm', 'linear_model', 'naive_bayes', 'neighbors',
                        'mixture', 'cluster', 'decomposition', 'lda',
                        'covariance', 'cross_validation', 'grid_search',
@@ -55,6 +55,16 @@ else:
                        'pipeline', 'pls', 'gaussian_process', 'qda',
                        'ensemble', 'manifold', 'metrics', 'preprocessing',
                        'semi_supervised', 'tree', 'hmm']
+
+else:
+    scikits_modules = ['calibration', 'cluster', 'covariance', 'cross_decomposition',
+                       'cross_validation', 'decomposition', 'discriminant_analysis',
+                       'ensemble', 'feature_extraction', 'feature_selection',
+                       'gaussian_process', 'grid_search', 'isotonic', 'kernel_approximation',
+                       'kernel_ridge', 'learning_curve', 'linear_model', 'manifold',
+                       'metrics', 'mixture', 'multiclass', 'naive_bayes', 'neighbors',
+                       'neural_network', 'preprocessing', 'random_projection',
+                       'semi_supervised', 'svm', 'tree']
 
 
 for name in scikits_modules:
