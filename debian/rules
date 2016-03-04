@@ -1,50 +1,15 @@
 #!/usr/bin/make -f
-#DH_VERBOSE=1
-
+#export DH_VERBOSE=1
+export PYBUILD_NAME = mdp
 RSEED:=1029384756
 
-PYTHON2:=$(shell pyversions -vr)
-
-# Check if python3-numpy is available
-# This is needed until python3-numpy is uploaded to sid to
-# simplify backporting to squeeze and older ubuntus
-DH_PYTHON3_STR:=$(shell python3 -c 'import numpy' > /dev/null 2>&1 && \
-                  echo ",python3" || echo "")
-PYTHON3:=$(shell python3 -c 'import numpy' > /dev/null 2>&1 && \
-           py3versions -vr || echo "")
-
-
-PYTHONALL:=$(PYTHON2) $(PYTHON3)
-
-include /usr/share/python/python.mk
-
-INSTALLPATH:=$(CURDIR)/debian/tmp
-
 %:
-	dh $@ --with python2$(DH_PYTHON3_STR)
+	dh $@ --with python2,python3 --buildsystem=pybuild
 
-# override dh_auto_install is not needed once dh_python3 knows
-# how to install python3 modules... 
-override_dh_auto_install: 
-	dh_auto_install --destdir=$(INSTALLPATH)
-	set -e && for v in $(PYTHON3); do \
-	  python$$v setup.py install $(py_setup_install_args) \
-	      --root=$(INSTALLPATH); \
-	done
-ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
-	set -xe && for v in $(PYTHONALL); do \
-	  LOC=$(INSTALLPATH)$(call py_libdir_sh, $$v); \
-	  cd $$LOC/mdp/test   && python$$v $$LOC/mdp/test/run_tests.py --seed $(RSEED) && \
-	  cd $$LOC/bimdp/test && python$$v $$LOC/mdp/test/run_tests.py --seed $(RSEED) ; \
-	done
-	: # Prune compiled code which could have been generated during testing
-	find \( -name __pycache__ -o -name \*.pyc -o -name \*.egg-info \) -delete
-endif
+override_dh_auto_test:
+	PYBUILD_SYSTEM=custom \
+	PYBUILD_TEST_ARGS="{interpreter} -m pytest --seed=$(RSEED) mdp && {interpreter} -m pytest --seed=$(RSEED) bimdp" dh_auto_test
 
 override_dh_installchangelogs:
 	dh_installchangelogs -k CHANGES
 
-override_dh_auto_clean:
-	dh_auto_clean
-	find -name build -type d -print0 | xargs -0 /bin/rm -r -f
-	find \( -name __pycache__ -o -name \*.pyc -o -name \*.egg-info \) -delete
