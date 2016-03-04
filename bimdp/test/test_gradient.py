@@ -1,4 +1,5 @@
-from __future__ import with_statement
+from builtins import range
+from builtins import object
 import mdp
 import bimdp
 
@@ -189,7 +190,7 @@ class TestGradientExtension(object):
         # original reference implementation
         def _switchboard_grad(self, x):
             grad = numx.zeros((self.output_dim, self.input_dim))
-            grad[range(self.output_dim), self.connections] = 1
+            grad[list(range(self.output_dim)), self.connections] = 1
             return numx.tile(grad, (len(x), 1, 1))
         with mdp.extension("gradient"):
             result = sboard._gradient(x, grad)

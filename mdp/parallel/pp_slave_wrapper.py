@@ -6,6 +6,7 @@ sys.path. So it acts like a wrapper for the server initialization.
 The paths are passed via sys.argv[5:]. The first four arguments are
 port, timeout, secret, n_workers.
 """
+from __future__ import print_function
 
 import sys
 
@@ -23,7 +24,7 @@ def main():
                                      port=port,
                                      secret=secret,
                                      timeout=timeout)
-    print "Server is ready."
+    print("Server is ready.")
     sys.stdout.flush()
     server.listen()
 

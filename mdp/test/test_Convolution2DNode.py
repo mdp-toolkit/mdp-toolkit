@@ -1,5 +1,5 @@
-from __future__ import with_statement
-from _tools import *
+from builtins import range
+from ._tools import *
 import py.test
 
 requires_signal = skip_on_condition(

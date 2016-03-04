@@ -1,5 +1,6 @@
+from builtins import range
 import mdp.parallel as parallel
-from _tools import *
+from ._tools import *
 
 requires_parallel_python = skip_on_condition(
     "not mdp.config.has_parallel_python",

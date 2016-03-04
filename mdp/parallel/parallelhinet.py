@@ -7,7 +7,7 @@ memory.
 
 import mdp.hinet as hinet
 
-import parallelnodes
+from . import parallelnodes
 
 
 class ParallelFlowNode(hinet.FlowNode, parallelnodes.ParallelExtensionNode):

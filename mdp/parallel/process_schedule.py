@@ -1,6 +1,11 @@
 """
 Process based scheduler for distribution across multiple CPU cores.
 """
+from __future__ import print_function
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import range
 
 # TODO: use a queue instead of sleep?
 #    http://docs.python.org/library/queue.html
@@ -20,7 +25,7 @@ Process based scheduler for distribution across multiple CPU cores.
 
 import sys
 import os
-import cPickle as pickle
+import pickle as pickle
 import threading
 import subprocess
 import time
@@ -128,7 +133,7 @@ class ProcessScheduler(Scheduler):
             process.stdin.flush()
         self._lock.release()
         if self.verbose:
-            print "scheduler shutdown"
+            print("scheduler shutdown")
 
     def _process_task(self, data, task_callable, task_index):
         """Add a task, if possible without blocking.
@@ -232,13 +237,13 @@ def _process_run(cache_callable=True):
                 del task_callable  # free memory
                 pickle.dump(result, pickle_out, protocol=-1)
                 pickle_out.flush()
-        except Exception, exception:
+        except Exception as exception:
             # return the exception instead of the result
             if task is None:
-                print "unpickling a task caused an exception in a process:"
+                print("unpickling a task caused an exception in a process:")
             else:
-                print "task %d caused exception in process:" % task[2]
-            print exception
+                print("task %d caused exception in process:" % task[2])
+            print(exception)
             traceback.print_exc()
             sys.stdout.flush()
             sys.exit()

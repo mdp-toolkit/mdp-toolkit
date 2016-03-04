@@ -1,3 +1,4 @@
+from builtins import str
 
 import mdp
 import mdp.hinet as hinet

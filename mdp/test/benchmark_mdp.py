@@ -1,5 +1,8 @@
 """These are some benchmark functions for MDP.
 """
+from __future__ import print_function
+from builtins import str
+from builtins import range
 
 import mdp
 #from mdp.utils import symeig
@@ -67,7 +70,7 @@ def quadratic_expansion_benchmark(dim, len, times):
     Arguments: (dim,len,times)."""
     a = numx_rand.random((len,dim))
     qnode = mdp.nodes.QuadraticExpansionNode()
-    for i in xrange(times):
+    for i in range(times):
         qnode(a)
 
 def polynomial_expansion_benchmark(dim, len, degree, times):
@@ -77,7 +80,7 @@ def polynomial_expansion_benchmark(dim, len, degree, times):
     numx_rand.seed(4253529)
     a = numx_rand.random((len,dim))
     pnode = mdp.nodes.PolynomialExpansionNode(degree)
-    for i in xrange(times):
+    for i in range(times):
         pnode(a)
 
 # ISFA benchmark
@@ -95,7 +98,7 @@ def _get_random_slow_sources(nsrc, distr_fun):
     src = distr_fun(size=(50000, nsrc))
     fsrc = numx_fft.rfft(src, axis=0)
     # enforce different time scales
-    for i in xrange(nsrc):
+    for i in range(nsrc):
         fsrc[5000+(i+1)*1000:,i] = 0.
     src = numx_fft.irfft(fsrc,axis=0)
     return src
@@ -167,7 +170,7 @@ def run_benchmarks(bench_funcs, time_digits=15):
         funcname = func.__name__[:-10]
 
         # loop over all cases
-        for i in xrange(ncases):
+        for i in range(ncases):
             args = args_list[i]
 
             # format description string
@@ -176,26 +179,26 @@ def run_benchmarks(bench_funcs, time_digits=15):
                 # print summary table header
                 descrlen = len(descr)+6
                 results_strlen = time_digits+descrlen+7
-                print '\nTiming results (%s, %d cases):' % (funcname, ncases)
-                print func.__doc__
-                print '+'+'-'*(results_strlen-2)+'+'
-                print label_str % 'Description'.center(descrlen)
-                print '+'+'-'*(results_strlen-2)+'+'
+                print('\nTiming results (%s, %d cases):' % (funcname, ncases))
+                print(func.__doc__)
+                print('+'+'-'*(results_strlen-2)+'+')
+                print(label_str % 'Description'.center(descrlen))
+                print('+'+'-'*(results_strlen-2)+'+')
 
             # execute function
             t = timeit(func, *args)
 
             # print summary table entry
-            print results_str % (descr.center(descrlen), t)
+            print(results_str % (descr.center(descrlen), t))
 
         # print summary table tail
-        print '+'+'-'*(results_strlen-2)+'+'
+        print('+'+'-'*(results_strlen-2)+'+')
 
-    print '\nTotal running time:', (TIMEFUNC()-tstart)*100.
+    print('\nTotal running time:', (TIMEFUNC()-tstart)*100.)
 
 ####### /benchmark function
 
-POLY_EXP_ARGS = [(2**i, 100, j, 200) for j in xrange(2,5) for i in xrange(2,4)]
+POLY_EXP_ARGS = [(2**i, 100, j, 200) for j in range(2,5) for i in range(2,4)]
 
 #if mdp.numx_description in ['symeig', 'scipy', 'numpy']:
 #    MUL_MTX_DIMS = [[2**i] for i in xrange(4,11)]
@@ -217,5 +220,5 @@ def get_benchmarks():
     return BENCH_FUNCS
 
 if __name__ == "__main__":
-    print "Running benchmarks: "
+    print("Running benchmarks: ")
     run_benchmarks(get_benchmarks())

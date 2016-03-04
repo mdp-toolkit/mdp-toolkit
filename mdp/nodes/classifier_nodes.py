@@ -1,3 +1,7 @@
+from __future__ import division
+from builtins import zip
+from builtins import range
+from past.utils import old_div
 __docformat__ = "restructuredtext en"
 
 import mdp
@@ -48,7 +52,7 @@ class PerceptronClassifier(ClassifierNode):
         if (not isinstance(labels, (list, tuple, numx.ndarray))):
             labels = [labels]
 
-        if (not numx.all(map(lambda x: abs(x) == 1, labels))):
+        if (not numx.all([abs(x) == 1 for x in labels])):
             msg = "The labels must be either -1 or 1."
             raise mdp.TrainingException(msg)
 
@@ -219,7 +223,7 @@ class DiscreteHopfieldClassifier(ClassifierNode):
     def _train_one(self, pattern):
         pattern = mdp.utils.bool_to_sign(pattern)
         weights = numx.outer(pattern, pattern)
-        self._weight_matrix += weights / float(self.input_dim)
+        self._weight_matrix += old_div(weights, float(self.input_dim))
         self._num_patterns += 1
 
     @property
@@ -232,7 +236,7 @@ class DiscreteHopfieldClassifier(ClassifierNode):
         """Returns the load parameter of the Hopfield net.
         The quality of memory recall for a Hopfield net breaks down when the
         load parameter is larger than 0.14."""
-        return self._num_patterns / float(self.input_dim)
+        return old_div(self._num_patterns, float(self.input_dim))
 
     def _stop_training(self):
         # remove self-feedback
@@ -252,7 +256,7 @@ class DiscreteHopfieldClassifier(ClassifierNode):
         has_converged = False
         while not has_converged:
             has_converged = True
-            iter_order = range(len(self._weight_matrix))
+            iter_order = list(range(len(self._weight_matrix)))
             if self._shuffled_update:
                 numx_rand.shuffle(iter_order)
             for row in iter_order:
@@ -307,13 +311,13 @@ class KMeansClassifier(ClassifierNode):
         # choose initial centroids unless they are already given
         if not self._centroids:
             import random
-            centr_idx = random.sample(xrange(self.tlen), self._num_clusters)
+            centr_idx = random.sample(range(self.tlen), self._num_clusters)
             #numx_rand.permutation(self.tlen)[:self._num_clusters]
             centroids = self.data[centr_idx]
         else:
             centroids = self._centroids
 
-        for step in xrange(self.max_iter):
+        for step in range(self.max_iter):
             # list of (sum_position, num_clusters)
             new_centroids = [(0., 0.)] * len(centroids)
             # cluster
@@ -325,7 +329,7 @@ class KMeansClassifier(ClassifierNode):
                 new_centroids[idx] = pos_count
 
             # get new centroid position
-            new_centroids = numx.array([c[0] / c[1] if c[1]>0. else centroids[idx]
+            new_centroids = numx.array([old_div(c[0], c[1]) if c[1]>0. else centroids[idx]
                                         for idx, c in enumerate(new_centroids)])
             # check if we are stable
             if numx.all(new_centroids == centroids):
@@ -405,7 +409,7 @@ class GaussianClassifier(ClassifierNode):
             self._update_covs(x, labels)
 
     def _stop_training(self):
-        self.labels = self._cov_objs.keys()
+        self.labels = list(self._cov_objs.keys())
         self.labels.sort()
         nitems = 0
         for lbl in self.labels:
@@ -444,7 +448,7 @@ class GaussianClassifier(ClassifierNode):
         # exponent
         exponent = -0.5 * (utils.mult(x_mn, invS)*x_mn).sum(axis=1)
         # constant
-        constant = (2.*numx.pi)**(-dim/2.) / sqrt_detS
+        constant = old_div((2.*numx.pi)**(old_div(-dim,2.)), sqrt_detS)
         # probability
         return constant * numx.exp(exponent)
 
@@ -463,13 +467,13 @@ class GaussianClassifier(ClassifierNode):
         # (not necessary, but sometimes useful)
         tmp_tot = tmp_prob.sum(axis=1)
         tmp_tot = tmp_tot[:, numx.newaxis]
-        return tmp_prob / tmp_tot
+        return old_div(tmp_prob, tmp_tot)
 
     def _prob(self, x):
         """Return the posterior probability of each class given the input in a dict."""
 
         class_prob = self.class_probabilities(x)
-        return [dict(zip(self.labels, prob)) for prob in class_prob]
+        return [dict(list(zip(self.labels, prob))) for prob in class_prob]
 
     def _label(self, x):
         """Classify the input data using Maximum A-Posteriori."""

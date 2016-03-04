@@ -1,4 +1,5 @@
-from _tools import *
+from builtins import range
+from ._tools import *
 
 TESTYPES = [numx.dtype('d'), numx.dtype('f')]
 
@@ -100,7 +101,7 @@ def testMultipleCovarianceMatricesDtypeAndFuncs():
 def _MultipleCovarianceMatrices_funcs(dtype, decimals):
     def assert_all(des,act, dec=decimals):
         # check list of matrices equals multcov array
-        for x in xrange(nmat):
+        for x in range(nmat):
             assert_array_almost_equal_diff(des[x],act.covs[:,:,x],dec)
 
     def rotate(mat,angle,indices):
@@ -125,7 +126,7 @@ def _MultipleCovarianceMatrices_funcs(dtype, decimals):
     dim = 7
     nmat = 13
     # create mult cov mat
-    covs = [uniform((dim,dim)).astype(dtype) for x in xrange(nmat)]
+    covs = [uniform((dim,dim)).astype(dtype) for x in range(nmat)]
     mult_cov = mdp.utils.MultipleCovarianceMatrices(covs)
     assert_equal(nmat,mult_cov.ncovs)
     # test symmetrize
@@ -134,7 +135,7 @@ def _MultipleCovarianceMatrices_funcs(dtype, decimals):
     assert_all(sym_covs,mult_cov)
     # test weight
     weights = uniform(nmat)
-    w_covs = [weights[x]*sym_covs[x] for x in xrange(nmat)]
+    w_covs = [weights[x]*sym_covs[x] for x in range(nmat)]
     mult_cov.weight(weights)
     assert_all(w_covs,mult_cov)
     # test rotate
@@ -165,7 +166,7 @@ def testMultipleCovarianceMatricesTransformations():
     def get_mult_covs(inp,nmat):
         # return delayed covariance matrices
         covs = []
-        for delay in xrange(nmat):
+        for delay in range(nmat):
             tmp = mdp.utils.DelayCovarianceMatrix(delay)
             tmp.update(inp)
             cov,avg,avg_dt,tlen = tmp.fix()

@@ -1,7 +1,11 @@
+from __future__ import print_function
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 __docformat__ = "restructuredtext en"
 
 import mdp
-from ica_nodes import ICANode
+from .ica_nodes import ICANode
 numx, numx_rand, numx_linalg = mdp.numx, mdp.numx_rand, mdp.numx_linalg
 
 mult = mdp.utils.mult
@@ -87,7 +91,7 @@ class JADENode(ICANode):
         X = data
 
         if verbose:
-            print "jade -> Estimating cumulant matrices"
+            print("jade -> Estimating cumulant matrices")
 
         # Dim. of the space of real symm matrices
         dimsymm = (m*(m+1)) // 2
@@ -108,16 +112,16 @@ class JADENode(ICANode):
         # will index the columns of CM where to store the cum. mats.
         Range = arange(m)
 
-        for im in xrange(m):
+        for im in range(m):
             Xim = X[:, im]
             Xijm = Xim*Xim
             # Note to myself: the -R on next line can be removed: it does not
             # affect the joint diagonalization criterion
-            Qij = ( mult(Xijm*X.T, X) / float(T)
+            Qij = ( old_div(mult(Xijm*X.T, X), float(T))
                     - R - 2 * numx.outer(R[:,im], R[:,im]) )
             CM[:, Range] = Qij
             Range += m
-            for jm in xrange(im):
+            for jm in range(im):
                 Xijm = Xim*X[:, jm]
                 Qij = ( sqrt(2) * mult(Xijm*X.T, X) / T
                         - numx.outer(R[:,im], R[:,jm]) - numx.outer(R[:,jm],
@@ -136,14 +140,14 @@ class JADENode(ICANode):
         Diag = numx.zeros(m, dtype=dtype)
         On = 0.0
         Range = arange(m)
-        for im in xrange(nbcm):
+        for im in range(nbcm):
             Diag = numx.diag(CM[:, Range])
             On = On + (Diag*Diag).sum(axis=0)
             Range += m
 
         Off = (CM*CM).sum(axis=0) - On
         # A statistically scaled threshold on `small" angles
-        seuil = (self.limit*self.limit) / sqrt(T)
+        seuil = old_div((self.limit*self.limit), sqrt(T))
         # sweep number
         encore = True
         sweep = 0
@@ -165,17 +169,17 @@ class JADENode(ICANode):
         # Joint diagonalization proper
         # ============================
         if verbose:
-            print "jade -> Contrast optimization by joint diagonalization"
+            print("jade -> Contrast optimization by joint diagonalization")
 
         while encore:
             encore = False
             if verbose:
-                print "jade -> Sweep #%3d" % sweep ,
+                print("jade -> Sweep #%3d" % sweep, end=' ')
             sweep += 1
             upds  = 0
 
-            for p in xrange(m-1):
-                for q in xrange(p+1, m):
+            for p in range(m-1):
+                for q in range(p+1, m):
 
                     Ip = arange(p, m*nbcm, m)
                     Iq = arange(q, m*nbcm, m)
@@ -187,7 +191,7 @@ class JADENode(ICANode):
                     ton = gg[0, 0] - gg[1, 1]
                     toff = gg[0, 1] + gg[1, 0]
                     theta = 0.5 * arctan2(toff, ton + sqrt(ton*ton+toff*toff))
-                    Gain = (sqrt(ton * ton + toff * toff) - ton) / 4.0
+                    Gain = old_div((sqrt(ton * ton + toff * toff) - ton), 4.0)
 
                     # Givens update
                     if abs(theta) > seuil:
@@ -208,14 +212,14 @@ class JADENode(ICANode):
                         Off = Off - Gain
 
             if verbose:
-                print "completed in %d rotations" % upds
+                print("completed in %d rotations" % upds)
             updates += upds
             if updates > max_it:
                 err_msg = 'No convergence after %d iterations.' % max_it
                 raise mdp.NodeException(err_msg)
 
         if verbose:
-            print "jade -> Total of %d Givens rotations" % updates
+            print("jade -> Total of %d Givens rotations" % updates)
 
         # A separating matrix
         # ===================
@@ -229,13 +233,13 @@ class JADENode(ICANode):
         # columns of A = pinv(B)
 
         if verbose:
-            print "jade -> Sorting the components"
+            print("jade -> Sorting the components")
 
         A = numx_linalg.pinv(B)
         B =  B[numx.argsort((A*A).sum(axis=0))[::-1], :]
 
         if verbose:
-            print "jade -> Fixing the signs"
+            print("jade -> Fixing the signs")
         b = B[:, 0]
         # just a trick to deal with sign == 0
         signs = numx.sign(numx.sign(b)+0.1)

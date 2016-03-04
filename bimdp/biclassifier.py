@@ -1,6 +1,6 @@
 
 import mdp
-import binode
+from . import binode
 
 
 class BiClassifier(binode.BiNode, mdp.ClassifierNode):

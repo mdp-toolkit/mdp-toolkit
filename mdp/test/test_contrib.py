@@ -1,8 +1,12 @@
 """These are test functions for MDP contributed nodes.
 """
+from __future__ import division
+from builtins import str
+from builtins import range
+from past.utils import old_div
 
-from _tools import *
-from test_ICANode import verify_ICANode, verify_ICANodeMatrices
+from ._tools import *
+from .test_ICANode import verify_ICANode, verify_ICANodeMatrices
 
 requires_joblib = skip_on_condition(
     "not mdp.config.has_caching",
@@ -37,7 +41,7 @@ def _compare_neighbors(orig, proj, k):
     n = orig.shape[0]
     err = numx.zeros((n,))
     # compare neighbors indices
-    for i in xrange(n):
+    for i in range(n):
         # neighbors in original space
         dist = orig - orig[i,:]
         orig_nbrs = numx.argsort((dist**2).sum(1))[1:k+1]
@@ -53,7 +57,7 @@ def _compare_neighbors(orig, proj, k):
 
 def test_JADENode():
     trials = 3
-    for i in xrange(trials):
+    for i in range(trials):
         try:
             ica = mdp.nodes.JADENode(limit = 10**(-decimal))
             ica2 = ica.copy()
@@ -202,8 +206,8 @@ def test_XSFANode():
     # create three souces with different speeds
     fsrc = numx_fft.rfft(src, axis=0)
 
-    for i in xrange(N):
-        fsrc[(i+1)*(T/10):, i] = 0.
+    for i in range(N):
+        fsrc[(i+1)*(old_div(T,10)):, i] = 0.
 
     src = numx_fft.irfft(fsrc,axis=0)
     src -= src.mean(axis=0)
@@ -214,7 +218,7 @@ def test_XSFANode():
 
     flow = mdp.Flow([mdp.nodes.XSFANode()])
     # let's test also chunk-mode training
-    flow.train([[mix[:T/2, :], mix[T/2:, :]]])
+    flow.train([[mix[:old_div(T,2), :], mix[old_div(T,2):, :]]])
 
     out = flow(mix)
     #import bimdp

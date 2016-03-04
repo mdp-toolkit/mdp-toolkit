@@ -1,8 +1,13 @@
-from __future__ import with_statement
+from future import standard_library
+standard_library.install_aliases()
+from builtins import zip
+from builtins import str
+from builtins import object
+from future.utils import with_metaclass
 
 __docformat__ = "restructuredtext en"
 
-import cPickle as _cPickle
+import pickle as _cPickle
 import warnings as _warnings
 import copy as _copy
 import inspect
@@ -65,7 +70,7 @@ class NodeMetaclass(type):
         priv_infos = cls._select_private_methods_to_wrap(cls, members)
 
         # now add the wrappers
-        for wrapper_name, priv_info in priv_infos.iteritems():
+        for wrapper_name, priv_info in priv_infos.items():
             # Note: super works because we never wrap in the defining class
             orig_pubmethod = getattr(super(new_cls, new_cls), wrapper_name)
 
@@ -172,12 +177,12 @@ class NodeMetaclass(type):
                     signature=signature,
                     argnames=argnames,
                     kwargs_name=varkwargs,
-                    defaults=func.func_defaults,
+                    defaults=func.__defaults__,
                     doc=func.__doc__,
                     module=func.__module__,
                     dict=func.__dict__,
-                    globals=func.func_globals,
-                    closure=func.func_closure)
+                    globals=func.__globals__,
+                    closure=func.__closure__)
 
     @staticmethod
     def _wrap_function(original_func, wrapper_infodict):
@@ -194,7 +199,7 @@ class NodeMetaclass(type):
         wrapped_func.__doc__ = wrapper_infodict['doc']
         wrapped_func.__module__ = wrapper_infodict['module']
         wrapped_func.__dict__.update(wrapper_infodict['dict'])
-        wrapped_func.func_defaults = wrapper_infodict['defaults']
+        wrapped_func.__defaults__ = wrapper_infodict['defaults']
         return wrapped_func
 
     @staticmethod
@@ -213,11 +218,11 @@ class NodeMetaclass(type):
         wrapped_func.__doc__ = wrapper_infodict['doc']
         wrapped_func.__module__ = wrapper_infodict['module']
         wrapped_func.__dict__.update(wrapper_infodict['dict'])
-        wrapped_func.func_defaults = wrapper_infodict['defaults']
+        wrapped_func.__defaults__ = wrapper_infodict['defaults']
         return wrapped_func
 
 
-class Node(object):
+class Node(with_metaclass(NodeMetaclass, object)):
     """A `Node` is the basic building block of an MDP application.
 
     It represents a data processing element, like for example a learning
@@ -249,8 +254,6 @@ class Node(object):
     node's properties refer to the docstring of `get_input_dim`/`set_input_dim`,
     `get_output_dim`/`set_output_dim`, and `get_dtype`/`set_dtype`.
     """
-
-    __metaclass__ = NodeMetaclass
 
     def __init__(self, input_dim=None, output_dim=None, dtype=None):
         """If the input dimension and the output dimension are

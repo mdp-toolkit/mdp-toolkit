@@ -4,6 +4,7 @@ This extension is based on the **joblib** library by Gael Varoquaux,
 available at http://packages.python.org/joblib/. At the moment, the
 extension is based on joblib v. 0.4.6.
 """
+from builtins import object
 __docformat__ = "restructuredtext en"
 
 import joblib
@@ -114,7 +115,7 @@ class CacheExecuteExtensionNode(ExtensionNode, Node):
         if self not in _cached_methods:
             global _memory
             _cached_methods[self] = _memory.cache(
-                self._non_extension_execute.im_func)
+                self._non_extension_execute.__func__)
             # execute pre-execution checks once so that all automatic
             # settings of things like dtype and input_dim are done, and
             # caching begins from first execution, not the second

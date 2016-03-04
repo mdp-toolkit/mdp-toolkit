@@ -111,12 +111,12 @@ class MDPDeprecationWarning(DeprecationWarning, MDPWarning):
     pass
 
 
-import configuration
+from . import configuration
 
 __version__ = '3.4'
 __revision__ = configuration.get_git_revision()
 __authors__ = 'MDP Developers'
-__copyright__ = '(c) 2003-2012 mdp-toolkit-devel@lists.sourceforge.net'
+__copyright__ = '(c) 2003-2016 mdp-toolkit-devel@lists.sourceforge.net'
 __license__ = 'BSD License, see COPYRIGHT'
 __contact__ = 'mdp-toolkit-users@lists.sourceforge.net'
 __homepage__ = 'http://mdp-toolkit.sourceforge.net'
@@ -128,29 +128,29 @@ config = configuration.config
  numx_rand, numx_version) = configuration.get_numx()
 
 # import the utils module (used by other modules)
-import utils
+from . import utils
 # set symeig
 utils.symeig = configuration.get_symeig(numx_linalg)
 
 # import exceptions from nodes and flows
-from signal_node import (NodeException, InconsistentDimException,
+from .signal_node import (NodeException, InconsistentDimException,
                          TrainingException,
                          TrainingFinishedException, IsNotTrainableException,
                          IsNotInvertibleException)
-from linear_flows import CrashRecoveryException, FlowException, FlowExceptionCR
+from .linear_flows import CrashRecoveryException, FlowException, FlowExceptionCR
 
 # import base nodes and flow classes
-from signal_node import (NodeMetaclass, Node, PreserveDimNode,
+from .signal_node import (NodeMetaclass, Node, PreserveDimNode,
                          Cumulator, VariadicCumulator)
 
-from linear_flows import (Flow, CheckpointFlow,
+from .linear_flows import (Flow, CheckpointFlow,
                           CheckpointFunction, CheckpointSaveFunction)
 
 # import helper functions:
-from helper_funcs import pca, fastica
+from .helper_funcs import pca, fastica
 
 # import extension mechanism
-from extension import (ExtensionException, extension_method,
+from .extension import (ExtensionException, extension_method,
                        extension_setup, extension_teardown,
                        ExtensionNodeMetaclass,
                        ExtensionNode, get_extensions,
@@ -160,13 +160,13 @@ from extension import (ExtensionException, extension_method,
                        extension)
 
 # import classifier node
-from classifier_node import (ClassifierNode, ClassifierCumulator)
+from .classifier_node import (ClassifierNode, ClassifierCumulator)
 
 # import our modules
-import nodes
-import hinet
-import parallel
-from test import test
+from . import nodes
+from . import hinet
+from . import parallel
+from .test import test
 
 # explicitly set __all__, mainly needed for epydoc
 __all__ = ['config',
@@ -211,7 +211,7 @@ __all__ = ['config',
            ]
 
 if config.has_joblib:
-    import caching
+    from . import caching
     __all__ += ['caching']
 
 utils.fixup_namespace(__name__, __all__,

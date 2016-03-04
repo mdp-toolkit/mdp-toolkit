@@ -1,3 +1,6 @@
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 __docformat__ = "restructuredtext en"
 
 from mdp import numx, NodeException, Cumulator
@@ -100,7 +103,7 @@ class NIPALSNode(Cumulator, PCANode):
                 it += 1
                 # Project X onto t to find corresponding loading p
                 # and normalize loading vector p to length 1
-                p = mult(X.T, t)/mult(t, t)
+                p = old_div(mult(X.T, t),mult(t, t))
                 p /= sqrt(mult(p, p))
 
                 # project X onto p to find corresponding score vector t_new
@@ -120,8 +123,8 @@ class NIPALSNode(Cumulator, PCANode):
             D = numx.outer(t, p)
             X -= D
             D = mult(D, p)
-            d[i] = (D*D).sum()/(tlen-1)
-            exp_var += d[i]/var
+            d[i] = old_div((D*D).sum(),(tlen-1))
+            exp_var += old_div(d[i],var)
             if des_var and (exp_var >= self.desired_variance):
                 self.output_dim = i + 1
                 break

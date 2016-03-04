@@ -1,9 +1,13 @@
 """
 Some helper functions and classes for inspection.
 """
+from future import standard_library
+standard_library.install_aliases()
+from builtins import next
+from builtins import object
 
 import os
-import cPickle as pickle
+import pickle as pickle
 
 
 def robust_pickle(path, filename, obj):
@@ -11,7 +15,7 @@ def robust_pickle(path, filename, obj):
     filename = os.path.join(path, filename)
     try:
         picke_file = open(filename, "wb")
-    except IOError, inst:
+    except IOError as inst:
         error_code = inst.args[0]
         if error_code == 2:  # path does not exist
             os.makedirs(path)
@@ -31,7 +35,7 @@ def robust_write_file(path, filename, content):
     """
     try:
         new_file = open(os.path.join(path, filename), "w")
-    except IOError, inst:
+    except IOError as inst:
         error_code = inst.args[0]
         if error_code == 2:  # path does not exist
             os.makedirs(path)
@@ -54,7 +58,7 @@ def first_iterable_elem(iterable):
         first_elem = peek_iter.peek()
         return first_elem, peek_iter
     else:
-        first_elem = iter(iterable).next()
+        first_elem = next(iter(iterable))
         return first_elem, iterable
 
 
@@ -73,16 +77,16 @@ class PeekIterator(object):
         order. If the iterator has no next element then the StopIterator
         exception is passed.
         """
-        next_elem = self.next()
+        next_elem = next(self)
         # TODO: use a dequeue for better efficiency
         self.cache = [next_elem] + self.cache
         return next_elem
 
-    def next(self):
+    def __next__(self):
         if self.cache:
             return self.cache.pop()
         else:
-            return self.iterator.next()
+            return next(self.iterator)
 
     def __iter__(self):
         return self

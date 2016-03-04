@@ -1,3 +1,8 @@
+from __future__ import print_function
+from __future__ import division
+from builtins import str
+from builtins import range
+from past.utils import old_div
 __docformat__ = "restructuredtext en"
 
 import sys as _sys
@@ -163,8 +168,8 @@ class ISFANode(Node):
             would give the same solution only much faster.
         """
         # check that the "lags" argument has some meaningful value
-        if isinstance(lags, (int, long)):
-            lags = range(1, lags+1)
+        if isinstance(lags, (int, int)):
+            lags = list(range(1, lags+1))
         elif isinstance(lags, (list, tuple)):
             lags = numx.array(lags, "i")
         elif isinstance(lags, numx.ndarray):
@@ -386,8 +391,8 @@ class ISFANode(Node):
         # funtion appears to be constant. This is because we hit the
         # maximum resolution for the cosine function (ca. 1e-15)
         npoints = 100
-        left = -PI/2 - PI/(npoints+1)
-        right = PI/2 + PI/(npoints+1)
+        left = old_div(-PI,2) - old_div(PI,(npoints+1))
+        right = old_div(PI,2) + old_div(PI,(npoints+1))
         for iter in (1, 2):
             phi = numx.linspace(left, right, npoints+3)
             contrast = c22*cos(-2*phi)+s22*sin(-2*phi)+\
@@ -428,7 +433,7 @@ class ISFANode(Node):
             # Compute the contrast between -pi/2 and pi/2
             # (useful for testing purposes)
             npoints = 1000
-            phi = numx.linspace(-PI/2, PI/2, npoints+1)
+            phi = numx.linspace(old_div(-PI,2), old_div(PI,2), npoints+1)
             contrast = a20 + c22*cos(-2*phi) + s22*sin(-2*phi) +\
                        c24*cos(-4*phi) + s24*sin(-4*phi)
             return phi, contrast, minimum, minimum_contrast
@@ -492,11 +497,11 @@ class ISFANode(Node):
         if complete == 1:
             # Compute the contrast between -pi/2 and pi/2
             # (useful for testing purposes)
-            phi = numx.linspace(-PI/2, PI/2, npoints+1)
+            phi = numx.linspace(old_div(-PI,2), old_div(PI,2), npoints+1)
             contrast = a20 + c24*cos(-4*phi) + s24*sin(-4*phi)
             return phi, contrast, minimum, minimum_contrast
         elif complete == 2:
-            phi = numx.linspace(-PI/4, PI/4, npoints+1)
+            phi = numx.linspace(old_div(-PI,4), old_div(PI,4), npoints+1)
             contrast = a20 + c24*cos(-4*phi) + s24*sin(-4*phi)
             return phi, contrast, minimum, minimum_contrast
         else:
@@ -528,8 +533,8 @@ class ISFANode(Node):
         # whereas ica accounts for the off-diagonal terms
         ncomp = self.output_dim
         if ncomp > 1:
-            bica =  self.sfa_ica_coeff[1]/(ncomp*(ncomp-1))
-            bsfa = -self.sfa_ica_coeff[0]/ncomp
+            bica =  old_div(self.sfa_ica_coeff[1],(ncomp*(ncomp-1)))
+            bsfa = old_div(-self.sfa_ica_coeff[0],ncomp)
         else:
             bica =  0.#self.sfa_ica_coeff[1]
             bsfa = -self.sfa_ica_coeff[0]
@@ -565,7 +570,7 @@ class ISFANode(Node):
                                  'TOT': sfa + ica}
         # info headers
         if self.verbose:
-            print self._info['header']+self._info['line']
+            print(self._info['header']+self._info['line'])
 
         # initialize control variables
         # contrast
@@ -669,9 +674,9 @@ class ISFANode(Node):
         contrast = sfa+ica
         # print final information
         if self.verbose:
-            print self._fmt_prog_info(sweep, perturbed,
-                                      contrast, sfa, ica)
-            print self._info['line']
+            print(self._fmt_prog_info(sweep, perturbed,
+                                      contrast, sfa, ica))
+            print(self._info['line'])
 
         self.final_contrast = {'SFA': sfa,
                                'ICA': ica,
@@ -699,7 +704,7 @@ class ISFANode(Node):
                 break
 
             # relative improvement in the contrast function
-            relative_diff = (prev_contrast-contrast)/abs(prev_contrast)
+            relative_diff = old_div((prev_contrast-contrast),abs(prev_contrast))
             if relative_diff < 0:
                 # if rate of change is negative we hit numerical precision
                 # or we already sit on the optimum for this pair of axis.

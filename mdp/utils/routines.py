@@ -1,3 +1,8 @@
+from __future__ import division
+from builtins import map
+from builtins import next
+from builtins import range
+from past.utils import old_div
 import mdp
 
 # import numeric module (scipy, Numeric or numarray)
@@ -141,7 +146,7 @@ def cov2(x, y):
     mnx = x.mean(axis=0)
     mny = y.mean(axis=0)
     tlen = x.shape[0]
-    return mdp.utils.mult(x.T, y)/(tlen-1) - numx.outer(mnx, mny)
+    return old_div(mdp.utils.mult(x.T, y),(tlen-1)) - numx.outer(mnx, mny)
 
 def cov_maxima(cov):
     """Extract the maxima of a covariance matrix."""
@@ -181,9 +186,9 @@ def comb(N, k):
     """Return number of combinations of k objects from a set of N objects
     without repetitions, a.k.a. the binomial coefficient of N and k."""
     ret = 1
-    for mlt in xrange(N, N-k, -1):
+    for mlt in range(N, N-k, -1):
         ret *= mlt
-    for dv in xrange(1, k+1):
+    for dv in range(1, k+1):
         ret //= dv
     return ret
 
@@ -263,7 +268,7 @@ except ImportError:
         # taken from python docs 2.6
         # product('ABCD', 'xy') --> Ax Ay Bx By Cx Cy Dx Dy
         # product(range(2), repeat=3) --> 000 001 010 011 100 101 110 111
-        pools = map(tuple, args) * kwds.get('repeat', 1)
+        pools = list(map(tuple, args)) * kwds.get('repeat', 1)
         result = [[]]
         for pool in pools:
             result = [x+[y] for x in result for y in pool]
@@ -292,7 +297,7 @@ def orthogonal_permutations(a_dict):
     """
     pool = dict(a_dict)
     args = []
-    for func, all_args in pool.items():
+    for func, all_args in list(pool.items()):
         # check the size of the list in the second item of the tuple
         args_with_fun = [(func, arg) for arg in all_args]
         args.append(args_with_fun)
@@ -330,10 +335,10 @@ def izip_stretched(*iterables):
         except TypeError:
             return itertools.repeat(val)
 
-    iterables= map(iter_or_repeat, iterables)
+    iterables= list(map(iter_or_repeat, iterables))
     while iterables:
         # need to care about python < 2.6
-        yield tuple([it.next() for it in iterables])
+        yield tuple([next(it) for it in iterables])
 
 
 def weighted_choice(a_dict, normalize=True):
@@ -352,13 +357,13 @@ def weighted_choice(a_dict, normalize=True):
     if normalize:
         d = a_dict.copy()
         s = sum(d.values())
-        for key, val in d.items():
-            d[key] = d[key] / s
+        for key, val in list(d.items()):
+            d[key] = old_div(d[key], s)
     else:
         d = a_dict
     rand_num = random.random()
     total_rand = 0
-    for key, val in d.items():
+    for key, val in list(d.items()):
         total_rand += val
         if total_rand > rand_num:
             return key

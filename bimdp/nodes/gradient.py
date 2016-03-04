@@ -1,6 +1,8 @@
 """
 Extension to get the total derivative / gradient / Jacobian matrix.
 """
+from builtins import str
+from builtins import range
 
 import mdp
 import bimdp

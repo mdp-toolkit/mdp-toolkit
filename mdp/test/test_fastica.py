@@ -1,5 +1,6 @@
+from builtins import str
 import mdp
-from _tools import *
+from ._tools import *
 uniform = mdp.numx_rand.random
 
 def pytest_generate_tests(metafunc):

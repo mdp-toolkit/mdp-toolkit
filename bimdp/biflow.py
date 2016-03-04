@@ -4,6 +4,11 @@ BiMDP Flow class for flexible (bidirectional) data flow.
 The central class is a BiFlow, which implements all the flow handling options
 offered by the BiNode class (see binode.py for a description).
 """
+from __future__ import print_function
+from builtins import zip
+from builtins import str
+from builtins import range
+from builtins import object
 
 # NOTE: make sure that isinstance(str, target) is never used, so that in
 #    principle any object could be used.
@@ -13,7 +18,7 @@ import itertools
 import mdp
 n = mdp.numx
 
-from binode import BiNode
+from .binode import BiNode
 
 # this target value tells the flow to abort and return the current values
 EXIT_TARGET = "exit"
@@ -135,7 +140,7 @@ class BiFlow(mdp.Flow):
             self._train_node(data_iterables[i_node], i_node,
                              msg_iterables[i_node], stop_messages[i_node])
             if self.verbose:
-                print "training finished"
+                print("training finished")
 
     def _train_node(self, iterable, nodenr, msg_iterable=None,
                     stop_msg=None):
@@ -169,7 +174,7 @@ class BiFlow(mdp.Flow):
         This method should be only called internally in BiFlow.
         """
         empty_iterator = True
-        for (x, msg) in itertools.izip(iterable, msg_iterable):
+        for (x, msg) in zip(iterable, msg_iterable):
             empty_iterator = False
             ## execute the flow until the nodes return value is right
             i_node = 0
@@ -303,7 +308,7 @@ class BiFlow(mdp.Flow):
         y_results = None
         msg_results = MessageResultContainer()
         empty_iterator = True
-        for (x, msg, target) in itertools.izip(iterable, msg_iterable,
+        for (x, msg, target) in zip(iterable, msg_iterable,
                                                target_iterable):
             empty_iterator = False
             if not target:
@@ -605,4 +610,4 @@ class BiCheckpointFlow(BiFlow, mdp.CheckpointFlow):
                 if dict:
                     self.__dict__.update(checkpoint_dict)
             if self.verbose:
-                print "training finished"
+                print("training finished")

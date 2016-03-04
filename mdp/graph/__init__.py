@@ -1,4 +1,4 @@
-from graph import ( Graph, GraphEdge, GraphException, GraphNode,
+from .graph import ( Graph, GraphEdge, GraphException, GraphNode,
                     GraphTopologicalException, is_sequence,
                     recursive_map, recursive_reduce)
 

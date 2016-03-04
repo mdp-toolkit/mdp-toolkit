@@ -1,5 +1,5 @@
 import sys
-from _tools import *
+from ._tools import *
 
 def _list_module(module):
     try:

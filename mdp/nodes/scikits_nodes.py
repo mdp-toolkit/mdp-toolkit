@@ -3,6 +3,7 @@
 
 This module is based on the 0.6.X branch of scikits.learn .
 """
+from __future__ import print_function
 __docformat__ = "restructuredtext en"
 
 try:
@@ -46,7 +47,7 @@ elif _version_too_old(sklearn.__version__, (0, 11)):
                        'feature_extraction.text', 'pipelines', 'pls',
                        'gaussian_process', 'qda', 'ensemble', 'manifold',
                        'metrics', 'preprocessing', 'tree']    
-else:
+elif _version_too_old(sklearn.__version__, (0, 17)):
     scikits_modules = ['svm', 'linear_model', 'naive_bayes', 'neighbors',
                        'mixture', 'cluster', 'decomposition', 'lda',
                        'covariance', 'cross_validation', 'grid_search',
@@ -54,6 +55,16 @@ else:
                        'pipeline', 'pls', 'gaussian_process', 'qda',
                        'ensemble', 'manifold', 'metrics', 'preprocessing',
                        'semi_supervised', 'tree', 'hmm']
+
+else:
+    scikits_modules = ['calibration', 'cluster', 'covariance', 'cross_decomposition',
+                       'cross_validation', 'decomposition', 'discriminant_analysis',
+                       'ensemble', 'feature_extraction', 'feature_selection',
+                       'gaussian_process', 'grid_search', 'isotonic', 'kernel_approximation',
+                       'kernel_ridge', 'learning_curve', 'linear_model', 'manifold',
+                       'metrics', 'mixture', 'multiclass', 'naive_bayes', 'neighbors',
+                       'neural_network', 'preprocessing', 'random_projection',
+                       'semi_supervised', 'svm', 'tree']
 
 
 for name in scikits_modules:
@@ -167,7 +178,7 @@ def apply_to_scikits_algorithms(current_module, action,
         return
     processed_modules.append(current_module)
 
-    for member_name, member in current_module.__dict__.items():
+    for member_name, member in list(current_module.__dict__.items()):
         if not member_name.startswith('_'):
 
             # classes
@@ -211,7 +222,7 @@ def wrap_scikits_classifier(scikits_class):
 
             if output_dim is not None:
                 # output_dim and n_components cannot be defined at the same time
-                if kwargs.has_key('n_components'):
+                if 'n_components' in kwargs:
                     msg = ("Dimensionality set both by "
                            "output_dim=%d and n_components=%d""")
                     raise ScikitsException(msg % (output_dim,
@@ -264,19 +275,19 @@ def wrap_scikits_classifier(scikits_class):
     if hasattr(scikits_class, 'predict_proba'):
         methods_dict['prob'] = 'predict_proba'
 
-    for mdp_name, scikits_name in methods_dict.items():
+    for mdp_name, scikits_name in list(methods_dict.items()):
         mdp_method = getattr(ScikitsNode, mdp_name)
         scikits_method = getattr(scikits_class, scikits_name)
-        if hasattr(scikits_method, 'im_func'):
-            # some scikits algorithms do not define an __init__ method
-            # the one inherited from 'object' is a
-            # "<slot wrapper '__init__' of 'object' objects>"
-            # which does not have a 'im_func' attribute
-            mdp_method.im_func.__doc__ = _gen_docstring(scikits_class,
-                                                        scikits_method.im_func)
+        if hasattr(scikits_method, '__func__'):
+            mdp_method.__func__.__doc__ = _gen_docstring(scikits_class,
+                                                        scikits_method.__func__)
 
     if scikits_class.__init__.__doc__ is None:
-        ScikitsNode.__init__.im_func.__doc__ = _gen_docstring(scikits_class)
+        try:
+            ScikitsNode.__init__.__func__.__doc__ = _gen_docstring(scikits_class)
+        except AttributeError:
+            # we are in Python3
+            ScikitsNode.__init__.__doc__ = _gen_docstring(scikits_class)
 
     return ScikitsNode
 
@@ -339,19 +350,20 @@ def wrap_scikits_transformer(scikits_class):
                     'stop_training': 'fit',
                     'execute': 'transform'}
 
-    for mdp_name, scikits_name in methods_dict.items():
+    for mdp_name, scikits_name in list(methods_dict.items()):
         mdp_method = getattr(ScikitsNode, mdp_name)
         scikits_method = getattr(scikits_class, scikits_name, None)
-        if hasattr(scikits_method, 'im_func'):
-            # some scikits algorithms do not define an __init__ method
-            # the one inherited from 'object' is a
-            # "<slot wrapper '__init__' of 'object' objects>"
-            # which does not have a 'im_func' attribute
-            mdp_method.im_func.__doc__ = _gen_docstring(scikits_class,
-                                                        scikits_method.im_func)
+        if hasattr(scikits_method, '__func__'):
+            mdp_method.__func__.__doc__ = _gen_docstring(scikits_class,
+                                                        scikits_method.__func__)
 
     if scikits_class.__init__.__doc__ is None:
-        ScikitsNode.__init__.im_func.__doc__ = _gen_docstring(scikits_class)
+        try:
+            ScikitsNode.__init__.__func__.__doc__ = _gen_docstring(scikits_class)
+        except AttributeError:
+            # we are in Python3
+            ScikitsNode.__init__.__doc__ = _gen_docstring(scikits_class)
+
     return ScikitsNode
 
 
@@ -413,19 +425,20 @@ def wrap_scikits_predictor(scikits_class):
                     'stop_training': 'fit',
                     'execute': 'predict'}
 
-    for mdp_name, scikits_name in methods_dict.items():
+    for mdp_name, scikits_name in list(methods_dict.items()):
         mdp_method = getattr(ScikitsNode, mdp_name)
         scikits_method = getattr(scikits_class, scikits_name)
-        if hasattr(scikits_method, 'im_func'):
-            # some scikits algorithms do not define an __init__ method
-            # the one inherited from 'object' is a
-            # "<slot wrapper '__init__' of 'object' objects>"
-            # which does not have a 'im_func' attribute
-            mdp_method.im_func.__doc__ = _gen_docstring(scikits_class,
-                                                        scikits_method.im_func)
+        if hasattr(scikits_method, '__func__'):
+            mdp_method.__func__.__doc__ = _gen_docstring(scikits_class,
+                                                        scikits_method.__func__)
 
     if scikits_class.__init__.__doc__ is None:
-        ScikitsNode.__init__.im_func.__doc__ = _gen_docstring(scikits_class)
+        try:
+            ScikitsNode.__init__.__func__.__doc__ = _gen_docstring(scikits_class)
+        except AttributeError:
+            # we are in Python3
+            ScikitsNode.__init__.__doc__ = _gen_docstring(scikits_class)
+
     return ScikitsNode
 
 
@@ -433,13 +446,13 @@ def wrap_scikits_predictor(scikits_class):
 def print_public_members(class_):
     """Print methods of sklearn algorithm.
     """
-    print '\n', '-' * 15
-    print '%s (%s)' % (class_.__name__, class_.__module__)
+    print('\n', '-' * 15)
+    print('%s (%s)' % (class_.__name__, class_.__module__))
     for attr_name in dir(class_):
         attr = getattr(class_, attr_name)
         #print attr_name, type(attr)
         if not attr_name.startswith('_') and inspect.ismethod(attr):
-            print ' -', attr_name
+            print(' -', attr_name)
 
 #apply_to_scikits_algorithms(sklearn, print_public_members)
 

@@ -1,4 +1,5 @@
-from _tools import *
+from builtins import range
+from ._tools import *
 from mdp.nodes import TimeDelayNode, TimeDelaySlidingWindowNode
 
 def test_TimeDelayNodes():

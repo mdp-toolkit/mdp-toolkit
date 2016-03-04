@@ -1,4 +1,6 @@
-from _tools import *
+from builtins import str
+from builtins import range
+from ._tools import *
 
 def testPCANode():
     line_x = numx.zeros((1000,2),"d")
@@ -111,14 +113,14 @@ def testPCANode_SVD():
     # and test that PCANode crashes whereas PCASVDNode doesn't
     mat, mix, inp = get_random_mix(mat_dim=(1000, 100), avg=1E+15)
     # now create a degenerate input
-    for i in xrange(1,100):
+    for i in range(1,100):
         inp[:,i] = inp[:,1].copy()
     # check that standard PCA fails
     pca = mdp.nodes.PCANode()
     pca.train(inp)
     try:
         pca.stop_training()
-        raise Exception, "PCANode didn't catch singular covariance matrix: degenerate"
+        raise Exception("PCANode didn't catch singular covariance matrix: degenerate")
     except mdp.NodeException:
         pass
     # now try the SVD version
@@ -133,7 +135,7 @@ def testPCANode_SVD():
     pca.train(inp)
     try:
         pca.stop_training()
-        raise Exception, "PCANode didn't catch singular covariance matrix: undetermined"
+        raise Exception("PCANode didn't catch singular covariance matrix: undetermined")
     except mdp.NodeException:
         pass
     # now try the SVD version
@@ -198,7 +200,7 @@ def testPCANode_negative_eigenvalues():
     try:
         pca.stop_training()
         assert False, "PCA did not catch negative eigenvalues!"
-    except mdp.NodeException, e:
+    except mdp.NodeException as e:
         if "Got negative eigenvalues" in str(e):
             pass
         else:

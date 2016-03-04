@@ -1,3 +1,4 @@
+from builtins import range
 
 import mdp
 import mdp.hinet as hinet
@@ -303,7 +304,7 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
             return [None] * len(self.nodes)
         msgs = [dict() for _ in range(len(self.nodes))]
         n_nodes = len(self.nodes)
-        for (key, value) in msg.items():
+        for (key, value) in list(msg.items()):
             if (isinstance(value, n.ndarray) and
                 # check if the array can be split up
                 len(value.shape) >= 2 and not value.shape[1] % n_nodes):
@@ -328,7 +329,7 @@ class CloneBiLayer(BiNode, hinet.CloneLayer):
         if len(msgs) == 1:
             return msgs[0]
         msg = dict()
-        for (key, one_value) in msgs[-1].items():
+        for (key, one_value) in list(msgs[-1].items()):
             other_value = msgs[0][key]
             if (isinstance(one_value, n.ndarray) and
                 # check if the array was originally split up

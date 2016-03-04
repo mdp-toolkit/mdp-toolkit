@@ -1,6 +1,7 @@
 """
 Parallel version of bihinet.
 """
+from builtins import range
 
 import mdp
 from bimdp.hinet import CloneBiLayer

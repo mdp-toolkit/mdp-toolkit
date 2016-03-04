@@ -1,3 +1,5 @@
+from builtins import map
+from builtins import object
 # inspired by some code by Nathan Denny (1999)
 # see http://www.ece.arizona.edu/~denny/python_nest/graph_lib_1.0.1.html
 
@@ -27,7 +29,7 @@ def recursive_map(func, seq):
             return recursive_map(func, x)
         else:
             return func(x)
-    return map(_func, seq)
+    return list(map(_func, seq))
 
 def recursive_reduce(func, seq, *argv):
     """Apply reduce(func, seq) recursively to a sequence and all its
@@ -99,11 +101,11 @@ class GraphNode(object):
 
     def in_neighbors(self):
         """Return the neighbors down in-edges (i.e. the parents nodes)."""
-        return map(lambda x: x.get_head(), self.ein)
+        return [x.get_head() for x in self.ein]
 
     def out_neighbors(self):
         """Return the neighbors down in-edges (i.e. the parents nodes)."""
-        return map(lambda x: x.get_tail(), self.eout)
+        return [x.get_tail() for x in self.eout]
 
     def neighbors(self):
         return self.in_neighbors() + self.out_neighbors()
@@ -189,7 +191,7 @@ class Graph(object):
                 each new node"""
         if not is_sequence(data):
             data = [None]*data
-        return map(self.add_node, data)
+        return list(map(self.add_node, data))
 
     def add_tree(self, tree):
         """Add a tree to the graph.
@@ -232,7 +234,7 @@ class Graph(object):
         """
         edges = []
         for from_ in from_nodes:
-            edges.append(map(lambda x: self.add_edge(from_, x), to_nodes))
+            edges.append([self.add_edge(from_, x) for x in to_nodes])
         return edges
 
     ###### graph algorithms

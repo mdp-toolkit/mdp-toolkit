@@ -1,9 +1,10 @@
+from builtins import zip
 __docformat__ = "restructuredtext en"
 
 import mdp
 from mdp import numx
 
-from svm_classifiers import _SVMClassifier, _LabelNormalizer
+from .svm_classifiers import _SVMClassifier, _LabelNormalizer
 
 import svmutil as libsvmutil
 
@@ -52,7 +53,7 @@ class LibSVMClassifier(_SVMClassifier):
         if classifier:
             self.set_classifier(classifier)
         # set all other parameters
-        for k, v in params.iteritems():
+        for k, v in params.items():
             if not k in self.parameter._names:
                 # check that the name is a valid parameter
                 msg = "'{}' is not a valid parameter for libsvm".format(k)
@@ -131,7 +132,7 @@ class LibSVMClassifier(_SVMClassifier):
         y = [0] * len(x)
         p_labs, p_acc, p_vals = libsvmutil.svm_predict(y, x.tolist(), self.model, "-b 1")
         labels = self.model.get_labels()
-        return [dict(zip(labels, ps)) for ps in p_vals]
+        return [dict(list(zip(labels, ps))) for ps in p_vals]
 
     def _train(self, x, labels):
         super(LibSVMClassifier, self)._train(x, labels)

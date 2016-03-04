@@ -1,5 +1,6 @@
+from builtins import range
 import mdp
-from _tools import *
+from ._tools import *
 
 def test_VariadicCumulator():
     # create random data

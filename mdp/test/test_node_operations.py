@@ -1,9 +1,11 @@
-from __future__ import with_statement
+from future import standard_library
+standard_library.install_aliases()
+from builtins import range
 
 import tempfile
-import cPickle
+import pickle
 import mdp
-from _tools import BogusMultiNode, BogusNodeTrainable
+from ._tools import BogusMultiNode, BogusNodeTrainable
 import py.test
 
 uniform = mdp.numx_rand.random
@@ -39,7 +41,7 @@ def test_Node_save():
     generic_node.dummy_attr = test_list
     # test string save
     copy_node_pic = generic_node.save(None)
-    copy_node = cPickle.loads(copy_node_pic)
+    copy_node = pickle.loads(copy_node_pic)
     assert generic_node.dummy_attr == copy_node.dummy_attr,\
            'Node save (string) method did not work'
     copy_node.dummy_attr[0] = 10
@@ -50,7 +52,7 @@ def test_Node_save():
                                  dir=py.test.mdp_tempdirname)
     generic_node.save(dummy_file, protocol=1)
     dummy_file = open(dummy_file, 'rb')
-    copy_node = cPickle.load(dummy_file)
+    copy_node = pickle.load(dummy_file)
     assert generic_node.dummy_attr == copy_node.dummy_attr,\
            'Node save (file) method did not work'
     copy_node.dummy_attr[0] = 10
@@ -61,7 +63,7 @@ def test_Node_multiple_training_phases():
     x = uniform(size=MAT_DIM)
     node = BogusMultiNode()
     phases = node.get_remaining_train_phase()
-    for i in xrange(phases):
+    for i in range(phases):
         assert node.get_current_train_phase() == i
         assert not node._train_phase_started
         node.train(x)

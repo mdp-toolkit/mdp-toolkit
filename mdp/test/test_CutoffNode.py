@@ -1,4 +1,4 @@
-from _tools import *
+from ._tools import *
 
 def test_CutoffNode():
     node = mdp.nodes.CutoffNode(-1.5, 1.2)

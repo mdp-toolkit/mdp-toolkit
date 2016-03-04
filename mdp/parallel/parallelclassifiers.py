@@ -18,7 +18,7 @@ class ParallelGaussianClassifier(ParallelExtensionNode,
             self.set_dtype(forked_node._dtype)
             self._cov_objs = forked_node._cov_objs
         else:
-            for key, forked_cov in forked_node._cov_objs.items():
+            for key, forked_cov in list(forked_node._cov_objs.items()):
                 if key in self._cov_objs:
                     self._join_covariance(self._cov_objs[key], forked_cov)
                 else:

@@ -1,5 +1,5 @@
 import mdp
-from _tools import *
+from ._tools import *
 
 def testHitParadeNode():
     signal = uniform((300,3))

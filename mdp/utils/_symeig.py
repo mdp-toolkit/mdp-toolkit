@@ -1,3 +1,6 @@
+from __future__ import division
+from builtins import str
+from past.utils import old_div
 import mdp
 from mdp import numx, numx_linalg
 
@@ -70,7 +73,7 @@ def wrap_eigh(A, B = None, eigenvectors = True, turbo = "on", range = None,
     args['eigvals'] = range
     try:
         return numx_linalg.eigh(**args)
-    except numx_linalg.LinAlgError, exception:
+    except numx_linalg.LinAlgError as exception:
         raise SymeigException(str(exception))
 
 def _symeig_fake(A, B = None, eigenvectors = True, turbo = "on", range = None,
@@ -122,13 +125,13 @@ numarray.linear_algebra.eigenvectors with an interface compatible with symeig.
             # make B the identity matrix
             wB, ZB = numx_linalg.eigh(B)
             _assert_eigenvalues_real_and_positive(wB, dtype)
-            ZB = ZB.real / numx.sqrt(wB.real)
+            ZB = old_div(ZB.real, numx.sqrt(wB.real))
             # transform A in the new basis: A = ZB^T * A * ZB
             A = mdp.utils.mult(mdp.utils.mult(ZB.T, A), ZB)
             # diagonalize A
             w, ZA = numx_linalg.eigh(A)
             Z = mdp.utils.mult(ZB, ZA)
-    except numx_linalg.LinAlgError, exception:
+    except numx_linalg.LinAlgError as exception:
         raise SymeigException(str(exception))
 
     _assert_eigenvalues_real_and_positive(w, dtype)

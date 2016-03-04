@@ -1,5 +1,10 @@
+from future import standard_library
+standard_library.install_aliases()
+from builtins import map
+from builtins import str
+from builtins import object
 import types
-import cPickle
+import pickle
 import mdp
 
 class _Walk(object):
@@ -21,7 +26,7 @@ class _Walk(object):
         for name in dir(x):
             # get the corresponding member
             obj = getattr(x, name)
-            if id(obj) in self.allobjs.keys():
+            if id(obj) in list(self.allobjs.keys()):
                 # if we already examined the member, skip to the next
                 continue
             else:
@@ -42,7 +47,7 @@ class _Walk(object):
                     arrays[struct] = obj
                 else:
                     arrays[name] = obj
-            elif name.startswith('__') or type(obj) in (int, long, float,
+            elif name.startswith('__') or type(obj) in (int, int, float,
                                                         types.MethodType):
                 # the present member is a private member or a known
                 # type that does not support arrays as attributes
@@ -57,8 +62,8 @@ class _Walk(object):
         return arrays
 
 def _format_dig(dict_):
-    longest_name = max(map(len, dict_.keys()))
-    longest_size = max(map(lambda x: len('%d'%x[0]), dict_.values()))
+    longest_name = max(list(map(len, list(dict_.keys()))))
+    longest_size = max([len('%d'%x[0]) for x in list(dict_.values())])
     msgs = []
     total_size = 0
     for name in sorted(dict_.keys()):
@@ -82,7 +87,7 @@ def dig_node(x):
     if not isinstance(x, mdp.Node):
         raise Exception('Cannot dig %s' % (str(type(x))))
     arrays = _Walk()(x)
-    for name in arrays.keys():
+    for name in list(arrays.keys()):
         ar = arrays[name]
         if len(ar.shape) == 0:
             size = 1
@@ -99,7 +104,7 @@ def get_node_size(x):
     """
     # TODO: add check for problematic node types, like NoiseNode?
     # TODO: replace this with sys.getsizeof for Python >= 2.6
-    size = len(cPickle.dumps(x, protocol = 2))
+    size = len(pickle.dumps(x, protocol = 2))
     return size
 
 def get_node_size_str(x, si_units=False):
