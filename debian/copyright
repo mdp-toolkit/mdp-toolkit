@@ -9,7 +9,7 @@ Upstream Authors:
 
 Copyright:
 
- 2003-2011, MDP Developers <mdp-toolkit-devel@lists.sourceforge.net>
+ 2003-2016, MDP Developers <mdp-toolkit-devel@lists.sourceforge.net>
 
 License:
 
@@ -37,6 +37,6 @@ License:
     OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
     OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-The Debian packaging is (C) 2008-2011, Yaroslav Halchenko
+The Debian packaging is (C) 2008-2016, Yaroslav Halchenko
 <debian@onerussian.com> and is licensed under the same license as
 upstream sources.
