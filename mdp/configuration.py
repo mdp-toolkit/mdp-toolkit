@@ -1,11 +1,16 @@
-from __future__ import with_statement
+from future import standard_library
+standard_library.install_aliases()
+from builtins import zip
+from builtins import str
+from builtins import object
 import sys
 import os
 import tempfile
 import inspect
 import mdp
-from repo_revision import get_git_revision
-import cStringIO as StringIO
+from .repo_revision import get_git_revision
+import io as StringIO
+from future.utils import with_metaclass
 
 
 __docformat__ = "restructuredtext en"
@@ -19,7 +24,7 @@ class MetaConfig(type):
     def __repr__(self):
         return self.info()
 
-class config(object):
+class config(with_metaclass(MetaConfig, object)):
     """Provide information about optional dependencies.
 
     This class should not be instantiated, it serves as a namespace
@@ -70,8 +75,6 @@ class config(object):
         otherwise a work around for debian bug #620551 is activated.
     """
 
-    __metaclass__ = MetaConfig
-
     _HAS_NUMBER = 0
 
     class _ExternalDep(object):
@@ -86,7 +89,7 @@ class config(object):
             config._HAS_NUMBER += 1
             setattr(config, 'has_' + name, self)
 
-        def __nonzero__(self):
+        def __bool__(self):
             return self.failmsg is None
 
         def __repr__(self):
@@ -183,7 +186,7 @@ def get_numx():
                                version as numx_version)
             numx_description = 'scipy'
             config.ExternalDepFound('numx', 'scipy ' + numx_version.version)
-        except ImportError, exc:
+        except ImportError as exc:
             if USR_LABEL:
                 raise ImportError(exc)
             else:
@@ -199,7 +202,7 @@ def get_numx():
                                version as numx_version)
             numx_description = 'numpy'
             config.ExternalDepFound('numx', 'numpy ' + numx_version.version)
-        except ImportError, exc:
+        except ImportError as exc:
             config.ExternalDepFailed('numx', exc)
             numx_exception['numpy'] = exc
 
@@ -209,7 +212,7 @@ def get_numx():
     if numx_description is None:
         msg = ([ "Could not import any of the numeric backends.",
                  "Import errors:" ] +
-               [ lab+': '+str(exc) for lab, exc in numx_exception.items() ]
+               [ lab+': '+str(exc) for lab, exc in list(numx_exception.items()) ]
                + ["sys.path: " + str(sys.path)])
         raise ImportError('\n'.join(msg))
 
@@ -222,12 +225,12 @@ def get_symeig(numx_linalg):
     args = inspect.getargspec(numx_linalg.eigh)[0]
     if len(args) > 4:
         # if yes, just wrap it
-        from utils._symeig import wrap_eigh as symeig
+        from .utils._symeig import wrap_eigh as symeig
         config.ExternalDepFound('symeig', 'scipy.linalg.eigh')
     else:
         # either we have numpy, or we have an old scipy
         # we need to use our own rich wrapper
-        from utils._symeig import _symeig_fake as symeig
+        from .utils._symeig import _symeig_fake as symeig
         config.ExternalDepFound('symeig', 'symeig_fake')
     return symeig
 
@@ -291,7 +294,13 @@ def _pp_needs_monkeypatching():
         import pp
         server = pp.Server()
         with _sys_stdout_replaced() as capture:
-            server.submit(lambda: None, (), (), ('numpy',))()
+            try:
+                server.submit(lambda: None, (), (), ('numpy',))()
+            except TypeError:
+                # our py2&3 futurize compatibility breaks this
+                # But given that bug 620551 has been fixed,
+                # we can safely ignore this error
+                pass
             server.destroy()
 
         # read error from hijacked stdout
@@ -321,7 +330,7 @@ def set_configuration():
         import user
         if not hasattr(user, 'pp_secret'):
             user.pp_secret = pp_secret
-    except ImportError, exc:
+    except ImportError as exc:
         config.ExternalDepFailed('parallel_python', exc)
     else:
         if os.getenv('MDP_DISABLE_PARALLEL_PYTHON'):
@@ -333,7 +342,7 @@ def set_configuration():
             try:
                 server = pp.Server()
                 server.destroy()
-            except Exception, exc:
+            except Exception as exc:
                 # no idea what exception the pp server may raise
                 # we need to catch all here...
                 config.ExternalDepFailed('parallel_python', exc)
@@ -355,23 +364,23 @@ def set_configuration():
         from shogun import (Kernel as sgKernel,
                             Features as sgFeatures,
                             Classifier as sgClassifier)
-    except ImportError, exc:
+    except ImportError as exc:
         config.ExternalDepFailed('shogun', exc)
     else:
         if os.getenv('MDP_DISABLE_SHOGUN'):
             config.ExternalDepFailed('shogun', 'disabled')
         else:
-            # From now on just support shogun >= 1.0
-            # Between 0.10 to 1.0 there are too many API changes...
+            # From now on just support shogun < 2.0
+            # Between 0.10 to 1.0 or beyond there are too many API changes...
             try:
                 version = sgKernel.Version_get_version_release()
             except AttributeError:
                 config.ExternalDepFailed('shogun',
-                                         'too old, upgrade to at least version 1.0')
+                                         'only shogun v1 is supported')
             else:
                 if not version.startswith('v1.'):
                     config.ExternalDepFailed('shogun',
-                                             'too old, upgrade to at least version 1.0.')
+                                             'only shogun v1 is supported')
                 else:
                     config.ExternalDepFound('shogun', version)
 
@@ -379,9 +388,9 @@ def set_configuration():
     try:
         import svm as libsvm
         libsvm.libsvm
-    except ImportError, exc:
+    except ImportError as exc:
         config.ExternalDepFailed('libsvm', exc)
-    except AttributeError, exc:
+    except AttributeError as exc:
         config.ExternalDepFailed('libsvm', 'libsvm version >= 2.91 required')
     else:
         if os.getenv('MDP_DISABLE_LIBSVM'):
@@ -392,7 +401,7 @@ def set_configuration():
     # joblib
     try:
         import joblib
-    except ImportError, exc:
+    except ImportError as exc:
         config.ExternalDepFailed('joblib', exc)
     else:
         version = joblib.__version__
@@ -411,9 +420,9 @@ def set_configuration():
         except ImportError:
             import scikits.learn as sklearn
         version = sklearn.__version__
-    except ImportError, exc:
+    except ImportError as exc:
         config.ExternalDepFailed('sklearn', exc)
-    except AttributeError, exc:
+    except AttributeError as exc:
         config.ExternalDepFailed('sklearn', exc)
     else:
         if os.getenv('MDP_DISABLE_SKLEARN'):

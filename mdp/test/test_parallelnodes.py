@@ -1,5 +1,9 @@
+from __future__ import division
+from builtins import range
+from builtins import object
+from past.utils import old_div
 import mdp.parallel as parallel
-from _tools import *
+from ._tools import *
 
 def test_PCANode():
     """Test Parallel PCANode"""
@@ -13,7 +17,7 @@ def test_PCANode():
     parallel_pca_node = parallel.ParallelPCANode()
     chunksize = 25
     chunks = [x[i*chunksize : (i+1)*chunksize]
-                for i in xrange(len(x)//chunksize)]
+                for i in range(len(x)//chunksize)]
     for chunk in chunks:
         pca_node.train(chunk)
         forked_node = parallel_pca_node.fork()
@@ -40,7 +44,7 @@ def test_SFANode():
     parallel_sfa_node = parallel.ParallelSFANode()
     chunksize = 25
     chunks = [x[i*chunksize : (i+1)*chunksize]
-                for i in xrange(len(x)//chunksize)]
+                for i in range(len(x)//chunksize)]
     for chunk in chunks:
         sfa_node.train(chunk)
         forked_node = parallel_sfa_node.fork()
@@ -89,9 +93,9 @@ def test_FDANode():
     assert_array_almost_equal(numx.mean(y, axis=0), [0., 0.], precision)
     assert_array_almost_equal(numx.std(y, axis=0), [1., 1.], precision)
     assert_almost_equal(utils.mult(y[:,0], y[:,1].T), 0., precision)
-    v1 = fda_node.v[:,0]/fda_node.v[0,0]
+    v1 = old_div(fda_node.v[:,0],fda_node.v[0,0])
     assert_array_almost_equal(v1, [1., -1.], 2)
-    v1 = fda_node.v[:,1]/fda_node.v[0,1]
+    v1 = old_div(fda_node.v[:,1],fda_node.v[0,1])
     assert_array_almost_equal(v1, [1., 1.], 2)
 
 def test_ParallelHistogramNode_nofraction():
@@ -145,7 +149,7 @@ class TestDerivedParallelMDPNodes(object):
         node = mdp.nodes.WhiteningNode()
         chunksize = 25
         chunks = [x[i*chunksize : (i+1)*chunksize]
-                    for i in xrange(len(x)//chunksize)]
+                    for i in range(len(x)//chunksize)]
         for chunk in chunks:
             forked_node = node.fork()
             forked_node.train(chunk)
@@ -163,7 +167,7 @@ class TestDerivedParallelMDPNodes(object):
         node = mdp.nodes.SFA2Node()
         chunksize = 25
         chunks = [x[i*chunksize : (i+1)*chunksize]
-                    for i in xrange(len(x)//chunksize)]
+                    for i in range(len(x)//chunksize)]
         for chunk in chunks:
             forked_node = node.fork()
             forked_node.train(chunk)

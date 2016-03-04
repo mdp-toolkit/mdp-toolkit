@@ -1,6 +1,7 @@
 """
 Extension for building switchboards in a 2d hierarchical network.
 """
+from builtins import range
 
 # TODO: add unittests and maybe mention it in the tutorial
 
@@ -77,7 +78,7 @@ class FactoryExtensionChannelSwitchboard(mdp.ExtensionNode,
         """
         in_channel_dim = prev_output_dim // prev_switchboard.output_channels
         return {"input_dim": prev_output_dim,
-                "connections": range(prev_output_dim),
+                "connections": list(range(prev_output_dim)),
                 "out_channel_dim": prev_output_dim,
                 "in_channel_dim": in_channel_dim}
 

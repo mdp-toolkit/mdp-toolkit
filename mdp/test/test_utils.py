@@ -1,7 +1,11 @@
 """These are test functions for MDP utilities.
 """
+from __future__ import division
+from builtins import range
+from past.utils import old_div
+from builtins import object
 import py.test
-from _tools import *
+from ._tools import *
 from mdp import Node, nodes
 
 class BogusClass(object):
@@ -18,10 +22,10 @@ class BogusNode(Node):
 def test_introspection():
     bogus = BogusNode()
     arrays, string = utils.dig_node(bogus)
-    assert len(arrays.keys()) == 4, 'Not all arrays where caught'
+    assert len(list(arrays.keys())) == 4, 'Not all arrays where caught'
     assert sorted(arrays.keys()) == ['x', 'y.x',
                                      'z.x', 'z.z.x'], 'Wrong names'
-    sizes = [x[0] for x in arrays.values()]
+    sizes = [x[0] for x in list(arrays.values())]
     assert sorted(sizes) == [numx_rand.random((2,2)).itemsize*4]*4, \
            'Wrong sizes'
     sfa = nodes.SFANode()
@@ -38,7 +42,7 @@ def test_introspection():
 def test_random_rot():
     dim = 20
     tlen = 10
-    for i in xrange(tlen):
+    for i in range(tlen):
         x = utils.random_rot(dim, dtype='f')
         assert x.dtype.char=='f', 'Wrong dtype'
         y = utils.mult(x.T, x)
@@ -62,10 +66,10 @@ def test_casting():
     x = (10*numx_rand.random((5,3))).astype('i')
     y = 3.*x
     assert_type_equal(y.dtype, 'd')
-    y = 3L*x
+    y = 3*x
     assert_type_equal(y.dtype, 'i')
     x = numx_rand.random((5,3)).astype('f')
-    y = 3L*x
+    y = 3*x
     assert_type_equal(y.dtype, 'f')
 
 def test_mult_diag():
@@ -95,8 +99,8 @@ def test_symeig_fake_LAPACK_bug():
     # instead of numx_linalg.eigh .
     # Note: this is a LAPACK bug.
     y = numx_rand.random((4,4))*1E-16
-    y = (y+y.T)/2
-    for i in xrange(4):
+    y = old_div((y+y.T),2)
+    for i in range(4):
         y[i,i]=1
     val, vec = utils._symeig._symeig_fake(y)
     assert_almost_equal(abs(numx_linalg.det(vec)), 1., 12)

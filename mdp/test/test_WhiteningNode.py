@@ -1,4 +1,4 @@
-from _tools import *
+from ._tools import *
 
 def testWhiteningNode():
     vars = 5

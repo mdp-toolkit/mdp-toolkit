@@ -2,7 +2,11 @@
 
 """These are test functions for MDP classifiers.
 """
-from _tools import *
+from __future__ import division
+from builtins import zip
+from builtins import range
+from past.utils import old_div
+from ._tools import *
 
 from mdp import ClassifierNode
 from mdp.nodes import (SignumClassifier, PerceptronClassifier,
@@ -10,7 +14,7 @@ from mdp.nodes import (SignumClassifier, PerceptronClassifier,
                        KMeansClassifier)
 
 def _sigmoid(t):
-    return 1.0 / (1.0 + numx.exp(-t))
+    return old_div(1.0, (1.0 + numx.exp(-t)))
 
 class _BogusClassifier(ClassifierNode):
     @staticmethod
@@ -58,7 +62,7 @@ def testSignumClassifier():
 
 def testPerceptronClassifier():
     or_Classifier = PerceptronClassifier()
-    for i in xrange(100):
+    for i in range(100):
         or_Classifier.train(mdp.numx.array([[0., 0.]]), -1)
         or_Classifier.train(mdp.numx.array([[0., 1.], [1., 0.], [1., 1.]]), 1)
     assert or_Classifier.input_dim == 2
@@ -67,14 +71,14 @@ def testPerceptronClassifier():
     assert res.tolist() == [-1, 1, 1, 1]
 
     and_Classifier = PerceptronClassifier()
-    for i in xrange(100):
+    for i in range(100):
         and_Classifier.train(mdp.numx.array([[0., 0.], [0., 1.], [1., 0.]]), -1)
         and_Classifier.train(mdp.numx.array([[1., 1.]]), 1)
     res = and_Classifier.label(mdp.numx.array([[0., 0.], [0., 1.], [1., 0.], [1., 1.]]))
     assert res.tolist() == [-1, -1, -1, 1]
 
     xor_Classifier = PerceptronClassifier()
-    for i in xrange(100):
+    for i in range(100):
         xor_Classifier.train(mdp.numx.array([[0., 0.], [1., 1.]]), -1)
         xor_Classifier.train(mdp.numx.array([[0., 1.], [1., 0.]]), 1)
     res = xor_Classifier.label(mdp.numx.array([[0., 0.], [0., 1.], [1., 0.], [1., 1.]]))
@@ -89,7 +93,7 @@ def testSimpleMarkovClassifier():
     for word in text.split():
         word = word.lower()
 
-        features = zip(" " + word)
+        features = list(zip(" " + word))
         labels = list(word + " ")
 
         mc.train(mdp.numx.array(features), labels)
@@ -98,12 +102,12 @@ def testSimpleMarkovClassifier():
 
     num_transitions = 0
     features = mc.features
-    for feature, count in features.items():
+    for feature, count in list(features.items()):
         if count:
             prob = mc.prob(mdp.numx.array([feature]))
             prob_sum = 0
             for p in prob:
-                for k, v in p.items():
+                for k, v in list(p.items()):
                     prob_sum += v
                     if v:
                         num_transitions += 1
@@ -111,14 +115,14 @@ def testSimpleMarkovClassifier():
             assert abs(prob_sum - 1.0) < 1e-5
 
     # calculate the number of transitions (the negative set deletes the artefact of two spaces)
-    trans = len(set((zip("  ".join(text.split()) + " ", \
-                         " " + "  ".join(text.split())))) - set([(' ', ' ')]))
+    trans = len(set((list(zip("  ".join(text.split()) + " ", \
+                         " " + "  ".join(text.split()))))) - set([(' ', ' ')]))
     assert num_transitions == trans
 
     letters_following_e = [' ', 'r', 't', 'i']
     letters_prob = mc.prob(mdp.numx.array([['e']]))[0]
     prob_sum = 0
-    for letter, prob in letters_prob.items():
+    for letter, prob in list(letters_prob.items()):
         prob_sum += prob
         if prob > 1e-5:
             assert letter in letters_following_e
@@ -148,7 +152,7 @@ def testDiscreteHopfieldClassifier():
     for p in patterns:
         # check, if a noisy pattern is recreated
         noisy = numx.array(p)
-        for i in xrange(len(noisy)):
+        for i in range(len(noisy)):
             if numx.random.random() > 0.95:
                 noisy[i] = not noisy[i]
         retrieved = h.label(numx.array([noisy]))

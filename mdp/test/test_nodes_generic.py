@@ -1,10 +1,11 @@
-from __future__ import with_statement
+from builtins import range
+from builtins import object
 import py.test
 import inspect
 
 from mdp import (config, nodes, ClassifierNode,
                  PreserveDimNode, InconsistentDimException)
-from _tools import *
+from ._tools import *
 
 uniform = numx_rand.random
 
@@ -341,6 +342,7 @@ NODES = [
          init_args=[10, 0.001, True]),
     dict(klass='KMeansClassifier',
          init_args=[2, 3]),
+
     dict(klass='PerceptronClassifier',
          sup_arg_gen=_rand_classification_labels_array),
     dict(klass='SimpleMarkovClassifier',
@@ -360,7 +362,9 @@ NODES = [
 
 # LabelSpreadingScikitsLearnNode is broken in sklearn version 0.11
 # It works fine in version 0.12
-EXCLUDE_NODES = ['ICANode', 'LabelSpreadingScikitsLearnNode']
+EXCLUDE_NODES = ['ICANode', 'LabelSpreadingScikitsLearnNode', 
+        'OutputCodeClassifierScikitsLearnNode', 'OneVsOneClassifierScikitsLearnNode',
+        'OneVsRestClassifierScikitsLearnNode', 'VotingClassifierScikitsLearnNode']
 
 
 def generate_nodes_list(nodes_dicts):
@@ -370,7 +374,7 @@ def generate_nodes_list(nodes_dicts):
     excluded = []
     for dct in nodes_dicts:
         klass = dct['klass']
-        if type(klass) is str:
+        if type(klass) is __builtins__['str']:
             # some of the nodes on the list may be optional
             if not hasattr(nodes, klass): continue
             # transform class name into class (needed by automatic tests)

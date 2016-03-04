@@ -1,4 +1,5 @@
 """Test the configuration object."""
+from builtins import object
 
 from mdp import config
 

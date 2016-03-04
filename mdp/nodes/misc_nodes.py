@@ -1,11 +1,17 @@
-from __future__ import with_statement
+from __future__ import division
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import range
+from past.utils import old_div
+from builtins import object
 
 __docformat__ = "restructuredtext en"
 
 import mdp
 from mdp import numx, utils, Node, NodeException, PreserveDimNode
 
-import cPickle as pickle
+import pickle as pickle
 import pickle as real_pickle
 
 class IdentityNode(PreserveDimNode):
@@ -73,7 +79,7 @@ class OneDimensionalHitParade(object):
         im = self.im
         lM = self.lM
         lm = self.lm
-        for i in xrange(rows):
+        for i in range(rows):
             k1 = M.argmin()
             k2 = m.argmax()
             if x[i] > M[k1]:
@@ -490,7 +496,7 @@ class EtaComputerNode(Node):
     def _stop_training(self):
         var_tlen = self._tlen-1
         # unbiased
-        var = (self._var - self._mean*self._mean/self._tlen)/var_tlen
+        var = old_div((self._var - self._mean*self._mean/self._tlen),var_tlen)
 
         # biased
         #var = (self._var - self._mean*self._mean/self._tlen)/self._tlen
@@ -499,9 +505,9 @@ class EtaComputerNode(Node):
         #var = (self._var/var_tlen) - (self._mean/self._tlen)**2
 
         self._var = var
-        delta = (self._diff2/self._tlen)/var
+        delta = old_div((old_div(self._diff2,self._tlen)),var)
         self._delta = delta
-        self._eta = numx.sqrt(delta)/(2*numx.pi)
+        self._eta = old_div(numx.sqrt(delta),(2*numx.pi))
 
     def get_eta(self, t=1):
         """Return the eta values of the data received during the training
@@ -795,11 +801,11 @@ class AdaptiveCutoffNode(HistogramNode):
             sorted_data.sort(axis=0)
             if self.lower_cutoff_fraction:
                 index = self.lower_cutoff_fraction * len(sorted_data)
-                self.lower_bounds = sorted_data[index]
+                self.lower_bounds = sorted_data[int(index)]
             if self.upper_cutoff_fraction:
                 index = (len(sorted_data) -
                          self.upper_cutoff_fraction * len(sorted_data))
-                self.upper_bounds = sorted_data[index]
+                self.upper_bounds = sorted_data[int(index)]
         super(AdaptiveCutoffNode, self)._stop_training()
 
     def _execute(self, x):

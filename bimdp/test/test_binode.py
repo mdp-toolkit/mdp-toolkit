@@ -1,3 +1,5 @@
+from builtins import range
+from builtins import object
 import mdp
 n = mdp.numx
 
@@ -7,7 +9,7 @@ from bimdp import BiNode, MSG_ID_SEP, BiFlow, BiClassifier, binode_coroutine
 from bimdp.nodes import (
     IdentityBiNode, SFABiNode, FDABiNode, SignumBiClassifier
 )
-from _tools import JumpBiNode
+from ._tools import JumpBiNode
 
 
 class TestBiNode(object):

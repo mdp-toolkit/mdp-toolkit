@@ -1,5 +1,4 @@
-from __future__ import with_statement
-from _tools import *
+from ._tools import *
 
 TESTDECIMALS = {numx.dtype('d'): 12,
                 numx.dtype('f'): 3,

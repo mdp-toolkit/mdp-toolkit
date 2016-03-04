@@ -1,4 +1,7 @@
-from _tools import *
+from __future__ import division
+from builtins import range
+from past.utils import old_div
+from ._tools import *
 
 def verify_ICANode(icanode, rand_func = uniform, vars = 3, N=8000,
                  prec = 3):
@@ -6,7 +9,7 @@ def verify_ICANode(icanode, rand_func = uniform, vars = 3, N=8000,
     mat,mix,inp = get_random_mix(rand_func=rand_func,mat_dim=dim)
     icanode.train(inp)
     act_mat = icanode.execute(inp)
-    cov = utils.cov2((mat-mean(mat,axis=0))/std(mat,axis=0), act_mat)
+    cov = utils.cov2(old_div((mat-mean(mat,axis=0)),std(mat,axis=0)), act_mat)
     maxima = numx.amax(abs(cov), axis=0)
     assert_array_almost_equal(maxima,numx.ones(vars),prec)
 
@@ -37,7 +40,7 @@ def rand_with_timestruct(size=None):
     src = uniform((T,N))*2-1
     fsrc = numx_fft.rfft(src,axis=0)
     # enforce different speeds
-    for i in xrange(N):
+    for i in range(N):
         fsrc[(i+1)*(T//20):,i] = 0.
     src = numx_fft.irfft(fsrc,axis=0)
     return src

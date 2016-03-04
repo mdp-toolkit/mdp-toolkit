@@ -15,10 +15,14 @@ is done in the seperate slideshow module.
 
 # TODO: wrap inner methods (e.g. _train) to document effective arguments?
 
-from __future__ import with_statement
+from __future__ import print_function
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from builtins import object
 
 import os
-import cPickle as pickle
+import pickle as pickle
 import fnmatch
 import copy
 import traceback
@@ -32,7 +36,7 @@ from bimdp import BiFlow
 from bimdp.hinet import BiFlowNode, CloneBiLayer
 
 from bimdp.hinet import BiHiNetHTMLVisitor
-from utils import robust_pickle
+from .utils import robust_pickle
 
 CLICKABLE_NODE_ID = "clickable_node_%d"
 # standard css filename for the complete CSS:
@@ -576,10 +580,10 @@ class TraceHTMLConverter(object):
         """Return a nice HTML representation of the given numpy array."""
         # TODO: use an stringio buffer for efficency
         # put array keys last, because arrays are typically rather large
-        keys = [key for key, value in dic.items()
+        keys = [key for key, value in list(dic.items())
                 if not isinstance(value, n.ndarray)]
         keys.sort()
-        ar_keys = [key for key, value in dic.items()
+        ar_keys = [key for key, value in list(dic.items())
                    if isinstance(value, n.ndarray)]
         ar_keys.sort()
         keys += ar_keys
@@ -871,9 +875,9 @@ def _trace_biflow_training(snapshot_path, inspection_path,
                 slide_node_ids += train_ids
                 slide_node_ids += stop_ids
                 if verbose:
-                    print "got traces for snapshot %d" % (i_snapshot + 1)
+                    print("got traces for snapshot %d" % (i_snapshot + 1))
                 i_snapshot += 1
-    except TraceDebugException, debug_exception:
+    except TraceDebugException as debug_exception:
         train_files, train_ids, stop_files, stop_ids = debug_exception.result
         slide_filenames += train_files
         train_index = len(slide_filenames) - 1

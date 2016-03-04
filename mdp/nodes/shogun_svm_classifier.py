@@ -1,3 +1,6 @@
+from builtins import zip
+from past.builtins import basestring
+from builtins import object
 __docformat__ = "restructuredtext en"
 
 from shogun import (Kernel as sgKernel,
@@ -7,7 +10,7 @@ from shogun import (Kernel as sgKernel,
 import mdp
 from mdp.utils import OrderedDict as _OrderedDict
 
-from svm_classifiers import _SVMClassifier, _LabelNormalizer
+from .svm_classifiers import _SVMClassifier, _LabelNormalizer
 
 # switch off spurious warnings from shogun
 import warnings
@@ -264,7 +267,7 @@ class ShogunSVMClassifier(_SVMClassifier):
         self.classifier_options = self.default_parameters
         self.classifier_options.update(classifier_options)
 
-        for p in self.classifier_options.keys():
+        for p in list(self.classifier_options.keys()):
             try:
                 self.set_classifier_param(p, self.classifier_options[p])
             except Exception:
@@ -328,12 +331,12 @@ class ShogunSVMClassifier(_SVMClassifier):
             and not isinstance(kernel_options, list):
             default_opts = _OrderedDict(ShogunSVMClassifier.kernel_parameters[kernel_name])
             default_opts.update(kernel_options)
-            options = default_opts.values()
+            options = list(default_opts.values())
 
         kernel_meth = getattr(sgKernel, kernel_name)
         try:
             kernel = kernel_meth(*options)
-        except NotImplementedError, msg:
+        except NotImplementedError as msg:
             msg = ("Tried to call %s with arguments %s\n" %
                    (kernel_meth.__module__ + '.' + kernel_meth.__name__,
                     tuple(options).__repr__()) +
@@ -364,7 +367,7 @@ class ShogunSVMClassifier(_SVMClassifier):
                 data[k].append(v)
             return data
         else:
-            return zip(self.labels, self.data)
+            return list(zip(self.labels, self.data))
 
     def _label(self, x):
         """Classify the input data 'x'

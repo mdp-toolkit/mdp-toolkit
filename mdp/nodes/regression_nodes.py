@@ -1,3 +1,4 @@
+from builtins import str
 __docformat__ = "restructuredtext en"
 
 from mdp import numx, numx_linalg, utils, Node, NodeException, TrainingException
@@ -109,7 +110,7 @@ class LinearRegressionNode(Node):
             else:
                 invfun = utils.inv
             inv_xTx = invfun(self._xTx)
-        except numx_linalg.LinAlgError, exception:
+        except numx_linalg.LinAlgError as exception:
             errstr = (str(exception) +
                       "\n Input data may be redundant (i.e., some of the " +
                       "variables may be linearly dependent).")

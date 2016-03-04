@@ -1,5 +1,7 @@
+from __future__ import division
+from past.utils import old_div
 import py.test
-from _tools import *
+from ._tools import *
 
 def test_FDANode():
     mean1 = [0., 2.]
@@ -51,7 +53,7 @@ def test_FDANode():
     assert_array_almost_equal(std(y, axis=0), [1., 1.], decimal-2)
     assert_almost_equal(mult(y[:,0], y[:,1].T), 0., decimal-2)
 
-    v1 = fda_node.v[:,0]/fda_node.v[0,0]
+    v1 = old_div(fda_node.v[:,0],fda_node.v[0,0])
     assert_array_almost_equal(v1, [1., -1.], 2)
-    v1 = fda_node.v[:,1]/fda_node.v[0,1]
+    v1 = old_div(fda_node.v[:,1],fda_node.v[0,1])
     assert_array_almost_equal(v1, [1., 1.], 2)

@@ -1,3 +1,7 @@
+from __future__ import print_function
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 __docformat__ = "restructuredtext en"
 
 import mdp
@@ -79,13 +83,13 @@ class RBMNode(mdp.Node):
 
     def _sample_h(self, v):
         # returns P(h=1|v,W,b) and a sample from it
-        probs = 1./(1. + exp(-self.bh - mult(v, self.w)))
+        probs = old_div(1.,(1. + exp(-self.bh - mult(v, self.w))))
         h = (probs > random(probs.shape)).astype(self.dtype)
         return probs, h
 
     def _sample_v(self, h):
         # returns  P(v=1|h,W,b) and a sample from it
-        probs = 1./(1. + exp(-self.bv - mult(h, self.w.T)))
+        probs = old_div(1.,(1. + exp(-self.bv - mult(h, self.w.T))))
         v = (probs > random(probs.shape)).astype(self.dtype)
         return probs, v
 
@@ -133,13 +137,13 @@ class RBMNode(mdp.Node):
         # update w
         data_term = mult(v.T, ph_data)
         model_term = mult(v_model.T, ph_model)
-        dw = momentum*dw + epsilon*((data_term - model_term)/n - decay*w)
+        dw = momentum*dw + epsilon*(old_div((data_term - model_term),n) - decay*w)
         w += dw
 
         # update bv
         data_term = v.sum(axis=0)
         model_term = v_model.sum(axis=0)
-        dbv = momentum*dbv + epsilon*((data_term - model_term)/n)
+        dbv = momentum*dbv + epsilon*(old_div((data_term - model_term),n))
         bv += dbv
 
         # update bh
@@ -149,16 +153,16 @@ class RBMNode(mdp.Node):
         else:
             data_term = h_data.sum(axis=0)
             model_term = h_model.sum(axis=0)
-        dbh = momentum*dbh + epsilon*((data_term - model_term)/n)
+        dbh = momentum*dbh + epsilon*(old_div((data_term - model_term),n))
         bh += dbh
 
         self._delta = (dw, dbv, dbh)
         self._train_err = float(((v-v_model)**2.).sum())
 
         if verbose:
-            print 'training error', self._train_err/v.shape[0]
+            print('training error', old_div(self._train_err,v.shape[0]))
             ph, h = self._sample_h(v)
-            print 'energy', self._energy(v, ph).sum()
+            print('energy', self._energy(v, ph).sum())
 
     def _stop_training(self):
         #del self._delta
@@ -282,7 +286,7 @@ class RBMWithLabelsNode(RBMNode):
         av, al = a[:, :vdim], a[:, vdim:]
 
         # ## visible units: logistic activation
-        probs_v = 1./(1. + exp(-av))
+        probs_v = old_div(1.,(1. + exp(-av)))
         v = (probs_v > random(probs_v.shape)).astype('d')
 
         # ## label units: softmax activation

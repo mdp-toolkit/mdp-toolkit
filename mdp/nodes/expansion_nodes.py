@@ -1,3 +1,6 @@
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 __docformat__ = "restructuredtext en"
 
 import mdp
@@ -72,7 +75,7 @@ class PolynomialExpansionNode(_ExpansionNode):
 
         k = n
         prec_end = 0
-        next_lens = numx.ones((dim+1, ))
+        next_lens = numx.ones((dim+1, ), dtype=numx.int64)
         next_lens[0] = 0
         for i in range(2, degree+1):
             prec_start = prec_end
@@ -80,7 +83,7 @@ class PolynomialExpansionNode(_ExpansionNode):
             prec = dexp[prec_start:prec_end, :]
 
             lens = next_lens[:-1].cumsum(axis=0)
-            next_lens = numx.zeros((dim+1, ))
+            next_lens = numx.zeros((dim+1, ), dtype=numx.int64)
             for j in range(dim):
                 factor = prec[lens[j]:, :]
                 len_ = factor.shape[0]
@@ -159,7 +162,7 @@ class RBFExpansionNode(mdp.Node):
             # check number of sizes correct
             if sizes.shape[0] != self._output_dim:
                 msg = "There must be as many RBF sizes as centers"
-                raise mdp.NodeException, msg
+                raise mdp.NodeException(msg)
 
         if numx.isscalar(sizes[0]):
             # isotropic RBFs
@@ -174,7 +177,7 @@ class RBFExpansionNode(mdp.Node):
                 msg = ("Dimensionality of size matrices should be the same " +
                        "as input dimensionality (%d != %d)"
                        % (sizes.shape[1], self._input_dim))
-                raise mdp.NodeException, msg
+                raise mdp.NodeException(msg)
 
             # compute inverse covariance matrix
             for i in range(sizes.shape[0]):
@@ -189,7 +192,7 @@ class RBFExpansionNode(mdp.Node):
         for i in range(self._output_dim):
             dist = x - c[i,:]
             if self._isotropic:
-                tmp = (dist**2.).sum(axis=1) / s[i]
+                tmp = old_div((dist**2.).sum(axis=1), s[i])
             else:
                 tmp = (dist*matmult(dist, s[i,:,:])).sum(axis=1)
             y[:,i] = numx.exp(-0.5*tmp)
@@ -337,7 +340,7 @@ class GeneralExpansionNode(_ExpansionNode):
     def output_sizes(self, n):
         """Return the individual output sizes of each expansion function
         when the input has lenght n."""
-        sizes = numx.zeros(len(self.funcs))
+        sizes = numx.zeros(len(self.funcs), dtype=numx.int64)
         x = numx.zeros((1,n))
         for i, func in enumerate(self.funcs):
             outx = func(x)
@@ -371,7 +374,7 @@ class GeneralExpansionNode(_ExpansionNode):
                                                     use_hint=use_hint,
                                                     k=0.000001)
             return app_x_2.astype(self.dtype)
-        except NotImplementedError, exc:
+        except NotImplementedError as exc:
             raise mdp.MDPException(exc)
 
     def _execute(self, x):

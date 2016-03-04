@@ -2,11 +2,14 @@
 Module with simple functions for the complete inspection procedure.
 """
 
-from __future__ import with_statement
+from __future__ import print_function
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
 
 import os
 import webbrowser
-import cPickle as pickle
+import pickle as pickle
 import tempfile
 import traceback
 import warnings
@@ -16,15 +19,15 @@ from mdp import numx
 
 from bimdp import BiFlow
 
-from tracer import (
+from .tracer import (
     InspectionHTMLTracer, TraceDebugException, inspection_css,
     prepare_training_inspection, remove_inspection_residues,
     _trace_biflow_training, PICKLE_EXT, STANDARD_CSS_FILENAME
 )
-from slideshow import (
+from .slideshow import (
     TrainHTMLSlideShow, ExecuteHTMLSlideShow,
     SectExecuteHTMLSlideShow)
-from utils import robust_write_file, robust_pickle, first_iterable_elem
+from .utils import robust_write_file, robust_pickle, first_iterable_elem
 
 
 def _open_custom_brower(open_browser, url):
@@ -109,7 +112,7 @@ def inspect_training(snapshot_path, x_samples, msg_samples=None,
             err = ("No inspection slides were generated, probably because "
                    "there are no untrained nodes in the given flow.")
             raise EmptyTraceException(err)
-    except TraceDebugException, debug_exception:
+    except TraceDebugException as debug_exception:
         slide_filenames, slide_node_ids, index_table = debug_exception.result
     if index_table is None:
         return None  # no snapshots were found
@@ -285,7 +288,7 @@ def inspect_execution(flow, x, msg=None, target=None, path=None,
                                    x=x, msg=msg, target=target,
                                    debug=debug,
                                    **kwargs)
-    except TraceDebugException, debug_exception:
+    except TraceDebugException as debug_exception:
         if not debug_exception.result:
             return None
         traceback.print_exc()

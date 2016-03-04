@@ -1,3 +1,7 @@
+from __future__ import print_function
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 __docformat__ = "restructuredtext en"
 
 import mdp
@@ -99,21 +103,21 @@ class FANode(mdp.Node):
         # too slow for large matrices. Is the product of the diagonal a good
         # approximation?
         if d<=300:
-            scale = det(cov_mtx)**(1./d)
+            scale = det(cov_mtx)**(old_div(1.,d))
         else:
-            scale = numx.product(sigma)**(1./d)
+            scale = numx.product(sigma)**(old_div(1.,d))
         if scale <= 0.:
             err = ("The covariance matrix of the data is singular. "
                    "Redundant dimensions need to be removed.")
             raise NodeException(err)
 
-        A = normal(0., sqrt(scale/k), size=(d, k)).astype(typ)
+        A = normal(0., sqrt(old_div(scale,k)), size=(d, k)).astype(typ)
 
         ##### EM-cycle
         lhood_curve = []
         base_lhood = None
         old_lhood = -numx.inf
-        for t in xrange(self.max_cycles):
+        for t in range(self.max_cycles):
             ## compute B = (A A^T + Sigma)^-1
             B = mult(A, A.T)
             # B += diag(sigma), avoid computing diag(sigma) which is dxd
@@ -143,7 +147,7 @@ class FANode(mdp.Node):
             # this is actually likelihood/tlen.
             lhood = const - 0.5*log_det_B - 0.5*trace_B_cov
             if verbose:
-                print 'cycle', t, 'log-lhood:', lhood
+                print('cycle', t, 'log-lhood:', lhood)
 
             ##### convergence criterion
             if base_lhood is None:

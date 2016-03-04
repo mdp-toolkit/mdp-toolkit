@@ -1,3 +1,7 @@
+from __future__ import print_function
+from __future__ import division
+from builtins import range
+from past.utils import old_div
 __docformat__ = "restructuredtext en"
 
 from mdp import numx, numx_linalg, Cumulator, TrainingException, MDPWarning
@@ -86,7 +90,7 @@ class LLENode(Cumulator):
             msg = ('training LLE on %i points'
                    ' in %i dimensions...' % (self.data.shape[0],
                                              self.data.shape[1]))
-            print msg
+            print(msg)
 
         # some useful quantities
         M = self.data
@@ -126,7 +130,7 @@ class LLENode(Cumulator):
         W = numx.zeros((N, N), dtype=self.dtype)
 
         if self.verbose:
-            print ' - constructing [%i x %i] weight matrix...' % W.shape
+            print(' - constructing [%i x %i] weight matrix...' % W.shape)
 
         for row in range(N):
             if learn_outdim:
@@ -177,7 +181,7 @@ class LLENode(Cumulator):
         if self.verbose:
             msg = (' - finding [%i x %i] null space of weight matrix\n'
                    '     (may take a while)...' % (self.output_dim, N))
-            print msg
+            print(msg)
 
         self.W = W.copy()
         #to find the null space, we need the bottom d+1
@@ -208,7 +212,7 @@ class LLENode(Cumulator):
         # useful later are pre-calculated to spare precious time
 
         if self.verbose:
-            print ' - adjusting output dim:'
+            print(' - adjusting output dim:')
 
         #otherwise, we need to compute output_dim
         #                  from desired_variance
@@ -250,9 +254,9 @@ class LLENode(Cumulator):
             S = sig2.cumsum()
             m_est = S.searchsorted(self.desired_variance)
             if m_est > 0:
-                m_est += (self.desired_variance-S[m_est-1])/sig2[m_est]
+                m_est += old_div((self.desired_variance-S[m_est-1]),sig2[m_est])
             else:
-                m_est = self.desired_variance/sig2[m_est]
+                m_est = old_div(self.desired_variance,sig2[m_est])
             m_est_array.append(m_est)
 
         m_est_array = numx.asarray(m_est_array)
@@ -261,7 +265,7 @@ class LLENode(Cumulator):
             msg = ('      output_dim = %i'
                    ' for variance of %.2f' % (self.output_dim,
                                               self.desired_variance))
-            print msg
+            print(msg)
 
         return Qs, sig2s, nbrss
 
@@ -322,7 +326,7 @@ def _mgs(a):
     r = numx.zeros((n, n))
     for i in range(n):
         r[i, i] = numx_linalg.norm(v[:, i])
-        v[:, i] = v[:, i]/r[i, i]
+        v[:, i] = old_div(v[:, i],r[i, i])
         for j in range(i+1, n):
             r[i, j] = mult(v[:, i], v[:, j])
             v[:, j] = v[:, j] - r[i, j]*v[:, i]
@@ -404,7 +408,7 @@ class HLLENode(LLENode):
             raise TrainingException(err)
 
         if self.verbose:
-            print 'performing HLLE on %i points in %i dimensions...' % M.shape
+            print('performing HLLE on %i points in %i dimensions...' % M.shape)
 
         # determines number of output dimensions: if desired_variance
         # is specified, we need to learn it from the data. Otherwise,
@@ -423,7 +427,7 @@ class HLLENode(LLENode):
         d_out = self.output_dim
 
         #dp = d_out + (d_out-1) + (d_out-2) + ...
-        dp = d_out*(d_out+1)/2
+        dp = d_out*(d_out+1)//2
 
         if min(k, N) <= d_out:
             err = ('k=%i and n=%i (number of input data points) must be'
@@ -442,7 +446,7 @@ class HLLENode(LLENode):
         W = numx.zeros((N, dp*N), dtype=self.dtype)
 
         if self.verbose:
-            print ' - constructing [%i x %i] weight matrix...' % W.shape
+            print(' - constructing [%i x %i] weight matrix...' % W.shape)
 
         for row in range(N):
             if learn_outdim:
@@ -497,7 +501,7 @@ class HLLENode(LLENode):
             S[numx.where(numx.absolute(S)<1E-4)] = 1.0
             #print w.shape, S.shape, (w/S).shape
             #print W[nbrs, row*dp:(row+1)*dp].shape
-            W[nbrs, row*dp:(row+1)*dp] = w / S
+            W[nbrs, row*dp:(row+1)*dp] = old_div(w, S)
 
         #-----------------------------------------------
         # To find the null space, we want the
@@ -508,7 +512,7 @@ class HLLENode(LLENode):
         if self.verbose:
             msg = (' - finding [%i x %i] '
                    'null space of weight matrix...' % (d_out, N))
-            print msg
+            print(msg)
 
         #XXX future work:
         #XXX  use of upcoming ARPACK interface for bottom few eigenvectors
@@ -548,7 +552,7 @@ class HLLENode(LLENode):
         #    self.training_projection = mult(Y, mult(VT.T, mult(S, VT)))
         #-----------------------------------------------
         if self.verbose:
-            print ' - normalizing null space...'
+            print(' - normalizing null space...')
 
         C = sqrtm(mult(Y.T, Y))
         self.training_projection = mult(Y, C)
