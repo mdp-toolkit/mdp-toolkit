@@ -179,6 +179,8 @@ class _TemplateBuilder(object):
                     code.append(s + self.emitpat % part)
         return '\n'.join(code)
 
+def _exec(code, globals, locals):
+    exec(code, globals, locals)
 
 class _TemplateMetaClass(type):
 
@@ -193,7 +195,7 @@ class _TemplateMetaClass(type):
         def expand(self, __dict = None, **kw):
             if __dict: kw.update([i for i in __dict.items() if i[0] not in kw])
             kw['self'] = self
-            exec(code, globals, kw)
+            _exec(code, globals, kw)
         return expand
 
     def __init__(cls, *args):
