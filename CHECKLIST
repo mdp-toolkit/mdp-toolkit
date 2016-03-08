@@ -134,7 +134,7 @@ pip install mdp
    as explained above for the source tarballs.
  - synchronize the site with:
    cd build/html
-   rsync -av --delete-after . username,mdp-toolkit@web.sourceforge.net:/home/project-web/mdp-toolkit/htdocs/
+   rsync -av --delete-after . username@web.sourceforge.net:/home/project-web/mdp-toolkit/htdocs/
  - more info: http://alexandria.wiki.sourceforge.net/Project+Web,+Shell,+VHOST+and+Database+Services
 - tag the docs repository:
   git tag -a MDP-3.5
