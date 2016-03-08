@@ -1,3 +1,0 @@
-rm -rf dist
-rm -rf build
-rm -f MANIFEST
