@@ -14,13 +14,11 @@ cache:
 before_install:
     # The ultimate one-liner setup for NeuroDebian repository
     - bash <(wget -q -O- http://neuro.debian.net/_files/neurodebian-travis.sh)
-    # - sudo apt-get install $PYTHON-dev
     - travis_retry sudo apt-get install python-numpy python-joblib python-sklearn
 install:
-    - python setup.py build_ext --inplace
-    - pip install --user -v coveralls codecov pytest-cov
+    - pip install --user -v pytest pytest-cov coveralls
 script:
-    - coverage run setup.py test # TODO: add args to limit coverage to mdp only
+    - py.test --cov-report= --cov=mdp --seed=725021957 mdp
+    - py.test --cov-report= --cov=bimdp --cov-append --seed=725021957 bimdp
 after_success:
     - coveralls
-    - codecov
