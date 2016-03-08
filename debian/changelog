@@ -1,3 +1,11 @@
+mdp (3.5-1) unstable; urgency=medium
+
+  * New upstread release
+    - fix failures with ancient Python versions
+  * Upload sponsored by Yaroslav Halchenko
+
+ -- Tiziano Zito <opossumnano@gmail.com>  Tue, 08 Mar 2016 14:17:15 +0100
+
 mdp (3.4-1) unstable; urgency=medium
 
   * New upstream release
