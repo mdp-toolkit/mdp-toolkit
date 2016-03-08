@@ -25,7 +25,7 @@ Before release:
 During release:
 - update CHANGES: you can generate a new bunch of CHANGES with:
   git log --no-color --pretty="format:%w(79,0,12)%ad: %s%+b" --date=short --no-merges --since=$LASTRELEASE
-  where LASTRELEASE is the date of the last release [LASTRELEASE=2012-09-21]. 
+  where LASTRELEASE is the tag of the last release, e.g. MDP-3.4
   You can then prepend the output of this command to the original CHANGES file, 
   but even better would be to edit the result to only keep the changes
   that are relevant for the user like incompatibilities, new features, etc..
