@@ -18,7 +18,7 @@ before_install:
 install:
     - pip install --user -v pytest pytest-cov coveralls future
 script:
-    - py.test --cov-report= --cov=mdp --seed=725021957 mdp
-    - py.test --cov-report= --cov=bimdp --cov-append --seed=725021957 bimdp
+    - py.test --cov-report= --cov-config=.coveragerc --cov=mdp --seed=725021957 mdp
+    - py.test --cov-report= --cov-config=.coveragerc --cov=bimdp --cov-append --seed=725021957 bimdp
 after_success:
     - coveralls

@@ -1,0 +1,6 @@
+[run]
+omit = 
+    mdp/test/*
+    bimdp/test/*
+
+concurrency = multiprocessing
