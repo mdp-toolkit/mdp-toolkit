@@ -137,19 +137,8 @@ pip install mdp
    rsync -av --delete-after . username,mdp-toolkit@web.sourceforge.net:/home/project-web/mdp-toolkit/htdocs/
  - more info: http://alexandria.wiki.sourceforge.net/Project+Web,+Shell,+VHOST+and+Database+Services
 - tag the docs repository:
-  git tag -a MDP-3.0
+  git tag -a MDP-3.5
   git push --tags
-- post news to sourceforge [the content may be the release notes file]:
-  https://sourceforge.net/news/submit.php?group_id=116959
-- update package information on mloss.org, pypi, and software.incf.net:
-  
-  - pypi [you need an account here: http://pypi.python.org/pypi]:
-     within a clone of the mdp-toolkit repo: python setup.py register
-  
-  - mloss.org: https://mloss.org/software/update/60/
- 
-  - software.incf.org: http://software.incf.net/software/modular-toolkit-for-data-processing-mdp/
-
 After release:
 - update version number in __init__
 - send announcement to:
