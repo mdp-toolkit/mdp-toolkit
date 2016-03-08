@@ -113,7 +113,7 @@ class MDPDeprecationWarning(DeprecationWarning, MDPWarning):
 
 from . import configuration
 
-__version__ = '3.4'
+__version__ = '3.5'
 __revision__ = configuration.get_git_revision()
 __authors__ = 'MDP Developers'
 __copyright__ = '(c) 2003-2016 mdp-toolkit-devel@lists.sourceforge.net'
