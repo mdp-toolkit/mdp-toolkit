@@ -1,0 +1,24 @@
+# vim ft=yaml
+# travis-ci.org definition for MDP build (based on PyMVPA configuration
+# which in turn was based on nipype and nipy)
+#
+# We pretend to be erlang because we need can't use the python support in
+# travis-ci; it uses virtualenvs, they do not have numpy, scipy, matplotlib,
+# and it is impractical to build them
+#
+# Alternative setups could have been done using anaconda etc, but I would
+# prefer to test against what is in neurodebian
+language: erlang
+cache:
+  - apt
+before_install:
+    # The ultimate one-liner setup for NeuroDebian repository
+    - bash <(wget -q -O- http://neuro.debian.net/_files/neurodebian-travis.sh)
+    - travis_retry sudo apt-get install python-numpy python-joblib python-sklearn
+install:
+    - pip install --user -v pytest pytest-cov coveralls future
+script:
+    - py.test --cov-report= --cov-config=.coveragerc --cov=mdp --seed=725021957 mdp
+    - py.test --cov-report= --cov-config=.coveragerc --cov=bimdp --cov-append --seed=725021957 bimdp
+after_success:
+    - coveralls

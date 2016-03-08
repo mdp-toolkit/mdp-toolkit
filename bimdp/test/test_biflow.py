@@ -6,7 +6,7 @@ import mdp
 from mdp import numx as np
 
 from bimdp import (
-    MessageResultContainer, BiFlow, BiFlowException, EXIT_TARGET, nodes
+    MessageResultContainer, BiFlow, BiFlowException, EXIT_TARGET, nodes,
 )
 from ._tools import TraceJumpBiNode, IdNode
 
@@ -71,6 +71,15 @@ class TestBiFlow(object):
         flow.train(data_iterables)
         x = np.random.random([100,10])
         flow.execute(x)
+
+    def test_index_with_node_ids(self):
+        """Test a BiFlow indexed by keys."""
+        pca_node = nodes.PCABiNode(node_id="pca")
+        biflow = BiFlow([pca_node])
+        x = biflow["pca"]
+        assert x is pca_node
+        assert pca_node in biflow
+        assert 'pca' in biflow
 
     def test_normal_multiphase(self):
         """Test training and execution with multiple training phases.

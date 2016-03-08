@@ -25,7 +25,7 @@ Before release:
 During release:
 - update CHANGES: you can generate a new bunch of CHANGES with:
   git log --no-color --pretty="format:%w(79,0,12)%ad: %s%+b" --date=short --no-merges --since=$LASTRELEASE
-  where LASTRELEASE is the date of the last release [LASTRELEASE=2012-09-21]. 
+  where LASTRELEASE is the tag of the last release, e.g. MDP-3.4
   You can then prepend the output of this command to the original CHANGES file, 
   but even better would be to edit the result to only keep the changes
   that are relevant for the user like incompatibilities, new features, etc..
@@ -34,18 +34,82 @@ During release:
 - change homepage colors
 - short/long description should go: on SF.net description, tutorial,
   home page, modules __init__, software.incf.net.
-- generate installers and source packages and test them:
-  for python2: run the gendist script
-  for python3: the windows installer must be generated under windows,
-               following the instructions in gendist
+- generate packages and test them:
+  # this generates a source distribution (tarball) and an universal wheel (binary
+  # installer OS independent)
+  python3 setup.py sdist bdist_wheel
+  # the generated files are in the directory "dist"
+  # test them in a virtualenv
+  virtualenv mdp-27 && source /home/tiziano/mdp-27/bin/activate
+  cd dist 
+  pip install MDP-3.4.tar.gz
+  pip install pytest
+  python -c 'import mdp; mdp.test(seed=10)'
+  python -c 'import bimdp; bimdp.test(seed=10)'
+  cd ..
+  virtualenv mdp-27-wheel && source /home/tiziano/mdp-27-wheel/bin/activate
+  cd dist
+  pip install MDP-3.4-py2.py3-none-any.whl
+  pip install pytest
+  python -c 'import mdp; mdp.test(seed=10)'
+  python -c 'import bimdp; bimdp.test(seed=10)'
+  # now do the same with python3, where instead of virtualenv you use
+  python3 -m venv mdp-3 && source /home/tiziano/mdp-3/bin/activate
 - create a release notes file
 - tag release in git (tag mdp-toolkit repo)
-  git tag -a MDP-3.0
+  git tag -a MDP-3.4
 - push the tag git push --tags
+- update the package on PyPI:
+  # first test on the test PyPI instance (you have to register there first)
+  # - create a ~/.pypirc first:
+  cat > ~/.pypirc <<EOF
+[distutils]
+index-servers=
+    test
+
+[test]
+    repository = https://testpypi.python.org/pypi
+    username = otizonaizit
+EOF
+  # - register
+  python3 setup.py register -r test
+  # go and check if it is there!
+  # now use twine to upload and sign the packages
+  twine upload -r test -s dist/MDP-3.4*
+  # now create another virtualenv and try to test installation
+  virtualenv mdp-27 && source /home/tiziano/mdp-27/bin/activate
+  pip install -i https://testpypi.python.org/pypi MDP
+  # if it fails because future or numpy are not on the test pypi server,
+  # just install them with pip install without -i
+  # 
+  # If all of the above works, you can finally upload to the real PyPI:
+  # modify your ~/.pypirc:
+cat > ~/.pypirc <<EOF
+[distutils]
+index-servers=
+    pypi
+    test
+
+[test]
+repository = https://testpypi.python.org/pypi
+username = otizonaizit
+
+[pypi]
+repository = https://pypi.python.org/pypi
+username = otizonaizit
+EOF
+   # now register
+   python3 setup register
+   # upload to pipy
+   twine upload -s dist/MDP-3.4*
+   # test that it works with pip
+virtualenv mdp-27 && source /home/tiziano/mdp-27/bin/activate
+pip install mdp
+   # yeah, it works!!!
 - update on SF.net:
   release files: 
-    - sftp username,mdp-toolkit@frs.sourceforge.net
-    - cd /home/pfs/project/m/md/mdp-toolkit/mdp-toolkit/
+    - sftp username@frs.sourceforge.net
+    - cd /home/frs/project/mdp-toolkit/mdp-toolkit/
     - create a new directory for the release, for example for release 3.0:
        mkdir 3.0
        cd 3.0
@@ -54,10 +118,9 @@ During release:
       file to upload are: .tar.gz, .zip, .exe, tutorial, release notes file
        - login to sourceforge, go to "Files"
        - select the new created directory
-       - select the installer for windows and set it as 
-         default for windows by clicking on the "i" icon on the right, 
-       - select the tar.gz for linux and set it as 
-         default for linux and mac
+       - select the wheel file and set it as a default for windows and
+         Mac by clicking on the "i" icon on the right, 
+       - select the tar.gz as a default for everything else
        - at that point the readme file should be automatically shown as release
          note file
 		 if README.txt is not shown, delete it and upload it through the web interface.
@@ -71,22 +134,11 @@ During release:
    as explained above for the source tarballs.
  - synchronize the site with:
    cd build/html
-   rsync -av --delete-after . username,mdp-toolkit@web.sourceforge.net:/home/project-web/mdp-toolkit/htdocs/
+   rsync -av --delete-after . username@web.sourceforge.net:/home/project-web/mdp-toolkit/htdocs/
  - more info: http://alexandria.wiki.sourceforge.net/Project+Web,+Shell,+VHOST+and+Database+Services
 - tag the docs repository:
-  git tag -a MDP-3.0
+  git tag -a MDP-3.5
   git push --tags
-- post news to sourceforge [the content may be the release notes file]:
-  https://sourceforge.net/news/submit.php?group_id=116959
-- update package information on mloss.org, pypi, and software.incf.net:
-  
-  - pypi [you need an account here: http://pypi.python.org/pypi]:
-     within a clone of the mdp-toolkit repo: python setup.py register
-  
-  - mloss.org: https://mloss.org/software/update/60/
- 
-  - software.incf.org: http://software.incf.net/software/modular-toolkit-for-data-processing-mdp/
-
 After release:
 - update version number in __init__
 - send announcement to:

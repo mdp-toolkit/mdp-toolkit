@@ -1,0 +1,12 @@
+[run]
+omit = 
+    mdp/test/*
+    bimdp/test/*
+    mdp/parallel/pp_*
+    mdp/nodes/*svm_classifier*
+    mdp/nodes/shogun*
+    mdp/utils/progress_bar.py
+    mdp/configuration.py
+    mdp/helper_funcs.py
+
+concurrency = multiprocessing

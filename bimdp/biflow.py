@@ -388,7 +388,7 @@ class BiFlow(mdp.Flow):
     ## container special methods to support node_id
 
     def __getitem__(self, key):
-        if isinstance(key, str):
+        if isinstance(key, __builtins__['str']):
             item = self._request_node_id(key)
             if item is None:
                 err = ("This biflow contains no node with with the id " +
@@ -399,21 +399,21 @@ class BiFlow(mdp.Flow):
             return super(BiFlow, self).__getitem__(key)
 
     def __setitem__(self, key, value):
-        if isinstance(key, str):
+        if isinstance(key, __builtins__['str']):
             err = "Setting nodes by node_id is not supported."
             raise BiFlowException(err)
         else:
             super(BiFlow, self).__setitem__(key, value)
 
     def __delitem__(self, key):
-        if isinstance(key, str):
+        if isinstance(key, __builtins__['str']):
             err = "Deleting nodes by node_id is not supported."
             raise BiFlowException(err)
         else:
             super(BiFlow, self).__delitem__(key)
 
     def __contains__(self, key):
-        if isinstance(key, str):
+        if isinstance(key, __builtins__['str']):
             if self._request_node_id(key) is not None:
                 return True
             else:
