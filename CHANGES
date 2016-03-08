@@ -1,4 +1,20 @@
 -------------------------------------------------------------------------------
+MDP-3.5:
+2016-03-08: fix use of str in biflow indexing
+2016-03-08: remove obsolete scripts
+2016-03-07: Add wrapper function for exec Old Python versions don't allow exec
+            statement in nested functions: Traceback (most recent call last):
+             File "<string>", line 1, in <module>
+             File "mdp/__init__.py", line 131, in <module>
+               from . import utils
+             File "mdp/utils/__init__.py", line 29, in <module>
+               from .slideshow import (basic_css, slideshow_css, HTMLSlideShow,
+             File "mdp/utils/slideshow.py", line 23, in <module>
+               from . import templet
+             File "mdp/utils/templet.py", line 196
+               exec(code, globals, kw) SyntaxError: unqualified exec is not
+            allowed in function 'expand' it is a nested function
+-------------------------------------------------------------------------------
 MDP-3.4:
 2016-03-02: Make use of setuptools instead of distutils While we resisted as
             long as possible, it is now time to move to use setuptools
