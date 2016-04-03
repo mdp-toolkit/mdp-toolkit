@@ -279,6 +279,7 @@ class InspectionHTMLTracer(object):
         The method should always be used after _begin_HTML_frame.
         """
         html_file.write('</body>\n</html>')
+        html_file.close()
 
     def _write_error_frame(self):
         with self._begin_HTML_frame() as html_file:
