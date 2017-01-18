@@ -27,7 +27,8 @@ def test(filename=None, seed=None, options='', mod_loc=None):
     # add --assert=reiterp option to work around permissions problem
     # with __pycache__ directory when MDP is installed on a normal
     # user non-writable directory
-    options = "--assert=reinterp "+options
+    # options = "--assert=reinterp "+options
+    options = "-s "+options
     args.extend(options.split())
     args.append(loc)
     _worker = get_worker()
