@@ -68,7 +68,7 @@ def test_multiple_training_phases():
     assert_array_equal(node.count, (node.get_remaining_train_phase()-1)*mdp.numx.ones(inp.shape))
 
 
-def test_node_add():
+def test_node_add_online_node():
     flow = BogusOnlineNode() + BogusOnlineNode()
     assert(isinstance(flow, mdp.OnlineFlow))
     inp = mdp.numx.zeros([2,5])
@@ -78,6 +78,7 @@ def test_node_add():
     for node in flow:
         assert(node.is_training())
 
+def test_node_add_trainable_classic_node():
     flow = BogusOnlineNode() + BogusNodeTrainable()
     assert(not isinstance(flow, mdp.OnlineFlow))
     assert(isinstance(flow, mdp.Flow))
@@ -87,6 +88,7 @@ def test_node_add():
     assert_array_equal(mdp.numx.ones(inp.shape), out)
     assert(not flow[1].is_training())
 
+def test_node_add_trainable_classic_node_swapped():
     # check with swapped add members
     flow =  BogusNodeTrainable() + BogusOnlineNode()
     assert(not isinstance(flow, mdp.OnlineFlow))
@@ -98,7 +100,6 @@ def test_node_add():
     #check if all the nodes are closed.
     for node in flow:
         assert(not node.is_training())
-
 
 def test_numx_rng():
     rng = mdp.numx_rand.RandomState(seed=3)
