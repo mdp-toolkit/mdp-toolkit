@@ -31,7 +31,7 @@ from .xsfa_nodes import XSFANode, NormalizeNode
 from .misc_nodes import OneDimensionalHitParade as _OneDimensionalHitParade
 from .expansion_nodes import expanded_dim as _expanded_dim
 
-from .stats_nodes_online import MovingAvgNode, MovingTimeDiffNode
+from .stats_nodes_online import OnlineCenteringNode, OnlineTimeDiffNode
 
 __all__ = ['PCANode', 'WhiteningNode', 'NIPALSNode', 'FastICANode',
            'CuBICANode', 'TDSEPNode', 'JADENode', 'SFANode', 'SFA2Node',
@@ -48,7 +48,7 @@ __all__ = ['PCANode', 'WhiteningNode', 'NIPALSNode', 'FastICANode',
            'TimeFramesNode', 'TimeDelayNode', 'TimeDelaySlidingWindowNode',
            'CutoffNode', 'AdaptiveCutoffNode', 'HistogramNode',
            'IdentityNode', '_OneDimensionalHitParade',
-           'MovingAvgNode', 'MovingTimeDiffNode', ]
+           'OnlineCenteringNode', 'OnlineTimeDiffNode', ]
 
 # nodes with external dependencies
 from mdp import config, numx_description, MDPException
