@@ -28,7 +28,7 @@ class OnlineFlow(mdp.Flow):
 
     OnlineFlow node sequence can contain
     (a) only OnlineNodes
-        (Eg. [MovingAvgNode(), IncSFANode()],
+        (Eg. [OnlineCenteringNode(), IncSFANode()],
     or
     (b) a mix of OnlineNodes and trained/non-trainable Nodes
         (eg. [a fully trained PCANode, IncSFANode()] or [QuadraticExpansionNode(), IncSFANode()],
