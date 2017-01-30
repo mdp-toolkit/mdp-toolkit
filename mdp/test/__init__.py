@@ -23,13 +23,9 @@ def test(filename=None, seed=None, options='', mod_loc=None):
         loc = os.path.join(mod_loc, os.path.basename(filename))
     args = []
     if seed is not None:
-        args.append('--seed=' + str(seed))
-    # add --assert=reiterp option to work around permissions problem
-    # with __pycache__ directory when MDP is installed on a normal
-    # user non-writable directory
-    # options = "--assert=reinterp "+options
-    options = "-s "+options
-    args.extend(options.split())
+        args.extend(('--seed', str(seed)))
+    if options is not None:
+        args.extend(options.split())
     args.append(loc)
     _worker = get_worker()
     return _worker(args)
