@@ -21,16 +21,21 @@ class OnlineFlow(mdp.Flow):
     training (including supervised training and multiple training phases),
     execution, and inverse execution (if defined) of the whole sequence.
 
-    OnlineFlow sequence can contain
-    (a) only OnlineNodes, or
-    (b) a mix of OnlineNodes and trained or non-trainable Nodes (classic), or
-    (c) a mix of OnlineNodes/trained or non-trainable Nodes and a terminal trainable Node whose
-    training hasn't finished.
-
-    Here is a brief summary of the terminology used:
+    To understand the compatible node sequences for an OnlineFlow, the following terminology is useful:
        A "trainable" node: node.is_trainable() returns True, node.is_training() returns True.
        A "trained" node: node.is_trainable() returns True, node.is_training() returns False.
-       A "non-trainalbe" node: node.is_trainable() returns False, node.is_training() returns False.
+       A "non-trainable" node: node.is_trainable() returns False, node.is_training() returns False.
+
+    OnlineFlow node sequence can contain
+    (a) only OnlineNodes
+        (Eg. [MovingAvgNode(), IncSFANode()],
+    or
+    (b) a mix of OnlineNodes and trained/non-trainable Nodes
+        (eg. [a fully trained PCANode, IncSFANode()] or [QuadraticExpansionNode(), IncSFANode()],
+    or
+    (c) a mix of OnlineNodes/trained/non-trainable Nodes and a terminal trainable Node (but not an OnlineNode) whose
+    training hasn't finished
+        (eg. [IncSFANode(), QuadraticExpansionNode(), a partially or untrained SFANode]).
 
     Differences between a Flow and an OnlineFlow:
     a) In Flow, data is processed sequentially, training one node at a time. That is, the second
@@ -79,8 +84,12 @@ class OnlineFlow(mdp.Flow):
 
     def __init__(self, flow, crash_recovery=False, verbose=False):
         super(OnlineFlow, self).__init__(flow, crash_recovery, verbose)
-        # check if the list of nodes is compatible.
-        self._check_compatibilitiy(flow)
+        # check if the list of nodes is compatible. Compatible node sequences:
+        # (a) A sequence of OnlineNodes, or
+        # (b) a mix of OnlineNodes and trained/non-trainable Nodes, or
+        # (c) a mix of OnlineNodes/trained/non-trainable Nodes and a terminal trainable Node whose
+        # training hasn't finished.
+        self._check_compatibility(flow)
         # collect cache from individual nodes.
         self._cache = self._get_cache_from_flow(flow)
         # collect train_args for each node
@@ -230,20 +239,26 @@ class OnlineFlow(mdp.Flow):
 
     # private container methods
 
-    def _check_value_type_is_compatible(self, value):
-        # onlinenodes, trained and non-trainable nodes are compatible
+    def _check_value_type_is_online_or_nontrainable_node(self, value):
+        # valid: onlinenode, trained or non-trainable nodes
+        # invalid: trainable but not an online node
         if not isinstance(value, mdp.Node):
             raise TypeError("flow item must be a Node instance and not %s" % type(value))
         elif isinstance(value, mdp.OnlineNode):
+            # OnlineNode
             pass
         else:
-            # classic mdp Node
-            if value.is_training():
+            # Node
+            if not value.is_training():
+                # trained or non-trainable node
+                pass
+            else:
+                # trainable but not an OnlineNode
                 raise TypeError("flow item must either be an OnlineNode instance, a trained or a non-trainable Node.")
 
-    def _check_compatibilitiy(self, flow):
-        [self._check_value_type_is_compatible(item) for item in flow[:-1]]
-        # terminal node can be a trainable Node
+    def _check_compatibility(self, flow):
+        [self._check_value_type_is_online_or_nontrainable_node(item) for item in flow[:-1]]
+        # terminal node can be a trainable Node whose training hasn't finished.
         self._check_value_type_isnode(flow[-1])
 
     def _get_cache_from_flow(self, flow):
@@ -257,15 +272,15 @@ class OnlineFlow(mdp.Flow):
 
     def __setitem__(self, key, value):
         if isinstance(key, slice):
-            [self._check_value_type_is_compatible(item) for item in value]
+            [self._check_value_type_is_online_or_nontrainable_node(item) for item in value]
         else:
-            self._check_value_type_is_compatible(value)
+            self._check_value_type_is_online_or_nontrainable_node(value)
 
         flow_copy = list(self.flow)
         flow_copy[key] = value
         # check dimension consistency
         self._check_nodes_consistency(flow_copy)
-        self._check_compatibilitiy(flow_copy)
+        self._check_compatibility(flow_copy)
         # if no exception was raised, accept the new sequence
         self.flow = flow_copy
         self._cache = self._get_cache_from_flow(flow_copy)
@@ -276,7 +291,7 @@ class OnlineFlow(mdp.Flow):
         del flow_copy[key]
         # check dimension consistency
         self._check_nodes_consistency(flow_copy)
-        self._check_compatibilitiy(flow_copy)
+        self._check_compatibility(flow_copy)
         # if no exception was raised, accept the new sequence
         self.flow = flow_copy
         self._cache = self._get_cache_from_flow(flow_copy)
@@ -287,7 +302,7 @@ class OnlineFlow(mdp.Flow):
         if isinstance(other, mdp.Flow):
             flow_copy = list(self.flow).__add__(other.flow)
             # check OnlineFlow compatibility
-            self._check_compatibilitiy(flow_copy)
+            self._check_compatibility(flow_copy)
             # check dimension consistency
             self._check_nodes_consistency(flow_copy)
             # if no exception was raised, accept the new sequence
@@ -296,7 +311,7 @@ class OnlineFlow(mdp.Flow):
             flow_copy = list(self.flow)
             flow_copy.append(other)
             # check OnlineFlow compatibility
-            self._check_compatibilitiy(flow_copy)
+            self._check_compatibility(flow_copy)
             # check dimension consistency
             self._check_nodes_consistency(flow_copy)
             # if no exception was raised, accept the new sequence
@@ -316,7 +331,7 @@ class OnlineFlow(mdp.Flow):
             err_str = ('can only concatenate flow or node'
                        ' (not \'%s\') to flow' % type(other).__name__)
             raise TypeError(err_str)
-        self._check_compatibilitiy(self.flow)
+        self._check_compatibility(self.flow)
         self._check_nodes_consistency(self.flow)
         self._cache = self._get_cache_from_flow(self.flow)
         self._train_arg_keys_list, self._train_args_needed_list = self._get_required_train_args_from_flow(self.flow)
@@ -328,7 +343,7 @@ class OnlineFlow(mdp.Flow):
         """flow.append(node) -- append node to flow end"""
         self[len(self):len(self)] = [x]
         self._check_nodes_consistency(self.flow)
-        self._check_compatibilitiy(self.flow)
+        self._check_compatibility(self.flow)
         self._cache = self._get_cache_from_flow(self.flow)
         self._train_arg_keys_list, self._train_args_needed_list = self._get_required_train_args_from_flow(self.flow)
 
@@ -341,7 +356,7 @@ class OnlineFlow(mdp.Flow):
             raise TypeError(err_str)
         self[len(self):len(self)] = x
         self._check_nodes_consistency(self.flow)
-        self._check_compatibilitiy(self.flow)
+        self._check_compatibility(self.flow)
         self._cache = self._get_cache_from_flow(self.flow)
         self._train_arg_keys_list, self._train_args_needed_list = self._get_required_train_args_from_flow(self.flow)
 
@@ -349,7 +364,7 @@ class OnlineFlow(mdp.Flow):
         """flow.insert(index, node) -- insert node before index"""
         self[i:i] = [x]
         self._check_nodes_consistency(self.flow)
-        self._check_compatibilitiy(self.flow)
+        self._check_compatibility(self.flow)
         self._cache = self._get_cache_from_flow(self.flow)
         self._train_arg_keys_list, self._train_args_needed_list = self._get_required_train_args_from_flow(self.flow)
 
@@ -409,7 +424,6 @@ class CircularOnlineFlow(OnlineFlow):
     def __init__(self, flow, crash_recovery=False, verbose=False):
         """
         flow - a list of nodes.
-        flow_iterations - Number of internal train iterations for each data point.
         """
         super(CircularOnlineFlow, self).__init__(flow, crash_recovery, verbose)
         self.flow = _deque(flow)  # A circular queue of the flow
@@ -427,6 +441,8 @@ class CircularOnlineFlow(OnlineFlow):
         self._ignore_input = False
 
     def set_stored_input(self, x):
+        # CircularOnlineFlow also supports training nodes while ignoring external input data at all times.
+        # In this case, the flow iterates everytime using an initially stored input that can be set using this method.
         if self.flow[0].input_dim is not None:
             if x.shape[-1] != self.flow[0].input_dim:
                 raise CircularOnlineFlowException(
@@ -434,12 +450,20 @@ class CircularOnlineFlow(OnlineFlow):
             self._stored_input = x
 
     def get_stored_input(self):
+        # returns the current stored input.
         return self._stored_input
 
     def ignore_input(self, flag):
+        # CircularOnlineFlow also supports training nodes while ignoring external input data at all times.
+        # This mode is enabled/disabled using this method.
+        # See train method docstring for information on different training modes.
         self._ignore_input = flag
 
     def set_flow_iterations(self, n):
+        # This method sets the number of total flow iterations:
+        # If self._ignore_input is False, then total flow iterations = 1 external + (n-1) internal iterations.
+        # if self._ignore input is True, then total flow iterations = n internal iterations.
+        # See train method docstring for information on different training modes.
         self._flow_iterations = n
 
     def _train_nodes(self, data_iterables):
@@ -555,8 +579,8 @@ class CircularOnlineFlow(OnlineFlow):
                 "Accepted 'node_idx' values: 0 <= node_idx < %d, given %d" % (len(self.flow), node_idx))
         self.output_node_idx = node_idx
 
-    def _check_compatibilitiy(self, flow):
-        [self._check_value_type_is_compatible(item) for item in flow]
+    def _check_compatibility(self, flow):
+        [self._check_value_type_is_online_or_nontrainable_node(item) for item in flow]
 
     def reset_output_node(self):
         self.output_node_idx = len(self.flow) - 1
@@ -593,7 +617,7 @@ class CircularOnlineFlow(OnlineFlow):
         if isinstance(other, OnlineFlow):
             flow_copy = list(self.flow)
             flow_copy.append(other)
-            self._check_compatibilitiy(flow_copy)
+            self._check_compatibility(flow_copy)
             self._check_nodes_consistency(flow_copy)
             # if no exception was raised, accept the new sequence
             return self.__class__(flow_copy)
@@ -601,7 +625,7 @@ class CircularOnlineFlow(OnlineFlow):
             flow_copy = list(self.flow)
             flow_copy.append(other)
             # check onlineflow compatibility
-            self._check_compatibilitiy(flow_copy)
+            self._check_compatibility(flow_copy)
             # check dimension consistency
             self._check_nodes_consistency(flow_copy)
             # if no exception was raised, accept the new sequence
@@ -621,7 +645,7 @@ class CircularOnlineFlow(OnlineFlow):
             err_str = ('can only concatenate OnlineFlow or OnlineNode'
                        ' (not \'%s\') to CircularOnlineFlow' % type(other).__name__)
             raise TypeError(err_str)
-        self._check_compatibilitiy(self.flow)
+        self._check_compatibility(self.flow)
         self._check_nodes_consistency(self.flow)
         self._cache = self._get_cache_from_flow(self.flow)
         return self
@@ -632,7 +656,7 @@ class CircularOnlineFlow(OnlineFlow):
         """flow.append(node) -- append node to flow end"""
         self[len(self):len(self)] = [x]
         self._check_nodes_consistency(self.flow)
-        self._check_compatibilitiy(self.flow)
+        self._check_compatibility(self.flow)
         self._cache = self._get_cache_from_flow(self.flow)
 
     def extend(self, x):
@@ -644,14 +668,14 @@ class CircularOnlineFlow(OnlineFlow):
             raise TypeError(err_str)
         self[len(self):len(self)] = x
         self._check_nodes_consistency(self.flow)
-        self._check_compatibilitiy(self.flow)
+        self._check_compatibility(self.flow)
         self._cache = self._get_cache_from_flow(self.flow)
 
     def insert(self, i, x):
         """flow.insert(index, node) -- insert node before index"""
         self[i:i] = [x]
         self._check_nodes_consistency(self.flow)
-        self._check_compatibilitiy(self.flow)
+        self._check_compatibility(self.flow)
         self._cache = self._get_cache_from_flow(self.flow)
 
         if self.output_node_idx >= i:
