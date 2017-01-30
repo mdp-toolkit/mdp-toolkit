@@ -51,7 +51,7 @@ class OnlineNode(Node):
 
         `OnlineNode` subclasses should take care of overwriting (if necessary)
         the functions `_train`, `_stop_training`, `_execute`, 'is_trainable',
-        `is_invertible`, `_inverse`, and `_get_supported_dtypes`.
+        `is_invertible`, `_inverse`, `_get_supported_dtypes` and '_get_supported_training_types'.
         If you need to overwrite the getters and setters of the
         node's properties refer to the docstring of `get_input_dim`/`set_input_dim`,
         `get_output_dim`/`set_output_dim`, `get_dtype`/`set_dtype`, 'get_numx_rng'/'set_numx_rng'.
@@ -79,11 +79,11 @@ class OnlineNode(Node):
         # this var stores random number generator
         self._numx_rng = None
         self.set_numx_rng(numx_rng)
-        # this var stores training type ('incremental' (default), 'batch')
+        # this var stores the training type. By default, the supported types are 'incremental' and 'batch'.
         # incremental - data is passed through the _train_seq sample by sample
         # batch - data is passed through the _train_seq in one shot (block-incremental training)
-        # this variable can be set using set_training_type() method.
-        self._training_type = 'incremental'
+        # this variable can only be set using set_training_type() method.
+        self._training_type = None
 
     # properties in addition to the Node properties
 
@@ -120,15 +120,19 @@ class OnlineNode(Node):
         """Training type (Read only)"""
         return self._training_type
 
-    def set_training_type(self, training_type):
-        """Sets the training type ('incremental' or 'batch')
+    def _get_supported_training_types(self):
+        """Return the list of training types supported by this node.
         """
+        return ['incremental', 'batch']
 
-        if (training_type == 'incremental') or (training_type == 'batch'):
+    def set_training_type(self, training_type):
+        """Sets the training type
+        """
+        if training_type in self._get_supported_training_types():
             self._training_type = training_type
         else:
             raise OnlineNodeException("Unknown training type specified %s. Supported types "
-                                "['incremental', 'batch']" % training_type)
+                                "%s" % str(self._get_supported_training_types()))
 
     # Each element in the _train_seq contains three sub elements
     # (training-phase, stop-training-phase, execution-phase)
@@ -225,6 +229,11 @@ class OnlineNode(Node):
         # set numx_rng if necessary
         if self.numx_rng is None:
             self.numx_rng = mdp.numx_rand.RandomState()
+
+        # set training type if necessary
+        if self.training_type is None:
+            # set the first supported training type as default
+            self._training_type = self._get_supported_training_types()[0]
 
     # Additional methods to be implemented by the user
 
