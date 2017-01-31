@@ -286,11 +286,12 @@ class OnlineNode(Node):
                         _x = self._train_seq[_phase][2](_x, *args, **kwargs)
                 self._train_iteration += 1
         else:
+            _x = x
             for _phase in xrange(len(self._train_seq)):
-                self._train_seq[_phase][0](x, *args, **kwargs)
+                self._train_seq[_phase][0](_x, *args, **kwargs)
                 # legacy support for _train_seq.
                 if len(self._train_seq[_phase]) > 2:
-                    x = self._train_seq[_phase][2](x, *args, **kwargs)
+                    _x = self._train_seq[_phase][2](_x, *args, **kwargs)
             self._train_iteration += x.shape[0]
 
     def stop_training(self, *args, **kwargs):
