@@ -111,6 +111,7 @@ class OnlineNode(Node):
                          doc="Numpy seeded random number generator")
 
     def get_cache(self):
+        """Return stored cache."""
         return self._cache
 
     cache = property(get_cache, doc="Internal cache dict")
