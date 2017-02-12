@@ -72,10 +72,6 @@ class OnlineNode(Node):
         super(OnlineNode, self).__init__(input_dim, output_dim, dtype)
         # this var stores the index of the current training iteration
         self._train_iteration = 0
-        # this cache var dict stores an interemediate result or paramenter values
-        # at the end of each train iteration. OnlineNode subclasses should
-        # initialize the required keys
-        self._cache = dict()
         # this var stores random number generator
         self._numx_rng = None
         self.set_numx_rng(numx_rng)
@@ -109,12 +105,6 @@ class OnlineNode(Node):
     numx_rng = property(get_numx_rng,
                          set_numx_rng,
                          doc="Numpy seeded random number generator")
-
-    def get_cache(self):
-        """Return stored cache."""
-        return self._cache
-
-    cache = property(get_cache, doc="Internal cache dict")
 
     @property
     def training_type(self):

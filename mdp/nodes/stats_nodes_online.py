@@ -19,7 +19,7 @@ class OnlineCenteringNode(mdp.PreserveDimOnlineNode):
     avg_n intuitively denotes a "window size". For a large avg_n, 'avg_n'-samples represent about 86% of
     the total weight.
 
-    **Internal variables of interest (stored in cache)**
+    **Internal variables of interest**
 
       ``self.avg``
           The updated average of the input data
@@ -35,7 +35,6 @@ class OnlineCenteringNode(mdp.PreserveDimOnlineNode):
                                                   numx_rng=numx_rng)
         self.avg_n = avg_n
         self.avg = None
-        self._cache = {'avg': None}
 
     def _check_params(self, x):
         if self.avg is None:
@@ -52,7 +51,6 @@ class OnlineCenteringNode(mdp.PreserveDimOnlineNode):
             alpha = 2.0 / (self.avg_n + 1) if self.get_current_train_iteration() > 0 else 1.0
 
         self.avg = (1 - alpha) * self.avg + alpha * x
-        self._cache['avg'] = self.avg
 
     def _execute(self, x):
         """returns a centered input"""

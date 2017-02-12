@@ -70,9 +70,6 @@ class OnlineFlow(mdp.Flow):
        that contains tuples of args for each node: [x, (node0 args), (node1 args), ...]. See
        train docstring.
 
-    d) OnlineFlow also has the cache attribute that retrieves any temporary caches variables
-       stored in the OnlineNodes.
-
     Crash recovery is optionally available: in case of failure the current
     state of the flow is saved for later inspection.
 
@@ -90,14 +87,8 @@ class OnlineFlow(mdp.Flow):
         # (c) a mix of OnlineNodes/trained/non-trainable Nodes and a terminal trainable Node whose
         # training hasn't finished.
         self._check_compatibility(flow)
-        # collect cache from individual nodes.
-        self._cache = self._get_cache_from_flow(flow)
         # collect train_args for each node
         self._train_arg_keys_list, self._train_args_needed_list = self._get_required_train_args_from_flow(flow)
-
-    @property
-    def cache(self):
-        return self._cache
 
     def _train_node(self, data_iterable, nodenr):
         err_str = ('Not used in %s' % str(type(self).__name__))
@@ -261,15 +252,6 @@ class OnlineFlow(mdp.Flow):
         # terminal node can be a trainable Node whose training hasn't finished.
         self._check_value_type_isnode(flow[-1])
 
-    def _get_cache_from_flow(self, flow):
-        _cache = {}
-        for i, node in enumerate(flow):
-            if not hasattr(node, 'cache'):
-                _cache['node#%d' % i] = {}
-            else:
-                _cache['node#%d' % i] = node.cache
-        return _cache
-
     def __setitem__(self, key, value):
         if isinstance(key, slice):
             [self._check_value_type_is_online_or_nontrainable_node(item) for item in value]
@@ -283,7 +265,6 @@ class OnlineFlow(mdp.Flow):
         self._check_compatibility(flow_copy)
         # if no exception was raised, accept the new sequence
         self.flow = flow_copy
-        self._cache = self._get_cache_from_flow(flow_copy)
         self._train_arg_keys_list, self._train_args_needed_list = self._get_required_train_args_from_flow(flow_copy)
 
     def __delitem__(self, key):
@@ -294,7 +275,6 @@ class OnlineFlow(mdp.Flow):
         self._check_compatibility(flow_copy)
         # if no exception was raised, accept the new sequence
         self.flow = flow_copy
-        self._cache = self._get_cache_from_flow(flow_copy)
         self._train_arg_keys_list, self._train_args_needed_list = self._get_required_train_args_from_flow(flow_copy)
 
     def __add__(self, other):
@@ -333,7 +313,6 @@ class OnlineFlow(mdp.Flow):
             raise TypeError(err_str)
         self._check_compatibility(self.flow)
         self._check_nodes_consistency(self.flow)
-        self._cache = self._get_cache_from_flow(self.flow)
         self._train_arg_keys_list, self._train_args_needed_list = self._get_required_train_args_from_flow(self.flow)
         return self
 
@@ -344,7 +323,6 @@ class OnlineFlow(mdp.Flow):
         self[len(self):len(self)] = [x]
         self._check_nodes_consistency(self.flow)
         self._check_compatibility(self.flow)
-        self._cache = self._get_cache_from_flow(self.flow)
         self._train_arg_keys_list, self._train_args_needed_list = self._get_required_train_args_from_flow(self.flow)
 
     def extend(self, x):
@@ -357,7 +335,6 @@ class OnlineFlow(mdp.Flow):
         self[len(self):len(self)] = x
         self._check_nodes_consistency(self.flow)
         self._check_compatibility(self.flow)
-        self._cache = self._get_cache_from_flow(self.flow)
         self._train_arg_keys_list, self._train_args_needed_list = self._get_required_train_args_from_flow(self.flow)
 
     def insert(self, i, x):
@@ -365,7 +342,6 @@ class OnlineFlow(mdp.Flow):
         self[i:i] = [x]
         self._check_nodes_consistency(self.flow)
         self._check_compatibility(self.flow)
-        self._cache = self._get_cache_from_flow(self.flow)
         self._train_arg_keys_list, self._train_args_needed_list = self._get_required_train_args_from_flow(self.flow)
 
 
@@ -415,9 +391,6 @@ class CircularOnlineFlow(OnlineFlow):
     CircularOnlineFlow objects are Python containers. Most of the builtin 'list'
     methods are available. CircularOnlineFlow can be saved or copied using the
     corresponding 'save' and 'copy' methods.
-
-    CircularOnlineFlow like an OnlineNode has 'cache' that is a dict of stored cache variables
-    from individual nodes.
 
     """
 
@@ -578,7 +551,6 @@ class CircularOnlineFlow(OnlineFlow):
                 "Accepted 'node_idx' values: 0 <= node_idx < %d, given %d" % (len(self.flow), node_idx))
         self.flow.rotate(-node_idx)
         self.output_node_idx = (self.output_node_idx - node_idx) % len(self.flow)
-        self._cache = self._get_cache_from_flow(self.flow)
 
     def set_output_node(self, node_idx):
         """Set the output node of the flow"""
@@ -656,7 +628,6 @@ class CircularOnlineFlow(OnlineFlow):
             raise TypeError(err_str)
         self._check_compatibility(self.flow)
         self._check_nodes_consistency(self.flow)
-        self._cache = self._get_cache_from_flow(self.flow)
         return self
 
     # public container methods
@@ -666,7 +637,6 @@ class CircularOnlineFlow(OnlineFlow):
         self[len(self):len(self)] = [x]
         self._check_nodes_consistency(self.flow)
         self._check_compatibility(self.flow)
-        self._cache = self._get_cache_from_flow(self.flow)
 
     def extend(self, x):
         """flow.extend(iterable) -- extend flow by appending
@@ -678,14 +648,12 @@ class CircularOnlineFlow(OnlineFlow):
         self[len(self):len(self)] = x
         self._check_nodes_consistency(self.flow)
         self._check_compatibility(self.flow)
-        self._cache = self._get_cache_from_flow(self.flow)
 
     def insert(self, i, x):
         """flow.insert(index, node) -- insert node before index"""
         self[i:i] = [x]
         self._check_nodes_consistency(self.flow)
         self._check_compatibility(self.flow)
-        self._cache = self._get_cache_from_flow(self.flow)
 
         if self.output_node_idx >= i:
             self.set_output_node(self.output_node_idx + 1)
