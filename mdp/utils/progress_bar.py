@@ -19,7 +19,7 @@ def get_termsize():
                                                   "\000"*8))[0:2]
         if not (height and width):
             height, width = 24, 79
-    except ImportError:
+    except (ImportError, IOError) as e:
         # for windows machins, use default values
         # Does anyone know how to get the console size under windows?
         # One approach is:
