@@ -54,8 +54,10 @@ class FlowNode(mdp.Node):
                               - self._pretrained_phase[i_node])
         if train_len:
             self._is_trainable = True
+            self._training = True
         else:
             self._is_trainable = False
+            self._training = False
         # remaining standard node initialisation
         super(FlowNode, self).__init__(input_dim=input_dim,
                                        output_dim=output_dim, dtype=dtype)
@@ -142,7 +144,7 @@ class FlowNode(mdp.Node):
             # the nodes in front of the current nodes.
             # using nested scopes here instead of default args, see pep-0227
             def _train(x, *args, **kwargs):
-                if i_node > 0:
+                if _i_node > 0:
                     _node.train(self._flow.execute(x, nodenr=_i_node-1),
                                 *args, **kwargs)
                 else:
@@ -219,3 +221,4 @@ class FlowNode(mdp.Node):
 
     def __iter__(self):
         return self._flow.__iter__()
+
