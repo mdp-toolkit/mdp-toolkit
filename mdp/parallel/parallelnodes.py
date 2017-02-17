@@ -249,5 +249,5 @@ class ParallelHistogramNode(ParallelExtensionNode, mdp.nodes.HistogramNode):
         if (self.data_hist is not None) and (forked_node.data_hist is not None):
             self.data_hist = numx.concatenate([self.data_hist,
                                             forked_node.data_hist])
-        elif forked_node.data_hist != None:
+        elif forked_node.data_hist is not None:
             self.data_hist = forked_node.data_hist
