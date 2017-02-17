@@ -94,8 +94,8 @@ class OnlineNode(Node):
         if rng is None:
             pass
         elif not isinstance(rng, mdp.numx_rand.mtrand.RandomState):
-                raise OnlineNodeException('numx_rng should be of type %s but given %s'
-                                    % (str(mdp.numx_rand.mtrand.RandomState), str(type(rng))))
+            raise OnlineNodeException('numx_rng should be of type %s but given %s'
+                                      % (str(mdp.numx_rand.mtrand.RandomState), str(type(rng))))
         else:
             self._set_numx_rng(rng)
 
@@ -103,8 +103,8 @@ class OnlineNode(Node):
         self._numx_rng = rng
 
     numx_rng = property(get_numx_rng,
-                         set_numx_rng,
-                         doc="Numpy seeded random number generator")
+                        set_numx_rng,
+                        doc="Numpy seeded random number generator")
 
     @property
     def training_type(self):
@@ -123,7 +123,7 @@ class OnlineNode(Node):
             self._training_type = training_type
         else:
             raise OnlineNodeException("Unknown training type specified %s. Supported types "
-                                "%s" % str(self._get_supported_training_types()))
+                                      "%s" % (str(training_type), str(self._get_supported_training_types())))
 
     # Each element in the _train_seq contains three sub elements
     # (training-phase, stop-training-phase, execution-phase)
