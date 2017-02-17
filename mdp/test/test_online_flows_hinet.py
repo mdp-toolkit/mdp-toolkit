@@ -390,7 +390,7 @@ def test_online_flow_node():
 
 
 
-def test_circular_online_flow_node():
+def test_circular_online_flow_node_default():
 
     # default setting (= onlineflownode)
     flow1 = mdp.CircularOnlineFlow([BogusNode(),
@@ -414,6 +414,7 @@ def test_circular_online_flow_node():
     assert_array_equal(out1, out2)
     assert_array_equal(node1.get_stored_input(), out2)
 
+def test_circular_online_flow_node_different_output():
 
     # default setting with different output_node. Check stored_input
     flow1 = mdp.CircularOnlineFlow([BogusNode(),
@@ -437,6 +438,7 @@ def test_circular_online_flow_node():
     assert_array_equal(node1.get_stored_input(), out2)
     assert (not (out1 != out2).all())
 
+def test_circular_online_flow_node_internal_training():
 
     # internal training (check errors without stored inputs)
     flow1 = mdp.CircularOnlineFlow([BogusNode(),
@@ -459,6 +461,7 @@ def test_circular_online_flow_node():
         raise Exception("node trained internally without any stored inputs.")
     except mdp.TrainingException: pass
 
+def test_circular_online_flow_node_internal_stored_inputs():
 
     # internal training with stored inputs. (check 1 loop output with default output)
     flow1 = mdp.CircularOnlineFlow([BogusNode(),
@@ -480,6 +483,7 @@ def test_circular_online_flow_node():
     assert_array_equal(out1, out2)
     assert_array_equal(node1._stored_input, out2)
 
+def test_circular_online_flow_node_internal_multiple_iterations():
 
     # internal training with multiple iterations.
     flow1 = mdp.CircularOnlineFlow([BogusNode(),
@@ -511,6 +515,7 @@ def test_circular_online_flow_node():
     assert_array_equal(out1, x)
     assert_array_equal(node1.get_stored_input(), x)
 
+def test_circular_online_flow_node_external_with_iterations():
 
     #external training with iterations.
     flow1 = mdp.CircularOnlineFlow([BogusNode(),
