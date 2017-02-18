@@ -8,8 +8,6 @@
 #
 # Alternative setups could have been done using anaconda etc, but I would
 # prefer to test against what is in neurodebian
-dist: trusty
-sudo: required
 language: erlang
 cache:
   - apt
