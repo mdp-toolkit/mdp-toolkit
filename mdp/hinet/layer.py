@@ -51,16 +51,9 @@ class Layer(mdp.Node):
             self.node_input_dims[index] = node.input_dim
         output_dim = self._get_output_dim_from_nodes()
 
-        # store which nodes are pretrained up to what phase
-        _pretrained_phase = [node.get_current_train_phase()
-                             for node in nodes]
-        # check if all the nodes are already fully trained
-        train_len = 0
-        for i_node, node in enumerate(nodes):
-            if node.is_trainable():
-                train_len += (len(node._get_train_seq())
-                              - _pretrained_phase[i_node])
-        if train_len:
+        # set layer state
+        nodes_is_training = [node.is_training() for node in nodes]
+        if mdp.numx.any(nodes_is_training):
             self._is_trainable = True
             self._training = True
         else:
@@ -315,16 +308,9 @@ class SameInputLayer(Layer):
                 raise mdp.NodeException(err)
         output_dim = self._get_output_dim_from_nodes()
 
-        # store which nodes are pretrained up to what phase
-        _pretrained_phase = [node.get_current_train_phase()
-                             for node in nodes]
-        # check if all the nodes are already fully trained
-        train_len = 0
-        for i_node, node in enumerate(nodes):
-            if node.is_trainable():
-                train_len += (len(node._get_train_seq())
-                              - _pretrained_phase[i_node])
-        if train_len:
+        # set layer state
+        nodes_is_training = [node.is_training() for node in nodes]
+        if mdp.numx.any(nodes_is_training):
             self._is_trainable = True
             self._training = True
         else:
