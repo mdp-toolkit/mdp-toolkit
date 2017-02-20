@@ -73,7 +73,8 @@ class CCIPCANode(mdp.OnlineNode):
                 '%d, given %d' % (self.output_dim, self._init_v.shape[1]))
         if self.v is None:
             self._v = self._init_v.copy()
-            self.d = mdp.numx_linalg.norm(self._v, axis=0)
+            self.d = mdp.numx.sum(self._v ** 2, axis=0) ** 0.5  # identical with np.linalg.norm(self._v, axis=0)
+            # Using this for backward numpy (versions below 1.8) compatibility.
             self.v = old_div(self._v, self.d)
 
     def _check_params(self, *args):

@@ -72,7 +72,8 @@ class MCANode(mdp.OnlineNode):
                                   self._init_v.shape[1]))
         if self.v is None:
             self.v = self._init_v.copy()
-            self.d = mdp.numx_linalg.norm(self.v, axis=0)
+            self.d = mdp.numx.sum(self.v ** 2, axis=0) ** 0.5  # identical with np.linalg.norm(self.v, axis=0)
+            # Using this for backward numpy (versions below 1.8) compatibility.
 
     def _check_params(self, *args):
         """Initialize parameters"""
