@@ -140,9 +140,6 @@ class FlowNode(mdp.Node):
         """Return a training sequence containing all training phases."""
         
         def get_train_function(_i_node, _node):
-            # This internal function is needed to channel the data through
-            # the nodes in front of the current nodes.
-            # using nested scopes here instead of default args, see pep-0227
             def _train(x, *args, **kwargs):
                 if _i_node > 0:
                     _node.train(self._flow.execute(x, nodenr=_i_node-1),
