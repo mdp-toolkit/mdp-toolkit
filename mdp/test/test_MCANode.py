@@ -49,7 +49,8 @@ def test_mcanode_v2():
 
     bpcanode = PCANode()
     bpcanode(input_data)
-    bv = bpcanode.v / numx.linalg.norm(bpcanode.v, axis=0)
+    # bv = bpcanode.v / numx.linalg.norm(bpcanode.v, axis=0)
+    bv = bpcanode.v / mdp.numx.sum(bpcanode.v ** 2, axis=0) ** 0.5
     bv = bv[:, ::-1][:, :output_dim]
 
     _tcnt = time.time()
