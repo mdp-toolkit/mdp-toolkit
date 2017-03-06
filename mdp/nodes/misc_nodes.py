@@ -400,7 +400,7 @@ class TimeDelaySlidingWindowNode(TimeDelayNode):
     def _execute(self, x):
         assert x.shape[0] == 1
 
-        if self.sliding_wnd == None:
+        if self.sliding_wnd is None:
             self._init_sliding_window()
 
         gap = self.gap

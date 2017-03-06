@@ -285,6 +285,17 @@ def LinearRegressionNode_inp_arg_gen():
 def _rand_1d(x):
     return uniform(size=(x.shape[0],))
 
+def CCIPCANode_inp_arg_gen():
+    line_x = numx.zeros((1000, 2), "d")
+    line_y = numx.zeros((1000, 2), "d")
+    line_x[:, 0] = numx.linspace(-1, 1, num=1000, endpoint=1)
+    line_y[:, 1] = numx.linspace(-0.2, 0.2, num=1000, endpoint=1)
+    mat = numx.concatenate((line_x, line_y))
+    utils.rotate(mat, uniform() * 2 * numx.pi)
+    mat += uniform(2)
+    mat -= mat.mean(axis=0)
+    return mat
+
 
 NODES = [
     dict(klass='NeuralGasNode',
@@ -342,6 +353,14 @@ NODES = [
          init_args=[10, 0.001, True]),
     dict(klass='KMeansClassifier',
          init_args=[2, 3]),
+    dict(klass='CCIPCANode',
+         inp_arg_gen=CCIPCANode_inp_arg_gen),
+    dict(klass='CCIPCAWhiteningNode',
+         inp_arg_gen=CCIPCANode_inp_arg_gen),
+    dict(klass='MCANode',
+         inp_arg_gen=CCIPCANode_inp_arg_gen),
+    dict(klass='IncSFANode',
+         inp_arg_gen=CCIPCANode_inp_arg_gen),
 
     dict(klass='PerceptronClassifier',
          sup_arg_gen=_rand_classification_labels_array),
