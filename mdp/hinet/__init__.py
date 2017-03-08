@@ -36,7 +36,8 @@ from .switchboard import (
     ChannelSwitchboard,
     Rectangular2dSwitchboard, Rectangular2dSwitchboardException,
     DoubleRect2dSwitchboard, DoubleRect2dSwitchboardException,
-    DoubleRhomb2dSwitchboard, DoubleRhomb2dSwitchboardException
+    DoubleRhomb2dSwitchboard, DoubleRhomb2dSwitchboardException,
+    RandomChannelSwitchboard, RandomChannelSwitchboardException,
 )
 from .htmlvisitor import (
     HiNetHTMLVisitor, HiNetXHTMLVisitor, NewlineWriteFile, show_flow
@@ -53,6 +54,7 @@ __all__ = ['FlowNode', 'OnlineFlowNode', 'CircularOnlineFlowNode', 'Layer', 'Sam
            'Rectangular2dSwitchboard', 'Rectangular2dSwitchboardException',
            'DoubleRect2dSwitchboard', 'DoubleRect2dSwitchboardException',
            'DoubleRhomb2dSwitchboard', 'DoubleRhomb2dSwitchboardException',
+           'RandomChannelSwitchboard', 'RandomChannelSwitchboardException',
            'HiNetHTMLVisitor', 'HiNetXHTMLVisitor', 'NewlineWriteFile',
            'show_flow', 'get_2d_image_switchboard'
            ]

@@ -232,6 +232,19 @@ def _rect2d_switchoard_html(self):
         lines.append('unused channels: ' + str(self.unused_channels_xy))
     return lines
 
+@mdp.extension_method("html", switchboard.RandomChannelSwitchboard,
+                      "_html_representation")
+def _rect2d_switchoard_html(self):
+    lines = ['rec. field size (in channels): %d x %d = %d' %
+                (self.field_channels_xy[0], self.field_channels_xy[1],
+                 self.field_channels_xy[0] * self.field_channels_xy[1]),
+             '# of rec. fields (out channels): %d' %
+                (self.output_channels),
+             'rec. field distribution: ' +
+                str(self.field_dstr),
+             'channel width: %d' % self.in_channel_dim]
+    return lines
+
 @mdp.extension_method("html", switchboard.DoubleRect2dSwitchboard,
                       "_html_representation")
 def _double_rect2d_switchoard_html(self):
