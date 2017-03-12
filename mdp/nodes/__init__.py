@@ -82,6 +82,14 @@ if config.has_sklearn:
             __all__.append(name)
         del name
 
+if config.has_pyqtgraph:
+    from .pg_nodes import PG2DNode, PGCurveNode, PGImageNode
+    __all__+= ['PG2DNode', 'PGCurveNode', 'PGImageNode']
+
+if config.has_gym:
+    from .openai_gym_nodes import GymNode, GymContinuousExplorerNode
+    __all__+=['GymNode', 'GymContinuousExplorerNode']
+
 from mdp import utils
 utils.fixup_namespace(__name__, __all__ + ['ICANode'],
                       ('pca_nodes',
@@ -115,4 +123,6 @@ utils.fixup_namespace(__name__, __all__ + ['ICANode'],
                        'mca_nodes_online',
                        'sfa_nodes_online',
                        'basis_function_nodes',
+                       'openai_gym_nodes',
+                       'pg_nodes',
                        ))

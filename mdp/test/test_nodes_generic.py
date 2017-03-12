@@ -372,6 +372,12 @@ NODES = [
     dict(klass='TransformerNode',
          init_args=[(5, 10), ['set_shape', 'center', 'transpose']],
          inp_arg_gen=lambda: mdp.numx.random.randn(4, 50)),
+    dict(klass='GymNode',
+         init_args=['MountainCar-v0'],
+         inp_arg_gen=lambda: mdp.numx.random.randint(0, 2, [3, 1]).astype('float')),
+    dict(klass='GymContinuousExplorerNode',
+         init_args=['MountainCarContinuous-v0'],
+         inp_arg_gen=lambda: mdp.numx.random.uniform(0, 1, [3, 1]).astype('float')),
 
     dict(klass='PerceptronClassifier',
          sup_arg_gen=_rand_classification_labels_array),
@@ -394,8 +400,9 @@ NODES = [
 # It works fine in version 0.12
 EXCLUDE_NODES = ['ICANode', 'LabelSpreadingScikitsLearnNode', 
         'OutputCodeClassifierScikitsLearnNode', 'OneVsOneClassifierScikitsLearnNode',
-        'OneVsRestClassifierScikitsLearnNode', 'VotingClassifierScikitsLearnNode']
-
+        'OneVsRestClassifierScikitsLearnNode', 'VotingClassifierScikitsLearnNode',
+         'PG2DNode', 'PGCurveNode', 'PGImageNode',
+                 ]
 
 def generate_nodes_list(nodes_dicts):
     nodes_list = []
