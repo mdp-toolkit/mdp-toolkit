@@ -65,6 +65,10 @@ class config(with_metaclass(MetaConfig, object)):
         inhibit loading of the ``joblib`` module and `mdp.caching`
       ``MDP_DISABLE_SKLEARN``
         inhibit loading of the ``sklearn`` module
+      ``MDP_DISABLE_PIL``
+        inhibit loading of the ``pil`` module
+      ``MDP_DISABLE_OPENCV``
+        inhibit loading of the ``opencv`` module
       ``MDPNSDEBUG``
         print debugging information during the import process
       ``MDP_PP_SECRET``
@@ -432,3 +436,33 @@ def set_configuration():
                                      'version %s is too old' % version)
         else:
             config.ExternalDepFound('sklearn', version)
+
+    # Python Image Library
+    try:
+        import PIL
+    except ImportError as exc:
+        config.ExternalDepFailed('pil', exc)
+    else:
+        version = PIL.__version__
+        if os.getenv('MDP_DISABLE_PIL'):
+            config.ExternalDepFailed('pil', 'disabled')
+        elif _version_too_old(version, (1, 1, 6)):
+            config.ExternalDepFailed('pil',
+                                     'version %s is too old' % version)
+        else:
+            config.ExternalDepFound('pil', version)
+
+    # Python OpenCV Library
+    try:
+        import cv2
+    except ImportError as exc:
+        config.ExternalDepFailed('opencv', exc)
+    else:
+        version = cv2.__version__
+        if os.getenv('MDP_DISABLE_OPENCV'):
+            config.ExternalDepFailed('opencv', 'disabled')
+        elif _version_too_old(version, (2, 3)):
+            config.ExternalDepFailed('opencv',
+                                     'version %s is too old' % version)
+        else:
+            config.ExternalDepFound('opencv', version)

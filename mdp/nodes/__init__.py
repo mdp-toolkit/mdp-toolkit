@@ -13,7 +13,8 @@ from .em_nodes import FANode
 from .misc_nodes import (IdentityNode, HitParadeNode, TimeFramesNode,
                         TimeDelayNode, TimeDelaySlidingWindowNode,
                         EtaComputerNode, NoiseNode, NormalNoiseNode,
-                        CutoffNode, HistogramNode, AdaptiveCutoffNode)
+                        CutoffNode, HistogramNode, AdaptiveCutoffNode, NumxBufferNode,
+                         TransformerNode, GridProcessingNode)
 from .isfa_nodes import ISFANode
 from .rbm_nodes import RBMNode, RBMWithLabelsNode
 from .regression_nodes import LinearRegressionNode
@@ -36,6 +37,8 @@ from .pca_nodes_online import CCIPCANode, CCIPCAWhiteningNode
 from .sfa_nodes_online import IncSFANode
 from .stats_nodes_online import OnlineCenteringNode, OnlineTimeDiffNode
 
+from .basis_function_nodes import BasisFunctionNode
+
 __all__ = ['PCANode', 'WhiteningNode', 'NIPALSNode', 'FastICANode',
            'CuBICANode', 'TDSEPNode', 'JADENode', 'SFANode', 'SFA2Node',
            'ISFANode', 'XSFANode', 'FDANode', 'FANode', 'RBMNode',
@@ -52,7 +55,9 @@ __all__ = ['PCANode', 'WhiteningNode', 'NIPALSNode', 'FastICANode',
            'CutoffNode', 'AdaptiveCutoffNode', 'HistogramNode',
            'IdentityNode', '_OneDimensionalHitParade',
            'OnlineCenteringNode', 'OnlineTimeDiffNode', 'CCIPCANode', 'CCIPCAWhiteningNode', 'MCANode',
-           'IncSFANode',]
+           'IncSFANode', 'TransformerNode', 'NumxBufferNode', 'BasisFunctionNode', 'GridProcessingNode',
+           ]
+
 
 # nodes with external dependencies
 from mdp import config, numx_description, MDPException
@@ -109,4 +114,5 @@ utils.fixup_namespace(__name__, __all__ + ['ICANode'],
                        'pca_nodes_online',
                        'mca_nodes_online',
                        'sfa_nodes_online',
+                       'basis_function_nodes',
                        ))
