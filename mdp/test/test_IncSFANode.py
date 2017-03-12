@@ -1,4 +1,3 @@
-from mdp.nodes import PolynomialExpansionNode, SFANode, IncSFANode
 from ._tools import *
 import time
 
@@ -9,14 +8,14 @@ def test_incsfa_v2():
     x = numx.zeros([t.shape[0], 2])
     x[:, 0] = numx.real(numx.sin(t) + numx.power(numx.cos(11 * t), 2))
     x[:, 1] = numx.cos(11 * t)
-    expnode = PolynomialExpansionNode(2)
+    expnode = mdp.nodes.PolynomialExpansionNode(2)
     input_data = expnode(x)
 
     ##Setup node/trainer
     output_dim = 4
-    node = IncSFANode(eps=0.05)
+    node = mdp.nodes.IncSFANode(eps=0.05)
 
-    bsfanode = SFANode(output_dim=output_dim)
+    bsfanode = mdp.nodes.SFANode(output_dim=output_dim)
     bsfanode(input_data)
     bv = bsfanode.sf
 
@@ -43,7 +42,7 @@ def test_incsfanode_numx_rng():
     x = mdp.numx_rand.randn(100, 5)
 
     numx_rng = mdp.numx_rand.RandomState(seed=10)
-    node1 = IncSFANode(numx_rng=numx_rng)
+    node1 = mdp.nodes.IncSFANode(numx_rng=numx_rng)
     node1.train(x)
     init_wv1 = node1.init_pca_vectors
     init_mv1 = node1.init_mca_vectors
@@ -51,7 +50,7 @@ def test_incsfanode_numx_rng():
     v1 = node1.sf
 
     numx_rng = mdp.numx_rand.RandomState(seed=10)
-    node2 = IncSFANode(numx_rng=numx_rng)
+    node2 = mdp.nodes.IncSFANode(numx_rng=numx_rng)
     node2.train(x)
     init_wv2 = node2.init_pca_vectors
     init_mv2 = node2.init_mca_vectors

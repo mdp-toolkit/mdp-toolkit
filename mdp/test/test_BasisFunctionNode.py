@@ -1,16 +1,13 @@
 
 from ._tools import *
-from mdp.nodes import BasisFunctionNode
-import mdp
+
 
 # TODO Need to add more test functions.
-
-
 def test_basisfn_node():
 
     # test indicator fn
     lims = [[0], [10]]
-    bfn = BasisFunctionNode(basis_name='indicator', lims=lims)
+    bfn = mdp.nodes.BasisFunctionNode(basis_name='indicator', lims=lims)
 
     for i in xrange(lims[1][0]):
         inp = mdp.numx.array([[i]]).astype('float')
