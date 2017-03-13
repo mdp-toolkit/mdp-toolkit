@@ -128,6 +128,14 @@ from builtins import object
 import sys, re, inspect
 from future.utils import with_metaclass
 
+# There is an issue with exec(st, g, l) not being treated correctly with python
+# 2.7.3 on precise/travis.  Since it spits SyntaxError, decision between the two
+# needs to be done at code parsing stage thus here we define the adapter function
+if sys.version_info[:3] < (2, 7, 9):
+    from ._exec import _exec
+else:
+    def _exec(st, g, l):
+        exec(st, g, l)
 
 class _TemplateBuilder(object):
 
