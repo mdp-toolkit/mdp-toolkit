@@ -9,6 +9,14 @@ html, body {
 
 h1, h2, h3, h4 {
     color: #003399;
+    text-align: center;
+}
+
+h5 {
+    color: #003399;
+    font-size: small;
+    text-align: center;
+    font-weight: normal;
 }
 
 par.explanation {
@@ -19,4 +27,16 @@ par.explanation {
 table.flow {
     margin-left: auto;
     margin-right: auto;
+}
+
+table.flow1 {
+    float: start;
+    display: inline-block;
+    vertical-align: top;
+    margin: 0 40px 0 40px;
+}
+
+table.caption {
+    color: #003399;
+    font-size: medium;
 }

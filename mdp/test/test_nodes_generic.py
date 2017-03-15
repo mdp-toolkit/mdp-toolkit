@@ -296,6 +296,13 @@ def CCIPCANode_inp_arg_gen():
     mat -= mat.mean(axis=0)
     return mat
 
+def HSFANode_inp_arg_gen():
+    t = mdp.numx.linspace(0, 4 * mdp.numx.pi, 1000)
+    x = mdp.numx.zeros([t.shape[0], 2])
+    x[:, 0] = mdp.numx.real(mdp.numx.sin(t) + mdp.numx.power(mdp.numx.cos(11 * t), 2))
+    x[:, 1] = mdp.numx.real(mdp.numx.cos(11 * t))
+    return x
+
 
 NODES = [
     dict(klass='NeuralGasNode',
@@ -363,6 +370,9 @@ NODES = [
          inp_arg_gen=CCIPCANode_inp_arg_gen),
     dict(klass='IncSFANode',
          inp_arg_gen=CCIPCANode_inp_arg_gen),
+    dict(klass='HSFANode',
+         init_args=[(1, 2), [(-1, -1)], [(-1, -1)], [(-1, -1)]],
+         inp_arg_gen=HSFANode_inp_arg_gen),
     dict(klass='BasisFunctionNode',
          init_args=['polynomial', [(-1, -1), (1, 1)]],
          inp_arg_gen=lambda: mdp.numx.random.uniform(-1, 1, [10, 2])),

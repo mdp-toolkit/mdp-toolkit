@@ -36,6 +36,7 @@ from .mca_nodes_online import MCANode
 from .pca_nodes_online import CCIPCANode, CCIPCAWhiteningNode
 from .sfa_nodes_online import IncSFANode
 from .stats_nodes_online import OnlineCenteringNode, OnlineTimeDiffNode
+from .hsfa_nodes import HSFANode
 
 from .basis_function_nodes import BasisFunctionNode
 
@@ -56,6 +57,7 @@ __all__ = ['PCANode', 'WhiteningNode', 'NIPALSNode', 'FastICANode',
            'IdentityNode', '_OneDimensionalHitParade',
            'OnlineCenteringNode', 'OnlineTimeDiffNode', 'CCIPCANode', 'CCIPCAWhiteningNode', 'MCANode',
            'IncSFANode', 'TransformerNode', 'NumxBufferNode', 'BasisFunctionNode', 'GridProcessingNode',
+           'HSFANode',
            ]
 
 
@@ -125,4 +127,5 @@ utils.fixup_namespace(__name__, __all__ + ['ICANode'],
                        'basis_function_nodes',
                        'openai_gym_nodes',
                        'pg_nodes',
+                       'hsfa_nodes',
                        ))
