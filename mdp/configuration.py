@@ -458,7 +458,7 @@ def set_configuration():
     except ImportError as exc:
         config.ExternalDepFailed('pil', exc)
     else:
-        version = PIL.__version__
+        version = PIL.VERSION
         if os.getenv('MDP_DISABLE_PIL'):
             config.ExternalDepFailed('pil', 'disabled')
         elif _version_too_old(version, (1, 1, 6)):
