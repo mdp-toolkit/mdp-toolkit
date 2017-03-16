@@ -454,11 +454,11 @@ def set_configuration():
 
     # Python Image Library
     try:
-        import PIL
+        import PIL.Image
     except ImportError as exc:
         config.ExternalDepFailed('pil', exc)
     else:
-        version = PIL.VERSION
+        version = PIL.Image.VERSION
         if os.getenv('MDP_DISABLE_PIL'):
             config.ExternalDepFailed('pil', 'disabled')
         elif _version_too_old(version, (1, 1, 6)):
