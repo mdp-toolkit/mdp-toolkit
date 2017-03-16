@@ -3,7 +3,7 @@ from setuptools.command.test import test as _test
 import os
 import sys
 
-email = 'mdp-toolkit-devel@lists.sourceforge.net'
+email = 'mdp-toolkit@python.org'
 
 classifiers = ["Development Status :: 5 - Production/Stable",
                "Intended Audience :: Developers",

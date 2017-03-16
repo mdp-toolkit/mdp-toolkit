@@ -116,9 +116,9 @@ from . import configuration
 __version__ = '3.5'
 __revision__ = configuration.get_git_revision()
 __authors__ = 'MDP Developers'
-__copyright__ = '(c) 2003-2016 mdp-toolkit-devel@lists.sourceforge.net'
+__copyright__ = '(c) 2003-2016 mdp-toolkit@python.org'
 __license__ = 'BSD License, see COPYRIGHT'
-__contact__ = 'mdp-toolkit-users@lists.sourceforge.net'
+__contact__ = 'mdp-toolkit@python.org'
 __homepage__ = 'http://mdp-toolkit.sourceforge.net'
 
 configuration.set_configuration()
@@ -143,8 +143,13 @@ from .linear_flows import CrashRecoveryException, FlowException, FlowExceptionCR
 from .signal_node import (NodeMetaclass, Node, PreserveDimNode,
                          Cumulator, VariadicCumulator)
 
+from .signal_node_online import (OnlineNode, PreserveDimOnlineNode, OnlineNodeException)
+
 from .linear_flows import (Flow, CheckpointFlow,
                           CheckpointFunction, CheckpointSaveFunction)
+
+from .linear_flows_online import (OnlineFlow, CircularOnlineFlow, OnlineFlowException,
+                                  CircularOnlineFlowException)
 
 # import helper functions:
 from .helper_funcs import pca, fastica
@@ -168,6 +173,7 @@ from . import hinet
 from . import parallel
 from .test import test
 
+
 # explicitly set __all__, mainly needed for epydoc
 __all__ = ['config',
            'CheckpointFlow',
@@ -182,12 +188,20 @@ __all__ = ['config',
            'Flow',
            'FlowException',
            'FlowExceptionCR',
+           'OnlineFlow',
+           'CircularOnlineFlow',
+           'OnlineFlowException',
+           'CircularOnlineFlowException',
            'IsNotInvertibleException',
            'IsNotTrainableException',
            'MDPException',
            'MDPWarning',
            'Node',
            'NodeException',
+           'OnlineNode',
+           'OnlineNodeException',
+           'PreserveDimOnlineNode',
+           'PreserveDimNode',
            'TrainingException',
            'TrainingFinishedException',
            'VariadicCumulator',
@@ -216,7 +230,9 @@ if config.has_joblib:
 
 utils.fixup_namespace(__name__, __all__,
                       ('signal_node',
+                       'signal_node_online',
                        'linear_flows',
+                       'linear_flows_online',
                        'helper_funcs',
                        'classifier_node',
                        'configuration',
