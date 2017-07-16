@@ -54,8 +54,6 @@ def test_ParallelNearestMeanClassifier():
     pnode.join(pnode2)
     pnode.stop_training()
     # check that results are the same for all object classes
-    assert_array_almost_equal(node.ordered_means, pnode.ordered_means,
-                              precision)
     for key in node.label_means:
         assert_array_almost_equal(node.label_means[key],
                                   pnode.label_means[key], precision)
