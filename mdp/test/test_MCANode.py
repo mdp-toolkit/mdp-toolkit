@@ -68,8 +68,7 @@ def test_mcanode_v2():
             dcosines[i, dim] = numx.fabs(numx.dot(v[i][:, dim], bv[:, dim].T)) / (
                 numx.linalg.norm(v[i][:, dim]) * numx.linalg.norm(bv[:, dim]))
 
-    print
-    print 'Total Time for %d iterations: ' % (iterval), time.time() - _tcnt
+    print('\nTotal Time for {} iterations: {}'.format(iterval, time.time() - _tcnt))
     assert_almost_equal(numx.ones(output_dim), dcosines[-1], decimal=2)
 
 

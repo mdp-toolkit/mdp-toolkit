@@ -513,8 +513,8 @@ class CircularOnlineFlow(OnlineFlow):
         if self.verbose:
             strn = [str(self.flow[i]) for i in xrange(len(self.flow))]
             if self._ignore_input:
-                print ("Training nodes %s internally using the stored inputs "
-                       "for %d loops" % (strn, self._flow_iterations))
+                print("Training nodes %s internally using the stored inputs "
+                      "for %d loops" % (strn, self._flow_iterations))
             else:
                 print("Training nodes %s using the given inputs and %d loops "
                       "internally for each data point" % (strn, self._flow_iterations))
@@ -572,7 +572,7 @@ class CircularOnlineFlow(OnlineFlow):
         super(CircularOnlineFlow, self).__setitem__(key, value)
         self.flow = _deque(self.flow)
         if (key.start < self.output_node_idx) and (self.output_node_idx < key.stop()):
-            print 'Output node is replaced! Resetting the output node.'
+            print('Output node is replaced! Resetting the output node.')
             self.reset_output_node()
 
     def __getitem__(self, key):
@@ -588,7 +588,7 @@ class CircularOnlineFlow(OnlineFlow):
         super(CircularOnlineFlow, self).__delitem__(key)
         self.flow = _deque(self.flow)
         if (key.start < self.output_node_idx) and (self.output_node_idx < key.stop()):
-            print 'Output node deleted! Resetting the output node to the default last node.'
+            print('Output node deleted! Resetting the output node to the default last node.')
             self.reset_output_node()
         elif self.output_node_idx > key.stop():
             self.set_output_node(self.output_node_idx - key.stop + key.start)
