@@ -298,7 +298,7 @@ class Graph(object):
             node = dfs_stack.pop()
             dfs_list.append(node)
             # visit the node
-            if visit_fct != None:
+            if visit_fct is not None:
                 visit_fct(node)
             # add all sons to the stack (if not already visited)
             for son in neighbors_fct(node):
@@ -373,7 +373,7 @@ class Graph(object):
             node = bfs_queue.pop(0)
             bfs_list.append(node)
             # visit the node
-            if visit_fct != None:
+            if visit_fct is not None:
                 visit_fct(node)
             # add all sons to the queue (if not already visited)
             for son in neighbors_fct(node):
