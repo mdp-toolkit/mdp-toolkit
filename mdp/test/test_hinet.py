@@ -5,6 +5,7 @@ from ._tools import *
 from future import standard_library
 from builtins import zip
 from builtins import range
+from mdp.hinet.switchboard import CoordinateTranslator
 
 standard_library.install_aliases()
 
@@ -504,6 +505,7 @@ def test_hinet_simple_net():
     x = numx_rand.random([5, switchboard.input_dim])
     flow.train(x)
 
+
 @pytest.fixture
 def noisenode():
     return mdp.nodes.NoiseNode(input_dim=20 * 20, noise_args=(0, 0.0001))
@@ -580,3 +582,50 @@ def test_layer_training_state():
     layer_node = mdp.hinet.CloneLayer(sfa_nodes2[1])
     assert (layer_node.is_training())
     assert (layer_node.is_trainable())
+
+
+# Tests for RandomChannelSwitchboard
+
+def test_rand_rect_sb_equivalence():
+    sboard = mh.RandomChannelSwitchboard(in_channels_xy=(3, 3),
+                                         field_channels_xy=(2, 2),
+                                         in_channel_dim=1,
+                                         out_channels=5)
+
+    rect_board = mh.Rectangular2dSwitchboard(in_channels_xy=(3, 3),
+                                             field_channels_xy=(2, 2),
+                                             in_channel_dim=1,
+                                             field_spacing_xy=1)
+
+    assert numx.all(sboard._lut_conn.ravel() == rect_board.connections)
+
+    in_trans = CoordinateTranslator(*rect_board.out_channels_xy)
+
+    for i in xrange(sboard.out_channel_dim):
+        x, y = in_trans.index_to_array(i)
+        assert numx.all(rect_board.get_out_channel_input(i) == sboard._lut_conn[x, y])
+
+
+def test_rand_sb_indices_used():
+    sboard = mh.RandomChannelSwitchboard(in_channels_xy=(4, 6),
+                                         field_channels_xy=(1, 1),
+                                         in_channel_dim=3,
+                                         out_channels=5)
+    assert numx.all(numx.sort(sboard._lut_conn.ravel()) == numx.arange(
+        numx.product(sboard.in_channels_xy) * sboard.in_channel_dim))
+
+
+def test_rand_sb_execute_conn():
+    sboard = mh.RandomChannelSwitchboard(in_channels_xy=(4, 6),
+                                         in_channel_dim=3,
+                                         field_channels_xy=(2, 3),
+                                         out_channels=10)
+    _conn = sboard.connections
+
+    x = numx.random.randn(1, sboard.input_dim)
+    for _ in xrange(10):
+        out = sboard(x)
+        assert numx.all(x[:, sboard.connections] == out)
+        assert not numx.all(_conn == sboard.connections)
+        _conn = sboard.connections
+        assert numx.all([conn in sboard._lut_conn.ravel() for conn in sboard.connections])

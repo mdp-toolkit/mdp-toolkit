@@ -1,4 +1,3 @@
-from mdp.nodes import PCANode, WhiteningNode, PolynomialExpansionNode, MCANode
 from ._tools import *
 import time
 
@@ -12,11 +11,11 @@ def test_mcanode_v1():
     utils.rotate(mat, uniform() * 2 * numx.pi)
     mat += uniform(2)
     mat -= mat.mean(axis=0)
-    mca = MCANode()
+    mca = mdp.nodes.MCANode()
     for i in xrange(5):
         mca.train(mat)
 
-    bpca = PCANode()
+    bpca = mdp.nodes.PCANode()
     bpca.train(mat)
     bpca.stop_training()
 
@@ -36,18 +35,18 @@ def test_mcanode_v2():
     x = numx.zeros([t.shape[0], 2])
     x[:, 0] = numx.real(numx.sin(t) + numx.power(numx.cos(11 * t), 2))
     x[:, 1] = numx.cos(11 * t)
-    expnode = PolynomialExpansionNode(2)
+    expnode = mdp.nodes.PolynomialExpansionNode(2)
     input_data = expnode(x)
     input_data = input_data - input_data.mean(axis=0)
-    wtnnode = WhiteningNode()
+    wtnnode = mdp.nodes.WhiteningNode()
     input_data = wtnnode(input_data)
     input_data = mdp.utils.timediff(input_data)
 
     ##Setup node/trainer
     output_dim = 4
-    node = MCANode(output_dim=output_dim, eps=0.05)
+    node = mdp.nodes.MCANode(output_dim=output_dim, eps=0.05)
 
-    bpcanode = PCANode()
+    bpcanode = mdp.nodes.PCANode()
     bpcanode(input_data)
     # bv = bpcanode.v / numx.linalg.norm(bpcanode.v, axis=0)
     bv = bpcanode.v / mdp.numx.sum(bpcanode.v ** 2, axis=0) ** 0.5
@@ -76,13 +75,13 @@ def test_mcanode_numx_rng():
     x = mdp.numx_rand.randn(100, 5)
 
     numx_rng = mdp.numx_rand.RandomState(seed=10)
-    node1 = MCANode(numx_rng=numx_rng)
+    node1 = mdp.nodes.MCANode(numx_rng=numx_rng)
     node1.train(x)
     init_v1 = node1.init_eigen_vectors
     v1 = node1.get_projmatrix()
 
     numx_rng = mdp.numx_rand.RandomState(seed=10)
-    node2 = MCANode(numx_rng=numx_rng)
+    node2 = mdp.nodes.MCANode(numx_rng=numx_rng)
     node2.train(x)
     init_v2 = node2.init_eigen_vectors
     v2 = node2.get_projmatrix()

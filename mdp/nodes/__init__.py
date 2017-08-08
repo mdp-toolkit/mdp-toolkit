@@ -13,7 +13,8 @@ from .em_nodes import FANode
 from .misc_nodes import (IdentityNode, HitParadeNode, TimeFramesNode,
                         TimeDelayNode, TimeDelaySlidingWindowNode,
                         EtaComputerNode, NoiseNode, NormalNoiseNode,
-                        CutoffNode, HistogramNode, AdaptiveCutoffNode)
+                        CutoffNode, HistogramNode, AdaptiveCutoffNode, NumxBufferNode,
+                         TransformerNode, GridProcessingNode)
 from .isfa_nodes import ISFANode
 from .rbm_nodes import RBMNode, RBMWithLabelsNode
 from .regression_nodes import LinearRegressionNode
@@ -35,6 +36,9 @@ from .mca_nodes_online import MCANode
 from .pca_nodes_online import CCIPCANode, CCIPCAWhiteningNode
 from .sfa_nodes_online import IncSFANode
 from .stats_nodes_online import OnlineCenteringNode, OnlineTimeDiffNode
+from .hsfa_nodes import HSFANode
+
+from .basis_function_nodes import BasisFunctionNode
 
 __all__ = ['PCANode', 'WhiteningNode', 'NIPALSNode', 'FastICANode',
            'CuBICANode', 'TDSEPNode', 'JADENode', 'SFANode', 'SFA2Node',
@@ -52,7 +56,10 @@ __all__ = ['PCANode', 'WhiteningNode', 'NIPALSNode', 'FastICANode',
            'CutoffNode', 'AdaptiveCutoffNode', 'HistogramNode',
            'IdentityNode', '_OneDimensionalHitParade',
            'OnlineCenteringNode', 'OnlineTimeDiffNode', 'CCIPCANode', 'CCIPCAWhiteningNode', 'MCANode',
-           'IncSFANode',]
+           'IncSFANode', 'TransformerNode', 'NumxBufferNode', 'BasisFunctionNode', 'GridProcessingNode',
+           'HSFANode',
+           ]
+
 
 # nodes with external dependencies
 from mdp import config, numx_description, MDPException
@@ -76,6 +83,14 @@ if config.has_sklearn:
             globals()[name] = scikits_nodes.DICT_[name]
             __all__.append(name)
         del name
+
+if config.has_pyqtgraph:
+    from .pg_nodes import PG2DNode, PGCurveNode, PGImageNode
+    __all__+= ['PG2DNode', 'PGCurveNode', 'PGImageNode']
+
+if config.has_gym:
+    from .openai_gym_nodes import GymNode, GymContinuousExplorerNode
+    __all__+=['GymNode', 'GymContinuousExplorerNode']
 
 from mdp import utils
 utils.fixup_namespace(__name__, __all__ + ['ICANode'],
@@ -109,4 +124,8 @@ utils.fixup_namespace(__name__, __all__ + ['ICANode'],
                        'pca_nodes_online',
                        'mca_nodes_online',
                        'sfa_nodes_online',
+                       'basis_function_nodes',
+                       'openai_gym_nodes',
+                       'pg_nodes',
+                       'hsfa_nodes',
                        ))
