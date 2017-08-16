@@ -2,6 +2,8 @@ from builtins import str
 from builtins import range
 __docformat__ = "restructuredtext en"
 
+import numpy as np ############################################################ SVD
+
 import mdp
 from mdp import numx, Node, NodeException, TrainingException
 from mdp.utils import (mult, pinv, CovarianceMatrix, QuadraticForm,
@@ -145,6 +147,10 @@ class SFANode(Node):
 
         rng = self._set_range()
 
+        """
+        ####################################################################### OLD
+        print '[eig]'
+
         #### solve the generalized eigenvalue problem
         # the eigenvalues are already ordered in ascending order
         try:
@@ -161,6 +167,25 @@ class SFANode(Node):
         except SymeigException as exception:
             errstr = str(exception)+"\n Covariance matrices may be singular."
             raise NodeException(errstr)
+        ####################################################################### OLD
+        """
+        ####################################################################### NEW
+        print '[svd]'
+
+        U, s, _ = np.linalg.svd(self.cov_mtx)
+        X1 = np.dot(U, np.diag(1.0 / s ** 0.5))
+        X2, _, _ = np.linalg.svd(np.dot(X1.T, np.dot(self.dcov_mtx, X1)))
+        E = np.dot(X1, X2)
+        e = np.dot(E.T, np.dot(self.dcov_mtx, E)).diagonal()
+
+        e = e[::-1]      # SVD delivers the eigenvalues sorted in reverse (compared to symeig).
+        E = E.T[::-1].T  # -> We reverse the array/matrix storing the eigenvalues/vectors respectively.
+
+        if rng is None:
+            self.d, self.sf = e, E
+        else:
+            self.d, self.sf = e[rng[0] - 1:rng[1]], E[:, rng[0] - 1:rng[1]]
+        ####################################################################### NEW
 
         if not debug:
             # delete covariance matrix if no exception occurred

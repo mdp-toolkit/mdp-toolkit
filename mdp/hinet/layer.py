@@ -261,6 +261,12 @@ class CloneLayer(Layer):
         super(CloneLayer, self).__init__((node,) * n_nodes, dtype=dtype)
         self.node = node  # attribute for convenience
 
+    def _execute(self, x, *args, **kwargs):                                               ### VARUN's fix
+        n_samples = x.shape[0]                                                            ### VARUN's fix
+        x = x.reshape(n_samples * x.shape[1] / self.node.input_dim, self.node.input_dim)  ### VARUN's fix
+        y = self.node.execute(x)                                                          ### VARUN's fix
+        return y.reshape(n_samples, self.output_dim)                                      ### VARUN's fix
+
     def _stop_training(self, *args, **kwargs):
         """Stop training of the internal node."""
         if self.node.is_training():
