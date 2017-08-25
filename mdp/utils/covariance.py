@@ -3,10 +3,10 @@ from builtins import object
 import mdp
 import warnings
 
-import sys                                                                       # CUDA cov update
-import ctypes                                                                    # CUDA cov update
-import numpy as np                                                               # CUDA cov update
-libcublas = ctypes.cdll.LoadLibrary('/local/work/cuda_mdp_module/libmodule.so')  # CUDA cov update
+
+import ctypes                                                                 # CUDA cov update
+import numpy as np                                                            # CUDA cov update
+libcublas = ctypes.cdll.LoadLibrary( mdp.__path__[0]+'/utils/libmodule.so' )  # CUDA cov update
 
 # import numeric module (scipy, Numeric or numarray)
 numx = mdp.numx

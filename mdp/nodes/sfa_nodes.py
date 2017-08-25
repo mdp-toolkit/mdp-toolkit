@@ -1,13 +1,18 @@
-from builtins import str
+
+#--------------------------------------------------------------------[ header ]
+
 from builtins import range
 __docformat__ = "restructuredtext en"
 
-import numpy as np ############################################################ SVD
+import numpy as np
+import matplotlib.pyplot as plt
 
 import mdp
 from mdp import numx, Node, NodeException, TrainingException
 from mdp.utils import (mult, pinv, CovarianceMatrix, QuadraticForm,
                        symeig, SymeigException)
+
+#-------------------------------------------------------------------[ SFANode ]
 
 class SFANode(Node):
     """Extract the slowly varying components from the input data.
@@ -73,10 +78,15 @@ class SFANode(Node):
     """
 
     def __init__(self, input_dim=None, output_dim=None, dtype=None,
-                 include_last_sample=True):
+                 include_last_sample=True, use_svd=False, data_info='never'):
         """
-        For the ``include_last_sample`` switch have a look at the
-        SFANode class docstring.
+        - include_last_sample: see SFANode docstring or API doc [1].
+        - use_svd:   set to True if training throws SymeigException.
+        - data_info: produce additional information about the training data
+                     'never', 'always', or on 'fail' (only if training fails
+                     with SymeigException).
+
+        [1] http://mdp-toolkit.sourceforge.net/api/mdp.nodes.SFANode-class.html
          """
         super(SFANode, self).__init__(input_dim, output_dim, dtype)
         self._include_last_sample = include_last_sample
@@ -87,8 +97,10 @@ class SFANode(Node):
         # one for the derivatives
         self._dcov_mtx = CovarianceMatrix(dtype)
 
-        # set routine for eigenproblem
-        self._symeig = symeig
+        # set parameters for solving the eigenproblem
+        self._symeig   = symeig
+        self._use_svd  = use_svd
+        self._dat_info = data_info
 
         # SFA eigenvalues and eigenvectors, will be set after training
         self.d = None
@@ -119,7 +131,7 @@ class SFANode(Node):
         if  s < 2:
             raise TrainingException('Need at least 2 time samples to '
                                     'compute time derivative (%d given)'%s)
-        
+
     def _train(self, x, include_last_sample=None):
         """
         For the ``include_last_sample`` switch have a look at the
@@ -134,43 +146,81 @@ class SFANode(Node):
         self._cov_mtx.update(x[:last_sample_index, :])
         self._dcov_mtx.update(self.time_derivative(x))
 
-    def _stop_training(self, debug=False):
-        ##### request the covariance matrices and clean up
-        self.cov_mtx, self.avg, self.tlen = self._cov_mtx.fix()
-        del self._cov_mtx
-        # do not center around the mean:
-        # we want the second moment matrix (centered about 0) and
-        # not the second central moment matrix (centered about the mean), i.e.
-        # the covariance matrix
-        self.dcov_mtx, self.davg, self.dtlen = self._dcov_mtx.fix(center=False)
-        del self._dcov_mtx
-
-        rng = self._set_range()
-
+    def _data_plot_(self, x, sub_pos, title='', arg_sort=False, style='dots'):
         """
-        ####################################################################### OLD
-        print '[eig]'
-
-        #### solve the generalized eigenvalue problem
-        # the eigenvalues are already ordered in ascending order
-        try:
-            self.d, self.sf = self._symeig(self.dcov_mtx, self.cov_mtx,
-                                     range=rng, overwrite=(not debug))
-            d = self.d
-            # check that we get only *positive* eigenvalues
-            if d.min() < 0:
-                err_msg = ("Got negative eigenvalues: %s."
-                           " You may either set output_dim to be smaller,"
-                           " or prepend the SFANode with a PCANode(reduce=True)"
-                           " or PCANode(svd=True)"% str(d))
-                raise NodeException(err_msg)
-        except SymeigException as exception:
-            errstr = str(exception)+"\n Covariance matrices may be singular."
-            raise NodeException(errstr)
-        ####################################################################### OLD
+        Helper function for _provide_data_help_. This plots the various subplots
+        produced by _provide_data_help_.
         """
-        ####################################################################### NEW
-        print '[svd]'
+        # plot and axis setup
+        ax = plt.subplot( sub_pos[0], sub_pos[1], sub_pos[2] )
+        if title is not '': ax.set_title( title )
+        x_rng    = np.arange( len(x) )
+        x_labels = x_rng
+        # sort data by dimension (default) or value (arg_sort)
+        if arg_sort:
+            sort = np.argsort( x )
+            x_labels = x_labels[sort]
+            x = x[sort]
+        # plot
+        if style is 'bars':
+            plt.bar( x_rng, x, align='center' )
+        elif style is 'dots':
+            plt.plot( x, 'o' )
+        # ticks and tick labels
+        if len(x) <= 50: plt.xticks( x_rng )
+        ax.set_xticklabels( x_labels )
+        ax.set_xlim( (-1,len(x_rng)) )
+
+    def _provide_data_help(self, full=False ):
+        """
+        This function provides some basic data analysis of the used training
+        data plus more a verbose error message if training the SFANode fails.
+
+        - full: If False, additional information on the training data is given.
+                If True, additional reasoning is given why this might be needed.
+        """
+
+        # plot some basic data analysis of the (presumably failed) training data
+        print '\t..analysing training data..'
+        plt.clf()
+        # plot training data variance per dimension
+        self._data_plot_(np.diagonal(self.cov_mtx), (3, 2, 1), 'Variance per dimension')
+        self._data_plot_(np.diagonal(self.cov_mtx), (3, 2, 2), 'Dimensions by Variance', arg_sort=True)
+        # plot training data slowness/delta values per dimension
+        self._data_plot_(np.diagonal(self.dcov_mtx), (3, 2, 3), 'Slowness per dimension')
+        self._data_plot_(np.diagonal(self.dcov_mtx), (3, 2, 4), 'Dimensions by slowness', True)
+        # plot eigenvalue spectrum
+        _, s, _ = np.linalg.svd( self.cov_mtx )
+        self._data_plot_(s, (3, 2, 5), 'Eigenvalue spectrum')
+        # clean up and save plot
+        plt.tight_layout()
+        plt.savefig( 'SFANode data info.png' )
+        print '\t..training data information plotted..'
+
+        # print optional additional information about the SymeigException
+        err = "This usually happens if there are redundancies in the (expanded) training data.\n" + \
+              "There are several ways to deal with this issue:\n\n" + \
+              "   - Use more data.\n\n" + \
+              "   - Add noise to the data. This can be done by slotting an additional NoiseNode\n\n" + \
+              "     in front of a troublesome SFANode. Noise levels do not have to be high.\n\n" + \
+              "   - Run training data through PCA. This can be done by slotting an additional\n\n" + \
+              "     PCA node in front of the troublesome SFANode. Use the PCA node to discard\n\n" + \
+              "     dimensions within your data with lower variance." + \
+              "   - [ RECOMMENDED ] Use SVD by setting the SFANode flag use_svd to True. This\n\n" + \
+              "     solves the internal SFA eigenvalue problem by using two instances of singular\n\n" + \
+              "     value decomposition (SVD) instead of the default behavior of using the\n\n" + \
+              "     systems's symeig() routine to solve a single, generalized eigenvalue problem.\n\n" + \
+              "     Using SVD is slightly more expensive but more robust.\n\n"
+        return err if full else ''
+
+    def _svd_solver(self, rng):
+        """
+        Alternative routine to solve the SFA eigenvalue issue. This can be used
+        in case the normal symeig() call in _stop_training() throws the common
+        SymeigException ('Covariance matrices may be singular').
+        For details on the used algorithm see:
+            http://www.geo.tuwien.ac.at/downloads/tm/svd.pdf (section 0.3.2)
+        """
 
         U, s, _ = np.linalg.svd(self.cov_mtx)
         X1 = np.dot(U, np.diag(1.0 / s ** 0.5))
@@ -178,14 +228,58 @@ class SFANode(Node):
         E = np.dot(X1, X2)
         e = np.dot(E.T, np.dot(self.dcov_mtx, E)).diagonal()
 
-        e = e[::-1]      # SVD delivers the eigenvalues sorted in reverse (compared to symeig).
-        E = E.T[::-1].T  # -> We reverse the array/matrix storing the eigenvalues/vectors respectively.
+        e = e[::-1]      # SVD delivers the eigenvalues sorted in reverse (compared to symeig). Thus
+        E = E.T[::-1].T  # we manually reverse the array/matrix storing the eigenvalues/vectors.
 
         if rng is None:
             self.d, self.sf = e, E
         else:
             self.d, self.sf = e[rng[0] - 1:rng[1]], E[:, rng[0] - 1:rng[1]]
-        ####################################################################### NEW
+
+    def _stop_training(self, debug=False):
+
+        # request the covariance matrices and clean up
+        self.cov_mtx, self.avg, self.tlen = self._cov_mtx.fix()
+        del self._cov_mtx
+
+        # do not center around the mean:
+        # we want the second moment matrix (centered about 0) and
+        # not the second central moment matrix (centered about the mean), i.e.
+        # the covariance matrix
+        self.dcov_mtx, self.davg, self.dtlen = self._dcov_mtx.fix(center=False)
+        del self._dcov_mtx
+
+        if self._dat_info is 'always': self._provide_data_help()
+
+        rng = self._set_range()
+
+        ####################################################################### EIG
+
+        #### solve the generalized eigenvalue problem
+        # the eigenvalues are already ordered in ascending order
+        if not self._use_svd:
+            try:
+                self.d, self.sf = self._symeig(self.dcov_mtx, self.cov_mtx,
+                                         range=rng, overwrite=(not debug))
+                d = self.d
+                # check that we get only *positive* eigenvalues
+                if d.min() < 0:
+                    err_msg = ("Got negative eigenvalues: %s."
+                               " You may either set output_dim to be smaller,"
+                               " or prepend the SFANode with a PCANode(reduce=True)"
+                               " or PCANode(svd=True)"% str(d))
+                    raise NodeException(err_msg)
+
+            except SymeigException as exception:
+                errstr = str(exception)+"\n Covariance matrices may be singular."
+                if self._dat_info is 'fail':
+                    errstr += self._provide_data_help( full=True )
+                raise NodeException(errstr)
+
+        else:
+            self._svd_solver( rng )  # sets self.d and self.sf
+
+        ####################################################################### EIG
 
         if not debug:
             # delete covariance matrix if no exception occurred
