@@ -28,8 +28,7 @@ def test_incsfa_v2():
         if (node.get_current_train_iteration() % 100 == 0):
             v.append(node.sf)
 
-    print ''
-    print 'Total Time for %d iterations: ' % (iterval), time.time() - _tcnt
+    print('\nTotal Time for {} iterations: {}'.format(iterval, time.time() - _tcnt))
 
     dcosines = numx.zeros([len(v), output_dim])
     for i in xrange(len(v)):

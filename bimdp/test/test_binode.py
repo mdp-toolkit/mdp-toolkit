@@ -153,7 +153,7 @@ class TestBiNode(object):
         assert bi_sfa_node.is_trainable()
         x = n.random.random((100,10))
         train_result = bi_sfa_node.train(x)
-        assert train_result == None
+        assert train_result is None
         assert bi_sfa_node.is_training()
         result = bi_sfa_node.stop_training()
         assert result == (None,) + stop_result
