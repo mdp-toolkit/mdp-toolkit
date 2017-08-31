@@ -3,11 +3,6 @@ from builtins import object
 import mdp
 import warnings
 
-
-import ctypes                                                                 # CUDA cov update
-import numpy as np                                                            # CUDA cov update
-libcublas = ctypes.cdll.LoadLibrary( mdp.__path__[0]+'/utils/libmodule.so' )  # CUDA cov update
-
 # import numeric module (scipy, Numeric or numarray)
 numx = mdp.numx
 
@@ -92,23 +87,7 @@ class CovarianceMatrix(object):
         # update the covariance matrix, the average and the number of
         # observations (try to do everything inplace)
 
-        ################################################ default cov update ###
-        """self._cov_mtx += mdp.utils.mult(x.T, x)"""
-        ################################################### CUDA cov update ###
-        tmp = np.zeros( (x.shape[1],x.shape[1]), dtype=np.float32 )
-
-        if x.flags['F_CONTIGUOUS']: # data given in Fortran's column major order
-            libcublas.cublas2ndMoment_F( x.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
-                                         x.shape[0], x.shape[1],
-                                         tmp.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
-                                         1 )
-        elif x.flags['C_CONTIGUOUS']: # data given in c's row major order
-            libcublas.cublas2ndMoment( x.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
-                                       x.shape[0], x.shape[1],
-                                       tmp.ctypes.data_as(ctypes.POINTER(ctypes.c_float)),
-                                       1 )
-        self._cov_mtx += tmp
-        #######################################################################
+        self._cov_mtx += mdp.utils.mult(x.T, x)
 
         self._avg += x.sum(axis=0)
         self._tlen += x.shape[0]
