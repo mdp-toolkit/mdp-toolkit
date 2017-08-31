@@ -86,7 +86,9 @@ class CovarianceMatrix(object):
         x = mdp.utils.refcast(x, self._dtype)
         # update the covariance matrix, the average and the number of
         # observations (try to do everything inplace)
+
         self._cov_mtx += mdp.utils.mult(x.T, x)
+
         self._avg += x.sum(axis=0)
         self._tlen += x.shape[0]
 
