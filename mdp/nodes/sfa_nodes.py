@@ -152,7 +152,9 @@ class SFANode(Node):
         #### solve the generalized eigenvalue problem
         # the eigenvalues are already ordered in ascending order
         try:
-            self.d, self.sf = self._sfa_solver(self.dcov_mtx, self.cov_mtx, True, "on", rng)
+            self.d, self.sf = self._sfa_solver(
+                    self.dcov_mtx, self.cov_mtx, True, "on", rng,
+                    overwrite=(not debug))
             d = self.d
             # check that we get only *positive* eigenvalues
             if d.min() < 0:
