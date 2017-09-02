@@ -71,7 +71,7 @@ class SFANode(Node):
     """
 
     def __init__(self, input_dim=None, output_dim=None, dtype=None,
-                 include_last_sample=True):
+                 include_last_sample=True, handle_rank_deficit=False):
         """
         For the ``include_last_sample`` switch have a look at the
         SFANode class docstring.
@@ -87,6 +87,10 @@ class SFANode(Node):
 
         # set routine for eigenproblem
         self._symeig = symeig
+        self._handle_rank_deficit = handle_rank_deficit
+        self._sfa_solver = (self._rank_deficit_solver if handle_rank_deficit
+                else self._symeig)
+        self._rank_threshold = 0.000001
 
         # SFA eigenvalues and eigenvectors, will be set after training
         self.d = None
@@ -148,8 +152,7 @@ class SFANode(Node):
         #### solve the generalized eigenvalue problem
         # the eigenvalues are already ordered in ascending order
         try:
-            self.d, self.sf = self._symeig(self.dcov_mtx, self.cov_mtx,
-                                     range=rng, overwrite=(not debug))
+            self.d, self.sf = self._sfa_solver(self.dcov_mtx, self.cov_mtx, True, "on", rng)
             d = self.d
             # check that we get only *positive* eigenvalues
             if d.min() < 0:
@@ -159,7 +162,8 @@ class SFANode(Node):
                            " or PCANode(svd=True)"% str(d))
                 raise NodeException(err_msg)
         except SymeigException as exception:
-            errstr = str(exception)+"\n Covariance matrices may be singular."
+            errstr = (str(exception)+"\n Covariance matrices may be singular."
+                    +"\n Try to create SFA node with handle_rank_deficit=True.")
             raise NodeException(errstr)
 
         if not debug:
@@ -213,6 +217,33 @@ class SFANode(Node):
         if self.is_training():
             self.stop_training()
         return self._refcast(t / (2 * numx.pi) * numx.sqrt(self.d))
+
+    def _rank_deficit_solver(
+            self, A, B = None, eigenvectors=True, turbo="on", rng=None,
+            type=1, overwrite=False):
+        dcov_mtx = A
+        cov_mtx = B
+        eg, ev = self._symeig(cov_mtx, None, True, turbo, None, type, overwrite)
+        off = 0
+        while eg[off] < self._rank_threshold:
+            off += 1
+        eg = 1/numx.sqrt(eg[off:])
+        ev2 = ev[:, off:]
+        # Inplace variant of S = mult(ev2, numx.diag(eg))
+        # Is there a better way?
+        for i in range(len(eg)):
+            ev2[:, i] *= eg[i]
+        S = ev2
+
+        white = mult(S.T, mult(dcov_mtx, S))
+        sfa_eg, sfa_ev = self._symeig(white, None, True, turbo, None, type, overwrite)
+        sfa_ev = mult(S, sfa_ev)
+        if rng is None:
+            # self.d, self.sf
+            return sfa_eg, sfa_ev
+        else:
+            # self.d, self.sf
+            return sfa_eg[rng[0]-1:rng[1]], sfa_ev[:, rng[0]-1:rng[1]]
 
 
 class SFA2Node(SFANode):
