@@ -4,7 +4,7 @@ __docformat__ = "restructuredtext en"
 
 import mdp
 from mdp import numx, Node, NodeException, TrainingException
-from mdp.utils import (mult, pinv, CovarianceMatrix, QuadraticForm,
+from mdp.utils import (mult, svd, pinv, CovarianceMatrix, QuadraticForm,
                        symeig, SymeigException)
 
 class SFANode(Node):
@@ -25,6 +25,10 @@ class SFANode(Node):
           Delta values corresponding to the SFA components (generalized
           eigenvalues). [See the docs of the ``get_eta_values`` method for
           more information]
+
+      ``self.rank_deficit``
+          If an SFA solver detects rank deficit in the covariance matrix,
+          it stores the count of zero eigenvalues as ``self.rank_deficit``.
 
     **Special arguments for constructor**
 
@@ -68,6 +72,33 @@ class SFANode(Node):
 
           You can even change this behaviour during training. Just set the
           corresponding switch in the `train` method.
+
+
+      ``handle_rank_deficit``
+          If ``True`` the `stop_train` method solves the SFA eigenvalue
+          problem in a way that is robust against linear redundancies in
+          the input data. This leads to rank deficit in the covariance
+          matrix, which usually yields a
+          SymeigException ('Covariance matrices may be singular').
+          There are several solving methods implemented, which you can
+          select by setting the _sfa_solver field, e.g.
+
+             sfa = SFANode()
+             sfa._sfa_solver = sfa._rank_deficit_solver_pca
+
+          Currently there are three solvers available:
+
+          _rank_deficit_solver_reg    - works by regularization
+          _rank_deficit_solver_pca - works by PCA
+          _rank_deficit_solver_svd    - works by svd
+
+            sfa = SFANode(handle_rank_deficit=True)
+
+          is equivalent to
+
+             sfa = SFANode()
+             sfa._sfa_solver = sfa._rank_deficit_solver_reg
+          
     """
 
     def __init__(self, input_dim=None, output_dim=None, dtype=None,
@@ -87,10 +118,10 @@ class SFANode(Node):
 
         # set routine for eigenproblem
         self._symeig = symeig
-        self._handle_rank_deficit = handle_rank_deficit
-        self._sfa_solver = (self._rank_deficit_solver if handle_rank_deficit
+        self._sfa_solver = (self._rank_deficit_solver_reg if handle_rank_deficit
                 else self._symeig)
-        self._rank_threshold = 0.000001
+        self._rank_threshold = 1e-12
+        self.rank_deficit = 0
 
         # SFA eigenvalues and eigenvectors, will be set after training
         self.d = None
@@ -220,32 +251,136 @@ class SFANode(Node):
             self.stop_training()
         return self._refcast(t / (2 * numx.pi) * numx.sqrt(self.d))
 
-    def _rank_deficit_solver(
-            self, A, B = None, eigenvectors=True, turbo="on", rng=None,
+    def _rank_deficit_solver_reg(
+            self, A, B = None, eigenvectors=True, turbo="on", range=None,
             type=1, overwrite=False):
+        """
+        Alternative routine to solve the SFA eigenvalue issue. This can be used
+        in case the normal symeig() call in _stop_training() throws the common
+        SymeigException ('Covariance matrices may be singular').
+
+        This solver applies a moderate regularization to the covariance matrix
+        before applying symeig(). Afterwards it properly detects the rank
+        deficit and filters out malformed features.
+        This procedure is (approximately) as efficient as the ordinary SFA
+        implementation based on plain symeig, because all additional steps are
+        computationally cheap.
+
+        Note:
+        For efficiency reasons it actually modifies the covariance matrix
+        (even if overwrite=False), but the changes are negligible.
+        """
+        if type != 1:
+            raise ValueError('Only type=1 is supported.')
+        # apply some regularization...
+        # The following is equivalent to B += 1e-14*np.eye(B.shape[0]),
+        # but works more in place, i.e. saves memory consumption of np.eye().
+        Bflat = B.reshape(B.shape[0]*B.shape[1])
+        idx = numx.arange(0, len(Bflat), B.shape[0]+1)
+        Bflat[idx] += 1e-14
+
+        eg, ev = self._symeig(A, B, True, turbo, None, type, overwrite)
+        m = numx.absolute(numx.sqrt(numx.sum(ev * mult(B, ev), 0))-1)
+        off = 0
+        while m[off] > self._rank_threshold:
+            off += 1
+        if off > 0:
+            self.rank_deficit = off
+            eg = eg[off:]
+            ev = ev[:, off:]
+        if range is None:
+            # self.d, self.sf
+            return eg, ev
+        else:
+            # self.d, self.sf
+            return eg[range[0]-1:range[1]], ev[:, range[0]-1:range[1]]
+
+    def _rank_deficit_solver_pca(
+            self, A, B = None, eigenvectors=True, turbo="on", range=None,
+            type=1, overwrite=False):
+        """
+        Alternative routine to solve the SFA eigenvalue issue. This can be used
+        in case the normal symeig() call in _stop_training() throws the common
+        SymeigException ('Covariance matrices may be singular').
+
+        It applies PCA to the covariance matrix and filters out rank deficit
+        before it applies symeig() to the differential covariance matrix.
+        This procedure detects and resolves rank deficit of the covariance
+        matrix properly.
+        It is roughly twice as expensive as the ordinary SFA implementation
+        based on plain symeig.
+
+        Note:
+        The advantage compared to prepending a PCA node is that in execution
+        phase all data needs to be processed by one step less. That is because
+        this approach includes the PCA into the SFA execution matrix.
+        """
+        if type != 1:
+            raise ValueError('Only type=1 is supported.')
         dcov_mtx = A
         cov_mtx = B
         eg, ev = self._symeig(cov_mtx, None, True, turbo, None, type, overwrite)
         off = 0
         while eg[off] < self._rank_threshold:
             off += 1
+        self.rank_deficit = off
         eg = 1/numx.sqrt(eg[off:])
         ev2 = ev[:, off:]
-        # Inplace variant of S = mult(ev2, numx.diag(eg))
-        # Is there a better way?
-        for i in range(len(eg)):
-            ev2[:, i] *= eg[i]
+        ev2 *= eg
         S = ev2
 
         white = mult(S.T, mult(dcov_mtx, S))
         sfa_eg, sfa_ev = self._symeig(white, None, True, turbo, None, type, overwrite)
         sfa_ev = mult(S, sfa_ev)
-        if rng is None:
+        if range is None:
             # self.d, self.sf
             return sfa_eg, sfa_ev
         else:
             # self.d, self.sf
-            return sfa_eg[rng[0]-1:rng[1]], sfa_ev[:, rng[0]-1:rng[1]]
+            return sfa_eg[range[0]-1:range[1]], sfa_ev[:, range[0]-1:range[1]]
+
+    def _rank_deficit_solver_svd(
+            self, A, B = None, eigenvectors=True, turbo="on", range=None,
+            type=1, overwrite=False):
+        """
+        Alternative routine to solve the SFA eigenvalue issue. This can be used
+        in case the normal symeig() call in _stop_training() throws the common
+        SymeigException ('Covariance matrices may be singular').
+
+        This solver's computational cost depends on the underlying svd
+        implementation. Its dominant cost factor consists of two svd runs.
+
+        For details on the used algorithm see:
+            http://www.geo.tuwien.ac.at/downloads/tm/svd.pdf (section 0.3.2)
+
+        Note:
+        The parameters eigenvectors, turbo, type, overwrite are not used.
+        They only exist to provide a symeig compatible signature.
+        """
+        dcov_mtx = A
+        cov_mtx = B
+        U, s, _ = svd(cov_mtx)
+        off = 0
+        while s[-1-off] < self._rank_threshold:
+            off += 1
+        if off > 0:
+            self.rank_deficit = off
+            s = s[:-off]
+            U = U[:, :-off]
+        X1 = mult(U, numx.diag(1.0 / s ** 0.5))
+        X2, _, _ = svd(mult(X1.T, mult(dcov_mtx, X1)))
+        E = mult(X1, X2)
+        e = mult(E.T, mult(dcov_mtx, E)).diagonal()
+
+        e = e[::-1]      # SVD delivers the eigenvalues sorted in reverse (compared to symeig). Thus
+        E = E.T[::-1].T  # we manually reverse the array/matrix storing the eigenvalues/vectors.
+
+        if range is None:
+            #d, sf
+            return e, E
+        else:
+            #d, sf
+            return e[range[0] - 1:range[1]], E[:, range[0] - 1:range[1]]
 
 
 class SFA2Node(SFANode):
