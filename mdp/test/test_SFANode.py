@@ -106,11 +106,14 @@ def testSFANode_rank_deficit():
     sdat0 = sfa0.execute(dat0)
 
     sfa2 = mdp.nodes.SFANode(output_dim=out, handle_rank_deficit=True)
+    # This is equivalent to sfa2._sfa_solver = sfa2._rank_deficit_solver_reg
     sfa2.train(dat)
     sfa2.stop_training()
     sdat = sfa2.execute(dat)
 
-    sfa2_sym = mdp.nodes.SFANode(output_dim=out) #, handle_rank_deficit=True)
+    sfa2_sym = mdp.nodes.SFANode(output_dim=out)
+    # For this test we add the rank_deficit_solver later, so we can
+    # assert that ordinary SFA would actually fail on the data.
     sfa2_sym.train(dat)
     try:
         sfa2_sym.stop_training()
