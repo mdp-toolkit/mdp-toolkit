@@ -94,9 +94,11 @@ def testSFANode_rank_deficit():
         # We generate a random, yet orthogonal matrix M:
         M = numx.random.rand(dfc+ovl, dfc+ovl)
         _, M = symeig(M+M.T)
+        dat0 = dat[:, :-dfc] # for use by ordinary SFA
         dat[:, -dfc:] = dat[:, :dfc]
         dat[:, -(dfc+ovl):] = dat[:, -(dfc+ovl):].dot(M)
-    dat0 = dat if dfc == 0 else dat[:, :-dfc]
+    else:
+        dat0 = dat
 
     sfa0 = mdp.nodes.SFANode(output_dim=out)
     sfa0.train(dat0)
@@ -112,6 +114,7 @@ def testSFANode_rank_deficit():
     sfa2_sym.train(dat)
     try:
         sfa2_sym.stop_training()
+        # Assert that with dfc > 0 ordinary SFA wouldn't reach this line.
         assert dfc == 0
     except mdp.NodeException:
         sfa2_sym._sfa_solver = sfa2_sym._rank_deficit_solver_pca
