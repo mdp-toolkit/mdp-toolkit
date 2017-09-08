@@ -169,14 +169,16 @@ class SFANode(Node):
 
     def _stop_training(self, debug=False):
         ##### request the covariance matrices and clean up
-        self.cov_mtx, self.avg, self.tlen = self._cov_mtx.fix()
-        del self._cov_mtx
+        if hasattr(self, '_dcov_mtx'):
+            self.cov_mtx, self.avg, self.tlen = self._cov_mtx.fix()
+            del self._cov_mtx
         # do not center around the mean:
         # we want the second moment matrix (centered about 0) and
         # not the second central moment matrix (centered about the mean), i.e.
         # the covariance matrix
-        self.dcov_mtx, self.davg, self.dtlen = self._dcov_mtx.fix(center=False)
-        del self._dcov_mtx
+        if hasattr(self, '_dcov_mtx'):
+            self.dcov_mtx, self.davg, self.dtlen = self._dcov_mtx.fix(center=False)
+            del self._dcov_mtx
 
         rng = self._set_range()
 
@@ -277,7 +279,7 @@ class SFANode(Node):
         # but works more in place, i.e. saves memory consumption of np.eye().
         Bflat = B.reshape(B.shape[0]*B.shape[1])
         idx = numx.arange(0, len(Bflat), B.shape[0]+1)
-        Bflat[idx] += 1e-14
+        Bflat[idx] += 1e-12
 
         eg, ev = self._symeig(A, B, True, turbo, None, type, overwrite)
         m = numx.absolute(numx.sqrt(numx.sum(ev * mult(B, ev), 0))-1)

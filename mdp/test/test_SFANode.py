@@ -1,7 +1,7 @@
 from __future__ import division
 from past.utils import old_div
 from ._tools import *
-mult = mdp.utils.mult
+from mdp.utils import mult, symeig
 
 def testSFANode():
     dim=10000
@@ -76,7 +76,89 @@ def testSFANode_include_last_sample():
     node.stop_training()
     assert node.tlen == 100
     assert node.dtlen == 99
+
+def testSFANode_rank_deficit():
+    dfc_max = 200
+    dat_dim = 500
+    dat_smpl = 10000
+    dat = numx.random.rand(dat_smpl, dat_dim)     # test data
+    dfc = numx.random.randint(0, dfc_max)         # rank deficit
+    out = numx.random.randint(4, dat_dim-50-dfc)  # output dim
+
+    # We add some linear redundancy to the data...
+    if dfc > 0:
+        # dfc is how many dimensions we overwrite with duplicates
+        # ovl is how many non-duplicated dims we mix into the fake data
+        # This should yield an overal rank deficit of dfc
+        ovl = numx.random.randint(0, dat_dim-max(out, dfc_max))
+        # We generate a random, yet orthogonal matrix M:
+        M = numx.random.rand(dfc+ovl, dfc+ovl)
+        _, M = symeig(M+M.T)
+        dat[:, -dfc:] = dat[:, :dfc]
+        dat[:, -(dfc+ovl):] = dat[:, -(dfc+ovl):].dot(M)
+    dat0 = dat if dfc == 0 else dat[:, :-dfc]
+
+    sfa0 = mdp.nodes.SFANode(output_dim=out)
+    sfa0.train(dat0)
+    sfa0.stop_training()
+    sdat0 = sfa0.execute(dat0)
+
+    sfa2 = mdp.nodes.SFANode(output_dim=out, handle_rank_deficit=True)
+    sfa2.train(dat)
+    sfa2.stop_training()
+    sdat = sfa2.execute(dat)
+
+    sfa2_sym = mdp.nodes.SFANode(output_dim=out) #, handle_rank_deficit=True)
+    sfa2_sym.train(dat)
+    try:
+        sfa2_sym.stop_training()
+        assert dfc == 0
+    except mdp.NodeException:
+        sfa2_sym._sfa_solver = sfa2_sym._rank_deficit_solver_pca
+        sfa2_sym.stop_training()
+    sdat_sym = sfa2_sym.execute(dat)
     
+    sfa2_svd = mdp.nodes.SFANode(output_dim=out)
+    sfa2_svd._sfa_solver = sfa2_svd._rank_deficit_solver_svd
+    sfa2_svd.train(dat)
+    sfa2_svd.stop_training()
+    sdat_svd = sfa2_svd.execute(dat)
+
+    def matrix_cmp(A, B):
+        assert_array_almost_equal(abs(A), abs(B))
+        return True
+
+    assert_array_almost_equal(abs(sdat), abs(sdat0))
+    assert_array_almost_equal(abs(sdat_sym), abs(sdat0))
+    assert_array_almost_equal(abs(sdat_svd), abs(sdat0))
+
+    assert_array_almost_equal(sfa2.d, sfa0.d)
+    assert_array_almost_equal(sfa2_sym.d, sfa0.d)
+    assert_array_almost_equal(sfa2_svd.d, sfa0.d)
+
+    assert sfa2.rank_deficit == dfc
+    assert sfa2_sym.rank_deficit == dfc
+    assert sfa2_svd.rank_deficit == dfc
+
+    # check that constraints are met
+    idn = numx.identity(out)
+    d_diag = numx.diag(sfa0.d)
+    # reg ok?
+    assert_array_almost_equal(mult(sdat.T, sdat)/(len(sdat)-1), idn)
+    sdat_d = sdat[1:]-sdat[:-1]
+    assert_array_almost_equal(
+            mult(sdat_d.T, sdat_d)/(len(sdat_d)-1), d_diag)
+    # sym ok?
+    assert_array_almost_equal(mult(sdat_sym.T, sdat_sym)/(len(sdat_sym)-1), idn)
+    sdat_sym_d = sdat_sym[1:]-sdat_sym[:-1]
+    assert_array_almost_equal(
+            mult(sdat_sym_d.T, sdat_sym_d)/(len(sdat_sym_d)-1), d_diag)
+    # svd ok?
+    assert_array_almost_equal(mult(sdat_svd.T, sdat_svd)/(len(sdat_svd)-1), idn)
+    sdat_svd_d = sdat_svd[1:]-sdat_svd[:-1]
+    assert_array_almost_equal(
+            mult(sdat_svd_d.T, sdat_svd_d)/(len(sdat_svd_d)-1), d_diag)
+
 def testSFANode_derivative_bug1D():
     # one dimensional worst case scenario
     T = 100
