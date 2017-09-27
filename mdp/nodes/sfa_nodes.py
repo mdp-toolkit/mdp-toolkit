@@ -74,39 +74,47 @@ class SFANode(Node):
           corresponding switch in the `train` method.
 
 
-      ``handle_rank_deficit``
-          If ``True`` the `stop_train` method solves the SFA eigenvalue
+      ``rank_deficit_method``
+          Possible values: 'none' (default), 'reg', 'pca', 'svd', 'auto'
+          If not ``none`` the `stop_train` method solves the SFA eigenvalue
           problem in a way that is robust against linear redundancies in
-          the input data. This leads to rank deficit in the covariance
-          matrix, which usually yields a
+          the input data. This would otherwise lead to rank deficit in the
+          covariance matrix, which usually yields a
           SymeigException ('Covariance matrices may be singular').
-          There are several solving methods implemented, which you can
-          select by setting the _sfa_solver field, e.g.
+          There are several solving methods implemented:
 
-             sfa = SFANode()
+          reg  - works by regularization
+          pca  - works by PCA
+          svd  - works by svd
+
+          auto - selects the best-benchmarked method of the above
+
+          Note: If you already received an exception
+          SymeigException ('Covariance matrices may be singular')
+          you can manually set the solving method for an existing node:
+
              sfa._sfa_solver = sfa._rank_deficit_solver_pca
 
-          Currently there are three solvers available:
+          That means,
 
-          _rank_deficit_solver_reg    - works by regularization
-          _rank_deficit_solver_pca - works by PCA
-          _rank_deficit_solver_svd    - works by svd
-
-            sfa = SFANode(handle_rank_deficit=True)
+             sfa = SFANode(rank_deficit='pca')
 
           is equivalent to
 
              sfa = SFANode()
-             sfa._sfa_solver = sfa._rank_deficit_solver_reg
-          
+             sfa._sfa_solver = sfa._rank_deficit_solver_pca
+
+          After such an adjustment you can run stop_training() again,
+          which would save potentially time consuming rerun of all
+          train() calls.
     """
 
     def __init__(self, input_dim=None, output_dim=None, dtype=None,
-                 include_last_sample=True, handle_rank_deficit=False):
+                 include_last_sample=True, rank_deficit_method='none'):
         """
         For the ``include_last_sample`` switch have a look at the
         SFANode class docstring.
-         """
+        """
         super(SFANode, self).__init__(input_dim, output_dim, dtype)
         self._include_last_sample = include_last_sample
 
@@ -118,9 +126,17 @@ class SFANode(Node):
 
         # set routine for eigenproblem
         self._symeig = symeig
-        self._sfa_solver = (self._rank_deficit_solver_reg if handle_rank_deficit
-                else self._symeig)
-        self._rank_threshold = 1e-12
+        if rank_deficit_method == 'pca':
+            self._sfa_solver = self._rank_deficit_solver_pca
+        elif rank_deficit_method == 'reg':
+            self._sfa_solver = self._rank_deficit_solver_reg
+        elif rank_deficit_method == 'svd':
+            self._sfa_solver = self._rank_deficit_solver_svd
+        elif rank_deficit_method == 'auto':
+            self._sfa_solver = self._rank_deficit_solver_pca
+        else:
+            self._sfa_solver = None
+        self.rank_threshold = 1e-12
         self.rank_deficit = 0
 
         # SFA eigenvalues and eigenvectors, will be set after training
@@ -184,6 +200,10 @@ class SFANode(Node):
 
         #### solve the generalized eigenvalue problem
         # the eigenvalues are already ordered in ascending order
+        if self._sfa_solver is None:
+            # We do not initialize this default method in the constructor to keep
+            # code that inserts a custom _symeig (after the constructor) workable.
+            self._sfa_solver = self._symeig
         try:
             self.d, self.sf = self._sfa_solver(
                     self.dcov_mtx, self.cov_mtx, True, "on", rng,
@@ -274,22 +294,44 @@ class SFANode(Node):
         """
         if type != 1:
             raise ValueError('Only type=1 is supported.')
+
         # apply some regularization...
         # The following is equivalent to B += 1e-14*np.eye(B.shape[0]),
         # but works more in place, i.e. saves memory consumption of np.eye().
         Bflat = B.reshape(B.shape[0]*B.shape[1])
         idx = numx.arange(0, len(Bflat), B.shape[0]+1)
-        Bflat[idx] += 1e-12
+        diag_tmp = Bflat[idx]
+        Bflat[idx] += self.rank_threshold
 
         eg, ev = self._symeig(A, B, True, turbo, None, type, overwrite)
+        
+        Bflat[idx] = diag_tmp
         m = numx.absolute(numx.sqrt(numx.sum(ev * mult(B, ev), 0))-1)
         off = 0
-        while m[off] > self._rank_threshold:
+        # In theory all values in m should be close to one or close to zero.
+        # So we use the mean of these values as threshold to distinguish cases:
+        while m[off] > 0.5:
             off += 1
-        if off > 0:
-            self.rank_deficit = off
-            eg = eg[off:]
-            ev = ev[:, off:]
+        m_off_sum = numx.sum(m[off:])
+        if m_off_sum < 0.5:
+            if off > 0:
+                self.rank_deficit = off
+                eg = eg[off:]
+                ev = ev[:, off:]
+        else:
+            # Sometimes (unlikely though) the values in m are not sorted
+            # In this case we search search all indices:
+            count = int(round(m_off_sum))
+            m_idx = numx.arange(len(m)-off-count)
+            self.rank_deficit = off+count
+            i = off
+            while off < len(m_idx):
+                if m[i] < 0.5:
+                    m_idx[off] = i
+                    off += 1
+                i += 1
+            eg = eg[m_idx]
+            ev = ev[:, m_idx]
         if range is None:
             # self.d, self.sf
             return eg, ev
@@ -323,7 +365,7 @@ class SFANode(Node):
         cov_mtx = B
         eg, ev = self._symeig(cov_mtx, None, True, turbo, None, type, overwrite)
         off = 0
-        while eg[off] < self._rank_threshold:
+        while eg[off] < self.rank_threshold:
             off += 1
         self.rank_deficit = off
         eg = 1/numx.sqrt(eg[off:])
@@ -363,7 +405,7 @@ class SFANode(Node):
         cov_mtx = B
         U, s, _ = svd(cov_mtx)
         off = 0
-        while s[-1-off] < self._rank_threshold:
+        while s[-1-off] < self.rank_threshold:
             off += 1
         if off > 0:
             self.rank_deficit = off

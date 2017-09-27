@@ -105,27 +105,26 @@ def testSFANode_rank_deficit():
     sfa0.stop_training()
     sdat0 = sfa0.execute(dat0)
 
-    sfa2 = mdp.nodes.SFANode(output_dim=out, handle_rank_deficit=True)
+    sfa2_reg = mdp.nodes.SFANode(output_dim=out, rank_deficit_method='reg')
     # This is equivalent to sfa2._sfa_solver = sfa2._rank_deficit_solver_reg
-    sfa2.train(dat)
-    sfa2.stop_training()
-    sdat = sfa2.execute(dat)
+    sfa2_reg.train(dat)
+    sfa2_reg.stop_training()
+    sdat_reg = sfa2_reg.execute(dat)
 
-    sfa2_sym = mdp.nodes.SFANode(output_dim=out)
+    sfa2_pca = mdp.nodes.SFANode(output_dim=out)
     # For this test we add the rank_deficit_solver later, so we can
     # assert that ordinary SFA would actually fail on the data.
-    sfa2_sym.train(dat)
+    sfa2_pca.train(dat)
     try:
-        sfa2_sym.stop_training()
+        sfa2_pca.stop_training()
         # Assert that with dfc > 0 ordinary SFA wouldn't reach this line.
         assert dfc == 0
     except mdp.NodeException:
-        sfa2_sym._sfa_solver = sfa2_sym._rank_deficit_solver_pca
-        sfa2_sym.stop_training()
-    sdat_sym = sfa2_sym.execute(dat)
+        sfa2_pca._sfa_solver = sfa2_pca._rank_deficit_solver_pca
+        sfa2_pca.stop_training()
+    sdat_pca = sfa2_pca.execute(dat)
     
-    sfa2_svd = mdp.nodes.SFANode(output_dim=out)
-    sfa2_svd._sfa_solver = sfa2_svd._rank_deficit_solver_svd
+    sfa2_svd = mdp.nodes.SFANode(output_dim=out, rank_deficit_method='svd')
     sfa2_svd.train(dat)
     sfa2_svd.stop_training()
     sdat_svd = sfa2_svd.execute(dat)
@@ -134,31 +133,31 @@ def testSFANode_rank_deficit():
         assert_array_almost_equal(abs(A), abs(B))
         return True
 
-    assert_array_almost_equal(abs(sdat), abs(sdat0))
-    assert_array_almost_equal(abs(sdat_sym), abs(sdat0))
+    assert_array_almost_equal(abs(sdat_reg), abs(sdat0))
+    assert_array_almost_equal(abs(sdat_pca), abs(sdat0))
     assert_array_almost_equal(abs(sdat_svd), abs(sdat0))
 
-    assert_array_almost_equal(sfa2.d, sfa0.d)
-    assert_array_almost_equal(sfa2_sym.d, sfa0.d)
+    assert_array_almost_equal(sfa2_reg.d, sfa0.d)
+    assert_array_almost_equal(sfa2_pca.d, sfa0.d)
     assert_array_almost_equal(sfa2_svd.d, sfa0.d)
 
-    assert sfa2.rank_deficit == dfc
-    assert sfa2_sym.rank_deficit == dfc
+    assert sfa2_reg.rank_deficit == dfc
+    assert sfa2_pca.rank_deficit == dfc
     assert sfa2_svd.rank_deficit == dfc
 
     # check that constraints are met
     idn = numx.identity(out)
     d_diag = numx.diag(sfa0.d)
     # reg ok?
-    assert_array_almost_equal(mult(sdat.T, sdat)/(len(sdat)-1), idn)
-    sdat_d = sdat[1:]-sdat[:-1]
+    assert_array_almost_equal(mult(sdat_reg.T, sdat_reg)/(len(sdat_reg)-1), idn)
+    sdat_reg_d = sdat_reg[1:]-sdat_reg[:-1]
     assert_array_almost_equal(
-            mult(sdat_d.T, sdat_d)/(len(sdat_d)-1), d_diag)
-    # sym ok?
-    assert_array_almost_equal(mult(sdat_sym.T, sdat_sym)/(len(sdat_sym)-1), idn)
-    sdat_sym_d = sdat_sym[1:]-sdat_sym[:-1]
+            mult(sdat_reg_d.T, sdat_reg_d)/(len(sdat_reg_d)-1), d_diag)
+    # pca ok?
+    assert_array_almost_equal(mult(sdat_pca.T, sdat_pca)/(len(sdat_pca)-1), idn)
+    sdat_pca_d = sdat_pca[1:]-sdat_pca[:-1]
     assert_array_almost_equal(
-            mult(sdat_sym_d.T, sdat_sym_d)/(len(sdat_sym_d)-1), d_diag)
+            mult(sdat_pca_d.T, sdat_pca_d)/(len(sdat_pca_d)-1), d_diag)
     # svd ok?
     assert_array_almost_equal(mult(sdat_svd.T, sdat_svd)/(len(sdat_svd)-1), idn)
     sdat_svd_d = sdat_svd[1:]-sdat_svd[:-1]
