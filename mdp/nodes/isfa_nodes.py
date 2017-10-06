@@ -38,7 +38,6 @@ def _triu(m, k=0):
 
 #############
 class ISFANode(Node):
-
     """
     Perform Independent Slow Feature Analysis on the input data.
 
