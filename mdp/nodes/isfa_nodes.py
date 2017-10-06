@@ -36,7 +36,12 @@ def _triu(m, k=0):
     return out
 
 class ISFANode(Node):
+<<<<<<< HEAD
     """Perform Independent Slow Feature Analysis on the input data.
+=======
+    """
+    Perform Independent Slow Feature Analysis on the input data.
+>>>>>>> 3643ddc41b80045568f4c4c3fbcdc1ad1c2d2d1e
 
     .. attribute:: RP
     
