@@ -37,7 +37,7 @@ class ProjectMatrixMixin(object):
     def get_recmatrix(self, transposed=1):
         """Return the back-projection matrix (i.e. the reconstruction matrix).
         
-        .. note::If the unknown sources are white, this is a good
+        .. note:: If the unknown sources are white, this is a good
             approximation of the mixing matrix (up to a permutation matrix).
             
         :param transposed: Indicates whether transposed projection matrix is to
