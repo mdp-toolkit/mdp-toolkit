@@ -20,9 +20,8 @@ sum, cos, sin, PI = numx.sum, numx.cos, numx.sin, numx.pi
 SQRT_EPS_D = numx.sqrt(numx.finfo('d').eps)
 
 def _triu(m, k=0):
-    """
-    Reduces a matrix to a triangular part.
-    
+    """Reduces a matrix to a triangular part.
+
     :param m: A Matrix.
     :param k: Index of diagonal.
     :return: Elements on and above the k-th diagonal of m.  k=0 is the
@@ -36,22 +35,22 @@ def _triu(m, k=0):
     out = (1-x)*m
     return out
 
-#############
 class ISFANode(Node):
-
-    """
-    Perform Independent Slow Feature Analysis on the input data.
+    """Perform Independent Slow Feature Analysis on the input data.
 
     .. attribute:: RP
+    
         The global rotation-permutation matrix. This is the filter
         applied on input_data to get output_data
 
     .. attribute:: RPC
+    
         The *complete* global rotation-permutation matrix. This
         is a matrix of dimension input_dim x input_dim (the 'outer space'
         is retained)
 
     .. attribute:: covs
+    
         A `mdp.utils.MultipleCovarianceMatrices` instance 
         input_data. After convergence the uppermost
         ``output_dim`` x ``output_dim`` submatrices should be almost
@@ -60,36 +59,40 @@ class ISFANode(Node):
         ``n``-th time-lag
             
     .. note::
+    
         They are not cleared after convergence. If you need to free
         some memory, you can safely delete them with::
-                >>> del self.covs
+        
+            >>> del self.covs
 
     .. attribute:: initial_contrast
+    
         A dictionary with the starting contrast and the
         SFA and ICA parts of it.
 
     .. attribute:: final_contrast
+    
         Like the above but after convergence.
 
     .. note::
+    
         If you intend to use this node for large datasets please have
-    	a look at the ``stop_training`` method documentation for
-    	speeding things up.
+        a look at the ``stop_training`` method documentation for
+        speeding things up.
 
-    .. admonition::
-		Blaschke, T. , Zito, T., and Wiskott, L. (2007).
-		Independent Slow Feature Analysis and Nonlinear Blind Source Separation.
-		Neural Computation 19(4):994-1021 (2007)
-		http://itb.biologie.hu-berlin.de/~wiskott/Publications/BlasZitoWisk2007-ISFA-NeurComp.pdf
+    .. admonition:: Reference
+    
+        Blaschke, T. , Zito, T., and Wiskott, L. (2007).
+        Independent Slow Feature Analysis and Nonlinear Blind Source Separation.
+        Neural Computation 19(4):994-1021 (2007)
+        http://itb.biologie.hu-berlin.de/~wiskott/Publications/BlasZitoWisk2007-ISFA-NeurComp.pdf
     """
     def __init__(self, lags=1, sfa_ica_coeff=(1., 1.), icaweights=None,
                  sfaweights=None, whitened=False, white_comp = None,
                  white_parm = None, eps_contrast=1e-6, max_iter=10000,
                  RP=None, verbose=False, input_dim=None, output_dim=None,
                  dtype=None):
-        """
-        
-        Initializes an object of type 'ISFANode' to perform 
+        """Initializes an object of type 'ISFANode' to perform 
         Independent Slow Feature Analysis.
 
         The notation is the same used in the paper by Blaschke et al. Please
@@ -100,7 +103,7 @@ class ISFANode(Node):
             matrices (in the paper this is the set of \tau). If lags is an
             integer, time-lags 1,2,...,'lags' are used.
             Note that time-lag == 0 (instantaneous correlation) is always
-               implicitly used.
+            implicitly used.
         :param sfa_ica_coeff: A list of float with two entries, which defines the
             weights of the SFA and ICA part of the objective function. 
             They are called b_{SFA} and b_{ICA} in the paper.
@@ -108,12 +111,15 @@ class ISFANode(Node):
             to the ICA part of the objective function (called
             \kappa_{ICA}^{\tau} in the paper). Default is 1.           
             Possible values are:
-            - an integer ``n``: all matrices are weighted the same
+            
+            An integer ``n``
+                All matrices are weighted the same
                 (note that it does not make sense to have ``n != 1``)
-            - a list or array of floats of ``len == len(lags)``:
-                each element of the list is used for weighting the
+            A list or array of floats of ``len == len(lags)``
+                Each element of the list is used for weighting the
                 corresponding matrix
-            - ``None``: use the default values.
+            ``None``
+                Use the default values.
         :param sfaweights: Weighting factors for the covariance matrices relative
             to the SFA part of the objective function (called
             \kappa_{SFA}^{\tau} in the paper). Default is [1., 0., ..., 0.]
