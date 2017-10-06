@@ -16,7 +16,13 @@ mult = utils.mult
 class ProjectMatrixMixin(object):
     """Mixin class to be inherited by all ICA-like algorithms"""
     def get_projmatrix(self, transposed=1):
-        """Return the projection matrix."""
+        """Return the projection matrix.
+        
+        :param transposed: Indicates whether transposed projection matrix is to
+            be returned.
+
+        :return: The projection matrix.
+        """
         self._if_training_stop_training()
         Q = self.filters.T
         if not self.whitened:
@@ -30,8 +36,13 @@ class ProjectMatrixMixin(object):
 
     def get_recmatrix(self, transposed=1):
         """Return the back-projection matrix (i.e. the reconstruction matrix).
-        Note that if the unknown sources are white, this is a good
-        approximation of the mixing matrix (up to a permutation matrix).
+        
+        .. note::If the unknown sources are white, this is a good
+            approximation of the mixing matrix (up to a permutation matrix).
+            
+        :param transposed: Indicates whether transposed projection matrix is to
+            be returned.
+        :return: The back-projection matrix.
         """
         self._if_training_stop_training()
         Q = self.filters.T
@@ -47,38 +58,43 @@ class ProjectMatrixMixin(object):
 class ICANode(mdp.Cumulator, mdp.Node, ProjectMatrixMixin):
     """
     ICANode is a general class to handle different batch-mode algorithm for
-    Independent Component Analysis. More information about ICA can be found
-    among others in
-    Hyvarinen A., Karhunen J., Oja E. (2001). Independent Component Analysis,
-    Wiley.
+    Independent Component Analysis.
+    
+    .. admonition:: Reference
+
+        More information about ICA can be found among others in
+        Hyvarinen A., Karhunen J., Oja E. (2001). Independent Component Analysis,
+        Wiley.
     """
 
     def __init__(self, limit = 0.001, telescope = False, verbose = False,
                  whitened = False, white_comp = None, white_parm = None,
                  input_dim = None, dtype = None):
+        """Initializes an object of type 'ICANode'.
+        
+        :param limit: Convergence threshold.
+        :param telescope: If telescope == True, use Telescope mode: Instead of
+            using all input data in a single batch try larger and larger
+            chunks of the input data until convergence is achieved. This
+            should lead to significantly faster convergence for stationary
+            statistics. This mode has not been thoroughly tested and must
+            be considered beta.
+        :param verbose: Idicates whether information is to be reported about
+            the operation.
+        :param whitened: Set whitened is True if input data are already whitened.
+            Otherwise the node will whiten the data itself.
+        :param white_comp: If whitened is False, you can set 'white_comp' to the
+            number of whitened components to keep during the
+            calculation (i.e., the input dimensions are reduced to
+            white_comp by keeping the components of largest variance).
+        :param white_parm: A dictionary with additional parameters for whitening.
+            It is passed directly to the WhiteningNode constructor. For example::
+                
+                >>> white_parm = { 'svd' : True }
+        :param input_dim: The input dimensionality.
+        :param dtype: The datatype.
         """
-        Input arguments:
 
-        whitened -- Set whitened is True if input data are already whitened.
-                    Otherwise the node will whiten the data itself.
-
-        white_comp -- If whitened is False, you can set 'white_comp' to the
-                      number of whitened components to keep during the
-                      calculation (i.e., the input dimensions are reduced to
-                      white_comp by keeping the components of largest variance).
-
-        white_parm -- a dictionary with additional parameters for whitening.
-                      It is passed directly to the WhiteningNode constructor.
-                      Ex: white_parm = { 'svd' : True }
-
-        limit -- convergence threshold.
-
-        telescope -- If telescope == True, use Telescope mode: Instead of
-          using all input data in a single batch try larger and larger chunks
-          of the input data until convergence is achieved. This should lead to
-          significantly faster convergence for stationary statistics. This mode
-          has not been thoroughly tested and must be considered beta.
-        """
         self.telescope = telescope
         self.verbose = verbose
         self.limit = limit
@@ -143,13 +159,20 @@ class ICANode(mdp.Cumulator, mdp.Node, ProjectMatrixMixin):
         self.convergence = convergence
 
     def core(self, data):
-        """This is the core routine of the ICANode. Each subclass must
-        define this function to return the achieved convergence value.
-        This function is also responsible for setting the ICA filters
-        matrix self.filters.
-        Note that the matrix self.filters is applied to the right of the
-        matrix containing input data. This is the transposed of the matrix
-        defining the linear transformation."""
+        """This is the core routine of the ICANode.
+        
+        Each subclass must define this function to return the achieved
+        convergence value. This function is also responsible for setting the
+        ICA filters matrix self.filters.
+        
+        .. note::
+            The matrix self.filters is applied to the right of the matrix
+            containing input data. This is the transposed of the matrix
+            defining the linear transformation.
+
+        :param data: The data you want to perform ICA on.
+        :return: The achieved convergence value.
+        """
         pass
 
     def _execute(self, x):
@@ -167,8 +190,8 @@ class ICANode(mdp.Cumulator, mdp.Node, ProjectMatrixMixin):
         return y
 
 class CuBICANode(ICANode):
-    """
-    Perform Independent Component Analysis using the CuBICA algorithm.
+    """Perform Independent Component Analysis using the CuBICA algorithm.
+    
     Note that CuBICA is a batch-algorithm, which means that it needs
     all input data before it can start and compute the ICs.  The
     algorithm is here given as a Node for convenience, but it actually
@@ -177,27 +200,41 @@ class CuBICANode(ICANode):
 
     As an alternative to this batch mode you might consider the telescope
     mode (see the docs of the ``__init__`` method).
+    
+    .. attribute:: white
+     
+        The whitening node used for preprocessing.
 
-    Reference:
-    Blaschke, T. and Wiskott, L. (2003).
-    CuBICA: Independent Component Analysis by Simultaneous Third- and
-    Fourth-Order Cumulant Diagonalization.
-    IEEE Transactions on Signal Processing, 52(5), pp. 1250-1256.
+    .. attribute:: filters
 
-    **Internal variables of interest**
+        The ICA filters matrix (this is the transposed of the
+        projection matrix after whitening).
 
-      ``self.white``
-          The whitening node used for preprocessing.
+    .. attribute:: convergence
+     
+        The value of the convergence threshold.
+        
+    .. admonition:: Reference
+    
+        Blaschke, T. and Wiskott, L. (2003).
+        CuBICA: Independent Component Analysis by Simultaneous Third- and
+        Fourth-Order Cumulant Diagonalization.
+        IEEE Transactions on Signal Processing, 52(5), pp. 1250-1256.
 
-      ``self.filters``
-          The ICA filters matrix (this is the transposed of the
-          projection matrix after whitening).
-
-      ``self.convergence``
-          The value of the convergence threshold.
     """
 
     def core(self, data):
+        """This is the core routine of a node inheriting from ICANode.
+
+        As a subclass, the CuBICANode define this function to return the achieved
+        convergence value. This function is also responsible for setting the
+        ICA filters matrix self.filters.
+        
+        :param data: The data you want to perform ICA on.
+
+        :return: The convergence value, i.e. the maximum angle of rotation.
+        """
+
         # keep track of maximum angle of rotation
         # angles vary in the range [-pi, +pi]
         # put here -2pi < -pi < +pi
@@ -288,8 +325,8 @@ class CuBICANode(ICANode):
         return maxangle
 
 class FastICANode(ICANode):
-    """
-    Perform Independent Component Analysis using the FastICA algorithm.
+    """Perform Independent Component Analysis using the FastICA algorithm.
+    
     Note that FastICA is a batch-algorithm. This means that it needs
     all input data before it can start and compute the ICs.
     The algorithm is here given as a Node for convenience, but it
@@ -298,34 +335,35 @@ class FastICANode(ICANode):
 
     FastICA does not support the telescope mode (the convergence
     criterium is not robust in telescope mode).
+    criterium is not robust in telescope mode).
+    
+    History:    
+        - 1.4.1998 created for Matlab by Jarmo Hurri, Hugo Gavert, Jaakko Sarela,
+          and Aapo Hyvarinen
+        - 7.3.2003  modified for Python by Thomas Wendler
+        - 3.6.2004  rewritten and adapted for scipy and MDP by MDP's authors
+        - 25.5.2005 now independent from scipy. Requires Numeric or numarray
+        - 26.6.2006 converted to numpy
+        - 14.9.2007 updated to Matlab version 2.5
 
-    Reference:
-    Aapo Hyvarinen (1999).
-    Fast and Robust Fixed-Point Algorithms for Independent Component Analysis
-    IEEE Transactions on Neural Networks, 10(3):626-634.
+    .. attribute:: white
+    
+        The whitening node used for preprocessing.
 
-    **Internal variables of interest**
+    .. attribute:: filters
+    
+        The ICA filters matrix (this is the transposed of the
+        projection matrix after whitening).
 
-      ``self.white``
-          The whitening node used for preprocessing.
-
-      ``self.filters``
-          The ICA filters matrix (this is the transposed of the
-          projection matrix after whitening).
-
-      ``self.convergence``
-          The value of the convergence threshold.
-
-    History:
-
-    - 1.4.1998 created for Matlab by Jarmo Hurri, Hugo Gavert, Jaakko Sarela,
-      and Aapo Hyvarinen
-    - 7.3.2003  modified for Python by Thomas Wendler
-    - 3.6.2004  rewritten and adapted for scipy and MDP by MDP's authors
-    - 25.5.2005 now independent from scipy. Requires Numeric or numarray
-    - 26.6.2006 converted to numpy
-    - 14.9.2007 updated to Matlab version 2.5
-    - 26.6.2012 added ability to run two stages of optimization [PK]
+    .. attribute:: convergence
+    
+        The value of the convergence threshold.
+        
+    .. admonition:: Reference
+    
+        Aapo Hyvarinen (1999).
+        Fast and Robust Fixed-Point Algorithms for Independent Component Analysis
+        IEEE Transactions on Neural Networks, 10(3):626-634.
     """
 
     def __init__(self, approach = 'defl', g = 'pow3', guess = None,
@@ -335,67 +373,46 @@ class FastICANode(ICANode):
                  failures = 5, coarse_limit=None, limit = 0.001,  verbose = False,
                  whitened = False, white_comp = None, white_parm = None,
                  input_dim = None, dtype=None):
-        """
-        Input arguments:
-
-        General:
-
-        whitened -- Set whitened == True if input data are already whitened.
-                    Otherwise the node will whiten the data itself
-
-        white_comp -- If whitened == False, you can set 'white_comp' to the
-                      number of whitened components to keep during the
-                      calculation (i.e., the input dimensions are reduced to
-                      white_comp by keeping the components of largest variance).
-
-        white_parm -- a dictionary with additional parameters for whitening.
-                      It is passed directly to the WhiteningNode constructor.
-                      Ex: white_parm = { 'svd' : True }
-
-        limit -- convergence threshold.
-
-        Specific for FastICA:
-
-        approach  -- Approach to use. Possible values are:
-                                          'defl' --> deflation
-                                          'symm' --> symmetric
-
-               g  -- Nonlinearity to use. Possible values are:
-                                          'pow3' --> x^3
-                                          'tanh' --> tanh(fine_tanh*x)
-                                          'gaus' --> x*exp(-fine_gaus*x^2/2)
-                                          'skew' --> x^2 (for skewed signals)
-
-           fine_g -- Nonlinearity for fine tuning. Possible values
-                     are the same as for 'g'. Set it to None to disable fine
-                     tuning.
-
-               mu -- Step size. If mu != 1, a stabilization procedure is used:
-                     the value of mu can momentarily be halved if the algorithm
-                     is stuck between two points (this is called a stroke).
-                     Also if there is no convergence before half of the maximum
-                     number of iterations has been reached then mu will be halved
-                     for the rest of the rounds.
-
-      sample_size -- Percentage of samples used in one iteration. If
-                     sample_size < 1, samples are chosen in random order.
-
-     coarse_limit -- initial convergence threshold, to switch to
-                     fine_g function (i.e. linear to non-linear) even
-                     before reaching the limit and final tuning. Set
-                     it to a value higher than limit to be in effect.
-
-        fine_tanh -- parameter for 'tanh' nonlinearity
-        fine_gaus -- parameter for 'gaus' nonlinearity
-
-            guess -- initial guess for the mixing matrix (ignored if None)
-
-           max_it -- maximum number of iterations
-
-      max_it_fine -- maximum number of iterations for fine tuning
-
-         failures -- maximum number of failures to allow in deflation mode
-
+        """Initializes an object of type 'FastICANode'.
+        
+        :param approach: approach: Approach to use. Possible values are
+            -'defl':deflation
+            -'symm': symmetric
+        :param g: Nonlinearity to use. Possible values are
+            -'pow3': x^3
+            -'tanh': tanh(fine_tanh*x)
+            -'gaus': x*exp(-fine_gaus*x^2/2)
+            -'skew': x^2 (for skewed signals)
+        :param guess: Initial guess for the mixing matrix (ignored if None). 
+        :param fine_g: Nonlinearity for fine tuning. Possible values are the same
+            as for 'g'. Set it to None to disable fine tuning.
+        :param mu: Step size.
+        :param sample_size: Percentage of samples used in one iteration.
+            If sample_size < 1, samples are chosen in random order.
+        :param fine_tanh: Parameter for 'tanh' nonlinearity.
+        :param fine_gaus: Parameter for 'gaus' nonlinearity. 
+        :param max_it: Maximum number of iterations.
+        :param max_it_fine: Maximum number of iterations for fine tuning.
+        :param failures: Maximum number of failures to allow in deflation mode.
+        :param coarse_limit: Initial convergence threshold, to switch to
+            fine_g function (i.e. linear to non-linear) even
+            before reaching the limit and final tuning. Set
+            it to a value higher than limit to be in effect.
+        :param limit: Convergence threshold.
+        :param verbose: Idicates whether information is to be reported about
+            the operation.
+        :param whitened: Set whitened == True if input data are already whitened.
+            Otherwise the node will whiten the data itself.
+        :param white_comp: If whitened == False, you can set 'white_comp' to the
+            number of whitened components to keep during the
+            calculation (i.e., the input dimensions are reduced to
+            white_comp by keeping the components of largest variance). 
+        :param white_parm: A dictionary with additional parameters for whitening.
+            It is passed directly to the WhiteningNode constructor. For example::
+            
+                >>> white_parm = { 'svd' : True }
+        :param input_dim: The input dimensionality.
+        :param dtype: The datatype.
         """
         super(FastICANode, self).__init__(limit, False, verbose, whitened,
                                           white_comp, white_parm, input_dim,
@@ -438,6 +455,16 @@ class FastICANode(ICANode):
         return X[:, mask]
 
     def core(self, data):
+        """This is the core routine of a node inheriting from ICANode.
+
+        As a subclass, the FastICANode defines this function to return the
+        achieved convergence value. This function is also responsible for
+        setting the ICA filters matrix self.filters.
+
+        
+        :param data: The data you want to perform ICA on.
+        :return: The convergence value.
+        """
         # this is a more or less line per line translation of the original
         # matlab code.
         # Everything could be done better and more efficiently.
@@ -940,57 +967,62 @@ class FastICANode(ICANode):
 
 class TDSEPNode(ISFANode, ProjectMatrixMixin):
     """Perform Independent Component Analysis using the TDSEP algorithm.
-    Note that TDSEP, as implemented in this Node, is an online algorithm,
-    i.e. it is suited to be trained on huge data sets, provided that the
-    training is done sending small chunks of data for each time.
 
-    Reference:
-    Ziehe, Andreas and Muller, Klaus-Robert (1998).
-    TDSEP an efficient algorithm for blind separation using time structure.
-    in Niklasson, L, Boden, M, and Ziemke, T (Editors), Proc. 8th Int. Conf.
-    Artificial Neural Networks (ICANN 1998).
+    .. note::
+        That TDSEP, as implemented in this Node, is an online algorithm,
+        i.e. it is suited to be trained on huge data sets, provided that the
+        training is done sending small chunks of data for each time.
 
-    **Internal variables of interest**
+    .. attribute:: white
+    
+        The whitening node used for preprocessing.
 
-      ``self.white``
-          The whitening node used for preprocessing.
+    .. attribute:: filters
+    
+        The ICA filters matrix (this is the transposed of the
+        projection matrix after whitening).
 
-      ``self.filters``
-          The ICA filters matrix (this is the transposed of the
-          projection matrix after whitening).
-
-      ``self.convergence``
-          The value of the convergence threshold.
-    """
+    .. attribute:: convergence
+    
+        The value of the convergence threshold.
+           
+    .. admonition:: Reference
+    
+        Ziehe, Andreas and Muller, Klaus-Robert (1998).
+        TDSEP an efficient algorithm for blind separation using time structure.
+        in Niklasson, L, Boden, M, and Ziemke, T (Editors), Proc. 8th Int. Conf.
+        Artificial Neural Networks (ICANN 1998).
+       """
     def __init__(self, lags=1, limit = 0.00001, max_iter=10000,
                  verbose = False, whitened = False, white_comp = None,
                  white_parm = None, input_dim = None, dtype = None):
-        """
-        Input arguments:
-
-        lags    -- list of time-lags to generate the time-delayed covariance
-                   matrices. If lags is an integer, time-lags 1,2,...,'lags'
-                   are used.
-                   Note that time-lag == 0 (instantaneous correlation) is
-                   always implicitly used.
-
-        whitened -- Set whitened is True if input data are already whitened.
-                    Otherwise the node will whiten the data itself.
-
-        white_comp -- If whitened is False, you can set 'white_comp' to the
-                      number of whitened components to keep during the
-                      calculation (i.e., the input dimensions are reduced to
-                      white_comp by keeping the components of largest variance).
-
-        white_parm -- a dictionary with additional parameters for whitening.
-                      It is passed directly to the WhiteningNode constructor.
-                      Ex: white_parm = { 'svd' : True }
-
-        limit -- convergence threshold.
-
-        max_iter     -- If the algorithms does not achieve convergence within
-                        max_iter iterations raise an Exception. Should be
-                        larger than 100.
+        """Initializes an object of type 'TDSEPNode'.
+        
+        :param lags: List of time-lags to generate the time-delayed covariance
+            matrices. If lags is an integer, time-lags 1,2,...,'lags'
+            are used.
+            
+        .. note:: Time-lag == 0 (instantaneous correlation) is
+            always implicitly used.
+            
+        :param limit: Convergence threshold.
+        :param max_iter: If the algorithms does not achieve convergence within
+            max_iter iterations raise an Exception.
+            Should be larger than 100.
+        :param verbose: Idicates whether information is to be reported about
+            the operation.
+        :param whitened: Set whitened is True if input data are already whitened.
+            Otherwise the node will whiten the data itself.
+        :param white_comp: If whitened is False, you can set 'white_comp' to the
+            number of whitened components to keep during the
+            calculation (i.e., the input dimensions are reduced to
+            white_comp by keeping the components of largest variance).
+        :param white_parm: A dictionary with additional parameters for whitening.
+            It is passed directly to the WhiteningNode constructor. For example::
+            
+                >>> white_parm = { 'svd' : True }
+        :param input_dim: The input dimensionality.
+        :param dtype: The datatype.
         """
         super(TDSEPNode, self).__init__(lags=lags, sfa_ica_coeff=(0., 1.),
                                         icaweights=None, sfaweights=None,

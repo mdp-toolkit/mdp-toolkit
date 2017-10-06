@@ -112,15 +112,14 @@ class ISFANode(Node):
             to the ICA part of the objective function (called
             \kappa_{ICA}^{\tau} in the paper). Default is 1.           
             Possible values are:
-            
-            An integer ``n``
-                All matrices are weighted the same
-                (note that it does not make sense to have ``n != 1``)
-            A list or array of floats of ``len == len(lags)``
-                Each element of the list is used for weighting the
-                corresponding matrix
-            ``None``
-                Use the default values.
+
+            	- An integer ``n``: All matrices are weighted the same
+                  (note that it does not make sense to have ``n != 1``).
+            	- A list or array of floats of ``len == len(lags)``:
+                  Each element of the list is used for weighting the
+                  corresponding matrix.
+            	- ``None``: Use the default values.
+
         :param sfaweights: Weighting factors for the covariance matrices relative
             to the SFA part of the objective function (called
             \kappa_{SFA}^{\tau} in the paper). Default is [1., 0., ..., 0.]
@@ -149,7 +148,7 @@ class ISFANode(Node):
             slow down the algorithm, but it's the only way to see
             the rate of improvement and immediately spot if something
             is going wrong.
-        :param input_dim:  The input dimension.
+        :param input_dim:  The input dimensionality.
         :param output_dim: Sets the number of independent components that have to
             be extracted. Note that if this is not smaller than input_dim,
             the problem is solved linearly and SFA would give the same
