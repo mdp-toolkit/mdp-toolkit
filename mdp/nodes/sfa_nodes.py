@@ -86,6 +86,7 @@ class SFANode(Node):
           reg  - works by regularization
           pca  - works by PCA
           svd  - works by svd
+          ldl  - works by ldl decomposition (requires SciPy >= 1.0)
 
           auto - selects the best-benchmarked method of the above
 
@@ -93,7 +94,7 @@ class SFANode(Node):
           SymeigException ('Covariance matrices may be singular')
           you can manually set the solving method for an existing node:
 
-             sfa._sfa_solver = sfa._rank_deficit_solver_pca
+             sfa.set_rank_deficit_method('pca')
 
           That means,
 
@@ -102,7 +103,7 @@ class SFANode(Node):
           is equivalent to
 
              sfa = SFANode()
-             sfa._sfa_solver = sfa._rank_deficit_solver_pca
+             sfa.set_rank_deficit_method('pca')
 
           After such an adjustment you can run stop_training() again,
           which would save potentially time consuming rerun of all
@@ -126,16 +127,7 @@ class SFANode(Node):
 
         # set routine for eigenproblem
         self._symeig = symeig
-        if rank_deficit_method == 'pca':
-            self._sfa_solver = self._rank_deficit_solver_pca
-        elif rank_deficit_method == 'reg':
-            self._sfa_solver = self._rank_deficit_solver_reg
-        elif rank_deficit_method == 'svd':
-            self._sfa_solver = self._rank_deficit_solver_svd
-        elif rank_deficit_method == 'auto':
-            self._sfa_solver = self._rank_deficit_solver_pca
-        else:
-            self._sfa_solver = None
+        self.set_rank_deficit_method(rank_deficit_method)
         self.rank_threshold = 1e-12
         self.rank_deficit = 0
 
@@ -145,6 +137,26 @@ class SFANode(Node):
         self.avg = None
         self._bias = None  # avg multiplied with sf
         self.tlen = None
+
+    def set_rank_deficit_method(self, rank_deficit_method):
+        if rank_deficit_method == 'pca':
+            self._sfa_solver = self._rank_deficit_solver_pca
+        elif rank_deficit_method == 'reg':
+            self._sfa_solver = self._rank_deficit_solver_reg
+        elif rank_deficit_method == 'svd':
+            self._sfa_solver = self._rank_deficit_solver_svd
+        elif rank_deficit_method == 'ldl':
+            try:
+                from scipy.linalg.lapack import dsytrf
+            except ImportError:
+                err_msg = ("ldl method for solving SFA with rank deficit covariance "
+                           "requires at least SciPy 1.0.")
+                raise NodeException(err_msg)
+            self._sfa_solver = self._rank_deficit_solver_ldl
+        elif rank_deficit_method == 'auto':
+            self._sfa_solver = self._rank_deficit_solver_pca
+        else:
+            self._sfa_solver = None
 
     def time_derivative(self, x):
         """Compute the linear approximation of the time derivative."""
@@ -284,9 +296,11 @@ class SFANode(Node):
         This solver applies a moderate regularization to the covariance matrix
         before applying symeig(). Afterwards it properly detects the rank
         deficit and filters out malformed features.
-        This procedure is (approximately) as efficient as the ordinary SFA
-        implementation based on plain symeig, because all additional steps are
-        computationally cheap.
+        For full range, this procedure is (approximately) as efficient as the
+        ordinary SFA implementation based on plain symeig, because all
+        additional steps are computationally cheap.
+        For shorter range, the LDL method should be preferred.
+        
 
         Note:
         For efficiency reasons it actually modifies the covariance matrix
@@ -296,7 +310,7 @@ class SFANode(Node):
             raise ValueError('Only type=1 is supported.')
 
         # apply some regularization...
-        # The following is equivalent to B += 1e-14*np.eye(B.shape[0]),
+        # The following is equivalent to B += 1e-12*np.eye(B.shape[0]),
         # but works more in place, i.e. saves memory consumption of np.eye().
         Bflat = B.reshape(B.shape[0]*B.shape[1])
         idx = numx.arange(0, len(Bflat), B.shape[0]+1)
@@ -304,7 +318,7 @@ class SFANode(Node):
         Bflat[idx] += self.rank_threshold
 
         eg, ev = self._symeig(A, B, True, turbo, None, type, overwrite)
-        
+
         Bflat[idx] = diag_tmp
         m = numx.absolute(numx.sqrt(numx.sum(ev * mult(B, ev), 0))-1)
         off = 0
@@ -320,7 +334,7 @@ class SFANode(Node):
                 ev = ev[:, off:]
         else:
             # Sometimes (unlikely though) the values in m are not sorted
-            # In this case we search search all indices:
+            # In this case we search all indices:
             count = int(round(m_off_sum))
             m_idx = numx.arange(len(m)-off-count)
             self.rank_deficit = off+count
@@ -333,11 +347,131 @@ class SFANode(Node):
             eg = eg[m_idx]
             ev = ev[:, m_idx]
         if range is None:
-            # self.d, self.sf
             return eg, ev
         else:
-            # self.d, self.sf
             return eg[range[0]-1:range[1]], ev[:, range[0]-1:range[1]]
+
+    def _rank_deficit_solver_ldl(
+            self, A, B = None, eigenvectors=True, turbo="on", rng=None,
+            type=1, overwrite=False):
+        """
+        Alternative routine to solve the SFA eigenvalue issue. This can be used
+        in case the normal symeig() call in _stop_training() throws the common
+        SymeigException ('Covariance matrices may be singular').
+
+        This solver uses SciPy's raw LAPACK interface to access LDL decomposition.
+        www.netlib.org/lapack/lug/node54.html describes how to solve a
+        generalized eigenvalue problem with positive definite B using a Cholesky/LL
+        decomposition. We extend this method to solve for a positive semidefinite B
+        using LDL decomposition, which is a variant of Cholesky/LL decomposition
+        for indefinite Matrices.
+        Accessing raw LAPACK's LDL decomposition (sytrf) is challenging. This code
+        is partly based on code for SciPy 1.1:
+        github.com/scipy/scipy/pull/7941/files#diff-9bf9b4b2f0f40415bc0e72143584c889
+        We optimized and shortened that code for the real-valued positive
+        semidefinite case.
+
+        This procedure is almost as efficient as the ordinary SFA implementation
+        based on plain symeig.
+        This is because implementations for symmetric generalized eigenvalue problems
+        usually perform the Cholesky approach mentioned above. The more general LDL
+        decomposition is only slightly more expensive than Cholesky, due to
+        pivotization.
+
+        Note:
+        This method requires SciPy >= 1.0.
+        """
+        if type != 1:
+            raise ValueError('Only type=1 is supported.')
+        # This method has special requirements, which is why we import here
+        # rather than module wide.
+        from scipy.linalg.lapack import get_lapack_funcs, _compute_lwork
+        from scipy.linalg.blas import get_blas_funcs
+        try:
+            inv_tri, solver, solver_lwork = get_lapack_funcs(
+                    ('trtri', 'sytrf', 'sytrf_lwork'), (B,))
+            mult_tri, = get_blas_funcs(('trmm',), (B,))
+        except ValueError:
+            err_msg = ("ldl method for solving SFA with rank deficit covariance "
+                       "requires at least SciPy 1.0.")
+            raise NodeException(err_msg)
+
+        n = B.shape[0]
+        arng = numx.arange(n)
+        lwork = _compute_lwork(solver_lwork, n, lower=1)
+        lu, piv, _ = solver(B, lwork=lwork, lower=1, overwrite_a=overwrite)
+
+        # using piv properly requires some postprocessing:
+        swap_ = numx.arange(n)
+        pivs = numx.zeros(swap_.shape, dtype=int)
+        skip_2x2 = False
+        for ind in range(n):
+            # If previous spin belonged already to a 2x2 block
+            if skip_2x2:
+                skip_2x2 = False
+                continue
+
+            cur_val = piv[ind]
+            # do we have a 1x1 block or not?
+            if cur_val > 0:
+                if cur_val != ind+1:
+                    # Index value != array value --> permutation required
+                    swap_[ind] = swap_[cur_val-1]
+                pivs[ind] = 1
+            # Not.
+            elif cur_val < 0 and cur_val == piv[ind+1]:
+                # first neg entry of 2x2 block identifier
+                if -cur_val != ind+2:
+                    # Index value != array value --> permutation required
+                    swap_[ind+1] = swap_[-cur_val-1]
+                pivs[ind] = 2
+                skip_2x2 = True
+
+        full_perm = numx.arange(n)
+        for ind in range(n-1, -1, -1):
+            s_ind = swap_[ind]
+            if s_ind != ind:
+                col_s = ind if pivs[ind] else ind-1 # 2x2 block
+                lu[[s_ind, ind], col_s:] = lu[[ind, s_ind], col_s:]
+                full_perm[[s_ind, ind]] = full_perm[[ind, s_ind]]
+        # usually only a few indices actually permute, so we reduce perm:
+        perm = (full_perm-arng).nonzero()[0]
+        perm_idx = full_perm[perm]
+        # end of ldl postprocessing
+        # perm_idx and perm now describe a permutation as dest and source indexes
+
+        lu[perm_idx, :] = lu[perm, :]
+
+        dgd = abs(numx.diag(lu))
+        dnz = (dgd>self.rank_threshold).nonzero()[0]
+        dgd_sqrt_I = numx.sqrt(1.0/dgd[dnz])
+        self.rank_deficit = len(dgd) - len(dnz)
+
+        # c, lower, unitdiag, overwrite_c
+        LI, _ = inv_tri(lu, 1, 1, 1) # invert triangular
+        # we mainly apply tril here, because we need to make a
+        # copy of LI anyway, because original result from
+        # dtrtri seems to be read-only regarding some operations
+        LI = numx.tril(LI, -1)
+        LI[arng, arng] = 1
+        LI[dnz, :] *= dgd_sqrt_I.reshape((dgd_sqrt_I.shape[0], 1))
+
+        A2 = A if overwrite else A.copy()
+        A2[perm_idx, :] = A2[perm, :]
+        A2[:, perm_idx] = A2[:, perm]
+        # alpha, a, b, side 0=left 1=right, lower, trans_a, diag 1=unitdiag, overwrite_b
+        A2 = mult_tri(1.0, LI, A2, 1, 1, 1, 0, 1) # A2 = mult(A2, LI.T)
+        A2 = mult_tri(1.0, LI, A2, 0, 1, 0, 0, 1) # A2 = mult(LI, A2)
+        A2 = A2[dnz, :]
+        A2 = A2[:, dnz]
+
+        # overwrite=True is okay here, because at this point A2 is a copy anyway
+        eg, ev = self._symeig(A2, None, True, turbo, rng, overwrite=True)
+        ev = mult(LI[dnz].T, ev) if self.rank_deficit \
+            else mult_tri(1.0, LI, ev, 0, 1, 1, 0, 1)
+        ev[perm] = ev[perm_idx]
+
+        return eg, ev
 
     def _rank_deficit_solver_pca(
             self, A, B = None, eigenvectors=True, turbo="on", range=None,
@@ -374,14 +508,10 @@ class SFANode(Node):
         S = ev2
 
         white = mult(S.T, mult(dcov_mtx, S))
-        sfa_eg, sfa_ev = self._symeig(white, None, True, turbo, None, type, overwrite)
+        sfa_eg, sfa_ev = self._symeig(white, None, True, turbo, range, type, overwrite)
         sfa_ev = mult(S, sfa_ev)
-        if range is None:
-            # self.d, self.sf
-            return sfa_eg, sfa_ev
-        else:
-            # self.d, self.sf
-            return sfa_eg[range[0]-1:range[1]], sfa_ev[:, range[0]-1:range[1]]
+        # self.d, self.sf
+        return sfa_eg, sfa_ev
 
     def _rank_deficit_solver_svd(
             self, A, B = None, eigenvectors=True, turbo="on", range=None,
@@ -420,10 +550,8 @@ class SFANode(Node):
         E = E.T[::-1].T  # we manually reverse the array/matrix storing the eigenvalues/vectors.
 
         if range is None:
-            #d, sf
             return e, E
         else:
-            #d, sf
             return e[range[0] - 1:range[1]], E[:, range[0] - 1:range[1]]
 
 
@@ -440,11 +568,11 @@ class SFA2Node(SFANode):
     Learning of Invariances, Neural Computation, 14(4):715-770 (2002)."""
 
     def __init__(self, input_dim=None, output_dim=None, dtype=None,
-                 include_last_sample=True):
+                 include_last_sample=True, rank_deficit_method='none'):
         self._expnode = mdp.nodes.QuadraticExpansionNode(input_dim=input_dim,
                                                          dtype=dtype)
         super(SFA2Node, self).__init__(input_dim, output_dim, dtype,
-                                       include_last_sample)
+                                       include_last_sample, rank_deficit_method)
 
     @staticmethod
     def is_invertible():

@@ -2,6 +2,7 @@ from __future__ import division
 from past.utils import old_div
 from ._tools import *
 from mdp.utils import mult, symeig
+from mdp.signal_node import NodeException
 
 def testSFANode():
     dim=10000
@@ -163,6 +164,29 @@ def testSFANode_rank_deficit():
     sdat_svd_d = sdat_svd[1:]-sdat_svd[:-1]
     assert_array_almost_equal(
             mult(sdat_svd_d.T, sdat_svd_d)/(len(sdat_svd_d)-1), d_diag)
+
+    try:
+        # test ldl separately due to its requirement of SciPy >= 1.0
+        sfa2_ldl = mdp.nodes.SFANode(output_dim=out, rank_deficit_method='ldl')
+        have_ldl = True
+    except NodeException:
+        # No SciPy >= 1.0 available.
+        have_ldl = False
+    if have_ldl:
+        sfa2_ldl.train(dat)
+        sfa2_ldl.stop_training()
+        sdat_ldl = sfa2_ldl.execute(dat)
+
+        assert_array_almost_equal(abs(sdat_ldl), abs(sdat0))
+        assert_array_almost_equal(sfa2_ldl.d, sfa0.d)
+        assert sfa2_ldl.rank_deficit == dfc
+
+        # check that constraints are met
+        # ldl ok?
+        assert_array_almost_equal(mult(sdat_ldl.T, sdat_ldl)/(len(sdat_ldl)-1), idn)
+        sdat_ldl_d = sdat_ldl[1:]-sdat_ldl[:-1]
+        assert_array_almost_equal(
+                mult(sdat_ldl_d.T, sdat_ldl_d)/(len(sdat_ldl_d)-1), d_diag)
 
 def testSFANode_derivative_bug1D():
     # one dimensional worst case scenario
