@@ -12,17 +12,21 @@ import scipy.signal as signal
 
 class Convolution2DNode(mdp.Node):
     """Convolve input data with filter banks.
-
-    The ``filters`` argument specifies a set of 2D filters that are
-    convolved with the input data during execution. Convolution can
-    be selected to be executed by linear filtering of the data, or
+    
+    Convolution can be selected to be executed by linear filtering of the data, or
     in the frequency domain using a Discrete Fourier Transform.
-
+    
     Input data can be given as 3D data, each row being a 2D array
     to be convolved with the filters, or as 2D data, in which case
     the ``input_shape`` argument must be specified.
-
+    
     This node depends on ``scipy``.
+    
+    .. attribute:: filters
+        
+        Specifies a set of 2D filters that are
+        convolved with the input data during execution. 
+
     """
 
     def __init__(self, filters, input_shape = None,
@@ -30,42 +34,61 @@ class Convolution2DNode(mdp.Node):
                  mode = 'full', boundary = 'fill', fillvalue = 0,
                  output_2d = True,
                  input_dim = None, dtype = None):
-        """
-        Input arguments:
+        """Initializes an object of type 'Convolution2DNode'.
+        
+        :param filters: Specifies a set of 2D filters that are
+            convolved with the input data during execution.
+        :type filters: numpy.ndarray
+        
+        :param input_shape: Is a tuple (h,w) that corresponds to the height and
+            width of the input 2D data. If the input data is given
+            in a flattened format, it is first reshaped before
+            convolution
+        :type input_shape: tuple
+        
+        :param approach: 'approach' is one of ['linear', 'fft']
+                    
+            - 'linear': convolution is done by linear filtering;
+            - 'fft': convoltion is done using the Fourier Transform
+                    
+            If 'approach' is 'fft', the 'boundary' and 'fillvalue' arguments
+            are ignored, and are assumed to be 'fill' and 0, respectively.
+            (*Default* = 'fft')
+        :type approach: str
+        
+        :param mode: Convolution mode, as defined in scipy.signal.convolve2d
+            'mode' is one of ['valid', 'same', 'full']
+            (*Default* = 'full')
+        :type mode: str
+        
+        :param boundary: Boundary condition, as defined in scipy.signal.convolve2d
+            'boundary' is one of ['fill', 'wrap', 'symm']
+            (*Default* = 'fill')
+        :type boundary: str
+        
+        :param fillvalue: Value to fill pad input arrays with
+            (*Default* = 0)
+        :type fillvalue: numeric
+        
+        :param output_2d: If True, the output array is 2D; the first index
+            corresponds to data points; every output data point
+            is the result of flattened convolution results, with
+            the output of each filter concatenated together.
 
-        input_shape -- Is a tuple (h,w) that corresponds to the height and
-                       width of the input 2D data. If the input data is given
-                       in a flattened format, it is first reshaped before
-                       convolution
-
-        approach -- 'approach' is one of ['linear', 'fft']
-                    'linear': convolution is done by linear filtering;
-                    'fft': convoltion is done using the Fourier Transform
-                    If 'approach' is 'fft', the 'boundary' and 'fillvalue' arguments
-                    are ignored, and are assumed to be 'fill' and 0, respectively.
-                    (*Default* = 'fft')
-
-        mode -- Convolution mode, as defined in scipy.signal.convolve2d
-                'mode' is one of ['valid', 'same', 'full']
-                (*Default* = 'full')
-
-        boundary -- Boundary condition, as defined in scipy.signal.convolve2d
-                     'boundary' is one of ['fill', 'wrap', 'symm']
-                     (*Default* = 'fill')
-
-        fillvalue -- Value to fill pad input arrays with
-                     (*Default* = 0)
-
-        output_2d -- If True, the output array is 2D; the first index
-                     corresponds to data points; every output data point
-                     is the result of flattened convolution results, with
-                     the output of each filter concatenated together.
-
-                     If False, the output array is 4D; the format is
-                     data[idx,filter_nr,x,y], with
-                     filter_nr: index of convolution filter
-                     idx: data point index
-                     x, y: 2D coordinates
+            If False, the output array is 4D; the format is
+            data[idx,filter_nr,x,y], with
+            
+            - filter_nr: index of convolution filter
+            - idx: data point index
+            - x, y: 2D coordinates
+            
+        :type output_2d: bool
+        
+        :param input_dim: The input dimensionality.
+        :type input_dim: int
+        
+        :param dtype: The datatype.
+        :type dtype: numpy.dtype
         """
         super(Convolution2DNode, self).__init__(input_dim=input_dim,
                                               dtype=dtype)
@@ -137,20 +160,23 @@ class Convolution2DNode(mdp.Node):
 
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node.
-      
+                
         Support floating point types with size smaller or equal than 64 bits.
         This is because fftpack does not support floating point types larger
         than that.
+        
+        :return: The list of dtypes supported by this node.
+        :rtype: list
         """
         return [t for t in utils.get_dtypes('Float') if t.itemsize<=8]
 
     def _pre_execution_checks(self, x):
         """This method contains all pre-execution checks.
+        
         It can be used when a subclass defines multiple execution methods.
-
-        In this case, the output dimension depends on the type of
-        convolution we use (padding, full, ...). Also, we want to
-        to be able to accept 3D arrays.
+        
+        :param x: The data.
+        :type x: numpy.ndarray
         """
 
         # check input rank
