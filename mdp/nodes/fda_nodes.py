@@ -8,34 +8,36 @@ class FDANode(mdp.Node):
     """Perform a (generalized) Fisher Discriminant Analysis of its
     input. It is a supervised node that implements FDA using a
     generalized eigenvalue approach.
+    
+    .. note:: FDANode has two training phases and is supervised so make sure to
+        pay attention to the following points when you train it:
+    
+        - call the ``train`` method with *two* arguments: the input data
+          and the labels (see the doc string of the ``train`` method for details).
 
-    FDANode has two training phases and is supervised so make sure to
-    pay attention to the following points when you train it:
+        - if you are training the node by hand, call the ``train`` method twice.
 
-    - call the ``train`` method with *two* arguments: the input data
-      and the labels (see the doc string of the ``train`` method for details).
+        - if you are training the node using a flow (recommended), the
+          only argument to ``Flow.train`` must be a list of
+          ``(data_point, label)`` tuples or an iterator returning lists of
+          such tuples, *not* a generator.  The ``Flow.train`` function can be
+          called just once as usual, since it takes care of *rewinding* the iterator
+          to perform the second training step.
 
-    - if you are training the node by hand, call the ``train`` method twice.
+    .. attribute:: avg
+      
+        Mean of the input data (available after training)
 
-    - if you are training the node using a flow (recommended), the
-      only argument to ``Flow.train`` must be a list of
-      ``(data_point, label)`` tuples or an iterator returning lists of
-      such tuples, *not* a generator.  The ``Flow.train`` function can be
-      called just once as usual, since it takes care of *rewinding* the iterator
-      to perform the second training step.
-
-    More information on Fisher Discriminant Analysis can be found for
-    example in C. Bishop, Neural Networks for Pattern Recognition,
-    Oxford Press, pp. 105-112.
-
-    **Internal variables of interest**
-
-      ``self.avg``
-          Mean of the input data (available after training)
-
-      ``self.v``
-          Transposed of the projection matrix, so that
-          ``output = dot(input-self.avg, self.v)`` (available after training).
+    .. attribute:: v
+      
+        Transposed of the projection matrix, so that
+        ``output = dot(input-self.avg, self.v)`` (available after training).
+          
+    .. admonition:: Reference
+    
+        More information on Fisher Discriminant Analysis can be found for
+        example in C. Bishop, Neural Networks for Pattern Recognition,
+        Oxford Press, pp. 105-112.
     """
 
     def _get_train_seq(self):
@@ -43,6 +45,17 @@ class FDANode(mdp.Node):
                 (self._train_fda, self._stop_fda)]
 
     def __init__(self, input_dim=None, output_dim=None, dtype=None):
+        """Initializes an object of type 'FDANode'.
+        
+        :param input_dim: The input dimensionality.
+        :type input_dim: int
+        
+        :param output_dim: The output dimensionality.
+        :type output_dim: int
+        
+        :param dtype: The datatype.
+        :type dtype: numpy.dtype
+        """
         super(FDANode, self).__init__(input_dim, output_dim, dtype)
         # mean in-class covariance matrix times number of data points
         # is deleted after training
@@ -64,7 +77,14 @@ class FDANode(mdp.Node):
     # Training step 1: compute mean and number of elements in each class
 
     def _train_means(self, x, labels):
-        """Gather data to compute the means and number of elements."""
+        """Gather data to compute the means and number of elements.
+        
+        :param x: The data.
+        :type x: numpy.ndarray
+        
+        :param labels: The class labels.
+        :type labels: list, tuple, numpy.ndarray
+        """
         if isinstance(labels, (list, tuple, numx.ndarray)):
             labels_ = numx.asarray(labels)
             for label in set(labels_):
@@ -81,9 +101,12 @@ class FDANode(mdp.Node):
 
     def _update_means(self, x, label):
         """Update the internal variables that store the data for the means.
-
-        x -- Data points from a single class.
-        label -- The label for that class.
+        
+        :param x: Data points from a single class.
+        :type x: numpy.ndarray
+        
+        :param label: The label for that class.
+        :type label: int
         """
         if label not in self.means:
             self.means[label] = numx.zeros((1, self.input_dim), dtype=self.dtype)
@@ -95,7 +118,14 @@ class FDANode(mdp.Node):
     # matrices and solve the FDA problem
 
     def _train_fda(self, x, labels):
-        """Gather data for the overall and within-class covariance"""
+        """Gather data for the overall and within-class covariance
+        
+        :param x: Data points from classes specified by labels.
+        :type x: numpy.ndarray
+        
+        :param labels: Labels of the data points.
+        :type labels: int, list, tuple or numpy.ndarray
+        """
         if self._S_W is None:
             self._S_W = numx.zeros((self.input_dim, self.input_dim),
                                    dtype=self.dtype)
@@ -129,9 +159,12 @@ class FDANode(mdp.Node):
 
     def _update_SW(self, x, label):
         """Update the covariance matrix of the class means.
-
-        x -- Data points from a single class.
-        label -- The label for that class.
+        
+        :param x: Data points from a single class.
+        :type x: numpy.ndarray
+        
+        :param label: The label for the specific class.
+        :type label: int
         """
         x = x - self.means[label]
         self._S_W += mdp.utils.mult(x.T, x)
@@ -141,19 +174,30 @@ class FDANode(mdp.Node):
     # dummy method used to overwrite the train docstring
     def _train(self, x, label):
         """Update the internal structures according to the input data 'x'.
-
-        x -- a matrix having different variables on different columns
+        
+        :param x: A matrix having different variables on different columns
             and observations on the rows.
-        label -- can be a list, tuple or array of labels (one for each data
+        :type x: numpy.ndarray
+        
+        :param label: Can be a list, tuple or array of labels (one for each data
             point) or a single label, in which case all input data is assigned
             to the same class.
+        :type label: list, tuple, numpy.ndarray or int 
         """
         pass
 
     def _execute(self, x, n=None):
         """Compute the output of the FDA projection.
-
-        If 'n' is an integer, then use the first 'n' components.
+        
+        :param x: Data to project.
+        :type x: numpy.ndarray
+        
+        :param n: If 'n' is a positive integer, then use the first 'n' components.
+            Otherwise use all.
+        :type n: int
+        
+        :return: The output of the FDA projection.
+        :rtype: numpy.ndarray
         """
         if n:
             v = self.v[:, 0:n]
