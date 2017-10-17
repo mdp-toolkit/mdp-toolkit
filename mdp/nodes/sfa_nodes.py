@@ -339,13 +339,14 @@ class SFANode(Node):
             m_idx = numx.arange(len(m)-off-count)
             self.rank_deficit = off+count
             i = off
-            while off < len(m_idx):
+            i_off = off
+            while i_off < len(m_idx):
                 if m[i] < 0.5:
-                    m_idx[off] = i
-                    off += 1
+                    m_idx[i_off] = i
+                    i_off += 1
                 i += 1
-            eg = eg[m_idx]
-            ev = ev[:, m_idx]
+            eg = eg[m_idx][off:]
+            ev = ev[:, m_idx][:, off:]
         if range is None:
             return eg, ev
         else:
@@ -383,6 +384,17 @@ class SFANode(Node):
         """
         if type != 1:
             raise ValueError('Only type=1 is supported.')
+
+        nonzerolines = (abs(numx.sum(B, 0)) > self.rank_threshold).nonzero()[0]
+        if len(nonzerolines) < len(B):
+            # This method appears to be particularly unstable if blank lines
+            # and columns exist in B. So we circumvent this case:
+            orig_shape = B.shape
+            B = B[nonzerolines, :][:, nonzerolines]
+            A = A[nonzerolines, :][:, nonzerolines]
+        else:
+            nonzerolines = None
+
         # This method has special requirements, which is why we import here
         # rather than module wide.
         from scipy.linalg.lapack import get_lapack_funcs, _compute_lwork
@@ -470,6 +482,12 @@ class SFANode(Node):
         ev = mult(LI[dnz].T, ev) if self.rank_deficit \
             else mult_tri(1.0, LI, ev, 0, 1, 1, 0, 1)
         ev[perm] = ev[perm_idx]
+
+        if not nonzerolines is None:
+            # restore ev to original size
+            ev_tmp = ev
+            ev = numx.zeros((orig_shape[0], ev.shape[1]))
+            ev[nonzerolines, :] = ev_tmp
 
         return eg, ev
 
