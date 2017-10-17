@@ -335,22 +335,37 @@ class SFANode(Node):
         else:
             # Sometimes (unlikely though) the values in m are not sorted
             # In this case we search all indices:
-            count = int(round(m_off_sum))
-            m_idx = numx.arange(len(m)-off-count)
-            self.rank_deficit = off+count
-            i = off
-            i_off = off
-            while i_off < len(m_idx):
-                if m[i] < 0.5:
-                    m_idx[i_off] = i
-                    i_off += 1
-                i += 1
-            eg = eg[m_idx][off:]
-            ev = ev[:, m_idx][:, off:]
+            m_idx = (m < 0.5).nonzero()[0]
+            eg = eg[m_idx]
+            ev = ev[:, m_idx]
         if range is None:
             return eg, ev
         else:
             return eg[range[0]-1:range[1]], ev[:, range[0]-1:range[1]]
+
+    def _find_blank_data_idx(self, B):
+        """
+        Helper for some of the rank_deficit solvers.
+        Some numerical decompositions, e.g. eig, svd, ldl appear to
+        yield numerically unstable results, if the input matrix contains
+        blank lines and columns (assuming symmetry).
+        It is relevant to guard this case, because it corresponds to constants
+        in the data. Think of a constantly white corner in training images or
+        slight black stripe atop of a training video due to insufficient cropping
+        or think of a logo or timestamp in a video. There are plenty of examples
+        that cause constants in real-world data. So by checking for this kind of
+        issue we release some burden of inconvenient preprocessing from the user.
+        """
+        zero_idx = (abs(B[0]) < self.rank_threshold).nonzero()[0]
+        # For efficiency we first just check the first line for zeros and fail fast.
+        if len(zero_idx) > 0:
+            # If there are near- zero entries in first line we check the whole columns:
+            #nonzerolines = (abs(numx.sum(B, 0)) > self.rank_threshold).nonzero()[0]
+            zero_idx = (numx.mean(abs(B[zero_idx]), 0) < self.rank_threshold).nonzero()[0]
+            if len(zero_idx) > 0:
+                nonzero_idx = numx.arange(len(B))
+                nonzero_idx[zero_idx] = -1
+                return nonzero_idx[(nonzero_idx != -1).nonzero()[0]]
 
     def _rank_deficit_solver_ldl(
             self, A, B = None, eigenvectors=True, turbo="on", rng=None,
@@ -385,15 +400,13 @@ class SFANode(Node):
         if type != 1:
             raise ValueError('Only type=1 is supported.')
 
-        nonzerolines = (abs(numx.sum(B, 0)) > self.rank_threshold).nonzero()[0]
-        if len(nonzerolines) < len(B):
-            # This method appears to be particularly unstable if blank lines
-            # and columns exist in B. So we circumvent this case:
+        # LDL-based method appears to be particularly unstable if blank lines
+        # and columns exist in B. So we circumvent this case:
+        nonzero_idx = self._find_blank_data_idx(B)
+        if not nonzero_idx is None:
             orig_shape = B.shape
-            B = B[nonzerolines, :][:, nonzerolines]
-            A = A[nonzerolines, :][:, nonzerolines]
-        else:
-            nonzerolines = None
+            B = B[nonzero_idx, :][:, nonzero_idx]
+            A = A[nonzero_idx, :][:, nonzero_idx]
 
         # This method has special requirements, which is why we import here
         # rather than module wide.
@@ -483,11 +496,12 @@ class SFANode(Node):
             else mult_tri(1.0, LI, ev, 0, 1, 1, 0, 1)
         ev[perm] = ev[perm_idx]
 
-        if not nonzerolines is None:
+        if not nonzero_idx is None:
             # restore ev to original size
+            self.rank_deficit += orig_shape[0]-len(nonzero_idx)
             ev_tmp = ev
             ev = numx.zeros((orig_shape[0], ev.shape[1]))
-            ev[nonzerolines, :] = ev_tmp
+            ev[nonzero_idx, :] = ev_tmp
 
         return eg, ev
 
@@ -513,6 +527,15 @@ class SFANode(Node):
         """
         if type != 1:
             raise ValueError('Only type=1 is supported.')
+
+        # PCA-based method appears to be particularly unstable if blank lines
+        # and columns exist in B. So we circumvent this case:
+        nonzero_idx = self._find_blank_data_idx(B)
+        if not nonzero_idx is None:
+            orig_shape = B.shape
+            B = B[nonzero_idx, :][:, nonzero_idx]
+            A = A[nonzero_idx, :][:, nonzero_idx]
+
         dcov_mtx = A
         cov_mtx = B
         eg, ev = self._symeig(cov_mtx, None, True, turbo, None, type, overwrite)
@@ -526,10 +549,17 @@ class SFANode(Node):
         S = ev2
 
         white = mult(S.T, mult(dcov_mtx, S))
-        sfa_eg, sfa_ev = self._symeig(white, None, True, turbo, range, type, overwrite)
-        sfa_ev = mult(S, sfa_ev)
-        # self.d, self.sf
-        return sfa_eg, sfa_ev
+        eg, ev = self._symeig(white, None, True, turbo, range, type, overwrite)
+        ev = mult(S, ev)
+
+        if not nonzero_idx is None:
+            # restore ev to original size
+            self.rank_deficit += orig_shape[0]-len(nonzero_idx)
+            ev_tmp = ev
+            ev = numx.zeros((orig_shape[0], ev.shape[1]))
+            ev[nonzero_idx, :] = ev_tmp
+
+        return eg, ev
 
     def _rank_deficit_solver_svd(
             self, A, B = None, eigenvectors=True, turbo="on", range=None,
@@ -549,6 +579,17 @@ class SFANode(Node):
         The parameters eigenvectors, turbo, type, overwrite are not used.
         They only exist to provide a symeig compatible signature.
         """
+        if type != 1:
+            raise ValueError('Only type=1 is supported.')
+
+        # SVD-based method appears to be particularly unstable if blank lines
+        # and columns exist in B. So we circumvent this case:
+        nonzero_idx = self._find_blank_data_idx(B)
+        if not nonzero_idx is None:
+            orig_shape = B.shape
+            B = B[nonzero_idx, :][:, nonzero_idx]
+            A = A[nonzero_idx, :][:, nonzero_idx]
+
         dcov_mtx = A
         cov_mtx = B
         U, s, _ = svd(cov_mtx)
@@ -567,10 +608,18 @@ class SFANode(Node):
         e = e[::-1]      # SVD delivers the eigenvalues sorted in reverse (compared to symeig). Thus
         E = E.T[::-1].T  # we manually reverse the array/matrix storing the eigenvalues/vectors.
 
-        if range is None:
-            return e, E
-        else:
-            return e[range[0] - 1:range[1]], E[:, range[0] - 1:range[1]]
+        if not range is None:
+            e = e[range[0] - 1:range[1]]
+            E = E[:, range[0] - 1:range[1]]
+
+        if not nonzero_idx is None:
+            # restore ev to original size
+            self.rank_deficit += orig_shape[0]-len(nonzero_idx)
+            E_tmp = E
+            E = numx.zeros((orig_shape[0], E.shape[1]))
+            E[nonzero_idx, :] = E_tmp
+
+        return e, E
 
 
 class SFA2Node(SFANode):
