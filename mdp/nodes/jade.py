@@ -13,6 +13,7 @@ mult = mdp.utils.mult
 class JADENode(ICANode):
     """
     Perform Independent Component Analysis using the JADE algorithm.
+    
     Note that JADE is a batch-algorithm. This means that it needs
     all input data before it can start and compute the ICs.
     The algorithm is here given as a Node for convenience, but it
@@ -20,52 +21,67 @@ class JADENode(ICANode):
     running out of memory when you have many components and many time samples.
 
     JADE does not support the telescope mode.
-
-    Main references:
     
-      * Cardoso, Jean-Francois and Souloumiac, Antoine (1993).
+    |
+    
+    .. admonition:: Reference
+    
+        *Cardoso, Jean-Francois and Souloumiac, Antoine (1993).*
         Blind beamforming for non Gaussian signals.
         Radar and Signal Processing, IEE Proceedings F, 140(6): 362-370.
-      * Cardoso, Jean-Francois (1999).
+        
+        *Cardoso, Jean-Francois (1999).*
         High-order contrasts for independent component analysis.
         Neural Computation, 11(1): 157-192.
 
-    Original code contributed by: 
-    Gabriel Beckers (2008).
-
-    History:
+        Original code contributed by: 
+        Gabriel Beckers (2008).
     
-    - May 2005    version 1.8 for MATLAB released by Jean-Francois Cardoso
-    - Dec 2007    MATLAB version 1.8 ported to Python/NumPy by Gabriel Beckers
-    - Feb 15 2008 Python/NumPy version adapted for MDP by Gabriel Beckers
+    |
+    
+    .. admonition:: History
+    
+        - May 2005    version 1.8 for MATLAB released by Jean-Francois Cardoso
+        - Dec 2007    MATLAB version 1.8 ported to Python/NumPy by Gabriel Beckers
+        - Feb 15 2008 Python/NumPy version adapted for MDP by Gabriel Beckers
+    
     """
 
     def __init__(self, limit = 0.001, max_it=1000, verbose = False,
                  whitened = False, white_comp = None, white_parm = None,
                  input_dim = None, dtype = None):
-        """
-        Input arguments:
-
-        General:
-
-        whitened -- Set whitened == True if input data are already whitened.
-                    Otherwise the node will whiten the data itself
-
-        white_comp -- If whitened == False, you can set 'white_comp' to the
-                      number of whitened components to keep during the
-                      calculation (i.e., the input dimensions are reduced to
-                      white_comp by keeping the components of largest variance).
-
-        white_parm -- a dictionary with additional parameters for whitening.
-                      It is passed directly to the WhiteningNode constructor.
-                      Ex: white_parm = { 'svd' : True }
-
-        limit -- convergence threshold.
-
-        Specific for JADE:
-
-        max_it -- maximum number of iterations
-
+        """Initializes an object of type 'JADENode'.
+        
+        :param limit: Convergence threshold.
+        :type limit: float
+        
+        :param max_it: Maximum number of iterations
+        :type max_it: int
+        
+        :param verbose: Idicates whether information is to be reported about
+            the operation.
+        :type verbose: bool
+        
+        :param whitened: Set whitened == True if input data are already whitened.
+            Otherwise the node will whiten the data itself.
+        :type whitened: bool
+        
+        :param white_comp: If whitened == False, you can set 'white_comp' to the
+            number of whitened components to keep during the
+            calculation (i.e., the input dimensions are reduced to
+            white_comp by keeping the components of largest variance).
+        :type white_comp: int
+        
+        :param white_parm: A dictionary with additional parameters for whitening.
+            It is passed directly to the WhiteningNode constructor.
+            Ex: white_parm = { 'svd' : True }
+        :type white_parm: dict
+        
+        :param input_dim: The input dimensionality.
+        :type input_dim: int
+        
+        :param dtype: The datatype.
+        :type dtype: numpy.dtype 
         """
         super(JADENode, self).__init__(limit, False, verbose, whitened,
                                        white_comp, white_parm, input_dim,
