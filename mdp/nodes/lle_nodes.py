@@ -1,3 +1,4 @@
+
 from __future__ import print_function
 from __future__ import division
 from builtins import range
@@ -20,54 +21,68 @@ sqrt = numx.sqrt
 class LLENode(Cumulator):
     """Perform a Locally Linear Embedding analysis on the data.
 
-    **Internal variables of interest**
-
-      ``self.training_projection``
+    .. attribute:: training_projection
+    
           The LLE projection of the training data (defined when
           training finishes).
 
-      ``self.desired_variance``
-          variance limit used to compute intrinsic dimensionality.
+    .. attribute:: desired_variance
+    
+          Variance limit used to compute intrinsic dimensionality.
 
     Based on the algorithm outlined in *An Introduction to Locally
     Linear Embedding* by L. Saul and S. Roweis, using improvements
     suggested in *Locally Linear Embedding for Classification* by
     D. deRidder and R.P.W. Duin.
 
-    References: Roweis, S. and Saul, L., Nonlinear dimensionality
-    reduction by locally linear embedding, Science 290 (5500), pp.
-    2323-2326, 2000.
+    |
+    
+    .. admonition:: Reference
+     
+        Roweis, S. and Saul, L., Nonlinear dimensionality
+        reduction by locally linear embedding, Science 290 (5500), pp.
+        2323-2326, 2000.
 
     Original code contributed by: Jake VanderPlas, University of Washington,
     """
 
     def __init__(self, k, r=0.001, svd=False, verbose=False,
                  input_dim=None, output_dim=None, dtype=None):
-        """
-        :Arguments:
-           k
-             number of nearest neighbors to use
-           r
-             regularization constant; if ``None``, ``r`` is automatically
+        """Initializes an object of type 'LLENode'.
+        
+        :param k: Number of nearest neighbors to use.
+        :type k: int
+        
+        :param r: Regularization constant; if ``None``, ``r`` is automatically
              computed using the method presented in deRidder and Duin;
              this method involves solving an eigenvalue problem for
-             every data point, and can slow down the algorithm
+             every data point, and can slow down the algorithm.
              If specified, it multiplies the trace of the local covariance
-             matrix of the distances, as in Saul & Roweis (faster)
-           svd
-             if true, use SVD to compute the projection matrix;
+             matrix of the distances, as in Saul & Roweis (faster).
+        :type r: float
+        
+        :param svd: If true, use SVD to compute the projection matrix;
              SVD is slower but more stable
-           verbose
-             if true, displays information about the progress
+        :type svd: bool
+        
+        :param verbose: if true, displays information about the progress
              of the algorithm
-           output_dim
-             number of dimensions to output or a float between 0.0 and
+        :type verbose: bool
+        
+        :param input_dim: The input dimensionality.
+        :type input_dim: int
+        
+        :param output_dim: Number of dimensions to output or a float between 0.0 and
              1.0. In the latter case, ``output_dim`` specifies the desired
              fraction of variance to be explained, and the final
              number of output dimensions is known at the end of
              training (e.g., for ``output_dim=0.95`` the algorithm will
              keep as many dimensions as necessary in order to explain
-             95% of the input variance)
+             95% of the input variance).
+        :type output_dim: int
+        
+        :param dtype: The datatype.
+        :type dtype: numpy.dtype  
         """
 
         if isinstance(output_dim, float) and output_dim <= 1:
@@ -207,9 +222,9 @@ class LLENode(Cumulator):
         self.training_projection = U
 
     def _adjust_output_dim(self):
-        # this function is called if we need to compute the number of
-        # output dimensions automatically; some quantities that are
-        # useful later are pre-calculated to spare precious time
+        """This function is called if we need to compute the number of
+        output dimensions automatically as some quantities that are
+        useful later can be precalculated.."""
 
         if self.verbose:
             print(' - adjusting output dim:')
@@ -319,8 +334,8 @@ class LLENode(Cumulator):
 #########################################################
 
 
-# Modified Gram-Schmidt
 def _mgs(a):
+    """Modified Gram-Schmidt."""
     m, n = a.shape
     v = a.copy()
     r = numx.zeros((n, n))
@@ -336,61 +351,73 @@ def _mgs(a):
 class HLLENode(LLENode):
     """Perform a Hessian Locally Linear Embedding analysis on the data.
 
-    **Internal variables of interest**
-
-      ``self.training_projection``
-          the HLLE projection of the training data (defined when training
+    .. attribute:: training_projection
+    
+          The HLLE projection of the training data (defined when training
           finishes)
 
-      ``self.desired_variance``
-          variance limit used to compute intrinsic dimensionality.
+    .. attribute:: desired_variance
+    
+          Variance limit used to compute intrinsic dimensionality.
+    
+    |
+    
+    .. note:: Many methods are inherited from LLENode, including _execute(),
+        _adjust_output_dim(), etc. The main advantage of the Hessian estimator
+        is to limit distortions of the input manifold.  Once the model has been
+        trained, it is sufficient (and much less computationally intensive)
+        to determine projections for new points using the LLE framework.
+        
+    |
+    
+    .. admonition:: Reference
+    
+        Implementation based on algorithm outlined in
+        Donoho, D. L., and Grimes, C., Hessian Eigenmaps: new locally linear
+        embedding techniques for high-dimensional data, Proceedings of the
+        National Academy of Sciences 100(10): 5591-5596, 2003.
 
-    Implementation based on algorithm outlined in
-    Donoho, D. L., and Grimes, C., Hessian Eigenmaps: new locally linear
-    embedding techniques for high-dimensional data, Proceedings of the
-    National Academy of Sciences 100(10): 5591-5596, 2003.
-
-    Original code contributed by: Jake Vanderplas, University of Washington
+        Original code contributed by: Jake Vanderplas, University of Washington
     """
-
-    #----------------------------------------------------
-    # Note that many methods ar inherited from LLENode,
-    #  including _execute(), _adjust_output_dim(), etc.
-    # The main advantage of the Hessian estimator is to
-    #  limit distortions of the input manifold.  Once
-    #  the model has been trained, it is sufficient (and
-    #  much less computationally intensive) to determine
-    #  projections for new points using the LLE framework.
-    #----------------------------------------------------
 
     def __init__(self, k, r=0.001, svd=False, verbose=False,
                  input_dim=None, output_dim=None, dtype=None):
-        """
-        :Keyword arguments:
-           k
-              number of nearest neighbors to use; the node will raise
-              an MDPWarning if k is smaller than
-              k >= 1 + output_dim + output_dim*(output_dim+1)/2,
-              because in this case a less efficient computation must be
-              used, and the ablgorithm can become unstable
-           r
-              regularization constant; as opposed to LLENode, it is
-              not possible to compute this constant automatically; it is
-              only used during execution
-           svd
-              if true, use SVD to compute the projection matrix;
-              SVD is slower but more stable
-           verbose
-              if true, displays information about the progress
-              of the algorithm
-           output_dim
-              number of dimensions to output or a float between 0.0
-              and 1.0. In the latter case, output_dim specifies the
-              desired fraction of variance to be exaplained, and the
-              final number of output dimensions is known at the end of
-              training (e.g., for 'output_dim=0.95' the algorithm will
-              keep as many dimensions as necessary in order to explain
-              95% of the input variance)
+        """Initializes an object of type 'HLLENode'.
+        
+        :param k: Number of nearest neighbors to use; the node will raise
+            an MDPWarning if k is smaller than
+            k >= 1 + output_dim + output_dim*(output_dim+1)/2,
+            because in this case a less efficient computation must be
+            used, and the ablgorithm can become unstable.
+        :type k: int
+        
+        :param r: Regularization constant; as opposed to LLENode, it is
+            not possible to compute this constant automatically; it is
+            only used during execution.
+        :type r: float
+        
+        :param svd: If true, use SVD to compute the projection matrix;
+            SVD is slower but more stable.
+        :type svd: bool
+        
+        :param verbose: If true, displays information about the progress
+            of the algorithm.
+        :type verbose: bool
+        
+        :param input_dim: The input dimensionality.
+        :type input_dim: int
+        
+        :param output_dim: number of dimensions to output or a float between 0.0
+            and 1.0. In the latter case, output_dim specifies the
+            desired fraction of variance to be exaplained, and the
+            final number of output dimensions is known at the end of
+            training (e.g., for 'output_dim=0.95' the algorithm will
+            keep as many dimensions as necessary in order to explain
+            95% of the input variance).
+        :type output_dim: int or float
+        
+        :param dtype: The datatype.
+        :type dtype: numpy.dtype  
         """
         LLENode.__init__(self, k, r, svd, verbose,
                          input_dim, output_dim, dtype)

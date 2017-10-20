@@ -24,11 +24,22 @@ class LibSVMClassifier(_SVMClassifier):
         
     .. attribute:: kernels
     
-        Kernels which LibSVM allows.
+        Kernels which LibSVM allows:
+			
+		- 'RBF' - Radial basis function kernel
+		- 'LINEAR' - Linear kernel
+		- 'POLY' - Polynomial kernel
+		- 'SIGMOID' - Sigmoid kernel
     
     .. attribute:: classifiers
     
-        Classifiers which LibSVM allows.
+        Classifiers which LibSVM allows:
+
+		- 'C_SVC'
+		- 'NU_SVC'
+		- 'ONE_CLASS'
+		- 'EPSILON_SVR'
+		- 'NU_SVR'
 
     This node depends on ``libsvm``.
     """
@@ -40,10 +51,12 @@ class LibSVMClassifier(_SVMClassifier):
                  input_dim=None, output_dim=None, dtype=None):
         """Initializes an object of type 'LibSVMClassifier'.
         
-        :param kernel: The kernel to use.
+        :param kernel: The kernel to use. See self.kernel or
+			class' description for more info.
         :type kernel: str
         
-        :param classifier: The type of the SVM.
+        :param classifier: The type of the SVM to use. See self.classifiers or
+			class' description for more info.
         :type classifier: str
         
         :param probability: Must be set to True, if probabilistic algorithms
@@ -78,7 +91,7 @@ class LibSVMClassifier(_SVMClassifier):
             self.set_kernel(kernel)
         if classifier:
             self.set_classifier(classifier)
-        # set all other parameters
+        # set all  other parameters
         for k, v in params.items():
             if not k in self.parameter._names:
                 # check that the name is a valid parameter
@@ -102,7 +115,8 @@ class LibSVMClassifier(_SVMClassifier):
         Sets the classifier.
         
         :param classifier: A string with the name of the classifier which
-            should be used. Possible values are in self.classifiers
+            should be used. Possible values are in self.classifiers and
+			in the class' description.
         :type classifier: str
         
         :raises TypeError: If the classifier type is unknown or not supported.
@@ -118,7 +132,8 @@ class LibSVMClassifier(_SVMClassifier):
         Sets the classifier.
         
         :param kernel: A string with the name of the kernel which
-            should be used. Possible values are in self.kernels
+            should be used. Possible values are in kernel and
+			in the class' description.
         :type kernel: str
         
         :raises TypeError: If the kernel type is unknown or not supported.
