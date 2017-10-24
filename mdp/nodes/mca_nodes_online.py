@@ -193,6 +193,8 @@ class MCANode(mdp.OnlineNode):
         
         :return: The projected vectors.
         :rtype: numpy.ndarray
+        
+        :raises mdp.NodeException: If the valid dimension is exceeded.
         """
         if n is None:
             n = y.shape[1]
