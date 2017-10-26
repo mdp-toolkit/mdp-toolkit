@@ -33,6 +33,8 @@ class PCANode(mdp.Node):
         variance, this is the fraction of the total variance that is
         actually explained.
     
+    |
+    
     .. admonition:: Reference
     
         More information about Principal Component Analysis, a.k.a. discrete
@@ -53,16 +55,30 @@ class PCANode(mdp.Node):
         will be kept in order to explain 95% of the input variance).
         
         :param input_dim: Dimensionality of the input.
+            Default is None.
+        :type input_dim: int
+        
         :param output_dim: Dimensionality of the output.
+            Default is None.
+        :type output_dim: int
+        
         :param dtype: Datatype of the input.
+            Default is None.
+        :type dtype: numpy.dtype
+        
         :param svd: If True use Singular Value Decomposition instead of the
             standard eigenvalue problem solver. Use it when PCANode
             complains about singular covariance matrices.
+            Default is Flase.
+        :type svd: bool
+        
         :param reduce: Keep only those principal components which have a variance
             larger than 'var_abs' and a variance relative to the
             first principal component larger than 'var_rel' and a
             variance relative to total variance larger than 'var_part'
             (set var_part to None or 0 for no filtering).
+            Default is False.
+        :type reduce: bool
             
         .. note:: 
             When the *reduce* switch is enabled, the actual number
@@ -70,8 +86,16 @@ class PCANode(mdp.Node):
             from that set when creating the instance.
             
         :param var_rel: Variance relative to first principal component threshold.
+            Default is 1E-12.
+        :type var_rel: float
+        
         :param var_abs: Absolute variance threshold.
+            Default is 1E-15.
+        :type var_abs; float
+        
         :param var_part: Variance relative to total variance threshold.
+            Default is None.
+        :type var_part: float
         """
 
         # this must occur *before* calling super!
@@ -126,6 +150,7 @@ class PCANode(mdp.Node):
             of components, there is no way to calculate the explained variance.
         
         :return: The explained variance.
+        :rtype: float
         """
 
         return self.explained_variance
@@ -134,6 +159,7 @@ class PCANode(mdp.Node):
         """Update the covariance matrix.
         
         :param x: The training data.
+        :type x: numpy.ndarray
         """
         self._cov_mtx.update(x)
 
@@ -143,6 +169,7 @@ class PCANode(mdp.Node):
         sets the output dim.
         
         :return: The eigenvector range.
+        :rtype: tuple
         """
         # if the number of principal components to keep is not specified,
         # keep all components
@@ -168,7 +195,12 @@ class PCANode(mdp.Node):
         :param debug: Determines if singular matrices itself are stored in
             self.cov_mtx and self.dcov_mtx to be examined, given that
             stop_training fails because of singular covmatrices.
-        :return: 
+            Default is False.
+        :type debug: bool
+        
+        :raises mdp.NodeException: If negative eigenvalues occur, 
+            the covariance matrix may be singular or no component
+            amounts to variation exceeding var_abs. 
         """
 
         # request the covariance matrix and clean up
@@ -272,7 +304,11 @@ class PCANode(mdp.Node):
         
         :param transposed: Determines whether the transposed projection
             matrix is returned.
+            Default is True.
+        :type transposed: bool
+        
         :return: The projection matrix.
+        :rtype: numpy.ndarray
         """
         self._if_training_stop_training()
         if transposed:
@@ -285,8 +321,11 @@ class PCANode(mdp.Node):
         
         :param transposed: Determines whether the transposed back-projection matrix
             (i.e. the reconstruction matrix) is returned.
+            Default is True.
+        :type transposed: bool
         
         :return: The back-projection matrix (i.e. the reconstruction matrix).
+        :rtype: numpy.ndarray
         """
         self._if_training_stop_training()
         if transposed:
@@ -299,9 +338,13 @@ class PCANode(mdp.Node):
         If 'n' is not set, use all available components.
         
         :param x: Input with at least 'n' principle components.
+        :type x: numpy.ndarray
+        
         :param n: Number of first principle components.
+        :type n: int
         
         :return: The projected input.
+        :rtype: numpy.ndarray
         """
 
         if n is not None:
@@ -315,9 +358,13 @@ class PCANode(mdp.Node):
         If 'n' is not set, use all available components.
         
         :param y: Data to be projected to the input space.
+        :type y: numpy.ndarray
+        
         :param n: Number of first principle components.
+        :type n: int
         
         :return: The projected data
+        :rtype: numpy.ndarray
         """
 
         if n is None:
@@ -335,7 +382,7 @@ class PCANode(mdp.Node):
 
 class WhiteningNode(PCANode):
     """*Whiten* the input data by filtering it through the most
-        significatives of its principal components. 
+        significant of its principal components. 
         
         All output signals have zero mean, unit variance and are decorrelated.
 
@@ -364,7 +411,9 @@ class WhiteningNode(PCANode):
         
         :param debug: Determines if singular matrices itself are stored in
             self.cov_mtx and self.dcov_mtx to be examined, given that
-            stop_training fails because of singular covmatrices. 
+            stop_training fails because of singular covmatrices.
+            Default is False.
+        :type debug: bool
         """
 
         super(WhiteningNode, self)._stop_training(debug)
@@ -377,6 +426,7 @@ class WhiteningNode(PCANode):
         """Return the eigenvectors of the covariance matrix.
         
         :return: The eigenvectors of the covariance matrix.
+        :rtype: numpy.ndarray
         """
         self._if_training_stop_training()
         return numx.sqrt(self.d)*self.v
@@ -387,8 +437,11 @@ class WhiteningNode(PCANode):
         
         :param transposed: Determines whether the transposed back-projection matrix
             (i.e. the reconstruction matrix) is returned.
+            Default is True.
+        :type transposed: bool
             
         :return: The back-projection matrix (i.e. the reconstruction matrix).
+        :rtype: numpy.ndarray
         """
 
         self._if_training_stop_training()
