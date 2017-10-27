@@ -91,7 +91,7 @@ class PCANode(mdp.Node):
         
         :param var_abs: Absolute variance threshold.
             Default is 1E-15.
-        :type var_abs; float
+        :type var_abs: float
         
         :param var_part: Variance relative to total variance threshold.
             Default is None.

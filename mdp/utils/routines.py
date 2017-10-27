@@ -317,14 +317,14 @@ def izip_stretched(*iterables):
 
     Thus,
     >>> for zipped in izip_stretched([1, 2, 3], -1):
-            print zipped
+    print zipped
     (1, -1)
     (2, -1)
     (3, -1)
 
     is equivalent to
     >>> for zipped in izip([1, 2, 3], [-1] * 3):
-            print zipped
+    print zipped
     (1, -1)
     (2, -1)
     (3, -1)
@@ -392,13 +392,13 @@ def gabor(size, alpha, phi, freq, sgm, x0=None, res=1, ampl=1.):
     phi -- phase (rad)
     freq -- frequency (cycles/deg)
     sgm -- (sigma_x, sigma_y) standard deviation along the axis
-           of the gaussian ellipse (pixel)
+    of the gaussian ellipse (pixel)
     x0 -- (x,y) coordinates of the center of the wavelet (pixel)
-          Default: None, meaning the center of the array
+    Default: None, meaning the center of the array
     res -- spatial resolution (deg/pixel)
-           Default: 1, so that 'freq' is measured in cycles/pixel
+    Default: 1, so that 'freq' is measured in cycles/pixel
     ampl -- constant multiplying the result
-            Default: 1.
+    Default: 1.
     """
 
     # init
@@ -448,10 +448,10 @@ def invert_exp_funcs2(exp_x_noisy, dim_x, exp_funcs, use_hint=False, k=0.0):
     otherwise: use the parameter use_hint itself as the first approximation
 
     k: weighting factor in [0, 1] to balance between approximation error and
-       closeness to the starting point. For instance:
-       objective function is to minimize:
-           (1-k) * ||exp_funcs(app_x) - exp_x_noisy||**2/output_dim +
-               k * ||app_x - starting point||**2/input_dim
+    closeness to the starting point. For instance:
+    objective function is to minimize:
+    (1-k) * ||exp_funcs(app_x) - exp_x_noisy||**2/output_dim +
+    k * ||app_x - starting point||**2/input_dim
 
     Note: this function requires scipy.
     """

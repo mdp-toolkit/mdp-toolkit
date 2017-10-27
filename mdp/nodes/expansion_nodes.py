@@ -267,10 +267,14 @@ class GrowingNeuralGasExpansionNode(GrowingNeuralGasNode):
 
     The positions of RBFs correspond to position of the nodes of the neural gas
     The sizes of the RBFs correspond to mean distance to the neighbouring nodes.
-
+    
+    |
+    
     .. note:: Adjust the maximum number of nodes to control the
         dimension of the expansion.
-
+    
+    |
+    
     .. admonition:: Reference
     
         More information on this expansion type can be found in:
@@ -393,6 +397,8 @@ class GeneralExpansionNode(_ExpansionNode):
     transformations of the data samples within MDP flows.
     
     Original code contributed by Alberto Escalante.
+    
+    |
     
     .. admonition:: Example
    
