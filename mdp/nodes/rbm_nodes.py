@@ -17,7 +17,14 @@ exp = mdp.numx.exp
 
 # this and the other replication functions should go in mdp.utils
 def rrep(x, n):
-    """Replicate x n-times on a new last dimension"""
+    """Replicate x n-times on a new last dimension.
+
+    :param x: The object to replicate.
+    :type x: numpy.ndarray
+
+    :param n: Number of replicas.
+    :type n: int
+    """
     shp = x.shape + (1,)
     return x.reshape(shp).repeat(n, axis=-1)
 
@@ -26,41 +33,50 @@ class RBMNode(mdp.Node):
     """Restricted Boltzmann Machine node. An RBM is an undirected
     probabilistic network with binary variables. The graph is
     bipartite into observed (*visible*) and hidden (*latent*) variables.
-
     By default, the ``execute`` method returns the *probability* of
     one of the hiden variables being equal to 1 given the input.
-
     Use the ``sample_v`` method to sample from the observed variables
     given a setting of the hidden variables, and ``sample_h`` to do the
     opposite. The ``energy`` method can be used to compute the energy
     of a given setting of all variables.
 
-    The network is trained by Contrastive Divergence, as described in
-    Hinton, G. E. (2002). Training products of experts by minimizing
-    contrastive divergence. Neural Computation, 14(8):1711-1800
+    |
 
-    **Internal variables of interest**
+    .. admonition:: Reference
 
-      ``self.w``
-          Generative weights between hidden and observed variables
+        For more information on RBMs, see
+        Geoffrey E. Hinton (2007) Boltzmann machine. Scholarpedia, 2(5):1668
 
-      ``self.bv``
-          bias vector of the observed variables
+        The network is trained by Contrastive Divergence, as described in
+        Hinton, G. E. (2002). Training products of experts by minimizing
+        contrastive divergence. Neural Computation, 14(8):1711-1800
 
-      ``self.bh``
-          bias vector of the hidden variables
+    .. attribute:: w
 
-    For more information on RBMs, see
-    Geoffrey E. Hinton (2007) Boltzmann machine. Scholarpedia, 2(5):1668
+        Generative weights between hidden and observed variables.
+
+    .. attribute:: bv
+
+        Bias vector of the observed variables.
+
+    .. attribute:: bh
+
+        Bias vector of the hidden variables.
     """
 
     def __init__(self, hidden_dim, visible_dim = None, dtype = None):
-        """
-        :Parameters:
-          hidden_dim
-            number of hidden variables
-          visible_dim
-            number of observed variables
+        """Initializes an object of type 'RBMNode'.
+
+        :param hidden_dim: Number of hidden variables.
+        :type hidden_dim: int
+
+        :param visible_dim: Number of observed variables.
+            Default is None.
+        :type visible_dim: int
+
+        :param dtype: Datatype of the input.
+            Default is None.
+        :type dtype: numpy.dtype
         """
         super(RBMNode, self).__init__(visible_dim, hidden_dim, dtype)
         self._initialized = False
@@ -97,24 +113,33 @@ class RBMNode(mdp.Node):
                update_with_ph=True, verbose=False):
         """Update the internal structures according to the input data `v`.
         The training is performed using Contrastive Divergence (CD).
+        
+        :param v: A binary matrix having different variables on different
+            columns and observations on the rows.
+        :type v: numpy.ndarray
 
-        :Parameters:
-          v
-            a binary matrix having different variables on different columns
-            and observations on the rows
-          n_updates
-            number of CD iterations. Default value: 1
-          epsilon
-            learning rate. Default value: 0.1
-          decay
-            weight decay term. Default value: 0.
-          momentum
-            momentum term. Default value: 0.
-          update_with_ph
-            In his code, G.Hinton updates the hidden biases using the
-            probability of the hidden unit activations instead of a
+        :param n_updates: Number of CD iterations. Default value: 1
+        :type n_updates: int
+
+        :param epsilon: Learning rate. Default value: 0.1
+        :type epsilon: float
+
+        :param decay: Weight decay term. Default value: 0.
+        :type decay: float
+
+        :param momentum: Momentum term. Default value: 0.
+        :type momentum: float
+
+        :param update_with_ph: In his code, G.Hinton updates the hidden biases
+            using the probability of the hidden unit activations instead of a
             sample from it. This is in order to speed up sequential
             learning of RBMs. Set this to False to use the samples instead.
+            Default value: True
+        :type update_with_ph: bool
+
+        :param verbose: Controls whether information about the energy and
+            training error is printed.
+        :type verbose: bool
         """
         if not self._initialized:
             self._init_weights()
@@ -183,9 +208,14 @@ class RBMNode(mdp.Node):
     def sample_h(self, v):
         """Sample the hidden variables given observations v.
 
-        :Returns: a tuple ``(prob_h, h)``, where ``prob_h[n,i]`` is the
-          probability that variable ``i`` is one given the observations
-          ``v[n,:]``, and ``h[n,i]`` is a sample from the posterior probability.
+        :param v: A binary matrix having different variables on different
+            columns and observations on the rows.
+        :type v: numpy.ndarray
+
+        :returns: A tuple ``(prob_h, h)``, where ``prob_h[n,i]`` is the
+            probability that variable ``i`` is one given the observations
+            ``v[n,:]``, and ``h[n,i]`` is a sample from the posterior probability.
+        :rtype: tuple
         """
         self._pre_execution_checks(v)
         return self._sample_h(v)
@@ -193,10 +223,14 @@ class RBMNode(mdp.Node):
     def sample_v(self, h):
         """Sample the observed variables given hidden variable state h.
 
-        :Returns: a tuple ``(prob_v, v)``, where ``prob_v[n,i]`` is the
-          probability that variable ``i`` is one given the hidden
-          variables ``h[n,:]``, and ``v[n,i]`` is a sample from that
-          conditional probability.
+        :param h: The hidden variable state h.
+        :type h: numpy.ndarray
+
+        :returns: A tuple ``(prob_v, v)``, where ``prob_v[n,i]`` is the
+            probability that variable ``i`` is one given the hidden
+            variables ``h[n,:]``, and ``v[n,i]`` is a sample from that
+            conditional probability.
+        :rtype: tuple
         """
         self._pre_inversion_checks(h)
         return self._sample_v(h)
@@ -208,6 +242,16 @@ class RBMNode(mdp.Node):
     def energy(self, v, h):
         """Compute the energy of the RBM given observed variables state `v` and
         hidden variables state `h`.
+
+        :param v: A binary matrix having different variables on different
+            columns and observations on the rows.
+        :type v: numpy.ndarray
+
+        :param h: The hidden variable state h.
+        :type h: numpy.ndarray
+
+        :return: The energy of the RBM given observed and the hidden variables.
+        :rtype: float
         """
         return self._energy(v, h)
 
@@ -215,6 +259,17 @@ class RBMNode(mdp.Node):
         """If `return_probs` is True, returns the probability of the
         hidden variables h[n,i] being 1 given the observations v[n,:].
         If `return_probs` is False, return a sample from that probability.
+
+        :param v: A binary matrix having different variables on different
+            columns and observations on the rows.
+        :type v: numpy.ndarray
+
+        :param return_probs: Controls the return value. Default value: True
+        :type return_probs: bool
+
+        :return: The probability of the hidden variables being 1 given the
+            observations or a sample from that probability.
+        :rtype: float
         """
         probs, h = self._sample_h(v)
         if return_probs:
@@ -230,38 +285,59 @@ class RBMWithLabelsNode(RBMNode):
     label variables (also observed), only one of which is active at
     any time. The node is able to learn associations between the
     visible variables and the labels.
-
     By default, the ``execute`` method returns the *probability* of
     one of the hiden variables being equal to 1 given the input.
-
     Use the ``sample_v`` method to sample from the observed variables
     (visible and labels) given a setting of the hidden variables, and
     ``sample_h`` to do the opposite. The ``energy`` method can be used
     to compute the energy of a given setting of all variables.
 
-    The network is trained by Contrastive Divergence, as described in
-    Hinton, G. E. (2002). Training products of experts by minimizing
-    contrastive divergence. Neural Computation, 14(8):1711-1800
+    |
 
-    Internal variables of interest:
+    .. admonition:: Reference
 
-      ``self.w``
-          Generative weights between hidden and observed variables
+        The network is trained by Contrastive Divergence, as described in
+        Hinton, G. E. (2002). Training products of experts by minimizing
+        contrastive divergence. Neural Computation, 14(8):1711-1800
 
-      ``self.bv``
-          bias vector of the observed variables
-
-      ``self.bh``
-          bias vector of the hidden variables
-
-    For more information on RBMs with labels, see
+        For more information on RBMs with labels, see:
     
-      * Geoffrey E. Hinton (2007) Boltzmann machine. Scholarpedia, 2(5):1668.
-      * Hinton, G. E, Osindero, S., and Teh, Y. W. (2006). A fast learning
-        algorithm for deep belief nets. Neural Computation, 18:1527-1554.
+        * Geoffrey E. Hinton (2007) Boltzmann machine. Scholarpedia, 2(5):1668.
+        * Hinton, G. E, Osindero, S., and Teh, Y. W. (2006). A fast learning
+          algorithm for deep belief nets. Neural Computation, 18:1527-1554.
+
+
+    .. attribute:: w
+
+        Generative weights between hidden and observed variables.
+
+    .. attribute:: bv
+
+        Bias vector of the observed variables.
+
+    .. attribute:: bh
+
+        Bias vector of the hidden variables.
+
     """
 
     def __init__(self, hidden_dim, labels_dim, visible_dim=None, dtype=None):
+        """Initializes an object of type 'RBMWithLabelsNode'.
+
+        :param hidden_dim: Number of hidden variables.
+        :type hidden_dim: int
+
+        :param labels_dim: Number of labels.
+        :type labels_dim: int
+
+        :param visible_dim: Number of observed variables.
+            Default is None.
+        :type visible_dim: int
+
+        :param dtype: Datatype of the input.
+            Default is None.
+        :type dtype: numpy.dtype
+        """
         super(RBMWithLabelsNode, self).__init__(None, None, dtype)
 
         self._labels_dim = labels_dim
@@ -313,12 +389,23 @@ class RBMWithLabelsNode(RBMNode):
     # execution methods
 
     def sample_h(self, v, l):
-        """Sample the hidden variables given observations `v` and labels `l`.
+        """Sample the hidden variables given observations v and labels `l`.
 
-        :Returns: a tuple ``(prob_h, h)``, where ``prob_h[n,i]`` is the
-          probability that variable ``i`` is one given the observations
-          ``v[n,:]`` and the labels ``l[n,:]``, and ``h[n,i]`` is a sample
-          from the posterior probability."""
+        :param v: A binary matrix having different variables on different
+            columns and observations on the rows.
+        :type v: numpy.ndarray
+
+        :param l: The labels. A binary matrix having different variables on
+            different columns and observations on the rows.
+            Only one value per row should be 1.
+        :type l: numpy.ndarray
+
+        :returns: A tuple ``(prob_h, h)``, where ``prob_h[n,i]`` is the
+            probability that variable ``i`` is one given the observations
+            ``v[n,:]`` and the labels ``l[n,:]``, and ``h[n,i]`` is a sample
+            from the posterior probability.
+        :rtype: tuple
+        """
 
         x = numx.concatenate((v, l), axis=1)
         self._pre_execution_checks(x)
@@ -327,13 +414,17 @@ class RBMWithLabelsNode(RBMNode):
     def sample_v(self, h):
         """Sample the observed variables given hidden variable state `h`.
 
-        :Returns: a tuple ``(prob_v, probs_l, v, l)``, where ``prob_v[n,i]``
+        :param h: The hidden variable state h.
+        :type h: numpy.ndarray
+
+        :returns: A tuple ``(prob_v, probs_l, v, l)``, where ``prob_v[n,i]``
           is the probability that the visible variable ``i`` is one given
           the hidden variables ``h[n,:]``, and ``v[n,i]`` is a sample from
           that conditional probability. ``prob_l`` and ``l`` have similar
           interpretations for the label variables. Note that the labels are
           activated using a softmax function, so that only one label can be
           active at any time.
+        :rtype: tuple
         """
         self._pre_inversion_checks(h)
 
@@ -343,7 +434,23 @@ class RBMWithLabelsNode(RBMNode):
 
     def energy(self, v, h, l):
         """Compute the energy of the RBM given observed variables state `v`
-        and `l`, and hidden variables state `h`."""
+        and `l`, and hidden variables state `h`.
+
+        :param v: A binary matrix having different variables on different
+            columns and observations on the rows.
+        :type v: numpy.ndarray
+
+        :param l: The labels. A binary matrix having different variables on
+            different columns and observations on the rows.
+            Only one value per row should be 1.
+        :type l: numpy.ndarray
+
+        :param h: The hidden variable state h.
+        :type h: numpy.ndarray
+
+        :return: The energy of the RBM given observed and the hidden variables.
+        :rtype: float
+        """
 
         x = numx.concatenate((v, l), axis=1)
         return self._energy(x, h)
@@ -351,8 +458,25 @@ class RBMWithLabelsNode(RBMNode):
     def execute(self, v, l, return_probs = True):
         """If `return_probs` is True, returns the probability of the
         hidden variables h[n,i] being 1 given the observations v[n,:]
-        and l[n,:].  If `return_probs` is False, return a sample from
-        that probability.
+        and l[n,:].
+
+        If `return_probs` is False, return a sample from that probability.
+
+        :param v: A binary matrix having different variables on different
+            columns and observations on the rows.
+        :type v: numpy.ndarray
+
+        :param l: The labels. A binary matrix having different variables on
+            different columns and observations on the rows.
+            Only one value per row should be 1.
+        :type l: numpy.ndarray
+
+        :param return_probs: Controls the return value. Default value: True
+        :type return_probs: bool
+
+        :return: The probability of the hidden variables being 1 given the
+            observations and labels or a sample from that probability.
+        :rtype: float
         """
         x = numx.concatenate((v, l), axis=1)
         self._pre_execution_checks(x)
@@ -373,21 +497,29 @@ class RBMWithLabelsNode(RBMNode):
         and the labels `l`.
         The training is performed using Contrastive Divergence (CD).
 
-        :Parameters:
-          v
-            a binary matrix having different variables on different columns
-            and observations on the rows
-          l
-            a binary matrix having different variables on different columns
-            and observations on the rows. Only one value per row should be 1.
-          n_updates
-            number of CD iterations. Default value: 1
-          epsilon
-            learning rate. Default value: 0.1
-          decay
-            weight decay term. Default value: 0.
-          momentum
-            momentum term. Default value: 0.
+        :param v: A binary matrix having different variables on different
+            columns and observations on the rows.
+        :type v: numpy.ndarray
+
+        :param l: A binary matrix having different variables on different
+            columns and observations on the rows. Only one value per row should
+            be 1.
+        :type l: numpy.ndarray
+
+        :param n_updates: Number of CD iterations. Default value: 1
+        :type n_updates: int
+
+        :param epsilon: Learning rate. Default value: 0.1
+        :type epsilon: float
+
+        :param decay: Weight decay term. Default value: 0.
+        :type decay: float
+
+        :param momentum: Momentum term. Default value: 0.
+        :type momentum: float
+
+        :param verbose: Controls the verbosity.
+        :type verbose: bool
         """
 
         if not self.is_training():
