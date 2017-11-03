@@ -161,7 +161,7 @@ def apply_to_scikits_algorithms(current_module, action,
     algorithm.
     
     :param action: A function that is called with as action(class_), where
-        class_ is a class that defines the 'fit' or 'predict' method.
+        'class_' is a class that defines the 'fit' or 'predict' method.
     :type action: function
     """
 
@@ -324,7 +324,7 @@ def wrap_scikits_transformer(scikits_class):
     class ScikitsNode(mdp.Cumulator):
 
         def __init__(self, input_dim=None, output_dim=None, dtype=None, **kwargs):
-                        """
+            """
             Initializes an object of type 'ScikitsNode'.
 
             :param input_dim: Dimensionality of the input.
@@ -423,7 +423,7 @@ def wrap_scikits_predictor(scikits_class):
     class ScikitsNode(mdp.Cumulator):
 
         def __init__(self, input_dim=None, output_dim=None, dtype=None, **kwargs):
-                        """
+            """
             Initializes an object of type 'ScikitsNode'.
 
             :param input_dim: Dimensionality of the input.

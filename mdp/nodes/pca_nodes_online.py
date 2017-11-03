@@ -260,7 +260,7 @@ class CCIPCANode(mdp.OnlineNode):
     def __repr__(self):
         """Print all args.
 
-        :return: A string that contains all names and their values.
+        :return: A string that contains all argument names and their values.
         :rtype: str
         """
         name = type(self).__name__

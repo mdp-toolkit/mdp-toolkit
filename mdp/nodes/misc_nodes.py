@@ -441,7 +441,7 @@ class TimeDelayNode(TimeFramesNode):
     def pseudo_inverse(self, y):
         """
         :raises mdp.NodeException: When called. This method overrides
-            the corresponding method of the ``TimeFramesNode``.
+            the corresponding method of the ``TimeFramesNode*.
         """
         raise NotImplementedError
 

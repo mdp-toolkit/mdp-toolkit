@@ -45,7 +45,9 @@ class FANode(mdp.Node):
     
           Vector of estimated variance of the noise
           for all input components
-
+    
+    |
+    
     .. admonition:: Reference
     
         More information about Factor Analysis can be found in
