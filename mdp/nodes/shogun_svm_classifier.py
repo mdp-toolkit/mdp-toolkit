@@ -20,7 +20,11 @@ warnings.filterwarnings('ignore',
 
 # maybe integrate to the class
 def is_shogun_classifier(test_classifier):
-    """Check, if a class is a subclass of a SHOGUN classifier."""
+    """Check, if a class is a subclass of a SHOGUN classifier.
+    
+    :param test_classifier: Class to test.
+    :type test_classifier: class
+    """
     try:
         return issubclass(test_classifier, sgClassifier.Machine)
     except (TypeError, NameError):
