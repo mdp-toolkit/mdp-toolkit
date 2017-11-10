@@ -76,7 +76,7 @@ class FANode(mdp.Node):
         :type output_dim: int
         
         :param dtype: The datatype.
-        :type dtype: numpy.dtype
+        :type dtype: numpy.dtype or str
         """
 
         # Notation as in Max Welling's notes

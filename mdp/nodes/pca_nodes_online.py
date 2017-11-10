@@ -57,7 +57,7 @@ class CCIPCANode(mdp.OnlineNode):
         
         :param dtype: Datatype of the input.
             Default is None.
-        :type dtype: numpy.dtype
+        :type dtype: numpy.dtype, str
         
         :param numx_rng: 
         :type numx_rng:

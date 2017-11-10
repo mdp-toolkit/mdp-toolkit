@@ -50,7 +50,7 @@ class _ExpansionNode(mdp.Node):
         :type input_dim: int
         
         :param dtype: The datatype.
-        :type dtype: numpy.dtype
+        :type dtype: numpy.dtype or str
         """
         super(_ExpansionNode, self).__init__(input_dim, None, dtype)
 
@@ -87,7 +87,7 @@ class PolynomialExpansionNode(_ExpansionNode):
         :type input_dim: int
         
         :param dtype: The datatype.
-        :type dtype: numpy.dtype
+        :type dtype: numpy.dtype or str
         """
         self._degree = int(degree)
         super(PolynomialExpansionNode, self).__init__(input_dim, dtype)
@@ -156,7 +156,7 @@ class QuadraticExpansionNode(PolynomialExpansionNode):
         :type input_dim: int
         
         :param dtype: The datatype.
-        :type dtype: numpy.dtype 
+        :type dtype: numpy.dtype or str
         """
         super(QuadraticExpansionNode, self).__init__(2, input_dim = input_dim,
                                                      dtype = dtype)
@@ -194,7 +194,7 @@ class RBFExpansionNode(mdp.Node):
         :type: list or numeric
 
         :param dtype: The datatype.
-        :type dtype: numpy.dtype 
+        :type dtype: numpy.dtype or str
         """
         super(RBFExpansionNode, self).__init__(None, None, dtype)
         self._init_RBF(centers, sizes)
@@ -325,7 +325,7 @@ class GrowingNeuralGasExpansionNode(GrowingNeuralGasNode):
         :type input_dim: int
         
         :param dtype: The datatype.
-        :type dtype: numpy.dtype 
+        :type dtype: numpy.dtype or str
         """
         # __init__ is overwritten only to reset the default for
         # max_nodes. The default of the GrowingNeuralGasNode is
@@ -430,7 +430,7 @@ class GeneralExpansionNode(_ExpansionNode):
         :type input_dim: int
         
         :param dtype: The datatype.
-        :type dtype: numpy.dtype  
+        :type dtype: numpy.dtype or str
         """
         self.funcs = funcs
         super(GeneralExpansionNode, self).__init__(input_dim, dtype)

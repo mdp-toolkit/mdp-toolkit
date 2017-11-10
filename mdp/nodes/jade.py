@@ -81,7 +81,7 @@ class JADENode(ICANode):
         :type input_dim: int
         
         :param dtype: The datatype.
-        :type dtype: numpy.dtype 
+        :type dtype: numpy.dtype or str
         """
         super(JADENode, self).__init__(limit, False, verbose, whitened,
                                        white_comp, white_parm, input_dim,

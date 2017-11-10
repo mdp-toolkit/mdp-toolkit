@@ -229,7 +229,7 @@ def wrap_scikits_classifier(scikits_class):
         
             :param dtype: Datatype of the input.
                 Default is None.
-            :type dtype: numpy.dtype
+            :type dtype: numpy.dtype or str
             """
             if output_dim is not None:
                 # output_dim and n_components cannot be defined at the same time
@@ -337,7 +337,7 @@ def wrap_scikits_transformer(scikits_class):
         
             :param dtype: Datatype of the input.
                 Default is None.
-            :type dtype: numpy.dtype
+            :type dtype: numpy.dtype or str
             """
             if output_dim is not None:
                 raise ScikitsException(_OUTPUTDIM_ERROR)
@@ -436,7 +436,7 @@ def wrap_scikits_predictor(scikits_class):
         
             :param dtype: Datatype of the input.
                 Default is None.
-            :type dtype: numpy.dtype
+            :type dtype: numpy.dtype or str
             """
             if output_dim is not None:
                 raise ScikitsException(_OUTPUTDIM_ERROR)

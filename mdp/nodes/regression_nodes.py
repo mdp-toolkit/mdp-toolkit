@@ -50,7 +50,7 @@ class LinearRegressionNode(Node):
         
         :param dtype: Datatype of the input.
             Default is None.
-        :type dtype: numpy.dtype
+        :type dtype: numpy.dtype, str
         """
         super(LinearRegressionNode, self).__init__(input_dim, output_dim, dtype)
 

@@ -82,7 +82,7 @@ class LLENode(Cumulator):
         :type output_dim: int
         
         :param dtype: The datatype.
-        :type dtype: numpy.dtype  
+        :type dtype: numpy.dtype or str
         """
 
         if isinstance(output_dim, float) and output_dim <= 1:
@@ -417,7 +417,7 @@ class HLLENode(LLENode):
         :type output_dim: int or float
         
         :param dtype: The datatype.
-        :type dtype: numpy.dtype  
+        :type dtype: numpy.dtype or str
         """
         LLENode.__init__(self, k, r, svd, verbose,
                          input_dim, output_dim, dtype)

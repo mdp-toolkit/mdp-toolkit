@@ -76,7 +76,7 @@ class RBMNode(mdp.Node):
 
         :param dtype: Datatype of the input.
             Default is None.
-        :type dtype: numpy.dtype
+        :type dtype: numpy.dtype, str
         """
         super(RBMNode, self).__init__(visible_dim, hidden_dim, dtype)
         self._initialized = False
@@ -336,7 +336,7 @@ class RBMWithLabelsNode(RBMNode):
 
         :param dtype: Datatype of the input.
             Default is None.
-        :type dtype: numpy.dtype
+        :type dtype: numpy.dtype, str
         """
         super(RBMWithLabelsNode, self).__init__(None, None, dtype)
 

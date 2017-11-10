@@ -324,7 +324,7 @@ class ShogunSVMClassifier(_SVMClassifier):
         :type output_dim: int
         
         :param dtype: The datatype.
-        :type dtype: numpy.dtype 
+        :type dtype: numpy.dtype or str
         """
         super(ShogunSVMClassifier, self).__init__(input_dim=input_dim,
                                                   output_dim=output_dim,

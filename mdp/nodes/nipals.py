@@ -68,7 +68,7 @@ class NIPALSNode(Cumulator, PCANode):
         :type output_dim: int or float
         
         :param dtype: The datatype.
-        :type dtype: numpy.dtype 
+        :type dtype: numpy.dtype or str
         
         :param conv: Convergence threshold for the residual error.
         :type conv: float

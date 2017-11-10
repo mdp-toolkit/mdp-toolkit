@@ -88,7 +88,7 @@ class Convolution2DNode(mdp.Node):
         :type input_dim: int
         
         :param dtype: The datatype.
-        :type dtype: numpy.dtype
+        :type dtype: numpy.dtype or str
         """
         super(Convolution2DNode, self).__init__(input_dim=input_dim,
                                               dtype=dtype)

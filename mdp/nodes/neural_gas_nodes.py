@@ -122,7 +122,7 @@ class GrowingNeuralGasNode(Node):
         :type input_dim: int
 
         :param dtype: The datatype.
-        :type dtype: numpy.dtype 
+        :type dtype: numpy.dtype or str
         """
 
         self.graph = graph.Graph()
@@ -425,7 +425,7 @@ class NeuralGasNode(GrowingNeuralGasNode):
         :type input_dim: int
 
         :param dtype: The datatype.
-        :type dtype: numpy.dtype 
+        :type dtype: numpy.dtype or str
         """
 
         self.graph = graph.Graph()

@@ -20,8 +20,10 @@ class ProjectMatrixMixin(object):
         
         :param transposed: Indicates whether transposed projection matrix is to
             be returned.
+        :type transposed: bool
 
         :return: The projection matrix.
+        :rtype: numpy.ndarray
         """
         self._if_training_stop_training()
         Q = self.filters.T
@@ -42,7 +44,10 @@ class ProjectMatrixMixin(object):
             
         :param transposed: Indicates whether transposed projection matrix is to
             be returned.
+        :type transposed: bool
+        
         :return: The back-projection matrix.
+        :rtype: numpy.ndarray
         """
         self._if_training_stop_training()
         Q = self.filters.T
@@ -73,26 +78,42 @@ class ICANode(mdp.Cumulator, mdp.Node, ProjectMatrixMixin):
         """Initializes an object of type 'ICANode'.
         
         :param limit: Convergence threshold.
+        :type limit: float
+        
         :param telescope: If telescope == True, use Telescope mode: Instead of
             using all input data in a single batch try larger and larger
             chunks of the input data until convergence is achieved. This
             should lead to significantly faster convergence for stationary
             statistics. This mode has not been thoroughly tested and must
             be considered beta.
+        :type telescope: bool
+        
         :param verbose: Idicates whether information is to be reported about
             the operation.
+        :type verbose: bool
+        
         :param whitened: Set whitened is True if input data are already whitened.
             Otherwise the node will whiten the data itself.
+        :type whitened: bool
+        
         :param white_comp: If whitened is False, you can set 'white_comp' to the
             number of whitened components to keep during the
             calculation (i.e., the input dimensions are reduced to
             white_comp by keeping the components of largest variance).
+        :type white_comp: int
+        
         :param white_parm: A dictionary with additional parameters for whitening.
             It is passed directly to the WhiteningNode constructor. For example::
                 
                 >>> white_parm = { 'svd' : True }
+        
+        :type white_parm: dict
+        
         :param input_dim: The input dimensionality.
+        :type input_dim: int
+        
         :param dtype: The datatype.
+        :type dtype: numpy.dtype or str
         """
 
         self.telescope = telescope
@@ -116,7 +137,8 @@ class ICANode(mdp.Cumulator, mdp.Node, ProjectMatrixMixin):
 
     def _stop_training(self):
         """Whiten data if needed and call the 'core' routine to perform ICA.
-           Take care of telescope-mode if needed.
+        
+        Take care of telescope-mode if needed.
         """
         super(ICANode, self)._stop_training()
 
@@ -171,6 +193,8 @@ class ICANode(mdp.Cumulator, mdp.Node, ProjectMatrixMixin):
             defining the linear transformation.
 
         :param data: The data you want to perform ICA on.
+        :type data: numpy.ndarray
+        
         :return: The achieved convergence value.
         """
         pass
@@ -231,8 +255,10 @@ class CuBICANode(ICANode):
         ICA filters matrix self.filters.
         
         :param data: The data you want to perform ICA on.
+        :type data: numpy.ndarray
 
         :return: The convergence value, i.e. the maximum angle of rotation.
+        :rtype: float
         """
 
         # keep track of maximum angle of rotation
@@ -337,7 +363,8 @@ class FastICANode(ICANode):
     criterium is not robust in telescope mode).
     criterium is not robust in telescope mode).
     
-    History:    
+    History:
+        
         - 1.4.1998 created for Matlab by Jarmo Hurri, Hugo Gavert, Jaakko Sarela,
           and Aapo Hyvarinen
         - 7.3.2003  modified for Python by Thomas Wendler
@@ -376,43 +403,81 @@ class FastICANode(ICANode):
         """Initializes an object of type 'FastICANode'.
         
         :param approach: approach: Approach to use. Possible values are
+        
             -'defl':deflation
             -'symm': symmetric
+            
+        :type approach: str
+        
         :param g: Nonlinearity to use. Possible values are
             -'pow3': x^3
             -'tanh': tanh(fine_tanh*x)
             -'gaus': x*exp(-fine_gaus*x^2/2)
             -'skew': x^2 (for skewed signals)
+        :type g: str
+        
         :param guess: Initial guess for the mixing matrix (ignored if None). 
+        
         :param fine_g: Nonlinearity for fine tuning. Possible values are the same
             as for 'g'. Set it to None to disable fine tuning.
+        :type fine_g: str
+        
         :param mu: Step size.
+
         :param sample_size: Percentage of samples used in one iteration.
             If sample_size < 1, samples are chosen in random order.
+        :type sample_size: float
+        
         :param fine_tanh: Parameter for 'tanh' nonlinearity.
-        :param fine_gaus: Parameter for 'gaus' nonlinearity. 
+        :type fine_tanh: float
+        
+        :param fine_gaus: Parameter for 'gaus' nonlinearity.
+        :type fine_gaus: float
+        
         :param max_it: Maximum number of iterations.
+        :type max_it: int
+        
         :param max_it_fine: Maximum number of iterations for fine tuning.
+        :type max_it_fine: int
+        
         :param failures: Maximum number of failures to allow in deflation mode.
+        :type failures: int
+        
         :param coarse_limit: Initial convergence threshold, to switch to
             fine_g function (i.e. linear to non-linear) even
             before reaching the limit and final tuning. Set
             it to a value higher than limit to be in effect.
+        :type coarse_limit: float
+        
         :param limit: Convergence threshold.
+        :type limit: float
+        
         :param verbose: Idicates whether information is to be reported about
             the operation.
+        :type verbose: bool
+        
         :param whitened: Set whitened == True if input data are already whitened.
             Otherwise the node will whiten the data itself.
+        :type whitened: bool
+        
         :param white_comp: If whitened == False, you can set 'white_comp' to the
             number of whitened components to keep during the
             calculation (i.e., the input dimensions are reduced to
-            white_comp by keeping the components of largest variance). 
+            white_comp by keeping the components of largest variance).
+        :type white_comp: int
+        
         :param white_parm: A dictionary with additional parameters for whitening.
             It is passed directly to the WhiteningNode constructor. For example::
             
                 >>> white_parm = { 'svd' : True }
+        
+        :type white_parm: dict
+        
         :param input_dim: The input dimensionality.
+        :type input_dim: int
+        
         :param dtype: The datatype.
+        :type dtype: numpy.dtype or str
         """
         super(FastICANode, self).__init__(limit, False, verbose, whitened,
                                           white_comp, white_parm, input_dim,
@@ -463,7 +528,10 @@ class FastICANode(ICANode):
 
         
         :param data: The data you want to perform ICA on.
+        :type data: numpy.ndarray
+        
         :return: The convergence value.
+        :rtype: float
         """
         # this is a more or less line per line translation of the original
         # matlab code.
@@ -1001,28 +1069,45 @@ class TDSEPNode(ISFANode, ProjectMatrixMixin):
         :param lags: List of time-lags to generate the time-delayed covariance
             matrices. If lags is an integer, time-lags 1,2,...,'lags'
             are used.
+        :type lags: list or int
             
         .. note:: Time-lag == 0 (instantaneous correlation) is
             always implicitly used.
             
         :param limit: Convergence threshold.
+        :type limit: float
+        
         :param max_iter: If the algorithms does not achieve convergence within
             max_iter iterations raise an Exception.
             Should be larger than 100.
+        :type max_iter: int
+        
         :param verbose: Idicates whether information is to be reported about
             the operation.
+        :type verbose: bool
+        
         :param whitened: Set whitened is True if input data are already whitened.
             Otherwise the node will whiten the data itself.
+        :type whitened: bool
+        
         :param white_comp: If whitened is False, you can set 'white_comp' to the
             number of whitened components to keep during the
             calculation (i.e., the input dimensions are reduced to
             white_comp by keeping the components of largest variance).
+        :type white_comp: int
+        
         :param white_parm: A dictionary with additional parameters for whitening.
             It is passed directly to the WhiteningNode constructor. For example::
             
                 >>> white_parm = { 'svd' : True }
+        
+        :type white_parm: dict
+        
         :param input_dim: The input dimensionality.
+        :type input_dim: int
+        
         :param dtype: The datatype.
+        :type dtype: numpy.dtype or str
         """
         super(TDSEPNode, self).__init__(lags=lags, sfa_ica_coeff=(0., 1.),
                                         icaweights=None, sfaweights=None,

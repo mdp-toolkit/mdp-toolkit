@@ -24,6 +24,8 @@ def _triu(m, k=0):
 
     :param m: A Matrix.
     :param k: Index of diagonal.
+    :type k: int
+    
     :return: Elements on and above the k-th diagonal of m.  k=0 is the
         main diagonal, k > 0 is above and k < 0 is below the main diagonal.
     """
@@ -105,9 +107,13 @@ class ISFANode(Node):
             integer, time-lags 1,2,...,'lags' are used.
             Note that time-lag == 0 (instantaneous correlation) is always
             implicitly used.
+            :type lags: list or int
+            
         :param sfa_ica_coeff: A list of float with two entries, which defines the
             weights of the SFA and ICA part of the objective function. 
             They are called b_{SFA} and b_{ICA} in the paper.
+        :type sfa_ica_coeff: list
+        
         :param icaweights: Weighting factors for the cov matrices relative
             to the ICA part of the objective function (called
             \kappa_{ICA}^{\tau} in the paper). Default is 1.           
@@ -119,41 +125,63 @@ class ISFANode(Node):
                   Each element of the list is used for weighting the
                   corresponding matrix.
             	- ``None``: Use the default values.
+        
+        :type icaweights: int, list or array
 
         :param sfaweights: Weighting factors for the covariance matrices relative
             to the SFA part of the objective function (called
             \kappa_{SFA}^{\tau} in the paper). Default is [1., 0., ..., 0.]
             For possible values see the description of icaweights.
+        :type sfaweights: int, list or array
+        
         :param whitened: ``True`` if input data is already white, ``False``
             otherwise (the data will be whitened internally).
+        :type whitened: bool
+        
         :param white_comp: If whitened is false, you can set ``white_comp`` to the
             number of whitened components to keep during the
             calculation (i.e., the input dimensions are reduced to
             `white_comp`` by keeping the components of largest variance).
+        :type white_comp: int
+        
         :param white_parm: A dictionary with additional parameters for whitening.
             It is passed directly to the WhiteningNode constructor.
             Ex: white_parm = { 'svd' : True }
+        :type white_parm: dict
+        
         :param eps_contrast: Convergence is achieved when the relative
             improvement in the contrast is below this threshold.
             Values in the range [1E-4, 1E-10] are usually reasonable.
+        :type eps_contrast: float
+        
         :param max_iter: If the algorithms does not achieve convergence within
             max_iter iterations raise an Exception. 
             Should be larger than 100.
+        :type max_iter: int
+        
         :param RP: Starting rotation-permutation matrix. It is an
             input_dim x input_dim matrix used to initially rotate the
             input components. If not set, the identity matrix is used.
             In the paper this is used to start the algorithm at the
             SFA solution (which is often quite near to the optimum).
+        
         :param verbose: Print progress information during convergence. This can
             slow down the algorithm, but it's the only way to see
             the rate of improvement and immediately spot if something
             is going wrong.
+        :type verbose: bool
+        
         :param input_dim:  The input dimensionality.
+        :type input_dim: int
+        
         :param output_dim: Sets the number of independent components that have to
             be extracted. Note that if this is not smaller than input_dim,
             the problem is solved linearly and SFA would give the same
             solution only much faster.
+        :type output_dim: int
+        
         :param dtype: Datatype to be used.
+        :type dtype: numpy.dtype or str
         """
 
         # check that the "lags" argument has some meaningful value

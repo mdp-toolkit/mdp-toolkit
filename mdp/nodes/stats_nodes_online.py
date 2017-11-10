@@ -41,7 +41,7 @@ class OnlineCenteringNode(mdp.PreserveDimOnlineNode):
         :type output_dim: int
         
         :param dtype: The datatype.
-        :type dtype: numpy.dtype 
+        :type dtype: numpy.dtype or str
         
         :param numx_rng: Random number generator.
         """
@@ -162,7 +162,7 @@ class OnlineTimeDiffNode(mdp.PreserveDimOnlineNode):
         :type output_dim: int
         
         :param dtype: The datatype.
-        :type dtype: numpy.dtype 
+        :type dtype: numpy.dtype or str
         
         :param numx_rng: Random number generator.
         """

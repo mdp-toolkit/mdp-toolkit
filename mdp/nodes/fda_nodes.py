@@ -54,7 +54,7 @@ class FDANode(mdp.Node):
         :type output_dim: int
         
         :param dtype: The datatype.
-        :type dtype: numpy.dtype
+        :type dtype: numpy.dtype or str
         """
         super(FDANode, self).__init__(input_dim, output_dim, dtype)
         # mean in-class covariance matrix times number of data points

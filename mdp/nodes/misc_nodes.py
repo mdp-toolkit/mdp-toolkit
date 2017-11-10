@@ -51,10 +51,10 @@ class OneDimensionalHitParade(object):
         :type d: int
         
         :param real_dtype: Datatype of sequence items
-        :type real_dtype: numpy.dtype
+        :type real_dtype: numpy.dtype or str
         
         :param integer_dtype: Datatype of sequence indices
-        :type integer_dtype: numpy.dtype
+        :type integer_dtype: numpy.dtype or str
         """
         self.n = int(n)
         self.d = int(d)
@@ -178,7 +178,7 @@ class HitParadeNode(PreserveDimNode):
         :type output_dim: int
         
         :param dtype: The datatype.
-        :type dtype: numpy.dtype 
+        :type dtype: numpy.dtype or str
         """
         super(HitParadeNode, self).__init__(input_dim=input_dim,
                                             output_dim=output_dim,
@@ -292,7 +292,7 @@ class TimeFramesNode(Node):
         :type input_dim: int
 
         :param dtype: The datatype.
-        :type dtype: numpy.dtype 
+        :type dtype: numpy.dtype or str
         """
         self.time_frames = time_frames
         super(TimeFramesNode, self).__init__(input_dim=input_dim,
@@ -472,7 +472,7 @@ class TimeDelaySlidingWindowNode(TimeDelayNode):
         :type input_dim: int
 
         :param dtype: The datatype.
-        :type dtype: numpy.dtype 
+        :type dtype: numpy.dtype or str
         """
 
         self.time_frames = time_frames
@@ -569,7 +569,7 @@ class EtaComputerNode(Node):
         :type input_dim: int
 
         :param dtype: The datatype.
-        :type dtype: numpy.dtype 
+        :type dtype: numpy.dtype or str
         """
         super(EtaComputerNode, self).__init__(input_dim, None, dtype)
         self._initialized = 0
@@ -667,7 +667,7 @@ class NoiseNode(PreserveDimNode):
         :type output_dim: int
         
         :param dtype: The datatype.
-        :type dtype: numpy.dtype 
+        :type dtype: numpy.dtype or str
         """
         super(NoiseNode, self).__init__(input_dim=input_dim,
                                         output_dim=output_dim,
@@ -753,7 +753,7 @@ class NormalNoiseNode(PreserveDimNode):
         :type output_dim: int
         
         :param dtype: The datatype.
-        :type dtype: numpy.dtype 
+        :type dtype: numpy.dtype or str
         """
         super(NormalNoiseNode, self).__init__(input_dim=input_dim,
                                               output_dim=output_dim,
@@ -802,7 +802,7 @@ class CutoffNode(PreserveDimNode):
         :type output_dim: int
         
         :param dtype: The datatype.
-        :type dtype: numpy.dtype  
+        :type dtype: numpy.dtype or str
         """
         super(CutoffNode, self).__init__(input_dim=input_dim,
                                          output_dim=output_dim,
@@ -870,7 +870,7 @@ class HistogramNode(PreserveDimNode):
         :type output_dim: int
         
         :param dtype: The datatype.
-        :type dtype: numpy.dtype  
+        :type dtype: numpy.dtype or str
         """
         super(HistogramNode, self).__init__(input_dim=input_dim,
                                             output_dim=output_dim,
@@ -959,7 +959,7 @@ class AdaptiveCutoffNode(HistogramNode):
         :type output_dim: int
         
         :param dtype: The datatype.
-        :type dtype: numpy.dtype   
+        :type dtype: numpy.dtype or str 
         """
         super(AdaptiveCutoffNode, self).__init__(hist_fraction=hist_fraction,
                                                  hist_filename=hist_filename,

@@ -52,7 +52,7 @@ class MCANode(mdp.OnlineNode):
         :type output_dim: int
         
         :param dtype: The datatype.
-        :type dtype: numpy.dtype 
+        :type dtype: numpy.dtype or str
         
         :param numx_rng: OnlineNodes support use of a pre-seeded random number generator
             through a 'numx_rng' argument. This can be useful to replicate
