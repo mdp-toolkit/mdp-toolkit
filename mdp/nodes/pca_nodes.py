@@ -64,7 +64,7 @@ class PCANode(mdp.Node):
         
         :param dtype: Datatype of the input.
             Default is None.
-        :type dtype: numpy.dtype
+        :type dtype: numpy.dtype, str
         
         :param svd: If True use Singular Value Decomposition instead of the
             standard eigenvalue problem solver. Use it when PCANode

@@ -49,7 +49,7 @@ class PerceptronClassifier(ClassifierNode):
         :param output_dim: The output dimensionality.
         :type output_dim: int
         :param dtype: The datatype.
-        :type dtype: numpy.dtype
+        :type dtype: numpy.dtype or str
         """
         super(PerceptronClassifier, self).__init__(
                                                 execute_method=execute_method,
@@ -135,7 +135,7 @@ class SimpleMarkovClassifier(ClassifierNode):
         :param output_dim: The output dimensionality.
         :type output_dim: int
         :param dtype: The datatype.
-        :type dtype: numpy.dtype
+        :type dtype: numpy.dtype or str
         """
         super(SimpleMarkovClassifier, self).__init__(
                                                 execute_method=execute_method,
@@ -257,7 +257,7 @@ class DiscreteHopfieldClassifier(ClassifierNode):
         :param output_dim: The output dimensionality.
         :type output_dim: int
         :param dtype: The datatype.
-        :type dtype: numpy.dtype
+        :type dtype: numpy.dtype or str
         """
         super(DiscreteHopfieldClassifier, self).__init__(
                                             execute_method=execute_method,
@@ -380,7 +380,7 @@ class KMeansClassifier(ClassifierNode):
         :type output_dim: int
                 
         :param dtype: The datatype.
-        :type dtype: numpy.dtype
+        :type dtype: numpy.dtype or str
         """
         super(KMeansClassifier, self).__init__(execute_method=execute_method,
                                                input_dim=input_dim,
@@ -470,7 +470,7 @@ class GaussianClassifier(ClassifierNode):
         :param output_dim: The output dimensionality.
         :type output_dim: int
         :param dtype: The datatype.
-        :type dtype: numpy.dtype
+        :type dtype: numpy.dtype or str
         """
         super(GaussianClassifier, self).__init__(execute_method=execute_method,
                                                  input_dim=input_dim,
@@ -631,7 +631,7 @@ class NearestMeanClassifier(ClassifierNode):
         :param output_dim: The output dimensionality.
         :type output_dim: int
         :param dtype: The datatype.
-        :type dtype: numpy.dtype
+        :type dtype: numpy.dtype or str
         """
         super(NearestMeanClassifier, self).__init__(
                                             execute_method=execute_method,
@@ -733,7 +733,7 @@ class KNNClassifier(ClassifierNode):
         :type output_dim: int
         
         :param dtype: The datatype.
-        :type dtype: numpy.dtype
+        :type dtype: numpy.dtype or str
         """
         super(KNNClassifier, self).__init__(execute_method=execute_method,
                                             input_dim=input_dim,
