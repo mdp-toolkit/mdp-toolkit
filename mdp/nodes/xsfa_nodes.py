@@ -347,4 +347,4 @@ class NormalizeNode(mdp.PreserveDimNode):
         return old_div((x - self.m),self.s)
 
     def _inverse(self, y):
-        return y*self.s + self.mdp
+        return y*self.s + self.m
