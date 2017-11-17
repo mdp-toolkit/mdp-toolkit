@@ -8,7 +8,6 @@ import mdp
 
 class XSFANode(mdp.Node):
     """Perform Non-linear Blind Source Separation using Slow Feature Analysis.
-
     This node is designed to iteratively extract statistically
     independent sources from (in principle) arbitrary invertible
     nonlinear mixtures. The method relies on temporal correlations in
@@ -27,7 +26,6 @@ class XSFANode(mdp.Node):
     doing so will automatically train all training phases. The argument
     ``x`` to the ``Flow.train`` method can be an array or a list of iterables
     (see the section about Iterators in the MDP tutorial for more info).
-
     If the number of training samples is large, you may run into
     memory problems: use data iterators and chunk training to reduce
     memory usage.
@@ -43,47 +41,58 @@ class XSFANode(mdp.Node):
     of the internal flow state for each training phase and execution step
     will be opened in a web brower and presented as a slideshow.
 
-    References:
-    Sprekeler, H., Zito, T., and Wiskott, L. (2009).
-    An Extension of Slow Feature Analysis for Nonlinear Blind Source Separation.
-    Journal of Machine Learning Research. 
-    http://cogprints.org/7056/1/SprekelerZitoWiskott-Cogprints-2010.pdf
+    |
+
+    .. admonition:: Reference
+
+        Sprekeler, H., Zito, T., and Wiskott, L. (2009).
+        An Extension of Slow Feature Analysis for Nonlinear Blind Source Separation.
+        Journal of Machine Learning Research. 
+        http://cogprints.org/7056/1/SprekelerZitoWiskott-Cogprints-2010.pdf
     """
     def __init__(self, basic_exp=None, intern_exp=None, svd=False, verbose=False,
                  input_dim=None, output_dim=None, dtype=None):
-        """
-        :Keywords:
-           basic_exp
-             a tuple ``(node, args, kwargs)`` defining the node used for
-             the basic nonlinear expansion.  It is assumed that the
-             mixture is linearly invertible after this expansion. The
-             higher the complexity of the nonlinearity, the higher are
-             the chances of inverting the unknown mixture. On the
-             other hand, high complexity of the nonlinear expansion
-             increases the danger of numeric instabilities, which can
-             cause singularities in the simulation or errors in the
-             source estimation. The trade-off has to be evaluated
-             carefully.
+        """Initializes an object of type 'XSFANode'.
 
-             Default: ``(mdp.nodes.PolynomialExpansionNode, (2, ), {})``
+        :param basic_exp: A tuple ``(node, args, kwargs)`` defining the node
+            used for the basic nonlinear expansion.  It is assumed that the
+            mixture is linearly invertible after this expansion. The higher the
+            complexity of the nonlinearity, the higher are the chances of
+            inverting the unknown mixture. On the other hand, high complexity
+            of the nonlinear expansion increases the danger of numeric
+            instabilities, which can cause singularities in the simulation or
+            errors in the source estimation. The trade-off has to be evaluated
+            carefully.
+            Default: ``(mdp.nodes.PolynomialExpansionNode, (2, ), {})``
+        :type basic_exp: tuple
 
-           intern_exp
-             a tuple ``(node, args, kwargs)`` defining the node used
-             for the internal nonlinear expansion of the estimated
-             sources to be removed from the input space.  The same
-             trade-off as for basic_exp is valid here.
+        :param intern_exp: A tuple ``(node, args, kwargs)`` defining the node
+            used for the internal nonlinear expansion of the estimated sources
+            to be removed from the input space.  The same trade-off as for
+            basic_exp is valid here.
+            Default: ``(mdp.nodes.PolynomialExpansionNode, (10, ), {})``
+        :type intern_exp: tuple
 
-             Default: ``(mdp.nodes.PolynomialExpansionNode, (10, ), {})``
+        :param svd: Enable Singular Value Decomposition for normalization
+            and regularization. Use it if the node complains about singular
+            covariance matrices. Default: False
+        :type svd: bool
 
-           svd
-             enable Singular Value Decomposition for normalization
-             and regularization. Use it if the node complains about
-             singular covariance matrices.
+        :param verbose: Show some progress during training.
+            Default: False
+        :type verbose: bool
 
-           verbose
-             show some progress during training.
-
-             Default: False
+        :param input_dim: Dimensionality of the input.
+            Default is None.
+        :type input_dim: int
+        
+        :param output_dim: Dimensionality of the output.
+            Default is None.
+        :type output_dim: int
+        
+        :param dtype: Datatype of the input.
+            Default is None.
+        :type dtype: numpy.dtype or str
         """
 
         # set up basic expansion
@@ -273,6 +282,7 @@ class ProjectionNode(mdp.Node):
     the sources and the input signals projected into the space
     orthogonal to the expanded sources and their products."""
     def __init__(self, S, L):
+        """Initializes an object of type 'ProjectionNode'."""
         #!! IMPORTANT!!
         # this node *must* return the sources together with the
         # projected input signals
@@ -302,8 +312,22 @@ class ProjectionNode(mdp.Node):
         return result
 
 class NormalizeNode(mdp.PreserveDimNode):
-    """Make input signal meanfree and unit variance"""
+    """Make input signal meanfree and unit variance."""
     def __init__(self, input_dim=None, output_dim=None, dtype=None):
+        """Initializes an object of type 'NormalizeNode'.
+
+        :param input_dim: Dimensionality of the input.
+            Default is None.
+        :type input_dim: int
+        
+        :param output_dim: Dimensionality of the output.
+            Default is None.
+        :type output_dim: int
+        
+        :param dtype: Datatype of the input.
+            Default is None.
+        :type dtype: numpy.dtype or str
+        """
         self._cov_mtx = mdp.utils.CovarianceMatrix(dtype)
         super(NormalizeNode, self).__init__(input_dim, output_dim, dtype)
 
@@ -323,4 +347,4 @@ class NormalizeNode(mdp.PreserveDimNode):
         return old_div((x - self.m),self.s)
 
     def _inverse(self, y):
-        return y*self.s + self.m
+        return y*self.s + self.mdp
