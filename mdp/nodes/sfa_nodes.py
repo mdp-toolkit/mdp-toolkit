@@ -223,14 +223,21 @@ class SFANode(Node):
             d = self.d
             # check that we get only *positive* eigenvalues
             if d.min() < 0:
-                err_msg = ("Got negative eigenvalues: %s."
-                           " You may either set output_dim to be smaller,"
-                           " or prepend the SFANode with a PCANode(reduce=True)"
-                           " or PCANode(svd=True)"% str(d))
+                err_msg = ("Got negative eigenvalues: %s.\n"
+                           "You may either set output_dim to be smaller,\n"
+                           "or prepend the SFANode with a PCANode(reduce=True)\n"
+                           "or PCANode(svd=True)\n"
+                           "or %s."% (str(d), "set a rank deficit method, e.g.\n"
+                           "create the SFA node with rank_deficit_method='auto'\n"
+                           "and try higher values for rank_threshold, e.g. try\n"
+                           "your_node.rank_threshold = 1e-10, 1e-8, 1e-6, ..."
+                           if self._sfa_solver is None else
+                           "set a higher value for rank_threshold, e.g. try\n"
+                           "your_node.rank_threshold = 1e-10, 1e-8, 1e-6, ..."))
                 raise NodeException(err_msg)
         except SymeigException as exception:
             errstr = (str(exception)+"\n Covariance matrices may be singular."
-                    +"\n Try to create SFA node with handle_rank_deficit=True.")
+                    +"\n Try to create SFA node with rank_deficit_method='auto'.")
             raise NodeException(errstr)
 
         if not debug:
