@@ -9,6 +9,33 @@ from mdp.utils import (mult, pinv, CovarianceMatrix, QuadraticForm,
                        symeig_semidefinite_pca, symeig_semidefinite_svd,
                        symeig_semidefinite_ldl)
 
+SINGULAR_VALUE_MSG = '''
+This usually happens if there are redundancies in the (expanded) training data.
+There are several ways to deal with this issue:
+
+  - Use more data.
+
+  - Use another solver for the generalized eigenvalue problem.
+    The default solver requires the covariance matrix to be strictly positive
+    definite. Construct your node with e.g. rank_deficit_method='auto' to use
+    a more robust solver that allows positive semidefinite covariance matrix.
+    Available values for rank_deficit_method: none, auto, pca, reg, svd, ldl
+    See mdp.utils.symeig_semidefinite for details on the available methods.
+
+  - Add noise to the data. This can be done by chaining an additional NoiseNode
+    in front of a troublesome SFANode. Noise levels do not have to be high.
+    Note:
+    You will get a somewhat similar effect by rank_deficit_method='reg'.
+    This will be more efficient in execution phase.
+
+  - Run training data through PCA. This can be done by chaining an additional
+    PCA node in front of the troublesome SFANode. Use the PCA node to discard
+    dimensions within your data with lower variance.
+    Note:
+    You will get the same result by rank_deficit_method='pca'.
+    This will be more efficient in execution phase.
+'''
+
 class SFANode(Node):
     """Extract the slowly varying components from the input data.
     More information about Slow Feature Analysis can be found in
@@ -235,17 +262,14 @@ class SFANode(Node):
                            "You may either set output_dim to be smaller,\n"
                            "or prepend the SFANode with a PCANode(reduce=True)\n"
                            "or PCANode(svd=True)\n"
-                           "or %s."% (str(d), "set a rank deficit method, e.g.\n"
+                           "or set a rank deficit method, e.g.\n"
                            "create the SFA node with rank_deficit_method='auto'\n"
                            "and try higher values for rank_threshold, e.g. try\n"
-                           "your_node.rank_threshold = 1e-10, 1e-8, 1e-6, ..."
-                           if self._sfa_solver is None else
-                           "set a higher value for rank_threshold, e.g. try\n"
-                           "your_node.rank_threshold = 1e-10, 1e-8, 1e-6, ..."))
+                           "your_node.rank_threshold = 1e-10, 1e-8, 1e-6, ..."%str(d))
                 raise NodeException(err_msg)
         except SymeigException as exception:
-            errstr = (str(exception)+"\n Covariance matrices may be singular."
-                    +"\n Try to create SFA node with rank_deficit_method='auto'.")
+            errstr = (str(exception)+"\n Covariance matrices may be singular.\n"
+                    +SINGULAR_VALUE_MSG)
             raise NodeException(errstr)
 
         if not debug:
