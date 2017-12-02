@@ -155,7 +155,6 @@ class SFANode(Node):
         self._dcov_mtx = CovarianceMatrix(dtype)
 
         # set routine for eigenproblem
-        self._symeig = symeig
         self.set_rank_deficit_method(rank_deficit_method)
         self.rank_threshold = 1e-12
         self.rank_deficit = 0
@@ -169,11 +168,11 @@ class SFANode(Node):
 
     def set_rank_deficit_method(self, rank_deficit_method):
         if rank_deficit_method == 'pca':
-            self._sfa_solver = symeig_semidefinite_pca
+            self._symeig = symeig_semidefinite_pca
         elif rank_deficit_method == 'reg':
-            self._sfa_solver = symeig_semidefinite_reg
+            self._symeig = symeig_semidefinite_reg
         elif rank_deficit_method == 'svd':
-            self._sfa_solver = symeig_semidefinite_svd
+            self._symeig = symeig_semidefinite_svd
         elif rank_deficit_method == 'ldl':
             try:
                 from scipy.linalg.lapack import dsytrf
@@ -181,11 +180,14 @@ class SFANode(Node):
                 err_msg = ("ldl method for solving SFA with rank deficit covariance "
                            "requires at least SciPy 1.0.")
                 raise NodeException(err_msg)
-            self._sfa_solver = symeig_semidefinite_ldl
+            self._symeig = symeig_semidefinite_ldl
         elif rank_deficit_method == 'auto':
-            self._sfa_solver = symeig_semidefinite_pca
+            self._symeig = symeig_semidefinite_pca
+        elif rank_deficit_method == 'none':
+            self._symeig = symeig
         else:
-            self._sfa_solver = None
+            raise ValueError("Invalid value for rank_deficit_method: %s" \
+                    %str(rank_deficit_method))
 
     def time_derivative(self, x):
         """Compute the linear approximation of the time derivative."""
@@ -241,18 +243,16 @@ class SFANode(Node):
 
         #### solve the generalized eigenvalue problem
         # the eigenvalues are already ordered in ascending order
-        if self._sfa_solver is None:
-            # We do not initialize this default method in the constructor to keep
-            # code that inserts a custom _symeig (after the constructor) workable.
-            self._sfa_solver = self._symeig
         try:
             try:
-                self.d, self.sf = self._sfa_solver(
+                # We first try to fulfill the extended signature described
+                # in mdp.utils.symeig_semidefinite
+                self.d, self.sf = self._symeig(
                         self.dcov_mtx, self.cov_mtx, True, "on", rng,
                         overwrite=(not debug),
                         rank_threshold=self.rank_threshold, dfc_out=self)
             except TypeError:
-                self.d, self.sf = self._sfa_solver(
+                self.d, self.sf = self._symeig(
                         self.dcov_mtx, self.cov_mtx, True, "on", rng,
                         overwrite=(not debug))
             d = self.d
