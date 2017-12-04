@@ -11,6 +11,46 @@ In such cases nodes like SFA usually fail with
 SymeigException ('Covariance matrices may be singular').
 The functions in this module allow for a more robust data processing in
 such scenarios.
+
+The various functions in this module yield different advantages and
+disadvantages in terms of robustness, accuracy, performance and requirements.
+Each of them can fail due to ill-conditioned data and if you experience
+problems with specific data you can try another method or use a higher
+value for rank_threshold, e.g. 1e-10, 1e-8, 1e-6, ... (default: 1e-12).
+
+A short overview (for more details see the doc of each function):
+
+pca (solves by prepending PCA/ principal component analysis)
+
+  One of the most stable and accurate approaches.
+  Roughly twice as expensive as ordinary symmetric eigenvalue solving as
+  it solves two symmetric eigenvalue problems.
+  Only the second one can exploit range parameter for performance.
+
+
+svd (solves by SVD / singular value decomposition)
+
+  One of the most stable and accurate approaches.
+  Involves solving two svd problems. Computational cost can vary greatly
+  depending on the backends used. E.g. SVD from SciPy appears to be much
+  faster than SVD from NumPy. Based on this it can be faster or slower
+  than the PCA based approach.
+
+
+reg (solves by applying regularization to matrix B)
+
+  Roughly as efficient as ordinary eigenvalue solving if no range is given.
+  If range is given, depending on the backend for ordinary symmetric
+  eigenvalue solving, this method can be much slower than an ordinary
+  symmetric eigenvalue solver that can exploit range for performance.
+
+
+ldl (solves by applying LDL / Cholesky decomposition for indefinite matrices)
+
+  Roughly as efficient as ordinary eigenvalue solving. Can exploit range
+  parameter for performance just as well as the backend for ordinary symmetric
+  eigenvalue solving enables. This is the recommended and most efficient
+  approach, but it requires SciPy 1.0 or newer.
 '''
 
 import mdp
