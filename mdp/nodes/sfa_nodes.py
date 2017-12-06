@@ -57,7 +57,7 @@ class SFANode(Node):
 
       ``self.rank_deficit``
           If an SFA solver detects rank deficit in the covariance matrix,
-          it stores the count of zero eigenvalues as ``self.rank_deficit``.
+          it stores the count of close-to-zero-eigenvalues as ``rank_deficit``.
 
     **Special arguments for constructor**
 
@@ -105,7 +105,7 @@ class SFANode(Node):
 
       ``rank_deficit_method``
           Possible values: 'none' (default), 'reg', 'pca', 'svd', 'auto'
-          If not ``none`` the `stop_train` method solves the SFA eigenvalue
+          If not 'none', the ``stop_train`` method solves the SFA eigenvalue
           problem in a way that is robust against linear redundancies in
           the input data. This would otherwise lead to rank deficit in the
           covariance matrix, which usually yields a
@@ -114,29 +114,30 @@ class SFANode(Node):
 
           reg  - works by regularization
           pca  - works by PCA
-          svd  - works by svd
-          ldl  - works by ldl decomposition (requires SciPy >= 1.0)
+          svd  - works by SVD
+          ldl  - works by LDL decomposition (requires SciPy >= 1.0)
 
-          auto - selects the best-benchmarked method of the above
+          auto - (Will be: selects the best-benchmarked method of the above)
+                 Currently it simply selects pca.
 
           Note: If you already received an exception
           SymeigException ('Covariance matrices may be singular')
-          you can manually set the solving method for an existing node:
+          you can manually set the solving method for an existing node::
 
              sfa.set_rank_deficit_method('pca')
 
-          That means,
+          That means,::
 
              sfa = SFANode(rank_deficit='pca')
 
-          is equivalent to
+          is equivalent to::
 
              sfa = SFANode()
              sfa.set_rank_deficit_method('pca')
 
-          After such an adjustment you can run stop_training() again,
-          which would save potentially time consuming rerun of all
-          train() calls.
+          After such an adjustment you can run ``stop_training()`` again,
+          which would save a potentially time-consuming rerun of all
+          ``train()`` calls.
     """
 
     def __init__(self, input_dim=None, output_dim=None, dtype=None,
