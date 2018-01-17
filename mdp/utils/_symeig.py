@@ -32,7 +32,7 @@ def _greatest_common_dtype(alist):
             dtype = _type_conv[transition]
     return dtype
 
-def _assert_eigenvalues_real_and_positive(w, dtype):
+def _assert_eigenvalues_real(w, dtype):
     tol = numx.finfo(dtype.type).eps * 100
     if abs(w.imag).max() > tol:
         err = "Some eigenvalues have significant imaginary part: %s " % str(w)
@@ -124,7 +124,15 @@ numarray.linear_algebra.eigenvectors with an interface compatible with symeig.
         else:
             # make B the identity matrix
             wB, ZB = numx_linalg.eigh(B)
-            _assert_eigenvalues_real_and_positive(wB, dtype)
+            _assert_eigenvalues_real(wB, dtype)
+            if wB.real.min() < 0:
+                # If we proceeded with negative values here, this would let some
+                # NumPy or SciPy versions cause nan values in the results.
+                # Such nan values would go through silently (or only with a warning,
+                # i.e. RuntimeWarning: invalid value encountered in sqrt)
+                # and cause hard to find issues later in user code outside mdp.
+                err = "Got negative eigenvalues: %s" % str(wB)
+                raise SymeigException(err)
             ZB = old_div(ZB.real, numx.sqrt(wB.real))
             # transform A in the new basis: A = ZB^T * A * ZB
             A = mdp.utils.mult(mdp.utils.mult(ZB.T, A), ZB)
@@ -134,7 +142,8 @@ numarray.linear_algebra.eigenvectors with an interface compatible with symeig.
     except numx_linalg.LinAlgError as exception:
         raise SymeigException(str(exception))
 
-    _assert_eigenvalues_real_and_positive(w, dtype)
+    _assert_eigenvalues_real(w, dtype)
+    # Negative eigenvalues at this stage will be checked and handled by the caller.
     w = w.real
     Z = Z.real
 
