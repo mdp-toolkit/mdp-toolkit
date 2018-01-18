@@ -5,7 +5,36 @@ __docformat__ = "restructuredtext en"
 import mdp
 from mdp import numx, Node, NodeException, TrainingException
 from mdp.utils import (mult, pinv, CovarianceMatrix, QuadraticForm,
-                       symeig, SymeigException)
+                       symeig, SymeigException, symeig_semidefinite_reg,
+                       symeig_semidefinite_pca, symeig_semidefinite_svd,
+                       symeig_semidefinite_ldl)
+
+SINGULAR_VALUE_MSG = '''
+This usually happens if there are redundancies in the (expanded) training data.
+There are several ways to deal with this issue:
+
+  - Use more data.
+
+  - Use another solver for the generalized eigenvalue problem.
+    The default solver requires the covariance matrix to be strictly positive
+    definite. Construct your node with e.g. rank_deficit_method='auto' to use
+    a more robust solver that allows positive semidefinite covariance matrix.
+    Available values for rank_deficit_method: none, auto, pca, reg, svd, ldl
+    See mdp.utils.symeig_semidefinite for details on the available methods.
+
+  - Add noise to the data. This can be done by chaining an additional NoiseNode
+    in front of a troublesome SFANode. Noise levels do not have to be high.
+    Note:
+    You will get a somewhat similar effect by rank_deficit_method='reg'.
+    This will be more efficient in execution phase.
+
+  - Run training data through PCA. This can be done by chaining an additional
+    PCA node in front of the troublesome SFANode. Use the PCA node to discard
+    dimensions within your data with lower variance.
+    Note:
+    You will get the same result by rank_deficit_method='pca'.
+    This will be more efficient in execution phase.
+'''
 
 class SFANode(Node):
     """Extract the slowly varying components from the input data.
@@ -25,6 +54,10 @@ class SFANode(Node):
           Delta values corresponding to the SFA components (generalized
           eigenvalues). [See the docs of the ``get_eta_values`` method for
           more information]
+
+      ``self.rank_deficit``
+          If an SFA solver detects rank deficit in the covariance matrix,
+          it stores the count of close-to-zero-eigenvalues as ``rank_deficit``.
 
     **Special arguments for constructor**
 
@@ -68,14 +101,51 @@ class SFANode(Node):
 
           You can even change this behaviour during training. Just set the
           corresponding switch in the `train` method.
+
+
+      ``rank_deficit_method``
+          Possible values: 'none' (default), 'reg', 'pca', 'svd', 'auto'
+          If not 'none', the ``stop_train`` method solves the SFA eigenvalue
+          problem in a way that is robust against linear redundancies in
+          the input data. This would otherwise lead to rank deficit in the
+          covariance matrix, which usually yields a
+          SymeigException ('Covariance matrices may be singular').
+          There are several solving methods implemented:
+
+          reg  - works by regularization
+          pca  - works by PCA
+          svd  - works by SVD
+          ldl  - works by LDL decomposition (requires SciPy >= 1.0)
+
+          auto - (Will be: selects the best-benchmarked method of the above)
+                 Currently it simply selects pca.
+
+          Note: If you already received an exception
+          SymeigException ('Covariance matrices may be singular')
+          you can manually set the solving method for an existing node::
+
+             sfa.set_rank_deficit_method('pca')
+
+          That means,::
+
+             sfa = SFANode(rank_deficit='pca')
+
+          is equivalent to::
+
+             sfa = SFANode()
+             sfa.set_rank_deficit_method('pca')
+
+          After such an adjustment you can run ``stop_training()`` again,
+          which would save a potentially time-consuming rerun of all
+          ``train()`` calls.
     """
 
     def __init__(self, input_dim=None, output_dim=None, dtype=None,
-                 include_last_sample=True):
+                 include_last_sample=True, rank_deficit_method='none'):
         """
         For the ``include_last_sample`` switch have a look at the
         SFANode class docstring.
-         """
+        """
         super(SFANode, self).__init__(input_dim, output_dim, dtype)
         self._include_last_sample = include_last_sample
 
@@ -86,7 +156,9 @@ class SFANode(Node):
         self._dcov_mtx = CovarianceMatrix(dtype)
 
         # set routine for eigenproblem
-        self._symeig = symeig
+        self.set_rank_deficit_method(rank_deficit_method)
+        self.rank_threshold = 1e-12
+        self.rank_deficit = 0
 
         # SFA eigenvalues and eigenvectors, will be set after training
         self.d = None
@@ -94,6 +166,29 @@ class SFANode(Node):
         self.avg = None
         self._bias = None  # avg multiplied with sf
         self.tlen = None
+
+    def set_rank_deficit_method(self, rank_deficit_method):
+        if rank_deficit_method == 'pca':
+            self._symeig = symeig_semidefinite_pca
+        elif rank_deficit_method == 'reg':
+            self._symeig = symeig_semidefinite_reg
+        elif rank_deficit_method == 'svd':
+            self._symeig = symeig_semidefinite_svd
+        elif rank_deficit_method == 'ldl':
+            try:
+                from scipy.linalg.lapack import dsytrf
+            except ImportError:
+                err_msg = ("ldl method for solving SFA with rank deficit covariance "
+                           "requires at least SciPy 1.0.")
+                raise NodeException(err_msg)
+            self._symeig = symeig_semidefinite_ldl
+        elif rank_deficit_method == 'auto':
+            self._symeig = symeig_semidefinite_pca
+        elif rank_deficit_method == 'none':
+            self._symeig = symeig
+        else:
+            raise ValueError("Invalid value for rank_deficit_method: %s" \
+                    %str(rank_deficit_method))
 
     def time_derivative(self, x):
         """Compute the linear approximation of the time derivative."""
@@ -134,32 +229,48 @@ class SFANode(Node):
 
     def _stop_training(self, debug=False):
         ##### request the covariance matrices and clean up
-        self.cov_mtx, self.avg, self.tlen = self._cov_mtx.fix()
-        del self._cov_mtx
+        if hasattr(self, '_dcov_mtx'):
+            self.cov_mtx, self.avg, self.tlen = self._cov_mtx.fix()
+            del self._cov_mtx
         # do not center around the mean:
         # we want the second moment matrix (centered about 0) and
         # not the second central moment matrix (centered about the mean), i.e.
         # the covariance matrix
-        self.dcov_mtx, self.davg, self.dtlen = self._dcov_mtx.fix(center=False)
-        del self._dcov_mtx
+        if hasattr(self, '_dcov_mtx'):
+            self.dcov_mtx, self.davg, self.dtlen = self._dcov_mtx.fix(center=False)
+            del self._dcov_mtx
 
         rng = self._set_range()
 
         #### solve the generalized eigenvalue problem
         # the eigenvalues are already ordered in ascending order
         try:
-            self.d, self.sf = self._symeig(self.dcov_mtx, self.cov_mtx,
-                                     range=rng, overwrite=(not debug))
+            try:
+                # We first try to fulfill the extended signature described
+                # in mdp.utils.symeig_semidefinite
+                self.d, self.sf = self._symeig(
+                        self.dcov_mtx, self.cov_mtx, True, "on", rng,
+                        overwrite=(not debug),
+                        rank_threshold=self.rank_threshold, dfc_out=self)
+            except TypeError:
+                self.d, self.sf = self._symeig(
+                        self.dcov_mtx, self.cov_mtx, True, "on", rng,
+                        overwrite=(not debug))
             d = self.d
             # check that we get only *positive* eigenvalues
             if d.min() < 0:
-                err_msg = ("Got negative eigenvalues: %s."
-                           " You may either set output_dim to be smaller,"
-                           " or prepend the SFANode with a PCANode(reduce=True)"
-                           " or PCANode(svd=True)"% str(d))
+                err_msg = ("Got negative eigenvalues: %s.\n"
+                           "You may either set output_dim to be smaller,\n"
+                           "or prepend the SFANode with a PCANode(reduce=True)\n"
+                           "or PCANode(svd=True)\n"
+                           "or set a rank deficit method, e.g.\n"
+                           "create the SFA node with rank_deficit_method='auto'\n"
+                           "and try higher values for rank_threshold, e.g. try\n"
+                           "your_node.rank_threshold = 1e-10, 1e-8, 1e-6, ..."%str(d))
                 raise NodeException(err_msg)
         except SymeigException as exception:
-            errstr = str(exception)+"\n Covariance matrices may be singular."
+            errstr = (str(exception)+"\n Covariance matrices may be singular.\n"
+                    +SINGULAR_VALUE_MSG)
             raise NodeException(errstr)
 
         if not debug:
@@ -228,11 +339,11 @@ class SFA2Node(SFANode):
     Learning of Invariances, Neural Computation, 14(4):715-770 (2002)."""
 
     def __init__(self, input_dim=None, output_dim=None, dtype=None,
-                 include_last_sample=True):
+                 include_last_sample=True, rank_deficit_method='none'):
         self._expnode = mdp.nodes.QuadraticExpansionNode(input_dim=input_dim,
                                                          dtype=dtype)
         super(SFA2Node, self).__init__(input_dim, output_dim, dtype,
-                                       include_last_sample)
+                                       include_last_sample, rank_deficit_method)
 
     @staticmethod
     def is_invertible():
