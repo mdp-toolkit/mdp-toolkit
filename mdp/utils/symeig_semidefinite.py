@@ -55,7 +55,7 @@ ldl (solves by applying LDL / Cholesky decomposition for indefinite matrices)
 
 import mdp
 from mdp import numx
-from _symeig import SymeigException
+from ._symeig import SymeigException
 
 
 def symeig_semidefinite_reg(
@@ -103,7 +103,8 @@ def symeig_semidefinite_reg(
     eg, ev = mdp.utils.symeig(A, B, True, turbo, None, type, overwrite)
 
     Bflat[idx] = diag_tmp
-    m = numx.absolute(numx.sqrt(numx.sum(ev * mdp.utils.mult(B, ev), 0))-1)
+    m = numx.absolute(numx.sqrt(numx.absolute(
+            numx.sum(ev * mdp.utils.mult(B, ev), 0)))-1)
     off = 0
     # In theory all values in m should be close to one or close to zero.
     # So we use the mean of these values as threshold to distinguish cases:
