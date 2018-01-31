@@ -2,6 +2,7 @@
 Module for the OnlineFlowNode class.
 """
 
+from builtins import range
 import mdp
 from .flownode import FlowNode
 
@@ -96,7 +97,7 @@ class OnlineFlowNode(FlowNode, mdp.OnlineNode):
             # This internal function is needed to channel the data through
             # the nodes i to j
             def _execute(x, *args, **kwargs):
-                for i in xrange(_i_node, _j_node):
+                for i in range(_i_node, _j_node):
                     try:
                         x = self._flow[i].execute(x)
                     except Exception as e:
@@ -125,7 +126,7 @@ class OnlineFlowNode(FlowNode, mdp.OnlineNode):
             train_seq += [(get_empty_function(), get_empty_function(),
                            get_execute_function(0, trainable_nodes_nrs[0]))]
 
-        for i in xrange(len(trainable_nodes_nrs)):
+        for i in range(len(trainable_nodes_nrs)):
             if i < (len(trainable_nodes_nrs) - 1):
                 # the execute function channels the data from the current node to the
                 # next trainable node
@@ -240,7 +241,7 @@ class CircularOnlineFlowNode(FlowNode, mdp.OnlineNode):
             # This internal function is needed to channel the data through
             # the nodes i to j
             def _execute(x, *args, **kwargs):
-                for _i in xrange(_i_node, _j_node):
+                for _i in range(_i_node, _j_node):
                     try:
                         x = self._flow[_i].execute(x)
                     except Exception as e:
@@ -293,7 +294,7 @@ class CircularOnlineFlowNode(FlowNode, mdp.OnlineNode):
             train_seq += [(get_empty_function(), get_empty_function(),
                            get_execute_function(0, trainable_nodes_nrs[0]))]
 
-        for i in xrange(len(trainable_nodes_nrs)):
+        for i in range(len(trainable_nodes_nrs)):
             if i < (len(trainable_nodes_nrs) - 1):
                 # the execute function channels the data from the current node to the
                 # next trainable node
@@ -313,7 +314,7 @@ class CircularOnlineFlowNode(FlowNode, mdp.OnlineNode):
             train_seq += [(get_empty_function(), get_empty_function(),
                            get_execute_function(0, trainable_nodes_nrs[0]))]
 
-        for i in xrange(len(trainable_nodes_nrs)):
+        for i in range(len(trainable_nodes_nrs)):
             if i < (len(trainable_nodes_nrs) - 1):
                 # the execute function channels the data from the current node to the
                 # next trainable node

@@ -1,4 +1,4 @@
-
+from builtins import range
 from ._tools import *
 
 import mdp
@@ -36,7 +36,7 @@ def test_train_execute_iteration():
 
     inp = mdp.numx.zeros([10,5])
 
-    for i in xrange(5):
+    for i in range(5):
         node.train(inp)
         assert (node.get_current_train_iteration() == inp.shape[0]*(i+1))
         out = node.execute(inp)
@@ -58,7 +58,7 @@ def test_batch_training_type():
     assert (node.get_current_train_iteration() == 0)
 
     inp = mdp.numx.zeros([10,5])
-    for i in xrange(5):
+    for i in range(5):
         node.train(inp)
         assert (node.get_current_train_iteration() == inp.shape[0]*(i+1))
         out = node.execute(inp)

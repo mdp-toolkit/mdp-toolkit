@@ -1,4 +1,4 @@
-
+from builtins import range
 import mdp
 from mdp import NodeException, IsNotTrainableException
 from mdp import TrainingException, TrainingFinishedException, IsNotInvertibleException
@@ -270,7 +270,7 @@ class OnlineNode(Node):
         if self.training_type == 'incremental':
             x = x[:, None, :]  # to train sample by sample with 2D shape
             for _x in x:
-                for _phase in xrange(len(self._train_seq)):
+                for _phase in range(len(self._train_seq)):
                     self._train_seq[_phase][0](_x, *args, **kwargs)
                     # legacy support for _train_seq.
                     if len(self._train_seq[_phase]) > 2:
@@ -278,7 +278,7 @@ class OnlineNode(Node):
                 self._train_iteration += 1
         else:
             _x = x
-            for _phase in xrange(len(self._train_seq)):
+            for _phase in range(len(self._train_seq)):
                 self._train_seq[_phase][0](_x, *args, **kwargs)
                 # legacy support for _train_seq.
                 if len(self._train_seq[_phase]) > 2:
@@ -300,7 +300,7 @@ class OnlineNode(Node):
             raise TrainingFinishedException(err_str)
 
         # close the current phase.
-        for _phase in xrange(len(self._train_seq)):
+        for _phase in range(len(self._train_seq)):
             self._train_seq[_phase][1](*args, **kwargs)
         self._train_phase = len(self._train_seq)
         self._train_phase_started = False

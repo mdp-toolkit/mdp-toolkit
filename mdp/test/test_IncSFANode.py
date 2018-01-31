@@ -1,3 +1,4 @@
+from builtins import range
 from mdp.nodes import PolynomialExpansionNode, SFANode, IncSFANode
 from ._tools import *
 import time
@@ -23,7 +24,7 @@ def test_incsfa_v2():
     v = []
 
     _tcnt = time.time()
-    for i in xrange(iterval * input_data.shape[0]):
+    for i in range(iterval * input_data.shape[0]):
         node.train(input_data[i % input_data.shape[0]:i % input_data.shape[0] + 1])
         if (node.get_current_train_iteration() % 100 == 0):
             v.append(node.sf)
@@ -31,8 +32,8 @@ def test_incsfa_v2():
     print('\nTotal Time for {} iterations: {}'.format(iterval, time.time() - _tcnt))
 
     dcosines = numx.zeros([len(v), output_dim])
-    for i in xrange(len(v)):
-        for dim in xrange(output_dim):
+    for i in range(len(v)):
+        for dim in range(output_dim):
             dcosines[i, dim] = numx.fabs(numx.dot(v[i][:, dim], bv[:, dim].T)) / (
                 numx.linalg.norm(v[i][:, dim]) * numx.linalg.norm(bv[:, dim]))
     assert_almost_equal(numx.ones(output_dim), dcosines[-1], decimal=2)
