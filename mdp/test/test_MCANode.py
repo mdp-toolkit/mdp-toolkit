@@ -1,3 +1,4 @@
+from builtins import range
 from mdp.nodes import PCANode, WhiteningNode, PolynomialExpansionNode, MCANode
 from ._tools import *
 import time
@@ -13,7 +14,7 @@ def test_mcanode_v1():
     mat += uniform(2)
     mat -= mat.mean(axis=0)
     mca = MCANode()
-    for i in xrange(5):
+    for i in range(5):
         mca.train(mat)
 
     bpca = PCANode()
@@ -24,7 +25,7 @@ def test_mcanode_v1():
     bv = bpca.get_projmatrix()[:, ::-1]
 
     dcosines = numx.zeros(v.shape[1])
-    for dim in xrange(v.shape[1]):
+    for dim in range(v.shape[1]):
         dcosines[dim] = numx.fabs(numx.dot(v[:, dim], bv[:, dim].T)) / (
             numx.linalg.norm(v[:, dim]) * numx.linalg.norm(bv[:, dim]))
     assert_almost_equal(numx.ones(v.shape[1]), dcosines)
@@ -57,14 +58,14 @@ def test_mcanode_v2():
 
     v = []
 
-    for i in xrange(iterval * input_data.shape[0]):
+    for i in range(iterval * input_data.shape[0]):
         node.train(input_data[i % input_data.shape[0]:i % input_data.shape[0] + 1])
         if (node.get_current_train_iteration() % 100 == 0):
             v.append(node.v)
 
     dcosines = numx.zeros([len(v), output_dim])
-    for i in xrange(len(v)):
-        for dim in xrange(output_dim):
+    for i in range(len(v)):
+        for dim in range(output_dim):
             dcosines[i, dim] = numx.fabs(numx.dot(v[i][:, dim], bv[:, dim].T)) / (
                 numx.linalg.norm(v[i][:, dim]) * numx.linalg.norm(bv[:, dim]))
 

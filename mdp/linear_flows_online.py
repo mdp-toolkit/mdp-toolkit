@@ -1,3 +1,4 @@
+from builtins import range
 from builtins import str
 import mdp
 from mdp import numx
@@ -112,7 +113,7 @@ class OnlineFlow(mdp.Flow):
             else:
                 args = ()
             empty_iterator = False
-            for nodenr in xrange(len(self.flow)):
+            for nodenr in range(len(self.flow)):
                 try:
                     node = self.flow[nodenr]
                     # check if the required number of arguments was given
@@ -220,7 +221,7 @@ class OnlineFlow(mdp.Flow):
         data_iterables = self._train_check_iterables(data_iterables)
 
         if self.verbose:
-            strn = [str(self.flow[i]) for i in xrange(len(self.flow))]
+            strn = [str(self.flow[i]) for i in range(len(self.flow))]
             print("Training nodes %s simultaneously" % strn)
         self._train_nodes(data_iterables)
 
@@ -448,11 +449,11 @@ class CircularOnlineFlow(OnlineFlow):
                 # ignore external input
                 x = self.get_stored_input()
             # train the loop for 'self.flow_iterations' iterations
-            _iters = xrange(self._flow_iterations)
+            _iters = range(self._flow_iterations)
             if self.verbose:
                 _iters = mdp.utils.progressinfo(_iters)
             for _ in _iters:
-                for nodenr in xrange(len(self.flow)):
+                for nodenr in range(len(self.flow)):
                     try:
                         node = self.flow[nodenr]
                         if node.is_training():
@@ -511,7 +512,7 @@ class CircularOnlineFlow(OnlineFlow):
         """
 
         if self.verbose:
-            strn = [str(self.flow[i]) for i in xrange(len(self.flow))]
+            strn = [str(self.flow[i]) for i in range(len(self.flow))]
             if self._ignore_input:
                 print("Training nodes %s internally using the stored inputs "
                       "for %d loops" % (strn, self._flow_iterations))

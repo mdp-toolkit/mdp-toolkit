@@ -1,3 +1,4 @@
+from builtins import range
 import mdp
 from mdp.utils import mult
 from past.utils import old_div
@@ -107,7 +108,7 @@ class CCIPCANode(mdp.OnlineNode):
         explained_var = 0.0
 
         r = x
-        for j in xrange(self.output_dim):
+        for j in range(self.output_dim):
             v = self._v[:, j:j + 1]
             d = self.d[j]
 
