@@ -1,3 +1,4 @@
+from builtins import range
 import mdp
 from .mca_nodes_online import MCANode
 from .pca_nodes_online import CCIPCAWhiteningNode as WhiteningNode
@@ -182,7 +183,7 @@ class IncSFANode(mdp.OnlineNode):
         sf_change = 0.0
         if self.training_type == 'batch':
             self._new_episode = True
-            for i in xrange(x.shape[0]):
+            for i in range(x.shape[0]):
                 sf_change = self._step_train(x[i:i + 1])
                 self._new_episode = False
         else:

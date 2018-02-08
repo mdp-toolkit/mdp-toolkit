@@ -1,4 +1,4 @@
-
+from builtins import range
 from mdp.nodes import OnlineCenteringNode, OnlineTimeDiffNode
 from ._tools import *
 
@@ -14,7 +14,7 @@ def test_online_centering_node_ema():
     node = OnlineCenteringNode(avg_n=n)
     alpha = 2./(n + 1.)
     x = mdp.numx_rand.randint(0, 10, (n, 4)).astype('float')
-    weights = [alpha * mdp.numx.power(1-alpha, t) for t in xrange(n-1)] + [mdp.numx.power(1-alpha, n-1)]
+    weights = [alpha * mdp.numx.power(1-alpha, t) for t in range(n-1)] + [mdp.numx.power(1-alpha, n-1)]
     ema = (mdp.numx.asarray(weights)[:, None] * x[::-1]).sum(axis=0)
     node.train(x)
     assert_array_almost_equal(node.get_average()[0], ema)
@@ -23,7 +23,7 @@ def test_online_time_diff_node_sample():
     node = OnlineTimeDiffNode()
     x = mdp.numx_rand.randn(10,10)
     out=[]
-    for i in xrange(x.shape[0]):
+    for i in range(x.shape[0]):
         node.train(x[i:i+1])
         out.append(node.execute(x[i:i+1]))
     assert_array_equal(mdp.numx.asarray(out).squeeze()[1:], x[1:]-x[:-1])

@@ -4,7 +4,7 @@ Module for Layers.
 Note that additional args and kwargs for train or execute are currently not
 supported.
 """
-
+from __future__ import division
 import mdp
 from mdp import numx
 
@@ -270,13 +270,13 @@ class CloneLayer(Layer):
 
     def _execute(self, x, *args, **kwargs):
         n_samples = x.shape[0]
-        x = x.reshape(n_samples * x.shape[1] / self.node.input_dim, self.node.input_dim)
+        x = x.reshape(n_samples * x.shape[1] // self.node.input_dim, self.node.input_dim)
         y = self.node.execute(x)
         return y.reshape(n_samples, self.output_dim)
 
     def _inverse(self, x, *args, **kwargs):
         n_samples = x.shape[0]
-        x = x.reshape(n_samples * x.shape[1] / self.node.output_dim, self.node.output_dim)
+        x = x.reshape(n_samples * x.shape[1] // self.node.output_dim, self.node.output_dim)
         y = self.node.inverse(x)
         return y.reshape(n_samples, self.input_dim)
 
