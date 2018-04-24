@@ -22,8 +22,9 @@ import scipy
 import scipy.optimize
 import sys
 
+# NodeException, TrainingException, ValueError
 import mdp
-from mdp import numx
+from mdp import numx, NodeException, TrainingException
 # from mdp.nodes.sfa_nodes import SFANode
 from mdp.utils import (mult, symeig, pinv, CovarianceMatrix, SymeigException)
 from mdp.nodes import GeneralExpansionNode
@@ -126,7 +127,7 @@ class GSFANode(mdp.Node):
                     self._covdcovmtx.update_serial(x2, block_size=block_size, weight=weight)
                 else:
                     er = "method unknown: %s" % (str(method))
-                    raise Exception(er)
+                    raise ValueError(er)
             else:
                 if train_mode == 'unlabeled':
                     if verbose:
@@ -368,7 +369,7 @@ class GSFANode(mdp.Node):
                         print("Training graph: ignoring data")
                 else:
                     ex = "Unknown training method"
-                    raise Exception(ex)
+                    raise ValueError(ex)
 
     def _stop_training(self, debug=False, verbose=None):
         if verbose is None:
@@ -398,7 +399,7 @@ class GSFANode(mdp.Node):
                 raise SymeigException("Got negative eigenvalues: %s." % str(d))
         except SymeigException as exception:
             ex = str(exception) + "\n Covariance matrices may be singular."
-            raise Exception(ex)
+            raise NodeException(ex)
 
         del self._covdcovmtx
         del self.cov_mtx
@@ -479,7 +480,7 @@ def Hamming_weight(integer_list):
         return w
     else:
         er = "unsupported input type for Hamming_weight:" + str(integer_list)
-        raise Exception(er)
+        raise ValueError(er)
 
 
 class CovDCovMatrix(object):
@@ -581,11 +582,11 @@ class CovDCovMatrix(object):
         if len(node_weights) != num_samples:
             er = "Node weights should be the same length %d as the number of samples %d" % \
                  (len(node_weights), num_samples)
-            raise Exception(er)
+            raise TrainingException(er)
 
         if edge_weights is None:
             er = "edge_weights should be a dictionary with entries: d[(i,j)] = w_{i,j} or an NxN array"
-            raise Exception(er)
+            raise TrainingException(er)
 
         if isinstance(edge_weights, numx.ndarray):
             # TODO: eventually make sure edge_weights are symmetric
@@ -593,7 +594,7 @@ class CovDCovMatrix(object):
             if edge_weights.shape != (num_samples, num_samples):
                 er = "Error, dimensions of edge_weights should be (%d,%d) but is (%d,%d)" % \
                      (num_samples, num_samples, edge_weights.shape[0], edge_weights.shape[1])
-                raise Exception(er)
+                raise TrainingException(er)
 
         node_weights_column = node_weights.reshape((num_samples, 1))
         # Update Cov Matrix
@@ -639,11 +640,11 @@ class CovDCovMatrix(object):
         if len(node_weights) != num_samples:
             er = "Node weights should be the same length %d as the number of samples %d" % \
                  (len(node_weights), num_samples)
-            raise Exception(er)
+            raise TrainingException(er)
 
         if edge_weights is None:
             er = "edge_weights should be a dictionary with entries: d[(i,j)] = w_{i,j} or an NxN array"
-            raise Exception(er)
+            raise TrainingException(er)
 
         if isinstance(edge_weights, numx.ndarray):
             if edge_weights.shape == (num_samples, num_samples):
@@ -656,7 +657,7 @@ class CovDCovMatrix(object):
             else:
                 er = "Error, dimensions of edge_weights should be (%d,%d) but is (%d,%d)" % \
                      (num_samples, num_samples, edge_weights.shape[0], edge_weights.shape[1])
-                raise Exception(er)
+                raise TrainingException(er)
         node_weights_column = node_weights.reshape((num_samples, 1))
         # Update Cov Matrix
         weighted_x = x * node_weights_column
@@ -688,7 +689,7 @@ class CovDCovMatrix(object):
         width = window_halfwidth  # window_halfwidth is too long to write it complete each time
         if 2 * width >= num_samples:
             ex = "window_halfwidth %d not supported for %d samples!" % (width, num_samples)
-            raise Exception(ex)
+            raise TrainingException(ex)
 
         # Update Cov Matrix. All samples have same weight
         sum_x = x.sum(axis=0)
@@ -730,7 +731,7 @@ class CovDCovMatrix(object):
         width = window_halfwidth  # window_halfwidth is way too long to write it
         if 2 * width >= num_samples:
             ex = "window_halfwidth %d not supported for %d samples!" % (width, num_samples)
-            raise Exception(ex)
+            raise TrainingException(ex)
 
         # Update Cov Matrix. All samples have same weight
         sum_x = x.sum(axis=0)
@@ -760,7 +761,7 @@ class CovDCovMatrix(object):
         width = window_halfwidth  # window_halfwidth is way too long to write it
         if 2 * width >= num_samples:
             ex = "window_halfwidth %d not supported for %d samples!" % (width, num_samples)
-            raise Exception(ex)
+            raise ValueError(ex)
 
         # Update Cov Matrix. All samples have same weight
         sum_x = x.sum(axis=0)
@@ -784,7 +785,7 @@ class CovDCovMatrix(object):
         width = window_halfwidth
         if 2 * width >= num_samples:
             ex = "window_halfwidth %d not supported for %d samples!" % (width, num_samples)
-            raise Exception(ex)
+            raise ValueError(ex)
 
         # MOST CORRECT VERSION
         x_sel = x + 0.0
@@ -851,7 +852,7 @@ class CovDCovMatrix(object):
         width = window_halfwidth
         if 2 * width >= num_samples:
             ex = "window_halfwidth %d not supported for %d samples!" % (width, num_samples)
-            raise Exception(ex)
+            raise ValueError(ex)
 
         # MOST CORRECT VERSION
         x_sel = x + 0.0
@@ -885,23 +886,23 @@ class CovDCovMatrix(object):
         num_samples, dim = x.shape
         if block_size is None:
             er = "block_size must be specified"
-            raise Exception(er)
+            raise TrainingException(er)
 
         if isinstance(block_size, numx.ndarray):
             err = "Inhomogeneous block sizes not yet supported in update_serial"
-            raise Exception(err)
+            raise ValueError(err)
         elif isinstance(block_size, list):
             block_size_0 = block_size[0]
             for bs in block_size:
                 if bs != block_size_0:
                     er = "for serial graph all groups must have same group size (block_size constant), but " + \
                          str(bs) + "!=" + str(block_size_0)
-                    raise Exception(er)
+                    raise ValueError(er)
             block_size = block_size_0
 
         if num_samples % block_size > 0:
             err = "Consistency error: num_samples is not a multiple of block_size"
-            raise Exception(err)
+            raise ValueError(err)
         num_blocks = num_samples // block_size
 
         # warning, plenty of dtype missing!!!!!!!!
@@ -950,11 +951,11 @@ class CovDCovMatrix(object):
 
         if block_sizes is None:
             er = "error, block_size not specified!!!!"
-            raise Exception(er)
+            raise TrainingException(er)
 
         if num_samples != numx.array(block_sizes).sum():
             err = "Inconsistency error: num_samples (%d) is not equal to sum of block_sizes:" % num_samples, block_sizes
-            raise Exception(err)
+            raise ValueError(err)
 
         counter_sample = 0
         for block_size in block_sizes:
@@ -969,18 +970,18 @@ class CovDCovMatrix(object):
             print("update_clustered_homogeneous_block_sizes ")
         if block_size is None:
             er = "error, block_size not specified!!!!"
-            raise Exception(er)
+            raise TrainingException(er)
 
         if isinstance(block_size, numx.ndarray):
             er = "Error: inhomogeneous block sizes not supported by this function"
-            raise Exception(er)
+            raise TrainingException(er)
 
         # Assuming block_size is an integer:
         num_samples, dim = x.shape
         if num_samples % block_size > 0:
             err = "Inconsistency error: num_samples (%d) is not a multiple of block_size (%d)" % \
                   (num_samples, block_size)
-            raise Exception(err)
+            raise ValueError(err)
         num_blocks = num_samples // block_size
 
         # warning, plenty of dtype missing! they are just derived from the data.
@@ -1019,20 +1020,20 @@ class CovDCovMatrix(object):
             if len(block_sizes) > 1:
                 if block_sizes.var() > 0:
                     er = "for compact_classes all groups must have the same number of elements (block_sizes)!!!!"
-                    raise Exception(er)
+                    raise ValueError(er)
                 else:
                     block_size = block_sizes[0]
             else:
                 block_size = block_sizes[0]
         elif block_sizes is None:
             er = "error, block_size not specified!!!!"
-            raise Exception(er)
+            raise TrainingException(er)
         else:
             block_size = block_sizes
 
         if num_samples % block_size != 0:
             err = "Inconsistency error: num_samples (%d) must be a multiple of block_size: " % num_samples, block_sizes
-            raise Exception(err)
+            raise ValueError(err)
 
         num_classes = num_samples // block_size
         J = int(numx.log2(num_classes))
@@ -1045,7 +1046,7 @@ class CovDCovMatrix(object):
 
         if num_classes != 2 ** J:
             err = "Inconsistency error: num_clases %d does not appear to be a power of 2" % num_classes
-            raise Exception(err)
+            raise ValueError(err)
 
         N = num_samples
         labels = numx.zeros((N, J + extra_label))
@@ -1304,7 +1305,7 @@ class iGSFANode(mdp.Node):
         if (not self.reconstruct_with_sfa) and (self.slow_feature_scaling_method not in [None, "data_dependent"]):
             er = "'reconstruct_with_sfa' (" + str(self.reconstruct_with_sfa) + ") must be True when the scaling" + \
                  "method (" + str(self.slow_feature_scaling_method) + ") is neither 'None' not 'data_dependent'"
-            raise Exception(er)
+            raise TrainingException(er)
         # else continue using the regular method:
 
         # Remove mean before expansion
@@ -1360,16 +1361,16 @@ class iGSFANode(mdp.Node):
             if self.delta_threshold > self.output_dim:
                 er = "The provided integer delta_threshold %d is larger than the allowed output dimensionality %d" % \
                      (self.delta_threshold, self.output_dim)
-                raise Exception(er)
+                raise ValueError(er)
             if self.max_length_slow_part is not None and self.delta_threshold > self.max_length_slow_part:
                 er = "The provided integer delta_threshold %d" % self.delta_threshold + \
                      " is larger than the given upper bound on the size of the slow part (max_length_slow_part) %d" % \
                      self.max_length_slow_part
-                raise Exception(er)
+                raise ValueError(er)
 
         else:
             ex = "Cannot handle type of self.delta_threshold"
-            raise Exception(ex)
+            raise ValueError(ex)
 
         if self.num_sfa_features_preserved > self.output_dim:
             self.num_sfa_features_preserved = self.output_dim
@@ -1387,7 +1388,7 @@ class iGSFANode(mdp.Node):
             print("self.sfa_x_std=", self.sfa_x_std)
         if (self.sfa_x_std == 0).any():
             er = "zero-component detected"
-            raise Exception(er)
+            raise TrainingException(er)
         n_sfa_x = (sfa_x - self.sfa_x_mean) / self.sfa_x_std
 
         if self.reconstruct_with_sfa:
@@ -1438,7 +1439,7 @@ class iGSFANode(mdp.Node):
         else:
             er = "unknown slow feature scaling method= " + str(self.slow_feature_scaling_method) + \
                  " for reconstruct_with_sfa= " + str(self.reconstruct_with_sfa)
-            raise Exception(er)
+            raise ValueError(er)
 
         print("training PCA...")
         pca_output_dim = self.output_dim - self.num_sfa_features_preserved
@@ -1468,7 +1469,7 @@ class iGSFANode(mdp.Node):
             er = "Error, the number of features computed is SMALLER than the output dimensionality of the node: " + \
                  "self.pca_node.output_dim=" + str(self.pca_node.output_dim) + ", self.num_sfa_features_preserved=" + \
                  str(self.num_sfa_features_preserved) + ", self.output_dim=" + str(self.output_dim)
-            raise Exception(er)
+            raise TrainingException(er)
 
         # Finally, the output is the concatenation of scaled slow features and remaining pca components
         sfa_pca_x = numx.concatenate((s_n_sfa_x, pca_x), axis=1)
@@ -1506,7 +1507,7 @@ class iGSFANode(mdp.Node):
         # WARNING, why the last condition???
         if self.pre_expansion_node_class and self.exp_node:
             er = "Unexpected parameters"
-            raise Exception(er)
+            raise TrainingException(er)
         else:
             x_pre_exp = x_zm
 
@@ -1569,15 +1570,15 @@ class iGSFANode(mdp.Node):
             if self.delta_threshold > self.output_dim:
                 er = "The provided integer delta_threshold %d is larger than the allowed output dimensionality %d" % \
                      (self.delta_threshold, self.output_dim)
-                raise Exception(er)
+                raise ValueError(er)
             if self.max_length_slow_part is not None and self.delta_threshold > self.max_length_slow_part:
                 er = "The provided integer delta_threshold %d" % self.delta_threshold + \
                      " is larger than the given upper bound on the size of the slow part (max_length_slow_part) %d" % \
                      self.max_length_slow_part
-                raise Exception(er)
+                raise ValueError(er)
         else:
             ex = "Cannot handle type of self.delta_threshold:" + str(type(self.delta_threshold))
-            raise Exception(ex)
+            raise ValueError(ex)
 
         if self.num_sfa_features_preserved > self.output_dim:
             self.num_sfa_features_preserved = self.output_dim
@@ -1591,7 +1592,7 @@ class iGSFANode(mdp.Node):
             er = "Error, the number of features computed is SMALLER than the output dimensionality of the node: " + \
                  "self.pca_node.output_dim=" + str(self.pca_node.output_dim) + ", self.num_sfa_features_preserved=" + \
                  str(self.num_sfa_features_preserved) + ", self.output_dim=" + str(self.output_dim)
-            raise Exception(er)
+            raise ValueError(er)
         PCANode_reduce_output_dim(self.pca_node, final_pca_node_output_dim, verbose=False)
 
         if verbose:
@@ -1612,7 +1613,7 @@ class iGSFANode(mdp.Node):
                 print("method: data dependent")
         else:
             er = "Unknown slow feature scaling method" + str(self.slow_feature_scaling_method)
-            raise Exception(er)
+            raise ValueError(er)
         self.evar = self.pca_node.explained_variance
 
     @staticmethod
@@ -1660,7 +1661,7 @@ class iGSFANode(mdp.Node):
             s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x
         else:
             er = "unknown feature scaling method" + str(self.slow_feature_scaling_method)
-            raise Exception(er)
+            raise ValueError(er)
 
         # Apply PCA to sfa removed data
         if self.pca_node.output_dim > 0:
@@ -1734,7 +1735,7 @@ class iGSFANode(mdp.Node):
         num_samples = y.shape[0]
         if y.shape[1] != self.output_dim:
             er = "Serious dimensionality inconsistency:", y.shape[0], self.output_dim
-            raise Exception(er)
+            raise TrainingException(er)
 
         sfa_pca_x_full = numx.zeros(
             (num_samples, self.pca_node.output_dim + self.num_sfa_features_preserved))  # self.input_dim
@@ -1793,7 +1794,7 @@ def SFANode_reduce_output_dim(sfa_node, new_output_dim, verbose=False):
     if new_output_dim > sfa_node.output_dim:
         er = "Can only reduce output dimensionality of SFA node, not increase it (%d > %d)" % \
              (new_output_dim, sfa_node.output_dim)
-        raise Exception(er)
+        raise ValueError(er)
     if verbose:
         print("Before: sfa_node.d.shape=", sfa_node.d.shape, " sfa_node.sf.shape=", sfa_node.sf.shape)
         print("sfa_node._bias.shape=", sfa_node._bias.shape)
@@ -1815,7 +1816,7 @@ def PCANode_reduce_output_dim(pca_node, new_output_dim, verbose=False):
         print("Updating the output dimensionality of PCA node")
     if new_output_dim > pca_node.output_dim:
         er = "Can only reduce output dimensionality of PCA node, not increase it"
-        raise Exception(er)
+        raise ValueError(er)
     if verbose:
         print("Before: pca_node.d.shape=", pca_node.d.shape, " pca_node.v.shape=", pca_node.v.shape)
         print(" pca_node.avg.shape=", pca_node.avg.shape)
@@ -1981,8 +1982,8 @@ def example_pathological_outputs(experiment):
         train_mode = "window%d" % half_width
         e = {}
     else:
-        er = "Unknown experiment " + str(experiment)
-        raise Exception(er)
+        er = "Unknown experiment: " + str(experiment)
+        raise ValueError(er)
 
     n = GSFANode(output_dim=5)
     if experiment in (10, 11):

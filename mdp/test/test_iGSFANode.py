@@ -16,7 +16,6 @@ from ._tools import *
 import pytest
 import mdp
 
-# import cuicuilco.patch_mdp
 from mdp.nodes.gsfa_nodes import comp_delta, GSFANode, iGSFANode, SFANode_reduce_output_dim, PCANode_reduce_output_dim
 
 # *test_SFANode_reduce_output_dim (extraction and inverse)
@@ -99,6 +98,7 @@ def test_slow_feature_scaling_methods():
         assert (y - output_features[num_slow_feature_scaling_methods-1]) == pytest.approx(0.0)
 
 
+#TODO: write this test
 def test_enforce_int_delta_threshold_le_output_dim():
     x = numpy.random.normal(size=(300, 15))
     # No automatic stop_training
@@ -113,6 +113,7 @@ def test_enforce_int_delta_threshold_le_output_dim():
         n.train(x, train_mode="regular")
 
 
+#TODO: write this test
 def test_enforce_int_delta_threshold_le_max_length_slow_part():
     x = numpy.random.normal(size=(300, 10))
     # No automatic stop_training
