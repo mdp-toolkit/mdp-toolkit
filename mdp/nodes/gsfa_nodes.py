@@ -1,6 +1,6 @@
 ######################################################################################################################
 # gsfa_nodes: This module implements the Graph-Based SFA Node (GSFANode) and the Information-Preserving GSFA Node    #
-#             (iGSFANode). This file belongs to the Cuicuilco framework                                              #
+#             (iGSFANode).                                                                                           #
 #                                                                                                                    #
 # See the following publications for details on GSFA and iGSFA:                                                      #
 # * Escalante-B A.-N., Wiskott L, "How to solve classification and regression problems on high-dimensional data with #
@@ -9,9 +9,6 @@
 # slowness principle", e-print arXiv:1601.03945, http://arxiv.org/abs/1601.03945, 2017                               #
 #                                                                                                                    #
 # Examples of using GSFA and iGSFA are provided at the end of the file                                               #
-#                                                                                                                    #
-# By Alberto Escalante. Alberto.Escalante@ini.ruhr-uni-bochum.de                                                     #
-# Ruhr-University-Bochum, Institute for Neural Computation, Group of Prof. Dr. Wiskott                               #
 ######################################################################################################################
 
 from __future__ import absolute_import
@@ -29,7 +26,7 @@ from mdp import numx, NodeException, TrainingException
 from mdp.utils import (mult, symeig, pinv, CovarianceMatrix, SymeigException)
 from mdp.nodes import GeneralExpansionNode
 
-# TODO: Apparently one must derive from the original mdp.Node, not from mdp.nodes.SFANode
+
 class GSFANode(mdp.Node):
     """ This node implements "Graph-Based SFA (GSFA)", which is the main component of hierarchical GSFA (HGSFA).
 
@@ -103,6 +100,8 @@ class GSFANode(mdp.Node):
             train_modes = [train_mode]
 
         for train_mode in train_modes:
+            if train_mode is None:
+                train_mode = "regular"
             if isinstance(train_mode, tuple):
                 method = train_mode[0]
                 labels = train_mode[1]
@@ -128,7 +127,7 @@ class GSFANode(mdp.Node):
                 else:
                     er = "method unknown: %s" % (str(method))
                     raise ValueError(er)
-            else:
+            elif isinstance(train_mode, basestring):
                 if train_mode == 'unlabeled':
                     if verbose:
                         print("update_unlabeled")
@@ -368,8 +367,11 @@ class GSFANode(mdp.Node):
                     if verbose:
                         print("Training graph: ignoring data")
                 else:
-                    ex = "Unknown training method"
+                    ex = "Unknown training method" + train_mode
                     raise ValueError(ex)
+            else:
+                ex = "Unknown training method" + str(train_mode)
+                raise ValueError(ex)
 
     def _stop_training(self, debug=False, verbose=None):
         if verbose is None:
@@ -386,7 +388,6 @@ class GSFANode(mdp.Node):
             print("DCov[0:3,0:3] is", self.dcov_mtx[0:3, 0:3])
 
         rng = self._set_range()
-        print("rng", rng)
         # Solve the generalized eigenvalue problem
         # the eigenvalues are already ordered in ascending order
         try:
@@ -430,7 +431,6 @@ class GSFANode(mdp.Node):
     def _set_range(self):
         if self.output_dim is not None and (self.output_dim <= self.input_dim or self.input_dim is None):
             # (eigenvalues sorted in ascending order)
-            print("AAAAA", self.input_dim, self.output_dim)
             rng = (1, self.output_dim)
         else:
             # otherwise, keep all output components
@@ -1211,8 +1211,8 @@ class iGSFANode(mdp.Node):
 
     def __init__(self, input_dim=None, output_dim=None, pre_expansion_node_class=None, pre_expansion_out_dim=None,
                  expansion_funcs=None, expansion_output_dim=None, expansion_starting_point=None,
-                 max_length_slow_part=None, slow_feature_scaling_method="sensitivity_based", delta_threshold=1.9999,
-                 reconstruct_with_sfa=True, verbose=False, **argv):
+                 max_length_slow_part=None, slow_feature_scaling_method=None, delta_threshold=1.9999,
+                 reconstruct_with_sfa=False, verbose=False, **argv):
         """Initializes the iGSFA node.
 
         pre_expansion_node_class: a node class. An instance of this class is used to filter the data before the
@@ -1235,9 +1235,10 @@ class iGSFANode(mdp.Node):
         More information about parameters 'expansion_funcs' and 'expansion_starting_point' can be found in the
             documentation of GeneralExpansionNode.
 
-        Note: Training is finished after a single call to the train method, unless multi-train is enabled, which
-              is done by using reconstruct_with_sfa=False and slow_feature_scaling_method in [None, "data_dependent"]. This
-              is necessary to support weight sharing in iGSFA layers (convolutional iGSFA layers).
+        Note: Training sometimes finishes after a single call to the train method, unless multi-train is enabled
+              (default). Multi-train is enabled by setting reconstruct_with_sfa=False and
+              slow_feature_scaling_method in [None, "data_dependent"]. This is necessary to support weight sharing in
+              iGSFA layers (convolutional iGSFA layers).
         """
         super(iGSFANode, self).__init__(input_dim=input_dim, output_dim=output_dim, **argv)
         self.pre_expansion_node_class = pre_expansion_node_class  # Type of node used to expand the data
