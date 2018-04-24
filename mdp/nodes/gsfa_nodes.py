@@ -17,12 +17,13 @@
 from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division
-import numpy
+
 import scipy
 import scipy.optimize
 import sys
 
 import mdp
+from mdp import numx
 # from mdp.nodes.sfa_nodes import SFANode
 from mdp.utils import (mult, symeig, pinv, CovarianceMatrix, SymeigException)
 from mdp.nodes import GeneralExpansionNode
@@ -50,7 +51,7 @@ class GSFANode(mdp.Node):
         self._symeig = symeig
         self._covdcovmtx = CovDCovMatrix()
         # List of parameters that are accepted by train()
-        self.list_train_params = ["train_mode", "block_size", "node_weights", "edge_weights", "verbose"]
+        # self.list_train_params = ["train_mode", "block_size", "node_weights", "edge_weights", "verbose"]
 
 
     def _train(self, x, block_size=None, train_mode=None, node_weights=None, edge_weights=None,
@@ -108,9 +109,9 @@ class GSFANode(mdp.Node):
                 if method == "classification":
                     if verbose:
                         print("update classification")
-                    ordering = numpy.argsort(labels)
+                    ordering = numx.argsort(labels)
                     x2 = x[ordering, :]
-                    unique_labels = numpy.unique(labels)
+                    unique_labels = numx.unique(labels)
                     unique_labels.sort()
                     block_sizes = []
                     for label in unique_labels:
@@ -120,7 +121,7 @@ class GSFANode(mdp.Node):
                     block_size = int(method[len("serial_regression"):])
                     if verbose:
                         print("update serial_regression, block_size=", block_size)
-                    ordering = numpy.argsort(labels)
+                    ordering = numx.argsort(labels)
                     x2 = x[ordering, :]
                     self._covdcovmtx.update_serial(x2, block_size=block_size, weight=weight)
                 else:
@@ -158,7 +159,7 @@ class GSFANode(mdp.Node):
                     if verbose:
                         print("dual_num_blocks = ", dual_num_blocks)
                     self._covdcovmtx.update_serial(x, block_size=block_size)
-                    x2 = numpy.zeros_like(x)
+                    x2 = numx.zeros_like(x)
                     for i in range(num_blocks):
                         for j in range(dual_num_blocks):
                             x2[j * dual_block_size + i * chunk_size:j * dual_block_size + (i + 1) * chunk_size] = \
@@ -290,7 +291,7 @@ class GSFANode(mdp.Node):
                     sum_prod_x_labeled = self._covdcovmtx.sum_prod_x + 0.0
 
                     if verbose:
-                        print("Original (Diag(C')/num_diffs.avg)**0.5 =", ((numpy.diagonal(
+                        print("Original (Diag(C')/num_diffs.avg)**0.5 =", ((numx.diagonal(
                             self._covdcovmtx.sum_prod_diffs) / self._covdcovmtx.num_diffs).mean()) ** 0.5)
 
                     weight_adjustment = (N1_norm - 1) / (N1_norm - 1 + v_norm * N2)
@@ -308,7 +309,7 @@ class GSFANode(mdp.Node):
                         print("num_diffs (w11) after weight_adjustment=", self._covdcovmtx.num_diffs)
                     w11 = 1 / (N1_norm - 1 + v_norm * N2)
                     if verbose:
-                        print("After adjustment (Diag(C')/num_diffs.avg)**0.5 =", ((numpy.diagonal(
+                        print("After adjustment (Diag(C')/num_diffs.avg)**0.5 =", ((numx.diagonal(
                         self._covdcovmtx.sum_prod_diffs) / self._covdcovmtx.num_diffs).mean()) ** 0.5)
                         print("")
 
@@ -324,7 +325,7 @@ class GSFANode(mdp.Node):
                         print("w22=", w22, "node_weights_complete_2*N2=", node_weights_complete_2 * N2)
                         print("After adding complete 2: num_samples=", self._covdcovmtx.num_samples)
                         print("num_diffs=", self._covdcovmtx.num_diffs)
-                        print(" (Diag(C')/num_diffs.avg)**0.5 =", ((numpy.diagonal(
+                        print(" (Diag(C')/num_diffs.avg)**0.5 =", ((numx.diagonal(
                             self._covdcovmtx.sum_prod_diffs) / self._covdcovmtx.num_diffs).mean()) ** 0.5)
                         print("")
 
@@ -340,7 +341,7 @@ class GSFANode(mdp.Node):
                     self._covdcovmtx.sum_prod_diffs += sum_prod_diffs_mixed
                     self._covdcovmtx.num_diffs += C * N1_norm * N2 * w12  # w12 already counts twice
                     if verbose:
-                        print(" (Diag(mixed)/num_diffs.avg)**0.5 =", ((numpy.diagonal(sum_prod_diffs_mixed) /
+                        print(" (Diag(mixed)/num_diffs.avg)**0.5 =", ((numx.diagonal(sum_prod_diffs_mixed) /
                                                                    (C * N1_norm * N2 * w12)).mean()) ** 0.5, "\n")
 
                     # Additional adjustment for node weights of unlabeled data
@@ -360,7 +361,7 @@ class GSFANode(mdp.Node):
                         print("Summary w11=%f, w22=%f, w12(two ways)=%f" % (w11, w22, w12))
                         print("Summary (N1/C-1)*w11=%f, N2*w12 (one way)=%f" % ((N1 / C - 1) * w11, N2 * w12 / 2))
                         print("Summary (N2-1)*w22*C=%f, N1*w12 (one way)=%f" % ((N2 - 1) * w22 * C, N1 * w12 / 2))
-                        print("Summary (Diag(C')/num_diffs.avg)**0.5 =", ((numpy.diagonal(
+                        print("Summary (Diag(C')/num_diffs.avg)**0.5 =", ((numx.diagonal(
                             self._covdcovmtx.sum_prod_diffs) / self._covdcovmtx.num_diffs).mean()) ** 0.5)
                 elif train_mode == 'ignore_data':
                     if verbose:
@@ -368,13 +369,6 @@ class GSFANode(mdp.Node):
                 else:
                     ex = "Unknown training method"
                     raise Exception(ex)
-
-    def _inverse(self, y):
-        """ This function uses a pseudoinverse of the matrix sf to approximate an inverse to the transformation.
-        """
-        if self.pinv is None:
-            self.pinv = pinv(self.sf)
-        return mult(y, self.pinv) + self.avg
 
     def _stop_training(self, debug=False, verbose=None):
         if verbose is None:
@@ -391,7 +385,7 @@ class GSFANode(mdp.Node):
             print("DCov[0:3,0:3] is", self.dcov_mtx[0:3, 0:3])
 
         rng = self._set_range()
-
+        print("rng", rng)
         # Solve the generalized eigenvalue problem
         # the eigenvalues are already ordered in ascending order
         try:
@@ -414,15 +408,35 @@ class GSFANode(mdp.Node):
         if verbose:
             print("shape of GSFANode.sf is=", self.sf.shape)
 
+    def _execute(self, x, n=None):
+        """Compute the output of the slowest functions.
+        If 'n' is an integer, then use the first 'n' slowest components."""
+        if n:
+            sf = self.sf[:, :n]
+            bias = self._bias[:n]
+        else:
+            sf = self.sf
+            bias = self._bias
+        return mult(x, sf) - bias
+
+    def _inverse(self, y):
+        """ This function uses a pseudoinverse of the matrix sf to approximate an inverse to the transformation.
+        """
+        if self.pinv is None:
+            self.pinv = pinv(self.sf)
+        return mult(y, self.pinv) + self.avg
+
     def _set_range(self):
-        if self.output_dim is not None and self.output_dim <= self.input_dim:
+        if self.output_dim is not None and (self.output_dim <= self.input_dim or self.input_dim is None):
             # (eigenvalues sorted in ascending order)
+            print("AAAAA", self.input_dim, self.output_dim)
             rng = (1, self.output_dim)
         else:
             # otherwise, keep all output components
             rng = None
             self.output_dim = self.input_dim
         return rng
+
 
 ##############################################################################################################
 #                              HELPER FUNCTIONS                                                              #
@@ -562,7 +576,7 @@ class CovDCovMatrix(object):
         num_samples, dim = x.shape
 
         if node_weights is None:
-            node_weights = numpy.ones(num_samples)
+            node_weights = numx.ones(num_samples)
 
         if len(node_weights) != num_samples:
             er = "Node weights should be the same length %d as the number of samples %d" % \
@@ -573,7 +587,7 @@ class CovDCovMatrix(object):
             er = "edge_weights should be a dictionary with entries: d[(i,j)] = w_{i,j} or an NxN array"
             raise Exception(er)
 
-        if isinstance(edge_weights, numpy.ndarray):
+        if isinstance(edge_weights, numx.ndarray):
             # TODO: eventually make sure edge_weights are symmetric
             # TODO: eventually make sure consistency restriction is fulfilled
             if edge_weights.shape != (num_samples, num_samples):
@@ -591,7 +605,7 @@ class CovDCovMatrix(object):
         self.add_samples(weighted_sum_prod_x, weighted_sum_x, weighted_num_samples, weight=weight)
 
         # Update DCov Matrix
-        if isinstance(edge_weights, numpy.ndarray):
+        if isinstance(edge_weights, numx.ndarray):
             weighted_num_diffs = edge_weights.sum()  # normalization constant R
             prod1 = weighted_sum_prod_x  # TODO: eventually check these equations, they might only work if Q==R
             prod2 = mdp.utils.mult(mdp.utils.mult(x.T, edge_weights), x)
@@ -599,8 +613,8 @@ class CovDCovMatrix(object):
             self.add_diffs(weighted_sum_prod_diffs, weighted_num_diffs, weight=weight)
         else:
             num_diffs = len(edge_weights)
-            diffs = numpy.zeros((num_diffs, dim))
-            weighted_diffs = numpy.zeros((num_diffs, dim))
+            diffs = numx.zeros((num_diffs, dim))
+            weighted_diffs = numx.zeros((num_diffs, dim))
             weighted_num_diffs = 0
             for ii, (i, j) in enumerate(edge_weights.keys()):
                 diff = x[j, :] - x[i, :]
@@ -620,7 +634,7 @@ class CovDCovMatrix(object):
         num_samples, dim = x.shape
 
         if node_weights is None:
-            node_weights = numpy.ones(num_samples)
+            node_weights = numx.ones(num_samples)
 
         if len(node_weights) != num_samples:
             er = "Node weights should be the same length %d as the number of samples %d" % \
@@ -631,7 +645,7 @@ class CovDCovMatrix(object):
             er = "edge_weights should be a dictionary with entries: d[(i,j)] = w_{i,j} or an NxN array"
             raise Exception(er)
 
-        if isinstance(edge_weights, numpy.ndarray):
+        if isinstance(edge_weights, numx.ndarray):
             if edge_weights.shape == (num_samples, num_samples):
                 e_w = {}
                 for i in range(num_samples):
@@ -654,8 +668,8 @@ class CovDCovMatrix(object):
 
         # Update DCov Matrix
         num_diffs = len(edge_weights)
-        diffs = numpy.zeros((num_diffs, dim))
-        weighted_diffs = numpy.zeros((num_diffs, dim))
+        diffs = numx.zeros((num_diffs, dim))
+        weighted_diffs = numx.zeros((num_diffs, dim))
         weighted_num_diffs = 0
         for ii, (i, j) in enumerate(edge_weights.keys()):
             diff = x[j, :] - x[i, :]
@@ -682,7 +696,7 @@ class CovDCovMatrix(object):
         self.add_samples(sum_prod_x, sum_x, num_samples, weight)
 
         # Update DCov Matrix. First mirror the borders
-        x_mirror = numpy.zeros((num_samples + 2 * width, dim))
+        x_mirror = numx.zeros((num_samples + 2 * width, dim))
         x_mirror[width:-width] = x  # center part
         x_mirror[0:width, :] = x[0:width, :][::-1, :]  # first end
         x_mirror[-width:, :] = x[-width:, :][::-1, :]  # second end
@@ -691,7 +705,7 @@ class CovDCovMatrix(object):
         x_full = x
         sum_prod_x_full = mdp.utils.mult(x_full.T, x_full)
 
-        Aacc123 = numpy.zeros((dim, dim))
+        Aacc123 = numx.zeros((dim, dim))
         for i in range(0, 2 * width):  # [0, 2*width-1]
             Aacc123 += (i + 1) * mdp.utils.mult(x_mirror[i:i + 1, :].T, x_mirror[i:i + 1, :])  # (i+1)=1,2,3..., 2*width
 
@@ -700,7 +714,7 @@ class CovDCovMatrix(object):
         x_middle = x_mirror[2 * width:-2 * width, :]  # intermediate values of x, which are connected 2*width+1 times
         Aacc123 += (2 * width + 1) * mdp.utils.mult(x_middle.T, x_middle)
 
-        b = numpy.zeros((num_samples + 1 + 2 * width, dim))
+        b = numx.zeros((num_samples + 1 + 2 * width, dim))
         b[1:] = x_mirror.cumsum(axis=0)
         B = b[2 * width + 1:] - b[0:-2 * width - 1]
         Bprod = mdp.utils.mult(x_full.T, B)
@@ -723,8 +737,8 @@ class CovDCovMatrix(object):
         sum_prod_x = mdp.utils.mult(x.T, x)
         self.add_samples(sum_prod_x, sum_x, num_samples, weight)
 
-        # Update DCov Matrix. window = numpy.ones(2*width+1) # Rectangular window
-        x_mirror = numpy.zeros((num_samples + 2 * width, dim))
+        # Update DCov Matrix. window = numx.ones(2*width+1) # Rectangular window
+        x_mirror = numx.zeros((num_samples + 2 * width, dim))
         x_mirror[width:-width] = x  # center part
         x_mirror[0:width, :] = x[0:width, :][::-1, :]  # start of the sequence
         x_mirror[-width:, :] = x[-width:, :][::-1, :]  # end of the sequence
@@ -753,8 +767,8 @@ class CovDCovMatrix(object):
         sum_prod_x = mdp.utils.mult(x.T, x)
         self.add_samples(sum_prod_x, sum_x, num_samples, weight)
 
-        # Update DCov Matrix. window = numpy.ones(2*width+1) # Rectangular window
-        x_extended = numpy.zeros((num_samples + 2 * width, dim))
+        # Update DCov Matrix. window = numx.ones(2*width+1) # Rectangular window
+        x_extended = numx.zeros((num_samples + 2 * width, dim))
         x_extended[width:-width] = x  # center part is preserved, extreme samples are zero
 
         # Negative offset is not considered because it is equivalent to the positive one, thereore the factor 2
@@ -774,9 +788,9 @@ class CovDCovMatrix(object):
 
         # MOST CORRECT VERSION
         x_sel = x + 0.0
-        w_up = numpy.arange(width, 2 * width) / (2.0 * width)
+        w_up = numx.arange(width, 2 * width) / (2.0 * width)
         w_up = w_up.reshape((width, 1))
-        w_down = numpy.arange(2 * width - 1, width - 1, -1) / (2.0 * width)
+        w_down = numx.arange(2 * width - 1, width - 1, -1) / (2.0 * width)
         w_down = w_down.reshape((width, 1))
         x_sel[0:width, :] = x_sel[0:width, :] * w_up
         x_sel[-width:, :] = x_sel[-width:, :] * w_down
@@ -807,7 +821,7 @@ class CovDCovMatrix(object):
         x_full = x[width:num_samples - width, :]
         sum_prod_x_full = mdp.utils.mult(x_full.T, x_full)
 
-        Aacc123 = numpy.zeros((dim, dim))
+        Aacc123 = numx.zeros((dim, dim))
         for i in range(0, 2 * width):  # [0, 2*width-1]
             Aacc123 += (i + 1) * mdp.utils.mult(x[i:i + 1, :].T, x[i:i + 1, :])  # (i+1)=1,2,3..., 2*width
 
@@ -820,7 +834,7 @@ class CovDCovMatrix(object):
 
         Aacc123 += (2 * width + 1) * mdp.utils.mult(x_middle.T, x_middle)
 
-        b = numpy.zeros((num_samples + 1, dim))
+        b = numx.zeros((num_samples + 1, dim))
         b[1:] = x.cumsum(axis=0)
         #        for i in range(1,num_samples+1):
         #            b[i] = b[i-1] + x[i-1,:]
@@ -841,9 +855,9 @@ class CovDCovMatrix(object):
 
         # MOST CORRECT VERSION
         x_sel = x + 0.0
-        w_up = numpy.arange(width, 2 * width) / (2.0 * width)
+        w_up = numx.arange(width, 2 * width) / (2.0 * width)
         w_up = w_up.reshape((width, 1))
-        w_down = numpy.arange(2 * width - 1, width - 1, -1) / (2.0 * width)
+        w_down = numx.arange(2 * width - 1, width - 1, -1) / (2.0 * width)
         w_down = w_down.reshape((width, 1))
         x_sel[0:width, :] = x_sel[0:width, :] * w_up
         x_sel[-width:, :] = x_sel[-width:, :] * w_down
@@ -853,8 +867,8 @@ class CovDCovMatrix(object):
         self.add_samples(sum_prod_x, sum_x, num_samples - (0.5 * window_halfwidth - 0.5), weight)  # weights verified
 
         # Update DCov Matrix
-        # window = numpy.ones(2*width+1) # Rectangular window, used always here!
-        # diffs = numpy.zeros((num_samples - 2 * width, dim))
+        # window = numx.ones(2*width+1) # Rectangular window, used always here!
+        # diffs = numx.zeros((num_samples - 2 * width, dim))
         # This can be made faster (twice) due to symmetry
         for offset in range(-width, width + 1):
             if offset == 0:
@@ -873,7 +887,7 @@ class CovDCovMatrix(object):
             er = "block_size must be specified"
             raise Exception(er)
 
-        if isinstance(block_size, numpy.ndarray):
+        if isinstance(block_size, numx.ndarray):
             err = "Inhomogeneous block sizes not yet supported in update_serial"
             raise Exception(err)
         elif isinstance(block_size, list):
@@ -907,15 +921,15 @@ class CovDCovMatrix(object):
         self.add_samples(sum_prod_x, sum_x, num_samples, weight)
 
         # DCorrelation Matrix. Compute medias signal
-        media = numpy.zeros((num_blocks, dim))
+        media = numx.zeros((num_blocks, dim))
         for i in range(num_blocks):
             media[i] = x[i * block_size:(i + 1) * block_size].sum(axis=0) * (1.0 / block_size)
 
         media_a = media[0:-1]
         media_b = media[1:]
         sum_prod_mixed_meds = (mdp.utils.mult(media_a.T, media_b) + mdp.utils.mult(media_b.T, media_a))
-        #        prod_first_media = numpy.outer(media[0], media[0]) * block_size
-        #        prod_last_media = numpy.outer(media[num_blocks-1], media[num_blocks-1]) * block_size
+        #        prod_first_media = numx.outer(media[0], media[0]) * block_size
+        #        prod_last_media = numx.outer(media[num_blocks-1], media[num_blocks-1]) * block_size
         prod_first_block = mdp.utils.mult(x[0:block_size].T, x[0:block_size])
         prod_last_block = mdp.utils.mult(x[num_samples - block_size:].T, x[num_samples - block_size:])
 
@@ -938,7 +952,7 @@ class CovDCovMatrix(object):
             er = "error, block_size not specified!!!!"
             raise Exception(er)
 
-        if num_samples != numpy.array(block_sizes).sum():
+        if num_samples != numx.array(block_sizes).sum():
             err = "Inconsistency error: num_samples (%d) is not equal to sum of block_sizes:" % num_samples, block_sizes
             raise Exception(err)
 
@@ -957,7 +971,7 @@ class CovDCovMatrix(object):
             er = "error, block_size not specified!!!!"
             raise Exception(er)
 
-        if isinstance(block_size, numpy.ndarray):
+        if isinstance(block_size, numx.ndarray):
             er = "Error: inhomogeneous block sizes not supported by this function"
             raise Exception(er)
 
@@ -975,7 +989,7 @@ class CovDCovMatrix(object):
         self.add_samples(sum_prod_x, sum_x, num_samples, weight)
 
         # DCorrelation Matrix. Compute medias signal
-        media = numpy.zeros((num_blocks, dim))
+        media = numx.zeros((num_blocks, dim))
         for i in range(num_blocks):
             media[i] = x[i * block_size:(i + 1) * block_size].sum(axis=0) * (1.0 / block_size)
 
@@ -991,7 +1005,7 @@ class CovDCovMatrix(object):
 
         self.add_diffs(sum_prod_diffs, num_diffs, weight)
         if self.verbose:
-            print("(Diag(complete)/num_diffs.avg)**0.5 =", ((numpy.diagonal(sum_prod_diffs) / num_diffs).mean()) ** 0.5)
+            print("(Diag(complete)/num_diffs.avg)**0.5 =", ((numx.diagonal(sum_prod_diffs) / num_diffs).mean()) ** 0.5)
 
     def update_compact_classes(self, x, block_sizes=None, Jdes=None, weight=1.0):
         num_samples, dim = x.shape
@@ -999,9 +1013,9 @@ class CovDCovMatrix(object):
         if self.verbose:
             print("block_sizes=", block_sizes, type(block_sizes))
         if isinstance(block_sizes, list):
-            block_sizes = numpy.array(block_sizes)
+            block_sizes = numx.array(block_sizes)
 
-        if isinstance(block_sizes, numpy.ndarray):
+        if isinstance(block_sizes, numx.ndarray):
             if len(block_sizes) > 1:
                 if block_sizes.var() > 0:
                     er = "for compact_classes all groups must have the same number of elements (block_sizes)!!!!"
@@ -1021,7 +1035,7 @@ class CovDCovMatrix(object):
             raise Exception(err)
 
         num_classes = num_samples // block_size
-        J = int(numpy.log2(num_classes))
+        J = int(numx.log2(num_classes))
         if Jdes is None:
             Jdes = J
         extra_label = Jdes - J  # 0, 1, 2
@@ -1034,19 +1048,19 @@ class CovDCovMatrix(object):
             raise Exception(err)
 
         N = num_samples
-        labels = numpy.zeros((N, J + extra_label))
+        labels = numx.zeros((N, J + extra_label))
         for j in range(J):
-            labels[:, j] = (numpy.arange(N) // block_size // (2 ** (J - j - 1)) % 2) * 2 - 1
-        eigenvalues = numpy.concatenate(([1.0] * (J - 1), numpy.arange(1.0, 0.0, -1.0 / (extra_label + 1))))
+            labels[:, j] = (numx.arange(N) // block_size // (2 ** (J - j - 1)) % 2) * 2 - 1
+        eigenvalues = numx.concatenate(([1.0] * (J - 1), numx.arange(1.0, 0.0, -1.0 / (extra_label + 1))))
 
         n_taken = [2 ** k for k in range(J)]
         n_free = list(set(range(num_classes)) - set(n_taken))
         n_free_weights = Hamming_weight(n_free)
-        order = numpy.argsort(n_free_weights)[::-1]
+        order = numx.argsort(n_free_weights)[::-1]
 
         for j in range(extra_label):
             digit = n_free[order[j]]
-            label = numpy.ones(N)
+            label = numx.ones(N)
             for c in range(J):
                 if (digit >> c) % 2:
                     label *= labels[:, c]
@@ -1054,7 +1068,7 @@ class CovDCovMatrix(object):
                 label *= -1
             labels[:, J + j] = label
 
-        eigenvalues = numpy.array(eigenvalues)
+        eigenvalues = numx.array(eigenvalues)
 
         eigenvalues /= eigenvalues.sum()
         if self.verbose:
@@ -1093,9 +1107,9 @@ class CovDCovMatrix(object):
 
         # THEORY: This computation has a bias
         # exp_prod_x = self.sum_prod_x * (1.0 / self.num_samples)
-        # prod_avg_x = numpy.outer(avg_x, avg_x)
+        # prod_avg_x = numx.outer(avg_x, avg_x)
         # cov_x = exp_prod_x - prod_avg_x
-        prod_avg_x = numpy.outer(avg_x, avg_x)
+        prod_avg_x = numx.outer(avg_x, avg_x)
         if divide_by_num_samples_or_differences:  # as specified by the theory on training graphs
             cov_x = (self.sum_prod_x - self.num_samples * prod_avg_x) / (1.0 * self.num_samples)
         else:  # standard unbiased estimation used by standard SFA
@@ -1329,10 +1343,8 @@ class iGSFANode(mdp.Node):
 
         # Apply SFA to expanded data
         self.sfa_node = GSFANode(output_dim=sfa_output_dim, verbose=verbose)
-        # TODO: train_params is only present if patch_mdp has been imported, is this a bug?
-        self.sfa_node.train_params(exp_x, params={"block_size": block_size, "train_mode": train_mode,
-                                                  "node_weights": node_weights,
-                                                  "edge_weights": edge_weights})
+        self.sfa_node.train(exp_x, block_size=block_size, train_mode=train_mode,
+                            node_weights=node_weights, edge_weights=edge_weights)  # sfa_node.train_params
         self.sfa_node.stop_training()
         if verbose:
             print("self.sfa_node.d", self.sfa_node.d)
@@ -1391,7 +1403,7 @@ class iGSFANode(mdp.Node):
             x_pca_app = self.lr_node.execute(n_sfa_x)
             x_app = x_pca_app
         else:
-            x_app = numpy.zeros_like(x_zm)
+            x_app = numx.zeros_like(x_zm)
 
         # Remove linear approximation
         sfa_removed_x = x_zm - x_app
@@ -1402,11 +1414,11 @@ class iGSFANode(mdp.Node):
         # AKA Laurenz method for feature scaling( +rotation)
         if self.reconstruct_with_sfa and self.slow_feature_scaling_method == "QR_decomposition":
             M = self.lr_node.beta[1:, :].T  # bias is used by default, we do not need to consider it
-            Q, R = numpy.linalg.qr(M)
+            Q, R = numx.linalg.qr(M)
             self.Q = Q
             self.R = R
             self.Rpinv = pinv(R)
-            s_n_sfa_x = numpy.dot(n_sfa_x, R.T)
+            s_n_sfa_x = numx.dot(n_sfa_x, R.T)
         # AKA my method for feature scaling (no rotation)
         elif self.reconstruct_with_sfa and (self.slow_feature_scaling_method == "sensitivity_based"):
             beta = self.lr_node.beta[1:, :]  # bias is used by default, we do not need to consider it
@@ -1444,7 +1456,7 @@ class iGSFANode(mdp.Node):
 
         if self.slow_feature_scaling_method == "data_dependent":
             if pca_output_dim > 0:
-                self.magn_n_sfa_x = 1.0 * numpy.median(
+                self.magn_n_sfa_x = 1.0 * numx.median(
                     self.pca_node.d) ** 0.5  # WARNING, why did I have 5.0 there? it is supposed to be 1.0
             else:
                 self.magn_n_sfa_x = 1.0
@@ -1459,7 +1471,7 @@ class iGSFANode(mdp.Node):
             raise Exception(er)
 
         # Finally, the output is the concatenation of scaled slow features and remaining pca components
-        sfa_pca_x = numpy.concatenate((s_n_sfa_x, pca_x), axis=1)
+        sfa_pca_x = numx.concatenate((s_n_sfa_x, pca_x), axis=1)
 
         sfa_pca_x_truncated = sfa_pca_x[:, 0:self.output_dim]
 
@@ -1487,7 +1499,7 @@ class iGSFANode(mdp.Node):
 
         # Data mean is ignored by the multiple train method
         if self.x_mean is None:
-            self.x_mean = numpy.zeros(self.input_dim)
+            self.x_mean = numx.zeros(self.input_dim)
         x_zm = x
 
         # Reorder or pre-process the data before it is expanded, but only if there is really an expansion.
@@ -1522,9 +1534,8 @@ class iGSFANode(mdp.Node):
         self.sfa_x_mean = 0
         self.sfa_x_std = 1.0
 
-        self.sfa_node.train_params(exp_x, params={"block_size": block_size, "train_mode": train_mode,
-                                                  "node_weights": node_weights,
-                                                  "edge_weights": edge_weights})
+        self.sfa_node.train(exp_x, block_size=block_size, train_mode=train_mode,
+                            node_weights=node_weights, edge_weights=edge_weights)
 
         if verbose:
             print("training PCA...")
@@ -1593,7 +1604,7 @@ class iGSFANode(mdp.Node):
         elif self.slow_feature_scaling_method == "data_dependent":
             # SFA components have an std equal to that of the least significant principal component
             if self.pca_node.d.shape[0] > 0:
-                self.magn_n_sfa_x = 1.0 * numpy.median(self.pca_node.d) ** 0.5
+                self.magn_n_sfa_x = 1.0 * numx.median(self.pca_node.d) ** 0.5
                 # 100.0 * self.pca_node.d[-1] ** 0.5 + 0.0 # Experiment: use 5.0 instead of 1.0
             else:
                 self.magn_n_sfa_x = 1.0
@@ -1631,14 +1642,14 @@ class iGSFANode(mdp.Node):
             x_pca_app = self.lr_node.execute(n_sfa_x)
             x_app = x_pca_app
         else:
-            x_app = numpy.zeros_like(x_zm)
+            x_app = numx.zeros_like(x_zm)
 
         # Remove linear approximation from the centered data
         sfa_removed_x = x_zm - x_app
 
         # Laurenz method for feature scaling( +rotation)
         if self.reconstruct_with_sfa and self.slow_feature_scaling_method == "QR_decomposition":
-            s_n_sfa_x = numpy.dot(n_sfa_x, self.R.T)
+            s_n_sfa_x = numx.dot(n_sfa_x, self.R.T)
         # My method for feature scaling (no rotation)
         elif self.reconstruct_with_sfa and self.slow_feature_scaling_method == "sensitivity_based":
             s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x
@@ -1656,10 +1667,10 @@ class iGSFANode(mdp.Node):
             pca_x = self.pca_node.execute(sfa_removed_x)
         else:
             # No reconstructive components present
-            pca_x = numpy.zeros((x.shape[0], 0))
+            pca_x = numx.zeros((x.shape[0], 0))
 
         # Finally output is the concatenation of scaled slow features and remaining pca components
-        sfa_pca_x = numpy.concatenate((s_n_sfa_x, pca_x), axis=1)
+        sfa_pca_x = numx.concatenate((s_n_sfa_x, pca_x), axis=1)
 
         return sfa_pca_x  # sfa_pca_x_truncated
 
@@ -1684,7 +1695,7 @@ class iGSFANode(mdp.Node):
         rmse_lin = ((y - self.execute(x_lin)) ** 2).sum(axis=1).mean() ** 0.5
         # scipy.optimize.leastsq(func, x0, args=(), Dfun=None, full_output=0, col_deriv=0, ftol=1.49012e-08,
         # xtol=1.49012e-08, gtol=0.0, maxfev=0, epsfcn=0.0, factor=100, diag=None)
-        x_nl = numpy.zeros_like(x_lin)
+        x_nl = numx.zeros_like(x_lin)
         y_dim = y.shape[1]
         x_dim = x_lin.shape[1]
         if y_dim < x_dim:
@@ -1693,7 +1704,7 @@ class iGSFANode(mdp.Node):
             num_zeros_filling = 0
         if verbose:
             print("x_dim=", x_dim, "y_dim=", y_dim, "num_zeros_filling=", num_zeros_filling)
-        y_long = numpy.zeros(y_dim + num_zeros_filling)
+        y_long = numx.zeros(y_dim + num_zeros_filling)
 
         for i, y_i in enumerate(y):
             y_long[0:y_dim] = y_i
@@ -1725,7 +1736,7 @@ class iGSFANode(mdp.Node):
             er = "Serious dimensionality inconsistency:", y.shape[0], self.output_dim
             raise Exception(er)
 
-        sfa_pca_x_full = numpy.zeros(
+        sfa_pca_x_full = numx.zeros(
             (num_samples, self.pca_node.output_dim + self.num_sfa_features_preserved))  # self.input_dim
         sfa_pca_x_full[:, 0:self.output_dim] = y
 
@@ -1735,11 +1746,11 @@ class iGSFANode(mdp.Node):
         if pca_x.shape[1] > 0:
             sfa_removed_x = self.pca_node.inverse(pca_x)
         else:
-            sfa_removed_x = numpy.zeros((num_samples, self.input_dim))
+            sfa_removed_x = numx.zeros((num_samples, self.input_dim))
 
         # AKA Laurenz method for feature scaling (+rotation)
         if self.reconstruct_with_sfa and self.slow_feature_scaling_method == "QR_decomposition":
-            n_sfa_x = numpy.dot(s_n_sfa_x, self.Rpinv.T)
+            n_sfa_x = numx.dot(s_n_sfa_x, self.Rpinv.T)
         else:
             n_sfa_x = s_n_sfa_x / self.magn_n_sfa_x
 
@@ -1748,7 +1759,7 @@ class iGSFANode(mdp.Node):
             x_pca_app = self.lr_node.execute(n_sfa_x)
             x_app = x_pca_app
         else:
-            x_app = numpy.zeros_like(sfa_removed_x)
+            x_app = numx.zeros_like(sfa_removed_x)
 
         x_zm = sfa_removed_x + x_app
 
@@ -1827,7 +1838,7 @@ def PCANode_reduce_output_dim(pca_node, new_output_dim, verbose=False):
 # Computes output errors dimension by dimension for a single sample: y - node.execute(x_app)
 # The library fails when dim(x_app) > dim(y), thus filling of x_app with zeros is recommended
 def f_residual(x_app_i, node, y_i):
-    res_long = numpy.zeros_like(y_i)
+    res_long = numx.zeros_like(y_i)
     y_i = y_i.reshape((1, -1))
     y_i_short = y_i[:, 0:node.output_dim]
     res = (y_i_short - node.execute(x_app_i.reshape((1, -1)))).flatten()
@@ -1847,8 +1858,8 @@ def example_clustered_graph():
     num_samples = cluster_size * num_clusters
     dim = 20
     output_dim = 2
-    x = numpy.random.normal(size=(num_samples, dim))
-    x += 0.1 * numpy.arange(num_samples).reshape((num_samples, 1))
+    x = numx.random.normal(size=(num_samples, dim))
+    x += 0.1 * numx.arange(num_samples).reshape((num_samples, 1))
 
     print("x=", x)
 
@@ -1872,8 +1883,8 @@ def example_clustered_graph():
     print("y", y)
     print("Standard delta values of output features y:", comp_delta(y))
 
-    x_test = numpy.random.normal(size=(num_samples, dim))
-    x_test += 0.1 * numpy.arange(num_samples).reshape((num_samples, 1))
+    x_test = numx.random.normal(size=(num_samples, dim))
+    x_test += 0.1 * numx.arange(num_samples).reshape((num_samples, 1))
     y_test = GSFA_n.execute(Exp_n.execute(x_test))
     print("y_test", y_test)
     print("Standard delta values of output features y_test:", comp_delta(y_test))
@@ -1882,17 +1893,17 @@ def example_clustered_graph():
 def example_pathological_outputs(experiment):
     print("\n **************************************************************************")
     print("*Pathological responses. Experiment on graph with weakly connected samples")
-    x = numpy.random.normal(size=(20, 19))
-    x2 = numpy.random.normal(size=(20, 19))
+    x = numx.random.normal(size=(20, 19))
+    x2 = numx.random.normal(size=(20, 19))
 
-    l = numpy.random.normal(size=20)
+    l = numx.random.normal(size=20)
     l -= l.mean()
     l /= l.std()
     l.sort()
 
     half_width = 3
 
-    v = numpy.ones(20)
+    v = numx.ones(20)
     e = {}
     for t in range(19):
         e[(t, t + 1)] = 1.0
@@ -1952,7 +1963,7 @@ def example_pathological_outputs(experiment):
         e = {}
         for j1 in range(19):
             for j2 in range(j1 + 1, 20):
-                e[(j1, j2)] = numpy.exp(-0.25 * (l[j2] - l[j1]) ** 2)
+                e[(j1, j2)] = numx.exp(-0.25 * (l[j2] - l[j1]) ** 2)
         exp_title = "Modified edge weights for labels as w12 = exp(-0.25*(l2-l1)**2) 8"
     elif experiment == 9:
         e = {}
@@ -1987,7 +1998,7 @@ def example_pathological_outputs(experiment):
         print(graph_delta_values(y, e))
         print(graph_delta_values(y2, e))
 
-    D = numpy.zeros(20)
+    D = numx.zeros(20)
     for (j1, j2) in e:
         D[j1] += e[(j1, j2)] / 2.0
         D[j2] += e[(j1, j2)] / 2.0
@@ -1999,7 +2010,7 @@ def example_pathological_outputs(experiment):
     plt.figure()
     plt.title("Overfitted outputs on training data, v (node weights)=" + str(v))
     plt.xlabel(exp_title + "\n With D (half the sum of all edges from/to each vertex)=" + str(D))
-    plt.xticks(numpy.arange(0, 20, 1))
+    plt.xticks(numx.arange(0, 20, 1))
     plt.plot(y)
     if experiment in (6, 7, 8):
         if y[0, 0] > 0:
@@ -2011,21 +2022,21 @@ def example_pathological_outputs(experiment):
 def example_continuous_edge_weights():
     print("\n**************************************************************************")
     print("*Testing continuous edge weigths w_{n,n'} = 1/(|l_n'-l_n|+k)")
-    x = numpy.random.normal(size=(20, 19))
-    x2 = numpy.random.normal(size=(20, 19))
+    x = numx.random.normal(size=(20, 19))
+    x2 = numx.random.normal(size=(20, 19))
 
-    l = numpy.random.normal(size=20)
+    l = numx.random.normal(size=20)
     l -= l.mean()
     l /= l.std()
     l.sort()
     k = 0.0001
 
-    v = numpy.ones(20)
+    v = numx.ones(20)
     e = {}
     for n1 in range(20):
         for n2 in range(20):
             if n1 != n2:
-                e[(n1, n2)] = 1.0 / (numpy.abs(l[n2] - l[n1]) + k)
+                e[(n1, n2)] = 1.0 / (numx.abs(l[n2] - l[n1]) + k)
 
     exp_title = "Original linear SFA graph"
     n = GSFANode(output_dim=5)
@@ -2039,7 +2050,7 @@ def example_continuous_edge_weights():
         print(graph_delta_values(y, e))
         print(graph_delta_values(y2, e))
 
-    D = numpy.zeros(20)
+    D = numx.zeros(20)
     for (j1, j2) in e:
         D[j1] += e[(j1, j2)] / 2.0
         D[j2] += e[(j1, j2)] / 2.0
@@ -2051,7 +2062,7 @@ def example_continuous_edge_weights():
     plt.figure()
     plt.title("Overfitted outputs on training data,v=" + str(v))
     plt.xlabel(exp_title + "\n With D=" + str(D))
-    plt.xticks(numpy.arange(0, 20, 1))
+    plt.xticks(numx.arange(0, 20, 1))
     plt.plot(y)
     plt.plot(l, "*")
     plt.show()
@@ -2067,15 +2078,15 @@ def example_iGSFA():
     num_samples = 1000
     dim = 20
     verbose = False
-    x = numpy.random.normal(size=(num_samples, dim))
-    x[:, 0] += 2.0 * numpy.arange(num_samples) / num_samples
-    x[:, 1] += 1.0 * numpy.arange(num_samples) / num_samples
-    x[:, 2] += 0.5 * numpy.arange(num_samples) / num_samples
+    x = numx.random.normal(size=(num_samples, dim))
+    x[:, 0] += 2.0 * numx.arange(num_samples) / num_samples
+    x[:, 1] += 1.0 * numx.arange(num_samples) / num_samples
+    x[:, 2] += 0.5 * numx.arange(num_samples) / num_samples
 
-    x_test = numpy.random.normal(size=(num_samples, dim))
-    x_test[:, 0] += 2.0 * numpy.arange(num_samples) / num_samples
-    x_test[:, 1] += 1.0 * numpy.arange(num_samples) / num_samples
-    x_test[:, 2] += 0.5 * numpy.arange(num_samples) / num_samples
+    x_test = numx.random.normal(size=(num_samples, dim))
+    x_test[:, 0] += 2.0 * numx.arange(num_samples) / num_samples
+    x_test[:, 1] += 1.0 * numx.arange(num_samples) / num_samples
+    x_test[:, 2] += 0.5 * numx.arange(num_samples) / num_samples
 
     import cuicuilco.patch_mdp
     from cuicuilco.sfa_libs import zero_mean_unit_var

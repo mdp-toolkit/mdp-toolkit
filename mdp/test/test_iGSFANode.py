@@ -12,16 +12,15 @@ from __future__ import division
 import numpy
 import copy
 
+from ._tools import *
 import pytest
 import mdp
 
+# import cuicuilco.patch_mdp
+from mdp.nodes.gsfa_nodes import comp_delta, GSFANode, iGSFANode, SFANode_reduce_output_dim, PCANode_reduce_output_dim
 
-import cuicuilco.patch_mdp  # Is this necessary???
-from cuicuilco.gsfa_nodes import comp_delta, GSFANode, iGSFANode, SFANode_reduce_output_dim, PCANode_reduce_output_dim
-
-# TODO: rename offsetting_mode -> slow_feature_scaling_method
-#       *test_SFANode_reduce_output_dim (extraction and inverse)
-#       *test_PCANode_reduce_output_dim (extraction and inverse)
+# *test_SFANode_reduce_output_dim (extraction and inverse)
+# *test_PCANode_reduce_output_dim (extraction and inverse)
 
 #iGSFANode(input_dim=None, output_dim=None, pre_expansion_node_class=None, pre_expansion_out_dim=None,
 #                 expansion_funcs=None, expansion_output_dim=None, expansion_starting_point=None,

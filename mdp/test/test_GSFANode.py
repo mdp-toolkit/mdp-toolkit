@@ -9,12 +9,8 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division
 
-from past.utils import old_div
 from ._tools import *
-
-# import numx
 import pytest
-# import mdp
 
 from mdp.nodes.gsfa_nodes import graph_delta_values, comp_delta
 
