@@ -282,6 +282,9 @@ def NeuralGasNode_inp_arg_gen():
 def LinearRegressionNode_inp_arg_gen():
     return uniform(size=(1000, 5))
 
+def iGSFANode_inp_arg_gen():
+    return uniform(size=(1000, 4)) * 0.01  #
+
 def _rand_1d(x):
     return uniform(size=(x.shape[0],))
 
@@ -345,6 +348,13 @@ NODES = [
          init_args=[(nodes.PolynomialExpansionNode, (1,), {}),
                     (nodes.PolynomialExpansionNode, (1,), {}),
                     True]),
+    dict(klass='iGSFANode',
+         init_args=[None, None, None, None, None, None, None, 0.5, False, False],
+#         """pre_expansion_node_class=None, pre_expansion_out_dim=None,
+#                 expansion_funcs=None, expansion_output_dim=None, expansion_starting_point=None,
+#                 max_length_slow_part=None, slow_feature_scaling_method=None, delta_threshold=1.999,
+#                 reconstruct_with_sfa=False, verbose=False, input_dim=None, output_dim=None, **argv"""
+         inp_arg_gen=iGSFANode_inp_arg_gen),
     dict(klass='LLENode',
          inp_arg_gen=_contrib_get_random_mix,
          init_args=[3, 0.001, True]),
@@ -361,7 +371,6 @@ NODES = [
          inp_arg_gen=CCIPCANode_inp_arg_gen),
     dict(klass='IncSFANode',
          inp_arg_gen=CCIPCANode_inp_arg_gen),
-
     dict(klass='PerceptronClassifier',
          sup_arg_gen=_rand_classification_labels_array),
     dict(klass='SimpleMarkovClassifier',

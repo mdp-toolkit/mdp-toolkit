@@ -1209,10 +1209,10 @@ class iGSFANode(mdp.Node):
     preservation complements the slowness principle", e-print arXiv:1601.03945, http://arxiv.org/abs/1601.03945, 2017
     """
 
-    def __init__(self, input_dim=None, output_dim=None, pre_expansion_node_class=None, pre_expansion_out_dim=None,
+    def __init__(self, pre_expansion_node_class=None, pre_expansion_out_dim=None,
                  expansion_funcs=None, expansion_output_dim=None, expansion_starting_point=None,
-                 max_length_slow_part=None, slow_feature_scaling_method=None, delta_threshold=1.9999,
-                 reconstruct_with_sfa=False, verbose=False, **argv):
+                 max_length_slow_part=None, slow_feature_scaling_method=None, delta_threshold=1.999,
+                 reconstruct_with_sfa=False, verbose=False, input_dim=None, output_dim=None, dtype=None, **argv):
         """Initializes the iGSFA node.
 
         pre_expansion_node_class: a node class. An instance of this class is used to filter the data before the
@@ -1240,7 +1240,7 @@ class iGSFANode(mdp.Node):
               slow_feature_scaling_method in [None, "data_dependent"]. This is necessary to support weight sharing in
               iGSFA layers (convolutional iGSFA layers).
         """
-        super(iGSFANode, self).__init__(input_dim=input_dim, output_dim=output_dim, **argv)
+        super(iGSFANode, self).__init__(input_dim=input_dim, output_dim=output_dim, dtype=dtype, **argv)
         self.pre_expansion_node_class = pre_expansion_node_class  # Type of node used to expand the data
         self.pre_expansion_node = None  # Node that expands the input data
         self.pre_expansion_output_dim = pre_expansion_out_dim
@@ -1344,7 +1344,7 @@ class iGSFANode(mdp.Node):
             sfa_output_dim = max(1, sfa_output_dim)
 
         # Apply SFA to expanded data
-        self.sfa_node = GSFANode(output_dim=sfa_output_dim, verbose=verbose)
+        self.sfa_node = GSFANode(output_dim=sfa_output_dim, dtype=self.dtype, verbose=verbose)
         self.sfa_node.train(exp_x, block_size=block_size, train_mode=train_mode,
                             node_weights=node_weights, edge_weights=edge_weights)  # sfa_node.train_params
         self.sfa_node.stop_training()
@@ -1445,7 +1445,7 @@ class iGSFANode(mdp.Node):
         print("training PCA...")
         pca_output_dim = self.output_dim - self.num_sfa_features_preserved
         # This allows training of PCA when pca_out_dim is zero
-        self.pca_node = mdp.nodes.PCANode(output_dim=max(1, pca_output_dim))  # reduce=True
+        self.pca_node = mdp.nodes.PCANode(output_dim=max(1, pca_output_dim), dtype=self.dtype)  # reduce=True
         self.pca_node.train(sfa_removed_x)
         self.pca_node.stop_training()
         PCANode_reduce_output_dim(self.pca_node, pca_output_dim, verbose=False)
@@ -1501,7 +1501,7 @@ class iGSFANode(mdp.Node):
 
         # Data mean is ignored by the multiple train method
         if self.x_mean is None:
-            self.x_mean = numx.zeros(self.input_dim)
+            self.x_mean = numx.zeros(self.input_dim, dtype=self.dtype)
         x_zm = x
 
         # Reorder or pre-process the data before it is expanded, but only if there is really an expansion.
@@ -1729,7 +1729,7 @@ class iGSFANode(mdp.Node):
             print("rmse_lin(all samples)=", rmse_lin, "rmse_nl(all samples)=", rmse_nl)
         return x_nl
 
-    def linear_inverse(self, y, verbose=None):
+    def linear_inverse(self, y, verbose=True):
         """Linear inverse approximation method. """
         if verbose is None:
             verbose = self.verbose
@@ -1739,7 +1739,7 @@ class iGSFANode(mdp.Node):
             raise TrainingException(er)
 
         sfa_pca_x_full = numx.zeros(
-            (num_samples, self.pca_node.output_dim + self.num_sfa_features_preserved))  # self.input_dim
+            (num_samples, self.pca_node.output_dim + self.num_sfa_features_preserved), dtype=self.dtype)
         sfa_pca_x_full[:, 0:self.output_dim] = y
 
         s_n_sfa_x = sfa_pca_x_full[:, 0:self.num_sfa_features_preserved]
@@ -1768,20 +1768,22 @@ class iGSFANode(mdp.Node):
         x = x_zm + self.x_mean
 
         if verbose:
-            print("Data_variance(x_zm)=", data_variance(x_zm))
-            print("Data_variance(x_app)=", data_variance(x_app))
-            print("Data_variance(sfa_removed_x)=", data_variance(sfa_removed_x))
+            print("Data_std(x_zm)=", x_zm.var(axis=0))
+            print("Data_std(x_app)=", x_app.var(axis=0))
+            print("Data_std(sfa_removed_x)=", sfa_removed_x.var(axis=0))
             print("x_app.mean(axis=0)=", x_app)
             print("x[0]=", x[0])
-            print("zm_x[0]=", zm_x[0])
-            print("exp_x[0]=", exp_x[0])
-            print("s_x_1[0]=", s_x_1[0])
-            print("proj_sfa_x[0]=", proj_sfa_x[0])
+            print("x_zm[0]=", x_zm[0])
             print("sfa_removed_x[0]=", sfa_removed_x[0])
             print("pca_x[0]=", pca_x[0])
-            print("n_pca_x[0]=", n_pca_x[0])
-            print("sfa_x[0]=", sfa_x[0])
-
+            print("num_sfa_features_preserved=", self.num_sfa_features_preserved)
+            print("pca_node.output_dim=", self.pca_node.output_dim)
+            print("sfa_node.d=", self.sfa_node.d)
+            print("dtype(y)=", y.dtype)
+            print("dtype(x)=", x.dtype)
+            print("dtypes of x_zm, self.x_mean, x_app, sfa_removed_x, n_sfa_x, pca_x, sfa_pca_x_full",
+                  x_zm.dtype, self.x_mean.dtype, x_app.dtype, sfa_removed_x.dtype,
+                  n_sfa_x.dtype, pca_x.dtype, sfa_pca_x_full.dtype)
         return x
 
 
