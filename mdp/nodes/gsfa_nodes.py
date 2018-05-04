@@ -26,6 +26,11 @@ from mdp import numx, NodeException, TrainingException
 from mdp.utils import (mult, symeig, pinv, CovarianceMatrix, SymeigException)
 from mdp.nodes import GeneralExpansionNode
 
+# For Python 2 & 3 compatibility
+try:
+  basestring
+except NameError:
+  basestring = str
 
 class GSFANode(mdp.Node):
     """ This node implements "Graph-Based SFA (GSFA)", which is the main component of hierarchical GSFA (HGSFA).
@@ -1139,68 +1144,6 @@ class CovDCovMatrix(object):
         return self.cov_mtx, self.avg, self.dcov_mtx
 
 
-# ####### Helper functions for parallel processing and CovDcovMatrices #########
-
-# This function is used by patch_mdp
-# def compute_cov_matrix(x, verbose=False):
-#     print("PCov")
-#     if verbose:
-#         print("Computation Began!!! **********************************************************")
-#         sys.stdout.flush()
-#     covmtx = CovarianceMatrix(bias=True)
-#     covmtx.update(x)
-#     if verbose:
-#         print("Computation Ended!!! **********************************************************")
-#         sys.stdout.flush()
-#     return covmtx
-#
-#
-# def compute_cov_dcov_matrix_clustered(params, verbose=False):
-#     print("PComp")
-#     if verbose:
-#         print("Computation Began!!! **********************************************************")
-#         sys.stdout.flush()
-#     x, block_size, weight = params
-#     covdcovmtx = CovDCovMatrix()
-#     covdcovmtx.update_clustered_homogeneous_block_sizes(x, block_size=block_size, weight=weight)
-#     if verbose:
-#         print("Computation Ended!!! **********************************************************")
-#         sys.stdout.flush()
-#     return covdcovmtx
-#
-#
-# def compute_cov_dcov_matrix_serial(params, verbose=False):
-#     print("PSeq")
-#     if verbose:
-#         print("Computation Began!!! **********************************************************")
-#         sys.stdout.flush()
-#     x, block_size = params
-#     covdcovmtx = CovDCovMatrix()
-#     covdcovmtx.update_serial(x, block_size=block_size)
-#     if verbose:
-#         print("Computation Ended!!! **********************************************************")
-#         sys.stdout.flush()
-#     return covdcovmtx
-#
-#
-# def compute_cov_dcov_matrix_mixed(params, verbose=False):
-#     print("PMixed")
-#     if verbose:
-#         print("Computation Began!!! **********************************************************")
-#         sys.stdout.flush()
-#     x, block_size = params
-#     bs = block_size
-#     covdcovmtx = CovDCovMatrix()
-#     covdcovmtx.update_clustered_homogeneous_block_sizes(x[0:bs], block_size=block_size, weight=0.5)
-#     covdcovmtx.update_clustered_homogeneous_block_sizes(x[bs:-bs], block_size=block_size, weight=1.0)
-#     covdcovmtx.update_clustered_homogeneous_block_sizes(x[-bs:], block_size=block_size, weight=0.5)
-#     covdcovmtx.update_serial(x, block_size=block_size)
-#     if verbose:
-#         print("Computation Ended!!! **********************************************************")
-#         sys.stdout.flush()
-#     return covdcovmtx
-
-
 class iGSFANode(mdp.Node):
     """This node implements "information-preserving graph-based SFA (iGSFA)", which is the main component of
     hierarchical iGSFA (HiGSFA).
@@ -1771,19 +1714,6 @@ class iGSFANode(mdp.Node):
             print("Data_std(x_zm)=", x_zm.var(axis=0))
             print("Data_std(x_app)=", x_app.var(axis=0))
             print("Data_std(sfa_removed_x)=", sfa_removed_x.var(axis=0))
-            print("x_app.mean(axis=0)=", x_app)
-            print("x[0]=", x[0])
-            print("x_zm[0]=", x_zm[0])
-            print("sfa_removed_x[0]=", sfa_removed_x[0])
-            print("pca_x[0]=", pca_x[0])
-            print("num_sfa_features_preserved=", self.num_sfa_features_preserved)
-            print("pca_node.output_dim=", self.pca_node.output_dim)
-            print("sfa_node.d=", self.sfa_node.d)
-            print("dtype(y)=", y.dtype)
-            print("dtype(x)=", x.dtype)
-            print("dtypes of x_zm, self.x_mean, x_app, sfa_removed_x, n_sfa_x, pca_x, sfa_pca_x_full",
-                  x_zm.dtype, self.x_mean.dtype, x_app.dtype, sfa_removed_x.dtype,
-                  n_sfa_x.dtype, pca_x.dtype, sfa_pca_x_full.dtype)
         return x
 
 
@@ -1798,16 +1728,10 @@ def SFANode_reduce_output_dim(sfa_node, new_output_dim, verbose=False):
         er = "Can only reduce output dimensionality of SFA node, not increase it (%d > %d)" % \
              (new_output_dim, sfa_node.output_dim)
         raise ValueError(er)
-    if verbose:
-        print("Before: sfa_node.d.shape=", sfa_node.d.shape, " sfa_node.sf.shape=", sfa_node.sf.shape)
-        print("sfa_node._bias.shape=", sfa_node._bias.shape)
     sfa_node.d = sfa_node.d[:new_output_dim]
     sfa_node.sf = sfa_node.sf[:, :new_output_dim]
     sfa_node._bias = sfa_node._bias[:new_output_dim]
     sfa_node._output_dim = new_output_dim
-    if verbose:
-        print("After: sfa_node.d.shape=", sfa_node.d.shape, " sfa_node.sf.shape=", sfa_node.sf.shape)
-        print(" sfa_node._bias.shape=", sfa_node._bias.shape)
 
 
 def PCANode_reduce_output_dim(pca_node, new_output_dim, verbose=False):
@@ -1820,9 +1744,6 @@ def PCANode_reduce_output_dim(pca_node, new_output_dim, verbose=False):
     if new_output_dim > pca_node.output_dim:
         er = "Can only reduce output dimensionality of PCA node, not increase it"
         raise ValueError(er)
-    if verbose:
-        print("Before: pca_node.d.shape=", pca_node.d.shape, " pca_node.v.shape=", pca_node.v.shape)
-        print(" pca_node.avg.shape=", pca_node.avg.shape)
 
     # if new_output_dim > 0:
     original_total_variance = pca_node.d.sum()
@@ -1832,11 +1753,6 @@ def PCANode_reduce_output_dim(pca_node, new_output_dim, verbose=False):
     # pca_node.avg is not affected by this method!
     pca_node._output_dim = new_output_dim
     pca_node.explained_variance = original_explained_variance * pca_node.d.sum() / original_total_variance
-    # else:
-
-    if verbose:
-        print("After: pca_node.d.shape=", pca_node.d.shape, " pca_node.v.shape=", pca_node.v.shape)
-        print(" pca_node.avg.shape=", pca_node.avg.shape)
 
 
 # Computes output errors dimension by dimension for a single sample: y - node.execute(x_app)
@@ -1918,20 +1834,20 @@ def example_pathological_outputs(experiment):
     # experiment = 0 #Select the experiment to perform, from 0 to 11
     print("experiment", experiment)
     if experiment == 0:
-        exp_title = "Original linear SFA graph"
+        exp_title = "Original linear SFA graph. Experiment 0"
     elif experiment == 1:
         v[0] = 10.0
         v[10] = 0.1
         v[19] = 10.0
-        exp_title = "Modified node weights 1"
+        exp_title = "Modified node weights. Experiment 1"
     elif experiment == 2:
         v[0] = 10.0
         v[19] = 0.1
-        exp_title = "Modified node weights 2"
+        exp_title = "Modified node weights. Experiment 2"
     elif experiment == 3:
         e[(0, 1)] = 0.1
         e[(18, 19)] = 10.0
-        exp_title = "Modified edge weights 3"
+        exp_title = "Modified edge weights. Experiment 3"
     elif experiment == 4:
         e[(0, 1)] = 0.01
         e[(18, 19)] = 0.01
@@ -1943,7 +1859,7 @@ def example_pathological_outputs(experiment):
         e[(5, 7)] = 0.5
 
         # e[(1,2)] = 0.1
-        exp_title = "Modified edge weights 4"
+        exp_title = "Modified edge weights. Experiment 4"
     elif experiment == 5:
         e[(10, 11)] = 0.02
         e[(1, 2)] = 0.02
@@ -1952,36 +1868,36 @@ def example_pathological_outputs(experiment):
         e[(17, 19)] = 1.0
         e[(14, 16)] = 1.0
 
-        exp_title = "Modified edge weights 5"
+        exp_title = "Modified edge weights. Experiment 5"
     elif experiment == 6:
         e[(6, 7)] = 0.1
         e[(5, 6)] = 0.1
-        exp_title = "Modified edge weights 6"
+        exp_title = "Modified edge weights. Experiment 6"
     elif experiment == 7:
         e = {}
         for j1 in range(19):
             for j2 in range(j1 + 1, 20):
                 e[(j1, j2)] = 1 / (l[j2] - l[j1] + 0.00005)
-        exp_title = "Modified edge weights for labels as w12 = 1/(l2-l1+0.00005) 7"
+        exp_title = "Modified edge weights for labels as w12 = 1/(l2-l1+0.00005). Experiment 7"
     elif experiment == 8:
         e = {}
         for j1 in range(19):
             for j2 in range(j1 + 1, 20):
                 e[(j1, j2)] = numx.exp(-0.25 * (l[j2] - l[j1]) ** 2)
-        exp_title = "Modified edge weights for labels as w12 = exp(-0.25*(l2-l1)**2) 8"
+        exp_title = "Modified edge weights for labels as w12 = exp(-0.25*(l2-l1)**2). Experiment 8"
     elif experiment == 9:
         e = {}
         for j1 in range(19):
             for j2 in range(j1 + 1, 20):
-                if l[j2] - l[j1] < 0.6:
-                    e[(j1, j2)] = 1 / (l[j2] - l[j1] + 0.00005)
-        exp_title = "Modified edge weights w12 = 1/(l2-l1+0.00005), for l2-l1<0.6 9"
+                if l[j2] - l[j1] < 1.5:
+                    e[(j1, j2)] = 1 / (l[j2] - l[j1] + 0.0005)
+        exp_title = "Modified edge weights w12 = 1/(l2-l1+0.0005), for l2-l1<1.5. Experiment 9"
     elif experiment == 10:
-        exp_title = "Mirroring training graph, w=%d" % half_width + "10"
+        exp_title = "Mirroring training graph, w=%d" % half_width + ". Experiment 10"
         train_mode = "smirror_window%d" % half_width
         e = {}
     elif experiment == 11:
-        exp_title = "Node weight adjustment training graph, w=%d " % half_width + "11"
+        exp_title = "Node weight adjustment training graph, w=%d " % half_width + ". Experiment 11"
         train_mode = "window%d" % half_width
         e = {}
     else:
@@ -2040,7 +1956,7 @@ def example_continuous_edge_weights():
     for n1 in range(20):
         for n2 in range(20):
             if n1 != n2:
-                e[(n1, n2)] = 1.0 / (numx.abs(l[n2] - l[n1]) + k)
+                e[(n1, n2)] = 1.0 / (numx.absolute(l[n2] - l[n1]) + k)
 
     exp_title = "Original linear SFA graph"
     n = GSFANode(output_dim=5)
@@ -2092,8 +2008,11 @@ def example_iGSFA():
     x_test[:, 1] += 1.0 * numx.arange(num_samples) / num_samples
     x_test[:, 2] += 0.5 * numx.arange(num_samples) / num_samples
 
-    import cuicuilco.patch_mdp
-    from cuicuilco.sfa_libs import zero_mean_unit_var
+    def zero_mean_unit_var(x):
+        x -= x.mean(axis=0)
+        x /= x.std(axis=0)
+    return x
+
     print("Node creation and training")
     n = iGSFANode(output_dim=15, reconstruct_with_sfa=False, slow_feature_scaling_method="data_dependent",
                   verbose=verbose)
