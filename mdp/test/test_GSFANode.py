@@ -1,5 +1,5 @@
 #####################################################################################################################
-# test_GSFANode: Tests for the Graph-Based SFA Node (GSFANode) as defined by the Cuicuilco framework                #
+# test_GSFANode: Tests for the Graph-Based SFA Node (GSFANode)                                                      #
 #                                                                                                                   #
 # By Alberto Escalante. Alberto.Escalante@ini.rub.de                                                                #
 # Ruhr-University Bochum, Institute for Neural Computation, Group of Prof. Dr. Wiskott                              #
@@ -14,7 +14,6 @@ import pytest
 
 from mdp.nodes.gsfa_nodes import graph_delta_values, comp_delta
 
-#TODO: test invalid parameters (training mode, block size, etc)
 
 
 def test_equivalence_SFA_GSFA_regular_mode():

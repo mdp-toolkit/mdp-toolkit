@@ -1,6 +1,5 @@
 #####################################################################################################################
-# test_iGSFANode: Tests for the Information-Preserving Graph-Based SFA Node (iGSFANode) as defined by                #
-#                 the Cuicuilco framework                                                                           #
+# test_iGSFANode: Tests for the Information-Preserving Graph-Based SFA Node (iGSFANode)                             #
 #                                                                                                                   #
 # By Alberto-N Escalante-B. Alberto.Escalante@ini.rub.de                                                            #
 # Ruhr-University Bochum, Institute for Neural Computation, Group of Prof. Dr. Wiskott                              #
