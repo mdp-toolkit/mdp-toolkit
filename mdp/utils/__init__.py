@@ -33,6 +33,11 @@ from .slideshow import (basic_css, slideshow_css, HTMLSlideShow,
 
 from ._symeig import SymeigException
 
+from .symeig_semidefinite import (symeig_semidefinite_reg,
+                                 symeig_semidefinite_pca,
+                                 symeig_semidefinite_svd,
+                                 symeig_semidefinite_ldl)
+
 import mdp as _mdp
 # matrix multiplication function
 # we use an alias to be able to use the wrapper for the 'gemm' Lapack
@@ -95,7 +100,9 @@ __all__ = ['CovarianceMatrix', 'DelayCovarianceMatrix','CrossCovarianceMatrix',
            'lrep', 'rrep', 'irep',
            'orthogonal_permutations', 'izip_stretched',
            'weighted_choice', 'bool_to_sign', 'sign_to_bool',
-           'OrderedDict', 'TemporaryDirectory', 'gabor', 'fixup_namespace']
+           'OrderedDict', 'TemporaryDirectory', 'gabor', 'fixup_namespace',
+           'symeig_semidefinite_reg', 'symeig_semidefinite_pca',
+           'symeig_semidefinite_svd', 'symeig_semidefinite_ldl']
 
 def _without_prefix(name, prefix):
     if name.startswith(prefix):
