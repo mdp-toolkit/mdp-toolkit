@@ -485,7 +485,7 @@ class GeneralExpansionNode(_ExpansionNode):
             the hint determines the starting point for the approximation.
             For details on this parameter see the function 
             ``invert_exp_funcs2`` in ``mdp.utils.routines.py``.
-        :type: numpy.ndarray or bool
+        :type use_hint: numpy.ndarray or bool
         
         :return: The pseudo inverse.
         :rtype: numpy.ndarray
