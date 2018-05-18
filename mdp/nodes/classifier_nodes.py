@@ -311,7 +311,7 @@ class DiscreteHopfieldClassifier(ClassifierNode):
 
     def _stop_training(self):
         # remove self-feedback
-        # we could use numx.fill_diagonal, but thats numpy 1. 4 only
+        # we could use numx.fill_diagonal, but thats numpy 1.4 only
         for i in range(self.input_dim):
             self._weight_matrix[i][i] = 0
 
