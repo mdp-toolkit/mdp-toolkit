@@ -107,7 +107,7 @@ class ISFANode(Node):
             integer, time-lags 1,2,...,'lags' are used.
             Note that time-lag == 0 (instantaneous correlation) is always
             implicitly used.
-            :type lags: list or int
+        :type lags: list or int
             
         :param sfa_ica_coeff: A list of float with two entries, which defines the
             weights of the SFA and ICA part of the objective function. 
