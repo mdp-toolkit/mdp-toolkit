@@ -107,9 +107,11 @@ class PerceptronClassifier(ClassifierNode):
         """  
         :param x: A matrix having different variables on different columns
             and observations on the rows.
+        :type x: numpy.ndarray
         :return: An array with class labels from the perceptron.
         :rtype: numpy.ndarray
         """
+        # todo: consider iterables
         return numx.sign(numx.dot(x, self.weights) + self.offset_weight)
 
 
