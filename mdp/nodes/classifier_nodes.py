@@ -320,9 +320,10 @@ class DiscreteHopfieldClassifier(ClassifierNode):
         
         :param x: A matrix having different variables on different columns
             and observations on rows.
-        :param threshold: 
+        :param threshold: np.ndarray
         :return: The patterns.
         """
+        # todo: consider iterables
         threshold = numx.zeros(self.input_dim) + threshold
         return numx.array([self._label_one(pattern, threshold) for pattern in x])
 
