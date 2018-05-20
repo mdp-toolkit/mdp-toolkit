@@ -282,7 +282,9 @@ class DiscreteHopfieldClassifier(ClassifierNode):
         
         :param x: A matrix having different variables on different columns
             and observations on rows.
+        :type x: numpy.ndarray
         """
+        # todo: consider iterables
         for pattern in x:
             self._train_one(pattern)
 
