@@ -9,13 +9,15 @@ from mdp import ClassifierNode, utils, numx, numx_rand, numx_linalg
 
 # TODO: The GaussianClassifier and NearestMeanClassifier could be parallelized.
 
-
 class SignumClassifier(ClassifierNode):
     """This classifier node classifies as ``1`` if the sum of the data points
-    is positive and as ``-1`` if the data point is negative"""
+    is positive and as ``-1`` if the data point is negative."""
 
     def _get_supported_dtypes(self):
-        """Return the list of dtypes supported by this node."""
+        """
+        :return: The list of dtypes supported by this node.
+        :rtype: list
+        """
         return (mdp.utils.get_dtypes('Float') +
                 mdp.utils.get_dtypes('Integer'))
 
@@ -33,6 +35,22 @@ class PerceptronClassifier(ClassifierNode):
     
     def __init__(self, execute_method=None,
                  input_dim=None, output_dim=None, dtype=None):
+        """Initializes an object of type 'PerceptronClassifier'.
+        
+        :param execute_method: Set to string value 'label', 'rank', or 'prob' to
+            force the corresponding classification method being used instead
+            of the standard identity execution (which is used when
+            execute_method has the default value None). This can be used when
+            the node is last in a flow, the return value from Flow.execute
+            will then consist of the classification results.
+        :type execute_method: str
+        :param input_dim: The input dimensionality.
+        :type input_dim: int
+        :param output_dim: The output dimensionality.
+        :type output_dim: int
+        :param dtype: The datatype.
+        :type dtype: numpy.dtype or str
+        """
         super(PerceptronClassifier, self).__init__(
                                                 execute_method=execute_method,
                                                 input_dim=input_dim,
@@ -58,12 +76,13 @@ class PerceptronClassifier(ClassifierNode):
 
     def _train(self, x, labels):
         """Update the internal structures according to the input data 'x'.
-
-        x -- a matrix having different variables on different columns
-             and observations on the rows.
-        labels -- can be a list, tuple or array of labels (one for each data point)
-              or a single label, in which case all input data is assigned to
-              the same class.
+        
+        :param x: A matrix having different variables on different columns
+            and observations on the rows.
+        :type x: numpy.ndarray
+        :param labels: Can be a list, tuple or array of labels (one for each data point)
+            or a single label, in which case all input data is assigned to
+            the same class.
         """
 
         # if weights are not yet initialised, initialise them
@@ -85,18 +104,41 @@ class PerceptronClassifier(ClassifierNode):
             self.offset_weight = new_offset
 
     def _label(self, x):
-        """Returns an array with class labels from the perceptron.
+        """  
+        :param x: A matrix having different variables on different columns
+            and observations on the rows.
+        :type x: numpy.ndarray
+        :return: An array with class labels from the perceptron.
+        :rtype: numpy.ndarray
         """
+        # todo: consider iterables
         return numx.sign(numx.dot(x, self.weights) + self.offset_weight)
 
 
 class SimpleMarkovClassifier(ClassifierNode):
     """A simple version of a Markov classifier.
+    
     It can be trained on a vector of tuples the label being the next element
     in the testing data.
     """
     def __init__(self, execute_method=None,
                  input_dim=None, output_dim=None, dtype=None):
+        """Initializes an object of type 'SimpleMarkovClassifier'
+        
+        :param execute_method: Set to string value 'label', 'rank', or 'prob' to
+            force the corresponding classification method being used instead
+            of the standard identity execution (which is used when
+            execute_method has the default value None). This can be used when
+            the node is last in a flow, the return value from Flow.execute
+            will then consist of the classification results.
+        :type execute_method: str
+        :param input_dim: The input dimensionality.
+        :type input_dim: int
+        :param output_dim: The output dimensionality.
+        :type output_dim: int
+        :param dtype: The datatype.
+        :type dtype: numpy.dtype or str
+        """
         super(SimpleMarkovClassifier, self).__init__(
                                                 execute_method=execute_method,
                                                 input_dim=input_dim,
@@ -109,7 +151,10 @@ class SimpleMarkovClassifier(ClassifierNode):
         self.connections = {}
         
     def _get_supported_dtypes(self):
-        """Return the list of dtypes supported by this node."""
+        """
+        :return: The list of dtypes supported by this node.
+        :rtype: list
+        """
         return (mdp.utils.get_dtypes('Float') +
                 mdp.utils.get_dtypes('AllInteger') +
                 mdp.utils.get_dtypes('Character'))
@@ -127,11 +172,12 @@ class SimpleMarkovClassifier(ClassifierNode):
     def _train(self, x, labels):
         """Update the internal structures according to the input data 'x'.
 
-        x -- a matrix having different variables on different columns
-             and observations on the rows.
-        labels -- can be a list, tuple or array of labels (one for each data point)
-              or a single label, in which case all input data is assigned to
-              the same class.
+        :param x: A matrix having different variables on different columns
+            and observations on the rows.
+        :type x: numpy.ndarray
+        :param labels: Can be a list, tuple or array of labels (one for each data point)
+            or a single label, in which case all input data is assigned to
+            the same class.
         """
         # if labels is a number, all x's belong to the same class
         for xi, labeli in mdp.utils.izip_stretched(x, labels):
@@ -199,6 +245,22 @@ class DiscreteHopfieldClassifier(ClassifierNode):
     # because label space is a subset of feature space
     def __init__(self, execute_method=None,
                  input_dim=None, output_dim=None, dtype='b'):
+        """Initializes an object of type 'DiscreteHopfieldClassifier'
+
+        :param execute_method: Set to string value 'label', 'rank', or 'prob' to
+            force the corresponding classification method being used instead
+            of the standard identity execution (which is used when
+            execute_method has the default value None). This can be used when
+            the node is last in a flow, the return value from Flow.execute
+            will then consist of the classification results.
+        :type execute_method: str
+        :param input_dim: The input dimensionality.
+        :type input_dim: int
+        :param output_dim: The output dimensionality.
+        :type output_dim: int
+        :param dtype: The datatype.
+        :type dtype: numpy.dtype or str
+        """
         super(DiscreteHopfieldClassifier, self).__init__(
                                             execute_method=execute_method,
                                             input_dim=input_dim,
@@ -209,14 +271,20 @@ class DiscreteHopfieldClassifier(ClassifierNode):
         self._shuffled_update = True
 
     def _get_supported_dtypes(self):
+        """
+        :return: The list of dtypes supported by this node.
+        :rtype: list
+        """
         return ['b']
 
     def _train(self, x):
         """Provide the hopfield net with the possible states.
-
-        x -- a matrix having different variables on different columns
+        
+        :param x: A matrix having different variables on different columns
             and observations on rows.
+        :type x: numpy.ndarray
         """
+        # todo: consider iterables
         for pattern in x:
             self._train_one(pattern)
 
@@ -228,14 +296,21 @@ class DiscreteHopfieldClassifier(ClassifierNode):
 
     @property
     def memory_size(self):
-        """Returns the Hopfield net's memory size"""
+        """
+        :return: The Hopfield net's memory size
+        :rtype: int
+        """
         return self.input_dim
 
     @property
     def load_parameter(self):
-        """Returns the load parameter of the Hopfield net.
-        The quality of memory recall for a Hopfield net breaks down when the
-        load parameter is larger than 0.14."""
+        """
+        .. note:: The quality of memory recall for a Hopfield net breaks down when the
+            load parameter is larger than 0.14.
+
+        :return: The load parameter of the Hopfield net.
+        :rtype: float
+        """
         return old_div(self._num_patterns, float(self.input_dim))
 
     def _stop_training(self):
@@ -246,7 +321,13 @@ class DiscreteHopfieldClassifier(ClassifierNode):
 
     def _label(self, x, threshold = 0):
         """Retrieves patterns from the associative memory.
+        
+        :param x: A matrix having different variables on different columns
+            and observations on rows.
+        :param threshold: numpy.ndarray
+        :return: The patterns.
         """
+        # todo: consider iterables
         threshold = numx.zeros(self.input_dim) + threshold
         return numx.array([self._label_one(pattern, threshold) for pattern in x])
 
@@ -280,13 +361,31 @@ class KMeansClassifier(ClassifierNode):
     """Employs K-Means Clustering for a given number of centroids."""
     def __init__(self, num_clusters, max_iter=10000, execute_method=None,
                  input_dim=None, output_dim=None, dtype=None):
-        """
-        :Arguments:
-          num_clusters
-            number of centroids to use = number of clusters
-          max_iter
-            if the algorithm does not reach convergence (for some
-            numerical reason), stop after ``max_iter`` iterations
+        """Initializes an object of type 'KMeansClassifier'
+        
+        :param num_clusters: number of centroids to use = number of clusters
+        :type num_clusters: int
+                
+        :param max_iter: If the algorithm does not reach convergence (for some
+            numerical reason), stop after ``max_iter`` iterations.
+        :type max_iter: int
+                
+        :param execute_method: Set to string value 'label', 'rank', or 'prob' to
+            force the corresponding classification method being used instead
+            of the standard identity execution (which is used when
+            execute_method has the default value None). This can be used when
+            the node is last in a flow, the return value from Flow.execute
+            will then consist of the classification results.
+        :type execute_method: str
+                
+        :param input_dim: The input dimensionality.
+        :type input_dim: int
+                
+        :param output_dim: The output dimensionality.
+        :type output_dim: int
+                
+        :param dtype: The datatype.
+        :type dtype: numpy.dtype or str
         """
         super(KMeansClassifier, self).__init__(execute_method=execute_method,
                                                input_dim=input_dim,
@@ -344,6 +443,11 @@ class KMeansClassifier(ClassifierNode):
     def _label(self, x):
         """For a set of feature vectors x, this classifier returns
         a list of centroids.
+        
+        :param x: A set of feature vectors
+        :type x: numpy.ndarray
+        :return: A list of centroids
+        :rtype: list
         """
         return [self._nearest_centroid_idx(xi, self._centroids) for xi in x]
 
@@ -357,6 +461,22 @@ class GaussianClassifier(ClassifierNode):
     
     def __init__(self, execute_method=False,
                  input_dim=None, output_dim=None, dtype=None):
+        """Initializes an object of type 'GaussianClassifier'
+
+        :param execute_method: Set to string value 'label', 'rank', or 'prob' to
+            force the corresponding classification method being used instead
+            of the standard identity execution (which is used when
+            execute_method has the default value None). This can be used when
+            the node is last in a flow, the return value from Flow.execute
+            will then consist of the classification results.
+        :type execute_method: str
+        :param input_dim: The input dimensionality.
+        :type input_dim: int
+        :param output_dim: The output dimensionality.
+        :type output_dim: int
+        :param dtype: The datatype.
+        :type dtype: numpy.dtype or str
+        """
         super(GaussianClassifier, self).__init__(execute_method=execute_method,
                                                  input_dim=input_dim,
                                                  output_dim=output_dim,
@@ -390,13 +510,11 @@ class GaussianClassifier(ClassifierNode):
 
     def _train(self, x, labels):
         """
-        :Arguments:
-          x
-              data
-          labels
-              Can be a list, tuple or array of labels (one for each data point)
-              or a single label, in which case all input data is assigned to
-              the same class.
+        :param x: Data
+        :type x: numpy.ndarray
+        :param labels: Can be a list, tuple or array of labels (one for each data point)
+            or a single label, in which case all input data is assigned to
+            the same class.
         """
         # if labels is a number, all x's belong to the same class
         if isinstance(labels, (list, tuple, numx.ndarray)):
@@ -432,11 +550,13 @@ class GaussianClassifier(ClassifierNode):
     def _gaussian_prob(self, x, lbl_idx):
         """Return the probability of the data points x with respect to a
         gaussian.
-
-        Input arguments:
-        x -- Input data
-        S -- Covariance matrix
-        mn -- Mean
+        
+        :param x: Input data
+        :type x: numpy.ndarray
+        :param lbl_idx: 
+        :return: The probability of the data points x with respect to a
+            gaussian
+        :rtype: float
         """
         x = self._refcast(x)
 
@@ -453,7 +573,13 @@ class GaussianClassifier(ClassifierNode):
         return constant * numx.exp(exponent)
 
     def class_probabilities(self, x):
-        """Return the posterior probability of each class given the input."""
+        """Return the posterior probability of each class given the input.
+        
+        :param x: The data.
+        :type x: numpy.ndarray
+        :return: The posterior probability of each class given the input.
+        :rtype: float
+        """
         self._pre_execution_checks(x)
 
         # compute the probability for each class
@@ -476,7 +602,13 @@ class GaussianClassifier(ClassifierNode):
         return [dict(list(zip(self.labels, prob))) for prob in class_prob]
 
     def _label(self, x):
-        """Classify the input data using Maximum A-Posteriori."""
+        """Classify the input data using Maximum A-Posteriori.
+        
+        :param x: The data.
+        :type x: numpy.ndarray
+        :return: A list of labels.
+        :rtype: list
+        """
 
         class_prob = self.class_probabilities(x)
         winner = class_prob.argmax(axis=-1)
@@ -490,6 +622,22 @@ class NearestMeanClassifier(ClassifierNode):
     
     def __init__(self, execute_method=None,
                  input_dim=None, output_dim=None, dtype=None):
+        """Initializes an object of type 'NearestMeanClassifier'
+
+        :param execute_method: Set to string value 'label', 'rank', or 'prob' to
+            force the corresponding classification method being used instead
+            of the standard identity execution (which is used when
+            execute_method has the default value None). This can be used when
+            the node is last in a flow, the return value from Flow.execute
+            will then consist of the classification results.
+        :type execute_method: str
+        :param input_dim: The input dimensionality.
+        :type input_dim: int
+        :param output_dim: The output dimensionality.
+        :type output_dim: int
+        :param dtype: The datatype.
+        :type dtype: numpy.dtype or str
+        """
         super(NearestMeanClassifier, self).__init__(
                                             execute_method=execute_method,
                                             input_dim=input_dim,
@@ -504,7 +652,9 @@ class NearestMeanClassifier(ClassifierNode):
     def _train(self, x, labels):
         """Update the mean information for the different classes.
         
-        labels -- Can be a list, tuple or array of labels (one for each data
+        :param x: The data.
+        :type x: numpy.ndarray
+        :param labels: Can be a list, tuple or array of labels (one for each data
             point) or a single label, in which case all input data is assigned
             to the same class (computationally this is more efficient).
         """
@@ -517,7 +667,12 @@ class NearestMeanClassifier(ClassifierNode):
             self._update_mean(x, labels)
             
     def _update_mean(self, x, label):
-        """Update the mean with data for a single label."""
+        """Update the mean with data for a single label.
+        
+        :param x: The data.
+        :type x: numpy.ndarray
+        :param label: The label index.
+        """
         if label not in self.label_means:
             self.label_means[label] = numx.zeros(self.input_dim)
             self.n_label_samples[label] = 0
@@ -542,7 +697,13 @@ class NearestMeanClassifier(ClassifierNode):
         self.ordered_means = numx.vstack(ordered_means)
             
     def _label(self, x):
-        """Classify the data based on minimal distance to mean."""
+        """Classify the data based on minimal distance to mean.
+        
+        :param x: The data to classify.
+        :type x: numpy.ndarray
+        :return: The data labels.
+        :rtype: list
+        """
         n_labels = len(self.ordered_labels)
         differences = x[:,:,numx.newaxis].repeat(n_labels, 2). \
                         swapaxes(1,2) - self.ordered_means
@@ -557,9 +718,27 @@ class KNNClassifier(ClassifierNode):
     
     def __init__(self, k=1, execute_method=None,
                  input_dim=None, output_dim=None, dtype=None):
-        """Initialize classifier.
+        """Initializes an object of type 'KNNClassifier'
         
-        k -- Number of closest sample points that are taken into account.
+        :param k: Number of closest sample points that are taken into account.
+        :type k: int
+        
+        :param execute_method: Set to string value 'label', 'rank', or 'prob' to
+            force the corresponding classification method being used instead
+            of the standard identity execution (which is used when
+            execute_method has the default value None). This can be used when
+            the node is last in a flow, the return value from Flow.execute
+            will then consist of the classification results.
+        :type execute_method: str
+        
+        :param input_dim: The input dimensionality.
+        :type input_dim: int
+        
+        :param output_dim: The output dimensionality.
+        :type output_dim: int
+        
+        :param dtype: The datatype.
+        :type dtype: numpy.dtype or str
         """
         super(KNNClassifier, self).__init__(execute_method=execute_method,
                                             input_dim=input_dim,
@@ -574,9 +753,11 @@ class KNNClassifier(ClassifierNode):
         self.ordered_labels = []
         
     def _train(self, x, labels):
-        """Add the sampel points to the classes.
+        """Add the sample points to the classes.
         
-        labels -- Can be a list, tuple or array of labels (one for each data
+        :param x: The data.
+        :type x: numpy.ndarray
+        :param labels: Can be a list, tuple or array of labels (one for each data
             point) or a single label, in which case all input data is assigned
             to the same class (computationally this is more efficient).
         """
@@ -617,7 +798,14 @@ class KNNClassifier(ClassifierNode):
                                  for i in range(len(self.ordered_labels))])
 
     def _label(self, x):
-        """Label the data by comparison with the reference points."""
+        """Label the data by comparison with the reference points.
+        
+        :param x: The data to label.
+        :type x: numpy.ndarray
+        
+        :return: The labels
+        :rtype: list
+        """
         square_distances = (x*x).sum(1)[:, numx.newaxis] \
                       + (self.samples*self.samples).sum(1)
         square_distances -= 2 * numx.dot(x, self.samples.T)

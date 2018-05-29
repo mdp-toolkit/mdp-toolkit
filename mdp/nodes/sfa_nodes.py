@@ -37,114 +37,121 @@ There are several ways to deal with this issue:
 '''
 
 class SFANode(Node):
-    """Extract the slowly varying components from the input data.
-    More information about Slow Feature Analysis can be found in
-    Wiskott, L. and Sejnowski, T.J., Slow Feature Analysis: Unsupervised
-    Learning of Invariances, Neural Computation, 14(4):715-770 (2002).
+    """
+    Extract the slowly varying components from the input data.
+    
+    .. attribute:: avg
+    
+        Mean of the input data (available after training)
 
-    **Instance variables of interest**
+    .. attribute:: sf
+        
+        Matrix of the SFA filters (available after training)
 
-      ``self.avg``
-          Mean of the input data (available after training)
+    .. attribute:: d
+        
+        Delta values corresponding to the SFA components (generalized
+        eigenvalues). [See the docs of the ``get_eta_values`` method for
+        more information]
 
-      ``self.sf``
-          Matrix of the SFA filters (available after training)
-
-      ``self.d``
-          Delta values corresponding to the SFA components (generalized
-          eigenvalues). [See the docs of the ``get_eta_values`` method for
-          more information]
-
-      ``self.rank_deficit``
-          If an SFA solver detects rank deficit in the covariance matrix,
-          it stores the count of close-to-zero-eigenvalues as ``rank_deficit``.
-
-    **Special arguments for constructor**
-
-      ``include_last_sample``
-          If ``False`` the `train` method discards the last sample in every
-          chunk during training when calculating the covariance matrix.
-          The last sample is in this case only used for calculating the
-          covariance matrix of the derivatives. The switch should be set
-          to ``False`` if you plan to train with several small chunks. For
-          example we can split a sequence (index is time)::
-
-            x_1 x_2 x_3 x_4
-
-          in smaller parts like this::
-
-            x_1 x_2
-            x_2 x_3
-            x_3 x_4
-
-          The SFANode will see 3 derivatives for the temporal covariance
-          matrix, and the first 3 points for the spatial covariance matrix.
-          Of course you will need to use a generator that *connects* the
-          small chunks (the last sample needs to be sent again in the next
-          chunk). If ``include_last_sample`` was True, depending on the
-          generator you use, you would either get::
-
-             x_1 x_2
-             x_2 x_3
-             x_3 x_4
-
-          in which case the last sample of every chunk would be used twice
-          when calculating the covariance matrix, or::
-
-             x_1 x_2
-             x_3 x_4
-
-          in which case you loose the derivative between ``x_3`` and ``x_2``.
-
-          If you plan to train with a single big chunk leave
-          ``include_last_sample`` to the default value, i.e. ``True``.
-
-          You can even change this behaviour during training. Just set the
-          corresponding switch in the `train` method.
-
-
-      ``rank_deficit_method``
-          Possible values: 'none' (default), 'reg', 'pca', 'svd', 'auto'
-          If not 'none', the ``stop_train`` method solves the SFA eigenvalue
-          problem in a way that is robust against linear redundancies in
-          the input data. This would otherwise lead to rank deficit in the
-          covariance matrix, which usually yields a
-          SymeigException ('Covariance matrices may be singular').
-          There are several solving methods implemented:
-
-          reg  - works by regularization
-          pca  - works by PCA
-          svd  - works by SVD
-          ldl  - works by LDL decomposition (requires SciPy >= 1.0)
-
-          auto - (Will be: selects the best-benchmarked method of the above)
-                 Currently it simply selects pca.
-
-          Note: If you already received an exception
-          SymeigException ('Covariance matrices may be singular')
-          you can manually set the solving method for an existing node::
-
-             sfa.set_rank_deficit_method('pca')
-
-          That means,::
-
-             sfa = SFANode(rank_deficit='pca')
-
-          is equivalent to::
-
-             sfa = SFANode()
-             sfa.set_rank_deficit_method('pca')
-
-          After such an adjustment you can run ``stop_training()`` again,
-          which would save a potentially time-consuming rerun of all
-          ``train()`` calls.
+    .. admonition:: Reference
+    
+        More information about Slow Feature Analysis can be found in
+        Wiskott, L. and Sejnowski, T.J., Slow Feature Analysis: Unsupervised
+        Learning of Invariances, Neural Computation, 14(4):715-770 (2002).
     """
 
     def __init__(self, input_dim=None, output_dim=None, dtype=None,
                  include_last_sample=True, rank_deficit_method='none'):
         """
-        For the ``include_last_sample`` switch have a look at the
-        SFANode class docstring.
+        Initialize an object of type 'SFANode'.
+
+        :param input_dim: The input dimensionality.
+        :type input_dim: int
+        
+        :param output_dim: The output dimensionality.
+        :type output_dim: int
+        
+        :param dtype: The datatype.
+        :type dtype: numpy.dtype or str
+        
+        :param include_last_sample: If ``False`` the `train` method discards the 
+            last sample in every chunk during training when calculating 
+            the covariance matrix.
+            The last sample is in this case only used for calculating the
+            covariance matrix of the derivatives. The switch should be set
+            to ``False`` if you plan to train with several small chunks. For
+            example we can split a sequence (index is time)::
+
+                x_1 x_2 x_3 x_4
+    
+            in smaller parts like this::
+
+                x_1 x_2
+                x_2 x_3
+                x_3 x_4
+
+            The SFANode will see 3 derivatives for the temporal covariance
+            matrix, and the first 3 points for the spatial covariance matrix.
+            Of course you will need to use a generator that *connects* the
+            small chunks (the last sample needs to be sent again in the next
+            chunk). If ``include_last_sample`` was True, depending on the
+            generator you use, you would either get::
+
+                x_1 x_2
+                x_2 x_3
+                x_3 x_4
+
+            in which case the last sample of every chunk would be used twice
+            when calculating the covariance matrix, or::
+
+                x_1 x_2
+                x_3 x_4
+
+            in which case you loose the derivative between ``x_3`` and ``x_2``.
+
+            If you plan to train with a single big chunk leave
+            ``include_last_sample`` to the default value, i.e. ``True``.
+
+            You can even change this behaviour during training. Just set the
+            corresponding switch in the `train` method.
+        :type include_last_sample: bool
+        
+        :param rank_deficit_method: Possible values: 'none' (default), 'reg', 'pca', 'svd', 'auto'
+            If not 'none', the ``stop_train`` method solves the SFA eigenvalue
+            problem in a way that is robust against linear redundancies in
+            the input data. This would otherwise lead to rank deficit in the
+            covariance matrix, which usually yields a
+            SymeigException ('Covariance matrices may be singular').
+            There are several solving methods implemented:
+
+            reg  - works by regularization
+            pca  - works by PCA
+            svd  - works by SVD
+            ldl  - works by LDL decomposition (requires SciPy >= 1.0)
+
+            auto - (Will be: selects the best-benchmarked method of the above)
+                   Currently it simply selects pca.
+
+            Note: If you already received an exception
+            SymeigException ('Covariance matrices may be singular')
+            you can manually set the solving method for an existing node::
+
+               sfa.set_rank_deficit_method('pca')
+
+            That means,::
+
+               sfa = SFANode(rank_deficit='pca')
+
+            is equivalent to::
+
+               sfa = SFANode()
+               sfa.set_rank_deficit_method('pca')
+
+            After such an adjustment you can run ``stop_training()`` again,
+            which would save a potentially time-consuming rerun of all
+            ``train()`` calls.
+        :type rank_deficit_method: str
         """
         super(SFANode, self).__init__(input_dim, output_dim, dtype)
         self._include_last_sample = include_last_sample
@@ -191,7 +198,15 @@ class SFANode(Node):
                     %str(rank_deficit_method))
 
     def time_derivative(self, x):
-        """Compute the linear approximation of the time derivative."""
+        """
+        Compute the linear approximation of the time derivative
+
+        :param x: The time series data.
+        :type x: numpy.ndarray
+
+        :returns: Piecewise linear approximation of the time derivative.
+        :rtype: numpy.ndarray
+        """
         # this is faster than a linear_filter or a weave-inline solution
         return x[1:, :]-x[:-1, :]
 
@@ -206,6 +221,15 @@ class SFANode(Node):
         return rng
 
     def _check_train_args(self, x, *args, **kwargs):
+        """
+        Raises exception if time dimension does not have enough elements.
+
+        :param x: The time series data.
+        :type x: numpy.ndarray
+        
+        :param *args:
+        :param **kwargs: 
+        """
         # check that we have at least 2 time samples to
         # compute the update for the derivative covariance matrix
         s = x.shape[0]
@@ -215,8 +239,14 @@ class SFANode(Node):
         
     def _train(self, x, include_last_sample=None):
         """
-        For the ``include_last_sample`` switch have a look at the
-        SFANode class docstring.
+        Training method.
+
+        :param x: The time series data.
+        :type x: numpy.ndarray
+        
+        :param include_last_sample: For the ``include_last_sample`` switch have a
+            look at the SFANode.__init__ docstring.
+        :type include_last_sample: bool
         """
         if include_last_sample is None:
             include_last_sample = self._include_last_sample
@@ -282,8 +312,19 @@ class SFANode(Node):
         self._bias = mult(self.avg, self.sf)
 
     def _execute(self, x, n=None):
-        """Compute the output of the slowest functions.
-        If 'n' is an integer, then use the first 'n' slowest components."""
+        """
+        Compute the output of the slowest functions.
+        If 'n' is an integer, then use the first 'n' slowest components.
+
+        :param x: The time series data.
+        :type x: numpy.ndarray
+        
+        :param n: The number of slowest components.
+        :type n: int
+
+        :returns: The output of the slowest functions.
+        :rtype: numpy.ndarray
+        """
         if n:
             sf = self.sf[:, :n]
             bias = self._bias[:n]
@@ -296,7 +337,8 @@ class SFANode(Node):
         return mult(y, pinv(self.sf)) + self.avg
 
     def get_eta_values(self, t=1):
-        """Return the eta values of the slow components learned during
+        """
+        Return the eta values of the slow components learned during
         the training phase. If the training phase has not been completed
         yet, call `stop_training`.
 
@@ -312,14 +354,15 @@ class SFANode(Node):
         If x is a signal of length 't' which consists of a sine function
         that accomplishes exactly N oscillations, then eta(x)=N.
 
-        :Parameters:
-           t
-             Sampling frequency in Hz.
+        :param t: Sampling frequency in Hz.
 
-             The original definition in (Wiskott and Sejnowski, 2002)
-             is obtained for t = number of training data points, while
-             for t=1 (default), this corresponds to the beta-value defined in
-             (Berkes and Wiskott, 2005).
+            The original definition in (Wiskott and Sejnowski, 2002)
+            is obtained for t = number of training data points, while
+            for t=1 (default), this corresponds to the beta-value defined
+            in (Berkes and Wiskott, 2005).
+
+        :returns: The eta values of the slow components learned during
+            the training phase.
         """
         if self.is_training():
             self.stop_training()
@@ -334,12 +377,44 @@ class SFA2Node(SFANode):
     See the documentation of ``mdp.utils.QuadraticForm`` for additional
     information.
 
-    More information about Slow Feature Analysis can be found in
-    Wiskott, L. and Sejnowski, T.J., Slow Feature Analysis: Unsupervised
-    Learning of Invariances, Neural Computation, 14(4):715-770 (2002)."""
+    .. admonition:: Reference:
+    
+        More information about Slow Feature Analysis can be found in
+        Wiskott, L. and Sejnowski, T.J., Slow Feature Analysis: Unsupervised
+        Learning of Invariances, Neural Computation, 14(4):715-770 (2002)."""
 
     def __init__(self, input_dim=None, output_dim=None, dtype=None,
                  include_last_sample=True, rank_deficit_method='none'):
+        """
+        Initialize an object of type SFA2Node.
+
+        :param input_dim: The input dimensionality.
+        :type input_dim: int
+        
+        :param output_dim: The output dimensionality.
+        :type output_dim: int
+        
+        :param dtype: The datatype.
+        :type dtype: numpy.dtype or str
+        
+        :param include_last_sample: If ``False`` the `train` method discards the 
+            last sample in every chunk during training when calculating 
+            the covariance matrix.
+            The last sample is in this case only used for calculating the
+            covariance matrix of the derivatives. The switch should be set
+            to ``False`` if you plan to train with several small chunks.
+            For an example, see the SFANode.__init__ method's docstring.
+        :type include_last_sample: bool
+        
+        :param rank_deficit_method: Possible values: 'none' (default), 'reg', 'pca', 'svd', 'auto'
+            If not 'none', the ``stop_train`` method solves the SFA eigenvalue
+            problem in a way that is robust against linear redundancies in
+            the input data. This would otherwise lead to rank deficit in the
+            covariance matrix, which usually yields a
+            SymeigException ('Covariance matrices may be singular').
+            For a more detailed description, have a look at the SFANode's constructor docstring.
+        :type rank_deficit_method: str
+        """
         self._expnode = mdp.nodes.QuadraticExpansionNode(input_dim=input_dim,
                                                          dtype=dtype)
         super(SFA2Node, self).__init__(input_dim, output_dim, dtype,
@@ -377,14 +452,28 @@ class SFA2Node(SFANode):
 
     def _execute(self, x, n=None):
         """Compute the output of the slowest functions.
-        If 'n' is an integer, then use the first 'n' slowest components."""
+        If 'n' is an integer, then use the first 'n' slowest components.
+
+        :param x: The time series data.
+        :type x: numpy.ndarray
+        
+        :param n: The number of slowest components.
+        :type n: int
+
+        :returns: The output of the slowest functions.
+        """
         return super(SFA2Node, self)._execute(self._expnode(x), n)
 
     def get_quadratic_form(self, nr):
-        """
-        Return the matrix H, the vector f and the constant c of the
+        """Return the matrix H, the vector f and the constant c of the
         quadratic form 1/2 x'Hx + f'x + c that defines the output
         of the component 'nr' of the SFA node.
+        
+        :param nr: The component 'nr' of the SFA node.
+
+        :returns: The matrix H, the vector f and the constant c of the
+            quadratic form.
+        :rtype: numpy.ndarray, numpy.ndarray, float
         """
         if self.sf is None:
             self._if_training_stop_training()

@@ -389,13 +389,13 @@ class Node(with_metaclass(NodeMetaclass, object)):
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node.
 
-        The types can be specified in any format allowed by :numpy:`dtype`.
+        The types can be specified in any format allowed by ``numpy.dtype``.
         """
         # TODO: http://epydoc.sourceforge.net/manual-othermarkup.html#external-api-links for numpy
         return mdp.utils.get_dtypes('Float')
 
     def get_supported_dtypes(self):
-        """Return dtypes supported by the node as a list of :numpy:`dtype`
+        """Return dtypes supported by the node as a list of  ``numpy.dtype``
         objects.
 
         Note that subclasses should overwrite `self._get_supported_dtypes`

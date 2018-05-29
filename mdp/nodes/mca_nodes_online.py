@@ -7,34 +7,57 @@ from past.utils import old_div
 class MCANode(mdp.OnlineNode):
     """
     Minor Component Analysis (MCA) extracts minor components (dual of principal
-    components) from the input data incrementally. More information about MCA can be found in
-    Peng, D. and Yi, Z, A new algorithm for sequential minor component analysis,
-    International Journal of Computational Intelligence Research,
-    2(2):207--215, 2006.
+    components) from the input data incrementally.
 
-
-    **Instance variables of interest**
-
-      ``self.v``
+    .. attribute:: v
+    
          Eigen vectors
 
-      ``self.d``
+    .. attribute:: d
+    
          Eigen values
+    
+    |
+    
+    .. admonition:: Reference
+        
+        More information about MCA can be found in
+        Peng, D. and Yi, Z, A new algorithm for sequential minor component
+        analysis, International Journal of Computational Intelligence Research,
+        2(2):207--215, 2006.
 
 
     """
 
     def __init__(self, eps=0.1, gamma=1.0, normalize=True, init_eigen_vectors=None, input_dim=None, output_dim=None,
                  dtype=None, numx_rng=None):
-        """
-        eps: Learning rate (default: 0.1)
-
-        gamma: Sequential addition coefficient (default: 1.0)
-
-        normalize: If True, eigenvectors are normalized after every update.
-                      Useful for non-stationary input data.  (default: True)
-
-        init_eigen_vectors: initial eigen vectors. Default - randomly set
+        """Initializes an object of type 'MCANode'.
+        
+        :param eps: Learning rate (default: 0.1).
+        :type eps: float
+        
+        :param gamma: Sequential addition coefficient (default: 1.0).
+        :type gamma: float
+        
+        :param normalize: If True, eigenvectors are normalized after every update.
+            Useful for non-stationary input data.  (default: True)
+        :type normalize: bool
+        
+        :param init_eigen_vectors: initial eigen vectors. Default - randomly set
+        :type init_eigen_vectors: numpy.ndarray
+        
+        :param input_dim: The input dimensionality.
+        :type input_dim: int
+        
+        :param output_dim: The output dimensionality.
+        :type output_dim: int
+        
+        :param dtype: The datatype.
+        :type dtype: numpy.dtype or str
+        
+        :param numx_rng: OnlineNodes support use of a pre-seeded random number generator
+            through a 'numx_rng' argument. This can be useful to replicate
+            results.
         """
         super(MCANode, self).__init__(input_dim, output_dim, dtype, numx_rng)
         self.eps = eps
@@ -48,12 +71,21 @@ class MCANode(mdp.OnlineNode):
 
     @property
     def init_eigen_vectors(self):
-        """Return initialized eigen vectors (minor components)"""
+        """Return initialized eigenvectors (minor components).
+        
+        :return: The initialized eigenvectors.
+        :rtype: numpy.ndarray
+        """
         return self._init_v
 
     @init_eigen_vectors.setter
     def init_eigen_vectors(self, init_eigen_vectors=None):
-        """Set initial eigen vectors (minor components)"""
+        """Set initial eigen vectors (minor components).
+        
+        :param init_eigen_vectors: The inital eigenvectors which are set before the
+            online routine starts.
+        :type init_eigen_vectors: numpy.ndarray
+        """
         self._init_v = init_eigen_vectors
         if self._input_dim is None:
             self._input_dim = self._init_v.shape[0]
@@ -77,7 +109,7 @@ class MCANode(mdp.OnlineNode):
             # Using this for backward numpy (versions below 1.8) compatibility.
 
     def _check_params(self, *args):
-        """Initialize parameters"""
+        """Initialize parameters."""
         if self._init_v is None:
             if self.output_dim is not None:
                 self.init_eigen_vectors = 0.1 * self.numx_rng.randn(self.input_dim, self.output_dim).astype(self.dtype)
@@ -106,13 +138,28 @@ class MCANode(mdp.OnlineNode):
                 self.v[:, j:j + 1] = old_div(v, self.d[j])
 
     def get_projmatrix(self, transposed=1):
-        """Return the projection matrix."""
+        """Return the projection matrix.
+        
+        :param transposed: If the projection matrix should return transposed,
+            set this to True.
+        :type transposed: bool
+        
+        :return: The projection matrix.
+        :rtype: numpy.ndarray
+        """
         if transposed:
             return self.v
         return self.v.T
 
     def get_recmatrix(self, transposed=1):
         """Return the back-projection matrix (i.e. the reconstruction matrix).
+        
+        :param transposed:  If the back-projection matrix should return
+            transposed, set this to True.
+        :type transposed: bool
+        
+        :return: The back-projection matrix.
+        :rtype: numpy.ndarray
         """
         if transposed:
             return self.v.T
@@ -120,14 +167,36 @@ class MCANode(mdp.OnlineNode):
 
     def _execute(self, x, n=None):
         """Project the input on the first 'n' principal components.
-        If 'n' is not set, use all available components."""
+        
+        :param x: The input that is to project.
+        :type x: numpy.ndarray
+        
+        :param n: The number of first principle components to project on.
+            If 'n' is not set, use all available components.
+        :type n: int
+        
+        :return: The projected input.
+        :rtype: numpy.ndarray
+        """
         if n is not None:
             return mult(x, self.v[:, :n])
         return mult(x, self.v)
 
     def _inverse(self, y, n=None):
         """Project 'y' to the input space using the first 'n' components.
-        If 'n' is not set, use all available components."""
+        
+        :param y: Vectors from the output space.
+        :type y: numpy.ndarray
+        
+        :param n: The number of components to use for projection to the
+            input space. If 'n' is not set, use all available components.
+        :type n: int
+        
+        :return: The projected vectors.
+        :rtype: numpy.ndarray
+        
+        :raises mdp.NodeException: If the valid dimension is exceeded.
+        """
         if n is None:
             n = y.shape[1]
         if n > self.output_dim:
@@ -141,7 +210,11 @@ class MCANode(mdp.OnlineNode):
         return mult(y, v)
 
     def __repr__(self):
-        # print all args
+        """Print all args.
+        
+        :return: A string that contains all names and their values.
+        :rtype: str
+        """
         name = type(self).__name__
         inp = "input_dim=%s" % str(self.input_dim)
         out = "output_dim=%s" % str(self.output_dim)

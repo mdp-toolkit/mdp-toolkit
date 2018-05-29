@@ -29,39 +29,56 @@ class FANode(mdp.Node):
     of the latent variables. The ``generate_input`` method generates
     observations from the prior distribution.
 
-    **Internal variables of interest**
-
-      ``self.mu``
+    .. attribute:: mu
+    
           Mean of the input data (available after training)
 
-      ``self.A``
+    .. attribute:: A
+    
           Generating weights (available after training)
 
-      ``self.E_y_mtx``
+    .. attribute:: E_y_mtx
+    
           Weights for Maximum A Posteriori inference
 
-      ``self.sigma``
+    .. attribute:: sigma
+    
           Vector of estimated variance of the noise
           for all input components
-
-    More information about Factor Analysis can be found in
-    Max Welling's classnotes:
-    http://www.ics.uci.edu/~welling/classnotes/classnotes.html ,
-    in the chapter 'Linear Models'.
+    
+    |
+    
+    .. admonition:: Reference
+    
+        More information about Factor Analysis can be found in
+        Max Welling's classnotes:
+        http://www.ics.uci.edu/~welling/classnotes/classnotes.html ,
+        in the chapter 'Linear Models'.
     """
     def __init__(self, tol=1e-4, max_cycles=100, verbose=False,
                  input_dim=None, output_dim=None, dtype=None):
+        """Initializes an object of type 'FANode'.
+        
+        :param tol: Tolerance (minimum change in log-likelihood before exiting
+            the EM algorithm).
+        :type tol: float
+        
+        :param max_cycles: Maximum number of EM cycles/
+        :type max_cycles: int
+        
+        :param verbose: If true, print log-likelihood during the EM-cycles.
+        :type verbose: bool
+        
+        :param input_dim: The input dimensionality.
+        :type input_dim: int
+        
+        :param output_dim: The output dimensionality.
+        :type output_dim: int
+        
+        :param dtype: The datatype.
+        :type dtype: numpy.dtype or str
+        """
 
-        """
-        :Parameters:
-          tol
-            tolerance (minimum change in log-likelihood before exiting
-            the EM algorithm)
-          max_cycles
-            maximum number of EM cycles
-          verbose
-            if true, print log-likelihood during the EM-cycles
-        """
         # Notation as in Max Welling's notes
         super(FANode, self).__init__(input_dim, output_dim, dtype)
         self.tol = tol
@@ -186,18 +203,19 @@ class FANode(mdp.Node):
         return False
 
     def generate_input(self, len_or_y=1, noise=False):
-        """
-        Generate data from the prior distribution.
+        """Generate data from the prior distribution.
 
         If the training phase has not been completed yet, call stop_training.
+        
+        :param len_or_y: If integer, it specified the number of observation
+            to generate. If array, it is used as a set of samples
+            of the latent variables
 
-        :Arguments:
-          len_or_y
-                    If integer, it specified the number of observation
-                    to generate. If array, it is used as a set of samples
-                    of the latent variables
-          noise
-                    if true, generation includes the estimated noise
+        :param noise: If true, generation includes the estimated noise
+        :type noise: bool
+        
+        :return: The generated data.
+        :rtype: numpy.ndarray
         """
 
         self._if_training_stop_training()

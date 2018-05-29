@@ -18,6 +18,8 @@ class _LabelNormalizer(object):
     TODO: Needs more refinement. E.g. could automatically round labels to +1, -1
     """
     def __init__(self, labels, mode=None):
+        """Initializes an object of type '_LabelNormalizer'.
+        """
         if mode is None:
             mode = "id"
         if mode == "id":
@@ -67,6 +69,20 @@ class _SVMClassifier(ClassifierCumulator):
     """Base class for the SVM classifier nodes."""
 
     def __init__(self, input_dim=None, output_dim=None, dtype=None):
+        """Initializes an object of type '_SVMClassifier'.
+
+        :param input_dim: Dimensionality of the input.
+            Default is None.
+        :type input_dim: int
+        
+        :param output_dim: Dimensionality of the output.
+            Default is None.
+        :type output_dim: int
+        
+        :param dtype: Datatype of the input.
+            Default is None.
+        :type dtype: numpy.dtype or str
+        """
         self.normalizer = None
         super(_SVMClassifier, self).__init__(input_dim=input_dim,
                                              output_dim=output_dim,
@@ -75,4 +91,3 @@ class _SVMClassifier(ClassifierCumulator):
     @staticmethod
     def is_invertible():
         return False
-

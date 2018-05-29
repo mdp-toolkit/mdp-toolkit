@@ -22,7 +22,11 @@ class IdentityNode(PreserveDimNode):
     """
 
     def _get_supported_dtypes(self):
-        """Return the list of dtypes supported by this node."""
+        """Return the data types supported by this node.
+        
+        :return: The list of numpy.dtypes that this node supports.
+        :rtype: list
+        """
         return (mdp.utils.get_dtypes('AllFloat') +
                 mdp.utils.get_dtypes('AllInteger') +
                 mdp.utils.get_dtypes('Character'))
@@ -33,19 +37,24 @@ class IdentityNode(PreserveDimNode):
 
 class OneDimensionalHitParade(object):
     """
-    Class to produce hit-parades (i.e., a list of the largest
+    Class to produce hit-parades (i.e., a list of the locally largest
     and smallest values) out of a one-dimensional time-series.
     """
     
     def __init__(self, n, d, real_dtype="d", integer_dtype="l"):
-        """
-        Input arguments:
-        n -- Number of maxima and minima to remember
-        d -- Minimum gap between two hits
-
-        real_dtype -- dtype of sequence items
-        integer_dtype -- dtype of sequence indices
-        Note: be careful with dtypes!
+        """Initializes an object of type 'OneDimensionalHitParade'.
+        
+        :param n: Number of maxima and minima to remember.
+        :type n: int
+        
+        :param d: Minimum gap between two hits.
+        :type d: int
+        
+        :param real_dtype: Datatype of sequence items
+        :type real_dtype: numpy.dtype or str
+        
+        :param integer_dtype: Datatype of sequence indices
+        :type integer_dtype: numpy.dtype or str
         """
         self.n = int(n)
         self.d = int(d)
@@ -67,8 +76,16 @@ class OneDimensionalHitParade(object):
 
     def update(self, inp):
         """
-        Input arguments:
-        inp -- tuple (time-series, time-indices)
+        
+        :param inp: A time series, defined by a tuple of numpy.ndarrays
+            with the first element containing the values and the second
+            containing the corresponding index. An example can be given by::
+            
+                >>> indices = numpy.array([0,1,2])
+                >>> values = numpy.array([100,101,100])
+                >>> avalidtuple = (indices,values)
+                
+        :type inp: tuple
         """
         (x, ix) = inp
         rows = len(x)
@@ -107,8 +124,13 @@ class OneDimensionalHitParade(object):
 
     def get_maxima(self):
         """
-        Return the tuple (maxima, time-indices).
-        Maxima are sorted in descending order.
+        Return the tuple defining the maxima fulfilling specified criteria.
+        
+        :return: A tuple containing maxima and their corresponding indices
+            as numpy.ndarrays (see example in definition of the method
+            ``OneDimensionalHitParade.update``). The maxima are sorted in
+            descending order.
+        :rtype: tuple
         """
         iM = self.iM
         M = self.M
@@ -117,8 +139,13 @@ class OneDimensionalHitParade(object):
 
     def get_minima(self):
         """
-        Return the tuple (minima, time-indices).
-        Minima are sorted in ascending order.
+        Return the tuple defining the minima fulfilling specified criteria.
+        
+        :return: A tuple containing minima and their corresponding indices
+            as numpy.ndarrays (see example in definition of the 
+            ``OneDimensionalHitParade.update()`` function). The minima are sorted
+            in descending order.
+        :rtype: tuple
         """
         im = self.im
         m = self.m
@@ -136,10 +163,22 @@ class HitParadeNode(PreserveDimNode):
     """
 
     def __init__(self, n, d=1, input_dim=None, output_dim=None, dtype=None):
-        """
-        Input arguments:
-        n -- Number of maxima and minima to store
-        d -- Minimum gap between two maxima or two minima
+        """Initializes an object of type 'HitParadeNode'.
+        
+        :param n: Number of maxima and minima to remember.
+        :type n: int
+        
+        :param d: Minimum gap between two hits.
+        :type d: int
+        
+        :param input_dim: The input dimensionality.
+        :type input_dim: int
+        
+        :param output_dim: The output dimensionality.
+        :type output_dim: int
+        
+        :param dtype: The datatype.
+        :type dtype: numpy.dtype or str
         """
         super(HitParadeNode, self).__init__(input_dim=input_dim,
                                             output_dim=output_dim,
@@ -155,7 +194,11 @@ class HitParadeNode(PreserveDimNode):
         self.output_dim = n
 
     def _get_supported_dtypes(self):
-        """Return the list of dtypes supported by this node."""
+        """Return the data types supported by this node.
+
+        :return: The list of numpy.dtypes that this node supports.
+        :rtype: list
+        """
         return (mdp.utils.get_dtypes('Float') +
                 mdp.utils.get_dtypes('AllInteger'))
 
@@ -175,11 +218,14 @@ class HitParadeNode(PreserveDimNode):
 
     def get_maxima(self):
         """
-        Return the tuple (maxima, indices).
-        Maxima are sorted in descending order.
-
-        If the training phase has not been completed yet, call
-        stop_training.
+        Return the tuple defining the maxima fulfilling specified criteria.
+        If the training phase has not been completed yet, call stop_training.
+        
+        :return: A tuple containing maxima and their corresponding indices
+            as numpy.ndarrays (see example in definition of the method
+            ``OneDimensionalHitParade.update``). The maxima are sorted in
+            descending order.
+        :rtype: tuple
         """
         self._if_training_stop_training()
         cols = self.input_dim
@@ -193,11 +239,14 @@ class HitParadeNode(PreserveDimNode):
 
     def get_minima(self):
         """
-        Return the tuple (minima, indices).
-        Minima are sorted in ascending order.
-
-        If the training phase has not been completed yet, call
-        stop_training.
+        Return the tuple defining the minima fulfilling specified criteria.
+        If the training phase has not been completed yet, call stop_training.
+        
+        :return: A tuple containing minima and their corresponding indices
+            as numpy.ndarrays (see example in definition of the 
+            ``OneDimensionalHitParade.update()`` function). The minima are sorted
+            in descending order.
+        :rtype: tuple
         """
         self._if_training_stop_training()
         cols = self.input_dim
@@ -231,10 +280,19 @@ class TimeFramesNode(Node):
 
     def __init__(self, time_frames, gap=1,
                  input_dim=None, dtype=None):
-        """
-        Input arguments:
-        time_frames -- Number of delayed copies
-        gap -- Time delay between the copies
+        """Initializes an object of type 'TimeFramesNode'.
+        
+        :param time_frames: Number of delayed copies.
+        :type time_frames: int
+        
+        :param gap: Time delay between the copies.
+        :type gap: int
+        
+        :param input_dim: The input dimensionality.
+        :type input_dim: int
+
+        :param dtype: The datatype.
+        :type dtype: numpy.dtype or str
         """
         self.time_frames = time_frames
         super(TimeFramesNode, self).__init__(input_dim=input_dim,
@@ -243,7 +301,11 @@ class TimeFramesNode(Node):
         self.gap = gap
 
     def _get_supported_dtypes(self):
-        """Return the list of dtypes supported by this node."""
+        """Return the data types supported by this node.
+
+        :return: The list of numpy.dtypes that this node supports.
+        :rtype: list
+        """
         return (mdp.utils.get_dtypes('AllFloat') +
                 mdp.utils.get_dtypes('AllInteger') +
                 mdp.utils.get_dtypes('Character'))
@@ -276,9 +338,16 @@ class TimeFramesNode(Node):
 
     def pseudo_inverse(self, y):
         """This function returns a pseudo-inverse of the execute frame.
-        y == execute(x) only if y belongs to the domain of execute and
-        has been computed with a sufficently large x.
+        
+        y == execute(x) is only ``True`` if y belongs to the domain of execute
+        and has been computed with a sufficently large x.
         If gap > 1 some of the last rows will be filled with zeros.
+        
+        :param y: The execute frame.
+        :type y: numpy.ndarray
+        
+        :return: A pseudo-inverse of the given frame.
+        :rtype: numpy.ndarray
         """
 
         self._if_training_stop_training()
@@ -339,10 +408,19 @@ class TimeDelayNode(TimeFramesNode):
     """
 
     def __init__(self, time_frames, gap=1, input_dim=None, dtype=None):
-        """
-        Input arguments:
-        time_frames -- Number of delayed copies
-        gap -- Time delay between the copies
+        """Initializes an object of type 'TimeDelayNode'.
+
+        :param time_frames: Number of delayed copies.
+        :type time_frames: int
+
+        :param gap: Time delay between the copies.
+        :type gap: int
+
+        :param input_dim: The input dimensionality.
+        :type input_dim: int
+
+        :param dtype: The datatype.
+        :type dtype: numpy.dtype 
         """
         super(TimeDelayNode, self).__init__(time_frames, gap,
                                             input_dim, dtype)
@@ -361,6 +439,10 @@ class TimeDelayNode(TimeFramesNode):
         return y
 
     def pseudo_inverse(self, y):
+        """
+        :raises mdp.NodeException: When called. This method overrides
+            the corresponding method of the ``TimeFramesNode*.
+        """
         raise NotImplementedError
 
 class TimeDelaySlidingWindowNode(TimeDelayNode):
@@ -378,10 +460,19 @@ class TimeDelaySlidingWindowNode(TimeDelayNode):
     Dec 31, 2010
     """
     def __init__(self, time_frames, gap=1, input_dim=None, dtype=None):
-        """
-        Input arguments:
-        time_frames -- Number of delayed copies
-        gap -- Time delay between the copies
+        """Initializes an object of type 'TimeDelaySlidingWindowNode'.
+
+        :param time_frames: Number of delayed copies.
+        :type time_frames: int
+
+        :param gap: Time delay between the copies.
+        :type gap: int
+
+        :param input_dim: The input dimensionality.
+        :type input_dim: int
+
+        :param dtype: The datatype.
+        :type dtype: numpy.dtype or str
         """
 
         self.time_frames = time_frames
@@ -450,22 +541,36 @@ class EtaComputerNode(Node):
     variance, such that it is possible to compare the temporal
     variation of two signals independently from their scaling.
 
-    Reference: Wiskott, L. and Sejnowski, T.J. (2002).
-    Slow Feature Analysis: Unsupervised Learning of Invariances,
-    Neural Computation, 14(4):715-770.
-
-    Important: if a data chunk is tlen data points long, this node is
-    going to consider only the first tlen-1 points together with their
-    derivatives. This means in particular that the variance of the
-    signal is not computed on all data points. This behavior is
-    compatible with that of ``SFANode``.
-
-    This is an analysis node, i.e. the data is analyzed during training
-    and the results are stored internally.  Use the method
-    ``get_eta`` to access them.
+    .. note:: 
+    
+        - If a data chunk is tlen data points long, this node is
+          going to consider only the first tlen-1 points together with their
+          derivatives. This means in particular that the variance of the
+          signal is not computed on all data points. This behavior is
+          compatible with that of ``SFANode``.
+    
+        - This is an analysis node, i.e. the data is analyzed during training
+          and the results are stored internally.  Use the method
+          ``get_eta`` to access them.
+    
+    |
+    
+    .. admonition:: Reference
+        
+        *Wiskott, L. and Sejnowski, T.J. (2002)*.
+        Slow Feature Analysis: Unsupervised Learning of Invariances,
+        Neural Computation, 14(4):715-770.
     """
 
     def __init__(self, input_dim=None, dtype=None):
+        """Initializes an object of type 'EtaComputerNode'.
+        
+        :param input_dim: The input dimensionality.
+        :type input_dim: int
+
+        :param dtype: The datatype.
+        :type dtype: numpy.dtype or str
+        """
         super(EtaComputerNode, self).__init__(input_dim, None, dtype)
         self._initialized = 0
 
@@ -511,17 +616,21 @@ class EtaComputerNode(Node):
 
     def get_eta(self, t=1):
         """Return the eta values of the data received during the training
-        phase. If the training phase has not been completed yet, call
+        phase.
+        
+        If the training phase has not been completed yet, call
         stop_training.
-
-        :Arguments:
-           t
-             Sampling frequency in Hz.
+        
+        :param t: Sampling frequency in Hz.
 
              The original definition in (Wiskott and Sejnowski, 2002)
              is obtained for ``t=self._tlen``, while for ``t=1`` (default),
              this corresponds to the beta-value defined in
              (Berkes and Wiskott, 2005).
+        :type t: int
+        
+        :return: The eta values of the data received.
+        :rtype: numpy.ndarray
         """
         self._if_training_stop_training()
         return self._refcast(self._eta*t)
@@ -536,29 +645,29 @@ class NoiseNode(PreserveDimNode):
     def __init__(self, noise_func=mdp.numx_rand.normal, noise_args=(0, 1),
                  noise_type='additive',
                  input_dim=None, output_dim=None, dtype=None):
-        """
-        Add noise to input signals.
-
-        :Arguments:
-          noise_func
-            A function that generates noise. It must
+        """Initializes an object of type 'NoiseNode'.
+        
+        :param noise_func: A function that generates noise. It must
             take a ``size`` keyword argument and return
             a random array of that size. Default is normal noise.
-
-          noise_args
-            Tuple of additional arguments passed to `noise_func`.
+        :type noise_func: function
+        
+        :param noise_args: Tuple of additional arguments passed to `noise_func`.
             Default is (0,1) for (mean, standard deviation)
             of the normal distribution.
-
-          noise_type
-            Either ``'additive'`` or ``'multiplicative'``.
-
-            'additive'
-               returns ``x + noise``.
-            'multiplicative'
-               returns ``x * (1 + noise)``
-
-            Default is ``'additive'``.
+        :type noise_args: tuple
+        
+        :param noise_type: Either ``'additive'`` or ``'multiplicative'``.
+        :type noise_type: str
+        
+        :param input_dim: The input dimensionality.
+        :type input_dim: int
+        
+        :param output_dim: The output dimensionality.
+        :type output_dim: int
+        
+        :param dtype: The datatype.
+        :type dtype: numpy.dtype or str
         """
         super(NoiseNode, self).__init__(input_dim=input_dim,
                                         output_dim=output_dim,
@@ -573,7 +682,11 @@ class NoiseNode(PreserveDimNode):
             self.noise_type = noise_type
 
     def _get_supported_dtypes(self):
-        """Return the list of dtypes supported by this node."""
+        """Return the data types supported by this node.
+
+        :return: The list of numpy.dtypes that this node supports.
+        :rtype: list
+        """
         return (mdp.utils.get_dtypes('Float') +
                 mdp.utils.get_dtypes('AllInteger'))
 
@@ -596,9 +709,17 @@ class NoiseNode(PreserveDimNode):
     def save(self, filename, protocol = -1):
         """Save a pickled serialization of the node to 'filename'.
         If 'filename' is None, return a string.
-
+        
         Note: the pickled Node is not guaranteed to be upward or
-        backward compatible."""
+        backward compatible.
+        
+        :param filename: The name of the file to save to.
+        :type filename: str
+        
+        :param protocol: Whether to open the file in
+            binary mode (protocol != 0). Default is -1.
+        :type: numeric
+        """
         if filename is None:
             # cPickle seems to create an error, probably due to the
             # self.noise_func attribute.
@@ -619,10 +740,20 @@ class NormalNoiseNode(PreserveDimNode):
 
     def __init__(self, noise_args=(0, 1),
                  input_dim=None, output_dim=None, dtype=None):
-        """Set the noise parameters.
-
-        noise_args -- Tuple of (mean, standard deviation) for the normal
+        """Initializes an object of type 'NormalNoiseNode'.
+        
+        :param noise_args: Tuple of (mean, standard deviation) for the normal
             distribution, default is (0,1).
+        :type noise_args: tuple
+        
+        :param input_dim: The input dimensionality.
+        :type input_dim: int
+        
+        :param output_dim: The output dimensionality.
+        :type output_dim: int
+        
+        :param dtype: The datatype.
+        :type dtype: numpy.dtype or str
         """
         super(NormalNoiseNode, self).__init__(input_dim=input_dim,
                                               output_dim=output_dim,
@@ -653,14 +784,25 @@ class CutoffNode(PreserveDimNode):
 
     def __init__(self, lower_bound=None, upper_bound=None,
                  input_dim=None, output_dim=None, dtype=None):
-        """Initialize node.
-
-        :Parameters:
-          lower_bound
-            Data values below this are cut to the ``lower_bound`` value.
-            If ``lower_bound`` is ``None`` no cutoff is performed.
-          upper_bound
-            Works like ``lower_bound``.
+        """Initializes an object of type 'CutoffNode'.
+        
+        :param lower_bound: Data values below this are cut to the
+            ``lower_bound`` value. If ``lower_bound`` is ``None`` no cutoff
+            is performed. ``None`` is the default.
+        :type lower_bound: numeric
+        
+        :param upper_bound: Works like ``lower_bound``.
+            ``None`` is the default.
+        :type upper_bound: numeric
+        
+        :param input_dim: The input dimensionality.
+        :type input_dim: int
+        
+        :param output_dim: The output dimensionality.
+        :type output_dim: int
+        
+        :param dtype: The datatype.
+        :type dtype: numpy.dtype or str
         """
         super(CutoffNode, self).__init__(input_dim=input_dim,
                                          output_dim=output_dim,
@@ -681,7 +823,14 @@ class CutoffNode(PreserveDimNode):
                 mdp.utils.get_dtypes('AllInteger'))
 
     def _execute(self, x):
-        """Return the clipped data."""
+        """Return the clipped data.
+        
+        :param x: Data to clip.
+        :type x: numpy.ndarray
+        
+        :return: The clipped data.
+        :rtype: numpy.ndarray
+        """
         # n.clip() does not work, since it does not accept None for one bound
         if self.lower_bound is not None:
             x = numx.where(x >= self.lower_bound, x, self.lower_bound)
@@ -701,15 +850,27 @@ class HistogramNode(PreserveDimNode):
 
     def __init__(self, hist_fraction=1.0, hist_filename=None,
                  input_dim=None, output_dim=None, dtype=None):
-        """Initialize the node.
-
-        hist_fraction -- Defines the fraction of the data that is stored
-            randomly.
-        hist_filename -- Filename for the file to which the data history will
+        """Initializes an object of type 'HistogramNode'.
+        
+        :param hist_fraction: Defines the fraction of the data that is stored
+            randomly. Default is 1.0.
+        :type hist_fraction: float
+        
+        :param hist_filename: Filename for the file to which the data history will
             be pickled after training. The data is pickled when stop_training
             is called and data_hist is then cleared (to free memory).
             If filename is None (default value) then data_hist is not cleared
             and can be directly used after training.
+        :type hist_filename: str
+        
+        :param input_dim: The input dimensionality.
+        :type input_dim: int
+        
+        :param output_dim: The output dimensionality.
+        :type output_dim: int
+        
+        :param dtype: The datatype.
+        :type dtype: numpy.dtype or str
         """
         super(HistogramNode, self).__init__(input_dim=input_dim,
                                             output_dim=output_dim,
@@ -719,12 +880,21 @@ class HistogramNode(PreserveDimNode):
         self.data_hist = None  # stores the data history
 
     def _get_supported_dtypes(self):
+        """Return the data types supported by this node.
+
+        :return: The list of numpy.dtypes that this node supports.
+        :rtype: list
+        """
         return (mdp.utils.get_dtypes('AllFloat') +
                 mdp.utils.get_dtypes('AllInteger') +
                 mdp.utils.get_dtypes('Character'))
 
     def _train(self, x):
-        """Store the history data."""
+        """Store the history data.
+        
+        :param x: The history data.
+        :type x: numpy.ndarray
+        """
         if self.hist_fraction < 1.0:
             x = x[numx.random.random(len(x)) < self.hist_fraction]
         if self.data_hist is not None:
@@ -760,25 +930,36 @@ class AdaptiveCutoffNode(HistogramNode):
     def __init__(self, lower_cutoff_fraction=None, upper_cutoff_fraction=None,
                  hist_fraction=1.0, hist_filename=None,
                  input_dim=None, output_dim=None, dtype=None):
-        """Initialize the node.
-
-        :Parameters:
-          lower_cutoff_fraction
-            Fraction of data that will be cut off after
-            the training phase (assuming the data distribution does not
+        """Initializes an object of type 'AdaptiveCutoffNode'.
+        
+        :param lower_cutoff_fraction: Fraction of data that will be cut off
+            after the training phase (assuming the data distribution does not
             change). If set to ``None`` (default value) no cutoff is performed.
-          upper_cutoff_fraction
-            Works like `lower_cutoff_fraction`.
-          hist_fraction
-            Defines the fraction of the data that is stored for the
-            histogram.
-          hist_filename
-            Filename for the file to which the data history will be
-            pickled after training. The data is pickled when
+        :type lower_cutoff_fraction: float
+        
+        :param upper_cutoff_fraction: Works like `lower_cutoff_fraction`.
+        :type upper_cutoff_fraction: float
+        
+        :param hist_fraction: Defines the fraction of the data that is stored
+            for the histogram.
+        :type hist_fraction: float
+        
+        :param hist_filename: Filename for the file to which the data history
+            will be pickled after training. The data is pickled when
             `stop_training` is called and ``data_hist`` is then
             cleared (to free memory).  If filename is ``None``
             (default value) then ``data_hist`` is not cleared and can
             be directly used after training.
+        :type hist_filename: str
+        
+        :param input_dim: The input dimensionality.
+        :type input_dim: int
+        
+        :param output_dim: The output dimensionality.
+        :type output_dim: int
+        
+        :param dtype: The datatype.
+        :type dtype: numpy.dtype or str 
         """
         super(AdaptiveCutoffNode, self).__init__(hist_fraction=hist_fraction,
                                                  hist_filename=hist_filename,
@@ -791,6 +972,11 @@ class AdaptiveCutoffNode(HistogramNode):
         self.upper_bounds = None
         
     def _get_supported_dtypes(self):
+        """Return the data types supported by this node.
+
+        :return: The list of numpy.dtypes that this node supports.
+        :rtype: list
+        """
         return (mdp.utils.get_dtypes('Float') +
                 mdp.utils.get_dtypes('AllInteger'))
 
@@ -809,7 +995,14 @@ class AdaptiveCutoffNode(HistogramNode):
         super(AdaptiveCutoffNode, self)._stop_training()
 
     def _execute(self, x):
-        """Return the clipped data."""
+        """Return the clipped data.
+
+        :param x: Data to clip.
+        :type x: numpy.ndarray
+
+        :return: The clipped data.
+        :rtype: numpy.ndarray
+        """
         if self.lower_bounds is not None:
             x = numx.where(x >= self.lower_bounds, x, self.lower_bounds)
         if self.upper_bounds is not None:
