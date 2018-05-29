@@ -19,10 +19,8 @@ import scipy
 import scipy.optimize
 import sys
 
-# NodeException, TrainingException, ValueError
 import mdp
 from mdp import numx, NodeException, TrainingException
-# from mdp.nodes.sfa_nodes import SFANode
 from mdp.utils import (mult, symeig, pinv, CovarianceMatrix, SymeigException)
 from mdp.nodes import GeneralExpansionNode
 
@@ -284,8 +282,8 @@ class GSFANode(mdp.Node):
                     if verbose:
                         print("N1=Q1=", Q1, "R1=", R1, "N2=", N2)
 
-                    v = 2.0 ** (-9.5)  # 500.0/4500 #weight of unlabeled samples (making it "500" vs "500")
-                    C = 10.0  # 10.0 #Clustered graph assumed, with C classes, and each one having N1/C samples
+                    v = 2.0 ** (-9.5)  # weight of unlabeled samples (making it "500" vs "500")
+                    C = 10.0  # Clustered graph assumed, with C classes, and each one having N1/C samples
                     if verbose:
                         print("v=", v, "C=", C)
 
@@ -302,7 +300,6 @@ class GSFANode(mdp.Node):
                     weight_adjustment = (N1_norm - 1) / (N1_norm - 1 + v_norm * N2)
                     if verbose:
                         print("weight_adjustment =", weight_adjustment, "w11=", 1 / (N1_norm - 1 + v_norm * N2))
-                    # w1 = Q1*1.0/R1 * (1.0-weight_fraction_unlabeled)
 
                     self._covdcovmtx.sum_x *= weight_adjustment
                     self._covdcovmtx.sum_prod_x *= weight_adjustment
@@ -318,7 +315,7 @@ class GSFANode(mdp.Node):
                         self._covdcovmtx.sum_prod_diffs) / self._covdcovmtx.num_diffs).mean()) ** 0.5)
                         print("")
 
-                    # ##Connections within unlabeled data (notice that C times this is equivalent to
+                    # Connections within unlabeled data (notice that C times this is equivalent to
                     # v*v/(N1+v*(N2-1)) once)
                     w22 = 0.5 * 2 * v_norm * v_norm / (N1_norm + v_norm * (N2 - 1))
                     sum_x_unlabeled = x.sum(axis=0).reshape((1, -1))
@@ -872,8 +869,7 @@ class CovDCovMatrix(object):
         sum_prod_x = mdp.utils.mult(x_sel.T, x)  # Bug fixed!!! computing w * X^T * X, with X=(x1,..xN)^T
         self.add_samples(sum_prod_x, sum_x, num_samples - (0.5 * window_halfwidth - 0.5), weight)  # weights verified
 
-        # Update DCov Matrix
-        # window = numx.ones(2*width+1) # Rectangular window, used always here!
+        # window = numx.ones(2*width+1). Rectangular window, used always here!
         # diffs = numx.zeros((num_samples - 2 * width, dim))
         # This can be made faster (twice) due to symmetry
         for offset in range(-width, width + 1):
@@ -911,8 +907,6 @@ class CovDCovMatrix(object):
         num_blocks = num_samples // block_size
 
         # warning, plenty of dtype missing!!!!!!!!
-        # Optimize computation of x.T ???
-        # Warning, remove last element of x (incremental computation)!!!
 
         # Correlation Matrix. Computing sum of outer products (the easy part)
         xp = x[block_size:num_samples - block_size]
@@ -934,12 +928,9 @@ class CovDCovMatrix(object):
         media_a = media[0:-1]
         media_b = media[1:]
         sum_prod_mixed_meds = (mdp.utils.mult(media_a.T, media_b) + mdp.utils.mult(media_b.T, media_a))
-        #        prod_first_media = numx.outer(media[0], media[0]) * block_size
-        #        prod_last_media = numx.outer(media[num_blocks-1], media[num_blocks-1]) * block_size
         prod_first_block = mdp.utils.mult(x[0:block_size].T, x[0:block_size])
         prod_last_block = mdp.utils.mult(x[num_samples - block_size:].T, x[num_samples - block_size:])
 
-        #       WARNING? why did I remove one factor block_size?
         num_diffs = block_size * (num_blocks - 1)
 
         sum_prod_diffs = (block_size * sum_prod_x -
@@ -1001,7 +992,7 @@ class CovDCovMatrix(object):
 
         sum_prod_meds = mdp.utils.mult(media.T, media)
         # FIX1: AFTER DT in (0,4) normalization
-        num_diffs = num_blocks * block_size  # ## * (block_size-1+1) / (block_size-1)
+        num_diffs = num_blocks * block_size  # * (block_size-1+1) / (block_size-1)
         if self.verbose:
             print("num_diffs in block:", num_diffs, " num_samples:", num_samples)
         if include_self_loops:
@@ -1044,7 +1035,7 @@ class CovDCovMatrix(object):
         J = int(numx.log2(num_classes))
         if Jdes is None:
             Jdes = J
-        extra_label = Jdes - J  # 0, 1, 2
+        extra_label = Jdes - J
 
         if self.verbose:
             print("Besides J=%d labels, also adding %d labels" % (J, extra_label))
@@ -1111,10 +1102,6 @@ class CovDCovMatrix(object):
 
         avg_x = self.sum_x * (1.0 / self.num_samples)
 
-        # THEORY: This computation has a bias
-        # exp_prod_x = self.sum_prod_x * (1.0 / self.num_samples)
-        # prod_avg_x = numx.outer(avg_x, avg_x)
-        # cov_x = exp_prod_x - prod_avg_x
         prod_avg_x = numx.outer(avg_x, avg_x)
         if divide_by_num_samples_or_differences:  # as specified by the theory on training graphs
             cov_x = (self.sum_prod_x - self.num_samples * prod_avg_x) / (1.0 * self.num_samples)
@@ -1388,7 +1375,7 @@ class iGSFANode(mdp.Node):
         print("training PCA...")
         pca_output_dim = self.output_dim - self.num_sfa_features_preserved
         # This allows training of PCA when pca_out_dim is zero
-        self.pca_node = mdp.nodes.PCANode(output_dim=max(1, pca_output_dim), dtype=self.dtype)  # reduce=True
+        self.pca_node = mdp.nodes.PCANode(output_dim=max(1, pca_output_dim), dtype=self.dtype)
         self.pca_node.train(sfa_removed_x)
         self.pca_node.stop_training()
         PCANode_reduce_output_dim(self.pca_node, pca_output_dim, verbose=False)
@@ -1448,7 +1435,6 @@ class iGSFANode(mdp.Node):
         x_zm = x
 
         # Reorder or pre-process the data before it is expanded, but only if there is really an expansion.
-        # WARNING, why the last condition???
         if self.pre_expansion_node_class and self.exp_node:
             er = "Unexpected parameters"
             raise TrainingException(er)
@@ -1458,7 +1444,7 @@ class iGSFANode(mdp.Node):
         if self.exp_node:
             if verbose:
                 print("expanding x...")
-            exp_x = self.exp_node.execute(x_pre_exp)  # x_zm
+            exp_x = self.exp_node.execute(x_pre_exp)
         else:
             exp_x = x_pre_exp
 
@@ -1486,8 +1472,7 @@ class iGSFANode(mdp.Node):
             print("training PCA...")
         pca_output_dim = self.output_dim
         if self.pca_node is None:
-            # WARNING: WHY WAS I EXTRACTING ALL PCA COMPONENTS!!?? INEFFICIENT!!!!
-            self.pca_node = mdp.nodes.PCANode(output_dim=pca_output_dim)  # reduce=True) #output_dim = pca_out_dim)
+            self.pca_node = mdp.nodes.PCANode(output_dim=pca_output_dim)  # evetually, add: reduce=True
         sfa_removed_x = x
         self.pca_node.train(sfa_removed_x)
 
@@ -1550,7 +1535,6 @@ class iGSFANode(mdp.Node):
             # SFA components have an std equal to that of the least significant principal component
             if self.pca_node.d.shape[0] > 0:
                 self.magn_n_sfa_x = 1.0 * numx.median(self.pca_node.d) ** 0.5
-                # 100.0 * self.pca_node.d[-1] ** 0.5 + 0.0 # Experiment: use 5.0 instead of 1.0
             else:
                 self.magn_n_sfa_x = 1.0
             if verbose:
@@ -1638,8 +1622,6 @@ class iGSFANode(mdp.Node):
             verbose = self.verbose
         x_lin = self.linear_inverse(y)
         rmse_lin = ((y - self.execute(x_lin)) ** 2).sum(axis=1).mean() ** 0.5
-        # scipy.optimize.leastsq(func, x0, args=(), Dfun=None, full_output=0, col_deriv=0, ftol=1.49012e-08,
-        # xtol=1.49012e-08, gtol=0.0, maxfev=0, epsfcn=0.0, factor=100, diag=None)
         x_nl = numx.zeros_like(x_lin)
         y_dim = y.shape[1]
         x_dim = x_lin.shape[1]
@@ -1693,13 +1675,13 @@ class iGSFANode(mdp.Node):
         else:
             sfa_removed_x = numx.zeros((num_samples, self.input_dim))
 
-        # AKA Laurenz method for feature scaling (+rotation)
+        # Laurenz method for feature scaling (+rotation)
         if self.reconstruct_with_sfa and self.slow_feature_scaling_method == "QR_decomposition":
             n_sfa_x = numx.dot(s_n_sfa_x, self.Rpinv.T)
         else:
             n_sfa_x = s_n_sfa_x / self.magn_n_sfa_x
 
-        # sfa_x = n_sfa_x * self.sfa_x_std + self.sfa_x_mean
+        # sfa_x is n_sfa_x * self.sfa_x_std + self.sfa_x_mean
         if self.reconstruct_with_sfa:
             x_pca_app = self.lr_node.execute(n_sfa_x)
             x_app = x_pca_app
@@ -1745,7 +1727,6 @@ def PCANode_reduce_output_dim(pca_node, new_output_dim, verbose=False):
         er = "Can only reduce output dimensionality of PCA node, not increase it"
         raise ValueError(er)
 
-    # if new_output_dim > 0:
     original_total_variance = pca_node.d.sum()
     original_explained_variance = pca_node.explained_variance
     pca_node.d = pca_node.d[0:new_output_dim]
@@ -1831,7 +1812,7 @@ def example_pathological_outputs(experiment):
     e[(19, 19)] = 0.5
     train_mode = "graph"
 
-    # experiment = 0 #Select the experiment to perform, from 0 to 11
+    # Select the experiment to perform, from 0 to 11
     print("experiment", experiment)
     if experiment == 0:
         exp_title = "Original linear SFA graph. Experiment 0"
@@ -1858,7 +1839,6 @@ def example_pathological_outputs(experiment):
         e[(4, 6)] = 0.5
         e[(5, 7)] = 0.5
 
-        # e[(1,2)] = 0.1
         exp_title = "Modified edge weights. Experiment 4"
     elif experiment == 5:
         e[(10, 11)] = 0.02

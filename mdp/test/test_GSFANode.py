@@ -10,10 +10,8 @@ from __future__ import print_function
 from __future__ import division
 
 from ._tools import *
-import pytest
-
+# import pytest
 from mdp.nodes.gsfa_nodes import graph_delta_values, comp_delta
-
 
 
 def test_equivalence_SFA_GSFA_regular_mode():
@@ -56,9 +54,8 @@ def test_equivalence_SFA_GSFA_regular_mode():
     y = y * signs_gsfa * signs_sfa
     y2 = y2 * signs_gsfa * signs_sfa
 
-    print("y_sfa:", y_sfa, "y:", y)
-    assert (y_sfa - y) == pytest.approx(0.0)
-    assert (y2_sfa - y2) == pytest.approx(0.0)
+    assert_array_almost_equal(y_sfa, y, decimal)
+    assert_array_almost_equal(y2_sfa, y2, decimal)
 
 
 def test_equivalence_GSFA_clustered_and_classification_modes():
@@ -110,7 +107,7 @@ def test_equivalence_GSFA_clustered_and_classification_modes():
     signs_gsfa_clustered = numx.sign(y_clustered[0,:])
     y_clustered = y_clustered * signs_gsfa_clustered * signs_gsfa_classification
 
-    assert (y_clustered - y_classification) == pytest.approx(0.0)
+    assert_array_almost_equal(y_clustered, y_classification, decimal)
 
 
 def test_GSFA_zero_mean_unit_variance_graph():
@@ -128,8 +125,10 @@ def test_GSFA_zero_mean_unit_variance_graph():
     n.stop_training()
 
     y = n.execute(x)
-    assert y.mean(axis=0) == pytest.approx(0.0)
-    assert (y**2).mean(axis=0) == pytest.approx(1.0)
+    y_mean = y.mean(axis=0)
+    y_var = (y**2).mean(axis=0)
+    assert_array_almost_equal(y_mean, numx.zeros(y_mean.shape), decimal)
+    assert_array_almost_equal(y_var, numx.ones(y_var.shape), decimal)
 
 
 def test_basic_GSFA_edge_dict():
@@ -152,14 +151,10 @@ def test_basic_GSFA_edge_dict():
     x2 = numx.random.normal(size=(200, 15))
     y2 = n.execute(x2)
     y2 = y2 - y2.mean(axis=0)  # enforce zero mean
-    y2 /= ((y2**2).mean(axis=0) ** 0.5)  # enforce zero-mean
-    # print("y2 means:", y2.mean(axis=0))
-    # print("y2 std:", (y2**2).mean(axis=0))
+    y2 /= ((y2**2).mean(axis=0) ** 0.5)  # enforce unit variance
 
     delta_values_test_data = graph_delta_values(y2, e)
-    assert (delta_values_training_data < delta_values_test_data).all()
-    # print("Graph delta values of training data", graph_delta_values(y, e))
-    # print("Graph delta values of test data (should be larger than for training)", graph_delta_values(y2, e))
+    assert (delta_values_test_data - delta_values_training_data > -1.5 * 10 ** -decimal).all()
 
 
 def test_equivalence_SFA_GSFA_linear_graph():
@@ -209,12 +204,8 @@ def test_equivalence_SFA_GSFA_linear_graph():
     y = y * signs_gsfa * signs_sfa
     y2 = y2 * signs_gsfa * signs_sfa
 
-    assert (y_sfa - y) == pytest.approx(0.0)
-    assert (y2_sfa - y2) == pytest.approx(0.0)
-
-
-
-
+    assert_array_almost_equal(y_sfa, y, decimal)
+    assert_array_almost_equal(y2_sfa, y2, decimal)
 
 
 # FUTURE: Is it worth it to have so many methods? I guess the mirroring windows are enough, they have constant
@@ -233,11 +224,9 @@ def test_equivalence_window3_fwindow3():
 
         y = n.execute(x)
         delta = comp_delta(y)
-        # print("**Brute Delta Values of mode %s are: " % training_mode, delta)
         delta_values.append(delta)
 
-    # print(delta_values)
-    assert (delta_values[1] - delta_values[0]) == pytest.approx(0.0)
+    assert_array_almost_equal(delta_values[1], delta_values[0], decimal)
 
 
 def test_equivalence_smirror_window3_mirror_window3():
@@ -254,11 +243,9 @@ def test_equivalence_smirror_window3_mirror_window3():
 
         y = n.execute(x)
         delta = comp_delta(y)
-        # print("**Brute Delta Values of mode %s are: " % training_mode, delta)
         delta_values.append(delta)
 
-    # print(delta_values)
-    assert (delta_values[1] - delta_values[0]) == pytest.approx(0.0)
+    assert_array_almost_equal(delta_values[1], delta_values[0], decimal)
 
 
 def test_equivalence_smirror_window32_mirror_window32():
@@ -275,11 +262,9 @@ def test_equivalence_smirror_window32_mirror_window32():
 
         y = n.execute(x)
         delta = comp_delta(y)
-        # print("**Brute Delta Values of mode %s are: " % training_mode, delta)
         delta_values.append(delta)
 
-    # print(delta_values)
-    assert (delta_values[1] - delta_values[0]) == pytest.approx(0.0)
+    assert_array_almost_equal(delta_values[1], delta_values[0], decimal)
 
 
 def test_equivalence_update_graph_and_update_graph_old():
@@ -302,5 +287,4 @@ def test_equivalence_update_graph_and_update_graph_old():
     n2.stop_training()
     y2 = n2.execute(x)
 
-    assert (y - y2) == pytest.approx(0.0)
-
+    assert_array_almost_equal(y, y2, decimal)
