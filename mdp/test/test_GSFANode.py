@@ -10,7 +10,6 @@ from __future__ import print_function
 from __future__ import division
 
 from ._tools import *
-# import pytest
 from mdp.nodes.gsfa_nodes import graph_delta_values, comp_delta
 
 

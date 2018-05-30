@@ -1343,7 +1343,7 @@ class iGSFANode(mdp.Node):
         # TODO:Compute variance removed by linear approximation
         if verbose:
             print("ranking method...")
-        # AKA Laurenz method for feature scaling( +rotation)
+        # A method for feature scaling( +rotation)
         if self.reconstruct_with_sfa and self.slow_feature_scaling_method == "QR_decomposition":
             M = self.lr_node.beta[1:, :].T  # bias is used by default, we do not need to consider it
             Q, R = numx.linalg.qr(M)
@@ -1351,7 +1351,7 @@ class iGSFANode(mdp.Node):
             self.R = R
             self.Rpinv = pinv(R)
             s_n_sfa_x = numx.dot(n_sfa_x, R.T)
-        # AKA my method for feature scaling (no rotation)
+        # Another method for feature scaling (no rotation)
         elif self.reconstruct_with_sfa and (self.slow_feature_scaling_method == "sensitivity_based"):
             beta = self.lr_node.beta[1:, :]  # bias is used by default, we do not need to consider it
             sens = (beta ** 2).sum(axis=1)
@@ -1576,15 +1576,14 @@ class iGSFANode(mdp.Node):
         # Remove linear approximation from the centered data
         sfa_removed_x = x_zm - x_app
 
-        # Laurenz method for feature scaling( +rotation)
+        # A method for feature scaling( +rotation)
         if self.reconstruct_with_sfa and self.slow_feature_scaling_method == "QR_decomposition":
             s_n_sfa_x = numx.dot(n_sfa_x, self.R.T)
-        # My method for feature scaling (no rotation)
+        # Another method for feature scaling (no rotation)
         elif self.reconstruct_with_sfa and self.slow_feature_scaling_method == "sensitivity_based":
             s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x
         elif self.slow_feature_scaling_method is None:
             s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x
-            # Scale according to ranking
         elif self.slow_feature_scaling_method == "data_dependent":
             s_n_sfa_x = n_sfa_x * self.magn_n_sfa_x
         else:
@@ -1611,13 +1610,19 @@ class iGSFANode(mdp.Node):
         if linear_inverse:
             return self.linear_inverse(y)
         else:
-            return self.non_linear_inverse(y)
+            return self.nonlinear_inverse(y)
 
-    def non_linear_inverse(self, y, verbose=None):
+    def nonlinear_inverse(self, y, verbose=None):
         """Non-linear inverse approximation method.
 
         This method is experimental and should be used with care.
+        Note: this function requires scipy.
         """
+        if mdp.numx_description != 'scipy':
+            raise NotImplementedError('This function requires scipy.')
+        else:
+            import scipy.optimize
+
         if verbose is None:
             verbose = self.verbose
         x_lin = self.linear_inverse(y)
@@ -1644,7 +1649,6 @@ class iGSFANode(mdp.Node):
                 print("x_nl_i=", x_nl_i, "plsq[1]=", plsq[1])
             if plsq[1] != 2:
                 print("Quitting: plsq[1]=", plsq[1])
-                # quit()
             x_nl[i] = x_nl_i
             if verbose:
                 print("|E_lin(%d)|=" % i, ((y_i - self.execute(x_lin[i].reshape((1, -1)))) ** 2).sum() ** 0.5)
@@ -1675,7 +1679,7 @@ class iGSFANode(mdp.Node):
         else:
             sfa_removed_x = numx.zeros((num_samples, self.input_dim))
 
-        # Laurenz method for feature scaling (+rotation)
+        # A method for feature scaling (+rotation)
         if self.reconstruct_with_sfa and self.slow_feature_scaling_method == "QR_decomposition":
             n_sfa_x = numx.dot(s_n_sfa_x, self.Rpinv.T)
         else:
@@ -1991,7 +1995,7 @@ def example_iGSFA():
     def zero_mean_unit_var(x):
         x -= x.mean(axis=0)
         x /= x.std(axis=0)
-    return x
+        return x
 
     print("Node creation and training")
     n = iGSFANode(output_dim=15, reconstruct_with_sfa=False, slow_feature_scaling_method="data_dependent",
@@ -2011,6 +2015,12 @@ def example_iGSFA():
     print("Standard delta values of output features y after constraint enforcement:", comp_delta(y_norm))
     print("Standard delta values of output features y_test after constraint enforcement:", comp_delta(y_test_norm))
 
+    x_app_lin = n.inverse(y)
+    x_app_nonlin = n.nonlinear_inverse(y)
+    y_app_lin = n.execute(x_app_lin)
+    y_app_nonlin = n.execute(x_app_nonlin)
+    print("|y - y_app_lin|", ((y - y_app_lin)**2).mean())
+    print("|y - y_app_nonlin|", ((y - y_app_nonlin)**2).mean())
 
 if __name__ == "__main__":
     for experiment_number in range(0, 12):
