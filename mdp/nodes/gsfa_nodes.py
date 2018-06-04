@@ -17,10 +17,6 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division
 
-import scipy
-import scipy.optimize
-import sys
-
 import mdp
 from mdp import numx, NodeException, TrainingException
 from mdp.utils import (mult, symeig, pinv, SymeigException)
@@ -59,10 +55,16 @@ class GSFANode(mdp.Node):
         self._symeig = symeig
         self._covdcovmtx = CovDCovMatrix()
 
+        # SFA eigenvalues and eigenvectors, will be set after training
+        self.d = None
+        self.sf = None  # second index for outputs
+        self.avg = None
+        self._bias = None  # avg multiplied with sf
+
     def _train(self, x, block_size=None, train_mode=None, node_weights=None,
                edge_weights=None, verbose=None):
-        """ This is the main training function of GSFA.
-        
+        """This is the main training function of GSFA.
+
         x: training data (each sample is a row)
 
         The semantics of the remaining parameters depends on the training mode
@@ -186,9 +188,9 @@ class GSFANode(mdp.Node):
                     for i in range(num_blocks):
                         for j in range(dual_num_blocks):
                             x2[j * dual_block_size + i * chunk_size:
-                                j * dual_block_size + (i + 1) * chunk_size] = \
-                                x[i * block_size + j * chunk_size:
-                                i * block_size + (j + 1) * chunk_size]
+                               j * dual_block_size + (i + 1) * chunk_size] = \
+                               x[i * block_size + j * chunk_size:
+                                 i * block_size + (j + 1) * chunk_size]
                     self._covdcovmtx.update_serial(x2,
                                                    block_size=dual_block_size,
                                                    weight=0.0)
@@ -401,7 +403,8 @@ class GSFANode(mdp.Node):
                                                       v_norm * (N2 - 1))))
                     if verbose:
                         print("(twice) w12=", w12)
-                    sum_prod_diffs_mixed = w12 * (N1 * sum_prod_x_unlabeled -
+                    sum_prod_diffs_mixed = \
+                        w12 * (N1 * sum_prod_x_unlabeled -
                         (mdp.utils.mult(sum_x_labeled.T, sum_x_unlabeled) +
                          mdp.utils.mult(sum_x_unlabeled.T, sum_x_labeled)) +
                         N2 * sum_prod_x_labeled)
@@ -464,7 +467,7 @@ class GSFANode(mdp.Node):
             print("self._covdcovmtx.num_samples = ",
                   self._covdcovmtx.num_samples)
             print("self._covdcovmtx.num_diffs= ", self._covdcovmtx.num_diffs)
-        self.cov_mtx, self.avg, self.dcov_mtx = self._covdcovmtx.fix()
+        cov_mtx, self.avg, dcov_mtx = self._covdcovmtx.fix()
 
         if verbose:
             print("Finishing GSFA training: ", self._covdcovmtx.num_samples)
@@ -478,7 +481,7 @@ class GSFANode(mdp.Node):
         try:
             if verbose:
                 print("***Range used=", rng)
-            self.d, self.sf = self._symeig(self.dcov_mtx, self.cov_mtx,
+            self.d, self.sf = self._symeig(dcov_mtx, cov_mtx,
                                            range=rng, overwrite=(not debug))
             d = self.d
             # check that we get only non-negative eigenvalues
@@ -488,10 +491,10 @@ class GSFANode(mdp.Node):
             ex = str(exception) + "\n Covariance matrices may be singular."
             raise NodeException(ex)
 
-        del self._covdcovmtx
-        del self.cov_mtx
-        del self.dcov_mtx
-        self.cov_mtx = self.dcov_mtx = self._covdcovmtx = None
+        if not debug:
+            del self._covdcovmtx
+            self._covdcovmtx = None
+
         self._bias = mult(self.avg, self.sf)
         if verbose:
             print("shape of GSFANode.sf is=", self.sf.shape)
@@ -532,8 +535,8 @@ class GSFANode(mdp.Node):
 ###############################################################################
 
 def graph_delta_values(y, edge_weights):
-    """ Computes delta values from an arbitrary graph as in the objective 
-    function of GSFA. The feature vectors are not normalized to weighted 
+    """ Computes delta values from an arbitrary graph as in the objective
+    function of GSFA. The feature vectors are not normalized to weighted
     unit variance or weighted zero mean.
     """
     R = 0
@@ -558,7 +561,8 @@ def Hamming_weight(integer_list):
      of bits equal to one).
     """
     if isinstance(integer_list, list):
-        return [Hamming_weight(k) for k in integer_list]
+        weights = [Hamming_weight(k) for k in integer_list]
+        return weights
     elif isinstance(integer_list, int):
         w = 0
         n = integer_list
@@ -645,7 +649,7 @@ class CovDCovMatrix(object):
         """ Add unlabeled samples to the covariance matrix
         (DCov remains unmodified).
         """
-        num_samples, dim = x.shape
+        num_samples = x.shape[0]
 
         sum_x = x.sum(axis=0)
         sum_prod_x = mdp.utils.mult(x.T, x)
@@ -655,7 +659,7 @@ class CovDCovMatrix(object):
         """This is equivalent to regular SFA training (except for the final
         feature scale).
         """
-        num_samples, dim = x.shape
+        num_samples = x.shape[0]
 
         # Update Cov Matrix
         sum_x = x.sum(axis=0)
@@ -857,8 +861,8 @@ class CovDCovMatrix(object):
         num_samples, dim = x.shape
         width = window_halfwidth
         if 2 * width >= num_samples:
-            ex = "window_halfwidth %d not supported for %d samples" % (width,
-                                                                        num_samples)
+            ex = "window_halfwidth %d " % width + \
+                 "not supported for %d samples" % num_samples
             raise TrainingException(ex)
 
         # Update Cov Matrix. All samples have same weight
@@ -889,8 +893,8 @@ class CovDCovMatrix(object):
         num_samples, dim = x.shape
         width = window_halfwidth
         if 2 * width >= num_samples:
-            ex = "window_halfwidth %d not supported for %d samples" % (width,
-                                                                        num_samples)
+            ex = "window_halfwidth %d " % width + \
+                 "not supported for %d samples" % num_samples
             raise ValueError(ex)
 
         # Update Cov Matrix. All samples have same weight
@@ -980,7 +984,7 @@ class CovDCovMatrix(object):
         self.add_diffs(sum_prod_diffs_full, num_diffs, weight)
 
     def update_sliding_window(self, x, weight=1.0, window_halfwidth=2):
-        num_samples, dim = x.shape
+        num_samples = x.shape[0]
         width = window_halfwidth
         if 2 * width >= num_samples:
             ex = "window_halfwidth %d not supported for %d samples" % \
@@ -1071,12 +1075,13 @@ class CovDCovMatrix(object):
     # Weight should refer to node weights
     def update_clustered(self, x, block_sizes=None, weight=1.0,
                          include_self_loops=True):
-        num_samples, dim = x.shape
+        num_samples = x.shape[0]
 
         if isinstance(block_sizes, int):
-            return self.update_clustered_homogeneous_block_sizes(
+            self.update_clustered_homogeneous_block_sizes(
                 x, weight=weight, block_size=block_sizes,
                 include_self_loops=include_self_loops)
+            return
 
         if block_sizes is None:
             er = "block_size is not specified"
@@ -1306,7 +1311,7 @@ class iGSFANode(mdp.Node):
                  delta_threshold=1.999, reconstruct_with_sfa=False,
                  verbose=False, input_dim=None, output_dim=None,
                  dtype=None, **argv):
-        """Initializes the iGSFA node.
+        """ Initializes the iGSFA node.
 
         pre_expansion_node_class: a node class. An instance of this class is
             used to filter the data before the expansion.
