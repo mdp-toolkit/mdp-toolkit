@@ -8,10 +8,9 @@ from __future__ import print_function
 from __future__ import division
 import copy
 
-from ._tools import *
-import mdp
 from mdp.nodes.gsfa_nodes import comp_delta, GSFANode, iGSFANode, \
     SFANode_reduce_output_dim, PCANode_reduce_output_dim
+from ._tools import numx, mdp, assert_array_almost_equal, decimal, py
 
 
 def test_automatic_stop_training():

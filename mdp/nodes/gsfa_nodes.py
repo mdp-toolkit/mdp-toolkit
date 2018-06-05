@@ -1150,7 +1150,7 @@ class CovDCovMatrix(object):
                   ((numx.diagonal(sum_prod_diffs) / num_diffs).mean()) ** 0.5)
 
     def update_compact_classes(self, x, block_sizes=None, Jdes=None):
-        num_samples, dim = x.shape
+        num_samples = x.shape[0]
 
         if self.verbose:
             print("block_sizes=", block_sizes, type(block_sizes))
@@ -1303,7 +1303,6 @@ class iGSFANode(mdp.Node):
     slowness principle", e-print arXiv:1601.03945,
     http://arxiv.org/abs/1601.03945, 2017.
     """
-
     def __init__(self, pre_expansion_node_class=None,
                  pre_expansion_out_dim=None, expansion_funcs=None,
                  expansion_output_dim=None, expansion_starting_point=None,
@@ -1312,7 +1311,6 @@ class iGSFANode(mdp.Node):
                  verbose=False, input_dim=None, output_dim=None,
                  dtype=None, **argv):
         """ Initializes the iGSFA node.
-
         pre_expansion_node_class: a node class. An instance of this class is
             used to filter the data before the expansion.
         pre_expansion_out_dim: the output dimensionality of the
@@ -1330,7 +1328,7 @@ class iGSFANode(mdp.Node):
             "data_dependent", and "QR_decomposition".
         delta_threshold: this parameter has two different meanings depending
             on its type. If it is real valued (e.g., 1.99), it determines the
-            parameter \Delta_threshold, which is used to decide how many slow
+            parameter Delta_threshold, which is used to decide how many slow
             features are preserved, depending on their delta values. If it is
             integer (e.g., 20), it directly specifies the exact size of the
             slow part.
@@ -1395,9 +1393,17 @@ class iGSFANode(mdp.Node):
 
         # The following variables are for internal use only (available after
         # training on a single batch only)
+        self.magn_n_sfa_x = None
+        self.num_sfa_features_preserved = None
         self.x_mean = None
         self.sfa_x_mean = None
         self.sfa_x_std = None
+        self.evar = None
+        # The following variables are for internal use only, by the QR slow
+        # feature scaling method
+        self.Q = None
+        self.R = None
+        self.Rpinv = None
 
     @staticmethod
     def is_trainable():
@@ -1601,7 +1607,6 @@ class iGSFANode(mdp.Node):
         PCANode_reduce_output_dim(self.pca_node, pca_output_dim,
                                   verbose=False)
 
-        # TODO:check that pca_out_dim > 0
         if verbose:
             print("executing PCA...")
 

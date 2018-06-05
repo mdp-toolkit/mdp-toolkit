@@ -6,7 +6,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division
 
-from ._tools import *
+from ._tools import numx, mdp, assert_array_almost_equal, decimal
 from mdp.nodes.gsfa_nodes import graph_delta_values, comp_delta
 
 
@@ -118,7 +118,7 @@ def test_GSFA_zero_mean_unit_variance_graph():
     x = numx.random.normal(size=(200, 15))
     v = numx.ones(200)
     e = {}
-    for i in range(1500):
+    for _ in range(1500):
         n1 = numx.random.randint(200)
         n2 = numx.random.randint(200)
         e[(n1, n2)] = numx.random.normal() + 1.0
@@ -139,7 +139,7 @@ def test_basic_GSFA_edge_dict():
     x = numx.random.normal(size=(200, 15))
     v = numx.ones(200)
     e = {}
-    for i in range(1500):
+    for _ in range(1500):
         n1 = numx.random.randint(200)
         n2 = numx.random.randint(200)
         e[(n1, n2)] = numx.random.normal() + 1.0
@@ -283,7 +283,7 @@ def test_equivalence_update_graph_and_update_graph_old():
     x = numx.random.normal(size=(200, 15))
     v = numx.ones(200)
     e = {}
-    for i in range(1500):
+    for _ in range(1500):
         n1 = numx.random.randint(200)
         n2 = numx.random.randint(200)
         e[(n1, n2)] = numx.random.normal() + 1.0
