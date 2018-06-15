@@ -26,6 +26,7 @@ from .jade import JADENode
 from .nipals import NIPALSNode
 from .lle_nodes import LLENode, HLLENode
 from .xsfa_nodes import XSFANode, NormalizeNode
+from .gsfa_nodes import GSFANode, iGSFANode
 
 # import internals for use in test_suites
 from .misc_nodes import OneDimensionalHitParade as _OneDimensionalHitParade
@@ -38,7 +39,7 @@ from .stats_nodes_online import OnlineCenteringNode, OnlineTimeDiffNode
 
 __all__ = ['PCANode', 'WhiteningNode', 'NIPALSNode', 'FastICANode',
            'CuBICANode', 'TDSEPNode', 'JADENode', 'SFANode', 'SFA2Node',
-           'ISFANode', 'XSFANode', 'FDANode', 'FANode', 'RBMNode',
+           'ISFANode', 'XSFANode', 'GSFANode', 'iGSFANode', 'FDANode', 'FANode', 'RBMNode',
            'RBMWithLabelsNode', 'GrowingNeuralGasNode', 'LLENode', 'HLLENode',
            'LinearRegressionNode', 'QuadraticExpansionNode',
            'PolynomialExpansionNode', 'RBFExpansionNode','GeneralExpansionNode',
@@ -95,6 +96,7 @@ utils.fixup_namespace(__name__, __all__ + ['ICANode'],
                        'nipals',
                        'lle_nodes',
                        'xsfa_nodes',
+                       'gsfa_nodes',
                        'convolution_nodes',
                        'shogun_svm_classifier',
                        'svm_classifiers',
