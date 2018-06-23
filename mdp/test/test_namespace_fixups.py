@@ -1,6 +1,7 @@
 import sys
 from ._tools import *
 
+
 def _list_module(module):
     try:
         names = module.__all__
@@ -17,6 +18,7 @@ def _list_module(module):
         if hasattr(item, '__module__'):
             yield modname, name, item
 
+
 MODULES = ['mdp',
            'mdp.nodes',
            'mdp.hinet',
@@ -25,12 +27,18 @@ MODULES = ['mdp',
            'mdp.utils',
            ]
 
+
 def pytest_generate_tests(metafunc):
     generate_calls(MODULES, metafunc)
 
+
 def generate_calls(modules, metafunc):
-    for module in modules:
-        metafunc.addcall(funcargs=dict(parentname=module), id=module)
+    # make list of different argument values
+    argvalues = [module for module in modules]
+    # only one argument name
+    metafunc.parametrize(argnames='parentname', argvalues=argvalues,
+                         ids=argvalues)
+
 
 def test_exports(parentname):
     rootname = parentname.split('.')[-1]
@@ -39,5 +47,5 @@ def test_exports(parentname):
         parts = modname.split('.')
         assert (parts[0] != rootname or
                 modname == parentname), \
-                '%s.%s.__module_ == %s != %s' % (
-                    parentname, itemname, item.__module__, parentname)
+            '%s.%s.__module_ == %s != %s' % (
+                parentname, itemname, item.__module__, parentname)
