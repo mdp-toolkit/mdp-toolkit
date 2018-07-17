@@ -1,6 +1,6 @@
 from builtins import range
 from builtins import object
-import py.test
+import pytest
 import inspect
 
 from mdp import (config, nodes, ClassifierNode,
@@ -249,16 +249,16 @@ def test_outputdim_consistency(klass, init_args, inp_arg_gen,
             # check that setting the input dim, then incompatible output dims
             # raises an appropriate error
             # case 1: both in the constructor
-            py.test.raises(InconsistentDimException,
+            pytest.raises(InconsistentDimException,
                            'klass(input_dim=inp.shape[1], output_dim=output_dim, *args)')
             # case 2: first input_dim, then output_dim
             node = klass(input_dim=inp.shape[1], *args)
-            py.test.raises(InconsistentDimException,
+            pytest.raises(InconsistentDimException,
                            'node.output_dim = output_dim')
             # case 3: first output_dim, then input_dim
             node = klass(output_dim=output_dim, *args)
             node.output_dim = output_dim
-            py.test.raises(InconsistentDimException,
+            pytest.raises(InconsistentDimException,
                            'node.input_dim = inp.shape[1]')
 
         # check that output_dim is set to whatever the output dim is

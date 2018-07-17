@@ -42,7 +42,7 @@ def testSFANode_one_time_samples():
     # the covmatrix is updated with zeros!
     node = mdp.nodes.SFANode()
     x = numx.random.random((1,5))
-    with py.test.raises(mdp.TrainingException):
+    with pytest.raises(mdp.TrainingException):
         node.train(x)
 
 def testSFANode_include_last_sample():

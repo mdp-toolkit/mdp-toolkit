@@ -6,7 +6,7 @@ import tempfile
 import pickle
 import mdp
 from ._tools import BogusMultiNode, BogusNodeTrainable
-import py.test
+import pytest
 
 uniform = mdp.numx_rand.random
 MAT_DIM = (500,5)
@@ -49,7 +49,7 @@ def test_Node_save():
            'Node save (string) method did not work'
     # test file save
     dummy_file = tempfile.mktemp(prefix='MDP_', suffix=".pic",
-                                 dir=py.test.mdp_tempdirname)
+                                 dir=pytest.mdp_tempdirname)
     generic_node.save(dummy_file, protocol=1)
     dummy_file = open(dummy_file, 'rb')
     copy_node = pickle.load(dummy_file)

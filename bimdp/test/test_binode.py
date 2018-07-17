@@ -3,7 +3,7 @@ from builtins import object
 import mdp
 n = mdp.numx
 
-import py.test
+import pytest
 
 from bimdp import BiNode, MSG_ID_SEP, BiFlow, BiClassifier, binode_coroutine
 from bimdp.nodes import (
@@ -451,7 +451,7 @@ class TestBiNodeCoroutine(object):
         node1.execute(x)
         assert node1._coroutine_instances == {}
         # couroutine should be reset, a argument is needed again
-        py.test.raises(TypeError, node1.execute, x)
+        pytest.raises(TypeError, node1.execute, x)
 
     def test_codecorator_reset2(self):
         """Test that codecorator correctly resets without yields."""

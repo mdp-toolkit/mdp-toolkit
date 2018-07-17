@@ -68,7 +68,7 @@ def testFlow_save():
            'Flow save (string) method did not work'
     # test file save
     dummy_file = tempfile.mktemp(prefix='MDP_', suffix=".pic",
-                                 dir=py.test.mdp_tempdirname)
+                                 dir=pytest.mdp_tempdirname)
     flow.save(dummy_file, protocol=1)
     dummy_file = open(dummy_file, 'rb')
     copy_flow = pickle.load(dummy_file)
@@ -306,7 +306,7 @@ def testCrashRecoveryException():
     except mdp.CrashRecoveryException as e:
         filename1 = e.dump()
         filename2 = e.dump(tempfile.mkstemp(prefix='MDP_',
-                                            dir=py.test.mdp_tempdirname)[1])
+                                            dir=pytest.mdp_tempdirname)[1])
         assert isinstance(e.parent_exception, Exception)
 
     for fname in filename1, filename2:

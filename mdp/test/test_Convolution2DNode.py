@@ -1,6 +1,6 @@
 from builtins import range
 from ._tools import *
-import py.test
+import pytest
 
 requires_signal = skip_on_condition(
     "not hasattr(mdp.nodes, 'Convolution2DNode')",
@@ -108,22 +108,22 @@ def testConvolution2DNode_in_Flow():
 def testConvolution2DNode_arguments():
     # filters must be 3D
     filters = numx.random.random((5,4))
-    py.test.raises(mdp.NodeException,
-                   "mdp.nodes.Convolution2DNode(filters)")
+    pytest.raises(mdp.NodeException,
+                  "mdp.nodes.Convolution2DNode(filters)")
     filters = numx.random.random((5,4,2,2))
-    py.test.raises(mdp.NodeException,
-                   "mdp.nodes.Convolution2DNode(filters)")
+    pytest.raises(mdp.NodeException,
+                  "mdp.nodes.Convolution2DNode(filters)")
     # filters must be array
     filters = [[[2.]]]
-    py.test.raises(mdp.NodeException,
-                   "mdp.nodes.Convolution2DNode(filters)")
+    pytest.raises(mdp.NodeException,
+                  "mdp.nodes.Convolution2DNode(filters)")
  
     filters = numx.random.random((1,1,1))
-    with py.test.raises(mdp.NodeException):
+    with pytest.raises(mdp.NodeException):
         mdp.nodes.Convolution2DNode(filters, approach='bug')
-    with py.test.raises(mdp.NodeException):
+    with pytest.raises(mdp.NodeException):
         mdp.nodes.Convolution2DNode(filters, mode='bug')
-    with py.test.raises(mdp.NodeException):
+    with pytest.raises(mdp.NodeException):
         mdp.nodes.Convolution2DNode(filters, boundary='bug')
 
 @requires_signal
@@ -131,5 +131,5 @@ def testConvolution2DNode_shape_mismatch():
     x = numx.random.random((10,60))
     filters = numx.random.random((3,5,4))
     node = mdp.nodes.Convolution2DNode(filters, input_shape=(3,2))
-    with py.test.raises(mdp.NodeException):
+    with pytest.raises(mdp.NodeException):
         node.execute(x)
