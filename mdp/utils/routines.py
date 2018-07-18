@@ -305,6 +305,12 @@ def orthogonal_permutations(a_dict):
         yield dict(i)
 
 
+def _iter_or_repeat(val):
+    try:
+        return iter(val)
+    except TypeError:
+        return itertools.repeat(val)
+
 def izip_stretched(*iterables):
     """Same as izip, except that for convenience non-iterables are repeated ad infinitum.
 
@@ -329,17 +335,13 @@ def izip_stretched(*iterables):
     (2, -1)
     (3, -1)
     """
-    def iter_or_repeat(val):
-        try:
-            return iter(val)
-        except TypeError:
-            return itertools.repeat(val)
-
-    iterables= list(map(iter_or_repeat, iterables))
+    iterables = list(map(_iter_or_repeat, iterables))
     while iterables:
         # need to care about python < 2.6
-        yield tuple([next(it) for it in iterables])
-
+        try:
+            yield tuple([next(it) for it in iterables])
+        except StopIteration:
+            break
 
 def weighted_choice(a_dict, normalize=True):
     """Returns a key from a dictionary based on the weight that the value suggests.
