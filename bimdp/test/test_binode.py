@@ -10,7 +10,7 @@ from bimdp.nodes import (
     IdentityBiNode, SFABiNode, FDABiNode, SignumBiClassifier
 )
 from ._tools import JumpBiNode
-
+from mdp.test._tools import skip_on_condition
 
 class TestBiNode(object):
 
@@ -361,6 +361,7 @@ class TestBiNodeCoroutine(object):
         assert msg["beta"] == 4
         assert node.execute.__doc__ == """Blabla."""
 
+    @skip_on_condition('sys.version_info >= (3,7)', 'test conflicts with PEP 479')
     def test_codecorator2(self):
         """Test codecorator functionality with StopIteration."""
 
@@ -385,6 +386,7 @@ class TestBiNodeCoroutine(object):
         assert msg["alpha"] == 4
         assert msg["beta"] == 4
 
+    @skip_on_condition('sys.version_info >= (3,7)', 'test conflicts with PEP 479')
     def test_codecorator_defaults(self):
         """Test codecorator argument default values."""
 
@@ -406,6 +408,7 @@ class TestBiNodeCoroutine(object):
         assert msg["alpha"] == 7
         assert msg["beta"] == 8
 
+    @skip_on_condition('sys.version_info >= (3,7)', 'test conflicts with PEP 479')
     def test_codecorator_no_iteration(self):
         """Test codecorator corner case with no iterations."""
 
@@ -427,6 +430,7 @@ class TestBiNodeCoroutine(object):
         result = node1.execute(x)
         assert result == (None, {"a": 1}, None)
 
+    @skip_on_condition('sys.version_info >= (3,7)', 'test conflicts with PEP 479')
     def test_codecorator_reset1(self):
         """Test that codecorator correctly resets after termination."""
 
@@ -453,6 +457,7 @@ class TestBiNodeCoroutine(object):
         # couroutine should be reset, a argument is needed again
         pytest.raises(TypeError, node1.execute, x)
 
+    @skip_on_condition('sys.version_info >= (3,7)', 'test conflicts with PEP 479')
     def test_codecorator_reset2(self):
         """Test that codecorator correctly resets without yields."""
 
