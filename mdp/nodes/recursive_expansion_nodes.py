@@ -440,15 +440,22 @@ class RecursiveExpansionNode(PolynomialExpansionNode):
         result[:, 0] = 1.
         pos = 1
 
-        for cur_var in range(num_vars):
-            # preset index for current variable
-            pos, n, special = self.r_init(result, x, pos, cur_var)
-            # single variable recursion
-            while n <= deg:
-                        # recursion step
-                result[:, pos] = self.recf(result, x, special, n, cur_var, pos)
-                n += 1
-                pos += 1
+        if self._degree > 1:
+            for cur_var in range(num_vars):
+                # preset index for current variable
+                pos, n, special = self.r_init(result, x, pos, cur_var)
+                # single variable recursion
+                while n <= deg:
+                            # recursion step
+                    result[:, pos] = self.recf(
+                        result, x, special, n, cur_var, pos)
+                    n += 1
+                    pos += 1
+        # in case input is unreasonable
+        else:
+            result[:, 0] = 1
+            for i in range(num_vars):
+                result[:, i+1] = x[:, i]
 
         todoList = []
         for i in range(1, num_vars):
