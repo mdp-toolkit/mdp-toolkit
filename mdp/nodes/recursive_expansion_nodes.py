@@ -297,7 +297,7 @@ def recf_chebyshev_poly(result, x, special, n, cur_var, pos):
     return 2. * x[:, cur_var] * result[:, pos-1] - result[:, pos-2]
 
 
-# collect the recusions and set the corresponding intervals
+# collect the recusions and set the corresponding domains
 recfs = {'standard_poly': (init_standard_poly, recf_standard_poly,
                            -float('Inf'), float('Inf')),
          'legendre_poly': (init_legendre_poly, recf_legendre_poly,
@@ -334,16 +334,16 @@ class RecursiveExpansionNode(PolynomialExpansionNode):
 
     .. attribute:: lower
 
-        The lower bound of the interval, on which the recursion
+        The lower bound of the domain, on which the recursion
         function sequence selected, is defined or orthogonal.
 
     .. attribute:: upper
 
-        The upper bound of the interval, on which the recursion
+        The upper bound of the domain, on which the recursion
         function sequence selected, is defined or orthogonal.
     """
 
-    def __init__(self, degree=2, recf='standard_poly', check=False,
+    def __init__(self, degree, recf='standard_poly', check=False,
                  with0=True, input_dim=None, dtype=None):
         """Initialize a RecursiveExpansionNode.
 
@@ -358,7 +358,7 @@ class RecursiveExpansionNode(PolynomialExpansionNode):
         :type recf: tuple
 
         :param check: Indicates whether the input data will
-            be checked for compliance to the interval on which the function
+            be checked for compliance to the domain on which the function
             sequence selected is defined or orthogonal. The check will be made
             automatically in the execute method.
         :type check: bool
@@ -435,27 +435,20 @@ class RecursiveExpansionNode(PolynomialExpansionNode):
             [num_samples, dim], dtype=self.dtype)
 
         if self.check:
-            self.check_interval(x)
+            self.check_domain(x)
 
         result[:, 0] = 1.
         pos = 1
 
-        if self._degree > 1:
-            for cur_var in range(num_vars):
-                # preset index for current variable
-                pos, n, special = self.r_init(result, x, pos, cur_var)
-                # single variable recursion
-                while n <= deg:
-                            # recursion step
-                    result[:, pos] = self.recf(
-                        result, x, special, n, cur_var, pos)
-                    n += 1
-                    pos += 1
-        # in case input is unreasonable
-        else:
-            result[:, 0] = 1
-            for i in range(num_vars):
-                result[:, i+1] = x[:, i]
+        for cur_var in range(num_vars):
+            # preset index for current variable
+            pos, n, special = self.r_init(result, x, pos, cur_var)
+            # single variable recursion
+            while n <= deg:
+                        # recursion step
+                result[:, pos] = self.recf(result, x, special, n, cur_var, pos)
+                n += 1
+                pos += 1
 
         todoList = []
         for i in range(1, num_vars):
@@ -466,19 +459,26 @@ class RecursiveExpansionNode(PolynomialExpansionNode):
             pos = process(*todoList.pop(0)+(deg, pos, result, todoList))
         return (result if _with0 else result[:, 1:])
 
-    def check_interval(self, x, prec=1e-6):
-        """Checks for compliance of the data x with the interval on which
+    def check_domain(self, x, prec=1e-6):
+        """Checks for compliance of the data x with the domain on which
             the function sequence selected is defined or orthogonal.
 
-        :raise ValueError: If one or more values lie outside of the function
-            specific interval.
+        :param x: The data to be expanded. Observations/samples must
+            be along the first axis, different variables along the second.
+        :type x: numpy.ndarray
+
+        :param prec: (Numerical) tolerance when checking validity.
+        :type prec: float
+
+        :raise mdp.NodeException: If one or more values lie outside of the function
+            specific domain.
         """
         xmax = np.amax(x)-prec
         xmin = np.amin(x)+prec
 
         if (self.upper < xmax) or (self.lower > xmin):
-            raise ValueError(
-                "One or more values lie outside of the function specific interval.")
+            raise mdp.NodeException(
+                "One or more values lie outside of the function specific domain.")
 
     @staticmethod
     def is_trainable():
@@ -487,3 +487,127 @@ class RecursiveExpansionNode(PolynomialExpansionNode):
     @staticmethod
     def is_invertible():
         return False
+
+
+class TrainableRecursiveExpansionNode(RecursiveExpansionNode):
+    """Recursively computable (orthogonal) expansions and a
+    trainable transformation to the domain of the expansions.
+
+    .. attribute:: lower
+
+        The lower bound of the domain, on which the recursion
+        function sequence selected, is defined or orthogonal.
+
+    .. attribute:: upper
+
+        The upper bound of the domain, on which the recursion
+        function sequence selected, is defined or orthogonal.
+    """
+
+    def __init__(self, degree, recf='standard_poly', check=True, with0=True,
+                 input_dim=None, dtype=None):
+        super(TrainableRecursiveExpansionNode, self).__init__(self, degree,
+                                                              recf=recf, check=check,
+                                                              with0=with0, input_dim=input_dim,
+                                                              dtype=dtype)
+
+        self.amaxcolumn = None
+        self.amincolumn = None
+        self.amax = None
+        self.amin = None
+
+    def _execute(self, x):
+        """Apply the transformation and execute RecursiveExpansionNode.
+
+        :param x: The data to be expanded. Observations/samples must
+            be along the first axis, different variables along the second.
+        :type x: numpy.ndarray
+        """
+        self.domain_transformation(x)
+        return super(TrainableRecursiveExpansionNode, self)._execute(self, x)
+
+    def _train(self, x):
+        """Determine coordinatewise and absolute maxima and minima.
+
+        :param x: Chuck of data to be used for training. Observations/samples
+            must be along the first axis, different variables along the second.
+        :type x: numpy.ndarray
+
+        The values are used to generate a transformation to the valid domain
+        for the data.
+        """
+        if self.amin is None:
+            self.amaxcolumn = np.amax(x, axis=0)
+            self.amincolumn = np.amin(x, axis=0)
+            self.amax = np.amax(x)
+            self.amin = np.amin(x)
+        else:
+            self.amaxcolumn = np.maximum(self.amaxcolumn, np.amax(x, axis=0))
+            self.amincolumn = np.minimum(self.amincolumn, np.amin(x, axis=0))
+            self.amax = np.maximum(self.amax, np.amax(x))
+            self.amin = np.minimum(self.amin, np.amin(x))
+
+    def _stop_training(self):
+        """Create a transformation function, that transforms the data
+        to the domain of the family of functions to evaluate.
+
+        If the cube is unbounded the data is translated by the shortest
+        length vector possible.
+
+        If instead the cube is bounded the data is scaled around 
+        the mean of max and min, if neccessary. Then the mean of max and min
+        is moved onto the cube mean by a translation.
+
+        It is important to note, that the assumption is made, that the data on
+        which the node is executed on, does not contain more "malign outliers"
+        than the ones already supplied during training.
+        """
+        # the following conditionals go through different domain types
+        if self.lower is None or self.upper is None:
+            def f(x): return x
+
+        elif self.lower == -float('Inf') and self.upper == float('Inf'):
+            def f(x): return x
+
+        elif self.lower == -float('Inf'):
+            self.diff = self.amaxcolumn-self.upper
+            self.diff = self.diff.clip(min=0)
+
+            def f(x):
+                x -= self.diff
+                return x
+
+        elif self.upper == float('Inf'):
+            self.diff = self.amincolumn-self.lower
+            self.diff = self.diff.clip(max=0)
+
+            def f(x):
+                x -= self.diff
+                return x
+        else:
+            mean = self.lower+(self.upper-self.lower)/2.0
+            dev = (self.upper-self.lower)
+
+            # maybe swap for functions that returns both in one pass
+            xmax = self.amax
+            xmin = self.amin
+            datamaxdev = xmax-xmin
+            datamean = (xmax+xmin)/2.
+
+            if (xmax < self.upper) and (xmin > self.lower):
+                def f(x):
+                    return x
+            elif datamaxdev < dev:
+                def f(x):
+                    x += (-datamean)+mean
+                    return x
+            else:
+                def f(x):
+                    x += ((-datamean)+mean*datamaxdev/dev)
+                    x *= dev/datamaxdev
+                    return x
+        self.domain_transformation = f
+
+    @staticmethod
+    def is_trainable():
+        return True
