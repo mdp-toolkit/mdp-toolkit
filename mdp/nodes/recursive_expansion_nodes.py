@@ -343,7 +343,7 @@ class RecursiveExpansionNode(PolynomialExpansionNode):
         function sequence selected, is defined or orthogonal.
     """
 
-    def __init__(self, degree, recf='standard_poly', check=False,
+    def __init__(self, degree=1, recf='standard_poly', check=False,
                  with0=True, input_dim=None, dtype=None):
         """Initialize a RecursiveExpansionNode.
 
@@ -387,14 +387,14 @@ class RecursiveExpansionNode(PolynomialExpansionNode):
             # the recursion function
             self.recf = recfs[recf][1]
             # interval on which data must be
-            self.upper = recfs[recf][2]
-            self.lower = recfs[recf][3]
+            self.lower = recfs[recf][2]
+            self.upper = recfs[recf][3]
         # if supplied by user
         else:
             self.r_init = recf[0]
             self.recf = recf[1]
-            self.upper = recf[2]
-            self.lower = recf[3]
+            self.lower = recf[2]
+            self.upper = recf[3]
 
     def expanded_dim(self, num_vars):
         """Return the size of a vector of dimension 'dim' after
@@ -511,9 +511,9 @@ class TrainableRecursiveExpansionNode(RecursiveExpansionNode):
         function sequence selected, is defined or orthogonal.
     """
 
-    def __init__(self, degree, recf='standard_poly', check=True, with0=True,
+    def __init__(self, degree=1, recf='standard_poly', check=True, with0=True,
                  input_dim=None, dtype=None):
-        super(TrainableRecursiveExpansionNode, self).__init__(self, degree,
+        super(TrainableRecursiveExpansionNode, self).__init__(degree,
                                                               recf=recf, check=check,
                                                               with0=with0, input_dim=input_dim,
                                                               dtype=dtype)
@@ -531,7 +531,7 @@ class TrainableRecursiveExpansionNode(RecursiveExpansionNode):
         :type x: numpy.ndarray
         """
         self.domain_transformation(x)
-        return super(TrainableRecursiveExpansionNode, self)._execute(self, x)
+        return super(TrainableRecursiveExpansionNode, self)._execute(x)
 
     def _train(self, x):
         """Determine coordinatewise and absolute maxima and minima.
@@ -569,12 +569,15 @@ class TrainableRecursiveExpansionNode(RecursiveExpansionNode):
         which the node is executed on, does not contain more "malign outliers"
         than the ones already supplied during training.
         """
+
         # the following conditionals go through different domain types
         if self.lower is None or self.upper is None:
-            def f(x): return x
+            def f(x):
+                return x
 
         elif self.lower == -float('Inf') and self.upper == float('Inf'):
-            def f(x): return x
+            def f(x):
+                return x
 
         elif self.lower == -float('Inf'):
             self.diff = self.amaxcolumn-self.upper
