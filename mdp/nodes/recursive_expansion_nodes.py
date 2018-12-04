@@ -7,6 +7,38 @@ from mdp.nodes import PolynomialExpansionNode
 __docformat__ = "restructuredtext en"
 
 
+def init_standard_poly(result, x, pos, cur_var):
+    """Initialize the first order before starting the recursion.
+
+    Mathematically this amounts to
+    P_1 = x.
+
+    :param result: Contains the observations along the first dimension
+        and the different function values of expansion w.r.t. an observation
+        along the second dimension.
+    :type result: numpy.ndarray
+
+    :param x: The data to be expanded.
+    :type x: numpy.ndarray
+
+    :param pos: The index of the element to be computed, along the second
+        dimension of result.
+    :type int: int
+
+    :param cur_var: The index of the current variable to be considered in the
+        recursion. This value will have to be lower than x.shape[1].
+    :type cur_var: int
+
+    :returns: The index of the next element that will be computed in the
+        recursion, the order of the next element, and the index of a special
+        member.
+    :rtype: Tuple[int, int, int]
+    """
+    result[:, pos] = x[:, cur_var]
+    # pos, n, special
+    return pos+1, 2, pos
+
+
 def recf_standard_poly(result, x, special, n, cur_var, pos):
     """Implementation of the recursion formula for standard polynomials.
     The recursion formula is P_n = P_{n-1} * x.
@@ -41,40 +73,8 @@ def recf_standard_poly(result, x, special, n, cur_var, pos):
     return result[:, pos-1]*result[:, special]
 
 
-def init_standard_poly(result, x, pos, cur_var):
-    """Initialize the first order before starting the recursion.
-
-    Mathematically this amounts to
-    P_1 = x.
-
-    :param result: Contains the observations along the first dimension
-        and the different function values of expansion w.r.t. an observation
-        along the second dimension.
-    :type result: numpy.ndarray
-
-    :param x: The data to be expanded.
-    :type x: numpy.ndarray
-
-    :param pos: The index of the element to be computed, along the second
-        dimension of result.
-    :type int: int
-
-    :param cur_var: The index of the current variable to be considered in the
-        recursion. This value will have to be lower than x.shape[1].
-    :type cur_var: int
-
-    :returns: The index of the next element that will be computed in the
-        recursion, the order of the next element, and the index of a special
-        member.
-    :rtype: numpy.ndarray
-    """
-    result[:, pos] = x[:, cur_var]
-    # pos, n, special
-    return pos+1, 2, pos
-
-
 def init_legendre_poly(result, x, pos, cur_var):
-    """Initialize  the first and second order before starting the recursion.
+    """Initialize the first and second order before starting the recursion.
 
     Mathematically this amounts to
     P_1 = x
@@ -99,12 +99,11 @@ def init_legendre_poly(result, x, pos, cur_var):
     :returns: The index of the next element that will be computed in the
         recursion, the order of the next element, and the index of a special
         member.
-    :rtype: numpy.ndarray
+    :rtype: Tuple[int, int, int]
     """
     result[:, pos] = x[:, cur_var]
     # after the first variable this is needed (no zero order available)
-    result[:, pos+1] = 3./2.*result[:, pos] * result[:, pos] - \
-        1./2.
+    result[:, pos+1] = 3./2.*result[:, pos] * result[:, pos] - .5
     return pos+2, 3, pos
 
 
@@ -174,7 +173,7 @@ def init_legendre_rational(result, x, pos, cur_var):
     :returns: The index of the next element that will be computed in the
         recursion, the order of the next element, and the index of a special
         member.
-    :rtype: numpy.ndarray
+    :rtype: Tuple[int, int, int]
     """
     result[:, pos] = (x[:, cur_var]-1.)/(x[:, cur_var]+1.)
     # after the first variable the second order is needed (no zero order available)
@@ -228,7 +227,7 @@ def init_chebyshev_poly(result, x, pos, cur_var):
 
     Mathematically this amounts to
     T_1 = x
-    T_2 = 2xT_1 -1.
+    T_2 = 2x T_1 -1.
 
     :param result: Contains the observations along the first dimension
         and the different function values of expansion w.r.t. an observation
@@ -249,7 +248,7 @@ def init_chebyshev_poly(result, x, pos, cur_var):
     :returns: The index of the next element that will be computed in the
         recursion, the order of the next element, and the index of a special
         member.
-    :rtype: numpy.ndarray
+    :rtype: Tuple[int, int, int]
     """
     result[:, pos] = x[:, cur_var]
     # after the first variable this is needed (no zero order available)
@@ -353,9 +352,9 @@ class RecursiveExpansionNode(PolynomialExpansionNode):
         :type degree: int
 
         :param recf: Must be in ['standard_poly', 'legendre_poly',
-            'legendre_rational', 'chebyshev_poly'] or a tuply similar
+            'legendre_rational', 'chebyshev_poly'] or a tuple similar
             to those in the recfs dictionary in this module.
-        :type recf: tuple
+        :type recf: tuple or str
 
         :param check: Indicates whether the input data will
             be checked for compliance to the domain on which the function
@@ -373,7 +372,7 @@ class RecursiveExpansionNode(PolynomialExpansionNode):
 
         :param dtype: Datatype of the input.
             Default is None.
-        :type dtype: numpy.dtype, str
+        :type dtype: numpy.dtype or str
         """
         super(RecursiveExpansionNode, self).__init__(
             degree, input_dim, dtype)
@@ -487,14 +486,6 @@ class RecursiveExpansionNode(PolynomialExpansionNode):
             raise mdp.NodeException(
                 "One or more values lie outside of the function specific domain.")
 
-    @staticmethod
-    def is_trainable():
-        return False
-
-    @staticmethod
-    def is_invertible():
-        return False
-
 
 class TrainableRecursiveExpansionNode(RecursiveExpansionNode):
     """Recursively computable (orthogonal) expansions and a
@@ -546,13 +537,13 @@ class TrainableRecursiveExpansionNode(RecursiveExpansionNode):
         if self.amin is None:
             self.amaxcolumn = np.amax(x, axis=0)
             self.amincolumn = np.amin(x, axis=0)
-            self.amax = np.amax(x)
-            self.amin = np.amin(x)
+            self.amax = np.amax(self.amaxcolumn)
+            self.amin = np.amin(self.amincolumn)
         else:
             self.amaxcolumn = np.maximum(self.amaxcolumn, np.amax(x, axis=0))
             self.amincolumn = np.minimum(self.amincolumn, np.amin(x, axis=0))
-            self.amax = np.maximum(self.amax, np.amax(x))
-            self.amin = np.minimum(self.amin, np.amin(x))
+            self.amax = np.amax(self.amaxcolumn)
+            self.amin = np.amin(self.amincolumn)
 
     def _stop_training(self):
         """Create a transformation function, that transforms the data
@@ -613,7 +604,7 @@ class TrainableRecursiveExpansionNode(RecursiveExpansionNode):
                     return x
             else:
                 def f(x):
-                    x += ((-datamean)+mean*datamaxdev/dev)
+                    x += (-datamean)+mean*datamaxdev/dev
                     x *= dev/datamaxdev
                     return x
         self.domain_transformation = f
