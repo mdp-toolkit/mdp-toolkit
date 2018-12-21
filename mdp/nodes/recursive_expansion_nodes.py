@@ -1,5 +1,33 @@
 """
 This module provides nodes for recursive computation of sequences of functions.
+
+The nodes contained in this module complement the existing
+PolynomialExpansionNode by generalization to arbitrary recursively
+computer sequences of basis function and by providing implemented
+polynomial and rational recursions that are numerically stable, even
+for high orders. More specifically this module provides the means
+for computing Legendre, Hermite or Chebyshev polynomials if first kind.
+
+Analytically all these polynomial expansions cover the same function space
+if they are of same degree. However the conventional
+monome-based polynomial expansion is numerically defective beyond
+degrees of about 20. Input values below one are flattened to
+zero and values above one explode.
+Analytically this would be compensated by very small or large coefficients,
+that are not properly presentable in floating point.
+
+Thus, for the most simple use case the *RecursiveExpansionNode*
+can be used. A full-featured version comes into play in the following case.
+
+All orthogonal sequences of functions implemented require input values
+in the right scope, i.e. where the respective polynomials
+are designed to be orthogonal, usually values in [0, 1] or [-1, 1].
+That means, one might have to scale the input appropriately.
+The *TrainableRecursiveExpansionNode* is advisable to use, if the data supplied
+drops out of this interval or it corresponding cube (i.e. [0,1}^k).
+For convenience, the *TrainableRecursiveExpansionNode* can adapt the
+value range of the data during a training phase and applythe corresponding
+scaling on execution.
 """
 import mdp
 from mdp import numx as np
@@ -9,6 +37,21 @@ __docformat__ = "restructuredtext en"
 
 def init_standard_poly(result, x, pos, cur_var):
     """Initialize the first order before starting the recursion.
+
+    .. note::
+
+        An init function also returns some indices relevant to further
+        steps in which the recursion formula is applied. The
+        first index indicates where the recursion is applied first.
+        In the case of standard polynomials this is pos+1.
+        The second index indicates the order of the element on which
+        the recursion si applied first. In the case of standard polynomials
+        this is order is equal to 2. The third index specifies the index
+        of a special member for use in the recursion. This might be a
+        constant order element that is used in every recursion. In the case
+        of standard polynomials this can be pos (as this is where x is) or
+        None (as x is passed to the recursion anyway).
+
 
     Mathematically this amounts to
     P_1 = x.
@@ -41,7 +84,38 @@ def init_standard_poly(result, x, pos, cur_var):
 
 def recf_standard_poly(result, x, special, n, cur_var, pos):
     """Implementation of the recursion formula for standard polynomials.
+
     The recursion formula is P_n = P_{n-1} * x.
+
+    .. note::
+
+        We translate this recursion formula into code as follows.
+
+        We leave out the leeft part of the equation, as the
+        return value is automatically set to the n-th order
+        expansion of the current variable, namely::
+
+            >>> result[:, pos]
+
+        We access all observations of the n-1-th order expansion of the current
+        variable at::
+
+            >>> result[:, pos-1]
+
+        Using the the index of the special variable we specified in our init
+        function we can set the return value to::
+
+            >>> result[:, pos-1]*result[:, special]
+
+        Alternatively, in this case we could have used the x variable directly,
+        by setting the return value to::
+
+            >> result[:, pos-1]*x[:, cur_var]
+
+        The recursion is natively applied to all variables contained in the data
+        one after another and the results saved in the
+        one-dimensional result array.
+
 
     :param result: Contains the observations along the first dimension
         and the different function values of expansion w.r.t. an observation
@@ -80,6 +154,13 @@ def init_legendre_poly(result, x, pos, cur_var):
     P_1 = x
     P_2 = 3/2 * P_1*P_1 - 1/2 .
 
+    .. note::
+
+        The procedure on how an init function is build can be found in the
+        docstring of the init method for
+        standard polynomials *init_standard_poly*.
+
+
     :param result: Contains the observations along the first dimension
         and the different function values of expansion w.r.t. an observation
         along the second dimension.
@@ -111,6 +192,12 @@ def recf_legendre_poly(result, x, special, n, cur_var, pos):
     """Implementation of the recursion formula for Legendre polynomials.
     The recursion formula is Bonnet's recursion formula
     P_n = (2n-1)/n * x * P_ {n-1}  - (n-1)* P_{n-2}.
+
+        .. note::
+
+        The procedure on how an recursion function is build can be found in the
+        docstring of the recursion function for
+        standard polynomials *recf_standard_poly*.
 
     :param result: Contains the observations along the first dimension
         and the different function values of expansion w.r.t. an observation
@@ -154,6 +241,13 @@ def init_legendre_rational(result, x, pos, cur_var):
     R_1 = (x-1)/(x+1)
     R_2 = 3/2 * (x-1)/(x+1)*P_1 - 1/2.
 
+    .. note::
+
+        The procedure on how an init function is build can be found in the
+        docstring of the init function for
+        standard polynomials *init_standard_poly*.
+
+
     :param result: Contains the observations along the first dimension
         and the different function values of expansion w.r.t. an observation
         along the second dimension.
@@ -186,6 +280,13 @@ def recf_legendre_rational(result, x, special, n, cur_var, pos):
     """Implementation of the recursion formula for Legendre rational functions.
     The recursion formula is
     R_n = (2n-1)/n * (x-1)/(x+1) R_{n-1} - (n-1)/n R_{n-2}.
+
+    .. note::
+
+        The procedure on how an recursion function is build can be found in the
+        docstring of the recursion function for
+        standard polynomials *recf_standard_poly*.
+
 
     :param result: Contains the observations along the first dimension
         and the different function values of expansion w.r.t. an observation
@@ -229,6 +330,13 @@ def init_chebyshev_poly(result, x, pos, cur_var):
     T_1 = x
     T_2 = 2x T_1 -1.
 
+    .. note::
+
+        The procedure on how an init function is build can be found in the
+        docstring of the init function for
+        standard polynomials *init_standard_poly*.
+
+
     :param result: Contains the observations along the first dimension
         and the different function values of expansion w.r.t. an observation
         along the second dimension.
@@ -261,6 +369,13 @@ def recf_chebyshev_poly(result, x, special, n, cur_var, pos):
     of the first kind.
     The recursion formula is
     T_n = 2xT_{n-1} - T_{n-2}.
+
+    .. note::
+
+        The procedure on how an recursion function is build can be found in the
+        docstring of the recursion function for
+        standard polynomials *recf_standard_poly*.
+
 
     :param result: Contains the observations along the first dimension
         and the different function values of expansion w.r.t. an observation
@@ -549,16 +664,18 @@ class TrainableRecursiveExpansionNode(RecursiveExpansionNode):
         """Create a transformation function, that transforms the data
         to the domain of the family of functions to evaluate.
 
-        If the cube is unbounded the data is translated by the shortest
-        length vector possible.
+        .. note::
 
-        If instead the cube is bounded the data is scaled around 
-        the mean of max and min, if neccessary. Then the mean of max and min
-        is moved onto the cube mean by a translation.
+            If the cube is unbounded the data is translated by the shortest
+            length vector possible.
 
-        It is important to note, that the assumption is made, that the data on
-        which the node is executed on, does not contain more "malign outliers"
-        than the ones already supplied during training.
+            If instead the cube is bounded the data is scaled around
+            the mean of max and min, if neccessary. Then the mean of max and min
+            is moved onto the cube mean by a translation.
+
+            It is important to note, that the assumption is made, that the data on
+            which the node is executed on, does not contain more "malign outliers"
+            than the ones already supplied during training.
         """
 
         # the following conditionals go through different domain types
