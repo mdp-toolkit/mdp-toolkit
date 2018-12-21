@@ -43,14 +43,14 @@ def init_standard_poly(result, x, pos, cur_var):
         An init function also returns some indices relevant to further
         steps in which the recursion formula is applied. The
         first index indicates where the recursion is applied first.
-        In the case of standard polynomials this is pos+1.
+        In the case of standard polynomials this is *pos+1*.
         The second index indicates the order of the element on which
-        the recursion si applied first. In the case of standard polynomials
+        the recursion is applied first. In the case of standard polynomials
         this is order is equal to 2. The third index specifies the index
         of a special member for use in the recursion. This might be a
         constant order element that is used in every recursion. In the case
-        of standard polynomials this can be pos (as this is where x is) or
-        None (as x is passed to the recursion anyway).
+        of standard polynomials this can be *pos* (as this is where *x* is) or
+        None (as *x* is passed to the recursion anyway).
 
 
     Mathematically this amounts to
@@ -91,7 +91,7 @@ def recf_standard_poly(result, x, special, n, cur_var, pos):
 
         We translate this recursion formula into code as follows.
 
-        We leave out the leeft part of the equation, as the
+        We leave out the left part of the equation, as the
         return value is automatically set to the n-th order
         expansion of the current variable, namely::
 
