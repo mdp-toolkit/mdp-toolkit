@@ -157,7 +157,7 @@ def init_legendre_poly(result, x, pos, cur_var):
     .. note::
 
         The procedure on how an init function is build can be found in the
-        docstring of the init method for
+        docstring of the init function for
         standard polynomials *init_standard_poly*.
 
 
@@ -468,7 +468,10 @@ class RecursiveExpansionNode(PolynomialExpansionNode):
 
         :param recf: Must be in ['standard_poly', 'legendre_poly',
             'legendre_rational', 'chebyshev_poly'] or a tuple similar
-            to those in the recfs dictionary in this module.
+            to those in the recfs dictionary in this module. The procedure
+            on how an init function is build can be found in the docstring
+            of the init and recursion function for standard polynomials 
+            *init_standard_poly* and *recf_standard_poly*, respectively.
         :type recf: tuple or str
 
         :param check: Indicates whether the input data will
