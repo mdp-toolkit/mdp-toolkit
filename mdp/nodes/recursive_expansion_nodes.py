@@ -622,6 +622,39 @@ class TrainableRecursiveExpansionNode(RecursiveExpansionNode):
 
     def __init__(self, degree=1, recf='standard_poly', check=True, with0=True,
                  input_dim=None, dtype=None):
+        """Initialize a TrainableRecursiveExpansionNode.
+
+        :param degree: The maximum order of the recursive expansion.
+            The dimension of the return for single variable inputs will be
+            equal to this value if with0 == False.
+        :type degree: int
+
+        :param recf: Must be in ['standard_poly', 'legendre_poly',
+            'legendre_rational', 'chebyshev_poly'] or a tuple similar
+            to those in the recfs dictionary in this module. The procedure
+            on how an init function is build can be found in the docstring
+            of the init and recursion function for standard polynomials 
+            *init_standard_poly* and *recf_standard_poly*, respectively.
+        :type recf: tuple or str
+
+        :param check: Indicates whether the input data will
+            be checked for compliance to the domain on which the function
+            sequence selected is defined or orthogonal. The check will be made
+            automatically in the execute method.
+        :type check: bool
+
+        :param with0: Parameter that specificies whether the zero-th order
+            element is to be included at the beginning of the result array.
+        :type with0: bool
+
+        :param input_dim: Dimensionality of the input.
+            Default is None.
+        :type input_dim: int
+
+        :param dtype: Datatype of the input.
+            Default is None.
+        :type dtype: numpy.dtype or str
+        """
         super(TrainableRecursiveExpansionNode, self).__init__(degree,
                                                               recf=recf, check=check,
                                                               with0=with0, input_dim=input_dim,
