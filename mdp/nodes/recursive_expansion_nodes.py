@@ -2,8 +2,8 @@
 This module provides nodes for recursive computation of sequences of functions.
 
 The nodes contained in this module complement the existing
-PolynomialExpansionNode by generalization to arbitrary recursively
-computer sequences of basis function and by providing implemented
+*PolynomialExpansionNode* by generalization to arbitrary recursively
+computed sequences of basis function and by providing implemented
 polynomial and rational recursions that are numerically stable, even
 for high orders. More specifically this module provides the means
 for computing Legendre, Hermite or Chebyshev polynomials if first kind.
