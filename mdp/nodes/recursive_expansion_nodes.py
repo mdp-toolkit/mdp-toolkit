@@ -6,9 +6,9 @@ The nodes contained in this module complement the existing
 computed sequences of basis function and by providing implemented
 polynomial and rational recursions that are numerically stable, even
 for high orders. More specifically this module provides the means
-for computing Legendre, Hermite or Chebyshev polynomials if first kind.
+for computing Legendre, Hermite or Chebyshev polynomials of first kind.
 
-Analytically all these polynomial expansions cover the same function space
+Analytically these polynomial expansions cover the same function space
 if they are of same degree. However the conventional
 monome-based polynomial expansion is numerically defective beyond
 degrees of about 20. Input values below one are flattened to
@@ -24,9 +24,9 @@ in the right scope, i.e. where the respective polynomials
 are designed to be orthogonal, usually values in [0, 1] or [-1, 1].
 That means, one might have to scale the input appropriately.
 The *TrainableRecursiveExpansionNode* is advisable to use, if the data supplied
-drops out of this interval or it corresponding cube (i.e. [0,1}^k).
+drops out of this interval or it corresponding cube (i.e. [0,1]^k).
 For convenience, the *TrainableRecursiveExpansionNode* can adapt the
-value range of the data during a training phase and applythe corresponding
+value range of the data during a training phase and apply the corresponding
 scaling on execution.
 """
 import mdp
