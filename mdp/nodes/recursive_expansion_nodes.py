@@ -46,7 +46,7 @@ def init_standard_poly(result, x, pos, cur_var):
         In the case of standard polynomials this is *pos+1*.
         The second index indicates the order of the element on which
         the recursion is applied first. In the case of standard polynomials
-        this is order is equal to 2. The third index specifies the index
+        this order is equal to 2. The third index specifies the index
         of a special member for use in the recursion. This might be a
         constant order element that is used in every recursion. In the case
         of standard polynomials this can be *pos* (as this is where *x* is) or
@@ -57,7 +57,7 @@ def init_standard_poly(result, x, pos, cur_var):
     P_1 = x.
 
     :param result: Contains the observations along the first dimension
-        and the different function values of expansion w.r.t. an observation
+        and the function values of expansion w.r.t. an observation
         along the second dimension.
     :type result: numpy.ndarray
 
@@ -102,7 +102,7 @@ def recf_standard_poly(result, x, special, n, cur_var, pos):
 
             >>> result[:, pos-1]
 
-        Using the the index of the special variable we specified in our init
+        Using the index of the special variable we specified in our init
         function we can set the return value to::
 
             >>> result[:, pos-1]*result[:, special]
@@ -113,12 +113,12 @@ def recf_standard_poly(result, x, special, n, cur_var, pos):
             >> result[:, pos-1]*x[:, cur_var]
 
         The recursion is natively applied to all variables contained in the data
-        one after another and the results saved in the
+        one after another and the results are stored in the
         one-dimensional result array.
 
 
     :param result: Contains the observations along the first dimension
-        and the different function values of expansion w.r.t. an observation
+        and the function values of expansion w.r.t. an observation
         along the second dimension.
     :type result: numpy.ndarray
 
@@ -156,13 +156,13 @@ def init_legendre_poly(result, x, pos, cur_var):
 
     .. note::
 
-        The procedure on how an init function is build can be found in the
+        The procedure on how an init function is built can be found in the
         docstring of the init function for
         standard polynomials *init_standard_poly*.
 
 
     :param result: Contains the observations along the first dimension
-        and the different function values of expansion w.r.t. an observation
+        and the function values of expansion w.r.t. an observation
         along the second dimension.
     :type result: numpy.ndarray
 
@@ -195,12 +195,12 @@ def recf_legendre_poly(result, x, special, n, cur_var, pos):
 
         .. note::
 
-        The procedure on how an recursion function is build can be found in the
+        The procedure on how an recursion function is built can be found in the
         docstring of the recursion function for
         standard polynomials *recf_standard_poly*.
 
     :param result: Contains the observations along the first dimension
-        and the different function values of expansion w.r.t. an observation
+        and the function values of expansion w.r.t. an observation
         along the second dimension.
     :type result: numpy.ndarray
 
@@ -243,13 +243,13 @@ def init_legendre_rational(result, x, pos, cur_var):
 
     .. note::
 
-        The procedure on how an init function is build can be found in the
+        The procedure on how an init function is built can be found in the
         docstring of the init function for
         standard polynomials *init_standard_poly*.
 
 
     :param result: Contains the observations along the first dimension
-        and the different function values of expansion w.r.t. an observation
+        and the function values of expansion w.r.t. an observation
         along the second dimension.
     :type result: numpy.ndarray
 
@@ -283,13 +283,13 @@ def recf_legendre_rational(result, x, special, n, cur_var, pos):
 
     .. note::
 
-        The procedure on how an recursion function is build can be found in the
+        The procedure on how an recursion function is built can be found in the
         docstring of the recursion function for
         standard polynomials *recf_standard_poly*.
 
 
     :param result: Contains the observations along the first dimension
-        and the different function values of expansion w.r.t. an observation
+        and the function values of expansion w.r.t. an observation
         along the second dimension.
     :type result: numpy.ndarray
 
@@ -332,13 +332,13 @@ def init_chebyshev_poly(result, x, pos, cur_var):
 
     .. note::
 
-        The procedure on how an init function is build can be found in the
+        The procedure on how an init function is built can be found in the
         docstring of the init function for
         standard polynomials *init_standard_poly*.
 
 
     :param result: Contains the observations along the first dimension
-        and the different function values of expansion w.r.t. an observation
+        and the function values of expansion w.r.t. an observation
         along the second dimension.
     :type result: numpy.ndarray
 
@@ -372,13 +372,13 @@ def recf_chebyshev_poly(result, x, special, n, cur_var, pos):
 
     .. note::
 
-        The procedure on how an recursion function is build can be found in the
+        The procedure on how an recursion function is built can be found in the
         docstring of the recursion function for
         standard polynomials *recf_standard_poly*.
 
 
     :param result: Contains the observations along the first dimension
-        and the different function values of expansion w.r.t. an observation
+        and the function values of expansion w.r.t. an observation
         along the second dimension.
     :type result: numpy.ndarray
 
@@ -448,13 +448,13 @@ class RecursiveExpansionNode(PolynomialExpansionNode):
 
     .. attribute:: lower
 
-        The lower bound of the domain, on which the recursion
-        function sequence selected, is defined or orthogonal.
+        The lower bound of the domain on which the recursion function is
+        defined or orthogonal.
 
     .. attribute:: upper
 
-        The upper bound of the domain, on which the recursion
-        function sequence selected, is defined or orthogonal.
+        The lower bound of the domain on which the recursion function is
+        defined or orthogonal.
     """
 
     def __init__(self, degree=1, recf='standard_poly', check=False,
@@ -469,7 +469,7 @@ class RecursiveExpansionNode(PolynomialExpansionNode):
         :param recf: Must be in ['standard_poly', 'legendre_poly',
             'legendre_rational', 'chebyshev_poly'] or a tuple similar
             to those in the recfs dictionary in this module. The procedure
-            on how an init function is build can be found in the docstring
+            on how an init function is built can be found in the docstring
             of the init and recursion function for standard polynomials 
             *init_standard_poly* and *recf_standard_poly*, respectively.
         :type recf: tuple or str
@@ -517,7 +517,7 @@ class RecursiveExpansionNode(PolynomialExpansionNode):
         """Return the size of a vector of dimension 'dim' after
         an expansion of degree 'self._degree'.
 
-        :param num_vars: The number of different variables in the
+        :param num_vars: The number of variables in the
             supplied data. This value is equal to x.shape[1].
         :type num_vars: int
 
@@ -532,7 +532,7 @@ class RecursiveExpansionNode(PolynomialExpansionNode):
         """Expansion of the data.
 
         :param x: The data to be expanded. Observations/samples must
-            be along the first axis, different variables along the second.
+            be along the first axis, variables along the second.
         :type x: numpy.ndarray
 
         :returns: The expansion of x with observations/samples along the
@@ -588,7 +588,7 @@ class RecursiveExpansionNode(PolynomialExpansionNode):
             the function sequence selected is defined or orthogonal.
 
         :param x: The data to be expanded. Observations/samples must
-            be along the first axis, different variables along the second.
+            be along the first axis, variables along the second.
         :type x: numpy.ndarray
 
         :param prec: (Numerical) tolerance when checking validity.
@@ -611,13 +611,13 @@ class TrainableRecursiveExpansionNode(RecursiveExpansionNode):
 
     .. attribute:: lower
 
-        The lower bound of the domain, on which the recursion
-        function sequence selected, is defined or orthogonal.
+        The lower bound of the domain on which the recursion
+        function is defined or orthogonal.
 
     .. attribute:: upper
 
-        The upper bound of the domain, on which the recursion
-        function sequence selected, is defined or orthogonal.
+        The lower bound of the domain on which the recursion function
+        is defined or orthogonal.
     """
 
     def __init__(self, degree=1, recf='standard_poly', check=True, with0=True,
@@ -632,7 +632,7 @@ class TrainableRecursiveExpansionNode(RecursiveExpansionNode):
         :param recf: Must be in ['standard_poly', 'legendre_poly',
             'legendre_rational', 'chebyshev_poly'] or a tuple similar
             to those in the recfs dictionary in this module. The procedure
-            on how an init function is build can be found in the docstring
+            on how an init function is built can be found in the docstring
             of the init and recursion function for standard polynomials 
             *init_standard_poly* and *recf_standard_poly*, respectively.
         :type recf: tuple or str
@@ -669,7 +669,7 @@ class TrainableRecursiveExpansionNode(RecursiveExpansionNode):
         """Apply the transformation and execute RecursiveExpansionNode.
 
         :param x: The data to be expanded. Observations/samples must
-            be along the first axis, different variables along the second.
+            be along the first axis, variables along the second.
         :type x: numpy.ndarray
         """
         self.domain_transformation(x)
@@ -679,7 +679,7 @@ class TrainableRecursiveExpansionNode(RecursiveExpansionNode):
         """Determine coordinatewise and absolute maxima and minima.
 
         :param x: Chuck of data to be used for training. Observations/samples
-            must be along the first axis, different variables along the second.
+            must be along the first axis, variables along the second.
         :type x: numpy.ndarray
 
         The values are used to generate a transformation to the valid domain
