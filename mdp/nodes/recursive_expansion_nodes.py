@@ -74,7 +74,7 @@ def init_standard_poly(result, x, pos, cur_var):
 
     :returns: The index of the next element that will be computed in the
         recursion, the order of the next element, and the index of a special
-        member.
+        element.
     :rtype: Tuple[int, int, int]
     """
     result[:, pos] = x[:, cur_var]
@@ -179,7 +179,8 @@ def init_legendre_poly(result, x, pos, cur_var):
 
     :returns: The index of the next element that will be computed in the
         recursion, the order of the next element, and the index of a special
-        member.
+        element. Is this case the first order Legendre polynomial of the 
+        current variable is the special element.
     :rtype: Tuple[int, int, int]
     """
     result[:, pos] = x[:, cur_var]
@@ -208,7 +209,8 @@ def recf_legendre_poly(result, x, special, n, cur_var, pos):
     :type x: numpy.ndarray
 
     :param special: Index of a special element to be considered in the
-        recursion formula. E.g. the first order function value.
+        recursion formula. In this case the special element is the 
+        first order Legendre polynomial of the current variable.
     :type special: int
 
     :param n: The order of the function to be computed at this step.
@@ -266,7 +268,8 @@ def init_legendre_rational(result, x, pos, cur_var):
 
     :returns: The index of the next element that will be computed in the
         recursion, the order of the next element, and the index of a special
-        member.
+        member. As we do not need a special element in Legendre rational 
+        functions, the index of the special element is set to None.
     :rtype: Tuple[int, int, int]
     """
     result[:, pos] = (x[:, cur_var]-1.)/(x[:, cur_var]+1.)
@@ -297,7 +300,7 @@ def recf_legendre_rational(result, x, special, n, cur_var, pos):
     :type x: numpy.ndarray
 
     :param special: Index of a special element to be considered in the
-        recursion formula. E.g. the first order function value.
+        recursion formula. In this case it is not needed and will be None.
     :type special: int
 
     :param n: The order of the function to be computed at this step.
@@ -355,7 +358,8 @@ def init_chebyshev_poly(result, x, pos, cur_var):
 
     :returns: The index of the next element that will be computed in the
         recursion, the order of the next element, and the index of a special
-        member.
+        member. The special element is the first Chebyshev polynomial
+        of the current variable.
     :rtype: Tuple[int, int, int]
     """
     result[:, pos] = x[:, cur_var]
@@ -386,7 +390,8 @@ def recf_chebyshev_poly(result, x, special, n, cur_var, pos):
     :type x: numpy.ndarray
 
     :param special: Index of a special element to be considered in the
-        recursion formula. E.g. the first order function value.
+        recursion formula. The special element is the first
+        Chebyshev polynomial of the current variable.
     :type special: int
 
     :param n: The order of the function to be computed at this step.
