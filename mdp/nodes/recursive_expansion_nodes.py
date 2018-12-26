@@ -453,7 +453,7 @@ class RecursiveExpansionNode(PolynomialExpansionNode):
 
     .. attribute:: upper
 
-        The lower bound of the domain on which the recursion function is
+        The upper bound of the domain on which the recursion function is
         defined or orthogonal.
     """
 
@@ -616,7 +616,7 @@ class TrainableRecursiveExpansionNode(RecursiveExpansionNode):
 
     .. attribute:: upper
 
-        The lower bound of the domain on which the recursion function
+        The upper bound of the domain on which the recursion function
         is defined or orthogonal.
     """
 
