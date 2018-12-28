@@ -31,7 +31,7 @@ scaling on execution.
 """
 import mdp
 from mdp import numx as np
-from mdp.nodes import PolynomialExpansionNode
+from mdp.nodes.expansion_nodes import _ExpansionNode, expanded_dim
 __docformat__ = "restructuredtext en"
 
 
@@ -448,7 +448,7 @@ def process(off, leadVar, leadDeg, deg, pos, result, todoList):
     return pos
 
 
-class RecursiveExpansionNode(PolynomialExpansionNode):
+class RecursiveExpansionNode(_ExpansionNode):
     """Recursively computable (orthogonal) expansions.
 
     .. attribute:: lower
@@ -497,9 +497,9 @@ class RecursiveExpansionNode(PolynomialExpansionNode):
             Default is None.
         :type dtype: numpy.dtype or str
         """
-        super(RecursiveExpansionNode, self).__init__(
-            degree, input_dim, dtype)
+        super(RecursiveExpansionNode, self).__init__(input_dim, dtype)
 
+        self.degree = degree
         self.check = check
         self.with0 = with0
         # if in dictionary
@@ -517,6 +517,14 @@ class RecursiveExpansionNode(PolynomialExpansionNode):
             self.recf = recf[1]
             self.lower = recf[2]
             self.upper = recf[3]
+    
+    def _get_supported_dtypes(self):
+        """Return the list of dtypes supported by this node.
+        
+        :return: The list of dtypes supported by this node.
+        :rtype: list
+        """
+        return mdp.utils.get_dtypes('AllFloat')
 
     def expanded_dim(self, num_vars):
         """Return the size of a vector of dimension 'dim' after
@@ -530,7 +538,7 @@ class RecursiveExpansionNode(PolynomialExpansionNode):
             that is, the dimension of the expansion.
         :rtype: int
         """
-        res = super(RecursiveExpansionNode, self).expanded_dim(num_vars)
+        res = expanded_dim(self.degree, num_vars)
         return res+1 if self.with0 else res
 
     def _execute(self, x):
@@ -548,9 +556,9 @@ class RecursiveExpansionNode(PolynomialExpansionNode):
 
         num_vars = x.shape[1]
         num_samples = x.shape[0]
+        deg = self.degree
 
         _with0 = hasattr(self, "with0") and self.with0
-        deg = self._degree
         dim = self.expanded_dim(num_vars)
         dim += 1 if not self.with0 else 0
         result = np.empty(
@@ -562,7 +570,7 @@ class RecursiveExpansionNode(PolynomialExpansionNode):
         result[:, 0] = 1.
         pos = 1
 
-        if self._degree > 1:
+        if deg > 1:
             for cur_var in range(num_vars):
                 # preset index for current variable
                 pos, n, special = self.r_init(result, x, pos, cur_var)
@@ -661,8 +669,10 @@ class TrainableRecursiveExpansionNode(RecursiveExpansionNode):
         :type dtype: numpy.dtype or str
         """
         super(TrainableRecursiveExpansionNode, self).__init__(degree,
-                                                              recf=recf, check=check,
-                                                              with0=with0, input_dim=input_dim,
+                                                              recf=recf,
+                                                              check=check,
+                                                              with0=with0, 
+                                                              input_dim=input_dim,
                                                               dtype=dtype)
 
         self.amaxcolumn = None
