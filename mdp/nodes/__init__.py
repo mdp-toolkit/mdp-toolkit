@@ -28,7 +28,7 @@ from .lle_nodes import LLENode, HLLENode
 from .xsfa_nodes import XSFANode, NormalizeNode
 from .gsfa_nodes import GSFANode, iGSFANode
 from .recursive_expansion_nodes import (RecursiveExpansionNode,
-                                        TrainableRecursiveExpansionNode)
+                                        NormalizingRecursiveExpansionNode)
 
 # import internals for use in test_suites
 from .misc_nodes import OneDimensionalHitParade as _OneDimensionalHitParade
@@ -55,7 +55,7 @@ __all__ = ['PCANode', 'WhiteningNode', 'NIPALSNode', 'FastICANode',
            'CutoffNode', 'AdaptiveCutoffNode', 'HistogramNode',
            'IdentityNode', '_OneDimensionalHitParade',
            'OnlineCenteringNode', 'OnlineTimeDiffNode', 'CCIPCANode', 'CCIPCAWhiteningNode', 'MCANode',
-           'IncSFANode', 'RecursiveExpansionNode', 'TrainableRecursiveExpansionNode', ]
+           'IncSFANode', 'RecursiveExpansionNode', 'NormalizingRecursiveExpansionNode', ]
 
 # nodes with external dependencies
 from mdp import config, numx_description, MDPException

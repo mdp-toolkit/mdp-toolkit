@@ -23,11 +23,18 @@ All orthogonal sequences of functions implemented require input values
 in the right scope, i.e. where the respective polynomials
 are designed to be orthogonal, usually values in [0, 1] or [-1, 1].
 That means, one might have to scale the input appropriately.
-The *TrainableRecursiveExpansionNode* is advisable to use, if the data supplied
+The *NormalizingRecursiveExpansionNode* is advisable to use, if the data supplied
 drops out of this interval or it corresponding cube (i.e. [0,1]^k).
-For convenience, the *TrainableRecursiveExpansionNode* can adapt the
+For convenience, the *NormalizingRecursiveExpansionNode* can adapt the
 value range of the data during a training phase and apply the corresponding
 scaling on execution.
+
+|
+
+.. admonition:: Reference
+
+    Example where orthogonal expansions are advisable to use:
+    URL: https://arxiv.org/abs/1805.08565, section 4.2.1, Figure 11 and A.2.
 """
 import mdp
 from mdp import numx as np
@@ -517,10 +524,10 @@ class RecursiveExpansionNode(_ExpansionNode):
             self.recf = recf[1]
             self.lower = recf[2]
             self.upper = recf[3]
-    
+
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node.
-        
+
         :return: The list of dtypes supported by this node.
         :rtype: list
         """
@@ -618,7 +625,7 @@ class RecursiveExpansionNode(_ExpansionNode):
                 "One or more values lie outside of the function specific domain.")
 
 
-class TrainableRecursiveExpansionNode(RecursiveExpansionNode):
+class NormalizingRecursiveExpansionNode(RecursiveExpansionNode):
     """Recursively computable (orthogonal) expansions and a
     trainable transformation to the domain of the expansions.
 
@@ -635,7 +642,7 @@ class TrainableRecursiveExpansionNode(RecursiveExpansionNode):
 
     def __init__(self, degree=1, recf='standard_poly', check=True, with0=True,
                  input_dim=None, dtype=None):
-        """Initialize a TrainableRecursiveExpansionNode.
+        """Initialize a NormalizingRecursiveExpansionNode.
 
         :param degree: The maximum order of the recursive expansion.
             The dimension of the return for single variable inputs will be
@@ -668,12 +675,12 @@ class TrainableRecursiveExpansionNode(RecursiveExpansionNode):
             Default is None.
         :type dtype: numpy.dtype or str
         """
-        super(TrainableRecursiveExpansionNode, self).__init__(degree,
-                                                              recf=recf,
-                                                              check=check,
-                                                              with0=with0, 
-                                                              input_dim=input_dim,
-                                                              dtype=dtype)
+        super(NormalizingRecursiveExpansionNode, self).__init__(degree,
+                                                                recf=recf,
+                                                                check=check,
+                                                                with0=with0,
+                                                                input_dim=input_dim,
+                                                                dtype=dtype)
 
         self.amaxcolumn = None
         self.amincolumn = None
@@ -688,7 +695,7 @@ class TrainableRecursiveExpansionNode(RecursiveExpansionNode):
         :type x: numpy.ndarray
         """
         self.domain_transformation(x)
-        return super(TrainableRecursiveExpansionNode, self)._execute(x)
+        return super(NormalizingRecursiveExpansionNode, self)._execute(x)
 
     def _train(self, x):
         """Determine coordinatewise and absolute maxima and minima.

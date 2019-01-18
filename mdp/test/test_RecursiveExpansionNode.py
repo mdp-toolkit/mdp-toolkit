@@ -4,7 +4,7 @@ Tests for the RecursiveExpansionNode.
 
 from mdp.nodes import PolynomialExpansionNode
 from mdp.nodes import (RecursiveExpansionNode,
-                       TrainableRecursiveExpansionNode)
+                       NormalizingRecursiveExpansionNode)
 from mdp.nodes.recursive_expansion_nodes import recfs
 from mdp.test._tools import *
 from mdp import numx as np

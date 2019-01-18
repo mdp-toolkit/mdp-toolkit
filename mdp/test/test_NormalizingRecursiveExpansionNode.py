@@ -1,16 +1,16 @@
 """
-Tests for the TrainableRecursiveExpansionNode.
+Tests for the NormalizingRecursiveExpansionNode.
 """
 
 from mdp.nodes import (RecursiveExpansionNode,
-                       TrainableRecursiveExpansionNode)
+                       NormalizingRecursiveExpansionNode)
 from mdp.nodes.recursive_expansion_nodes import recfs
 from mdp.test._tools import *
 from mdp import numx as np
 import py.test
 
 
-def test_TrainableRecursiveExpansionNode():
+def test_NormalizingRecursiveExpansionNode():
     """Essentially testing the domain transformation."""
     degree = 10
     episodes = 5
@@ -19,8 +19,8 @@ def test_TrainableRecursiveExpansionNode():
 
     for func_name in recfs:
         x = np.zeros((0, num_vars))
-        expn = TrainableRecursiveExpansionNode(degree, recf=func_name,
-                                               check=True, with0=True)
+        expn = NormalizingRecursiveExpansionNode(degree, recf=func_name,
+                                                 check=True, with0=True)
         for i in range(episodes):
             chunk = (np.random.rand(num_obs, num_vars)-0.5)*1000
             expn.train(chunk)
