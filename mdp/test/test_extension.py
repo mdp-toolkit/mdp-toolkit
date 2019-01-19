@@ -2,7 +2,7 @@ from builtins import object
 
 import mdp
 import sys
-import py.test
+import pytest
 
 def teardown_function(function):
     """Deactivate all extensions and remove testing extensions."""
@@ -202,7 +202,7 @@ def testExtCollision():
         extension_name = "__test2"
         def _testtest(self):
             pass
-    py.test.raises(mdp.ExtensionException,
+    pytest.raises(mdp.ExtensionException,
                    mdp.activate_extensions, ["__test1", "__test2"])
     # none of the extension should be active after the exception
     assert not hasattr(mdp.Node, "_testtest")
@@ -354,7 +354,7 @@ def testExtensionDuplicateSetup():
     def dummy_setup2():
         pass
     mdp.extension_setup("__test")(dummy_setup1)
-    py.test.raises(mdp.ExtensionException,
+    pytest.raises(mdp.ExtensionException,
                    lambda: mdp.extension_setup("__test")(dummy_setup2))
 
 def testExtensionDuplicateTeardown():
@@ -364,5 +364,5 @@ def testExtensionDuplicateTeardown():
     def dummy_setup2():
         pass
     mdp.extension_teardown("__test")(dummy_setup1)
-    py.test.raises(mdp.ExtensionException,
+    pytest.raises(mdp.ExtensionException,
                    lambda: mdp.extension_teardown("__test")(dummy_setup2))

@@ -150,7 +150,7 @@ class config(with_metaclass(MetaConfig, object)):
                     numx: scipy 0.9.0
                   symeig: scipy.linalg.eigh
 
-        This function is used to provide the py.test report header and
+        This function is used to provide the pytest report header and
         footer.
         """
         listable_features = [(f[4:].replace('_', ' '), getattr(cls, f))

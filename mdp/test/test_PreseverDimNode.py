@@ -1,4 +1,4 @@
-import py.test
+import pytest
 from ._tools import *
 
 
@@ -27,4 +27,4 @@ def testPreserveDimNode():
     assert node.input_dim == dim
     def get_node():
         DummyPreserveDimNode(input_dim=dim, output_dim=dim+1)
-    py.test.raises(mdp.InconsistentDimException, get_node)
+    pytest.raises(mdp.InconsistentDimException, get_node)

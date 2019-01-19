@@ -75,5 +75,5 @@ def test_FANode_singular_cov():
     fanode = mdp.nodes.FANode(output_dim=3)
     fanode.train(x)
     # the matrix x is singular
-    py.test.raises(mdp.NodeException, "fanode.stop_training()")
+    pytest.raises(mdp.NodeException, "fanode.stop_training()")
 

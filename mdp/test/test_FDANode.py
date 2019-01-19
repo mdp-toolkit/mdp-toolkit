@@ -1,6 +1,6 @@
 from __future__ import division
 from past.utils import old_div
-import py.test
+import pytest
 from ._tools import *
 
 def test_FDANode():
@@ -32,7 +32,7 @@ def test_FDANode():
     classes = numx.take(classes, perm_idx)
 
     flow = mdp.Flow([mdp.nodes.FDANode()])
-    py.test.raises(mdp.TrainingException,
+    pytest.raises(mdp.TrainingException,
                    flow[0].train, x, numx.ones((2,)))
 
     flow.train([[(x, classes)]])

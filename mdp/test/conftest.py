@@ -1,10 +1,10 @@
-# global hooks for py.test
+# global hooks for pytest
 import tempfile
 import os
 import shutil
 import glob
 import mdp
-import py.test
+import pytest
 
 _err_str = """
 IMPORTANT: some tests use random numbers. This could
@@ -23,7 +23,7 @@ def pytest_unconfigure(config):
     # remove garbage created during tests
     # note that usage of TemporaryDirectory is not enough to assure
     # that all garbage is removed, expacially because we use subprocesses
-    shutil.rmtree(py.test.mdp_tempdirname, ignore_errors=True)
+    shutil.rmtree(pytest.mdp_tempdirname, ignore_errors=True)
     # if pp was monkey-patched, remove any stale pp4mdp directories
     if hasattr(mdp.config, 'pp_monkeypatch_dirname'):
         monkey_dirs = os.path.join(mdp.config.pp_monkeypatch_dirname,
@@ -38,7 +38,7 @@ def pytest_runtest_setup(item):
     mdp.numx_rand.seed(item.config.option.seed)
 
 def pytest_addoption(parser):
-    """Add random seed option to py.test.
+    """Add random seed option to pytest.
     """
     parser.addoption('--seed', dest='seed', type=int, action='store',
                      help='set random seed')

@@ -7,10 +7,11 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division
 import copy
+import pytest
 
 from mdp.nodes.gsfa_nodes import comp_delta, GSFANode, iGSFANode, \
     SFANode_reduce_output_dim, PCANode_reduce_output_dim
-from ._tools import numx, mdp, assert_array_almost_equal, decimal, py
+from ._tools import numx, mdp, assert_array_almost_equal, decimal
 
 
 def test_automatic_stop_training():
@@ -22,25 +23,25 @@ def test_automatic_stop_training():
     n = iGSFANode(output_dim=15, reconstruct_with_sfa=True,
                   slow_feature_scaling_method=None)
     n.train(x, train_mode="regular")
-    with py.test.raises(mdp.TrainingFinishedException):
+    with pytest.raises(mdp.TrainingFinishedException):
         n.train(x, train_mode="regular")
 
     n = iGSFANode(output_dim=15, reconstruct_with_sfa=True,
                   slow_feature_scaling_method="data_dependent")
     n.train(x, train_mode="regular")
-    with py.test.raises(mdp.TrainingFinishedException):
+    with pytest.raises(mdp.TrainingFinishedException):
         n.train(x, train_mode="regular")
 
     n = iGSFANode(output_dim=15, reconstruct_with_sfa=True,
                   slow_feature_scaling_method="sensitivity_based")
     n.train(x, train_mode="regular")
-    with py.test.raises(mdp.TrainingFinishedException):
+    with pytest.raises(mdp.TrainingFinishedException):
         n.train(x, train_mode="regular")
 
     n = iGSFANode(output_dim=15, reconstruct_with_sfa=True,
                   slow_feature_scaling_method="QR_decomposition")
     n.train(x, train_mode="regular")
-    with py.test.raises(mdp.TrainingFinishedException):
+    with pytest.raises(mdp.TrainingFinishedException):
         n.train(x, train_mode="regular")
 
 
@@ -109,13 +110,13 @@ def test_enforce_int_delta_threshold_le_output_dim():
                   slow_feature_scaling_method=None, delta_threshold=6)
     n.train(x, train_mode="regular")
     n.train(x**3, train_mode="regular")
-    with py.test.raises(Exception):
+    with pytest.raises(Exception):
         n.stop_training()
     # Automatic stop_training. Since delta_threshold > output_dim this
     # should rise an exception
     n = iGSFANode(output_dim=5, reconstruct_with_sfa=True,
                   slow_feature_scaling_method=None, delta_threshold=6)
-    with py.test.raises(Exception):
+    with pytest.raises(Exception):
         n.train(x, train_mode="regular")
 
 
@@ -128,14 +129,14 @@ def test_enforce_int_delta_threshold_le_max_length_slow_part():
                   max_length_slow_part=5, delta_threshold=6)
     n.train(x, train_mode="regular")
     n.train(x**3, train_mode="regular")
-    with py.test.raises(Exception):
+    with pytest.raises(Exception):
         n.stop_training()
     # Automatic stop_training. Since delta_threshold > max_length_slow_part,
     #  this should rise an exception
     n = iGSFANode(output_dim=8, reconstruct_with_sfa=True,
                   slow_feature_scaling_method=None,
                   max_length_slow_part=5, delta_threshold=6)
-    with py.test.raises(Exception):
+    with pytest.raises(Exception):
         n.train(x, train_mode="regular")
 
 
