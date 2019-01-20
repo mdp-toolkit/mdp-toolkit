@@ -20,6 +20,10 @@ def pytest_configure(config):
     if seed is None or seed == ('NO', 'DEFAULT'):
         config.option.seed = int(mdp.numx_rand.randint(2**31-1))
 
+    # get temp dir
+    py.test.mdp_tempdirname = tempfile.mkdtemp(
+        suffix='.tmp', prefix='MDPtestdir_')
+
 
 def pytest_unconfigure(config):
     # remove garbage created during tests
