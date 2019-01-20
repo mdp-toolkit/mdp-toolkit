@@ -21,7 +21,7 @@ def pytest_configure(config):
         config.option.seed = int(mdp.numx_rand.randint(2**31-1))
 
     # get temp dir
-    py.test.mdp_tempdirname = tempfile.mkdtemp(
+    pytest.mdp_tempdirname = tempfile.mkdtemp(
         suffix='.tmp', prefix='MDPtestdir_')
 
 
