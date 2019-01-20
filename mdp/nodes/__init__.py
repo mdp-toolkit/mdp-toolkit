@@ -6,27 +6,29 @@ from .sfa_nodes import SFANode, SFA2Node
 from .ica_nodes import ICANode, CuBICANode, FastICANode, TDSEPNode
 from .neural_gas_nodes import GrowingNeuralGasNode, NeuralGasNode
 from .expansion_nodes import (QuadraticExpansionNode, PolynomialExpansionNode,
-                             RBFExpansionNode, GrowingNeuralGasExpansionNode,
-                             GeneralExpansionNode)
+                              RBFExpansionNode, GrowingNeuralGasExpansionNode,
+                              GeneralExpansionNode)
 from .fda_nodes import FDANode
 from .em_nodes import FANode
 from .misc_nodes import (IdentityNode, HitParadeNode, TimeFramesNode,
-                        TimeDelayNode, TimeDelaySlidingWindowNode,
-                        EtaComputerNode, NoiseNode, NormalNoiseNode,
-                        CutoffNode, HistogramNode, AdaptiveCutoffNode)
+                         TimeDelayNode, TimeDelaySlidingWindowNode,
+                         EtaComputerNode, NoiseNode, NormalNoiseNode,
+                         CutoffNode, HistogramNode, AdaptiveCutoffNode)
 from .isfa_nodes import ISFANode
 from .rbm_nodes import RBMNode, RBMWithLabelsNode
 from .regression_nodes import LinearRegressionNode
 from .classifier_nodes import (SignumClassifier, PerceptronClassifier,
-                              SimpleMarkovClassifier,
-                              DiscreteHopfieldClassifier,
-                              KMeansClassifier, GaussianClassifier,
-                              NearestMeanClassifier, KNNClassifier)
+                               SimpleMarkovClassifier,
+                               DiscreteHopfieldClassifier,
+                               KMeansClassifier, GaussianClassifier,
+                               NearestMeanClassifier, KNNClassifier)
 from .jade import JADENode
 from .nipals import NIPALSNode
 from .lle_nodes import LLENode, HLLENode
 from .xsfa_nodes import XSFANode, NormalizeNode
 from .gsfa_nodes import GSFANode, iGSFANode
+from .recursive_expansion_nodes import (RecursiveExpansionNode,
+                                        NormalizingRecursiveExpansionNode)
 
 # import internals for use in test_suites
 from .misc_nodes import OneDimensionalHitParade as _OneDimensionalHitParade
@@ -42,7 +44,7 @@ __all__ = ['PCANode', 'WhiteningNode', 'NIPALSNode', 'FastICANode',
            'ISFANode', 'XSFANode', 'GSFANode', 'iGSFANode', 'FDANode', 'FANode', 'RBMNode',
            'RBMWithLabelsNode', 'GrowingNeuralGasNode', 'LLENode', 'HLLENode',
            'LinearRegressionNode', 'QuadraticExpansionNode',
-           'PolynomialExpansionNode', 'RBFExpansionNode','GeneralExpansionNode',
+           'PolynomialExpansionNode', 'RBFExpansionNode', 'GeneralExpansionNode',
            'GrowingNeuralGasExpansionNode', 'NeuralGasNode', '_expanded_dim',
            'SignumClassifier',
            'PerceptronClassifier', 'SimpleMarkovClassifier',
@@ -53,7 +55,7 @@ __all__ = ['PCANode', 'WhiteningNode', 'NIPALSNode', 'FastICANode',
            'CutoffNode', 'AdaptiveCutoffNode', 'HistogramNode',
            'IdentityNode', '_OneDimensionalHitParade',
            'OnlineCenteringNode', 'OnlineTimeDiffNode', 'CCIPCANode', 'CCIPCAWhiteningNode', 'MCANode',
-           'IncSFANode',]
+           'IncSFANode', 'RecursiveExpansionNode', 'NormalizingRecursiveExpansionNode', ]
 
 # nodes with external dependencies
 from mdp import config, numx_description, MDPException
@@ -111,4 +113,5 @@ utils.fixup_namespace(__name__, __all__ + ['ICANode'],
                        'pca_nodes_online',
                        'mca_nodes_online',
                        'sfa_nodes_online',
+                       'recursive_expansion_nodes',
                        ))
