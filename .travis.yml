@@ -26,7 +26,7 @@ before_install:
     - bash <(wget -q -O- http://neuro.debian.net/_files/neurodebian-travis.sh)
     - travis_retry sudo apt-get install python-numpy python-joblib python-sklearn
 install:
-    - pip install --user -v pytest pytest-cov coveralls future
+    - pip install -v pytest pytest-cov coveralls future
 script:
     - pytest --cov-report= --cov-config=.coveragerc --cov=mdp --seed=725021957 mdp
     - pytest --cov-report= --cov-config=.coveragerc --cov=bimdp --cov-append --seed=725021957 bimdp
