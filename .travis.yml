@@ -8,17 +8,7 @@
 #
 # Alternative setups could have been done using anaconda etc, but I would
 # prefer to test against what is in neurodebian
-language: python
-python:
-  - "2.6"
-  - "2.7"
-  - "3.3"
-  - "3.4"
-  - "3.5"
-  - "3.5-dev"  # 3.5 development branch
-  - "3.6"
-  - "3.6-dev"  # 3.6 development branch
-  - "3.7-dev"  # 3.7 development branch
+language: erlang
 cache:
   - apt
 before_install:
@@ -26,7 +16,7 @@ before_install:
     - bash <(wget -q -O- http://neuro.debian.net/_files/neurodebian-travis.sh)
     - travis_retry sudo apt-get install python-numpy python-joblib python-sklearn
 install:
-    - pip install -v pytest pytest-cov coveralls future
+    - pip install --user -v pytest pytest-cov coveralls future
 script:
     - pytest --cov-report= --cov-config=.coveragerc --cov=mdp --seed=725021957 mdp
     - pytest --cov-report= --cov-config=.coveragerc --cov=bimdp --cov-append --seed=725021957 bimdp
