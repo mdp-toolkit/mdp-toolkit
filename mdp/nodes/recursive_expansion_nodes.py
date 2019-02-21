@@ -589,10 +589,14 @@ class RecursiveExpansionNode(_ExpansionNode):
                     n += 1
                     pos += 1
         # in case input is unreasonable
-        else:
+        elif deg == 1:
             result[:, 0] = 1
             for i in range(num_vars):
                 result[:, i+1] = x[:, i]
+        elif self.with0:
+            return np.ones((num_samples, num_vars))
+        else:
+            return None
 
         todoList = []
         for i in range(1, num_vars):
