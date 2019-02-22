@@ -29,6 +29,8 @@ matrix:
       env: VNUMPY=1.8.2
     - python: "3.6"
       env: VNUMPY=1.8.2
+    - python: "3.5-dev"
+      env: VNUMPY=1.8.2
       
 before_install:
     # The ultimate one-liner setup for NeuroDebian repository
