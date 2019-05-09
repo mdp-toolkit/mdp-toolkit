@@ -6,6 +6,7 @@ import warnings
 # import numeric module (scipy, Numeric or numarray)
 numx = mdp.numx
 
+
 def _check_roundoff(t, dtype):
     """Check if t is so large that t+1 == t up to 2 precision digits"""
     # limit precision
@@ -17,6 +18,7 @@ def _check_roundoff(t, dtype):
               '\nerrors. See CovarianceMatrix docstring for more'
               ' information.' % (t, dtype.name))
         warnings.warn(wr, mdp.MDPWarning)
+
 
 class CovarianceMatrix(object):
     """This class stores an empirical covariance matrix that can be updated
@@ -104,7 +106,7 @@ class CovarianceMatrix(object):
         avg = self._avg
         cov_mtx = self._cov_mtx
 
-        ##### fix the training variables
+        # fix the training variables
         # fix the covariance matrix (try to do everything inplace)
         if self.bias:
             cov_mtx /= tlen
@@ -122,7 +124,7 @@ class CovarianceMatrix(object):
         # fix the average
         avg /= tlen
 
-        ##### clean up
+        # clean up
         # covariance matrix, updated during the training phase
         self._cov_mtx = None
         # average, updated during the training phase
@@ -131,6 +133,119 @@ class CovarianceMatrix(object):
         self._tlen = 0
 
         return cov_mtx, avg, tlen
+
+
+class UnevenlySampledCovarianceMatrix(CovarianceMatrix):
+    """This class stores an empirical covariance matrix that can be updated
+    incrementally. A call to the 'fix' method returns the current state of
+    the covariance matrix, the average and the number of observations, and
+    resets the internal data.
+
+    As compared to the *CovarianceMatrix* class, this class accepts unevenly
+    sampled input in conjunction with a time increment between samples. The
+    covariance matrix is then computed as a (centered) scalar product
+    between functions, that is sampled unevenly, using the trapezoid rule.
+
+    The mean is computed using the trapezoid rule as well.
+
+    Note that the internal sum is a standard __add__ operation.
+    """
+    def __init__(self, dtype=None):
+        """Initialize an *UnevenlySampledCovarianceMatrix*.
+
+        :param dtype: Datatype of the input.
+            Default is None. If dtype is not defined, it will be inherited
+            from the first data bunch received by 'update'. 
+        :type dtype: numpy.dtype or str
+        """
+        super(UnevenlySampledCovarianceMatrix,
+              self).__init__(dtype=dtype, bias=True)
+        # we need to keep steps and actual time
+        # values seperately, due to the weighing
+        # which is not required in the evenly sampled case
+        self._steps = 0
+
+    def update(self, xn, dt):
+        """Update internal structures.
+
+        Note that no consistency checks are performed on the data (this is
+        typically done in the enclosing node).
+
+        :param xn: Timed sequence of random vectors, with samples along the rows
+        and random variables along the colums
+        :type xn: numpy.ndarray
+
+        :param dt: Sequence of time increments between random vectors. Must be
+        of length *x.shape[0]-1*.
+        :type dt: numpy.ndarray        
+
+        """
+        if self._cov_mtx is None:
+            self._init_internals(xn)
+        # cast input
+        xn = mdp.utils.refcast(xn, self._dtype)
+        # update the covariance matrix, the average and the number of
+        # observations
+        # the implementation is analogous to the evenly sampled case
+        # values might get big as it is only normalized in fix
+        xncpy = numx.multiply(xn[1:, :], numx.sqrt(dt/2.)[:, None])
+        self._cov_mtx += mdp.utils.mult(xncpy.T, xncpy)
+        xncpy[:, :] = numx.multiply(xn[:-1, :], numx.sqrt(dt/2.)[:, None])
+        self._cov_mtx += mdp.utils.mult(xncpy.T, xncpy)
+
+        xncpy[:, :] = numx.multiply(xn[:-1, :], numx.sqrt(dt/2.)[:, None])
+        self._avg += xncpy.sum(axis=0)
+
+        xncpy[:, :] = numx.multiply(xn[1:, :], (dt/2.)[:, None])
+        self._avg += xncpy.sum(axis=0)
+        # should the xn be reset to their original value, as they are not passed as a copy?
+        self._tlen += dt.sum()
+        self._steps += xn.shape[0]-1
+
+    def fix(self, center=True):
+        """Returns a triple containing the generalised
+        covariance matrix, the average and length of the
+        sequence (in time/ summed increments).
+
+        The covariance matrix is then reset to a zero-state.
+
+        :param center: If center is false, the returned matrix is the matrix
+            of the second moments, i.e. the covariance matrix of the data
+            without subtracting the mean.
+        :type bool: bool
+
+        :returns: Generalised covariance matrx, average and length
+        of sequence (in time/ summed increments).
+        :rtype: Tuple[np.ndarray, np.ndarray, np.ndarray]
+        """
+        # local variables
+        type_ = self._dtype
+        steps = self._steps
+        _check_roundoff(steps, type_)
+        avg = self._avg
+        cov_mtx = self._cov_mtx
+
+        # fix the training variables
+        # fix the covariance matrix (try to do everything inplace)
+        cov_mtx /= self._tlen
+
+        if center:
+            avg_mtx = numx.outer(avg, avg)
+            avg_mtx /= self._tlen*self._tlen
+            cov_mtx -= avg_mtx
+
+        # fix the average
+        avg /= self._tlen
+
+        # clean up
+        # covariance matrix, updated during the training phase
+        self._cov_mtx = None
+        # average, updated during the training phase
+        self._avg = None
+        # number of observation so far during the training phase
+        self._tlen = 0
+
+        return cov_mtx, avg, self._tlen
 
 
 class DelayCovarianceMatrix(object):
@@ -235,7 +350,7 @@ class DelayCovarianceMatrix(object):
         avg_dt = self._avg_dt
         cov_mtx = self._cov_mtx
 
-        ##### fix the training variables
+        # fix the training variables
         # fix the covariance matrix (try to do everything inplace)
         avg_mtx = numx.outer(avg, avg_dt)
         avg_mtx /= tlen
@@ -253,7 +368,7 @@ class DelayCovarianceMatrix(object):
         avg /= tlen
         avg_dt /= tlen
 
-        ##### clean up variables to spare on space
+        # clean up variables to spare on space
         self._cov_mtx = None
         self._avg = None
         self._avg_dt = None
@@ -266,6 +381,7 @@ class MultipleCovarianceMatrices(object):
     """Container class for multiple covariance matrices to easily
     execute operations on all matrices at the same time.
     Note: all operations are done in place where possible."""
+
     def __init__(self, covs):
         """Insantiate with a sequence of covariance matrices."""
         # swap axes to get the different covmat on to the 3rd axis
@@ -303,14 +419,14 @@ class MultipleCovarianceMatrices(object):
         # you need to copy the first column that is modified
         covs_i = covs[:, i, :] + 0
         covs_j = covs[:, j, :]
-        covs[:, i, :] =  cos_*covs_i - sin_*covs_j
-        covs[:, j, :] =  sin_*covs_i + cos_*covs_j
+        covs[:, i, :] = cos_*covs_i - sin_*covs_j
+        covs[:, j, :] = sin_*covs_i + cos_*covs_j
         # rotate rows
         # you need to copy the first row that is modified
         covs_i = covs[i, :, :] + 0
         covs_j = covs[j, :, :]
-        covs[i, :, :] =  cos_*covs_i - sin_*covs_j
-        covs[j, :, :] =  sin_*covs_i + cos_*covs_j
+        covs[i, :, :] = cos_*covs_i - sin_*covs_j
+        covs[j, :, :] = sin_*covs_i + cos_*covs_j
         self.covs = covs
 
     def permute(self, indices):
@@ -342,8 +458,8 @@ class CrossCovarianceMatrix(CovarianceMatrix):
         if self._dtype is None:
             self._dtype = x.dtype
             if y.dtype != x.dtype:
-                err = 'dtype mismatch: x (%s) != y (%s)'%(x.dtype,
-                                                          y.dtype)
+                err = 'dtype mismatch: x (%s) != y (%s)' % (x.dtype,
+                                                            y.dtype)
                 raise mdp.MDPException(err)
         dim_x = x.shape[1]
         dim_y = y.shape[1]
@@ -352,12 +468,11 @@ class CrossCovarianceMatrix(CovarianceMatrix):
         self._avgx = numx.zeros(dim_x, type_)
         self._avgy = numx.zeros(dim_y, type_)
 
-
     def update(self, x, y):
         # check internal dimensions consistency
         if x.shape[0] != y.shape[0]:
-            err = '# samples mismatch: x (%d) != y (%d)'%(x.shape[0],
-                                                          y.shape[0])
+            err = '# samples mismatch: x (%d) != y (%d)' % (x.shape[0],
+                                                            y.shape[0])
             raise mdp.MDPException(err)
 
         if self._cov_mtx is None:
@@ -380,7 +495,7 @@ class CrossCovarianceMatrix(CovarianceMatrix):
         avgy = self._avgy
         cov_mtx = self._cov_mtx
 
-        ##### fix the training variables
+        # fix the training variables
         # fix the covariance matrix (try to do everything inplace)
         avg_mtx = numx.outer(avgx, avgy)
 
@@ -395,7 +510,7 @@ class CrossCovarianceMatrix(CovarianceMatrix):
         avgx /= tlen
         avgy /= tlen
 
-        ##### clean up
+        # clean up
         # covariance matrix, updated during the training phase
         self._cov_mtx = None
         # average, updated during the training phase
