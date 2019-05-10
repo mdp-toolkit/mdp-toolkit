@@ -23,8 +23,9 @@ except ImportError:
 
 from .introspection import dig_node, get_node_size, get_node_size_str
 from .quad_forms import QuadraticForm, QuadraticFormException
-from .covariance import (CovarianceMatrix, DelayCovarianceMatrix,
-                        MultipleCovarianceMatrices,CrossCovarianceMatrix)
+from .covariance import (CovarianceMatrix, UnevenlySampledCovarianceMatrix,
+                        DelayCovarianceMatrix, MultipleCovarianceMatrices,
+                        CrossCovarianceMatrix)
 from .progress_bar import progressinfo
 from .slideshow import (basic_css, slideshow_css, HTMLSlideShow,
                        image_slideshow_css, ImageHTMLSlideShow,
