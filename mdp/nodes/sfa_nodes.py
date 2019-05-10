@@ -4,7 +4,8 @@ __docformat__ = "restructuredtext en"
 
 import mdp
 from mdp import numx, Node, NodeException, TrainingException
-from mdp.utils import (mult, pinv, CovarianceMatrix, QuadraticForm,
+from mdp.utils import (mult, pinv, CovarianceMatrix,
+                       UnevenlySampledCovarianceMatrix, QuadraticForm,
                        symeig, SymeigException, symeig_semidefinite_reg,
                        symeig_semidefinite_pca, symeig_semidefinite_svd,
                        symeig_semidefinite_ldl)
@@ -35,6 +36,7 @@ There are several ways to deal with this issue:
     You will get the same result by rank_deficit_method='pca'.
     This will be more efficient in execution phase.
 '''
+
 
 class SFANode(Node):
     """
@@ -75,8 +77,8 @@ class SFANode(Node):
         :param dtype: The datatype.
         :type dtype: numpy.dtype or str
         
-        :param include_last_sample: If ``False`` the `train` method discards the 
-            last sample in every chunk during training when calculating 
+        :param include_last_sample: If ``False`` the `train` method discards
+            the last sample in every chunk during training when calculating
             the covariance matrix.
             The last sample is in this case only used for calculating the
             covariance matrix of the derivatives. The switch should be set
@@ -367,6 +369,66 @@ class SFANode(Node):
         if self.is_training():
             self.stop_training()
         return self._refcast(t / (2 * numx.pi) * numx.sqrt(self.d))
+
+
+class UnevenlySampledSFANode(SFANode):
+
+    def __init__(self, input_dim=None, output_dim=None, dtype=None,
+                 include_last_sample=True, rank_deficit_method='none'):
+        super(SFANode, self).__init__(input_dim, output_dim, dtype)
+
+        self._include_last_sample = include_last_sample
+
+        # init two covariance matrices
+        # one for the input data
+        self._cov_mtx = UnevenlySampledCovarianceMatrix(dtype)
+        # one for the derivatives
+        self._dcov_mtx = UnevenlySampledCovarianceMatrix(dtype)
+
+        # set routine for eigenproblem
+        self.set_rank_deficit_method(rank_deficit_method)
+        self.rank_threshold = 1e-12
+        self.rank_deficit = 0
+
+        # SFA eigenvalues and eigenvectors, will be set after training
+        self.d = None
+        self.sf = None  # second index for outputs
+        self.avg = None
+        self._bias = None  # avg multiplied with sf
+        self.tlen = None
+
+    def time_derivative(self, x, dt):
+        """
+        Compute the linear approximation of the time derivative
+
+        :param x: The time series data.
+        :type x: numpy.ndarray
+
+        :returns: Piecewise linear approximation of the time derivative.
+        :rtype: numpy.ndarray
+        """
+        # Improvements can be made, by interpolating polynomials
+        return (x[1:, :]-x[:-1, :])/dt
+    
+    def _train(self, x, dt, include_last_sample=None):
+        """
+        Training method.
+
+        :param x: The time series data.
+        :type x: numpy.ndarray
+        
+        :param include_last_sample: For the ``include_last_sample`` switch have a
+            look at the SFANode.__init__ docstring.
+        :type include_last_sample: bool
+        """
+        if include_last_sample is None:
+            include_last_sample = self._include_last_sample
+        # works because x[:None] == x[:]
+        last_sample_index = None if include_last_sample else -1
+
+        # update the covariance matrices
+        self._cov_mtx.update(x[:last_sample_index, :], dt)
+        self._dcov_mtx.update(self.time_derivative(x), dt)
 
 
 class SFA2Node(SFANode):

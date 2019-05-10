@@ -165,15 +165,15 @@ class UnevenlySampledCovarianceMatrix(CovarianceMatrix):
         # which is not required in the evenly sampled case
         self._steps = 0
 
-    def update(self, xn, dt):
+    def update(self, x, dt):
         """Update internal structures.
 
         Note that no consistency checks are performed on the data (this is
         typically done in the enclosing node).
 
-        :param xn: Timed sequence of random vectors, with samples along the rows
+        :param x: Timed sequence of random vectors, with samples along the rows
         and random variables along the colums
-        :type xn: numpy.ndarray
+        :type x: numpy.ndarray
 
         :param dt: Sequence of time increments between random vectors. Must be
         of length *x.shape[0]-1*.
@@ -181,26 +181,26 @@ class UnevenlySampledCovarianceMatrix(CovarianceMatrix):
 
         """
         if self._cov_mtx is None:
-            self._init_internals(xn)
+            self._init_internals(x)
         # cast input
-        xn = mdp.utils.refcast(xn, self._dtype)
+        x = mdp.utils.refcast(x, self._dtype)
         # update the covariance matrix, the average and the number of
         # observations
         # the implementation is analogous to the evenly sampled case
         # values might get big as it is only normalized in fix
-        xncpy = numx.multiply(xn[1:, :], numx.sqrt(dt/2.)[:, None])
-        self._cov_mtx += mdp.utils.mult(xncpy.T, xncpy)
-        xncpy[:, :] = numx.multiply(xn[:-1, :], numx.sqrt(dt/2.)[:, None])
-        self._cov_mtx += mdp.utils.mult(xncpy.T, xncpy)
+        xcpy = numx.multiply(x[1:, :], numx.sqrt(dt/2.)[:, None])
+        self._cov_mtx += mdp.utils.mult(xcpy.T, xcpy)
+        xcpy[:, :] = numx.multiply(x[:-1, :], numx.sqrt(dt/2.)[:, None])
+        self._cov_mtx += mdp.utils.mult(xcpy.T, xcpy)
 
-        xncpy[:, :] = numx.multiply(xn[:-1, :], numx.sqrt(dt/2.)[:, None])
-        self._avg += xncpy.sum(axis=0)
+        xcpy[:, :] = numx.multiply(x[:-1, :], numx.sqrt(dt/2.)[:, None])
+        self._avg += xcpy.sum(axis=0)
 
-        xncpy[:, :] = numx.multiply(xn[1:, :], (dt/2.)[:, None])
-        self._avg += xncpy.sum(axis=0)
-        # should the xn be reset to their original value, as they are not passed as a copy?
+        xcpy[:, :] = numx.multiply(x[1:, :], (dt/2.)[:, None])
+        self._avg += xcpy.sum(axis=0)
+        # should the x be reset to their original value, as they are not passed as a copy?
         self._tlen += dt.sum()
-        self._steps += xn.shape[0]-1
+        self._steps += x.shape[0]-1
 
     def fix(self, center=True):
         """Returns a triple containing the generalised
