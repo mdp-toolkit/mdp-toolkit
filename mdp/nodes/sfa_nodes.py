@@ -292,7 +292,7 @@ class SFANode(Node):
             # check that we get only *positive* eigenvalues
             if d.min() < 0:
                 err_msg = ("Got negative eigenvalues: %s.\n"
-                           "You may either set output_dim to be smaller,\n"
+                           "You may either set oucovartput_dim to be smaller,\n"
                            "or prepend the SFANode with a PCANode(reduce=True)\n"
                            "or PCANode(svd=True)\n"
                            "or set a rank deficit method, e.g.\n"
@@ -408,7 +408,7 @@ class UnevenlySampledSFANode(SFANode):
         :rtype: numpy.ndarray
         """
         # Improvements can be made, by interpolating polynomials
-        return (x[1:, :]-x[:-1, :])/dt
+        return (x[1:, :]-x[:-1, :])/dt[:,None]
     
     def _train(self, x, dt, include_last_sample=None):
         """
@@ -428,7 +428,7 @@ class UnevenlySampledSFANode(SFANode):
 
         # update the covariance matrices
         self._cov_mtx.update(x[:last_sample_index, :], dt)
-        self._dcov_mtx.update(self.time_derivative(x), dt)
+        self._dcov_mtx.update(self.time_derivative(x, dt), dt[:-1])
 
 
 class SFA2Node(SFANode):
