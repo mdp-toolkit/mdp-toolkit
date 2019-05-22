@@ -38,3 +38,20 @@ def test_UnevenlySampledCovarianceMatrix1():
 
     assert_array_almost_equal(prec, unPrec, decimal-3)
     assert_array_almost_equal(prec, unPrec2, decimal-3)
+
+
+def test_UnevenlySampledCovarianceMatrix2():
+    # sample
+    x = numx.random.random((10000, 2))
+    dt = numx.ones(x.shape[0]-1,)
+    # initialize the estimators
+    cov = CovarianceMatrix()
+    uncov = UnevenlySampledCovarianceMatrix()
+    # update the estimators
+    cov.update(x)
+    uncov.update(x, dt)
+    # quit estimating
+    unC, unAvg, unTlen = uncov.fix()
+    C, avg, tlen = cov.fix()
+
+    assert_array_almost_equal(unC, C, decimal-3)
