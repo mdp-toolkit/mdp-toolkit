@@ -150,6 +150,7 @@ class UnevenlySampledCovarianceMatrix(CovarianceMatrix):
 
     Note that the internal sum is a standard __add__ operation.
     """
+
     def __init__(self, dtype=None):
         """Initialize an *UnevenlySampledCovarianceMatrix*.
 
@@ -193,7 +194,7 @@ class UnevenlySampledCovarianceMatrix(CovarianceMatrix):
         xcpy[:, :] = numx.multiply(x[:-1, :], numx.sqrt(dt/2.)[:, None])
         self._cov_mtx += mdp.utils.mult(xcpy.T, xcpy)
 
-        xcpy[:, :] = numx.multiply(x[:-1, :], numx.sqrt(dt/2.)[:, None])
+        xcpy[:, :] = numx.multiply(x[:-1, :], (dt/2.)[:, None])
         self._avg += xcpy.sum(axis=0)
 
         xcpy[:, :] = numx.multiply(x[1:, :], (dt/2.)[:, None])
