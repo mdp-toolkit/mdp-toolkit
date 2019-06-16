@@ -192,6 +192,8 @@ def test_dtype_consistency(klass, init_args, inp_arg_gen,
     supported_types = klass(*args).get_supported_dtypes()
     for dtype in supported_types:
         inp = inp_arg_gen()
+        if klass.__name__ == "ComplementNBScikitsLearnNode":
+            inp = numx.absolute(inp)
         args = call_init_args(init_args)
         node = klass(dtype=dtype, *args)
         _train_if_necessary(inp, node, sup_arg_gen)
@@ -210,6 +212,8 @@ def test_outputdim_consistency(klass, init_args, inp_arg_gen,
                                sup_arg_gen, execute_arg_gen):
     args = call_init_args(init_args)
     inp = inp_arg_gen()
+    if klass.__name__ == "ComplementNBScikitsLearnNode":
+        inp = numx.absolute(inp)
     # support generators
     if isinstance(inp, Iter):
         for x in inp:
@@ -250,16 +254,16 @@ def test_outputdim_consistency(klass, init_args, inp_arg_gen,
             # raises an appropriate error
             # case 1: both in the constructor
             pytest.raises(InconsistentDimException,
-                           'klass(input_dim=inp.shape[1], output_dim=output_dim, *args)')
+                          'klass(input_dim=inp.shape[1], output_dim=output_dim, *args)')
             # case 2: first input_dim, then output_dim
             node = klass(input_dim=inp.shape[1], *args)
             pytest.raises(InconsistentDimException,
-                           'node.output_dim = output_dim')
+                          'node.output_dim = output_dim')
             # case 3: first output_dim, then input_dim
             node = klass(output_dim=output_dim, *args)
             node.output_dim = output_dim
             pytest.raises(InconsistentDimException,
-                           'node.input_dim = inp.shape[1]')
+                          'node.input_dim = inp.shape[1]')
 
         # check that output_dim is set to whatever the output dim is
         node = klass(*args)
@@ -278,6 +282,8 @@ def test_dimdtypeset(klass, init_args, inp_arg_gen,
                      sup_arg_gen, execute_arg_gen):
     init_args = call_init_args(init_args)
     inp = inp_arg_gen()
+    if klass.__name__ == "ComplementNBScikitsLearnNode":
+        inp = numx.absolute(inp)
     node = klass(*init_args)
     _train_if_necessary(inp, node, sup_arg_gen)
     _stop_training_or_execute(node, inp)
