@@ -192,6 +192,10 @@ def test_dtype_consistency(klass, init_args, inp_arg_gen,
     supported_types = klass(*args).get_supported_dtypes()
     for dtype in supported_types:
         inp = inp_arg_gen()
+        # The code was written before the following was included in
+        # scikit-learn. If more new nodes show up, that require the
+        # following fix, switch to a more generic solution.
+        # See: https://github.com/mdp-toolkit/mdp-toolkit/pull/47
         if klass.__name__ == "ComplementNBScikitsLearnNode":
             inp = numx.absolute(inp)
         args = call_init_args(init_args)
@@ -212,6 +216,10 @@ def test_outputdim_consistency(klass, init_args, inp_arg_gen,
                                sup_arg_gen, execute_arg_gen):
     args = call_init_args(init_args)
     inp = inp_arg_gen()
+    # The code was written before the following was included in
+    # scikit-learn. If more new nodes show up, that require the
+    # following fix, switch to a more generic solution.
+    # See: https://github.com/mdp-toolkit/mdp-toolkit/pull/47
     if klass.__name__ == "ComplementNBScikitsLearnNode":
         inp = numx.absolute(inp)
     # support generators
@@ -282,6 +290,10 @@ def test_dimdtypeset(klass, init_args, inp_arg_gen,
                      sup_arg_gen, execute_arg_gen):
     init_args = call_init_args(init_args)
     inp = inp_arg_gen()
+    # The code was written before the following was included in
+    # scikit-learn. If more new nodes show up, that require the
+    # following fix, switch to a more generic solution.
+    # See: https://github.com/mdp-toolkit/mdp-toolkit/pull/47
     if klass.__name__ == "ComplementNBScikitsLearnNode":
         inp = numx.absolute(inp)
     node = klass(*init_args)

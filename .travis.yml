@@ -6,6 +6,7 @@
 # I would prefer to test against what is in neurodebian
 language: python
 python:
+  - "2.7"
   - "3.5"
   - "3.5-dev"  # 3.5 development branch
   - "3.6"
@@ -69,6 +70,18 @@ matrix:
       env: VNUMPY=1.8.2  VSCI=0.21.2
     - python: "3.5"
       env: VNUMPY=1.8.2  VSCI=0.20.0
+    - python: "2.7"
+      env: VNUMPY=1.8.2  VSCI=0.21.2
+    - python: "2.7"
+      env: VNUMPY=1.8.2  VSCI=0.20.0
+    - python: "2.7"
+      env: VNUMPY=1.12.1  VSCI=0.21.2
+    - python: "2.7"
+      env: VNUMPY=1.12.1  VSCI=0.20.0
+    - python: "2.7"
+      env: VNUMPY=1.16.1  VSCI=0.21.2
+    - python: "2.7"
+      env: VNUMPY=1.16.1  VSCI=0.20.0
       
       
 before_install:
