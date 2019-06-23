@@ -27,25 +27,25 @@ cache:
 matrix:
   include:
   - python: "2.7"
-    env: VNUMPY=1.8.2  VSCI=0.15
+    env: VNUMPY=1.16.1  VSCI=0.15
   - python: "2.7"
-    env: VNUMPY=1.8.2  VSCI=0.15.1
+    env: VNUMPY=1.16.1  VSCI=0.15.1
   - python: "2.7"
-    env: VNUMPY=1.8.2  VSCI=0.15.2
+    env: VNUMPY=1.16.1  VSCI=0.15.2
   - python: "2.7"
-    env: VNUMPY=1.8.2  VSCI=0.16
+    env: VNUMPY=1.16.1  VSCI=0.16
   - python: "2.7"
-    env: VNUMPY=1.8.2  VSCI=0.16.1
+    env: VNUMPY=1.16.1  VSCI=0.16.1
   - python: "2.7"
-    env: VNUMPY=1.8.2  VSCI=0.17
+    env: VNUMPY=1.16.1  VSCI=0.17
   - python: "2.7"
-    env: VNUMPY=1.8.2  VSCI=0.17.1
+    env: VNUMPY=1.16.1  VSCI=0.17.1
   - python: "2.7"
-    env: VNUMPY=1.8.2  VSCI=0.18
+    env: VNUMPY=1.16.1  VSCI=0.18
   - python: "2.7"
-    env: VNUMPY=1.8.2  VSCI=0.18.1
+    env: VNUMPY=1.16.1  VSCI=0.18.1
   - python: "2.7"
-    env: VNUMPY=1.8.2  VSCI=0.19.2
+    env: VNUMPY=1.16.1  VSCI=0.19.2
 
 # old packagese + new python has problems setting up
   exclude:
