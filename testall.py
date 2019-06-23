@@ -7,9 +7,9 @@ from __future__ import print_function
 # $ python testall.py /home/tiziano/python/x86_64/lib/pythonVERSION/site-packages
 
 PARMS = {
-         '3.4': ('numpy', None, 'joblib', 'scikits'),
-         '3.5': ('numpy', None, 'joblib', 'scikits'),
-         '2.7': ('scipy', None, 'parallel_python', 'libsvm', 'joblib', 'scikits'),
+         '3.4': ('numpy', None, 'joblib', 'scikit-learn'),
+         '3.5': ('numpy', None, 'joblib', 'scikit-learn'),
+         '2.7': ('scipy', None, 'parallel_python', 'libsvm', 'joblib', 'scikit-learn'),
          }
 
 import os
