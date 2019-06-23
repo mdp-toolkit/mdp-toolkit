@@ -99,7 +99,8 @@ before_install:
    - bash <(wget -q -O- http://neuro.debian.net/_files/neurodebian-travis.sh)
    - travis_retry sudo apt-get install python-joblib
 install:
-    - pip install -v numpy==$VNUMPY scikit-learn==$VSCI scipy
+    - pip install scipy
+    - pip install -v numpy==$VNUMPY scikit-learn==$VSCI
     - pip install -v pytest==4.0.0 pytest-cov>=2.5.0 coveralls future
 script:
     - pytest --cov-report= --cov-config=.coveragerc --cov=mdp --seed=725021957 mdp
