@@ -27,7 +27,7 @@ cache:
 matrix:
   include:
   - python: "2.7"
-    env: VNUMPY=1.8.2  VSCI=0.14
+    env: VNUMPY=1.9.0  VSCI=0.14
   - python: "2.7"
     env: VNUMPY=1.8.2  VSCI=0.19.2
   - python: "2.7"
