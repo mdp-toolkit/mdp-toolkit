@@ -26,7 +26,7 @@ cache:
   - apt
 matrix:
   include:
-   - python: "2.7"
+  - python: "2.7"
     env: VNUMPY=1.8.2  VSCI=0.13.1
   - python: "2.7"
     env: VNUMPY=1.8.2  VSCI=0.19.2
