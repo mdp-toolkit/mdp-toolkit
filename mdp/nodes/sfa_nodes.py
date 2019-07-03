@@ -292,7 +292,7 @@ class SFANode(Node):
             # check that we get only *positive* eigenvalues
             if d.min() < 0:
                 err_msg = ("Got negative eigenvalues: %s.\n"
-                           "You may either set oucovartput_dim to be smaller,\n"
+                           "You may either set output_dim to be smaller,\n"
                            "or prepend the SFANode with a PCANode(reduce=True)\n"
                            "or PCANode(svd=True)\n"
                            "or set a rank deficit method, e.g.\n"
