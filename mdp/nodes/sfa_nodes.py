@@ -390,7 +390,7 @@ class UnevenlySampledSFANode(SFANode):
         # one for the derivatives
         self._dcov_mtx = UnevenlySampledCovarianceMatrix(self.dtype)
 
-    def time_derivative(self, x, dt):
+    def time_derivative(self, x, dt=None):
         """
         Compute the linear approximation of the time derivative
 
@@ -400,8 +400,12 @@ class UnevenlySampledSFANode(SFANode):
         :returns: Piecewise linear approximation of the time derivative.
         :rtype: numpy.ndarray
         """
-        # Improvements can be made, by interpolating polynomials
-        return (x[1:, :]-x[:-1, :])/dt[:, None]
+        if dt is not None:
+            # Improvements can be made, by interpolating polynomials
+            return (x[1:, :]-x[:-1, :])/dt[:, None]
+        else:
+            # trivial fallback
+            return x[1:, :]-x[:-1, :]
 
     def _train(self, x, dt, include_last_sample=None):
         """
