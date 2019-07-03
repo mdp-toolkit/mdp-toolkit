@@ -41,23 +41,23 @@ There are several ways to deal with this issue:
 class SFANode(Node):
     """
     Extract the slowly varying components from the input data.
-    
+
     .. attribute:: avg
-    
+
         Mean of the input data (available after training)
 
     .. attribute:: sf
-        
+
         Matrix of the SFA filters (available after training)
 
     .. attribute:: d
-        
+
         Delta values corresponding to the SFA components (generalized
         eigenvalues). [See the docs of the ``get_eta_values`` method for
         more information]
 
     .. admonition:: Reference
-    
+
         More information about Slow Feature Analysis can be found in
         Wiskott, L. and Sejnowski, T.J., Slow Feature Analysis: Unsupervised
         Learning of Invariances, Neural Computation, 14(4):715-770 (2002).
@@ -70,13 +70,13 @@ class SFANode(Node):
 
         :param input_dim: The input dimensionality.
         :type input_dim: int
-        
+
         :param output_dim: The output dimensionality.
         :type output_dim: int
-        
+
         :param dtype: The datatype.
         :type dtype: numpy.dtype or str
-        
+
         :param include_last_sample: If ``False`` the `train` method discards
             the last sample in every chunk during training when calculating
             the covariance matrix.
@@ -86,7 +86,7 @@ class SFANode(Node):
             example we can split a sequence (index is time)::
 
                 x_1 x_2 x_3 x_4
-    
+
             in smaller parts like this::
 
                 x_1 x_2
@@ -118,7 +118,7 @@ class SFANode(Node):
             You can even change this behaviour during training. Just set the
             corresponding switch in the `train` method.
         :type include_last_sample: bool
-        
+
         :param rank_deficit_method: Possible values: 'none' (default), 'reg', 'pca', 'svd', 'auto'
             If not 'none', the ``stop_train`` method solves the SFA eigenvalue
             problem in a way that is robust against linear redundancies in
@@ -159,10 +159,7 @@ class SFANode(Node):
         self._include_last_sample = include_last_sample
 
         # init two covariance matrices
-        # one for the input data
-        self._cov_mtx = CovarianceMatrix(dtype)
-        # one for the derivatives
-        self._dcov_mtx = CovarianceMatrix(dtype)
+        self._init_cov()
 
         # set routine for eigenproblem
         self.set_rank_deficit_method(rank_deficit_method)
@@ -175,6 +172,13 @@ class SFANode(Node):
         self.avg = None
         self._bias = None  # avg multiplied with sf
         self.tlen = None
+
+    def _init_cov(self):
+        # init two covariance matrices
+        # one for the input data
+        self._cov_mtx = CovarianceMatrix(self.dtype)
+        # one for the input data
+        self._dcov_mtx = CovarianceMatrix(self.dtype)
 
     def set_rank_deficit_method(self, rank_deficit_method):
         if rank_deficit_method == 'pca':
@@ -196,8 +200,8 @@ class SFANode(Node):
         elif rank_deficit_method == 'none':
             self._symeig = symeig
         else:
-            raise ValueError("Invalid value for rank_deficit_method: %s" \
-                    %str(rank_deficit_method))
+            raise ValueError("Invalid value for rank_deficit_method: %s"
+                             % str(rank_deficit_method))
 
     def time_derivative(self, x):
         """
@@ -228,24 +232,24 @@ class SFANode(Node):
 
         :param x: The time series data.
         :type x: numpy.ndarray
-        
+
         :param *args:
         :param **kwargs: 
         """
         # check that we have at least 2 time samples to
         # compute the update for the derivative covariance matrix
         s = x.shape[0]
-        if  s < 2:
+        if s < 2:
             raise TrainingException('Need at least 2 time samples to '
-                                    'compute time derivative (%d given)'%s)
-        
+                                    'compute time derivative (%d given)' % s)
+
     def _train(self, x, include_last_sample=None):
         """
         Training method.
 
         :param x: The time series data.
         :type x: numpy.ndarray
-        
+
         :param include_last_sample: For the ``include_last_sample`` switch have a
             look at the SFANode.__init__ docstring.
         :type include_last_sample: bool
@@ -260,7 +264,7 @@ class SFANode(Node):
         self._dcov_mtx.update(self.time_derivative(x))
 
     def _stop_training(self, debug=False):
-        ##### request the covariance matrices and clean up
+        # request the covariance matrices and clean up
         if hasattr(self, '_dcov_mtx'):
             self.cov_mtx, self.avg, self.tlen = self._cov_mtx.fix()
             del self._cov_mtx
@@ -269,25 +273,26 @@ class SFANode(Node):
         # not the second central moment matrix (centered about the mean), i.e.
         # the covariance matrix
         if hasattr(self, '_dcov_mtx'):
-            self.dcov_mtx, self.davg, self.dtlen = self._dcov_mtx.fix(center=False)
+            self.dcov_mtx, self.davg, self.dtlen = self._dcov_mtx.fix(
+                center=False)
             del self._dcov_mtx
 
         rng = self._set_range()
 
-        #### solve the generalized eigenvalue problem
+        # solve the generalized eigenvalue problem
         # the eigenvalues are already ordered in ascending order
         try:
             try:
                 # We first try to fulfill the extended signature described
                 # in mdp.utils.symeig_semidefinite
                 self.d, self.sf = self._symeig(
-                        self.dcov_mtx, self.cov_mtx, True, "on", rng,
-                        overwrite=(not debug),
-                        rank_threshold=self.rank_threshold, dfc_out=self)
+                    self.dcov_mtx, self.cov_mtx, True, "on", rng,
+                    overwrite=(not debug),
+                    rank_threshold=self.rank_threshold, dfc_out=self)
             except TypeError:
                 self.d, self.sf = self._symeig(
-                        self.dcov_mtx, self.cov_mtx, True, "on", rng,
-                        overwrite=(not debug))
+                    self.dcov_mtx, self.cov_mtx, True, "on", rng,
+                    overwrite=(not debug))
             d = self.d
             # check that we get only *positive* eigenvalues
             if d.min() < 0:
@@ -298,11 +303,11 @@ class SFANode(Node):
                            "or set a rank deficit method, e.g.\n"
                            "create the SFA node with rank_deficit_method='auto'\n"
                            "and try higher values for rank_threshold, e.g. try\n"
-                           "your_node.rank_threshold = 1e-10, 1e-8, 1e-6, ..."%str(d))
+                           "your_node.rank_threshold = 1e-10, 1e-8, 1e-6, ..." % str(d))
                 raise NodeException(err_msg)
         except SymeigException as exception:
             errstr = (str(exception)+"\n Covariance matrices may be singular.\n"
-                    +SINGULAR_VALUE_MSG)
+                      + SINGULAR_VALUE_MSG)
             raise NodeException(errstr)
 
         if not debug:
@@ -320,7 +325,7 @@ class SFANode(Node):
 
         :param x: The time series data.
         :type x: numpy.ndarray
-        
+
         :param n: The number of slowest components.
         :type n: int
 
@@ -375,27 +380,15 @@ class UnevenlySampledSFANode(SFANode):
 
     def __init__(self, input_dim=None, output_dim=None, dtype=None,
                  include_last_sample=True, rank_deficit_method='none'):
-        super(SFANode, self).__init__(input_dim, output_dim, dtype)
+        super(UnevenlySampledSFANode, self).__init__(
+            input_dim, output_dim, dtype, include_last_sample, rank_deficit_method)
 
-        self._include_last_sample = include_last_sample
-
+    def _init_cov(self):
         # init two covariance matrices
         # one for the input data
-        self._cov_mtx = UnevenlySampledCovarianceMatrix(dtype)
+        self._cov_mtx = UnevenlySampledCovarianceMatrix(self.dtype)
         # one for the derivatives
-        self._dcov_mtx = UnevenlySampledCovarianceMatrix(dtype)
-
-        # set routine for eigenproblem
-        self.set_rank_deficit_method(rank_deficit_method)
-        self.rank_threshold = 1e-12
-        self.rank_deficit = 0
-
-        # SFA eigenvalues and eigenvectors, will be set after training
-        self.d = None
-        self.sf = None  # second index for outputs
-        self.avg = None
-        self._bias = None  # avg multiplied with sf
-        self.tlen = None
+        self._dcov_mtx = UnevenlySampledCovarianceMatrix(self.dtype)
 
     def time_derivative(self, x, dt):
         """
@@ -408,15 +401,15 @@ class UnevenlySampledSFANode(SFANode):
         :rtype: numpy.ndarray
         """
         # Improvements can be made, by interpolating polynomials
-        return (x[1:, :]-x[:-1, :])/dt[:,None]
-    
+        return (x[1:, :]-x[:-1, :])/dt[:, None]
+
     def _train(self, x, dt, include_last_sample=None):
         """
         Training method.
 
         :param x: The time series data.
         :type x: numpy.ndarray
-        
+
         :param include_last_sample: For the ``include_last_sample`` switch have a
             look at the SFANode.__init__ docstring.
         :type include_last_sample: bool
@@ -440,7 +433,7 @@ class SFA2Node(SFANode):
     information.
 
     .. admonition:: Reference:
-    
+
         More information about Slow Feature Analysis can be found in
         Wiskott, L. and Sejnowski, T.J., Slow Feature Analysis: Unsupervised
         Learning of Invariances, Neural Computation, 14(4):715-770 (2002)."""
@@ -452,13 +445,13 @@ class SFA2Node(SFANode):
 
         :param input_dim: The input dimensionality.
         :type input_dim: int
-        
+
         :param output_dim: The output dimensionality.
         :type output_dim: int
-        
+
         :param dtype: The datatype.
         :type dtype: numpy.dtype or str
-        
+
         :param include_last_sample: If ``False`` the `train` method discards the 
             last sample in every chunk during training when calculating 
             the covariance matrix.
@@ -467,7 +460,7 @@ class SFA2Node(SFANode):
             to ``False`` if you plan to train with several small chunks.
             For an example, see the SFANode.__init__ method's docstring.
         :type include_last_sample: bool
-        
+
         :param rank_deficit_method: Possible values: 'none' (default), 'reg', 'pca', 'svd', 'auto'
             If not 'none', the ``stop_train`` method solves the SFA eigenvalue
             problem in a way that is robust against linear redundancies in
@@ -497,7 +490,7 @@ class SFA2Node(SFANode):
 
     def _set_range(self):
         if (self.output_dim is not None) and (
-            self.output_dim <= self._expnode.output_dim):
+                self.output_dim <= self._expnode.output_dim):
             # (eigenvalues sorted in ascending order)
             rng = (1, self.output_dim)
         else:
@@ -518,7 +511,7 @@ class SFA2Node(SFANode):
 
         :param x: The time series data.
         :type x: numpy.ndarray
-        
+
         :param n: The number of slowest components.
         :type n: int
 
@@ -530,7 +523,7 @@ class SFA2Node(SFANode):
         """Return the matrix H, the vector f and the constant c of the
         quadratic form 1/2 x'Hx + f'x + c that defines the output
         of the component 'nr' of the SFA node.
-        
+
         :param nr: The component 'nr' of the SFA node.
 
         :returns: The matrix H, the vector f and the constant c of the
@@ -560,25 +553,24 @@ class SFA2Node(SFANode):
         return QuadraticForm(h, f, c, dtype=self.dtype)
 
 
-
-### old weave inline code to perform the time derivative
+# old weave inline code to perform the time derivative
 
 # weave C code executed in the function SfaNode.time_derivative
-## _TDERIVATIVE_1ORDER_CCODE = """
-##   for( int i=0; i<columns; i++ ) {
-##     for( int j=0; j<rows-1; j++ ) {
-##       deriv(j,i) = x(j+1,i)-x(j,i);
-##     }
-##   }
-## """
+# _TDERIVATIVE_1ORDER_CCODE = """
+# for( int i=0; i<columns; i++ ) {
+# for( int j=0; j<rows-1; j++ ) {
+# deriv(j,i) = x(j+1,i)-x(j,i);
+# }
+# }
+# """
 
 # it was called like that:
-## def time_derivative(self, x):
+# def time_derivative(self, x):
 ##     rows = x.shape[0]
 ##     columns = x.shape[1]
 ##     deriv = numx.zeros((rows-1, columns), dtype=self.dtype)
 
-##     weave.inline(_TDERIVATIVE_1ORDER_CCODE,['rows','columns','deriv','x'],
+# weave.inline(_TDERIVATIVE_1ORDER_CCODE,['rows','columns','deriv','x'],
 ##                  type_factories = weave.blitz_tools.blitz_type_factories,
-##                  compiler='gcc',extra_compile_args=['-O3']);
-##     return deriv
+# compiler='gcc',extra_compile_args=['-O3']);
+# return deriv
