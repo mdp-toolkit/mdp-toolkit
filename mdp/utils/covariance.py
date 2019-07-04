@@ -222,8 +222,7 @@ class UnevenlySampledCovarianceMatrix(CovarianceMatrix):
         """
         # local variables
         type_ = self._dtype
-        steps = self._steps
-        _check_roundoff(steps, type_)
+        _check_roundoff(self._steps, type_)
         avg = self._avg
         cov_mtx = self._cov_mtx
 
