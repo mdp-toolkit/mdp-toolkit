@@ -165,7 +165,6 @@ class UnevenlySampledCovarianceMatrix(CovarianceMatrix):
         # values seperately, due to the weighing
         # which is not required in the evenly sampled case
         self._steps = 0
-        self._tlen = 0.
 
     def update(self, x, dt):
         """Update internal structures.
