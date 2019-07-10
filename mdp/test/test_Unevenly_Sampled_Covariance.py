@@ -4,7 +4,7 @@ Tests for the UnevenlySampledCovarianceMatrix
 from mdp.utils.covariance import CovarianceMatrix,\
     UnevenlySampledCovarianceMatrix
 from mdp import numx
-from mdp.test._tools import assert_array_almost_equal, decimal
+from mdp.test._tools import assert_array_almost_equal, decimal, assert_allclose
 
 
 def test_UnevenlySampledCovarianceMatrix1():
@@ -29,15 +29,18 @@ def test_UnevenlySampledCovarianceMatrix1():
     uncov.update(x, inc)
     unC2, unAvg2, unTlen2 = uncov.fix()
 
-    assert_array_almost_equal(unC, tC, decimal-5)
-    assert_array_almost_equal(unC2, tC, decimal-5)
-
+    # precision of stepfunction covariance estimator
     prec = numx.linalg.norm(tC-C)
+    # precision of trapezoidal convariacne matrix estimator
+    # using non random step sizes
     unPrec = numx.linalg.norm(tC-unC)
+    # precision of trapezoidal convariance matrix estimator
+    # using random step sizes
     unPrec2 = numx.linalg.norm(tC-unC2)
 
-    assert_array_almost_equal(prec, unPrec, decimal-3)
-    assert_array_almost_equal(prec, unPrec2, decimal-3)
+    # allow deviation from standard by factor of .01 and .2 respectively
+    assert_allclose(unPrec, prec, .01)
+    assert_allclose(unPrec2, prec, .2)
 
 
 def test_UnevenlySampledCovarianceMatrix2():
