@@ -407,7 +407,7 @@ class UnevenlySampledSFANode(SFANode):
             # trivial fallback
             return x[1:, :]-x[:-1, :]
 
-    def _train(self, x, dt, include_last_sample=None):
+    def _train(self, x, include_last_sample=None, dt=None, dtphases=None):
         """
         Training method.
 
@@ -420,12 +420,15 @@ class UnevenlySampledSFANode(SFANode):
         """
         if include_last_sample is None:
             include_last_sample = self._include_last_sample
+        if dt is None:
+            dt = numx.ones(x.shape[0]-1)
         # works because x[:None] == x[:]
         last_sample_index = None if include_last_sample else -1
 
         # update the covariance matrices
-        self._cov_mtx.update(x[:last_sample_index, :], dt)
-        self._dcov_mtx.update(self.time_derivative(x, dt), dt[:-1])
+        self._cov_mtx.update(x[:last_sample_index, :], dt, dtphases=dtphases)
+        self._dcov_mtx.update(self.time_derivative(
+            x, dt), dt[:-1], dtphases=dtphases)
 
 
 class SFA2Node(SFANode):
