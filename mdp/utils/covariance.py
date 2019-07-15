@@ -213,9 +213,9 @@ class UnevenlySampledCovarianceMatrix(CovarianceMatrix):
         # the implementation is analogous to the evenly sampled case
         # values might get big as it is only normalized in fix
         xcpy = numx.multiply(x[1:, :], numx.sqrt(_dt))
-        self._cov_mtx += mdp.utils.mult(xcpy.T, xcpy)/numx.sqrt(2)
+        self._cov_mtx += mdp.utils.mult(xcpy.T, xcpy)/2.
         numx.multiply(x[:-1, :], numx.sqrt(_dt), out=xcpy)
-        self._cov_mtx += mdp.utils.mult(xcpy.T, xcpy)/numx.sqrt(2)
+        self._cov_mtx += mdp.utils.mult(xcpy.T, xcpy)/2.
 
         numx.multiply(x[:-1, :], _dt, out=xcpy)
         self._avg += xcpy.sum(axis=0)/2.
