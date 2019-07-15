@@ -15,7 +15,7 @@ def test_UnevenlySampledSFANode1():
 
     # train sfa
     sfa.train(x)
-    unsfa.train(x, dt)
+    unsfa.train(x, dt=dt)
 
     # stop training and generate slow features
     sfa.stop_training()
