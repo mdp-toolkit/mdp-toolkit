@@ -65,3 +65,36 @@ def test_UnevenlySampledCovarianceMatrix2():
 
     assert_array_almost_equal(unC*unTlen, C*tlen -
                               numx.outer(x[0], x[0])/2.-numx.outer(x[-1], x[-1])/2., decimal=10)
+
+
+def test_UnevenlySampledCovarianceMatrix3():
+    """Test whether the trapezoidal integrator returns the expected
+    when calculated in multiple phases."""
+
+    # sample
+    x = numx.random.random((15000, 2))
+    dt = (numx.random.rand(x.shape[0]-1)-.5)*.5 + 1.
+    xlen = x.shape[0]
+    # initialize the estimators
+    uncov = UnevenlySampledCovarianceMatrix()
+    uncov2 = UnevenlySampledCovarianceMatrix()
+    # update the estimators
+    uncov.update(x, dt)
+
+    # split into phases
+    dtphases = dt[[xlen//3-1, 2*xlen//3-1]]
+    dtpart1 = dt[:xlen//3-1]
+    dtpart2 = dt[xlen//3:2*xlen//3-1]
+    dtpart3 = dt[2*xlen//3:]
+    xpart1 = x[:xlen//3]
+    xpart2 = x[xlen//3:2*xlen//3]
+    xpart3 = x[2*xlen//3:]
+
+    uncov2.update(xpart1, dtpart1, dtphases=dtphases)
+    uncov2.update(xpart2, dtpart2, dtphases=dtphases)
+    uncov2.update(xpart3, dtpart3, dtphases=dtphases)
+    # quit estimating
+    unC, unAvg, unTlen = uncov.fix(center=False)
+    unC2, unAvg2, unTlen2 = uncov2.fix(center=False)
+
+    assert_array_almost_equal(unC, unC2, decimal=10)

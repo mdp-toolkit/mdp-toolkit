@@ -165,8 +165,9 @@ class UnevenlySampledCovarianceMatrix(CovarianceMatrix):
         # values seperately, due to the weighing
         # which is not required in the evenly sampled case
         self._steps = 0
+        self.tphase = 0
 
-    def update(self, x, dt):
+    def update(self, x, dt, dtphases=None):
         """Update internal structures.
 
         Note that no consistency checks are performed on the data (this is
@@ -185,6 +186,24 @@ class UnevenlySampledCovarianceMatrix(CovarianceMatrix):
             self._init_internals(x)
         # cast input
         x = mdp.utils.refcast(x, self._dtype)
+
+        if self.tphase > 0:
+            if dtphases is not None:
+                self._avg += (self.xlast + x[0, :])*dtphases[self.tphase-1]/2.
+                self._cov_mtx += (numx.outer(self.xlast, self.xlast) +
+                                  numx.outer(x[0, :], x[0, :]))*dtphases[self.tphase-1]/2.
+                self._tlen += dtphases[self.tphase-1]
+            else:
+                sdt = (self.dtlast+dt[0])/2.
+                self._avg += (self.xlast + x[0, :])*sdt/2.
+                self._cov_mtx += (numx.outer(self.xlast, self.xlast) +
+                                  numx.outer(x[0, :], x[0, :]))*sdt/2.
+                self._tlen += sdt
+
+        # keep last observation for multiple training phases
+        self.xlast = x[-1, :]
+        self.dtlast = dt[-1]
+
         # update the covariance matrix, the average and the number of
         # observations
         # the implementation is analogous to the evenly sampled case
@@ -201,7 +220,8 @@ class UnevenlySampledCovarianceMatrix(CovarianceMatrix):
         self._avg += xcpy.sum(axis=0)
         # should the x be reset to their original value, as they are not passed as a copy?
         self._tlen += dt.sum()
-        self._steps += x.shape[0]-1
+        self._steps += x.shape[0]
+        self.tphase += 1
 
     def fix(self, center=True):
         """Returns a triple containing the generalised
