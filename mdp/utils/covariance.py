@@ -223,6 +223,7 @@ class UnevenlySampledCovarianceMatrix(CovarianceMatrix):
         type_ = self._dtype
         _check_roundoff(self._steps, type_)
         avg = self._avg
+        tlen = self._tlen
         cov_mtx = self._cov_mtx
 
         # fix the training variables
@@ -245,7 +246,7 @@ class UnevenlySampledCovarianceMatrix(CovarianceMatrix):
         # number of observation so far during the training phase
         self._tlen = 0.
 
-        return cov_mtx, avg, self._tlen
+        return cov_mtx, avg, tlen
 
 
 class DelayCovarianceMatrix(object):

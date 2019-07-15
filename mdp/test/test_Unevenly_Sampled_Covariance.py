@@ -1,5 +1,5 @@
 """
-Tests for the UnevenlySampledCovarianceMatrix
+Tests for the UnevenlySampledCovarianceMatrix.
 """
 from mdp.utils.covariance import CovarianceMatrix,\
     UnevenlySampledCovarianceMatrix
@@ -8,6 +8,9 @@ from mdp.test._tools import assert_array_almost_equal, decimal, assert_allclose
 
 
 def test_UnevenlySampledCovarianceMatrix1():
+    """Test if the new trazoidal rule integrator deviates substancially
+    more than the regular one - with and without noisy input."""
+
     # initialize the estimators
     cov = CovarianceMatrix()
     uncov = UnevenlySampledCovarianceMatrix()
@@ -44,17 +47,21 @@ def test_UnevenlySampledCovarianceMatrix1():
 
 
 def test_UnevenlySampledCovarianceMatrix2():
+    """Test whether the trapezoidal integrator returns the expected
+    based on the analytically adjusted results of the regular one."""
+
     # sample
     x = numx.random.random((10000, 2))
     dt = numx.ones(x.shape[0]-1,)
     # initialize the estimators
-    cov = CovarianceMatrix()
+    cov = CovarianceMatrix(bias=True)
     uncov = UnevenlySampledCovarianceMatrix()
     # update the estimators
     cov.update(x)
     uncov.update(x, dt)
     # quit estimating
-    unC, unAvg, unTlen = uncov.fix()
-    C, avg, tlen = cov.fix()
+    unC, unAvg, unTlen = uncov.fix(center=False)
+    C, avg, tlen = cov.fix(center=False)
 
-    assert_array_almost_equal(unC, C, decimal-3)
+    assert_array_almost_equal(unC*unTlen, C*tlen -
+                              numx.outer(x[0], x[0])/2.-numx.outer(x[-1], x[-1])/2., decimal=10)
