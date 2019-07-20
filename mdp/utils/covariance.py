@@ -207,14 +207,14 @@ class UnevenlySampledCovarianceMatrix(CovarianceMatrix):
 
         # make sure dt is defined and convenient to use
         _dt = 1. if dt is None else dt[:, None]
-
+        sqdt  = numx.sqrt(_dt)
         # update the covariance matrix, the average and the number of
         # observations
         # the implementation is analogous to the evenly sampled case
         # values might get big as it is only normalized in fix
-        xcpy = numx.multiply(x[1:, :], numx.sqrt(_dt))
+        xcpy = numx.multiply(x[1:, :], sqdt)
         self._cov_mtx += mdp.utils.mult(xcpy.T, xcpy)/2.
-        numx.multiply(x[:-1, :], numx.sqrt(_dt), out=xcpy)
+        numx.multiply(x[:-1, :], sqdt, out=xcpy)
         self._cov_mtx += mdp.utils.mult(xcpy.T, xcpy)/2.
 
         numx.multiply(x[:-1, :], _dt, out=xcpy)
