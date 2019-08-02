@@ -54,7 +54,7 @@ def test_Flow_copy_with_lambda():
     generic_flow = mdp.Flow([generic_node])
     generic_flow.copy()
     
-def testFlow_save():
+def testFlow_save(tmpdir):
     dummy_list = [1,2,3]
     flow = _get_default_flow()
     flow[0].dummy_attr = dummy_list
@@ -67,8 +67,7 @@ def testFlow_save():
     assert flow[0].dummy_attr != copy_flow[0].dummy_attr, \
            'Flow save (string) method did not work'
     # test file save
-    dummy_file = tempfile.mktemp(prefix='MDP_', suffix=".pic",
-                                 dir=pytest.mdp_tempdirname)
+    dummy_file = tempfile.mktemp(prefix='MDP_', suffix=".pic", dir=tmpdir)
     flow.save(dummy_file, protocol=1)
     dummy_file = open(dummy_file, 'rb')
     copy_flow = pickle.load(dummy_file)
@@ -299,14 +298,13 @@ def testCrashRecovery():
         assert isinstance(e,mdp.FlowExceptionCR)
         assert not hasattr(e,'filename')
 
-def testCrashRecoveryException():
+def testCrashRecoveryException(tmpdir):
     a = 3
     try:
         raise mdp.CrashRecoveryException('bogus errstr', a, Exception())
     except mdp.CrashRecoveryException as e:
         filename1 = e.dump()
-        filename2 = e.dump(tempfile.mkstemp(prefix='MDP_',
-                                            dir=pytest.mdp_tempdirname)[1])
+        filename2 = e.dump(tempfile.mkstemp(prefix='MDP_', dir=tmpdir)[1])
         assert isinstance(e.parent_exception, Exception)
 
     for fname in filename1, filename2:
