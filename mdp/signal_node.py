@@ -10,6 +10,11 @@ __docformat__ = "restructuredtext en"
 import pickle as _cPickle
 import warnings as _warnings
 import copy as _copy
+# python 2/3 compatibility
+try:
+    from inspect import getfullargspec as getargs
+except ImportError:
+    from inspect import getargspec as getargs
 import inspect
 
 import mdp
@@ -162,7 +167,7 @@ class NodeMetaclass(type):
         >>> info["kwargs_name"]
         kw
         """
-        regargs, varargs, varkwargs, defaults = inspect.getargspec(func)
+        regargs, varargs, varkwargs, defaults = getargs(func)[:4]
         argnames = list(regargs)
         if varargs:
             argnames.append(varargs)

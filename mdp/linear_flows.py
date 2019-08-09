@@ -1,23 +1,29 @@
 from __future__ import print_function
+from mdp import numx
+import copy as _copy
+import tempfile as _tempfile
+import pickle as _cPickle
+import traceback as _traceback
+import warnings as _warnings
+# python 2/3 compatibility
+try:
+    from inspect import getfullargspec as getargs
+except ImportError:
+    from inspect import getargspec as getargs
+
+import os as _os
+import sys as _sys
+import mdp
+from builtins import object
+from builtins import range
+from builtins import str
 from future import standard_library
 standard_library.install_aliases()
-from builtins import str
-from builtins import range
-from builtins import object
-import mdp
-import sys as _sys
-import os as _os
-import inspect as _inspect
-import warnings as _warnings
-import traceback as _traceback
-import pickle as _cPickle
-import tempfile as _tempfile
-import copy as _copy
 
-from mdp import numx
 
 class CrashRecoveryException(mdp.MDPException):
     """Class to handle crash recovery """
+
     def __init__(self, *args):
         """Allow crash recovery.
         Arguments: (error_string, crashing_obj, parent_exception)
@@ -40,7 +46,8 @@ class CrashRecoveryException(mdp.MDPException):
         if filename is None:
             # This 'temporary file' should actually stay 'forever', i.e. until
             # deleted by the user.
-            (fd, filename)=_tempfile.mkstemp(suffix=".pic", prefix="MDPcrash_")
+            (fd, filename) = _tempfile.mkstemp(
+                suffix=".pic", prefix="MDPcrash_")
             fl = _os.fdopen(fd, 'w+b', -1)
         else:
             fl = open(filename, 'w+b', -1)
@@ -48,9 +55,11 @@ class CrashRecoveryException(mdp.MDPException):
         fl.close()
         return filename
 
+
 class FlowException(mdp.MDPException):
     """Base class for exceptions in Flow subclasses."""
     pass
+
 
 class FlowExceptionCR(CrashRecoveryException, FlowException):
     """Class to handle flow-crash recovery """
@@ -76,6 +85,7 @@ class FlowExceptionCR(CrashRecoveryException, FlowException):
             errstr = errstr+dumpinfo
 
         Exception.__init__(self, errstr)
+
 
 class Flow(object):
     """A 'Flow' is a sequence of nodes that are trained and executed
@@ -118,10 +128,11 @@ class Flow(object):
         # is raised. Allow crash recovery.
         (etype, val, tb) = _sys.exc_info()
         prev = ''.join(_traceback.format_exception(except_.__class__,
-                                                   except_,tb))
+                                                   except_, tb))
         act = "\n! Exception in node #%d (%s):\n" % (nodenr,
                                                      str(self.flow[nodenr]))
-        errstr = ''.join(('\n', 40*'-', act, 'Node Traceback:\n', prev, 40*'-'))
+        errstr = ''.join(
+            ('\n', 40*'-', act, 'Node Traceback:\n', prev, 40*'-'))
         raise FlowExceptionCR(errstr, self, except_)
 
     def _train_node(self, data_iterable, nodenr):
@@ -150,11 +161,11 @@ class Flow(object):
         try:
             train_arg_keys = self._get_required_train_args(node)
             train_args_needed = bool(len(train_arg_keys))
-            ## We leave the last training phase open for the
-            ## CheckpointFlow class.
-            ## Checkpoint functions must close it explicitly if needed!
-            ## Note that the last training_phase is closed
-            ## automatically when the node is executed.
+            # We leave the last training phase open for the
+            # CheckpointFlow class.
+            # Checkpoint functions must close it explicitly if needed!
+            # Note that the last training_phase is closed
+            # automatically when the node is executed.
             while True:
                 empty_iterator = True
                 for x in data_iterable:
@@ -230,7 +241,7 @@ class Flow(object):
 
         Argumentes that have a default value are ignored.
         """
-        train_arg_spec = _inspect.getargspec(node._train)
+        train_arg_spec = getargs(node._train)
         train_arg_keys = train_arg_spec[0][2:]  # ignore self, x
         if train_arg_spec[3]:
             # subtract arguments with a default value
@@ -283,7 +294,7 @@ class Flow(object):
         except Exception as e:
             self._propagate_exception(e, len(self.flow)-1)
 
-    def set_crash_recovery(self, state = True):
+    def set_crash_recovery(self, state=True):
         """Set crash recovery capabilities.
 
         When a node raises an Exception during training, execution, or
@@ -338,7 +349,7 @@ class Flow(object):
 
         self._close_last_node()
 
-    def _execute_seq(self, x, nodenr = None):
+    def _execute_seq(self, x, nodenr=None):
         # Filters input data 'x' through the nodes 0..'node_nr' included
         flow = self.flow
         if nodenr is None:
@@ -350,7 +361,7 @@ class Flow(object):
                 self._propagate_exception(e, i)
         return x
 
-    def execute(self, iterable, nodenr = None):
+    def execute(self, iterable, nodenr=None):
         """Process the data through all nodes in the flow.
 
         'iterable' is an iterable or iterator (note that a list is also an
@@ -373,7 +384,7 @@ class Flow(object):
         return numx.concatenate(res)
 
     def _inverse_seq(self, x):
-        #Successively invert input data 'x' through all nodes backwards
+        # Successively invert input data 'x' through all nodes backwards
         flow = self.flow
         for i in range(len(flow)-1, -1, -1):
             try:
@@ -432,11 +443,11 @@ class Flow(object):
             with open(filename, mode) as flh:
                 _cPickle.dump(self, flh, protocol)
 
-    def __call__(self, iterable, nodenr = None):
+    def __call__(self, iterable, nodenr=None):
         """Calling an instance is equivalent to call its 'execute' method."""
         return self.execute(iterable, nodenr=nodenr)
 
-    ###### string representation
+    # string representation
 
     def __str__(self):
         nodes = ', '.join([str(x) for x in self.flow])
@@ -452,7 +463,7 @@ class Flow(object):
         nodes = sep.join([repr(x) for x in self.flow])
         return '%s([%s])' % (name, nodes)
 
-    ###### private container methods
+    # private container methods
 
     def __len__(self):
         return len(self.flow)
@@ -463,7 +474,7 @@ class Flow(object):
             errstr = "dimensions mismatch: %d != %d" % (out, inp)
             raise ValueError(errstr)
 
-    def _check_nodes_consistency(self, flow = None):
+    def _check_nodes_consistency(self, flow=None):
         """Check the dimension consistency of a list of nodes."""
         if flow is None:
             flow = self.flow
@@ -547,7 +558,7 @@ class Flow(object):
         self._check_nodes_consistency(self.flow)
         return self
 
-    ###### public container methods
+    # public container methods
 
     def append(self, x):
         """flow.append(node) -- append node to flow end"""
@@ -566,12 +577,13 @@ class Flow(object):
         """flow.insert(index, node) -- insert node before index"""
         self[i:i] = [x]
 
-    def pop(self, i = -1):
+    def pop(self, i=-1):
         """flow.pop([index]) -> node -- remove and return node at index
         (default last)"""
         x = self[i]
         del self[i]
         return x
+
 
 class CheckpointFlow(Flow):
     """Subclass of Flow class that allows user-supplied checkpoint functions
@@ -588,7 +600,6 @@ class CheckpointFlow(Flow):
             raise FlowException(error_str)
 
         return checkpoints
-
 
     def train(self, data_iterables, checkpoints):
         """Train all trainable nodes in the flow.
@@ -623,6 +634,7 @@ class CheckpointFlow(Flow):
 
         self._close_last_node()
 
+
 class CheckpointFunction(object):
     """Base class for checkpoint functions.
 
@@ -636,6 +648,7 @@ class CheckpointFunction(object):
         This is the method that is going to be called at the checkpoint.
         Overwrite it to match your needs."""
         pass
+
 
 class CheckpointSaveFunction(CheckpointFunction):
     """This checkpoint function saves the node in pickle format.

@@ -1,28 +1,35 @@
+from future.utils import with_metaclass
+import io as StringIO
+from .repo_revision import get_git_revision
+import mdp
+# python 2/3 compatibility
+try:
+    from inspect import getfullargspec as getargs
+except ImportError:
+    from inspect import getargspec as getargs
+import tempfile
+import os
+import sys
+from builtins import object
+from builtins import str
+from builtins import zip
 from future import standard_library
 standard_library.install_aliases()
-from builtins import zip
-from builtins import str
-from builtins import object
-import sys
-import os
-import tempfile
-import inspect
-import mdp
-from .repo_revision import get_git_revision
-import io as StringIO
-from future.utils import with_metaclass
 
 
 __docformat__ = "restructuredtext en"
 
+
 class MetaConfig(type):
     """Meta class for config object to allow for pretty printing
     of class config (as we never instantiate it)"""
+
     def __str__(self):
         return self.info()
 
     def __repr__(self):
         return self.info()
+
 
 class config(with_metaclass(MetaConfig, object)):
     """Provide information about optional dependencies.
@@ -81,7 +88,7 @@ class config(with_metaclass(MetaConfig, object)):
         def __init__(self, name, version=None, failmsg=None):
             assert (version is not None) + (failmsg is not None) == 1
 
-            self.version = str(version) # convert e.g. exception to str
+            self.version = str(version)  # convert e.g. exception to str
             self.failmsg = str(failmsg) if failmsg is not None else None
 
             global config
@@ -160,6 +167,7 @@ class config(with_metaclass(MetaConfig, object)):
         return '\n'.join('%*s: %r' % (maxlen+1, f[0], f[1])
                          for f in listable_features)
 
+
 def get_numx():
     # find out the numerical extension
     # To force MDP to use one specific extension module
@@ -210,19 +218,20 @@ def get_numx():
     # the test is for numx_description, not numx, because numx could
     # be imported successfully, but e.g. numx_rand could later fail.
     if numx_description is None:
-        msg = ([ "Could not import any of the numeric backends.",
-                 "Import errors:" ] +
-               [ lab+': '+str(exc) for lab, exc in list(numx_exception.items()) ]
+        msg = (["Could not import any of the numeric backends.",
+                "Import errors:"] +
+               [lab+': '+str(exc) for lab, exc in list(numx_exception.items())]
                + ["sys.path: " + str(sys.path)])
         raise ImportError('\n'.join(msg))
 
     return (numx_description, numx, numx_linalg,
             numx_fft, numx_rand, numx_version)
 
+
 def get_symeig(numx_linalg):
     # if we have scipy, check if the version of
     # scipy.linalg.eigh supports the rich interface
-    args = inspect.getargspec(numx_linalg.eigh)[0]
+    args = getargs(numx_linalg.eigh)[0]
     if len(args) > 4:
         # if yes, just wrap it
         from .utils._symeig import wrap_eigh as symeig
@@ -233,6 +242,7 @@ def get_symeig(numx_linalg):
         from .utils._symeig import _symeig_fake as symeig
         config.ExternalDepFound('symeig', 'symeig_fake')
     return symeig
+
 
 def _version_too_old(version, known_good):
     """Return True iff a version is smaller than a tuple of integers.
@@ -253,7 +263,7 @@ def _version_too_old(version, known_good):
     False
     >>> _version_too_old('0.4.devel', (0,4,3))
     """
-    for part,expected in zip(version.split('.'), known_good):
+    for part, expected in zip(version.split('.'), known_good):
         try:
             p = int(part)
         except ValueError:
@@ -264,14 +274,18 @@ def _version_too_old(version, known_good):
             break
     return False
 
+
 class _sys_stdout_replaced(object):
     "Replace systdout temporarily"
+
     def __enter__(self):
         self.sysstdout = sys.stdout
         sys.stdout = StringIO.StringIO()
         return sys.stdout
+
     def __exit__(self, *args):
         sys.stdout = self.sysstdout
+
 
 def _pp_needs_monkeypatching():
     # only run this function the first time mdp is imported
@@ -308,6 +322,7 @@ def _pp_needs_monkeypatching():
         mdp._pp_needs_monkeypatching = 'ImportError' in error
 
     return mdp._pp_needs_monkeypatching
+
 
 def set_configuration():
     # set python version
@@ -407,7 +422,7 @@ def set_configuration():
         version = joblib.__version__
         if os.getenv('MDP_DISABLE_JOBLIB'):
             config.ExternalDepFailed('joblib', 'disabled')
-        elif _version_too_old(version, (0,4,3)):
+        elif _version_too_old(version, (0, 4, 3)):
             config.ExternalDepFailed('joblib',
                                      'version %s is too old' % version)
         else:
@@ -427,7 +442,7 @@ def set_configuration():
     else:
         if os.getenv('MDP_DISABLE_SKLEARN'):
             config.ExternalDepFailed('sklearn', 'disabled')
-        elif _version_too_old(version, (0,6)):
+        elif _version_too_old(version, (0, 6)):
             config.ExternalDepFailed('sklearn',
                                      'version %s is too old' % version)
         else:
