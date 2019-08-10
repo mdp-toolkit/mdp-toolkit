@@ -125,7 +125,14 @@ from builtins import str
 from past.builtins import basestring
 from builtins import object
 
-import sys, re, inspect
+import sys
+import re
+# python 2/3 compatibility
+try:
+    from inspect import getfullargspec as getargs
+except ImportError:
+    from inspect import getargspec as getargs
+import inspect
 from future.utils import with_metaclass
 
 
@@ -151,7 +158,8 @@ class _TemplateBuilder(object):
         This is important for embedded Python code.
         """
         lines = str.splitlines()
-        if lines and not lines[0].strip(): del lines[0]
+        if lines and not lines[0].strip():
+            del lines[0]
         lspace = [len(l) - len(l.lstrip()) for l in lines if l.lstrip()]
         margin = len(lspace) and min(lspace)
         return '\n'.join((spaces + l[margin:]) for l in lines)
@@ -179,8 +187,10 @@ class _TemplateBuilder(object):
                     code.append(s + self.emitpat % part)
         return '\n'.join(code)
 
+
 def _exec(code, globals, locals):
     exec(code, globals, locals)
+
 
 class _TemplateMetaClass(type):
 
@@ -189,11 +199,16 @@ class _TemplateMetaClass(type):
 
     def __compile(cls, template, n):
         globals = sys.modules[cls.__module__].__dict__
-        if '__file__' not in globals: filename = '<%s %s>' % (cls.__name__, n)
-        else: filename = '%s: <%s %s>' % (globals['__file__'], cls.__name__, n)
-        code = compile(cls.__builder.build(template, filename), filename, 'exec')
-        def expand(self, __dict = None, **kw):
-            if __dict: kw.update([i for i in __dict.items() if i[0] not in kw])
+        if '__file__' not in globals:
+            filename = '<%s %s>' % (cls.__name__, n)
+        else:
+            filename = '%s: <%s %s>' % (globals['__file__'], cls.__name__, n)
+        code = compile(cls.__builder.build(
+            template, filename), filename, 'exec')
+
+        def expand(self, __dict=None, **kw):
+            if __dict:
+                kw.update([i for i in __dict.items() if i[0] not in kw])
             kw['self'] = self
             _exec(code, globals, kw)
         return expand
@@ -243,11 +258,13 @@ class UnicodeTemplate(with_metaclass(_TemplateMetaClass, object)):
 
 def _templatefunction(func, listname, stringtype):
     globals, locals = sys.modules[func.__module__].__dict__, {}
-    if '__file__' not in globals: filename = '<%s>' % func.__name__
-    else: filename = '%s: <%s>' % (globals['__file__'], func.__name__)
+    if '__file__' not in globals:
+        filename = '<%s>' % func.__name__
+    else:
+        filename = '%s: <%s>' % (globals['__file__'], func.__name__)
     builder = _TemplateBuilder('%s.append(%%s)' % listname,
-                                                         '%s.append(%s(%%s))' % (listname, stringtype))
-    args = inspect.getargspec(func)
+                               '%s.append(%s(%%s))' % (listname, stringtype))
+    args = getargs(func)
     code = [
         'def %s%s:' % (func.__name__, inspect.formatargspec(*args)),
         ' %s = []' % listname,
@@ -257,9 +274,11 @@ def _templatefunction(func, listname, stringtype):
     exec(code, globals, locals)
     return locals[func.__name__]
 
+
 def stringfunction(func):
     """Function attribute for string template functions"""
     return _templatefunction(func, listname='out', stringtype='str')
+
 
 def unicodefunction(func):
     """Function attribute for unicode template functions"""
@@ -269,11 +288,13 @@ def unicodefunction(func):
 # When executed as a script, run some testing code.
 if __name__ == '__main__':
     ok = True
+
     def expect(actual, expected):
         global ok
         if expected != actual:
             print("error - got:\n%s" % repr(actual))
             ok = False
+
     class TestAll(Template):
         """A test of all the $ forms"""
         template = r"""
@@ -285,6 +306,7 @@ if __name__ == '__main__':
             }}
             Total: $$${"%.2f" % (count * price)}
         """
+
     class TestCalls(Template):
         """A recursive test"""
         template = "$name$i ${*[TestCalls(name=name[0], i=n) for n in xrange(i)]}"
@@ -297,11 +319,13 @@ if __name__ == '__main__':
         "template call3 t0 t1 t0 t2 t0 t1 t0 \n"
         "template call4 t0 t1 t0 t2 t0 t1 t0 t3 t0 t1 t0 t2 t0 t1 t0 \n"
         "Total: $6.15\n")
+
     class TestBase(Template):
         template = r"""
             <head>$<head_template></head>
             <body>$<body_template></body>
         """
+
     class TestDerived(TestBase):
         head_template = "<title>$name</title>"
         body_template = "${TestAll(vars())}"
@@ -316,12 +340,13 @@ if __name__ == '__main__':
         "template call3 t0 t1 t0 t2 t0 t1 t0 \n"
         "Total: $11.52\n"
         "</body>\n")
+
     class TestUnicode(UnicodeTemplate):
         template = u"""
             \N{Greek Small Letter Pi} = $pi
         """
     expect(
-        str(TestUnicode(pi = 3.14)),
+        str(TestUnicode(pi=3.14)),
         u"\N{Greek Small Letter Pi} = 3.14\n")
     goterror = False
     try:
@@ -332,6 +357,7 @@ if __name__ == '__main__':
     if not goterror:
         print('TestError failed')
         ok = False
+
     @stringfunction
     def testBasic(name):
         "Hello $name."
@@ -343,6 +369,7 @@ if __name__ == '__main__':
     expect(
         testReps('foo'),
         "foofoofoofoofoo")
+
     @unicodefunction
     def testUnicode(count=4): u"""
         ${{ if not count: return '' }}
@@ -350,4 +377,5 @@ if __name__ == '__main__':
     expect(
         testUnicode(count=10),
         u"\N{BLACK STAR}" * 10)
-    if ok: print("OK")
+    if ok:
+        print("OK")

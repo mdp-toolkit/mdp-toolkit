@@ -73,7 +73,11 @@ keywords are treated in a special way:
 from builtins import next
 from builtins import str
 
-import inspect
+# python 2/3 compatibility
+try:
+    from inspect import getfullargspec as getargs
+except ImportError:
+    from inspect import getargspec as getargs
 
 import mdp
 
@@ -208,7 +212,7 @@ class BiNode(mdp.Node):
                     self._check_train_args(x, **arg_dict)
                 except TypeError:
                     err = ("The given additional arguments %s " %
-                                str(list(arg_dict.keys())) +
+                           str(list(arg_dict.keys())) +
                            "are not compatible with training %s." % str(self))
                     raise BiNodeException(err)
                 self._train_phase_started = True
@@ -220,7 +224,7 @@ class BiNode(mdp.Node):
             return None
         result = self._combine_result(result, msg, target)
         if (isinstance(result, tuple) and len(result) == 2 and
-            result[0] is None):
+                result[0] is None):
             # drop the remaining msg, so that no maual clearing is required
             return None
         return result
@@ -368,7 +372,7 @@ class BiNode(mdp.Node):
         Return the new message and a dict with the keyword arguments (the
         return of the message is done because it can be set to None).
         """
-        arg_keys = inspect.getargspec(method)[0]
+        arg_keys = getargs(method)[0]
         arg_dict = dict((key, msg[key]) for key in msg if key in arg_keys)
         for key, fullkey in msg_id_keys:
             if key in arg_keys:
@@ -484,7 +488,7 @@ class PreserveDimBiNode(BiNode, mdp.PreserveDimNode):
 
 def binode_coroutine(args=None, defaults=()):
     """Decorator for the convenient definition of BiNode couroutines.
-    
+
     This decorator takes care of all the boilerplate code to use a coroutine
     as a BiNode method for continuations (which is more elegant and convenient
     than using a a state machine implementation). 
@@ -494,8 +498,8 @@ def binode_coroutine(args=None, defaults=()):
         are requested the yield will return n+1 values.
     defaults -- Tuple of default values for the arguments. If this tuple has
         n elements, they correspond to the last n elements in 'args'
-        (following the convention of inspect.getargspec).
-    
+        (following the convention of inspect.getfullargspec).
+
     Internally there are three methods/functions:
         - The user defined function containing the original coroutine code.
           This is only stored in the decorator closure.
@@ -513,11 +517,13 @@ def binode_coroutine(args=None, defaults=()):
         args = ["self", "x"]
     else:
         args = ["self", "x"] + args
+
     def _binode_coroutine(coroutine):
         # the original coroutine is only stored in this closure
         infodict = mdp.NodeMetaclass._function_infodict(coroutine)
         original_name = infodict["name"]
-        ## create the coroutine interface method
+        # create the coroutine interface method
+
         def _coroutine_interface(self, *args):
             try:
                 return self._coroutine_instances[original_name].send(args)
@@ -533,12 +539,13 @@ def binode_coroutine(args=None, defaults=()):
         interface_infodict["signature"] = ", ".join(args)
         interface_infodict["defaults"] = defaults
         coroutine_interface = mdp.NodeMetaclass._wrap_function(
-                                    _coroutine_interface, interface_infodict)
-        ## create the initialization method
+            _coroutine_interface, interface_infodict)
+        # create the initialization method
+
         def _coroutine_initialization(self, *args):
             coroutine_instance = coroutine(self, *args)
             bound_coroutine_interface = coroutine_interface.__get__(
-                                                        self, self.__class__)
+                self, self.__class__)
             if self._coroutine_instances is None:
                 self._coroutine_instances = dict()
             self._coroutine_instances[original_name] = coroutine_instance
@@ -553,6 +560,6 @@ def binode_coroutine(args=None, defaults=()):
                 else:
                     return None
         coroutine_initialization = mdp.NodeMetaclass._wrap_function(
-                                    _coroutine_initialization, infodict)
+            _coroutine_initialization, infodict)
         return coroutine_initialization
     return _binode_coroutine

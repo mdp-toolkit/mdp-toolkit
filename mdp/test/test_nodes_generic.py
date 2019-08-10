@@ -1,8 +1,12 @@
 from builtins import range
 from builtins import object
 import pytest
+# python 2/3 compatibility
+try:
+    from inspect import getfullargspec as getargs
+except ImportError:
+    from inspect import getargspec as getargs
 import inspect
-
 from mdp import (config, nodes, ClassifierNode,
                  PreserveDimNode, InconsistentDimException)
 from ._tools import *
@@ -245,7 +249,7 @@ def test_outputdim_consistency(klass, init_args, inp_arg_gen,
     # check if the node output dimension can be set or must be determined
     # by the node
     if (not issubclass(klass, PreserveDimNode) and
-            'output_dim' in inspect.getargspec(klass.__init__)[0]):
+            'output_dim' in getargs(klass.__init__)[0]):
         # case 1: output dim set in the constructor
         node = klass(output_dim=output_dim, *args)
         _test(node)
@@ -257,7 +261,7 @@ def test_outputdim_consistency(klass, init_args, inp_arg_gen,
     else:
         if issubclass(klass, PreserveDimNode):
             # check that constructor allows to set output_dim
-            assert 'output_dim' in inspect.getargspec(klass.__init__)[0]
+            assert 'output_dim' in getargs(klass.__init__)[0]
             # check that setting the input dim, then incompatible output dims
             # raises an appropriate error
             # case 1: both in the constructor
