@@ -75,10 +75,14 @@ matrix:
       env: VNUMPY=1.8.2  VSCI=0.21.2
     - python: "3.5-dev"
       env: VNUMPY=1.8.2  VSCI=0.20.0
+    - python: "3.5-dev"
+      env: VNUMPY=1.8.2  VSCI=0.18
     - python: "3.5"
       env: VNUMPY=1.8.2  VSCI=0.21.2
     - python: "3.5"
       env: VNUMPY=1.8.2  VSCI=0.20.0
+    - python: "3.5"
+      env: VNUMPY=1.8.2  VSCI=0.18
 
       
       
