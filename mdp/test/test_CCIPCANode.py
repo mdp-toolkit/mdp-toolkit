@@ -67,7 +67,7 @@ def test_ccipcanode_v2():
 
     print('\nTotal Time for {} iterations: {}'.format(
         iterval, time.time() - _tcnt))
-    assert_almost_equal(numx.ones(output_dim), dcosines[-1], decimal=2)
+    assert_almost_equal(numx.ones(output_dim), dcosines[-1], decimal=1)
 
 
 def test_whiteningnode():
