@@ -189,17 +189,17 @@ class UnevenlySampledCovarianceMatrix(CovarianceMatrix):
 
         # account for the gap between training phases
         if self.tphase > 0:
-            if dtphases is not None:
-                self._avg += (self.xlast + x[0, :])*dtphases[self.tphase-1]/2.
-                self._cov_mtx += (numx.outer(self.xlast, self.xlast) +
-                                  numx.outer(x[0, :], x[0, :]))*dtphases[self.tphase-1]/2.
-                self._tlen += dtphases[self.tphase-1]
-            else:
+            if dtphases == 'interpolate':
                 sdt = (self.dtlast+dt[0])/2. if dt is not None else self.dtlast
                 self._avg += (self.xlast + x[0, :])*sdt/2.
                 self._cov_mtx += (numx.outer(self.xlast, self.xlast) +
                                   numx.outer(x[0, :], x[0, :]))*sdt/2.
                 self._tlen += sdt
+            elif dtphases is not None:
+                self._avg += (self.xlast + x[0, :])*dtphases[self.tphase-1]/2.
+                self._cov_mtx += (numx.outer(self.xlast, self.xlast) +
+                                  numx.outer(x[0, :], x[0, :]))*dtphases[self.tphase-1]/2.
+                self._tlen += dtphases[self.tphase-1]
 
         # keep last observation for multiple training phases
         self.xlast = x[-1, :]
@@ -207,7 +207,7 @@ class UnevenlySampledCovarianceMatrix(CovarianceMatrix):
 
         # make sure dt is defined and convenient to use
         _dt = 1. if dt is None else dt[:, None]
-        sqdt  = numx.sqrt(_dt)
+        sqdt = numx.sqrt(_dt)
         # update the covariance matrix, the average and the number of
         # observations
         # the implementation is analogous to the evenly sampled case
