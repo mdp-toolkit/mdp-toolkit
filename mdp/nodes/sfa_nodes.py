@@ -398,6 +398,8 @@ class UnevenlySampledSFANode(Node):
         self._bias = None  # avg multiplied with sf
         self.tlen = None
 
+        self.tphase = 0
+
     def _init_cov(self):
         # init two covariance matrices
         # one for the input data
@@ -405,7 +407,7 @@ class UnevenlySampledSFANode(Node):
         # one for the derivatives
         self._dcov_mtx = UnevenlySampledCovarianceMatrix(self.dtype)
 
-    def time_derivative(self, x, dt=None):
+    def time_derivative(self, x, dt=None, dtphases=None):
         """
         Compute the linear approximation of the time derivative
 
@@ -415,31 +417,49 @@ class UnevenlySampledSFANode(Node):
         :returns: Piecewise linear approximation of the time derivative.
         :rtype: numpy.ndarray
         """
+        outlen = x.shape[0] - \
+            1 if self.tphase == 0 or dtphases is None else x.shape[0]
+        out = numx.empty([outlen, x.shape[1]])
+
         if dt is not None:
             # Improvements can be made, by interpolating polynomials
-            return (x[1:, :]-x[:-1, :])/dt[:, None]
+            out[-x.shape[0]+1:, :] = (x[1:, :]-x[:-1, :])/dt[:, None]
         else:
             # trivial fallback
-            return x[1:, :]-x[:-1, :]
+            out[-x.shape[0]+1:, :] = x[1:, :]-x[:-1, :]
 
-    def _train(self, x, include_last_sample=True, dt=None, dtphases=None):
+        if self.tphase > 0 and dtphases is not None:
+            if isinstance(dtphases, str) and dtphases == 'interpolate':
+                sdt = (self.dtlast+dt[0])/2.
+            else:
+                sdt = dtphases[self.tphase-1]
+
+            out[0, :] = (x[0, :]-self.xlast)/sdt
+
+        self.xlast = x[-1, :]
+        self.dtlast = dt[-1] if dt is not None else 1.
+        self.tphase += 1
+
+        return out
+
+    def _train(self, x, dt=None, dtphases=None):
         """
         Training method.
 
         :param x: The time series data.
         :type x: numpy.ndarray
-
-        :param include_last_sample: For the ``include_last_sample`` switch have a
-            look at the SFANode.__init__ docstring.
-        :type include_last_sample: bool
         """
-        # works because x[:None] == x[:]
-        last_sample_index = None if include_last_sample else -1
-
         # update the covariance matrices
-        self._cov_mtx.update(x[:last_sample_index, :], dt, dtphases=dtphases)
-        self._dcov_mtx.update(self.time_derivative(
-            x, dt), dt[:-1] if dt is not None else None, dtphases=dtphases)
+        self._cov_mtx.update(x, dt, dtphases=dtphases)
+        x_ = self.time_derivative(x, dt, dtphases=dtphases)
+
+        if (x_.shape[0] > x.shape[0]-1) and (dt is not None):
+            dt_ = dt
+        elif dt is not None:
+            dt_ = dt[1:]
+        else:
+            dt_ = None
+        self._dcov_mtx.update(x_, dt_, dtphases=dtphases)
 
     def set_rank_deficit_method(self, rank_deficit_method):
         if rank_deficit_method == 'pca':

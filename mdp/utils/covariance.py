@@ -189,7 +189,7 @@ class UnevenlySampledCovarianceMatrix(CovarianceMatrix):
 
         # account for the gap between training phases
         if self.tphase > 0:
-            if dtphases == 'interpolate':
+            if isinstance(dtphases, str) and dtphases == 'interpolate':
                 sdt = (self.dtlast+dt[0])/2. if dt is not None else self.dtlast
                 self._avg += (self.xlast + x[0, :])*sdt/2.
                 self._cov_mtx += (numx.outer(self.xlast, self.xlast) +
