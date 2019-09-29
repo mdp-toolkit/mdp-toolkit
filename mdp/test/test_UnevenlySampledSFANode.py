@@ -1,3 +1,6 @@
+"""
+Tests for the UnevenlySampledSFANode.
+"""
 from mdp.nodes.sfa_nodes import SFANode, UnevenlySampledSFANode
 from mdp import numx, Node
 from mdp.test._tools import assert_array_almost_equal, decimal

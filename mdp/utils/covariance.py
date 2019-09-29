@@ -173,14 +173,26 @@ class UnevenlySampledCovarianceMatrix(CovarianceMatrix):
         Note that no consistency checks are performed on the data (this is
         typically done in the enclosing node).
 
-        :param x: Timed sequence of random vectors, with samples along the rows
-        and random variables along the colums
+        :param x: Timed sequence of vectors, with samples along the rows
+            and random variables along the columns.
         :type x: numpy.ndarray
 
-        :param dt: Sequence of time increments between random vectors. Must be
-        of length *x.shape[0]-1*.
-        :type dt: numpy.ndarray        
+        :param dt: Sequence of time increments between vectors. Must be
+            of length *x.shape[0]-1*.
+        :type dt: numpy.ndarray
 
+        :param dtphases: Only needed when supplying multiple chunks of data
+            and thus calling the method multiple times.
+            *dtphases* can be sequence of time steps between chunks. Then it
+            must have a length of the number of calls made to the method minus
+            one and thus be supplied after the first call. 
+            Alternatively, dtphases can be the string *'interpolate'* which will result
+            in the timesteps between chunks to be the mean of the neighboring
+            timesteps.
+            When *dtphases* is not supplied, but the method is called mutiple
+            times, the chunks are considered "independent" and all moments
+            will be computed as weighted means of the chunks.
+        :type dt: numpy.ndarray  or str
         """
         if self._cov_mtx is None:
             self._init_internals(x)
@@ -189,7 +201,7 @@ class UnevenlySampledCovarianceMatrix(CovarianceMatrix):
 
         # account for the gap between training phases
         if self.tphase > 0:
-            if isinstance(dtphases, str) and dtphases == 'interpolate':
+            if isinstance(dtphases, "".__class__) and dtphases == 'interpolate':
                 sdt = (self.dtlast+dt[0])/2. if dt is not None else self.dtlast
                 self._avg += (self.xlast + x[0, :])*sdt/2.
                 self._cov_mtx += (numx.outer(self.xlast, self.xlast) +
@@ -239,7 +251,7 @@ class UnevenlySampledCovarianceMatrix(CovarianceMatrix):
             without subtracting the mean.
         :type bool: bool
 
-        :returns: Generalised covariance matrx, average and length
+        :returns: Generalised covariance matrix, average and length
         of sequence (in time/ summed increments).
         :rtype: Tuple[np.ndarray, np.ndarray, np.ndarray]
         """

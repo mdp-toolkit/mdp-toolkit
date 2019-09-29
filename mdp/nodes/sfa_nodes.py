@@ -377,9 +377,84 @@ class SFANode(Node):
 
 
 class UnevenlySampledSFANode(Node):
+    """
+    Extract the slowly varying components from the input data.
+    This node can be understood as a generalization to the *SFANode*.
+
+    In particular this nodes numerically computes the integrals involved in
+    the SFA problem formulation by applying the trapezoid rule.
+
+    .. attribute:: avg
+
+        Mean of the input data (available after training)
+
+    .. attribute:: sf
+
+        Matrix of the SFA filters (available after training)
+
+    .. attribute:: d
+
+        Delta values corresponding to the SFA components (generalized
+        eigenvalues). [See the docs of the ``get_eta_values`` method for
+        more information]
+
+    .. admonition:: Reference
+
+        More information about Slow Feature Analysis can be found in
+        Wiskott, L. and Sejnowski, T.J., Slow Feature Analysis: Unsupervised
+        Learning of Invariances, Neural Computation, 14(4):715-770 (2002).
+    """
 
     def __init__(self, input_dim=None, output_dim=None, dtype=None,
                  rank_deficit_method='none'):
+        """"
+        Initialize an object of type 'UnevenlySampledSFANode'.
+
+        :param input_dim: The input dimensionality.
+        :type input_dim: int
+
+        :param output_dim: The output dimensionality.
+        :type output_dim: int
+
+        :param dtype: The datatype.
+        :type dtype: numpy.dtype or str
+
+        :param rank_deficit_method: Possible values: 'none' (default), 'reg', 'pca', 'svd', 'auto'
+            If not 'none', the ``stop_train`` method solves the SFA eigenvalue
+            problem in a way that is robust against linear redundancies in
+            the input data. This would otherwise lead to rank deficit in the
+            covariance matrix, which usually yields a
+            SymeigException ('Covariance matrices may be singular').
+            There are several solving methods implemented:
+
+            reg  - works by regularization
+            pca  - works by PCA
+            svd  - works by SVD
+            ldl  - works by LDL decomposition (requires SciPy >= 1.0)
+
+            auto - (Will be: selects the best-benchmarked method of the above)
+                   Currently it simply selects pca.
+
+            Note: If you already received an exception
+            SymeigException ('Covariance matrices may be singular')
+            you can manually set the solving method for an existing node::
+
+               sfa.set_rank_deficit_method('pca')
+
+            That means,::
+
+               sfa = SFANode(rank_deficit='pca')
+
+            is equivalent to::
+
+               sfa = SFANode()
+               sfa.set_rank_deficit_method('pca')
+
+            After such an adjustment you can run ``stop_training()`` again,
+            which would save a potentially time-consuming rerun of all
+            ``train()`` calls.
+        :type rank_deficit_method: str
+        """
         super(UnevenlySampledSFANode, self).__init__(
             input_dim, output_dim, dtype)
 
@@ -414,6 +489,23 @@ class UnevenlySampledSFANode(Node):
         :param x: The time series data.
         :type x: numpy.ndarray
 
+        :param dt: Sequence of time increments between vectors. Must be
+            of length *x.shape[0]-1*.
+        :type dt: numpy.ndarray
+
+        :param dtphases: Only needed when supplying multiple chunks of data
+            and thus calling the method multiple times.
+            *dtphases* can be sequence of time steps between chunks. Then it
+            must have a length of the number of calls made to the method minus
+            one and thus be supplied after the first call. 
+            Alternatively, dtphases can be the string *'interpolate'* which will result
+            in the timesteps between chunks to be the mean of the neighboring
+            timesteps.
+            When *dtphases* is not supplied, but the method is called mutiple
+            times, the chunks are considered "independent" and derivatives
+            are not computed inbetween chunks.
+        :type dt: numpy.ndarray  or str
+
         :returns: Piecewise linear approximation of the time derivative.
         :rtype: numpy.ndarray
         """
@@ -429,7 +521,8 @@ class UnevenlySampledSFANode(Node):
             out[-x.shape[0]+1:, :] = x[1:, :]-x[:-1, :]
 
         if self.tphase > 0 and dtphases is not None:
-            if isinstance(dtphases, str) and dtphases == 'interpolate':
+            # check if str before checking, to avoid comparison warnings
+            if isinstance(dtphases, "".__class__) and dtphases == 'interpolate':
                 sdt = (self.dtlast+dt[0])/2.
             else:
                 sdt = dtphases[self.tphase-1]
@@ -448,6 +541,23 @@ class UnevenlySampledSFANode(Node):
 
         :param x: The time series data.
         :type x: numpy.ndarray
+
+        :param dt: Sequence of time increments between vectors. Must be
+            of length *x.shape[0]-1*.
+        :type dt: numpy.ndarray
+
+        :param dtphases: Only needed when supplying multiple chunks of data
+            and thus calling the method multiple times.
+            *dtphases* can be sequence of time steps between chunks. Then it
+            must have a length of the number of calls made to the method minus
+            one and thus be supplied after the first call. 
+            Alternatively, dtphases can be the string *'interpolate'* which will result
+            in the timesteps between chunks to be the mean of the neighboring
+            timesteps.
+            When *dtphases* is not supplied, but the method is called mutiple
+            times, the chunks are considered "independent" and all moments
+            will be computed as weighted means of the chunks.
+        :type dt: numpy.ndarray  or str
         """
         # update the covariance matrices
         self._cov_mtx.update(x, dt, dtphases=dtphases)
