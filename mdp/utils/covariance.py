@@ -214,8 +214,8 @@ class UnevenlySampledCovarianceMatrix(CovarianceMatrix):
                 self._tlen += dtphases[self.tphase-1]
 
         # keep last observation for multiple training phases
-        self.xlast = x[-1, :]
-        self.dtlast = dt[-1] if dt is not None else 1.
+        self.xlast = x[-1, :].copy()
+        self.dtlast = dt[-1].copy() if dt is not None else 1.
 
         # make sure dt is defined and convenient to use
         _dt = 1. if dt is None else dt[:, None]

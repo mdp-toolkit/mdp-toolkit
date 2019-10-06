@@ -529,8 +529,8 @@ class UnevenlySampledSFANode(Node):
 
             out[0, :] = numx.divide(x[0, :]-self.xlast, sdt)
 
-        self.xlast = x[-1, :]
-        self.dtlast = dt[-1] if dt is not None else 1.
+        self.xlast = x[-1, :].copy()
+        self.dtlast = dt[-1].copy() if dt is not None else 1.
         self.tphase += 1
 
         return out
