@@ -482,7 +482,7 @@ class UnevenlySampledSFANode(Node):
         # one for the derivatives
         self._dcov_mtx = UnevenlySampledCovarianceMatrix(self.dtype)
 
-    def time_derivative(self, x, dt=None, dtphases=None):
+    def time_derivative(self, x, dt=None):
         """
         Compute the linear approximation of the time derivative
 
@@ -490,27 +490,21 @@ class UnevenlySampledSFANode(Node):
         :type x: numpy.ndarray
 
         :param dt: Sequence of time increments between vectors. Must be
-            of length *x.shape[0]-1*.
+            of length *x.shape[0]-1* in case of a single training phase.
+            In case the training is done in multiple phases with intended
+            time dependence - meaning the derivative between chunks should
+            be considered, *dt* should be of length *x.shape[0]* starting
+            with the second call. If it continues to be of length
+            *x.shape[0]-1* time dependence is omitted. If *dt* is omitted
+            entirely there will be no time dependence between calls and
+            it will be considered to be one everywhere within a call.
         :type dt: numpy.ndarray
-
-        :param dtphases: Only needed when supplying multiple chunks of data
-            and thus calling the method multiple times.
-            *dtphases* can be sequence of time steps between chunks. Then it
-            must have a length of the number of calls made to the method minus
-            one and thus be supplied after the first call. 
-            Alternatively, dtphases can be the string *'interpolate'* which will result
-            in the timesteps between chunks to be the mean of the neighboring
-            timesteps.
-            When *dtphases* is not supplied, but the method is called mutiple
-            times, the chunks are considered "independent" and derivatives
-            are not computed inbetween chunks.
-        :type dt: numpy.ndarray  or str
 
         :returns: Piecewise linear approximation of the time derivative.
         :rtype: numpy.ndarray
         """
         outlen = x.shape[0] - \
-            1 if self.tphase == 0 or dtphases is None else x.shape[0]
+            1 if self.tphase == 0 or dt is None or dt.shape[0] != x.shape[0] else x.shape[0]
         out = numx.empty([outlen, x.shape[1]])
 
         if dt is not None:
@@ -520,14 +514,9 @@ class UnevenlySampledSFANode(Node):
             # trivial fallback
             out[-x.shape[0]+1:, :] = x[1:, :]-x[:-1, :]
 
-        if self.tphase > 0 and dtphases is not None:
+        if self.tphase > 0 and dt is not None and dt.shape[0] == x.shape[0]:
             # check if str before checking, to avoid comparison warnings
-            if isinstance(dtphases, "".__class__) and dtphases == 'interpolate':
-                sdt = (self.dtlast+dt[0])/2.
-            else:
-                sdt = dtphases[self.tphase-1]
-
-            out[0, :] = numx.divide(x[0, :]-self.xlast, sdt)
+            out[0, :] = numx.divide(x[0, :]-self.xlast, dt[0])
 
         self.xlast = x[-1, :].copy()
         self.dtlast = dt[-1].copy() if dt is not None else 1.
@@ -535,7 +524,7 @@ class UnevenlySampledSFANode(Node):
 
         return out
 
-    def _train(self, x, dt=None, dtphases=None):
+    def _train(self, x, dt=None):
         """
         Training method.
 
@@ -543,25 +532,17 @@ class UnevenlySampledSFANode(Node):
         :type x: numpy.ndarray
 
         :param dt: Sequence of time increments between vectors. Must be
-            of length *x.shape[0]-1*.
+            of length *x.shape[0]-1*. In case the training is done in multiple
+            phases with intended time dependence , *dt* should be of length
+            *x.shape[0]* starting with the second call. If it continues to be
+            of length *x.shape[0]-1* time dependence is omitted. If *dt* is
+            omitted entirely there will be no time dependence between calls and
+            it will be considered to be one everywhere within a call.
         :type dt: numpy.ndarray
-
-        :param dtphases: Only needed when supplying multiple chunks of data
-            and thus calling the method multiple times.
-            *dtphases* can be sequence of time steps between chunks. Then it
-            must have a length of the number of calls made to the method minus
-            one and thus be supplied after the first call. 
-            Alternatively, dtphases can be the string *'interpolate'* which will result
-            in the timesteps between chunks to be the mean of the neighboring
-            timesteps.
-            When *dtphases* is not supplied, but the method is called mutiple
-            times, the chunks are considered "independent" and all moments
-            will be computed as weighted means of the chunks.
-        :type dt: numpy.ndarray  or str
         """
         # update the covariance matrices
-        self._cov_mtx.update(x, dt, dtphases=dtphases)
-        x_ = self.time_derivative(x, dt, dtphases=dtphases)
+        self._cov_mtx.update(x, dt)
+        x_ = self.time_derivative(x, dt)
 
         if (x_.shape[0] > x.shape[0]-1) and (dt is not None):
             dt_ = dt
@@ -569,7 +550,7 @@ class UnevenlySampledSFANode(Node):
             dt_ = dt[1:]
         else:
             dt_ = None
-        self._dcov_mtx.update(x_, dt_, dtphases=dtphases)
+        self._dcov_mtx.update(x_, dt_)
 
     def set_rank_deficit_method(self, rank_deficit_method):
         if rank_deficit_method == 'pca':

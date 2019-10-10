@@ -167,7 +167,7 @@ class UnevenlySampledCovarianceMatrix(CovarianceMatrix):
         self._steps = 0
         self.tphase = 0
 
-    def update(self, x, dt=None, dtphases=None):
+    def update(self, x, dt=None):
         """Update internal structures.
 
         Note that no consistency checks are performed on the data (this is
@@ -178,21 +178,17 @@ class UnevenlySampledCovarianceMatrix(CovarianceMatrix):
         :type x: numpy.ndarray
 
         :param dt: Sequence of time increments between vectors. Must be
-            of length *x.shape[0]-1*.
+            of length *x.shape[0]-1* in case of a single call. In case of
+            multiple calls with intended time dependence - as opposed to
+            computing the results as a weighted avarage of separate calls -
+            *dt* must be of length *x.shape[0]* starting with the second call.
+            The first element will be considered as the time difference
+            between the last element of *x* in the preceding call and the
+            first element of *x* in the current call. In case of not supplying
+            a *x.shape[0]*-th element in *dt*, time dependence will be dropped.
+            If *dt* omitted entirely, it will be considered to be one everywhere
+            whereas time dependence between calls is still dropped.
         :type dt: numpy.ndarray
-
-        :param dtphases: Only needed when supplying multiple chunks of data
-            and thus calling the method multiple times.
-            *dtphases* can be sequence of time steps between chunks. Then it
-            must have a length of the number of calls made to the method minus
-            one and thus be supplied after the first call. 
-            Alternatively, dtphases can be the string *'interpolate'* which will result
-            in the timesteps between chunks to be the mean of the neighboring
-            timesteps.
-            When *dtphases* is not supplied, but the method is called mutiple
-            times, the chunks are considered "independent" and all moments
-            will be computed as weighted means of the chunks.
-        :type dt: numpy.ndarray  or str
         """
         if self._cov_mtx is None:
             self._init_internals(x)
@@ -201,17 +197,11 @@ class UnevenlySampledCovarianceMatrix(CovarianceMatrix):
 
         # account for the gap between training phases
         if self.tphase > 0:
-            if isinstance(dtphases, "".__class__) and dtphases == 'interpolate':
-                sdt = (self.dtlast+dt[0])/2. if dt is not None else self.dtlast
-                self._avg += (self.xlast + x[0, :])*sdt/2.
+            if dt is not None and dt.shape[0] == x.shape[0]:
+                self._avg += (self.xlast + x[0, :])*dt[0]/2.
                 self._cov_mtx += (numx.outer(self.xlast, self.xlast) +
-                                  numx.outer(x[0, :], x[0, :]))*sdt/2.
-                self._tlen += sdt
-            elif dtphases is not None:
-                self._avg += (self.xlast + x[0, :])*dtphases[self.tphase-1]/2.
-                self._cov_mtx += (numx.outer(self.xlast, self.xlast) +
-                                  numx.outer(x[0, :], x[0, :]))*dtphases[self.tphase-1]/2.
-                self._tlen += dtphases[self.tphase-1]
+                                  numx.outer(x[0, :], x[0, :]))*dt[0]/2.
+                self._tlen += dt[0]
 
         # keep last observation for multiple training phases
         self.xlast = x[-1, :].copy()
