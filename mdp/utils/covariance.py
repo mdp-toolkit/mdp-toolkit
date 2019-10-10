@@ -208,7 +208,7 @@ class UnevenlySampledCovarianceMatrix(CovarianceMatrix):
         self.dtlast = dt[-1].copy() if dt is not None else 1.
 
         # make sure dt is defined and convenient to use
-        _dt = 1. if dt is None else dt[:, None]
+        _dt = 1. if dt is None else dt[-x.shape[0]+1:, None]
         sqdt = numx.sqrt(_dt)
         # update the covariance matrix, the average and the number of
         # observations

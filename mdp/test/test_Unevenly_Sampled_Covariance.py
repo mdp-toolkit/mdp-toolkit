@@ -69,42 +69,6 @@ def test_UnevenlySampledCovarianceMatrix2():
 
 def test_UnevenlySampledCovarianceMatrix3():
     """Test whether the trapezoidal integrator returns the expected
-    when calculated in multiple phases, time dependence and interpolation
-    of a missing time step."""
-
-    # sample
-    x = numx.random.random((15000, 2))
-    dt = (numx.random.rand(x.shape[0]-1)-.5)*.5 + 1.
-    xlen = x.shape[0]
-    # initialize the estimators
-    uncov = UnevenlySampledCovarianceMatrix()
-    uncov2 = UnevenlySampledCovarianceMatrix()
-    # emulate interpolation
-    dt[xlen//3-1] = (dt[xlen//3]+dt[xlen//3-2])/2.
-    dt[2*xlen//3-1] = (dt[2*xlen//3]+dt[2*xlen//3-2])/2.
-    # update the estimators
-    uncov.update(x, dt)
-
-    # split into phases
-    dtpart1 = dt[:xlen//3-1]
-    dtpart2 = dt[xlen//3:2*xlen//3-1]
-    dtpart3 = dt[2*xlen//3:]
-    xpart1 = x[:xlen//3]
-    xpart2 = x[xlen//3:2*xlen//3]
-    xpart3 = x[2*xlen//3:]
-
-    uncov2.update(xpart1, dtpart1, dtphases='interpolate')
-    uncov2.update(xpart2, dtpart2, dtphases='interpolate')
-    uncov2.update(xpart3, dtpart3, dtphases='interpolate')
-    # quit estimating
-    unC, unAvg, unTlen = uncov.fix(center=True)
-    unC2, unAvg2, unTlen2 = uncov2.fix(center=True)
-
-    assert_array_almost_equal(unC, unC2, decimal=10)
-
-
-def test_UnevenlySampledCovarianceMatrix4():
-    """Test whether the trapezoidal integrator returns the expected
     when calculated in multiple phases and without time dependence."""
 
     # sample
@@ -138,7 +102,7 @@ def test_UnevenlySampledCovarianceMatrix4():
     assert_array_almost_equal(unC, unC2, decimal=10)
 
 
-def test_UnevenlySampledCovarianceMatrix5():
+def test_UnevenlySampledCovarianceMatrix4():
     """Test whether the trapezoidal integrator returns the expected
     when calculated in multiple phases and time dependence."""
 
@@ -153,19 +117,25 @@ def test_UnevenlySampledCovarianceMatrix5():
     uncov.update(x, dt)
 
     # split into phases
-    dtphases = dt[[xlen//3-1, 2*xlen//3-1]]
     dtpart1 = dt[:xlen//3-1]
-    dtpart2 = dt[xlen//3:2*xlen//3-1]
-    dtpart3 = dt[2*xlen//3:]
+    dtpart2 = dt[xlen//3-1:2*xlen//3-1]
+    dtpart3 = dt[2*xlen//3-1:]
     xpart1 = x[:xlen//3]
     xpart2 = x[xlen//3:2*xlen//3]
     xpart3 = x[2*xlen//3:]
 
-    uncov2.update(xpart1, dtpart1, dtphases=dtphases)
-    uncov2.update(xpart2, dtpart2, dtphases=dtphases)
-    uncov2.update(xpart3, dtpart3, dtphases=dtphases)
+    uncov2.update(xpart1, dtpart1)
+    uncov2.update(xpart2, dtpart2)
+    uncov2.update(xpart3, dtpart3)
     # quit estimating
     unC, unAvg, unTlen = uncov.fix(center=False)
     unC2, unAvg2, unTlen2 = uncov2.fix(center=False)
 
     assert_array_almost_equal(unC, unC2, decimal=10)
+
+
+if __name__ == "__main__":
+    test_UnevenlySampledCovarianceMatrix1()
+    test_UnevenlySampledCovarianceMatrix2()
+    test_UnevenlySampledCovarianceMatrix3()
+    test_UnevenlySampledCovarianceMatrix4()

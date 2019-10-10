@@ -509,7 +509,8 @@ class UnevenlySampledSFANode(Node):
 
         if dt is not None:
             # Improvements can be made, by interpolating polynomials
-            out[-x.shape[0]+1:, :] = (x[1:, :]-x[:-1, :])/dt[:, None]
+            out[-x.shape[0]+1:, :] = (x[1:, :]-x[:-1, :]) / \
+                dt[-x.shape[0]+1:, None]
         else:
             # trivial fallback
             out[-x.shape[0]+1:, :] = x[1:, :]-x[:-1, :]
