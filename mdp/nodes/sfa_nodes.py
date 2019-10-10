@@ -376,7 +376,7 @@ class SFANode(Node):
         return self._refcast(t / (2 * numx.pi) * numx.sqrt(self.d))
 
 
-class UnevenlySampledSFANode(Node):
+class UnevenlySampledSFANode(SFANode):
     """
     Extract the slowly varying components from the input data.
     This node can be understood as a generalization to the *SFANode*.
@@ -455,23 +455,9 @@ class UnevenlySampledSFANode(Node):
             ``train()`` calls.
         :type rank_deficit_method: str
         """
-        super(UnevenlySampledSFANode, self).__init__(
-            input_dim, output_dim, dtype)
-
-        # init two covariance matrices
-        self._init_cov()
-
-        # set routine for eigenproblem
-        self.set_rank_deficit_method(rank_deficit_method)
-        self.rank_threshold = 1e-12
-        self.rank_deficit = 0
-
-        # SFA eigenvalues and eigenvectors, will be set after training
-        self.d = None
-        self.sf = None  # second index for outputs
-        self.avg = None
-        self._bias = None  # avg multiplied with sf
-        self.tlen = None
+        super(UnevenlySampledSFANode, self).__init__(input_dim,
+                                                     output_dim, dtype, include_last_sample=True,
+                                                     rank_deficit_method=rank_deficit_method)
 
         self.tphase = 0
 
@@ -552,168 +538,6 @@ class UnevenlySampledSFANode(Node):
         else:
             dt_ = None
         self._dcov_mtx.update(x_, dt_)
-
-    def set_rank_deficit_method(self, rank_deficit_method):
-        if rank_deficit_method == 'pca':
-            self._symeig = symeig_semidefinite_pca
-        elif rank_deficit_method == 'reg':
-            self._symeig = symeig_semidefinite_reg
-        elif rank_deficit_method == 'svd':
-            self._symeig = symeig_semidefinite_svd
-        elif rank_deficit_method == 'ldl':
-            try:
-                from scipy.linalg.lapack import dsytrf
-            except ImportError:
-                err_msg = ("ldl method for solving SFA with rank deficit covariance "
-                           "requires at least SciPy 1.0.")
-                raise NodeException(err_msg)
-            self._symeig = symeig_semidefinite_ldl
-        elif rank_deficit_method == 'auto':
-            self._symeig = symeig_semidefinite_pca
-        elif rank_deficit_method == 'none':
-            self._symeig = symeig
-        else:
-            raise ValueError("Invalid value for rank_deficit_method: %s"
-                             % str(rank_deficit_method))
-
-    def _set_range(self):
-        if self.output_dim is not None and self.output_dim <= self.input_dim:
-            # (eigenvalues sorted in ascending order)
-            rng = (1, self.output_dim)
-        else:
-            # otherwise, keep all output components
-            rng = None
-            self.output_dim = self.input_dim
-        return rng
-
-    def _check_train_args(self, x, *args, **kwargs):
-        """
-        Raises exception if time dimension does not have enough elements.
-
-        :param x: The time series data.
-        :type x: numpy.ndarray
-
-        :param *args:
-        :param **kwargs:
-        """
-        # check that we have at least 2 time samples to
-        # compute the update for the derivative covariance matrix
-        s = x.shape[0]
-        if s < 2:
-            raise TrainingException('Need at least 2 time samples to '
-                                    'compute time derivative (%d given)' % s)
-
-    def _stop_training(self, debug=False):
-        # request the covariance matrices and clean up
-        if hasattr(self, '_dcov_mtx'):
-            self.cov_mtx, self.avg, self.tlen = self._cov_mtx.fix()
-            del self._cov_mtx
-        # do not center around the mean:
-        # we want the second moment matrix (centered about 0) and
-        # not the second central moment matrix (centered about the mean), i.e.
-        # the covariance matrix
-        if hasattr(self, '_dcov_mtx'):
-            self.dcov_mtx, self.davg, self.dtlen = self._dcov_mtx.fix(
-                center=False)
-            del self._dcov_mtx
-
-        rng = self._set_range()
-
-        # solve the generalized eigenvalue problem
-        # the eigenvalues are already ordered in ascending order
-        try:
-            try:
-                # We first try to fulfill the extended signature described
-                # in mdp.utils.symeig_semidefinite
-                self.d, self.sf = self._symeig(
-                    self.dcov_mtx, self.cov_mtx, True, "on", rng,
-                    overwrite=(not debug),
-                    rank_threshold=self.rank_threshold, dfc_out=self)
-            except TypeError:
-                self.d, self.sf = self._symeig(
-                    self.dcov_mtx, self.cov_mtx, True, "on", rng,
-                    overwrite=(not debug))
-            d = self.d
-            # check that we get only *positive* eigenvalues
-            if d.min() < 0:
-                err_msg = ("Got negative eigenvalues: %s.\n"
-                           "You may either set output_dim to be smaller,\n"
-                           "or prepend the SFANode with a PCANode(reduce=True)\n"
-                           "or PCANode(svd=True)\n"
-                           "or set a rank deficit method, e.g.\n"
-                           "create the SFA node with rank_deficit_method='auto'\n"
-                           "and try higher values for rank_threshold, e.g. try\n"
-                           "your_node.rank_threshold = 1e-10, 1e-8, 1e-6, ..." % str(d))
-                raise NodeException(err_msg)
-        except SymeigException as exception:
-            errstr = (str(exception)+"\n Covariance matrices may be singular.\n"
-                      + SINGULAR_VALUE_MSG)
-            raise NodeException(errstr)
-
-        if not debug:
-            # delete covariance matrix if no exception occurred
-            del self.cov_mtx
-            del self.dcov_mtx
-
-        # store bias
-        self._bias = mult(self.avg, self.sf)
-
-    def _execute(self, x, n=None):
-        """
-        Compute the output of the slowest functions.
-        If 'n' is an integer, then use the first 'n' slowest components.
-
-        :param x: The time series data.
-        :type x: numpy.ndarray
-
-        :param n: The number of slowest components.
-        :type n: int
-
-        :returns: The output of the slowest functions.
-        :rtype: numpy.ndarray
-        """
-        if n:
-            sf = self.sf[:, :n]
-            bias = self._bias[:n]
-        else:
-            sf = self.sf
-            bias = self._bias
-        return mult(x, sf) - bias
-
-    def _inverse(self, y):
-        return mult(y, pinv(self.sf)) + self.avg
-
-    def get_eta_values(self, t=1):
-        """
-        Return the eta values of the slow components learned during
-        the training phase. If the training phase has not been completed
-        yet, call `stop_training`.
-
-        The delta value of a signal is a measure of its temporal
-        variation, and is defined as the mean of the derivative squared,
-        i.e. delta(x) = mean(dx/dt(t)^2).  delta(x) is zero if
-        x is a constant signal, and increases if the temporal variation
-        of the signal is bigger.
-
-        The eta value is a more intuitive measure of temporal variation,
-        defined as
-        eta(x) = t/(2*pi) * sqrt(delta(x))
-        If x is a signal of length 't' which consists of a sine function
-        that accomplishes exactly N oscillations, then eta(x)=N.
-
-        :param t: Sampling frequency in Hz.
-
-            The original definition in (Wiskott and Sejnowski, 2002)
-            is obtained for t = number of training data points, while
-            for t=1 (default), this corresponds to the beta-value defined
-            in (Berkes and Wiskott, 2005).
-
-        :returns: The eta values of the slow components learned during
-            the training phase.
-        """
-        if self.is_training():
-            self.stop_training()
-        return self._refcast(t / (2 * numx.pi) * numx.sqrt(self.d))
 
 
 class SFA2Node(SFANode):
