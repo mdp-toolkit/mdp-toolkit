@@ -5,7 +5,7 @@ __docformat__ = "restructuredtext en"
 import mdp
 from mdp import numx, Node, NodeException, TrainingException
 from mdp.utils import (mult, pinv, CovarianceMatrix,
-                       UnevenlySampledCovarianceMatrix, QuadraticForm,
+                       VartimeCovarianceMatrix, QuadraticForm,
                        symeig, SymeigException, symeig_semidefinite_reg,
                        symeig_semidefinite_pca, symeig_semidefinite_svd,
                        symeig_semidefinite_ldl)
@@ -376,7 +376,7 @@ class SFANode(Node):
         return self._refcast(t / (2 * numx.pi) * numx.sqrt(self.d))
 
 
-class UnevenlySampledSFANode(SFANode):
+class VartimeSFANode(SFANode):
     """
     Extract the slowly varying components from the input data.
     This node can be understood as a generalization to the *SFANode*.
@@ -408,7 +408,7 @@ class UnevenlySampledSFANode(SFANode):
     def __init__(self, input_dim=None, output_dim=None, dtype=None,
                  rank_deficit_method='none'):
         """"
-        Initialize an object of type 'UnevenlySampledSFANode'.
+        Initialize an object of type 'VartimeSFANode'.
 
         :param input_dim: The input dimensionality.
         :type input_dim: int
@@ -455,18 +455,18 @@ class UnevenlySampledSFANode(SFANode):
             ``train()`` calls.
         :type rank_deficit_method: str
         """
-        super(UnevenlySampledSFANode, self).__init__(input_dim,
-                                                     output_dim, dtype, include_last_sample=True,
-                                                     rank_deficit_method=rank_deficit_method)
+        super(VartimeSFANode, self).__init__(input_dim,
+                                             output_dim, dtype, include_last_sample=True,
+                                             rank_deficit_method=rank_deficit_method)
 
         self.tphase = 0
 
     def _init_cov(self):
         # init two covariance matrices
         # one for the input data
-        self._cov_mtx = UnevenlySampledCovarianceMatrix(self.dtype)
+        self._cov_mtx = VartimeCovarianceMatrix(self.dtype)
         # one for the derivatives
-        self._dcov_mtx = UnevenlySampledCovarianceMatrix(self.dtype)
+        self._dcov_mtx = VartimeCovarianceMatrix(self.dtype)
 
     def time_derivative(self, x, dt=None):
         """

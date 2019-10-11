@@ -1,19 +1,19 @@
 """
-Tests for the UnevenlySampledCovarianceMatrix.
+Tests for the VartimeCovarianceMatrix.
 """
 from mdp.utils.covariance import CovarianceMatrix,\
-    UnevenlySampledCovarianceMatrix
+    VartimeCovarianceMatrix
 from mdp import numx
 from mdp.test._tools import assert_array_almost_equal, decimal, assert_allclose
 
 
-def test_UnevenlySampledCovarianceMatrix1():
+def test_VartimeCovarianceMatrix1():
     """Test if the new trazoidal rule integrator deviates substancially
     more than the regular one - with and without noisy input."""
 
     # initialize the estimators
     cov = CovarianceMatrix()
-    uncov = UnevenlySampledCovarianceMatrix()
+    uncov = VartimeCovarianceMatrix()
     # set sample distribution parameters
     tC = [[2., 0.5], [0.5, 1]]
     tAvg = [0, 0]
@@ -27,7 +27,7 @@ def test_UnevenlySampledCovarianceMatrix1():
     C, avg, tlen = cov.fix()
 
     # same for uneven, random time increments
-    uncov = UnevenlySampledCovarianceMatrix()
+    uncov = VartimeCovarianceMatrix()
     inc = (numx.random.rand(x.shape[0]-1)-.5)*.2 + 1.
     uncov.update(x, inc)
     unC2, unAvg2, unTlen2 = uncov.fix()
@@ -46,7 +46,7 @@ def test_UnevenlySampledCovarianceMatrix1():
     assert_allclose(unPrec2, prec, .2)
 
 
-def test_UnevenlySampledCovarianceMatrix2():
+def test_VartimeCovarianceMatrix2():
     """Test whether the trapezoidal integrator returns the expected
     based on the analytically adjusted results of the regular one."""
 
@@ -55,7 +55,7 @@ def test_UnevenlySampledCovarianceMatrix2():
     dt = numx.ones(x.shape[0]-1,)
     # initialize the estimators
     cov = CovarianceMatrix(bias=True)
-    uncov = UnevenlySampledCovarianceMatrix()
+    uncov = VartimeCovarianceMatrix()
     # update the estimators
     cov.update(x)
     uncov.update(x, dt)
@@ -67,7 +67,7 @@ def test_UnevenlySampledCovarianceMatrix2():
                               numx.outer(x[0], x[0])/2.-numx.outer(x[-1], x[-1])/2., decimal=10)
 
 
-def test_UnevenlySampledCovarianceMatrix3():
+def test_VartimeCovarianceMatrix3():
     """Test whether the trapezoidal integrator returns the expected
     when calculated in multiple phases and without time dependence."""
 
@@ -76,8 +76,8 @@ def test_UnevenlySampledCovarianceMatrix3():
     dt = (numx.random.rand(x.shape[0]-1)-.5)*.5 + 1.
     xlen = x.shape[0]
     # initialize the estimators
-    uncov = UnevenlySampledCovarianceMatrix()
-    uncov2 = UnevenlySampledCovarianceMatrix()
+    uncov = VartimeCovarianceMatrix()
+    uncov2 = VartimeCovarianceMatrix()
     # emulate disconnetion
     dt[xlen//3-1] = 0.
     dt[2*xlen//3-1] = 0.
@@ -102,7 +102,7 @@ def test_UnevenlySampledCovarianceMatrix3():
     assert_array_almost_equal(unC, unC2, decimal=10)
 
 
-def test_UnevenlySampledCovarianceMatrix4():
+def test_VartimeCovarianceMatrix4():
     """Test whether the trapezoidal integrator returns the expected
     when calculated in multiple phases and time dependence."""
 
@@ -111,8 +111,8 @@ def test_UnevenlySampledCovarianceMatrix4():
     dt = (numx.random.rand(x.shape[0]-1)-.5)*.5 + 1.
     xlen = x.shape[0]
     # initialize the estimators
-    uncov = UnevenlySampledCovarianceMatrix()
-    uncov2 = UnevenlySampledCovarianceMatrix()
+    uncov = VartimeCovarianceMatrix()
+    uncov2 = VartimeCovarianceMatrix()
     # update the estimators
     uncov.update(x, dt)
 
@@ -132,10 +132,3 @@ def test_UnevenlySampledCovarianceMatrix4():
     unC2, unAvg2, unTlen2 = uncov2.fix(center=False)
 
     assert_array_almost_equal(unC, unC2, decimal=10)
-
-
-if __name__ == "__main__":
-    test_UnevenlySampledCovarianceMatrix1()
-    test_UnevenlySampledCovarianceMatrix2()
-    test_UnevenlySampledCovarianceMatrix3()
-    test_UnevenlySampledCovarianceMatrix4()

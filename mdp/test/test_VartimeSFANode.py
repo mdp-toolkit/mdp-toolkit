@@ -1,12 +1,12 @@
 """
-Tests for the UnevenlySampledSFANode.
+Tests for the VartimeSFANode.
 """
-from mdp.nodes.sfa_nodes import SFANode, UnevenlySampledSFANode
+from mdp.nodes.sfa_nodes import SFANode, VartimeSFANode
 from mdp import numx, Node
 from mdp.test._tools import assert_array_almost_equal, decimal
 
 
-def test_UnevenlySampledSFANode1():
+def test_VartimeSFANode1():
     """Check whether solutions are rougly close to original solutions of sfa."""
     # generate data
     x = numx.random.random((100000, 3))
@@ -15,7 +15,7 @@ def test_UnevenlySampledSFANode1():
 
     # initialize nodes
     sfa = SFANode()
-    unsfa = UnevenlySampledSFANode()
+    unsfa = VartimeSFANode()
 
     # train sfa
     sfa.train(x)
@@ -33,15 +33,15 @@ def test_UnevenlySampledSFANode1():
     assert_array_almost_equal(unsfa.sf, sfa.sf, decimal-6)
 
 
-def test_UnevenlySampledSFANode2():
+def test_VartimeSFANode2():
     """Check whether splitting input to unsfa in multiple phases 
     and with time dependence works."""
     x = numx.random.random((12000, 2))
     dt = (numx.random.rand(x.shape[0]-1)-.5)*.5 + 1.
     xlen = x.shape[0]
     # initialize the nodes
-    unsfa = UnevenlySampledSFANode()
-    unsfa2 = UnevenlySampledSFANode()
+    unsfa = VartimeSFANode()
+    unsfa2 = VartimeSFANode()
 
     # update the estimators
     unsfa2.train(x, dt=dt)

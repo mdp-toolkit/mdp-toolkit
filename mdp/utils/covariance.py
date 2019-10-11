@@ -135,7 +135,7 @@ class CovarianceMatrix(object):
         return cov_mtx, avg, tlen
 
 
-class UnevenlySampledCovarianceMatrix(CovarianceMatrix):
+class VartimeCovarianceMatrix(CovarianceMatrix):
     """This class stores an empirical covariance matrix that can be updated
     incrementally. A call to the 'fix' method returns the current state of
     the covariance matrix, the average and the number of observations, and
@@ -152,14 +152,14 @@ class UnevenlySampledCovarianceMatrix(CovarianceMatrix):
     """
 
     def __init__(self, dtype=None):
-        """Initialize an *UnevenlySampledCovarianceMatrix*.
+        """Initialize an *VartimeCovarianceMatrix*.
 
         :param dtype: Datatype of the input.
             Default is None. If dtype is not defined, it will be inherited
             from the first data bunch received by 'update'. 
         :type dtype: numpy.dtype or str
         """
-        super(UnevenlySampledCovarianceMatrix,
+        super(VartimeCovarianceMatrix,
               self).__init__(dtype=dtype, bias=True)
         # we need to keep steps and actual time
         # values seperately, due to the weighing

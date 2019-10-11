@@ -1,19 +1,20 @@
 from __future__ import print_function
+import os
 from builtins import str
 __docformat__ = "restructuredtext en"
 
 from .routines import (timediff, refcast, scast, rotate, random_rot,
-                      permute, symrand, norm2, cov2,
-                      mult_diag, comb, sqrtm, get_dtypes, nongeneral_svd,
-                      hermitian, cov_maxima,
-                      lrep, rrep, irep, orthogonal_permutations,
-                      izip_stretched,
-                      weighted_choice, bool_to_sign, sign_to_bool, gabor,
-                      invert_exp_funcs2)
+                       permute, symrand, norm2, cov2,
+                       mult_diag, comb, sqrtm, get_dtypes, nongeneral_svd,
+                       hermitian, cov_maxima,
+                       lrep, rrep, irep, orthogonal_permutations,
+                       izip_stretched,
+                       weighted_choice, bool_to_sign, sign_to_bool, gabor,
+                       invert_exp_funcs2)
 try:
     from collections import OrderedDict
 except ImportError:
-    ## Getting an Ordered Dict for Python < 2.7
+    # Getting an Ordered Dict for Python < 2.7
     from ._ordered_dict import OrderedDict
 
 try:
@@ -23,21 +24,21 @@ except ImportError:
 
 from .introspection import dig_node, get_node_size, get_node_size_str
 from .quad_forms import QuadraticForm, QuadraticFormException
-from .covariance import (CovarianceMatrix, UnevenlySampledCovarianceMatrix,
-                        DelayCovarianceMatrix, MultipleCovarianceMatrices,
-                        CrossCovarianceMatrix)
+from .covariance import (CovarianceMatrix, VartimeCovarianceMatrix,
+                         DelayCovarianceMatrix, MultipleCovarianceMatrices,
+                         CrossCovarianceMatrix)
 from .progress_bar import progressinfo
 from .slideshow import (basic_css, slideshow_css, HTMLSlideShow,
-                       image_slideshow_css, ImageHTMLSlideShow,
-                       SectionHTMLSlideShow, SectionImageHTMLSlideShow,
-                       image_slideshow, show_image_slideshow)
+                        image_slideshow_css, ImageHTMLSlideShow,
+                        SectionHTMLSlideShow, SectionImageHTMLSlideShow,
+                        image_slideshow, show_image_slideshow)
 
 from ._symeig import SymeigException
 
 from .symeig_semidefinite import (symeig_semidefinite_reg,
-                                 symeig_semidefinite_pca,
-                                 symeig_semidefinite_svd,
-                                 symeig_semidefinite_ldl)
+                                  symeig_semidefinite_pca,
+                                  symeig_semidefinite_svd,
+                                  symeig_semidefinite_ldl)
 
 import mdp as _mdp
 # matrix multiplication function
@@ -47,7 +48,7 @@ mult = _mdp.numx.dot
 matmult = mult
 
 if _mdp.numx_description == 'scipy':
-    def matmult(a,b, alpha=1.0, beta=0.0, c=None, trans_a=0, trans_b=0):
+    def matmult(a, b, alpha=1.0, beta=0.0, c=None, trans_a=0, trans_b=0):
         """Return alpha*(a*b) + beta*c.
         a,b,c : matrices
         alpha, beta: scalars
@@ -57,22 +58,33 @@ if _mdp.numx_description == 'scipy':
                   2 (b conjugate transposed)
         """
         if c:
-            gemm,=_mdp.numx_linalg.get_blas_funcs(('gemm',),(a,b,c))
+            gemm, = _mdp.numx_linalg.get_blas_funcs(('gemm',), (a, b, c))
         else:
-            gemm,=_mdp.numx_linalg.get_blas_funcs(('gemm',),(a,b))
+            gemm, = _mdp.numx_linalg.get_blas_funcs(('gemm',), (a, b))
 
         return gemm(alpha, a, b, beta, c, trans_a, trans_b)
 
 # workaround to numpy issues with dtype behavior:
 # 'f' is upcasted at least in the following functions
 _inv = _mdp.numx_linalg.inv
-inv = lambda x: refcast(_inv(x), x.dtype)
-_pinv = _mdp.numx_linalg.pinv
-pinv = lambda x: refcast(_pinv(x), x.dtype)
-_solve = _mdp.numx_linalg.solve
-solve = lambda x, y: refcast(_solve(x, y), x.dtype)
 
-def svd(x, compute_uv = True):
+
+def inv(x): return refcast(_inv(x), x.dtype)
+
+
+_pinv = _mdp.numx_linalg.pinv
+
+
+def pinv(x): return refcast(_pinv(x), x.dtype)
+
+
+_solve = _mdp.numx_linalg.solve
+
+
+def solve(x, y): return refcast(_solve(x, y), x.dtype)
+
+
+def svd(x, compute_uv=True):
     """Wrap the numx SVD routine, so that it returns arrays of the correct
     dtype and a SymeigException in case of failures."""
     tc = x.dtype
@@ -86,7 +98,9 @@ def svd(x, compute_uv = True):
     except _mdp.numx_linalg.LinAlgError as exc:
         raise SymeigException(str(exc))
 
-__all__ = ['CovarianceMatrix', 'DelayCovarianceMatrix','CrossCovarianceMatrix',
+
+__all__ = ['CovarianceMatrix', 'VartimeCovarianceMatrix',
+           'DelayCovarianceMatrix', 'CrossCovarianceMatrix',
            'MultipleCovarianceMatrices', 'QuadraticForm',
            'QuadraticFormException',
            'comb', 'cov2', 'dig_node', 'get_dtypes', 'get_node_size',
@@ -105,14 +119,16 @@ __all__ = ['CovarianceMatrix', 'DelayCovarianceMatrix','CrossCovarianceMatrix',
            'symeig_semidefinite_reg', 'symeig_semidefinite_pca',
            'symeig_semidefinite_svd', 'symeig_semidefinite_ldl']
 
+
 def _without_prefix(name, prefix):
     if name.startswith(prefix):
         return name[len(prefix):]
     else:
         return None
 
-import os
+
 FIXUP_DEBUG = os.getenv('MDPNSDEBUG')
+
 
 def fixup_namespace(mname, names, old_modules, keep_modules=()):
     """Update ``__module__`` attribute and remove ``old_modules`` from namespace
@@ -172,23 +188,25 @@ def fixup_namespace(mname, names, old_modules, keep_modules=()):
         try:
             delattr(module, filename)
             if FIXUP_DEBUG:
-                print('NAMESPACE FIXUP: deleting %s from %s' % (filename, module))
+                print('NAMESPACE FIXUP: deleting %s from %s' %
+                      (filename, module))
         except AttributeError:
             # if the name is not there, we are in a reload, so do not
             # do anything
             pass
 
+
 def _fixup_namespace_item(parent, mname, name, old_modules, path):
     try:
         item = getattr(parent, name)
     except AttributeError:
-        if name.startswith('__'): # those sometimes fail unexplicably
+        if name.startswith('__'):  # those sometimes fail unexplicably
             return
         else:
             raise
     current_name = getattr(item, '__module__', None)
     if (current_name is not None and
-        _without_prefix(current_name, mname + '.') in old_modules):
+            _without_prefix(current_name, mname + '.') in old_modules):
         if FIXUP_DEBUG:
             print('namespace fixup: {%s => %s}%s.%s' % (
                 current_name, mname, path, name))
@@ -207,6 +225,7 @@ def _fixup_namespace_item(parent, mname, name, old_modules, path):
         for subitem in subitems:
             _fixup_namespace_item(item, mname, subitem, old_modules,
                                   path + '.' + name)
+
 
 fixup_namespace(__name__, __all__,
                 ('routines',
