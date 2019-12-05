@@ -286,15 +286,15 @@ class SFANode(Node):
                 # We first try to fulfill the extended signature described
                 # in mdp.utils.symeig_semidefinite
                 self.d, self.sf = self._symeig(
-                    self.dcov_mtx, self.cov_mtx,
-                    True, "on", rng,
-                    overwrite=(not debug),
-                    rank_threshold=self.rank_threshold,
-                    dfc_out=self)
+                        self.dcov_mtx, self.cov_mtx,
+                        True, "on", rng,
+                        overwrite=(not debug),
+                        rank_threshold=self.rank_threshold,
+                        dfc_out=self)
             except TypeError:
                 self.d, self.sf = self._symeig(
-                    self.dcov_mtx, self.cov_mtx, True, "on", rng,
-                    overwrite=(not debug))
+                        self.dcov_mtx, self.cov_mtx, True,
+                        "on", rng, overwrite=(not debug))
             d = self.d
             # check that we get only *positive* eigenvalues
             if d.min() < 0:
@@ -457,10 +457,11 @@ class VartimeSFANode(SFANode):
             ``train()`` calls.
         :type rank_deficit_method: str
         """
-        super(VartimeSFANode, self).__init__(input_dim,
-                                             output_dim, dtype, include_last_sample=True, rank_deficit_method=rank_deficit_method)
+        super(VartimeSFANode, self).__init__(
+                input_dim, output_dim, dtype, include_last_sample=True,
+                rank_deficit_method=rank_deficit_method)
 
-        self.tphase = 0
+        self.tchunk = 0
 
     def _init_cov(self):
         # init two covariance matrices
@@ -476,39 +477,53 @@ class VartimeSFANode(SFANode):
         :param x: The time series data.
         :type x: numpy.ndarray
 
-        :param dt: Sequence of time increments between vectors. Must be
-            of length *x.shape[0]-1* in case of a single training phase.
-            In case the training is done in multiple phases with intended
-            time dependence - meaning the derivative between chunks should
-            be considered, *dt* should be of length *x.shape[0]* starting
-            with the second call. If it continues to be of length
-            *x.shape[0]-1* time dependence is omitted. If *dt* is omitted
-            entirely there will be no time dependence between calls and
-            it will be considered to be one everywhere within a call.
+        :param dt: Sequence of time increments between vectors. 
+
+            Usage with only single chunk of data:
+                *dt* must be of length *x.shape[0]-1*.
+
+            Usage with multiple chunks of data with intended time dependence:
+                *dt* should have length *x.shape[0]-1* in the first call and
+                be of length *x.shape[0]* starting with the second call.
+                Starting with the second call, the first element in each chunk
+                will be considered the time difference between the last element
+                of *x* in the previous chunk and the first element of *x* of the
+                current chunk.
+
+            Usage with multiple chunks without time dependence:
+                If *dt* has length *x.shape[0]-1* time dependence between
+                chunks is omitted and all algorithmic components regard
+                only the time structure within chunks.
+
+            Minimal usage:
+                If *dt* is omitted entirely there will be no time dependence
+                between chunks and it will be considered to be one everywhere
+                within a chunk.
+
         :type dt: numpy.ndarray
 
         :returns: Piecewise linear approximation of the time derivative.
         :rtype: numpy.ndarray
         """
-        outlen = x.shape[0] - \
-            1 if self.tphase == 0 or dt is None or dt.shape[0] != x.shape[0] else x.shape[0]
+        outlen = x.shape[0] - 1\
+                if self.tchunk == 0 or dt is None or dt.shape[0] != x.shape[0] else x.shape[0]
         out = numx.empty([outlen, x.shape[1]])
 
         if dt is not None:
             # Improvements can be made, by interpolating polynomials
             out[-x.shape[0]+1:, :] =\
-                (x[1:, :]-x[:-1, :]) / dt[-x.shape[0]+1:, None]
+                    (x[1:, :]-x[:-1, :]) / dt[-x.shape[0]+1:, None]
         else:
             # trivial fallback
             out[-x.shape[0]+1:, :] = x[1:, :]-x[:-1, :]
 
-        if self.tphase > 0 and dt is not None and dt.shape[0] == x.shape[0]:
+        if self.tchunk > 0 and dt is not None and dt.shape[0] == x.shape[0]:
             # check if str before checking, to avoid comparison warnings
             out[0, :] = numx.divide(x[0, :]-self.xlast, dt[0])
 
         self.xlast = x[-1, :].copy()
         self.dtlast = dt[-1].copy() if dt is not None else 1.
-        self.tphase += 1
+        self.tchunk += 1
 
         return out
 
@@ -533,12 +548,15 @@ class VartimeSFANode(SFANode):
                 current chunk.
 
             Usage with multiple chunks without time dependence:
-                If *dt* has length *x.shape[0]-1* time dependence is omitted.
+                If *dt* has length *x.shape[0]-1* time dependence between
+                chunks is omitted and all algorithmic components regard
+                only the time structure within chunks.
 
             Minimal usage:
                 If *dt* is omitted entirely there will be no time dependence
                 between chunks and it will be considered to be one everywhere
                 within a chunk.
+
         :type dt: numpy.ndarray
         """
         # update the covariance matrices
@@ -683,24 +701,24 @@ class SFA2Node(SFANode):
         return QuadraticForm(h, f, c, dtype=self.dtype)
 
 
-# old weave inline code to perform the time derivative
+### old weave inline code to perform the time derivative
 
 # weave C code executed in the function SfaNode.time_derivative
-# _TDERIVATIVE_1ORDER_CCODE = """
-# for( int i=0; i<columns; i++ ) {
-# for( int j=0; j<rows-1; j++ ) {
-# deriv(j,i) = x(j+1,i)-x(j,i);
-# }
-# }
-# """
+## _TDERIVATIVE_1ORDER_CCODE = """
+##   for( int i=0; i<columns; i++ ) {
+##     for( int j=0; j<rows-1; j++ ) {
+##       deriv(j,i) = x(j+1,i)-x(j,i);
+##     }
+##   }
+## """
 
 # it was called like that:
-# def time_derivative(self, x):
-# rows = x.shape[0]
-# columns = x.shape[1]
-# deriv = numx.zeros((rows-1, columns), dtype=self.dtype)
+## def time_derivative(self, x):
+##     rows = x.shape[0]
+##     columns = x.shape[1]
+##     deriv = numx.zeros((rows-1, columns), dtype=self.dtype)
 
-# weave.inline(_TDERIVATIVE_1ORDER_CCODE,['rows','columns','deriv','x'],
-# type_factories = weave.blitz_tools.blitz_type_factories,
-# compiler='gcc',extra_compile_args=['-O3']);
-# return deriv
+##     weave.inline(_TDERIVATIVE_1ORDER_CCODE,['rows','columns','deriv','x'],
+##                  type_factories = weave.blitz_tools.blitz_type_factories,
+##                  compiler='gcc',extra_compile_args=['-O3']);
+##     return deriv
