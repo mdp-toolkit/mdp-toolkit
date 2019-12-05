@@ -152,7 +152,7 @@ class VartimeCovarianceMatrix(CovarianceMatrix):
     """
 
     def __init__(self, dtype=None):
-        """Initialize an *VartimeCovarianceMatrix*.
+        """Initialize a *VartimeCovarianceMatrix*.
 
         :param dtype: Datatype of the input.
             Default is None. If dtype is not defined, it will be inherited
@@ -165,7 +165,7 @@ class VartimeCovarianceMatrix(CovarianceMatrix):
         # values seperately, due to the weighing
         # which is not required in the evenly sampled case
         self._steps = 0
-        self.tphase = 0
+        self.tchunk = 0
 
     def update(self, x, dt=None):
         """Update internal structures.
@@ -177,17 +177,30 @@ class VartimeCovarianceMatrix(CovarianceMatrix):
             and random variables along the columns.
         :type x: numpy.ndarray
 
-        :param dt: Sequence of time increments between vectors. Must be
-            of length *x.shape[0]-1* in case of a single call. In case of
-            multiple calls with intended time dependence - as opposed to
-            computing the results as a weighted avarage of separate calls -
-            *dt* must be of length *x.shape[0]* starting with the second call.
-            The first element will be considered as the time difference
-            between the last element of *x* in the preceding call and the
-            first element of *x* in the current call. In case of not supplying
-            a *x.shape[0]*-th element in *dt*, time dependence will be dropped.
-            If *dt* omitted entirely, it will be considered to be one everywhere
-            whereas time dependence between calls is still dropped.
+        :param dt: Sequence of time increments between vectors. 
+
+            Usage with only single chunk of data:
+                *dt* must be of length *x.shape[0]-1*.
+
+            Usage with multiple chunks of data with intended time dependence:
+                *dt* should have length *x.shape[0]-1* in the first call and
+                be of length *x.shape[0]* starting with the second call.
+                Starting with the second call, the first element in each chunk
+                will be considered the time difference between the last element
+                of *x* in the previous chunk and the first element of *x* of the
+                current chunk.
+
+            Usage with multiple chunks without time dependence:
+                The moments are computed as a weighted average of the moments
+                of separate chunks, if *dt* has length *x.shape[0]-1*. Time 
+                dependence between chunks is thus omitted and all algorithmic
+                components regard only the time structure within chunks.
+
+            Minimal usage:
+                If *dt* is omitted entirely there will be no time dependence
+                between chunks and it will be considered to be one everywhere
+                within a chunk.
+
         :type dt: numpy.ndarray
         """
         if self._cov_mtx is None:
@@ -195,15 +208,15 @@ class VartimeCovarianceMatrix(CovarianceMatrix):
         # cast input
         x = mdp.utils.refcast(x, self._dtype)
 
-        # account for the gap between training phases
-        if self.tphase > 0:
+        # account for the gap between chunks
+        if self.tchunk > 0:
             if dt is not None and dt.shape[0] == x.shape[0]:
                 self._avg += (self.xlast + x[0, :])*dt[0]/2.
                 self._cov_mtx += (numx.outer(self.xlast, self.xlast) +
                                   numx.outer(x[0, :], x[0, :]))*dt[0]/2.
                 self._tlen += dt[0]
 
-        # keep last observation for multiple training phases
+        # keep last observation for continuation to future chunk
         self.xlast = x[-1, :].copy()
         self.dtlast = dt[-1].copy() if dt is not None else 1.
 
@@ -227,12 +240,12 @@ class VartimeCovarianceMatrix(CovarianceMatrix):
         # should the x be reset to their original value, as they are not passed as a copy?
         self._tlen += _dt.sum() if dt is not None else x.shape[0]-1
         self._steps += x.shape[0]
-        self.tphase += 1
+        self.tchunk += 1
 
     def fix(self, center=True):
         """Returns a triple containing the generalised
         covariance matrix, the average and length of the
-        sequence (in time/ summed increments).
+        sequence (in time/summed increments).
 
         The covariance matrix is then reset to a zero-state.
 
@@ -242,7 +255,7 @@ class VartimeCovarianceMatrix(CovarianceMatrix):
         :type bool: bool
 
         :returns: Generalised covariance matrix, average and length
-        of sequence (in time/ summed increments).
+        of sequence (in time/summed increments).
         :rtype: Tuple[np.ndarray, np.ndarray, np.ndarray]
         """
         # local variables
