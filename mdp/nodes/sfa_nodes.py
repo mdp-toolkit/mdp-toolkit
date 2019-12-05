@@ -286,9 +286,11 @@ class SFANode(Node):
                 # We first try to fulfill the extended signature described
                 # in mdp.utils.symeig_semidefinite
                 self.d, self.sf = self._symeig(
-                    self.dcov_mtx, self.cov_mtx, True, "on", rng,
+                    self.dcov_mtx, self.cov_mtx,
+                    True, "on", rng,
                     overwrite=(not debug),
-                    rank_threshold=self.rank_threshold, dfc_out=self)
+                    rank_threshold=self.rank_threshold,
+                    dfc_out=self)
             except TypeError:
                 self.d, self.sf = self._symeig(
                     self.dcov_mtx, self.cov_mtx, True, "on", rng,
@@ -381,7 +383,7 @@ class VartimeSFANode(SFANode):
     Extract the slowly varying components from the input data.
     This node can be understood as a generalization to the *SFANode*.
 
-    In particular this nodes numerically computes the integrals involved in
+    In particular, this node numerically computes the integrals involved in
     the SFA problem formulation by applying the trapezoid rule.
 
     .. attribute:: avg
@@ -407,7 +409,7 @@ class VartimeSFANode(SFANode):
 
     def __init__(self, input_dim=None, output_dim=None, dtype=None,
                  rank_deficit_method='none'):
-        """"
+        """
         Initialize an object of type 'VartimeSFANode'.
 
         :param input_dim: The input dimensionality.
@@ -456,8 +458,7 @@ class VartimeSFANode(SFANode):
         :type rank_deficit_method: str
         """
         super(VartimeSFANode, self).__init__(input_dim,
-                                             output_dim, dtype, include_last_sample=True,
-                                             rank_deficit_method=rank_deficit_method)
+                                             output_dim, dtype, include_last_sample=True, rank_deficit_method=rank_deficit_method)
 
         self.tphase = 0
 
@@ -495,8 +496,8 @@ class VartimeSFANode(SFANode):
 
         if dt is not None:
             # Improvements can be made, by interpolating polynomials
-            out[-x.shape[0]+1:, :] = (x[1:, :]-x[:-1, :]) / \
-                dt[-x.shape[0]+1:, None]
+            out[-x.shape[0]+1:, :] =\
+                (x[1:, :]-x[:-1, :]) / dt[-x.shape[0]+1:, None]
         else:
             # trivial fallback
             out[-x.shape[0]+1:, :] = x[1:, :]-x[:-1, :]
@@ -518,13 +519,26 @@ class VartimeSFANode(SFANode):
         :param x: The time series data.
         :type x: numpy.ndarray
 
-        :param dt: Sequence of time increments between vectors. Must be
-            of length *x.shape[0]-1*. In case the training is done in multiple
-            phases with intended time dependence , *dt* should be of length
-            *x.shape[0]* starting with the second call. If it continues to be
-            of length *x.shape[0]-1* time dependence is omitted. If *dt* is
-            omitted entirely there will be no time dependence between calls and
-            it will be considered to be one everywhere within a call.
+        :param dt: Sequence of time increments between vectors. 
+
+            Usage with only single chunk of data:
+                *dt* must be of length *x.shape[0]-1*.
+
+            Usage with multiple chunks of data with intended time dependence:
+                *dt* should have length *x.shape[0]-1* in the first call and
+                be of length *x.shape[0]* starting with the second call.
+                Starting with the second call, the first element in each chunk
+                will be considered the time difference between the last element
+                of *x* in the previous chunk and the first element of *x* of the
+                current chunk.
+
+            Usage with multiple chunks without time dependence:
+                If *dt* has length *x.shape[0]-1* time dependence is omitted.
+
+            Minimal usage:
+                If *dt* is omitted entirely there will be no time dependence
+                between chunks and it will be considered to be one everywhere
+                within a chunk.
         :type dt: numpy.ndarray
         """
         # update the covariance matrices
