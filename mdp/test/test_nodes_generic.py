@@ -1,50 +1,65 @@
 from builtins import range
 from builtins import object
-import py.test
+import pytest
+# python 2/3 compatibility
+try:
+    from inspect import getfullargspec as getargs
+except ImportError:
+    from inspect import getargspec as getargs
 import inspect
-
 from mdp import (config, nodes, ClassifierNode,
                  PreserveDimNode, InconsistentDimException)
 from ._tools import *
 
 uniform = numx_rand.random
 
+
 def _rand_labels(x):
     return numx_rand.randint(0, 2, size=(x.shape[0],))
+
 
 def _rand_labels_array(x):
     return numx_rand.randint(0, 2, size=(x.shape[0], 1))
 
+
 def _rand_classification_labels_array(x):
     labels = numx_rand.randint(0, 2, size=(x.shape[0],))
-    labels[labels==0] = -1
+    labels[labels == 0] = -1
     return labels
+
 
 def _dumb_quadratic_expansion(x):
     dim_x = x.shape[1]
-    return numx.asarray([(x[i].reshape(dim_x,1) *
-                          x[i].reshape(1,dim_x)).flatten()
+    return numx.asarray([(x[i].reshape(dim_x, 1) *
+                          x[i].reshape(1, dim_x)).flatten()
                          for i in range(len(x))])
+
 
 def _rand_array_halfdim(x):
     return uniform(size=(x.shape[0], x.shape[1]//2))
 
+
 class Iter(object):
     pass
 
+
 def _rand_array_single_rows():
-    x = uniform((500,4))
+    x = uniform((500, 4))
+
     class _Iter(Iter):
         def __iter__(self):
             for row in range(x.shape[0]):
-                yield x[numx.newaxis,row,:]
+                yield x[numx.newaxis, row, :]
     return _Iter()
+
 
 def _contrib_get_random_mix():
     return get_random_mix(type='d', mat_dim=(100, 3))[2]
 
+
 def _positive_get_random_mix():
     return abs(get_random_mix()[2])
+
 
 def _train_if_necessary(inp, node, sup_arg_gen):
     if node.is_trainable():
@@ -64,6 +79,7 @@ def _train_if_necessary(inp, node, sup_arg_gen):
             else:
                 break
 
+
 def _stop_training_or_execute(node, inp):
     if node.is_trainable():
         node.stop_training()
@@ -74,8 +90,10 @@ def _stop_training_or_execute(node, inp):
         else:
             node.execute(inp)
 
+
 def pytest_generate_tests(metafunc):
     generic_test_factory(NODES, metafunc)
+
 
 def generic_test_factory(big_nodes, metafunc):
     """Generator creating a test for each of the nodes
@@ -114,15 +132,12 @@ def generic_test_factory(big_nodes, metafunc):
       The return value is unpacked and used as additional arguments to
       `execute`.
     """
+    ids = []
+    argvalues = []
     for nodetype in big_nodes:
+
         if not isinstance(nodetype, dict):
             nodetype = dict(klass=nodetype)
-        funcargs = dict(
-            init_args=(),
-            inp_arg_gen=lambda: get_random_mix(type='d')[2],
-            sup_arg_gen=None,
-            execute_arg_gen=None)
-        funcargs.update(nodetype)
 
         if hasattr(metafunc.function, 'only_if_node_condition'):
             # A TypeError can be thrown by the condition checking
@@ -134,8 +149,30 @@ def generic_test_factory(big_nodes, metafunc):
             except TypeError:
                 continue
 
-        theid = nodetype['klass'].__name__
-        metafunc.addcall(funcargs, id=theid)
+        argv = [(), lambda: get_random_mix(type='d')
+                [2], None, None, None]
+
+        # add whatever is in nodetype to the argumentlist
+        for key in nodetype:
+            if key == 'init_args':
+                argv[0] = nodetype[key]
+            elif key == 'inp_arg_gen':
+                argv[1] = nodetype[key]
+            elif key == 'sup_arg_gen':
+                argv[2] = nodetype[key]
+            elif key == 'execute_arg_gen':
+                argv[3] = nodetype[key]
+            elif key == 'klass':
+                argv[4] = nodetype[key]
+
+        # make list with different inputs
+        argvalues.append(tuple(argv))
+        ids.append(nodetype['klass'].__name__)
+
+    # argnames are the same
+    argnames = 'init_args,inp_arg_gen,sup_arg_gen,execute_arg_gen,klass'
+    metafunc.parametrize(argnames=argnames, argvalues=argvalues, ids=ids)
+
 
 def only_if_node(condition):
     """Execute the test only if condition(nodetype) is True.
@@ -147,9 +184,11 @@ def only_if_node(condition):
         return func
     return f
 
+
 def call_init_args(init_args):
     return [item() if hasattr(item, '__call__') else item
             for item in init_args]
+
 
 def test_dtype_consistency(klass, init_args, inp_arg_gen,
                            sup_arg_gen, execute_arg_gen):
@@ -157,6 +196,12 @@ def test_dtype_consistency(klass, init_args, inp_arg_gen,
     supported_types = klass(*args).get_supported_dtypes()
     for dtype in supported_types:
         inp = inp_arg_gen()
+        # The code was written before the following was included in
+        # scikit-learn. If more new nodes show up, that require the
+        # following fix, switch to a more generic solution.
+        # See: https://github.com/mdp-toolkit/mdp-toolkit/pull/47
+        if klass.__name__ == "ComplementNBScikitsLearnNode":
+            inp = numx.absolute(inp)
         args = call_init_args(init_args)
         node = klass(dtype=dtype, *args)
         _train_if_necessary(inp, node, sup_arg_gen)
@@ -175,6 +220,12 @@ def test_outputdim_consistency(klass, init_args, inp_arg_gen,
                                sup_arg_gen, execute_arg_gen):
     args = call_init_args(init_args)
     inp = inp_arg_gen()
+    # The code was written before the following was included in
+    # scikit-learn. If more new nodes show up, that require the
+    # following fix, switch to a more generic solution.
+    # See: https://github.com/mdp-toolkit/mdp-toolkit/pull/47
+    if klass.__name__ == "ComplementNBScikitsLearnNode":
+        inp = numx.absolute(inp)
     # support generators
     if isinstance(inp, Iter):
         for x in inp:
@@ -198,7 +249,7 @@ def test_outputdim_consistency(klass, init_args, inp_arg_gen,
     # check if the node output dimension can be set or must be determined
     # by the node
     if (not issubclass(klass, PreserveDimNode) and
-        'output_dim' in inspect.getargspec(klass.__init__)[0]):
+            'output_dim' in getargs(klass.__init__)[0]):
         # case 1: output dim set in the constructor
         node = klass(output_dim=output_dim, *args)
         _test(node)
@@ -210,21 +261,21 @@ def test_outputdim_consistency(klass, init_args, inp_arg_gen,
     else:
         if issubclass(klass, PreserveDimNode):
             # check that constructor allows to set output_dim
-            assert 'output_dim' in inspect.getargspec(klass.__init__)[0]
+            assert 'output_dim' in getargs(klass.__init__)[0]
             # check that setting the input dim, then incompatible output dims
             # raises an appropriate error
             # case 1: both in the constructor
-            py.test.raises(InconsistentDimException,
-                   'klass(input_dim=inp.shape[1], output_dim=output_dim, *args)')
+            pytest.raises(InconsistentDimException,
+                          'klass(input_dim=inp.shape[1], output_dim=output_dim, *args)')
             # case 2: first input_dim, then output_dim
             node = klass(input_dim=inp.shape[1], *args)
-            py.test.raises(InconsistentDimException,
-                           'node.output_dim = output_dim')
+            pytest.raises(InconsistentDimException,
+                          'node.output_dim = output_dim')
             # case 3: first output_dim, then input_dim
             node = klass(output_dim=output_dim, *args)
             node.output_dim = output_dim
-            py.test.raises(InconsistentDimException,
-                           'node.input_dim = inp.shape[1]')
+            pytest.raises(InconsistentDimException,
+                          'node.input_dim = inp.shape[1]')
 
         # check that output_dim is set to whatever the output dim is
         node = klass(*args)
@@ -238,16 +289,24 @@ def test_outputdim_consistency(klass, init_args, inp_arg_gen,
 
         assert out.shape[1] == node.output_dim
 
+
 def test_dimdtypeset(klass, init_args, inp_arg_gen,
                      sup_arg_gen, execute_arg_gen):
     init_args = call_init_args(init_args)
     inp = inp_arg_gen()
+    # The code was written before the following was included in
+    # scikit-learn. If more new nodes show up, that require the
+    # following fix, switch to a more generic solution.
+    # See: https://github.com/mdp-toolkit/mdp-toolkit/pull/47
+    if klass.__name__ == "ComplementNBScikitsLearnNode":
+        inp = numx.absolute(inp)
     node = klass(*init_args)
     _train_if_necessary(inp, node, sup_arg_gen)
     _stop_training_or_execute(node, inp)
     assert node.output_dim is not None
     assert node.dtype is not None
     assert node.input_dim is not None
+
 
 @only_if_node(lambda nodetype: nodetype.is_invertible())
 def test_inverse(klass, init_args, inp_arg_gen,
@@ -268,22 +327,31 @@ def test_inverse(klass, init_args, inp_arg_gen,
     assert_array_almost_equal_diff(rec, inp, decimal-3)
     assert rec.dtype == dtype
 
+
 def SFA2Node_inp_arg_gen():
-    freqs = [2*numx.pi*100.,2*numx.pi*200.]
-    t =  numx.linspace(0, 1, num=1000)
+    freqs = [2*numx.pi*100., 2*numx.pi*200.]
+    t = numx.linspace(0, 1, num=1000)
     mat = numx.array([numx.sin(freqs[0]*t),
                       numx.sin(freqs[1]*t)]).T
     inp = mat.astype('d')
     return inp
 
+
 def NeuralGasNode_inp_arg_gen():
-    return numx.asarray([[2.,0,0],[-2,0,0],[0,0,0]])
+    return numx.asarray([[2., 0, 0], [-2, 0, 0], [0, 0, 0]])
+
 
 def LinearRegressionNode_inp_arg_gen():
     return uniform(size=(1000, 5))
 
+
+def iGSFANode_inp_arg_gen():
+    return uniform(size=(1000, 4)) * 0.01
+
+
 def _rand_1d(x):
     return uniform(size=(x.shape[0],))
+
 
 def CCIPCANode_inp_arg_gen():
     line_x = numx.zeros((1000, 2), "d")
@@ -299,7 +367,7 @@ def CCIPCANode_inp_arg_gen():
 
 NODES = [
     dict(klass='NeuralGasNode',
-         init_args=[3,NeuralGasNode_inp_arg_gen()],
+         init_args=[3, NeuralGasNode_inp_arg_gen()],
          inp_arg_gen=NeuralGasNode_inp_arg_gen),
     dict(klass='SFA2Node',
          inp_arg_gen=SFA2Node_inp_arg_gen),
@@ -335,7 +403,7 @@ NODES = [
     dict(klass='LinearRegressionNode',
          sup_arg_gen=_rand_array_halfdim),
     dict(klass='Convolution2DNode',
-         init_args=[mdp.numx.array([[[1.]]]), (5,1)]),
+         init_args=[mdp.numx.array([[[1.]]]), (5, 1)]),
     dict(klass='JADENode',
          inp_arg_gen=_contrib_get_random_mix),
     dict(klass='NIPALSNode',
@@ -345,6 +413,10 @@ NODES = [
          init_args=[(nodes.PolynomialExpansionNode, (1,), {}),
                     (nodes.PolynomialExpansionNode, (1,), {}),
                     True]),
+    dict(klass='iGSFANode',
+         init_args=[None, None, None, None, None,
+                    None, None, 0.5, False, False],
+         inp_arg_gen=iGSFANode_inp_arg_gen),
     dict(klass='LLENode',
          inp_arg_gen=_contrib_get_random_mix,
          init_args=[3, 0.001, True]),
@@ -361,29 +433,28 @@ NODES = [
          inp_arg_gen=CCIPCANode_inp_arg_gen),
     dict(klass='IncSFANode',
          inp_arg_gen=CCIPCANode_inp_arg_gen),
-
     dict(klass='PerceptronClassifier',
          sup_arg_gen=_rand_classification_labels_array),
     dict(klass='SimpleMarkovClassifier',
          sup_arg_gen=_rand_classification_labels_array),
     dict(klass='ShogunSVMClassifier',
-        sup_arg_gen=_rand_labels_array,
-        init_args=["libsvmmulticlass", (), None, "GaussianKernel"]),
+         sup_arg_gen=_rand_labels_array,
+         init_args=["libsvmmulticlass", (), None, "GaussianKernel"]),
     dict(klass='LibSVMClassifier',
-        sup_arg_gen=_rand_labels_array,
-        init_args=["LINEAR","C_SVC"]),
+         sup_arg_gen=_rand_labels_array,
+         init_args=["LINEAR", "C_SVC"]),
     dict(klass='MultinomialNBScikitsLearnNode',
          inp_arg_gen=_positive_get_random_mix,
          sup_arg_gen=_rand_labels),
     dict(klass='NeighborsScikitsLearnNode',
-        sup_arg_gen=_rand_1d),
-    ]
+         sup_arg_gen=_rand_1d),
+]
 
 # LabelSpreadingScikitsLearnNode is broken in sklearn version 0.11
 # It works fine in version 0.12
-EXCLUDE_NODES = ['ICANode', 'LabelSpreadingScikitsLearnNode', 
-        'OutputCodeClassifierScikitsLearnNode', 'OneVsOneClassifierScikitsLearnNode',
-        'OneVsRestClassifierScikitsLearnNode', 'VotingClassifierScikitsLearnNode']
+EXCLUDE_NODES = ['ICANode', 'LabelSpreadingScikitsLearnNode',
+                 'OutputCodeClassifierScikitsLearnNode', 'OneVsOneClassifierScikitsLearnNode',
+                 'OneVsRestClassifierScikitsLearnNode', 'VotingClassifierScikitsLearnNode']
 
 
 def generate_nodes_list(nodes_dicts):
@@ -395,7 +466,8 @@ def generate_nodes_list(nodes_dicts):
         klass = dct['klass']
         if type(klass) is __builtins__['str']:
             # some of the nodes on the list may be optional
-            if not hasattr(nodes, klass): continue
+            if not hasattr(nodes, klass):
+                continue
             # transform class name into class (needed by automatic tests)
             klass = getattr(nodes, klass)
             dct['klass'] = klass
@@ -418,7 +490,7 @@ def generate_nodes_list(nodes_dicts):
         if (inspect.isclass(node)
             and node_name.endswith('ScikitsLearnNode')
             and (node not in visited)
-            and (node not in excluded)):
+                and (node not in excluded)):
             if issubclass(node, ClassifierNode):
                 nodes_list.append(dict(klass=node,
                                        sup_arg_gen=_rand_labels))
@@ -434,8 +506,9 @@ def generate_nodes_list(nodes_dicts):
         if (inspect.isclass(attr)
             and issubclass(attr, mdp.Node)
             and attr not in visited
-            and attr not in excluded):
+                and attr not in excluded):
             nodes_list.append(attr)
     return nodes_list
+
 
 NODES = generate_nodes_list(NODES)

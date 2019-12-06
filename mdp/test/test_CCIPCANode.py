@@ -41,7 +41,7 @@ def test_ccipcanode_v2():
     input_data = expnode(x)
     input_data = input_data - input_data.mean(axis=0)
 
-    ##Setup node/trainer
+    # Setup node/trainer
     output_dim = 4
     node = CCIPCANode(output_dim=output_dim)
 
@@ -54,7 +54,8 @@ def test_ccipcanode_v2():
 
     _tcnt = time.time()
     for i in range(iterval * input_data.shape[0]):
-        node.train(input_data[i % input_data.shape[0]:i % input_data.shape[0] + 1])
+        node.train(input_data[i % input_data.shape[0]:i %
+                              input_data.shape[0] + 1])
         if (node.get_current_train_iteration() % 100 == 0):
             v.append(node.v)
 
@@ -64,8 +65,9 @@ def test_ccipcanode_v2():
             dcosines[i, dim] = numx.fabs(numx.dot(v[i][:, dim], bv[:, dim].T)) / (
                 numx.linalg.norm(v[i][:, dim]) * numx.linalg.norm(bv[:, dim]))
 
-    print('\nTotal Time for {} iterations: {}'.format(iterval, time.time() - _tcnt))
-    assert_almost_equal(numx.ones(output_dim), dcosines[-1], decimal=3)
+    print('\nTotal Time for {} iterations: {}'.format(
+        iterval, time.time() - _tcnt))
+    assert_almost_equal(numx.ones(output_dim), dcosines[-1], decimal=1)
 
 
 def test_whiteningnode():

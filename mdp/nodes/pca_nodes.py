@@ -13,53 +13,91 @@ import warnings as _warnings
 class PCANode(mdp.Node):
     """Filter the input data through the most significatives of its
     principal components.
-
-    **Internal variables of interest**
     
-      ``self.avg``
-          Mean of the input data (available after training).
+    .. attribute:: avg
+    
+        Mean of the input data (available after training).
+        
+    .. attribute:: v
+    
+        Transposed of the projection matrix (available after training).
 
-      ``self.v``
-          Transposed of the projection matrix (available after training).
+    .. attribute:: d
+    
+        Variance corresponding to the PCA components (eigenvalues of the
+        covariance matrix).
 
-      ``self.d``
-          Variance corresponding to the PCA components (eigenvalues of the
-          covariance matrix).
-
-      ``self.explained_variance``
-          When output_dim has been specified as a fraction of the total
-          variance, this is the fraction of the total variance that is
-          actually explained.
-
-    More information about Principal Component Analysis, a.k.a. discrete
-    Karhunen-Loeve transform can be found among others in
-    I.T. Jolliffe, Principal Component Analysis, Springer-Verlag (1986).
+    .. attribute:: explained_variance
+    
+        When output_dim has been specified as a fraction of the total
+        variance, this is the fraction of the total variance that is
+        actually explained.
+    
+    |
+    
+    .. admonition:: Reference
+    
+        More information about Principal Component Analysis, a.k.a. discrete
+        Karhunen-Loeve transform can be found among others in
+        I.T. Jolliffe, Principal Component Analysis, Springer-Verlag (1986).
     """
+
 
     def __init__(self, input_dim=None, output_dim=None, dtype=None,
                  svd=False, reduce=False, var_rel=1E-12, var_abs=1E-15,
                  var_part=None):
-        """The number of principal components to be kept can be specified as
+        """Initializes an object of type 'PCANode'.
+
+        The number of principal components to be kept can be specified as
         'output_dim' directly (e.g. 'output_dim=10' means 10 components
         are kept) or by the fraction of variance to be explained
         (e.g. 'output_dim=0.95' means that as many components as necessary
         will be kept in order to explain 95% of the input variance).
-
-        Other Keyword Arguments:
-
-        svd -- if True use Singular Value Decomposition instead of the
-               standard eigenvalue problem solver. Use it when PCANode
-               complains about singular covariance matrices
-
-        reduce -- Keep only those principal components which have a variance
-                  larger than 'var_abs' and a variance relative to the
-                  first principal component larger than 'var_rel' and a
-                  variance relative to total variance larger than 'var_part'
-                  (set var_part to None or 0 for no filtering).
-                  Note: when the 'reduce' switch is enabled, the actual number
-                  of principal components (self.output_dim) may be different
-                  from that set when creating the instance.
+        
+        :param input_dim: Dimensionality of the input.
+            Default is None.
+        :type input_dim: int
+        
+        :param output_dim: Dimensionality of the output.
+            Default is None.
+        :type output_dim: int
+        
+        :param dtype: Datatype of the input.
+            Default is None.
+        :type dtype: numpy.dtype, str
+        
+        :param svd: If True use Singular Value Decomposition instead of the
+            standard eigenvalue problem solver. Use it when PCANode
+            complains about singular covariance matrices.
+            Default is Flase.
+        :type svd: bool
+        
+        :param reduce: Keep only those principal components which have a variance
+            larger than 'var_abs' and a variance relative to the
+            first principal component larger than 'var_rel' and a
+            variance relative to total variance larger than 'var_part'
+            (set var_part to None or 0 for no filtering).
+            Default is False.
+        :type reduce: bool
+            
+        .. note:: 
+            When the *reduce* switch is enabled, the actual number
+            of principal components (self.output_dim) may be different
+            from that set when creating the instance.
+            
+        :param var_rel: Variance relative to first principal component threshold.
+            Default is 1E-12.
+        :type var_rel: float
+        
+        :param var_abs: Absolute variance threshold.
+            Default is 1E-15.
+        :type var_abs: float
+        
+        :param var_part: Variance relative to total variance threshold.
+            Default is None.
+        :type var_part: float
         """
+
         # this must occur *before* calling super!
         self.desired_variance = None
         super(PCANode, self).__init__(input_dim, output_dim, dtype)
@@ -102,24 +140,36 @@ class PCANode(mdp.Node):
             raise mdp.NodeException(error_str)
 
     def get_explained_variance(self):
-        """Return the fraction of the original variance that can be
-        explained by self._output_dim PCA components.
-        If for example output_dim has been set to 0.95, the explained
-        variance could be something like 0.958...
-        Note that if output_dim was explicitly set to be a fixed number
-        of components, there is no way to calculate the explained variance.
+        """The explained variance is the  fraction of the original variance
+        that can be explained by self._output_dim PCA components. If for
+        example output_dim has been set to 0.95, the explained variance could
+        be something like 0.958...
+        
+        .. note::
+            If output_dim was explicitly set to be a fixed number
+            of components, there is no way to calculate the explained variance.
+        
+        :return: The explained variance.
+        :rtype: float
         """
+
         return self.explained_variance
 
     def _train(self, x):
-        # update the covariance matrix
+        """Update the covariance matrix.
+        
+        :param x: The training data.
+        :type x: numpy.ndarray
+        """
         self._cov_mtx.update(x)
 
     def _adjust_output_dim(self):
-        """Return the eigenvector range and set the output dim if required.
-
-        This is used if the output dimensions is smaller than the input
-        dimension (so only the larger eigenvectors have to be kept).
+        """This function is used if the output dimensions is smaller than the input
+        dimension (so only the larger eigenvectors have to be kept). If required it
+        sets the output dim.
+        
+        :return: The eigenvector range.
+        :rtype: tuple
         """
         # if the number of principal components to keep is not specified,
         # keep all components
@@ -141,13 +191,18 @@ class PCANode(mdp.Node):
 
     def _stop_training(self, debug=False):
         """Stop the training phase.
-
-        Keyword arguments:
-
-        debug=True     if stop_training fails because of singular cov
-                       matrices, the singular matrices itselves are stored in
-                       self.cov_mtx and self.dcov_mtx to be examined.
+        
+        :param debug: Determines if singular matrices itself are stored in
+            self.cov_mtx and self.dcov_mtx to be examined, given that
+            stop_training fails because of singular covmatrices.
+            Default is False.
+        :type debug: bool
+        
+        :raises mdp.NodeException: If negative eigenvalues occur, 
+            the covariance matrix may be singular or no component
+            amounts to variation exceeding var_abs. 
         """
+
         # request the covariance matrix and clean up
         self.cov_mtx, avg, self.tlen = self._cov_mtx.fix()
         del self._cov_mtx
@@ -245,14 +300,32 @@ class PCANode(mdp.Node):
         self.total_variance = vartot
 
     def get_projmatrix(self, transposed=1):
-        """Return the projection matrix."""
+        """Returns the projection matrix.
+        
+        :param transposed: Determines whether the transposed projection
+            matrix is returned.
+            Default is True.
+        :type transposed: bool
+        
+        :return: The projection matrix.
+        :rtype: numpy.ndarray
+        """
         self._if_training_stop_training()
         if transposed:
             return self.v
         return self.v.T
 
     def get_recmatrix(self, transposed=1):
-        """Return the back-projection matrix (i.e. the reconstruction matrix).
+        """Returns the the back-projection matrix
+        (i.e. the reconstruction matrix).
+        
+        :param transposed: Determines whether the transposed back-projection matrix
+            (i.e. the reconstruction matrix) is returned.
+            Default is True.
+        :type transposed: bool
+        
+        :return: The back-projection matrix (i.e. the reconstruction matrix).
+        :rtype: numpy.ndarray
         """
         self._if_training_stop_training()
         if transposed:
@@ -261,14 +334,39 @@ class PCANode(mdp.Node):
 
     def _execute(self, x, n=None):
         """Project the input on the first 'n' principal components.
-        If 'n' is not set, use all available components."""
+        
+        If 'n' is not set, use all available components.
+        
+        :param x: Input with at least 'n' principle components.
+        :type x: numpy.ndarray
+        
+        :param n: Number of first principle components.
+        :type n: int
+        
+        :return: The projected input.
+        :rtype: numpy.ndarray
+        """
+
         if n is not None:
             return mult(x-self.avg, self.v[:, :n])
         return mult(x-self.avg, self.v)
 
     def _inverse(self, y, n=None):
-        """Project 'y' to the input space using the first 'n' components.
-        If 'n' is not set, use all available components."""
+        """Project data from the output to the input space using the
+        first 'n' components.
+        
+        If 'n' is not set, use all available components.
+        
+        :param y: Data to be projected to the input space.
+        :type y: numpy.ndarray
+        
+        :param n: Number of first principle components.
+        :type n: int
+        
+        :return: The projected data
+        :rtype: numpy.ndarray
+        """
+
         if n is None:
             n = y.shape[1]
         if n > self.output_dim:
@@ -284,28 +382,40 @@ class PCANode(mdp.Node):
 
 class WhiteningNode(PCANode):
     """*Whiten* the input data by filtering it through the most
-    significatives of its principal components. All output
-    signals have zero mean, unit variance and are decorrelated.
+        significant of its principal components. 
+        
+        All output signals have zero mean, unit variance and are decorrelated.
 
-    **Internal variables of interest**
+        .. attribute:: avg
+        
+            Mean of the input data (available after training).
+            
+        .. attribute:: v
+        
+            Transpose of the projection matrix (available after training).
 
-      ``self.avg``
-          Mean of the input data (available after training).
+        .. attribute:: d
+        
+            Variance corresponding to the PCA components (eigenvalues of
+            the covariance matrix).
 
-      ``self.v``
-          Transpose of the projection matrix (available after training).
-
-      ``self.d``
-          Variance corresponding to the PCA components (eigenvalues of the
-          covariance matrix).
-
-      ``self.explained_variance``
-          When output_dim has been specified as a fraction of the total
-          variance, this is the fraction of the total variance that is actually
-          explained.
-    """
+        .. attribute:: explained_variance
+        
+            When output_dim has been specified as a 
+            fraction of the total variance, this is the fraction of the total
+            variance that is actually explained.
+        """
 
     def _stop_training(self, debug=False):
+        """Stop the training phase.
+        
+        :param debug: Determines if singular matrices itself are stored in
+            self.cov_mtx and self.dcov_mtx to be examined, given that
+            stop_training fails because of singular covmatrices.
+            Default is False.
+        :type debug: bool
+        """
+
         super(WhiteningNode, self)._stop_training(debug)
 
         ##### whiten the filters
@@ -313,13 +423,27 @@ class WhiteningNode(PCANode):
         self.v = old_div(self.v, numx.sqrt(self.d))
 
     def get_eigenvectors(self):
-        """Return the eigenvectors of the covariance matrix."""
+        """Return the eigenvectors of the covariance matrix.
+        
+        :return: The eigenvectors of the covariance matrix.
+        :rtype: numpy.ndarray
+        """
         self._if_training_stop_training()
         return numx.sqrt(self.d)*self.v
 
     def get_recmatrix(self, transposed=1):
-        """Return the back-projection matrix (i.e. the reconstruction matrix).
+        """Returns the the back-projection matrix
+        (i.e. the reconstruction matrix).
+        
+        :param transposed: Determines whether the transposed back-projection matrix
+            (i.e. the reconstruction matrix) is returned.
+            Default is True.
+        :type transposed: bool
+            
+        :return: The back-projection matrix (i.e. the reconstruction matrix).
+        :rtype: numpy.ndarray
         """
+
         self._if_training_stop_training()
         v_inverse = self.v*self.d
         if transposed:

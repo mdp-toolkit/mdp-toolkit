@@ -1,12 +1,20 @@
 
 import mdp
+# python 2/3 compatibility
+try:
+    from inspect import getfullargspec as getargs
+except ImportError:
+    from inspect import getargspec as getargs
 import inspect
-X = mdp.numx_rand.random(size=(500,5))
+
+X = mdp.numx_rand.random(size=(500, 5))
+
 
 def get_signature(func):
-    regargs, varargs, varkwargs, defaults = inspect.getargspec(func)
+    regargs, varargs, varkwargs, defaults = getargs(func)[:4]
     return inspect.formatargspec(regargs, varargs, varkwargs, defaults,
                                  formatvalue=lambda value: "")[1:-1]
+
 
 def test_docstrings():
     # first try on a subclass of Node if
@@ -21,8 +29,8 @@ def test_docstrings():
     assert anode.foo == 42
     assert get_signature(anode.train) == 'self, x'
 
-
     # now try on a subclass of it
+
     class ChildNode(AncestorNode):
         def _train(self, x):
             """doc child"""
@@ -32,6 +40,7 @@ def test_docstrings():
     cnode.train(X)
     assert cnode.foo2 == 42
     assert get_signature(cnode.train) == 'self, x'
+
 
 def test_signatures_no_doc():
     # first try on a subclass of Node if
@@ -43,7 +52,7 @@ def test_signatures_no_doc():
     anode.train(X, foo='abc')
     assert anode.foo == 42
     assert get_signature(anode.train) == 'self, x, foo'
-    
+
     # now try on a subclass of it
     class ChildNode(AncestorNode):
         def _train(self, x, foo2=None):
@@ -52,6 +61,7 @@ def test_signatures_no_doc():
     cnode.train(X, foo2='abc')
     assert cnode.foo2 == 42
     assert get_signature(cnode.train) == 'self, x, foo2'
+
 
 def test_signatures_with_doc_in_both():
     # first try on a subclass of Node if
@@ -66,7 +76,7 @@ def test_signatures_with_doc_in_both():
     anode.train(X, foo='abc')
     assert anode.foo == 42
     assert get_signature(anode.train) == 'self, x, foo'
-    
+
     # now try on a subclass of it
     class ChildNode(AncestorNode):
         def _train(self, x, foo2=None):
@@ -77,6 +87,7 @@ def test_signatures_with_doc_in_both():
     cnode.train(X, foo2='abc')
     assert cnode.foo2 == 42
     assert get_signature(cnode.train) == 'self, x, foo2'
+
 
 def test_signatures_with_doc_in_ancestor():
     # first try on a subclass of Node if
@@ -101,6 +112,7 @@ def test_signatures_with_doc_in_ancestor():
     cnode.train(X, foo2='abc')
     assert cnode.foo2 == 42
     assert get_signature(cnode.train) == 'self, x, foo2'
+
 
 def test_signatures_with_doc_in_child():
     # first try on a subclass of Node if

@@ -10,7 +10,7 @@ import time
 import itertools
 from functools import wraps
 
-import py.test
+import pytest
 
 import mdp
 from mdp import numx, numx_rand, numx_fft, numx_linalg, utils
@@ -171,6 +171,6 @@ class skip_on_condition(object):
                          'os': os,
                          'mdp': mdp}
             if eval(self.condition_str, namespace):
-                py.test.skip(self.skipping_msg)
+                pytest.skip(self.skipping_msg)
             f(*args, **kwargs)
         return wrapped_f

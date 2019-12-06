@@ -1,15 +1,15 @@
 import tempfile
 import os
-import py.test
+import pytest
 
 def test_tmpdir_exists():
-    assert os.path.exists(py.test.mdp_tempdirname)
+    assert os.path.exists(pytest.mdp_tempdirname)
 
 def test_tmpdir_writable1():
-    with open(os.path.join(py.test.mdp_tempdirname, 'empty'), 'w'):
+    with open(os.path.join(pytest.mdp_tempdirname, 'empty'), 'w'):
         pass
 
 def test_tmpdir_writable2():
     with tempfile.NamedTemporaryFile(prefix='MDP_', suffix='.testfile',
-                                     dir=py.test.mdp_tempdirname):
+                                     dir=pytest.mdp_tempdirname):
         pass

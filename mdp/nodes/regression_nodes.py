@@ -9,41 +9,48 @@ from mdp.utils import mult
 
 class LinearRegressionNode(Node):
     """Compute least-square, multivariate linear regression on the input
-    data, i.e., learn coefficients ``b_j`` so that::
-
-      y_i = b_0 + b_1 x_1 + ... b_N x_N ,
-
-    for ``i = 1 ... M``, minimizes the square error given the training ``x``'s
-    and ``y``'s.
+    data, i.e., learn coefficients ``b_j`` so that the linear combination
+    ``y_i = b_0 + b_1 x_1 + ... b_N x_N`` , for ``i = 1 ... M``, minimizes
+    the sum of squared error given the training ``x``'s and ``y``'s.
 
     This is a supervised learning node, and requires input data ``x`` and
     target data ``y`` to be supplied during training (see ``train``
     docstring).
 
-    **Internal variables of interest**
+    .. attribute:: beta
 
-      ``self.beta``
-          The coefficients of the linear regression
+        The coefficients of the linear regression
     """
 
     def __init__(self, with_bias=True, use_pinv=False,
                  input_dim=None, output_dim=None, dtype=None):
-        """
-        :Arguments:
+        """Initializes an object of type 'LinearRegressionNode'.
 
-          with_bias
-            If true, the linear model includes a constant term
+        :param with_bias: If true, the linear model includes a constant term.
 
             - True:  y_i = b_0 + b_1 x_1 + ... b_N x_N
             - False: y_i =       b_1 x_1 + ... b_N x_N
 
             If present, the constant term is stored in the first
-            column of ``self.beta``.
+            column of ``self.beta``. Default: True.
+        :type with_bias: bool
 
-          use_pinv
-            If true, uses the pseudo-inverse function to compute
+        :param use_pinv: If true, uses the pseudo-inverse function to compute
             the linear regression coefficients, which is more robust
-            in some cases
+            in some cases. Default: False.
+        :type use_pinv: bool
+
+        :param input_dim: Dimensionality of the input.
+            Default is None.
+        :type input_dim: int
+        
+        :param output_dim: Dimensionality of the output.
+            Default is None.
+        :type output_dim: int
+        
+        :param dtype: Datatype of the input.
+            Default is None.
+        :type dtype: numpy.dtype, str
         """
         super(LinearRegressionNode, self).__init__(input_dim, output_dim, dtype)
 
@@ -80,11 +87,12 @@ class LinearRegressionNode(Node):
 
     def _train(self, x, y):
         """
-        **Additional input arguments**
+        :param x: Array of different input observations.
+        :type x: numpy.ndarray
 
-        y
-          array of size (x.shape[0], output_dim) that contains the observed
-          output to the input x's.
+        :param y: Array of size (x.shape[0], output_dim) that contains the 
+            observed output to the input x's.
+        :type y: numpy.ndarray
         """
         # initialize internal vars if necessary
         if self._xTx is None:
@@ -130,6 +138,12 @@ class LinearRegressionNode(Node):
     def _add_constant(self, x):
         """Add a constant term to the vector 'x'.
         x -> [1 x]
+
+        :param x: The vector a constant term is appended to.
+        :type x: numpy.ndarray
+
+        :return: The altered vector.
+        :rtype: numpy.ndarray
         """
         return numx.concatenate((numx.ones((x.shape[0], 1),
                                            dtype=self.dtype), x), axis=1)

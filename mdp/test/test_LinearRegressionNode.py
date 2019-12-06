@@ -1,5 +1,5 @@
 from builtins import range
-import py.test
+import pytest
 from ._tools import *
 
 INDIM, OUTDIM, TLEN = 5, 3, 10000
@@ -60,7 +60,7 @@ def test_LinearRegressionNode_raises_on_linearly_dependent_input():
     x = mdp.utils.rrep(x, INDIM)
     x[:,-1] = 2.*x[:,0]
     y = mult(x, beta)
-    py.test.raises(mdp.NodeException, train_LRNode, [x], [y], False)
+    pytest.raises(mdp.NodeException, train_LRNode, [x], [y], False)
 
 def test_LinearRegressionNode_raises_on_wrong_output_size():
     # 4. test wrong output size
@@ -69,4 +69,4 @@ def test_LinearRegressionNode_raises_on_wrong_output_size():
     x[:,-1] = 2.*x[:,0]
     y = mult(x, beta)
     y = y[:10,:]
-    py.test.raises(mdp.TrainingException, train_LRNode, [x], [y], False)
+    pytest.raises(mdp.TrainingException, train_LRNode, [x], [y], False)

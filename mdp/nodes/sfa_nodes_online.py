@@ -8,50 +8,70 @@ from mdp.utils import mult, pinv
 
 class IncSFANode(mdp.OnlineNode):
     """
-
     Incremental Slow Feature Analysis (IncSFA) extracts the slowly varying
-    components from the input data incrementally. More information about IncSFA
-    can be found in Kompella V.R, Luciw M. and Schmidhuber J., Incremental Slow
-    Feature Analysis: Adaptive Low-Complexity Slow Feature Updating from
-    High-Dimensional Input Streams, Neural Computation, 2012.
+    components from the input data incrementally.
 
 
-    **Instance variables of interest**
-
-      ``self.sf``
+    .. attribute:: sf
+    
          Slow feature vectors
 
-      ``self.wv``
+    .. attribute:: wv
+    
          Whitening vectors
 
-      ``self.sf_change``
+    .. attribute:: sf_change
+    
          Difference in slow features after update
-
+         
+    .. admonition:: Reference
+    
+        More information about IncSFA
+        can be found in Kompella V.R, Luciw M. and Schmidhuber J., Incremental Slow
+        Feature Analysis: Adaptive Low-Complexity Slow Feature Updating from
+        High-Dimensional Input Streams, Neural Computation, 2012.
     """
 
     def __init__(self, eps=0.05, whitening_output_dim=None, remove_mean=True, avg_n=None, amn_params=(20, 200, 2000, 3),
                  init_pca_vectors=None, init_mca_vectors=None, input_dim=None, output_dim=None, dtype=None,
                  numx_rng=None):
-        """
-        eps: Learning rate (default: 0.1)
-
-        whitening_output_dim: Whitening output dimension. (default: input_dim)
-
-        remove_mean: Remove input mean incrementally (default: True)
-
-        avg_n - When set, the node updates an exponential weighted moving average.
-                avg_n intuitively denotes a window size. For a large avg_n, avg_n samples
-                represents about 86% of the total weight. (Default:None)
-
-        amn_params: pca amnesic parameters. Default set to (n1=20,n2=200,m=2000,c=3).
-                            For n < n1, ~ moving average.
-                            For n1 < n < n2 - Transitions from moving average to amnesia. m denotes the scaling
-                            param and c typically should be between (2-4). Higher values will weigh recent data.
-
-        init_pca_vectors: initial whitening vectors. Default - randomly set
-
-        init_mca_vectors: initial mca vectors. Default - randomly set
-
+        """Initialize an object of type 'SFANode'.
+        
+        :param eps: Learning rate (default: 0.1)
+        :type eps: float
+        
+        :param whitening_output_dim: Whitening output dimension. (default: input_dim)
+        :type whitening_output_dim: int
+        
+        :param remove_mean: Remove input mean incrementally (default: True)
+        :type remove_mean: bool
+        
+        :param avg_n: When set, the node updates an exponential weighted moving average.
+            avg_n intuitively denotes a window size. For a large avg_n, avg_n samples
+            represents about 86% of the total weight. (Default:None)
+        
+        :param amn_params: PCA amnesic parameters. Default set to (n1=20,n2=200,m=2000,c=3).
+            For n < n1, ~ moving average.
+            For n1 < n < n2 - Transitions from moving average to amnesia. m denotes the scaling
+            param and c typically should be between (2-4). Higher values will weigh recent data.
+        :type amn_params: tuple
+        
+        :param init_pca_vectors: Initial whitening vectors. Default - randomly set
+        :type init_pca_vectors: numpy.ndarray
+        
+        :param init_mca_vectors: Initial mca vectors. Default - randomly set
+        :type init_mca_vectors: numpy.ndarray
+        
+        :param input_dim: The input dimensionality.
+        :type input_dim: int
+        
+        :param output_dim: The output dimensionality.
+        :type output_dim: int
+        
+        :param dtype: The datatype.
+        :type dtype: numpy.dtype or str
+        
+        :param numx_rng: Random number generator. (Optional)
         """
 
         self.whiteningnode = WhiteningNode(amn_params=amn_params, init_eigen_vectors=init_pca_vectors,
@@ -104,21 +124,31 @@ class IncSFANode(mdp.OnlineNode):
 
     @property
     def init_slow_features(self):
-        """Return initialized slow features"""
+        """Return the initialized slow features.
+        
+        :return: Initialized slow features."""
         return self._init_sf
 
     @property
     def init_pca_vectors(self):
-        """Return initialized whitening vectors"""
+        """Return the initialized whitening vectors.
+        
+        :return: Initialized whitening vectors.
+        :rtype: numpy.ndarray
+        """
         return self.whiteningnode.init_eigen_vectors
 
     @property
     def init_mca_vectors(self):
-        """Return initialized minor components"""
+        """Return initialized minor components.
+        
+        :return: Initialized minor components.
+        :rtype: numpy.ndarray
+        """
         return self.mcanode.init_eigen_vectors
 
     def _check_params(self, x):
-        """Initialize parameters"""
+        """Initialize parameters."""
         if self._init_sf is None:
             if self.remove_mean:
                 self._pseudo_check_fn(self.avgnode, x)
@@ -178,8 +208,11 @@ class IncSFANode(mdp.OnlineNode):
 
     def _train(self, x, new_episode=None):
         """Update slow features.
-        Set new_episode to True to ignore taking erroneous derivatives between the episodes of
-        training data."""
+        
+        :param new_episode: Set new_episode to True to ignore taking erroneous
+            derivatives between the episodes of training data.
+        :type new_episode: bool
+        """
         sf_change = 0.0
         if self.training_type == 'batch':
             self._new_episode = True
@@ -195,17 +228,27 @@ class IncSFANode(mdp.OnlineNode):
         self.sf_change = sf_change
 
     def _execute(self, x):
-        """Return slow feature response"""
+        """Return slow feature response.
+        
+        :return: Slow feature response.
+        """
         if self.remove_mean:
             x = self.avgnode._execute(x)
         return mult(x, self.sf)
 
     def _inverse(self, y):
-        """Return inverse of the slow feature response"""
+        """Return inverse of the slow feature response.
+        
+        :return: The inverse of the slow feature response.
+        """
         return mult(y, pinv(self.sf)) + self.avgnode.avg
 
     def __repr__(self):
-        # print all args
+        """Print all args.
+
+        :return: A string that contains all argument names and their values.
+        :rtype: str
+        """
         name = type(self).__name__
         inp = "input_dim=%s" % str(self.input_dim)
         out = "output_dim=%s" % str(self.output_dim)
