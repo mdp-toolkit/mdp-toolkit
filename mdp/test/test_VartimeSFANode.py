@@ -35,7 +35,8 @@ def test_VartimeSFANode1():
 
 def test_VartimeSFANode2():
     """Check whether splitting input to unsfa in multiple phases 
-    and with time dependence works."""
+    and with time dependence works.
+    """
     x = numx.random.random((12000, 2))
     dt = (numx.random.rand(x.shape[0]-1)-.5)*.5 + 1.
     xlen = x.shape[0]

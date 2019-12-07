@@ -8,8 +8,9 @@ from mdp.test._tools import assert_array_almost_equal, decimal, assert_allclose
 
 
 def test_VartimeCovarianceMatrix1():
-    """Test if the new trazoidal rule integrator deviates substancially
-    more than the regular one - with and without noisy input."""
+    """Test if the new trapezoidal rule integrator deviates substantially
+    more than the regular one - with and without noisy input.
+    """
 
     # initialize the estimators
     cov = CovarianceMatrix()
@@ -32,12 +33,12 @@ def test_VartimeCovarianceMatrix1():
     uncov.update(x, inc)
     unC2, unAvg2, unTlen2 = uncov.fix()
 
-    # precision of stepfunction covariance estimator
+    # precision of step function covariance estimator
     prec = numx.linalg.norm(tC-C)
-    # precision of trapezoidal convariacne matrix estimator
+    # precision of trapezoidal covariance matrix estimator
     # using non random step sizes
     unPrec = numx.linalg.norm(tC-unC)
-    # precision of trapezoidal convariance matrix estimator
+    # precision of trapezoidal covariance matrix estimator
     # using random step sizes
     unPrec2 = numx.linalg.norm(tC-unC2)
 
@@ -48,7 +49,8 @@ def test_VartimeCovarianceMatrix1():
 
 def test_VartimeCovarianceMatrix2():
     """Test whether the trapezoidal integrator returns the expected
-    based on the analytically adjusted results of the regular one."""
+    based on the analytically adjusted results of the regular one.
+    """
 
     # sample
     x = numx.random.random((10000, 2))
@@ -69,7 +71,8 @@ def test_VartimeCovarianceMatrix2():
 
 def test_VartimeCovarianceMatrix3():
     """Test whether the trapezoidal integrator returns the expected
-    when calculated in multiple phases and without time dependence."""
+    when calculated in multiple phases and without time dependence.
+    """
 
     # sample
     x = numx.random.random((15000, 2))
@@ -78,7 +81,7 @@ def test_VartimeCovarianceMatrix3():
     # initialize the estimators
     uncov = VartimeCovarianceMatrix()
     uncov2 = VartimeCovarianceMatrix()
-    # emulate disconnetion
+    # emulate disconnection
     dt[xlen//3-1] = 0.
     dt[2*xlen//3-1] = 0.
     # update the estimators
@@ -104,7 +107,8 @@ def test_VartimeCovarianceMatrix3():
 
 def test_VartimeCovarianceMatrix4():
     """Test whether the trapezoidal integrator returns the expected
-    when calculated in multiple phases and time dependence."""
+    when calculated in multiple phases and time dependence.
+    """
 
     # sample
     x = numx.random.random((15000, 2))

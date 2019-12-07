@@ -39,8 +39,7 @@ There are several ways to deal with this issue:
 
 
 class SFANode(Node):
-    """
-    Extract the slowly varying components from the input data.
+    """Extract the slowly varying components from the input data.
 
     .. attribute:: avg
 
@@ -65,8 +64,7 @@ class SFANode(Node):
 
     def __init__(self, input_dim=None, output_dim=None, dtype=None,
                  include_last_sample=True, rank_deficit_method='none'):
-        """
-        Initialize an object of type 'SFANode'.
+        """Initialize an object of type 'SFANode'.
 
         :param input_dim: The input dimensionality.
         :type input_dim: int
@@ -204,8 +202,7 @@ class SFANode(Node):
                              % str(rank_deficit_method))
 
     def time_derivative(self, x):
-        """
-        Compute the linear approximation of the time derivative
+        """Compute the linear approximation of the time derivative
 
         :param x: The time series data.
         :type x: numpy.ndarray
@@ -227,8 +224,7 @@ class SFANode(Node):
         return rng
 
     def _check_train_args(self, x, *args, **kwargs):
-        """
-        Raises exception if time dimension does not have enough elements.
+        """Raises exception if time dimension does not have enough elements.
 
         :param x: The time series data.
         :type x: numpy.ndarray
@@ -244,8 +240,7 @@ class SFANode(Node):
                                     'compute time derivative (%d given)' % s)
 
     def _train(self, x, include_last_sample=None):
-        """
-        Training method.
+        """Training method.
 
         :param x: The time series data.
         :type x: numpy.ndarray
@@ -321,14 +316,13 @@ class SFANode(Node):
         self._bias = mult(self.avg, self.sf)
 
     def _execute(self, x, n=None):
-        """
-        Compute the output of the slowest functions.
-        If 'n' is an integer, then use the first 'n' slowest components.
+        """Compute the output of the slowest functions.
 
         :param x: The time series data.
         :type x: numpy.ndarray
 
-        :param n: The number of slowest components.
+        :param n: The number of slowest components. If 'n' is an integer,
+            then use the first 'n' slowest components.
         :type n: int
 
         :returns: The output of the slowest functions.
@@ -346,8 +340,7 @@ class SFANode(Node):
         return mult(y, pinv(self.sf)) + self.avg
 
     def get_eta_values(self, t=1):
-        """
-        Return the eta values of the slow components learned during
+        """Return the eta values of the slow components learned during
         the training phase. If the training phase has not been completed
         yet, call `stop_training`.
 
@@ -379,8 +372,7 @@ class SFANode(Node):
 
 
 class VartimeSFANode(SFANode):
-    """
-    Extract the slowly varying components from the input data.
+    """Extract the slowly varying components from the input data.
     This node can be understood as a generalization to the *SFANode*.
 
     In particular, this node numerically computes the integrals involved in
@@ -409,8 +401,7 @@ class VartimeSFANode(SFANode):
 
     def __init__(self, input_dim=None, output_dim=None, dtype=None,
                  rank_deficit_method='none'):
-        """
-        Initialize an object of type 'VartimeSFANode'.
+        """Initialize an object of type 'VartimeSFANode'.
 
         :param input_dim: The input dimensionality.
         :type input_dim: int
@@ -471,8 +462,7 @@ class VartimeSFANode(SFANode):
         self._dcov_mtx = VartimeCovarianceMatrix(self.dtype)
 
     def time_derivative(self, x, dt=None):
-        """
-        Compute the linear approximation of the time derivative
+        """Compute the linear approximation of the time derivative
 
         :param x: The time series data.
         :type x: numpy.ndarray
@@ -528,8 +518,7 @@ class VartimeSFANode(SFANode):
         return out
 
     def _train(self, x, dt=None):
-        """
-        Training method.
+        """Training method.
 
         :param x: The time series data.
         :type x: numpy.ndarray
@@ -575,7 +564,9 @@ class VartimeSFANode(SFANode):
 class SFA2Node(SFANode):
     """Get an input signal, expand it in the space of
     inhomogeneous polynomials of degree 2 and extract its slowly varying
-    components. The ``get_quadratic_form`` method returns the input-output
+    components.
+
+     The ``get_quadratic_form`` method returns the input-output
     function of one of the learned unit as a ``QuadraticForm`` object.
     See the documentation of ``mdp.utils.QuadraticForm`` for additional
     information.
@@ -584,12 +575,12 @@ class SFA2Node(SFANode):
 
         More information about Slow Feature Analysis can be found in
         Wiskott, L. and Sejnowski, T.J., Slow Feature Analysis: Unsupervised
-        Learning of Invariances, Neural Computation, 14(4):715-770 (2002)."""
+        Learning of Invariances, Neural Computation, 14(4):715-770 (2002).
+    """
 
     def __init__(self, input_dim=None, output_dim=None, dtype=None,
                  include_last_sample=True, rank_deficit_method='none'):
-        """
-        Initialize an object of type SFA2Node.
+        """Initialize an object of type SFA2Node.
 
         :param input_dim: The input dimensionality.
         :type input_dim: int
@@ -655,12 +646,12 @@ class SFA2Node(SFANode):
 
     def _execute(self, x, n=None):
         """Compute the output of the slowest functions.
-        If 'n' is an integer, then use the first 'n' slowest components.
 
         :param x: The time series data.
         :type x: numpy.ndarray
 
-        :param n: The number of slowest components.
+        :param n: The number of slowest components. If 'n' is an integer,
+            then use the first 'n' slowest components.
         :type n: int
 
         :returns: The output of the slowest functions.

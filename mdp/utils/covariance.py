@@ -8,7 +8,7 @@ numx = mdp.numx
 
 
 def _check_roundoff(t, dtype):
-    """Check if t is so large that t+1 == t up to 2 precision digits"""
+    """Check if t is so large that t+1 == t up to 2 precision digits."""
     # limit precision
     limit = 10.**(numx.finfo(dtype).precision-2)
     if int(t) >= limit:
@@ -98,7 +98,8 @@ class CovarianceMatrix(object):
         a zero-state.
 
         If center is false, the returned matrix is the matrix of the second moments,
-        i.e. the covariance matrix of the data without subtracting the mean."""
+        i.e. the covariance matrix of the data without subtracting the mean.
+        """
         # local variables
         type_ = self._dtype
         tlen = self._tlen
@@ -420,7 +421,8 @@ class DelayCovarianceMatrix(object):
 class MultipleCovarianceMatrices(object):
     """Container class for multiple covariance matrices to easily
     execute operations on all matrices at the same time.
-    Note: all operations are done in place where possible."""
+    Note: all operations are done in place where possible.
+    """
 
     def __init__(self, covs):
         """Insantiate with a sequence of covariance matrices."""
