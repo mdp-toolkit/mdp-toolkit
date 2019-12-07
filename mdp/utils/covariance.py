@@ -6,6 +6,10 @@ import warnings
 # import numeric module (scipy, Numeric or numarray)
 numx = mdp.numx
 
+_INC_ARG_WARNING1 = ('As time_dependence is not specified, argument dt
+                     'should be of length x.shape[0].')
+warnings.filterwarnings('always', _INC_ARG_WARNING1, mdp.MDPWarning)
+
 
 def _check_roundoff(t, dtype):
     """Check if t is so large that t+1 == t up to 2 precision digits."""
@@ -168,7 +172,7 @@ class VartimeCovarianceMatrix(CovarianceMatrix):
         self._steps = 0
         self.tchunk = 0
 
-    def update(self, x, dt=None):
+    def update(self, x, dt=None, time_dep=True):
         """Update internal structures.
 
         Note that no consistency checks are performed on the data (this is
@@ -204,6 +208,19 @@ class VartimeCovarianceMatrix(CovarianceMatrix):
 
         :type dt: numpy.ndarray
         """
+        if dt is not None and type(dt) == nd.ndarray:
+            # check for inconsistent arguments
+            if time_dep and self.tchunk >0 and x.shape[0] == len(dt)-1:
+                raise Exception('As time_dependence is specified, and it is not the first'
+                        '\ncall argument dt should be of length x.shape[0].')
+            if not time_dep and x.shape[0] == len(dt):
+                warnings.warn(_INC_ARG_WARNING1, mdp.MDPWarning)
+	    if len(dt) not in [x.shape[0], x.shape[0]-1]:
+                raise Exception('Unexpected length of dt.')
+        elif dt is not None and not dt > 0:
+            raise Exception('Unexpected length of dt.')
+
+
         if self._cov_mtx is None:
             self._init_internals(x)
         # cast input
@@ -216,12 +233,27 @@ class VartimeCovarianceMatrix(CovarianceMatrix):
                 self._cov_mtx += (numx.outer(self.xlast, self.xlast) +
                                   numx.outer(x[0, :], x[0, :]))*dt[0]/2.
                 self._tlen += dt[0]
-
+            elif time_dep:
+                if type(dt) != nd.array and dt > 0:
+                    self._avg += (self.xlast + x[0, :])*dt/2.
+                    self._cov_mtx += (numx.outer(self.xlast, self.xlast) +
+                                  numx.outer(x[0, :], x[0, :]))*dt/2.
+                    self._tlen += dt
+                elif dt is None:
+                    self._avg += (self.xlast + x[0, :])*1./2.
+                    self._cov_mtx += (numx.outer(self.xlast, self.xlast) +
+                                  numx.outer(x[0, :], x[0, :]))*1./2.
+                    self._tlen += 1.
         # keep last observation for continuation to future chunk
         self.xlast = x[-1, :].copy()
 
         # make sure dt is defined and convenient to use
-        _dt = 1. if dt is None else dt[-x.shape[0]+1:, None]
+        if dt is None:
+            _dt = 1.
+        elif type(dt) == numx.ndarray:
+            _dt = dt[-x.shape[0]+1:, None]
+        else:
+            _dt = dt
         sqdt = numx.sqrt(_dt)
         # update the covariance matrix, the average and the number of
         # observations
@@ -237,8 +269,13 @@ class VartimeCovarianceMatrix(CovarianceMatrix):
 
         numx.multiply(x[1:, :], _dt, out=xcpy)
         self._avg += xcpy.sum(axis=0)/2.
-        # should the x be reset to their original value, as they are not passed as a copy?
-        self._tlen += _dt.sum() if dt is not None else x.shape[0]-1
+
+        if dt is not None and type(dt) == numx.ndarray:
+            self._tlen += _dt.sum()
+        elif dt>0:
+            self._tlen += dt*(x.shape[0]-1)
+        else:
+            self._tlen = float(x.shape[0]-1)
         self._steps += x.shape[0]
         self.tchunk += 1
 
