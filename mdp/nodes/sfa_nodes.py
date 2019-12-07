@@ -508,11 +508,9 @@ class VartimeSFANode(SFANode):
             out[-x.shape[0]+1:, :] = x[1:, :]-x[:-1, :]
 
         if self.tchunk > 0 and dt is not None and dt.shape[0] == x.shape[0]:
-            # check if str before checking, to avoid comparison warnings
             out[0, :] = numx.divide(x[0, :]-self.xlast, dt[0])
 
         self.xlast = x[-1, :].copy()
-        self.dtlast = dt[-1].copy() if dt is not None else 1.
         self.tchunk += 1
 
         return out

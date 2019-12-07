@@ -219,7 +219,6 @@ class VartimeCovarianceMatrix(CovarianceMatrix):
 
         # keep last observation for continuation to future chunk
         self.xlast = x[-1, :].copy()
-        self.dtlast = dt[-1].copy() if dt is not None else 1.
 
         # make sure dt is defined and convenient to use
         _dt = 1. if dt is None else dt[-x.shape[0]+1:, None]
