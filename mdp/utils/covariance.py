@@ -272,7 +272,7 @@ class VartimeCovarianceMatrix(CovarianceMatrix):
 
         if dt is not None and type(dt) == numx.ndarray:
             self._tlen += _dt.sum()
-        elif dt>0:
+        elif dt is not None and dt>0:
             self._tlen += dt*(x.shape[0]-1)
         else:
             self._tlen = float(x.shape[0]-1)

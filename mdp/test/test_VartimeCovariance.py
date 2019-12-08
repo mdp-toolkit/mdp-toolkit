@@ -71,7 +71,7 @@ def test_VartimeCovarianceMatrix2():
 
 def test_VartimeCovarianceMatrix3():
     """Test whether the trapezoidal integrator returns the expected
-    when calculated in multiple phases and without time dependence.
+    when calculated in multiple chunks and without time dependence.
     """
 
     # sample
@@ -85,7 +85,7 @@ def test_VartimeCovarianceMatrix3():
     dt[xlen//3-1] = 0.
     dt[2*xlen//3-1] = 0.
     # update the estimators
-    uncov.update(x, dt)
+    uncov.update(x, dt, time_dep=False)
 
     # split into phases
     dtpart1 = dt[:xlen//3-1]
@@ -95,9 +95,9 @@ def test_VartimeCovarianceMatrix3():
     xpart2 = x[xlen//3:2*xlen//3]
     xpart3 = x[2*xlen//3:]
 
-    uncov2.update(xpart1, dtpart1)
-    uncov2.update(xpart2, dtpart2)
-    uncov2.update(xpart3, dtpart3)
+    uncov2.update(xpart1, dtpart1, time_dep=False)
+    uncov2.update(xpart2, dtpart2, time_dep=False)
+    uncov2.update(xpart3, dtpart3, time_dep=False)
     # quit estimating
     unC, unAvg, unTlen = uncov.fix(center=True)
     unC2, unAvg2, unTlen2 = uncov2.fix(center=True)
@@ -107,7 +107,7 @@ def test_VartimeCovarianceMatrix3():
 
 def test_VartimeCovarianceMatrix4():
     """Test whether the trapezoidal integrator returns the expected
-    when calculated in multiple phases and time dependence.
+    when calculated in multiple chunks and time dependence.
     """
 
     # sample

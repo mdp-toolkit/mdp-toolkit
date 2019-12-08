@@ -34,7 +34,7 @@ def test_VartimeSFANode1():
 
 
 def test_VartimeSFANode2():
-    """Check whether splitting input to unsfa in multiple phases 
+    """Check whether splitting input to unsfa in multiple chunks 
     and with time dependence works.
     """
     x = numx.random.random((12000, 2))
