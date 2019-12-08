@@ -234,7 +234,7 @@ class VartimeCovarianceMatrix(CovarianceMatrix):
                                   numx.outer(x[0, :], x[0, :]))*dt[0]/2.
                 self._tlen += dt[0]
             elif time_dep:
-                if type(dt) != nd.array and dt > 0:
+                if type(dt) != numx.ndarray and dt > 0:
                     self._avg += (self.xlast + x[0, :])*dt/2.
                     self._cov_mtx += (numx.outer(self.xlast, self.xlast) +
                                   numx.outer(x[0, :], x[0, :]))*dt/2.
