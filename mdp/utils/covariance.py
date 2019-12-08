@@ -6,7 +6,7 @@ import warnings
 # import numeric module (scipy, Numeric or numarray)
 numx = mdp.numx
 
-_INC_ARG_WARNING1 = ('As time_dependence is not specified, argument dt
+_INC_ARG_WARNING1 = ('As time_dependence is not specified, argument dt '
                      'should be of length x.shape[0].')
 warnings.filterwarnings('always', _INC_ARG_WARNING1, mdp.MDPWarning)
 
@@ -208,17 +208,17 @@ class VartimeCovarianceMatrix(CovarianceMatrix):
 
         :type dt: numpy.ndarray
         """
-        if dt is not None and type(dt) == nd.ndarray:
+        if dt is not None and type(dt) == numx.ndarray:
             # check for inconsistent arguments
             if time_dep and self.tchunk >0 and x.shape[0] == len(dt)-1:
                 raise Exception('As time_dependence is specified, and it is not the first'
                         '\ncall argument dt should be of length x.shape[0].')
             if not time_dep and x.shape[0] == len(dt):
                 warnings.warn(_INC_ARG_WARNING1, mdp.MDPWarning)
-	    if len(dt) not in [x.shape[0], x.shape[0]-1]:
+            if len(dt) not in [x.shape[0], x.shape[0]-1]:
                 raise Exception('Unexpected length of dt.')
         elif dt is not None and not dt > 0:
-            raise Exception('Unexpected length of dt.')
+            raise Exception('Unexpected type or value of dt.')
 
 
         if self._cov_mtx is None:
