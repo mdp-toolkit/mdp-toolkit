@@ -536,7 +536,7 @@ class VartimeSFANode(SFANode):
             # Improvements can be made, by interpolating polynomials
             out[-x.shape[0]+1:, :] =\
                     (x[1:, :]-x[:-1, :]) / dt[-x.shape[0]+1:, None]
-        elif dt > 0:
+        elif dt is not None and dt > 0:
             out[-x.shape[0]+1:, :] = (x[1:, :]-x[:-1, :])/dt
         else:
             # trivial fallback
