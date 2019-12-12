@@ -9,6 +9,11 @@ from mdp.utils import (mult, pinv, CovarianceMatrix,
                        symeig, SymeigException, symeig_semidefinite_reg,
                        symeig_semidefinite_pca, symeig_semidefinite_svd,
                        symeig_semidefinite_ldl)
+import warnings
+
+_INC_ARG_WARNING1 = ('As time_dependence is not specified, argument dt '
+                     'should be of length x.shape[0]-1.')
+warnings.filterwarnings('always', _INC_ARG_WARNING1, mdp.MDPWarning)
 
 SINGULAR_VALUE_MSG = '''
 This usually happens if there are redundancies in the (expanded) training data.
@@ -461,7 +466,7 @@ class VartimeSFANode(SFANode):
         # one for the derivatives
         self._dcov_mtx = VartimeCovarianceMatrix(self.dtype)
 
-    def time_derivative(self, x, dt=None):
+    def time_derivative(self, x, dt=None, time_dep=True):
         """Compute the linear approximation of the time derivative
 
         :param x: The time series data.
@@ -470,7 +475,11 @@ class VartimeSFANode(SFANode):
         :param dt: Sequence of time increments between vectors. 
 
             Usage with only single chunk of data:
-                *dt* must be of length *x.shape[0]-1*.
+                *dt* should be of length *x.shape[0]-1* or a constant. When
+                constant, the time increments are assumed to be constant. If
+                *dt* is not supplied, a constant time increments of one is
+                assumed. If a time sequence of length *x.shape[0]* is supplied
+                the first element is disregarded and a warning is presented.
 
             Usage with multiple chunks of data with intended time dependence:
                 *dt* should have length *x.shape[0]-1* in the first call and
@@ -478,44 +487,72 @@ class VartimeSFANode(SFANode):
                 Starting with the second call, the first element in each chunk
                 will be considered the time difference between the last element
                 of *x* in the previous chunk and the first element of *x* of the
-                current chunk.
+                current chunk. The *time_dep* argument should be *True*.
 
             Usage with multiple chunks without time dependence:
-                If *dt* has length *x.shape[0]-1* time dependence between
-                chunks is omitted and all algorithmic components regard
-                only the time structure within chunks.
+                The moments are computed as a weighted average of the moments
+                of separate chunks, if *dt* continues to have length
+                *x.shape[0]-1* after the first call. Time dependence between
+                chunks is thus omitted and all algorithmic components regard
+                only the time structure within chunks. The *time_dep* argument
+                should be *False*. As in the single chunk case it is possible
+                to set *dt* to be a constant or omit it completely for constant
+                or unit time increments within chunks.
 
-            Minimal usage:
-                If *dt* is omitted entirely there will be no time dependence
-                between chunks and it will be considered to be one everywhere
-                within a chunk.
+        :type dt: numpy.ndarray or numeric
 
-        :type dt: numpy.ndarray
+        :param time_dep: Indicates whether time dependence between chunks can
+            be considered. The argument is only relevant in case multiple chunks
+            of data are used. Time dependence between chunks is disregarded
+            when data collection has been done time independently and thus no
+            reasonable time increment between the end of a chunk and
+            beginning of the next can be specified.
+        
+        :type time_dep: bool
 
         :returns: Piecewise linear approximation of the time derivative.
         :rtype: numpy.ndarray
         """
-        outlen = x.shape[0] - 1\
-                if self.tchunk == 0 or dt is None or dt.shape[0] != x.shape[0] else x.shape[0]
+        if dt is not None and type(dt) == numx.ndarray:
+            # check for inconsistent arguments
+            if time_dep and self.tchunk >0 and x.shape[0] == len(dt)-1:
+                raise Exception('As time_dependence is specified, and it is not the first'
+                        '\ncall argument dt should be of length x.shape[0].')
+            if not time_dep and x.shape[0] == len(dt):
+                warnings.warn(_INC_ARG_WARNING1, mdp.MDPWarning)
+            if len(dt) != x.shape[0] and len(dt) != x.shape[0]-1:
+                raise Exception('Unexpected length of dt.')
+        elif dt is not None and not dt > 0:
+            raise Exception('Unexpected type or value of dt.')
+
+        if dt is None or type(dt) == numx.ndarray:
+            outlen = x.shape[0] - 1\
+                    if self.tchunk == 0 or dt is None or dt.shape[0] != x.shape[0] else x.shape[0]
+        elif dt > 0:
+            outlen = x.shape[0] - 1
         out = numx.empty([outlen, x.shape[1]])
 
-        if dt is not None:
+        if dt is not None and type(dt)==numx.ndarray:
             # Improvements can be made, by interpolating polynomials
             out[-x.shape[0]+1:, :] =\
                     (x[1:, :]-x[:-1, :]) / dt[-x.shape[0]+1:, None]
+        elif dt > 0:
+            out[-x.shape[0]+1:, :] = (x[1:, :]-x[:-1, :])/dt
         else:
             # trivial fallback
             out[-x.shape[0]+1:, :] = x[1:, :]-x[:-1, :]
 
-        if self.tchunk > 0 and dt is not None and dt.shape[0] == x.shape[0]:
+        if self.tchunk > 0 and time_dep and type(dt) == numx.ndarray and dt.shape[0] == x.shape[0]:
             out[0, :] = numx.divide(x[0, :]-self.xlast, dt[0])
+        elif self.tchunk > 0 and  time_dep and dt > 0:
+            out[0, :] = numx.divide(x[0, :]-self.xlast, dt)
 
         self.xlast = x[-1, :].copy()
         self.tchunk += 1
 
         return out
 
-    def _train(self, x, dt=None):
+    def _train(self, x, dt=None, time_dep=True):
         """Training method.
 
         :param x: The time series data.
@@ -524,7 +561,11 @@ class VartimeSFANode(SFANode):
         :param dt: Sequence of time increments between vectors. 
 
             Usage with only single chunk of data:
-                *dt* must be of length *x.shape[0]-1*.
+                *dt* should be of length *x.shape[0]-1* or a constant. When
+                constant, the time increments are assumed to be constant. If
+                *dt* is not supplied, a constant time increments of one is
+                assumed. If a time sequence of length *x.shape[0]* is supplied
+                the first element is disregarded and a warning is presented.
 
             Usage with multiple chunks of data with intended time dependence:
                 *dt* should have length *x.shape[0]-1* in the first call and
@@ -532,31 +573,42 @@ class VartimeSFANode(SFANode):
                 Starting with the second call, the first element in each chunk
                 will be considered the time difference between the last element
                 of *x* in the previous chunk and the first element of *x* of the
-                current chunk.
+                current chunk. The *time_dep* argument should be *True*.
 
             Usage with multiple chunks without time dependence:
-                If *dt* has length *x.shape[0]-1* time dependence between
-                chunks is omitted and all algorithmic components regard
-                only the time structure within chunks.
+                The moments are computed as a weighted average of the moments
+                of separate chunks, if *dt* continues to have length
+                *x.shape[0]-1* after the first call. Time dependence between
+                chunks is thus omitted and all algorithmic components regard
+                only the time structure within chunks. The *time_dep* argument
+                should be *False*. As in the single chunk case it is possible
+                to set *dt* to be a constant or omit it completely for constant
+                or unit time increments within chunks.
 
-            Minimal usage:
-                If *dt* is omitted entirely there will be no time dependence
-                between chunks and it will be considered to be one everywhere
-                within a chunk.
+        :type dt: numpy.ndarray or numeric
 
-        :type dt: numpy.ndarray
+        :param time_dep: Indicates whether time dependence between chunks can
+            be considered. The argument is only relevant in case multiple chunks
+            of data are used. Time dependence between chunks is disregarded
+            when data collection has been done time independently and thus no
+            reasonable time increment between the end of a chunk and
+            beginning of the next can be specified.
+        
+        :type time_dep: bool
         """
         # update the covariance matrices
-        self._cov_mtx.update(x, dt)
-        x_ = self.time_derivative(x, dt)
+        self._cov_mtx.update(x, dt, time_dep)
+        x_ = self.time_derivative(x, dt, time_dep)
 
         if (x_.shape[0] > x.shape[0]-1) and (dt is not None):
             dt_ = dt
-        elif dt is not None:
+        elif dt is not None and type(dt)==numx.ndarray:
             dt_ = dt[1:]
+        elif dt is not None and dt > 0:
+            dt_ = dt
         else:
             dt_ = None
-        self._dcov_mtx.update(x_, dt_)
+        self._dcov_mtx.update(x_, dt_, time_dep)
 
 
 class SFA2Node(SFANode):

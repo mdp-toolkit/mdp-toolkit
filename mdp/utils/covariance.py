@@ -7,7 +7,7 @@ import warnings
 numx = mdp.numx
 
 _INC_ARG_WARNING1 = ('As time_dependence is not specified, argument dt '
-                     'should be of length x.shape[0].')
+                     'should be of length x.shape[0]-1.')
 warnings.filterwarnings('always', _INC_ARG_WARNING1, mdp.MDPWarning)
 
 
@@ -185,7 +185,11 @@ class VartimeCovarianceMatrix(CovarianceMatrix):
         :param dt: Sequence of time increments between vectors. 
 
             Usage with only single chunk of data:
-                *dt* must be of length *x.shape[0]-1*.
+                *dt* should be of length *x.shape[0]-1* or a constant. When
+                constant, the time increments are assumed to be constant. If
+                *dt* is not supplied, a constant time increments of one is
+                assumed. If a time sequence of length *x.shape[0]* is supplied
+                the first element is disregarded and a warning is presented.
 
             Usage with multiple chunks of data with intended time dependence:
                 *dt* should have length *x.shape[0]-1* in the first call and
@@ -193,20 +197,28 @@ class VartimeCovarianceMatrix(CovarianceMatrix):
                 Starting with the second call, the first element in each chunk
                 will be considered the time difference between the last element
                 of *x* in the previous chunk and the first element of *x* of the
-                current chunk.
+                current chunk. The *time_dep* argument should be *True*.
 
             Usage with multiple chunks without time dependence:
                 The moments are computed as a weighted average of the moments
-                of separate chunks, if *dt* has length *x.shape[0]-1*. Time 
-                dependence between chunks is thus omitted and all algorithmic
-                components regard only the time structure within chunks.
+                of separate chunks, if *dt* continues to have length
+                *x.shape[0]-1* after the first call. Time dependence between
+                chunks is thus omitted and all algorithmic components regard
+                only the time structure within chunks. The *time_dep* argument
+                should be *False*. As in the single chunk case it is possible
+                to set *dt* to be a constant or omit it completely for constant
+                or unit time increments within chunks.
 
-            Minimal usage:
-                If *dt* is omitted entirely there will be no time dependence
-                between chunks and it will be considered to be one everywhere
-                within a chunk.
+        :type dt: numpy.ndarray or numeric
 
-        :type dt: numpy.ndarray
+        :param time_dep: Indicates whether time dependence between chunks can
+            be considered. The argument is only relevant in case multiple chunks
+            of data are used. Time dependence between chunks is disregarded
+            when data collection has been done time independently and thus no
+            reasonable time increment between the end of a chunk and
+            beginning of the next can be specified.
+        
+        :type time_dep: bool
         """
         if dt is not None and type(dt) == numx.ndarray:
             # check for inconsistent arguments
@@ -215,7 +227,7 @@ class VartimeCovarianceMatrix(CovarianceMatrix):
                         '\ncall argument dt should be of length x.shape[0].')
             if not time_dep and x.shape[0] == len(dt):
                 warnings.warn(_INC_ARG_WARNING1, mdp.MDPWarning)
-            if len(dt) not in [x.shape[0], x.shape[0]-1]:
+            if len(dt) != x.shape[0] and len(dt) != x.shape[0]-1:
                 raise Exception('Unexpected length of dt.')
         elif dt is not None and not dt > 0:
             raise Exception('Unexpected type or value of dt.')
@@ -228,7 +240,7 @@ class VartimeCovarianceMatrix(CovarianceMatrix):
 
         # account for the gap between chunks
         if self.tchunk > 0:
-            if dt is not None and dt.shape[0] == x.shape[0]:
+            if dt is not None and type(dt)==numx.ndarray and dt.shape[0] == x.shape[0]:
                 self._avg += (self.xlast + x[0, :])*dt[0]/2.
                 self._cov_mtx += (numx.outer(self.xlast, self.xlast) +
                                   numx.outer(x[0, :], x[0, :]))*dt[0]/2.
@@ -289,7 +301,7 @@ class VartimeCovarianceMatrix(CovarianceMatrix):
         :param center: If center is false, the returned matrix is the matrix
             of the second moments, i.e. the covariance matrix of the data
             without subtracting the mean.
-        :type bool: bool
+        :type center: bool
 
         :returns: Generalised covariance matrix, average and length
         of sequence (in time/summed increments).
