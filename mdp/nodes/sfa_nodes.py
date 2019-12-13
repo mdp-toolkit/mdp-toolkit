@@ -515,7 +515,7 @@ class VartimeSFANode(SFANode):
         """
         if dt is not None and type(dt) == numx.ndarray:
             # check for inconsistent arguments
-            if time_dep and self.tchunk >0 and x.shape[0] == len(dt)-1:
+            if time_dep and self.tchunk >0 and x.shape[0]-1 == len(dt):
                 raise Exception('As time_dependence is specified, and it is not the first'
                         '\ncall argument dt should be of length x.shape[0].')
             if not time_dep and x.shape[0] == len(dt):
@@ -525,11 +525,12 @@ class VartimeSFANode(SFANode):
         elif dt is not None and not dt > 0:
             raise Exception('Unexpected type or value of dt.')
 
-        if dt is None or type(dt) == numx.ndarray:
-            outlen = x.shape[0] - 1\
-                    if self.tchunk == 0 or dt is None or dt.shape[0] != x.shape[0] else x.shape[0]
+        if dt is None:
+            outlen = x.shape[0] if time_dep and self.tchunk > 0 else x.shape[0]-1
+        elif type(dt) == numx.ndarray:
+            outlen = x.shape[0]-1  if self.tchunk == 0 or dt.shape[0] != x.shape[0] else x.shape[0]
         elif dt > 0:
-            outlen = x.shape[0] - 1
+            outlen = x.shape[0]  if self.tchunk > 0  and time_dep else x.shape[0]-1
         out = numx.empty([outlen, x.shape[1]])
 
         if dt is not None and type(dt)==numx.ndarray:
@@ -542,10 +543,13 @@ class VartimeSFANode(SFANode):
             # trivial fallback
             out[-x.shape[0]+1:, :] = x[1:, :]-x[:-1, :]
 
-        if self.tchunk > 0 and time_dep and type(dt) == numx.ndarray and dt.shape[0] == x.shape[0]:
-            out[0, :] = numx.divide(x[0, :]-self.xlast, dt[0])
-        elif self.tchunk > 0 and  time_dep and dt > 0:
-            out[0, :] = numx.divide(x[0, :]-self.xlast, dt)
+        if self.tchunk > 0 and time_dep:
+            if dt is None:
+                out[0, :] = x[0, :]-self.xlast
+            elif type(dt) == numx.ndarray and dt.shape[0] == x.shape[0]:
+                out[0, :] = numx.divide(x[0, :]-self.xlast, dt[0])
+            elif dt > 0:
+                out[0, :] = numx.divide(x[0, :]-self.xlast, dt)
 
         self.xlast = x[-1, :].copy()
         self.tchunk += 1
@@ -608,6 +612,7 @@ class VartimeSFANode(SFANode):
             dt_ = dt
         else:
             dt_ = None
+
         self._dcov_mtx.update(x_, dt_, time_dep)
 
 

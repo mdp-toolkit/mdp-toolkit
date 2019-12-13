@@ -19,7 +19,7 @@ def test_VartimeSFANode1():
 
     # train sfa
     sfa.train(x)
-    unsfa.train(x, dt=dt)
+    unsfa.train(x, dt=dt, time_dep=False)
 
     # stop training and generate slow features
     sfa.stop_training()
@@ -70,3 +70,94 @@ def test_VartimeSFANode2():
         unsfa2.sf *= -1.
 
     assert_array_almost_equal(unsfa.sf, unsfa2.sf, decimal=10)
+
+def test_VartimeSFANode3():
+    """Test whether different inputs for the same behavior result in the same
+    output - without time dependence.
+    """
+    numx.random.seed(seed=10)
+    # sample
+    x1 = numx.random.random((1500, 2))
+    x2 = numx.random.random((1500, 2))
+    x3 = numx.random.random((1500, 2))
+    xlen = x1.shape[0]
+    dt_const = 1.
+    dt_ones = numx.ones((xlen-1,))
+    dt_none = None
+    # initialize the nodes
+    varsfa1 = VartimeSFANode()
+    varsfa2 = VartimeSFANode()
+    varsfa3 = VartimeSFANode()
+
+    # update the estimators
+    varsfa1.train(x1, dt=dt_const, time_dep=False)
+    varsfa1.train(x2, dt=dt_const, time_dep=False)
+    varsfa1.train(x3, dt=dt_const, time_dep=False)
+    varsfa2.train(x1, dt=dt_ones, time_dep=False)
+    varsfa2.train(x2, dt=dt_ones, time_dep=False)
+    varsfa2.train(x3, dt=dt_ones, time_dep=False)
+    varsfa3.train(x1, dt=dt_none, time_dep=False)
+    varsfa3.train(x2, dt=dt_none, time_dep=False)
+    varsfa3.train(x3, dt=dt_none, time_dep=False)
+    # quit
+    varsfa1.stop_training()
+    varsfa2.stop_training()
+    varsfa3.stop_training()
+
+    # check whether it's the inverse
+    if ((varsfa2.sf[0, 0] > 0) and (varsfa1.sf[0, 0] < 0)) \
+            or ((varsfa2.sf[0, 0] < 0) and (varsfa1.sf[0, 0] > 0)):
+        varsfa2.sf *= -1.
+    if ((varsfa3.sf[0, 0] > 0) and (varsfa1.sf[0, 0] < 0)) \
+            or ((varsfa3.sf[0, 0] < 0) and (varsfa1.sf[0, 0] > 0)):
+        varsfa3.sf *= -1.
+
+    assert_array_almost_equal(varsfa1.sf, varsfa2.sf, decimal=10)
+    assert_array_almost_equal(varsfa1.sf, varsfa3.sf, decimal=10)
+
+
+def test_VartimeSFANode4():
+    """Test whether different inputs for the same behavior result in the same
+    output - with time dependence.
+    """
+    numx.random.seed(seed=10)
+    # sample
+    x1 = numx.random.random((1500, 2))
+    x2 = numx.random.random((1500, 2))
+    x3 = numx.random.random((1500, 2))
+    xlen = x1.shape[0]
+    dt_const = 1.
+    dt_ones = numx.ones((xlen,))
+    dt_none = None
+    # initialize the nodes
+    varsfa1 = VartimeSFANode()
+    varsfa2 = VartimeSFANode()
+    varsfa3 = VartimeSFANode()
+
+    # update the estimators
+    varsfa1.train(x1, dt=dt_const, time_dep=True)
+    varsfa2.train(x1, dt=dt_ones, time_dep=True)
+    varsfa3.train(x1, dt=dt_none, time_dep=True)
+
+    varsfa1.train(x2, dt=dt_const, time_dep=True)
+    varsfa2.train(x2, dt=dt_ones, time_dep=True)
+    varsfa3.train(x2, dt=dt_none, time_dep=True)
+
+    varsfa1.train(x3, dt=dt_const, time_dep=True)
+    varsfa2.train(x3, dt=dt_ones, time_dep=True)
+    varsfa3.train(x3, dt=dt_none, time_dep=True)
+    # quit
+    varsfa1.stop_training()
+    varsfa2.stop_training()
+    varsfa3.stop_training()
+
+    # check whether it's the inverse
+    if ((varsfa2.sf[0, 0] > 0) and (varsfa1.sf[0, 0] < 0)) \
+            or ((varsfa2.sf[0, 0] < 0) and (varsfa1.sf[0, 0] > 0)):
+        varsfa2.sf *= -1.
+    if ((varsfa3.sf[0, 0] > 0) and (varsfa1.sf[0, 0] < 0)) \
+            or ((varsfa3.sf[0, 0] < 0) and (varsfa1.sf[0, 0] > 0)):
+        varsfa3.sf *= -1.
+
+    assert_array_almost_equal(varsfa1.sf, varsfa2.sf, decimal=10)
+    assert_array_almost_equal(varsfa1.sf, varsfa3.sf, decimal=10)

@@ -222,7 +222,7 @@ class VartimeCovarianceMatrix(CovarianceMatrix):
         """
         if dt is not None and type(dt) == numx.ndarray:
             # check for inconsistent arguments
-            if time_dep and self.tchunk >0 and x.shape[0] == len(dt)-1:
+            if time_dep and self.tchunk > 0 and x.shape[0]-1 == len(dt):
                 raise Exception('As time_dependence is specified, and it is not the first'
                         '\ncall argument dt should be of length x.shape[0].')
             if not time_dep and x.shape[0] == len(dt):
@@ -246,7 +246,7 @@ class VartimeCovarianceMatrix(CovarianceMatrix):
                                   numx.outer(x[0, :], x[0, :]))*dt[0]/2.
                 self._tlen += dt[0]
             elif time_dep:
-                if type(dt) != numx.ndarray and dt > 0:
+                if dt is not None and  type(dt) != numx.ndarray and dt > 0:
                     self._avg += (self.xlast + x[0, :])*dt/2.
                     self._cov_mtx += (numx.outer(self.xlast, self.xlast) +
                                   numx.outer(x[0, :], x[0, :]))*dt/2.
@@ -287,7 +287,7 @@ class VartimeCovarianceMatrix(CovarianceMatrix):
         elif dt is not None and dt>0:
             self._tlen += dt*(x.shape[0]-1)
         else:
-            self._tlen = float(x.shape[0]-1)
+            self._tlen += float(x.shape[0]-1)
         self._steps += x.shape[0]
         self.tchunk += 1
 
