@@ -146,9 +146,9 @@ class VartimeCovarianceMatrix(CovarianceMatrix):
     the covariance matrix, the average and the number of observations, and
     resets the internal data.
 
-    As compared to the *CovarianceMatrix* class, this class accepts unevenly
-    sampled input in conjunction with a time increment between samples. The
-    covariance matrix is then computed as a (centered) scalar product
+    As compared to the *CovarianceMatrix* class, this class accepts sampled
+    input in conjunction with a non-constant time increment between samples.
+    The covariance matrix is then computed as a (centered) scalar product
     between functions, that is sampled unevenly, using the trapezoid rule.
 
     The mean is computed using the trapezoid rule as well.
@@ -187,7 +187,7 @@ class VartimeCovarianceMatrix(CovarianceMatrix):
             Usage with only single chunk of data:
                 *dt* should be of length *x.shape[0]-1* or a constant. When
                 constant, the time increments are assumed to be constant. If
-                *dt* is not supplied, a constant time increments of one is
+                *dt* is not supplied, a constant time increment of one is
                 assumed. If a time sequence of length *x.shape[0]* is supplied
                 the first element is disregarded and a warning is presented.
 
@@ -197,24 +197,26 @@ class VartimeCovarianceMatrix(CovarianceMatrix):
                 Starting with the second call, the first element in each chunk
                 will be considered the time difference between the last element
                 of *x* in the previous chunk and the first element of *x* of the
-                current chunk. The *time_dep* argument should be *True*.
+                current chunk.
+                The *time_dep* argument being *True* indicates this mode.
 
             Usage with multiple chunks without time dependence:
                 The moments are computed as a weighted average of the moments
                 of separate chunks, if *dt* continues to have length
                 *x.shape[0]-1* after the first call. Time dependence between
                 chunks is thus omitted and all algorithmic components regard
-                only the time structure within chunks. The *time_dep* argument
-                should be *False*. As in the single chunk case it is possible
-                to set *dt* to be a constant or omit it completely for constant
-                or unit time increments within chunks.
+                only the time structure within chunks.
+                The *time_dep* argument being *False* indicates this mode.
+                As in the single chunk case it is possible to set *dt* to be a
+                constant or omit it completely for constant or unit time
+                increments within chunks respectively.
 
         :type dt: numpy.ndarray or numeric
 
         :param time_dep: Indicates whether time dependence between chunks can
-            be considered. The argument is only relevant in case multiple chunks
+            be considered. The argument is only relevant if multiple chunks
             of data are used. Time dependence between chunks is disregarded
-            when data collection has been done time independently and thus no
+            when data collection has been done time-independently and thus no
             reasonable time increment between the end of a chunk and
             beginning of the next can be specified.
         
@@ -249,12 +251,12 @@ class VartimeCovarianceMatrix(CovarianceMatrix):
                 if dt is not None and  type(dt) != numx.ndarray and dt > 0:
                     self._avg += (self.xlast + x[0, :])*dt/2.
                     self._cov_mtx += (numx.outer(self.xlast, self.xlast) +
-                                  numx.outer(x[0, :], x[0, :]))*dt/2.
+                                      numx.outer(x[0, :], x[0, :]))*dt/2.
                     self._tlen += dt
                 elif dt is None:
                     self._avg += (self.xlast + x[0, :])*1./2.
                     self._cov_mtx += (numx.outer(self.xlast, self.xlast) +
-                                  numx.outer(x[0, :], x[0, :]))*1./2.
+                                      numx.outer(x[0, :], x[0, :]))*1./2.
                     self._tlen += 1.
         # keep last observation for continuation to future chunk
         self.xlast = x[-1, :].copy()
@@ -292,7 +294,7 @@ class VartimeCovarianceMatrix(CovarianceMatrix):
         self.tchunk += 1
 
     def fix(self, center=True):
-        """Returns a triple containing the generalised
+        """Returns a triple containing the generalized
         covariance matrix, the average and length of the
         sequence (in time/summed increments).
 
@@ -303,7 +305,7 @@ class VartimeCovarianceMatrix(CovarianceMatrix):
             without subtracting the mean.
         :type center: bool
 
-        :returns: Generalised covariance matrix, average and length
+        :returns: Generalized covariance matrix, average and length
         of sequence (in time/summed increments).
         :rtype: Tuple[np.ndarray, np.ndarray, np.ndarray]
         """

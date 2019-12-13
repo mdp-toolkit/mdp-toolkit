@@ -66,7 +66,8 @@ def test_VartimeCovarianceMatrix2():
     C, avg, tlen = cov.fix(center=False)
 
     assert_array_almost_equal(unC*unTlen, C*tlen -
-                              numx.outer(x[0], x[0])/2.-numx.outer(x[-1], x[-1])/2., decimal=10)
+                              numx.outer(x[0], x[0])/2.-
+                              numx.outer(x[-1], x[-1])/2., decimal=10)
 
 
 def test_VartimeCovarianceMatrix3():
@@ -137,6 +138,7 @@ def test_VartimeCovarianceMatrix4():
 
     assert_array_almost_equal(unC, unC2, decimal=10)
 
+
 def test_VartimeCovarianceMatrix5():
     """Test whether different inputs for the same behavior result in the same
     output - without time dependence.
@@ -172,6 +174,7 @@ def test_VartimeCovarianceMatrix5():
     assert_array_almost_equal(varC1, varC2, decimal=10)
     assert_array_almost_equal(varC1, varC3, decimal=10)
 
+
 def test_VartimeCovarianceMatrix6():
     """Test whether different inputs for the same behavior result in the same
     output - with time dependence.
@@ -191,7 +194,7 @@ def test_VartimeCovarianceMatrix6():
     varcov3 = VartimeCovarianceMatrix()
 
     varcov1.update(x1, dt_const, time_dep=True)
-    varcov2.update(x1, dt_ones, time_dep=True)
+    varcov2.update(x1, dt_ones[1:], time_dep=True)
     varcov3.update(x1, dt_none, time_dep=True)
     varcov1.update(x2, dt_const, time_dep=True)
     varcov2.update(x2, dt_ones, time_dep=True)
