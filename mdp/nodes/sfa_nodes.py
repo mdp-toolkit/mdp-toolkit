@@ -273,8 +273,8 @@ class SFANode(Node):
         # not the second central moment matrix (centered about the mean), i.e.
         # the covariance matrix
         if hasattr(self, '_dcov_mtx'):
-            self.dcov_mtx, self.davg, self.dtlen =
-                    self._dcov_mtx.fix(center=False)
+            self.dcov_mtx, self.davg, self.dtlen = self._dcov_mtx.fix(
+                    center=False)
             del self._dcov_mtx
 
         rng = self._set_range()
