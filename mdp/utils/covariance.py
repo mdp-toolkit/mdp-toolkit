@@ -6,8 +6,13 @@ import warnings
 # import numeric module (scipy, Numeric or numarray)
 numx = mdp.numx
 
+_INC_ARG_WARNING1 = ('As time_dependence is not specified, argument dt '
+                     'should be of length x.shape[0]-1.')
+warnings.filterwarnings('always', _INC_ARG_WARNING1, mdp.MDPWarning)
+
+
 def _check_roundoff(t, dtype):
-    """Check if t is so large that t+1 == t up to 2 precision digits"""
+    """Check if t is so large that t+1 == t up to 2 precision digits."""
     # limit precision
     limit = 10.**(numx.finfo(dtype).precision-2)
     if int(t) >= limit:
@@ -17,6 +22,7 @@ def _check_roundoff(t, dtype):
               '\nerrors. See CovarianceMatrix docstring for more'
               ' information.' % (t, dtype.name))
         warnings.warn(wr, mdp.MDPWarning)
+
 
 class CovarianceMatrix(object):
     """This class stores an empirical covariance matrix that can be updated
@@ -96,7 +102,8 @@ class CovarianceMatrix(object):
         a zero-state.
 
         If center is false, the returned matrix is the matrix of the second moments,
-        i.e. the covariance matrix of the data without subtracting the mean."""
+        i.e. the covariance matrix of the data without subtracting the mean.
+        """
         # local variables
         type_ = self._dtype
         tlen = self._tlen
@@ -104,7 +111,7 @@ class CovarianceMatrix(object):
         avg = self._avg
         cov_mtx = self._cov_mtx
 
-        ##### fix the training variables
+        # fix the training variables
         # fix the covariance matrix (try to do everything inplace)
         if self.bias:
             cov_mtx /= tlen
@@ -122,13 +129,210 @@ class CovarianceMatrix(object):
         # fix the average
         avg /= tlen
 
-        ##### clean up
+        # clean up
         # covariance matrix, updated during the training phase
         self._cov_mtx = None
         # average, updated during the training phase
         self._avg = None
         # number of observation so far during the training phase
         self._tlen = 0
+
+        return cov_mtx, avg, tlen
+
+
+class VartimeCovarianceMatrix(CovarianceMatrix):
+    """This class stores an empirical covariance matrix that can be updated
+    incrementally. A call to the 'fix' method returns the current state of
+    the covariance matrix, the average and the number of observations, and
+    resets the internal data.
+
+    As compared to the *CovarianceMatrix* class, this class accepts unevenly
+    sampled input in conjunction with a time increment between samples. The
+    covariance matrix is then computed as a (centered) scalar product
+    between functions, that is sampled unevenly, using the trapezoid rule.
+
+    The mean is computed using the trapezoid rule as well.
+
+    Note that the internal sum is a standard __add__ operation.
+    """
+
+    def __init__(self, dtype=None):
+        """Initialize a *VartimeCovarianceMatrix*.
+
+        :param dtype: Datatype of the input.
+            Default is None. If dtype is not defined, it will be inherited
+            from the first data bunch received by 'update'. 
+        :type dtype: numpy.dtype or str
+        """
+        super(VartimeCovarianceMatrix,
+              self).__init__(dtype=dtype, bias=True)
+        # we need to keep steps and actual time
+        # values seperately, due to the weighing
+        # which is not required in the evenly sampled case
+        self._steps = 0
+        self.tchunk = 0
+
+    def update(self, x, dt=None, time_dep=True):
+        """Update internal structures.
+
+        Note that no consistency checks are performed on the data (this is
+        typically done in the enclosing node).
+
+        :param x: Timed sequence of vectors, with samples along the rows
+            and random variables along the columns.
+        :type x: numpy.ndarray
+
+        :param dt: Sequence of time increments between vectors. 
+
+            Usage with only single chunk of data:
+                *dt* should be of length *x.shape[0]-1* or a constant. When
+                constant, the time increments are assumed to be constant. If
+                *dt* is not supplied, a constant time increments of one is
+                assumed. If a time sequence of length *x.shape[0]* is supplied
+                the first element is disregarded and a warning is presented.
+
+            Usage with multiple chunks of data with intended time dependence:
+                *dt* should have length *x.shape[0]-1* in the first call and
+                be of length *x.shape[0]* starting with the second call.
+                Starting with the second call, the first element in each chunk
+                will be considered the time difference between the last element
+                of *x* in the previous chunk and the first element of *x* of the
+                current chunk. The *time_dep* argument should be *True*.
+
+            Usage with multiple chunks without time dependence:
+                The moments are computed as a weighted average of the moments
+                of separate chunks, if *dt* continues to have length
+                *x.shape[0]-1* after the first call. Time dependence between
+                chunks is thus omitted and all algorithmic components regard
+                only the time structure within chunks. The *time_dep* argument
+                should be *False*. As in the single chunk case it is possible
+                to set *dt* to be a constant or omit it completely for constant
+                or unit time increments within chunks.
+
+        :type dt: numpy.ndarray or numeric
+
+        :param time_dep: Indicates whether time dependence between chunks can
+            be considered. The argument is only relevant in case multiple chunks
+            of data are used. Time dependence between chunks is disregarded
+            when data collection has been done time independently and thus no
+            reasonable time increment between the end of a chunk and
+            beginning of the next can be specified.
+        
+        :type time_dep: bool
+        """
+        if dt is not None and type(dt) == numx.ndarray:
+            # check for inconsistent arguments
+            if time_dep and self.tchunk > 0 and x.shape[0]-1 == len(dt):
+                raise Exception('As time_dependence is specified, and it is not the first'
+                        '\ncall argument dt should be of length x.shape[0].')
+            if (not time_dep or self.tchunk == 0) and x.shape[0] == len(dt):
+                warnings.warn(_INC_ARG_WARNING1, mdp.MDPWarning)
+            if len(dt) != x.shape[0] and len(dt) != x.shape[0]-1:
+                raise Exception('Unexpected length of dt.')
+        elif dt is not None and not dt > 0:
+            raise Exception('Unexpected type or value of dt.')
+
+
+        if self._cov_mtx is None:
+            self._init_internals(x)
+        # cast input
+        x = mdp.utils.refcast(x, self._dtype)
+
+        # account for the gap between chunks
+        if self.tchunk > 0:
+            if dt is not None and type(dt) == numx.ndarray and dt.shape[0] == x.shape[0]:
+                self._avg += (self.xlast + x[0, :])*dt[0]/2.
+                self._cov_mtx += (numx.outer(self.xlast, self.xlast) +
+                                  numx.outer(x[0, :], x[0, :]))*dt[0]/2.
+                self._tlen += dt[0]
+            elif time_dep:
+                if dt is not None and  type(dt) != numx.ndarray and dt > 0:
+                    self._avg += (self.xlast + x[0, :])*dt/2.
+                    self._cov_mtx += (numx.outer(self.xlast, self.xlast) +
+                                  numx.outer(x[0, :], x[0, :]))*dt/2.
+                    self._tlen += dt
+                elif dt is None:
+                    self._avg += (self.xlast + x[0, :])*1./2.
+                    self._cov_mtx += (numx.outer(self.xlast, self.xlast) +
+                                  numx.outer(x[0, :], x[0, :]))*1./2.
+                    self._tlen += 1.
+        # keep last observation for continuation to future chunk
+        self.xlast = x[-1, :].copy()
+
+        # make sure dt is defined and convenient to use
+        if dt is None:
+            _dt = 1.
+        elif type(dt) == numx.ndarray:
+            _dt = dt[-x.shape[0]+1:, None]
+        else:
+            _dt = dt
+        sqdt = numx.sqrt(_dt)
+        # update the covariance matrix, the average and the number of
+        # observations
+        # the implementation is analogous to the evenly sampled case
+        # values might get big as it is only normalized in fix
+        xcpy = numx.multiply(x[1:, :], sqdt)
+        self._cov_mtx += mdp.utils.mult(xcpy.T, xcpy)/2.
+        numx.multiply(x[:-1, :], sqdt, out=xcpy)
+        self._cov_mtx += mdp.utils.mult(xcpy.T, xcpy)/2.
+
+        numx.multiply(x[:-1, :], _dt, out=xcpy)
+        self._avg += xcpy.sum(axis=0)/2.
+
+        numx.multiply(x[1:, :], _dt, out=xcpy)
+        self._avg += xcpy.sum(axis=0)/2.
+
+        if dt is not None and type(dt) == numx.ndarray:
+            self._tlen += _dt.sum()
+        elif dt is not None and dt > 0:
+            self._tlen += dt*(x.shape[0]-1)
+        else:
+            self._tlen += float(x.shape[0]-1)
+        self._steps += x.shape[0]
+        self.tchunk += 1
+
+    def fix(self, center=True):
+        """Returns a triple containing the generalised
+        covariance matrix, the average and length of the
+        sequence (in time/summed increments).
+
+        The covariance matrix is then reset to a zero-state.
+
+        :param center: If center is false, the returned matrix is the matrix
+            of the second moments, i.e. the covariance matrix of the data
+            without subtracting the mean.
+        :type center: bool
+
+        :returns: Generalised covariance matrix, average and length
+        of sequence (in time/summed increments).
+        :rtype: Tuple[np.ndarray, np.ndarray, np.ndarray]
+        """
+        # local variables
+        type_ = self._dtype
+        _check_roundoff(self._steps, type_)
+        avg = self._avg
+        tlen = self._tlen
+        cov_mtx = self._cov_mtx
+
+        # fix the training variables
+        # fix the covariance matrix (try to do everything inplace)
+        cov_mtx /= self._tlen
+
+        if center:
+            avg_mtx = numx.outer(avg, avg)
+            avg_mtx /= self._tlen*self._tlen
+            cov_mtx -= avg_mtx
+
+        # fix the average
+        avg /= self._tlen
+
+        # clean up
+        # covariance matrix, updated during the training phase
+        self._cov_mtx = None
+        # average, updated during the training phase
+        self._avg = None
+        # number of observation so far during the training phase
+        self._tlen = 0.
 
         return cov_mtx, avg, tlen
 
@@ -235,7 +439,7 @@ class DelayCovarianceMatrix(object):
         avg_dt = self._avg_dt
         cov_mtx = self._cov_mtx
 
-        ##### fix the training variables
+        # fix the training variables
         # fix the covariance matrix (try to do everything inplace)
         avg_mtx = numx.outer(avg, avg_dt)
         avg_mtx /= tlen
@@ -253,7 +457,7 @@ class DelayCovarianceMatrix(object):
         avg /= tlen
         avg_dt /= tlen
 
-        ##### clean up variables to spare on space
+        # clean up variables to spare on space
         self._cov_mtx = None
         self._avg = None
         self._avg_dt = None
@@ -265,7 +469,9 @@ class DelayCovarianceMatrix(object):
 class MultipleCovarianceMatrices(object):
     """Container class for multiple covariance matrices to easily
     execute operations on all matrices at the same time.
-    Note: all operations are done in place where possible."""
+    Note: all operations are done in place where possible.
+    """
+
     def __init__(self, covs):
         """Insantiate with a sequence of covariance matrices."""
         # swap axes to get the different covmat on to the 3rd axis
@@ -303,14 +509,14 @@ class MultipleCovarianceMatrices(object):
         # you need to copy the first column that is modified
         covs_i = covs[:, i, :] + 0
         covs_j = covs[:, j, :]
-        covs[:, i, :] =  cos_*covs_i - sin_*covs_j
-        covs[:, j, :] =  sin_*covs_i + cos_*covs_j
+        covs[:, i, :] = cos_*covs_i - sin_*covs_j
+        covs[:, j, :] = sin_*covs_i + cos_*covs_j
         # rotate rows
         # you need to copy the first row that is modified
         covs_i = covs[i, :, :] + 0
         covs_j = covs[j, :, :]
-        covs[i, :, :] =  cos_*covs_i - sin_*covs_j
-        covs[j, :, :] =  sin_*covs_i + cos_*covs_j
+        covs[i, :, :] = cos_*covs_i - sin_*covs_j
+        covs[j, :, :] = sin_*covs_i + cos_*covs_j
         self.covs = covs
 
     def permute(self, indices):
@@ -342,8 +548,8 @@ class CrossCovarianceMatrix(CovarianceMatrix):
         if self._dtype is None:
             self._dtype = x.dtype
             if y.dtype != x.dtype:
-                err = 'dtype mismatch: x (%s) != y (%s)'%(x.dtype,
-                                                          y.dtype)
+                err = 'dtype mismatch: x (%s) != y (%s)' % (x.dtype,
+                                                            y.dtype)
                 raise mdp.MDPException(err)
         dim_x = x.shape[1]
         dim_y = y.shape[1]
@@ -352,12 +558,11 @@ class CrossCovarianceMatrix(CovarianceMatrix):
         self._avgx = numx.zeros(dim_x, type_)
         self._avgy = numx.zeros(dim_y, type_)
 
-
     def update(self, x, y):
         # check internal dimensions consistency
         if x.shape[0] != y.shape[0]:
-            err = '# samples mismatch: x (%d) != y (%d)'%(x.shape[0],
-                                                          y.shape[0])
+            err = '# samples mismatch: x (%d) != y (%d)' % (x.shape[0],
+                                                            y.shape[0])
             raise mdp.MDPException(err)
 
         if self._cov_mtx is None:
@@ -380,7 +585,7 @@ class CrossCovarianceMatrix(CovarianceMatrix):
         avgy = self._avgy
         cov_mtx = self._cov_mtx
 
-        ##### fix the training variables
+        # fix the training variables
         # fix the covariance matrix (try to do everything inplace)
         avg_mtx = numx.outer(avgx, avgy)
 
@@ -395,7 +600,7 @@ class CrossCovarianceMatrix(CovarianceMatrix):
         avgx /= tlen
         avgy /= tlen
 
-        ##### clean up
+        # clean up
         # covariance matrix, updated during the training phase
         self._cov_mtx = None
         # average, updated during the training phase
