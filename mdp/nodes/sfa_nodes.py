@@ -568,31 +568,31 @@ class VartimeSFANode(SFANode):
         :param dt: Sequence of time increments between vectors. 
 
             Usage with only single chunk of data:
-				*dt* should be of length *x.shape[0]-1* or a constant. When
-				constant, the time increments are assumed to be constant. If
-				*dt* is not supplied, a constant time increment of one is
-				assumed. If a time sequence of length *x.shape[0]* is supplied
-				the first element is disregarded and a warning is presented.
+                *dt* should be of length *x.shape[0]-1* or a constant. When
+                constant, the time increments are assumed to be constant. If
+                *dt* is not supplied, a constant time increment of one is
+                assumed. If a time sequence of length *x.shape[0]* is supplied
+                the first element is disregarded and a warning is presented.
 
-			Usage with multiple chunks of data with intended time dependence:
-				*dt* should have length *x.shape[0]-1* in the first call and
-				be of length *x.shape[0]* starting with the second call.
-				Starting with the second call, the first element in each chunk
-				will be considered the time difference between the last element
-				of *x* in the previous chunk and the first element of *x* of the
-				current chunk.
-				The *time_dep* argument being *True* indicates this mode.
+            Usage with multiple chunks of data with intended time dependence:
+                *dt* should have length *x.shape[0]-1* in the first call and
+                be of length *x.shape[0]* starting with the second call.
+                Starting with the second call, the first element in each chunk
+                will be considered the time difference between the last element
+                of *x* in the previous chunk and the first element of *x* of the
+                current chunk.
+                The *time_dep* argument being *True* indicates this mode.
 
-			Usage with multiple chunks without time dependence:
-				The moments are computed as a weighted average of the moments
-				of separate chunks, if *dt* continues to have length
-				*x.shape[0]-1* after the first call. Time dependence between
-				chunks is thus omitted and all algorithmic components regard
-				only the time structure within chunks.
-				The *time_dep* argument being *False* indicates this mode.
-				As in the single chunk case it is possible to set *dt* to be a
-				constant or omit it completely for constant or unit time
-				increments within chunks respectively.
+            Usage with multiple chunks without time dependence:
+                The moments are computed as a weighted average of the moments
+                of separate chunks, if *dt* continues to have length
+                *x.shape[0]-1* after the first call. Time dependence between
+                chunks is thus omitted and all algorithmic components regard
+                only the time structure within chunks.
+                The *time_dep* argument being *False* indicates this mode.
+                As in the single chunk case it is possible to set *dt* to be a
+                constant or omit it completely for constant or unit time
+                increments within chunks respectively.
 
         :type dt: numpy.ndarray or numeric
 
