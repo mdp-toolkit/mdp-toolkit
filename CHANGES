@@ -1,8 +1,8 @@
 -------------------------------------------------------------------------------
 MDP-3.6:
-TBA:        NEW: VartimeSFANode supports SFA on data with non-constant time
-            increments. Most notably, this yields an SFA implementation that
-            is robust against missing data.
+2019-13-12: NEW: VartimeSFANode supports SFA on data with non-constant time
+            increments. This yields an SFA implementation that is robust
+            against missing data.
 2019-08-12: FIX: Precision on test_ccipcanode_v2.
 2019-08-10: FIX: inspect module getargspec deprecation
 2019-07-03: FIX: Scikits compatibility regarding negative input
@@ -2381,4 +2381,4 @@ MDP-0.9.0:
 
 24.08.2004: MDP 0.9.0 released. First public release. 
 16.08.2004: MDP project registered at SourceForge.
--------------------------------------------------------------------------------
+-------------------------------------------------------------------------------, t
