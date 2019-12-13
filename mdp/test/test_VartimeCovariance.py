@@ -194,7 +194,7 @@ def test_VartimeCovarianceMatrix6():
     varcov3 = VartimeCovarianceMatrix()
 
     varcov1.update(x1, dt_const, time_dep=True)
-    varcov2.update(x1, dt_ones[:-1], time_dep=True)
+    varcov2.update(x1, dt_ones[1:], time_dep=True)
     varcov3.update(x1, dt_none, time_dep=True)
     varcov1.update(x2, dt_const, time_dep=True)
     varcov2.update(x2, dt_ones, time_dep=True)

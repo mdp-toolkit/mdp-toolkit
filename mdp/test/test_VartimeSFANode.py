@@ -137,7 +137,7 @@ def test_VartimeSFANode4():
 
     # update the estimators
     varsfa1.train(x1, dt=dt_const, time_dep=True)
-    varsfa2.train(x1, dt=dt_ones, time_dep=True)
+    varsfa2.train(x1, dt=dt_ones[1:], time_dep=True)
     varsfa3.train(x1, dt=dt_none, time_dep=True)
 
     varsfa1.train(x2, dt=dt_const, time_dep=True)
