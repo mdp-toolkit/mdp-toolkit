@@ -533,7 +533,7 @@ class VartimeSFANode(SFANode):
             outlen = x.shape[0]  if self.tchunk > 0  and time_dep else x.shape[0]-1
         out = numx.empty([outlen, x.shape[1]])
 
-        if dt is not None and type(dt)==numx.ndarray:
+        if dt is not None and type(dt) == numx.ndarray:
             # Improvements can be made, by interpolating polynomials
             out[-x.shape[0]+1:, :] =\
                     (x[1:, :]-x[:-1, :]) / dt[-x.shape[0]+1:, None]
@@ -606,7 +606,7 @@ class VartimeSFANode(SFANode):
 
         if (x_.shape[0] > x.shape[0]-1) and (dt is not None):
             dt_ = dt
-        elif dt is not None and type(dt)==numx.ndarray:
+        elif dt is not None and type(dt) == numx.ndarray:
             dt_ = dt[1:]
         elif dt is not None and dt > 0:
             dt_ = dt

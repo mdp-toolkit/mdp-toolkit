@@ -240,7 +240,7 @@ class VartimeCovarianceMatrix(CovarianceMatrix):
 
         # account for the gap between chunks
         if self.tchunk > 0:
-            if dt is not None and type(dt)==numx.ndarray and dt.shape[0] == x.shape[0]:
+            if dt is not None and type(dt) == numx.ndarray and dt.shape[0] == x.shape[0]:
                 self._avg += (self.xlast + x[0, :])*dt[0]/2.
                 self._cov_mtx += (numx.outer(self.xlast, self.xlast) +
                                   numx.outer(x[0, :], x[0, :]))*dt[0]/2.
@@ -284,7 +284,7 @@ class VartimeCovarianceMatrix(CovarianceMatrix):
 
         if dt is not None and type(dt) == numx.ndarray:
             self._tlen += _dt.sum()
-        elif dt is not None and dt>0:
+        elif dt is not None and dt > 0:
             self._tlen += dt*(x.shape[0]-1)
         else:
             self._tlen += float(x.shape[0]-1)
