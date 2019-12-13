@@ -518,7 +518,7 @@ class VartimeSFANode(SFANode):
             if time_dep and self.tchunk >0 and x.shape[0]-1 == len(dt):
                 raise Exception('As time_dependence is specified, and it is not the first'
                         '\ncall argument dt should be of length x.shape[0].')
-            if not time_dep and x.shape[0] == len(dt):
+            if (not time_dep or self.tchunk == 0) and x.shape[0] == len(dt):
                 warnings.warn(_INC_ARG_WARNING1, mdp.MDPWarning)
             if len(dt) != x.shape[0] and len(dt) != x.shape[0]-1:
                 raise Exception('Unexpected length of dt.')
