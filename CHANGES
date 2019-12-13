@@ -1,4 +1,73 @@
 -------------------------------------------------------------------------------
+MDP-3.6:
+2019-13-12: NEW: VartimeSFANode supports SFA on data with non-constant time
+            increments. This yields an SFA implementation that is robust
+            against missing data.
+2019-08-12: FIX: Precision on test_ccipcanode_v2.
+2019-08-10: FIX: inspect module getargspec deprecation
+2019-07-03: FIX: Scikits compatibility regarding negative input
+2019-06-20: FIX: Add python 2.7 testing with old scikit versions
+2019-03-16: ERF: Configured Travis CI to test on Python 3.
+            As a side effect the whole travis.yml was modernized and tests now
+            with modern Python 3.5-3.7, NumPy 1.8, 1.12, 1.16,
+            using a pip-based setup.
+2019-01-20: FIX: issues caused by pytest namespace deprecation
+2019-01-20: NEW: Added a new family of expansion nodes, including Legendre,
+            Hermite and Chebyshev polynomials. A facility for easily including
+            recursively defined 1-dimensional expansion functions powers these
+            nodes, applying them to N-dimensional data by tensor basis
+            construction. The new expansion nodes are numerically more stable
+            than ordinary monomials and permit higher expansion degrees.
+            Examples where numerically stable expansion is beneficial:
+            https://github.com/NiMlr/pyfunctionbases
+            https://arxiv.org/abs/1805.08565, section 4.2.1, Figure 11 and A.2.
+2019-01-19: FIX: pytest Python 3.7 compatibility
+2018-07-18: FIX: PEP 479 compatibility
+2018-07-17: ERF: Drop the dot from py.test
+2018-06-23: FIX: swapped out deprecated metafunc.addcall method in pytest
+2018-06-15: NEW: Added SFA-based supervised learning, specifically graph based
+            SFA nodes GSFANode and iGSFANode and hierarchical GSFA (HGSFA).
+            For further information, see:
+            Escalante-B A.-N., Wiskott L, "How to solve classification and
+            regression problems on high-dimensional data with a supervised
+            extension of Slow Feature Analysis". Journal of Machine Learning
+            Research 14:3683-3719, 2013.
+            http://www.jmlr.org/papers/volume14/escalante13a/escalante13a.pdf
+            https://github.com/AlbertoEsc/cuicuilco
+2018-05-29: DOC: Revamped the documentation for Sphinx-autodoc compatibility.
+            MDP documentation is now available on readthedocs:
+            https://mdpdocs.readthedocs.io/en/latest
+2018-01-31: FIX: compatibility with Python 3
+2018-01-18: NEW: Added solvers to SFA-node that are robust against rank deficit
+            in the covariance matrix. When data contained linear redundancies,
+            like easily introduced by e.g. insufficient cropping of black bars
+            of a video, this usually resulted in
+            SymeigException ('Covariance matrices may be singular').
+            Now it provides simple instructions for robust processing of such
+            data by setting a new flag in SFANode:
+            rank_deficit_method can be 'none' (default), 'reg', 'pca', 'svd',
+            leveraging robust solving via regularization, PCA, SVD or LDL
+            decomposition respectively. (LDL requires SciPy >= 1.0)
+2017-08-08: FIX: Obsolete syntax, Python 3 compatibility
+2017-08-07: OTH: Use idiomatic is-None tests
+2017-07-16: FIX: fixed broken test for parallel classifier node
+2017-03-11: DOC: changed reference to new mailing list
+            old: mdp-toolkit-users@lists.sourceforge.net
+            new: mdp-toolkit@python.org
+2017-03-06: NEW: Added online mode to enable use of MDP in reinforcement
+            learning. This notably includes incremental SFA as described in
+            "Varun Raj Kompella, Matthew Luciw, and Juergen Schmidhuber (2012).
+            Incremental Slow Feature Analysis: Adaptive Low-Complexity Slow
+            Feature Updating from High-Dimensional Input Streams.
+            Neural Computation."
+            https://www.mitpressjournals.org/doi/abs/10.1162/NECO_a_00344
+            New nodes and flows:
+            OnlineNode, OnlineFlow, CircularFlow, OnlineCenteringNode,
+            OnlineTimeDiffNode, OnlineFlowNode, CircularOnlineFlowNode,
+            OnlineLayer, CloneOnlineLayer, SameInputOnlineLayer, MCANode,
+            CCIPCANode, IncSFANode
+
+-------------------------------------------------------------------------------
 MDP-3.5:
 2016-03-08: fix use of str in biflow indexing
 2016-03-08: remove obsolete scripts
@@ -14,6 +83,7 @@ MDP-3.5:
              File "mdp/utils/templet.py", line 196
                exec(code, globals, kw) SyntaxError: unqualified exec is not
             allowed in function 'expand' it is a nested function
+
 -------------------------------------------------------------------------------
 MDP-3.4:
 2016-03-02: Make use of setuptools instead of distutils While we resisted as
@@ -81,6 +151,7 @@ MDP-3.4:
 2012-10-04: DOC: bumped version number after release ;)
 2012-09-21: OTH: updated CHANGES and COPYRIGHT
 2012-09-21: NEW: add support for newest sklearn algorithms
+
 -------------------------------------------------------------------------------
 MDP-3.3:
 2012-09-19: FIX: fix error in automatic testing for MultinomialNB.
