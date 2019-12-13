@@ -1,8 +1,9 @@
 # -*- coding:utf-8 -*-
 __docformat__ = "restructuredtext en"
 
+from mdp import utils
 from .pca_nodes import WhiteningNode, PCANode
-from .sfa_nodes import SFANode, SFA2Node
+from .sfa_nodes import SFANode, SFA2Node, VartimeSFANode
 from .ica_nodes import ICANode, CuBICANode, FastICANode, TDSEPNode
 from .neural_gas_nodes import GrowingNeuralGasNode, NeuralGasNode
 from .expansion_nodes import (QuadraticExpansionNode, PolynomialExpansionNode,
@@ -80,7 +81,6 @@ if config.has_sklearn:
             __all__.append(name)
         del name
 
-from mdp import utils
 utils.fixup_namespace(__name__, __all__ + ['ICANode'],
                       ('pca_nodes',
                        'sfa_nodes',

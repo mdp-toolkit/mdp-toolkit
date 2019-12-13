@@ -4,10 +4,16 @@ __docformat__ = "restructuredtext en"
 
 import mdp
 from mdp import numx, Node, NodeException, TrainingException
-from mdp.utils import (mult, pinv, CovarianceMatrix, QuadraticForm,
+from mdp.utils import (mult, pinv, CovarianceMatrix,
+                       VartimeCovarianceMatrix, QuadraticForm,
                        symeig, SymeigException, symeig_semidefinite_reg,
                        symeig_semidefinite_pca, symeig_semidefinite_svd,
                        symeig_semidefinite_ldl)
+import warnings
+
+_INC_ARG_WARNING1 = ('As time_dependence is not specified, argument dt '
+                     'should be of length x.shape[0]-1.')
+warnings.filterwarnings('always', _INC_ARG_WARNING1, mdp.MDPWarning)
 
 SINGULAR_VALUE_MSG = '''
 This usually happens if there are redundancies in the (expanded) training data.
@@ -36,26 +42,26 @@ There are several ways to deal with this issue:
     This will be more efficient in execution phase.
 '''
 
+
 class SFANode(Node):
-    """
-    Extract the slowly varying components from the input data.
-    
+    """Extract the slowly varying components from the input data.
+
     .. attribute:: avg
-    
+
         Mean of the input data (available after training)
 
     .. attribute:: sf
-        
+
         Matrix of the SFA filters (available after training)
 
     .. attribute:: d
-        
+
         Delta values corresponding to the SFA components (generalized
         eigenvalues). [See the docs of the ``get_eta_values`` method for
         more information]
 
     .. admonition:: Reference
-    
+
         More information about Slow Feature Analysis can be found in
         Wiskott, L. and Sejnowski, T.J., Slow Feature Analysis: Unsupervised
         Learning of Invariances, Neural Computation, 14(4):715-770 (2002).
@@ -63,20 +69,19 @@ class SFANode(Node):
 
     def __init__(self, input_dim=None, output_dim=None, dtype=None,
                  include_last_sample=True, rank_deficit_method='none'):
-        """
-        Initialize an object of type 'SFANode'.
+        """Initialize an object of type 'SFANode'.
 
         :param input_dim: The input dimensionality.
         :type input_dim: int
-        
+
         :param output_dim: The output dimensionality.
         :type output_dim: int
-        
+
         :param dtype: The datatype.
         :type dtype: numpy.dtype or str
-        
-        :param include_last_sample: If ``False`` the `train` method discards the 
-            last sample in every chunk during training when calculating 
+
+        :param include_last_sample: If ``False`` the `train` method discards
+            the last sample in every chunk during training when calculating
             the covariance matrix.
             The last sample is in this case only used for calculating the
             covariance matrix of the derivatives. The switch should be set
@@ -84,7 +89,7 @@ class SFANode(Node):
             example we can split a sequence (index is time)::
 
                 x_1 x_2 x_3 x_4
-    
+
             in smaller parts like this::
 
                 x_1 x_2
@@ -116,7 +121,7 @@ class SFANode(Node):
             You can even change this behaviour during training. Just set the
             corresponding switch in the `train` method.
         :type include_last_sample: bool
-        
+
         :param rank_deficit_method: Possible values: 'none' (default), 'reg', 'pca', 'svd', 'auto'
             If not 'none', the ``stop_train`` method solves the SFA eigenvalue
             problem in a way that is robust against linear redundancies in
@@ -157,10 +162,7 @@ class SFANode(Node):
         self._include_last_sample = include_last_sample
 
         # init two covariance matrices
-        # one for the input data
-        self._cov_mtx = CovarianceMatrix(dtype)
-        # one for the derivatives
-        self._dcov_mtx = CovarianceMatrix(dtype)
+        self._init_cov()
 
         # set routine for eigenproblem
         self.set_rank_deficit_method(rank_deficit_method)
@@ -173,6 +175,13 @@ class SFANode(Node):
         self.avg = None
         self._bias = None  # avg multiplied with sf
         self.tlen = None
+
+    def _init_cov(self):
+        # init two covariance matrices
+        # one for the input data
+        self._cov_mtx = CovarianceMatrix(self.dtype)
+        # one for the input data
+        self._dcov_mtx = CovarianceMatrix(self.dtype)
 
     def set_rank_deficit_method(self, rank_deficit_method):
         if rank_deficit_method == 'pca':
@@ -194,12 +203,11 @@ class SFANode(Node):
         elif rank_deficit_method == 'none':
             self._symeig = symeig
         else:
-            raise ValueError("Invalid value for rank_deficit_method: %s" \
-                    %str(rank_deficit_method))
+            raise ValueError("Invalid value for rank_deficit_method: %s"
+                             % str(rank_deficit_method))
 
     def time_derivative(self, x):
-        """
-        Compute the linear approximation of the time derivative
+        """Compute the linear approximation of the time derivative
 
         :param x: The time series data.
         :type x: numpy.ndarray
@@ -221,29 +229,27 @@ class SFANode(Node):
         return rng
 
     def _check_train_args(self, x, *args, **kwargs):
-        """
-        Raises exception if time dimension does not have enough elements.
+        """Raises exception if time dimension does not have enough elements.
 
         :param x: The time series data.
         :type x: numpy.ndarray
-        
+
         :param *args:
-        :param **kwargs: 
+        :param **kwargs:
         """
         # check that we have at least 2 time samples to
         # compute the update for the derivative covariance matrix
         s = x.shape[0]
-        if  s < 2:
+        if s < 2:
             raise TrainingException('Need at least 2 time samples to '
-                                    'compute time derivative (%d given)'%s)
-        
+                                    'compute time derivative (%d given)' % s)
+
     def _train(self, x, include_last_sample=None):
-        """
-        Training method.
+        """Training method.
 
         :param x: The time series data.
         :type x: numpy.ndarray
-        
+
         :param include_last_sample: For the ``include_last_sample`` switch have a
             look at the SFANode.__init__ docstring.
         :type include_last_sample: bool
@@ -258,7 +264,7 @@ class SFANode(Node):
         self._dcov_mtx.update(self.time_derivative(x))
 
     def _stop_training(self, debug=False):
-        ##### request the covariance matrices and clean up
+        # request the covariance matrices and clean up
         if hasattr(self, '_dcov_mtx'):
             self.cov_mtx, self.avg, self.tlen = self._cov_mtx.fix()
             del self._cov_mtx
@@ -267,25 +273,28 @@ class SFANode(Node):
         # not the second central moment matrix (centered about the mean), i.e.
         # the covariance matrix
         if hasattr(self, '_dcov_mtx'):
-            self.dcov_mtx, self.davg, self.dtlen = self._dcov_mtx.fix(center=False)
+            self.dcov_mtx, self.davg, self.dtlen = self._dcov_mtx.fix(
+                center=False)
             del self._dcov_mtx
 
         rng = self._set_range()
 
-        #### solve the generalized eigenvalue problem
+        # solve the generalized eigenvalue problem
         # the eigenvalues are already ordered in ascending order
         try:
             try:
                 # We first try to fulfill the extended signature described
                 # in mdp.utils.symeig_semidefinite
                 self.d, self.sf = self._symeig(
-                        self.dcov_mtx, self.cov_mtx, True, "on", rng,
+                        self.dcov_mtx, self.cov_mtx,
+                        True, "on", rng,
                         overwrite=(not debug),
-                        rank_threshold=self.rank_threshold, dfc_out=self)
+                        rank_threshold=self.rank_threshold,
+                        dfc_out=self)
             except TypeError:
                 self.d, self.sf = self._symeig(
-                        self.dcov_mtx, self.cov_mtx, True, "on", rng,
-                        overwrite=(not debug))
+                        self.dcov_mtx, self.cov_mtx, True,
+                        "on", rng, overwrite=(not debug))
             d = self.d
             # check that we get only *positive* eigenvalues
             if d.min() < 0:
@@ -296,11 +305,11 @@ class SFANode(Node):
                            "or set a rank deficit method, e.g.\n"
                            "create the SFA node with rank_deficit_method='auto'\n"
                            "and try higher values for rank_threshold, e.g. try\n"
-                           "your_node.rank_threshold = 1e-10, 1e-8, 1e-6, ..."%str(d))
+                           "your_node.rank_threshold = 1e-10, 1e-8, 1e-6, ..." % str(d))
                 raise NodeException(err_msg)
         except SymeigException as exception:
             errstr = (str(exception)+"\n Covariance matrices may be singular.\n"
-                    +SINGULAR_VALUE_MSG)
+                      + SINGULAR_VALUE_MSG)
             raise NodeException(errstr)
 
         if not debug:
@@ -312,14 +321,13 @@ class SFANode(Node):
         self._bias = mult(self.avg, self.sf)
 
     def _execute(self, x, n=None):
-        """
-        Compute the output of the slowest functions.
-        If 'n' is an integer, then use the first 'n' slowest components.
+        """Compute the output of the slowest functions.
 
         :param x: The time series data.
         :type x: numpy.ndarray
-        
-        :param n: The number of slowest components.
+
+        :param n: The number of slowest components. If 'n' is an integer,
+            then use the first 'n' slowest components.
         :type n: int
 
         :returns: The output of the slowest functions.
@@ -337,8 +345,7 @@ class SFANode(Node):
         return mult(y, pinv(self.sf)) + self.avg
 
     def get_eta_values(self, t=1):
-        """
-        Return the eta values of the slow components learned during
+        """Return the eta values of the slow components learned during
         the training phase. If the training phase has not been completed
         yet, call `stop_training`.
 
@@ -369,34 +376,276 @@ class SFANode(Node):
         return self._refcast(t / (2 * numx.pi) * numx.sqrt(self.d))
 
 
+class VartimeSFANode(SFANode):
+    """Extract the slowly varying components from the input data.
+    This node can be understood as a generalization to the *SFANode*.
+
+    In particular, this node numerically computes the integrals involved in
+    the SFA problem formulation by applying the trapezoid rule.
+
+    .. attribute:: avg
+
+        Mean of the input data (available after training)
+
+    .. attribute:: sf
+
+        Matrix of the SFA filters (available after training)
+
+    .. attribute:: d
+
+        Delta values corresponding to the SFA components (generalized
+        eigenvalues). [See the docs of the ``get_eta_values`` method for
+        more information]
+
+    .. admonition:: Reference
+
+        More information about Slow Feature Analysis can be found in
+        Wiskott, L. and Sejnowski, T.J., Slow Feature Analysis: Unsupervised
+        Learning of Invariances, Neural Computation, 14(4):715-770 (2002).
+    """
+
+    def __init__(self, input_dim=None, output_dim=None, dtype=None,
+                 rank_deficit_method='none'):
+        """Initialize an object of type 'VartimeSFANode'.
+
+        :param input_dim: The input dimensionality.
+        :type input_dim: int
+
+        :param output_dim: The output dimensionality.
+        :type output_dim: int
+
+        :param dtype: The datatype.
+        :type dtype: numpy.dtype or str
+
+        :param rank_deficit_method: Possible values: 'none' (default), 'reg', 'pca', 'svd', 'auto'
+            If not 'none', the ``stop_train`` method solves the SFA eigenvalue
+            problem in a way that is robust against linear redundancies in
+            the input data. This would otherwise lead to rank deficit in the
+            covariance matrix, which usually yields a
+            SymeigException ('Covariance matrices may be singular').
+            There are several solving methods implemented:
+
+            reg  - works by regularization
+            pca  - works by PCA
+            svd  - works by SVD
+            ldl  - works by LDL decomposition (requires SciPy >= 1.0)
+
+            auto - (Will be: selects the best-benchmarked method of the above)
+                   Currently it simply selects pca.
+
+            Note: If you already received an exception
+            SymeigException ('Covariance matrices may be singular')
+            you can manually set the solving method for an existing node::
+
+               sfa.set_rank_deficit_method('pca')
+
+            That means,::
+
+               sfa = SFANode(rank_deficit='pca')
+
+            is equivalent to::
+
+               sfa = SFANode()
+               sfa.set_rank_deficit_method('pca')
+
+            After such an adjustment you can run ``stop_training()`` again,
+            which would save a potentially time-consuming rerun of all
+            ``train()`` calls.
+        :type rank_deficit_method: str
+        """
+        super(VartimeSFANode, self).__init__(
+                input_dim, output_dim, dtype, include_last_sample=True,
+                rank_deficit_method=rank_deficit_method)
+
+        self.tchunk = 0
+
+    def _init_cov(self):
+        # init two covariance matrices
+        # one for the input data
+        self._cov_mtx = VartimeCovarianceMatrix(self.dtype)
+        # one for the derivatives
+        self._dcov_mtx = VartimeCovarianceMatrix(self.dtype)
+
+    def time_derivative(self, x, dt=None, time_dep=True):
+        """Compute the linear approximation of the time derivative
+
+        :param x: The time series data.
+        :type x: numpy.ndarray
+
+        :param dt: Sequence of time increments between vectors. 
+
+            Usage with only single chunk of data:
+                *dt* should be of length *x.shape[0]-1* or a constant. When
+                constant, the time increments are assumed to be constant. If
+                *dt* is not supplied, a constant time increments of one is
+                assumed. If a time sequence of length *x.shape[0]* is supplied
+                the first element is disregarded and a warning is presented.
+
+            Usage with multiple chunks of data with intended time dependence:
+                *dt* should have length *x.shape[0]-1* in the first call and
+                be of length *x.shape[0]* starting with the second call.
+                Starting with the second call, the first element in each chunk
+                will be considered the time difference between the last element
+                of *x* in the previous chunk and the first element of *x* of the
+                current chunk. The *time_dep* argument should be *True*.
+
+            Usage with multiple chunks without time dependence:
+                The moments are computed as a weighted average of the moments
+                of separate chunks, if *dt* continues to have length
+                *x.shape[0]-1* after the first call. Time dependence between
+                chunks is thus omitted and all algorithmic components regard
+                only the time structure within chunks. The *time_dep* argument
+                should be *False*. As in the single chunk case it is possible
+                to set *dt* to be a constant or omit it completely for constant
+                or unit time increments within chunks.
+
+        :type dt: numpy.ndarray or numeric
+
+        :param time_dep: Indicates whether time dependence between chunks can
+            be considered. The argument is only relevant in case multiple chunks
+            of data are used. Time dependence between chunks is disregarded
+            when data collection has been done time independently and thus no
+            reasonable time increment between the end of a chunk and
+            beginning of the next can be specified.
+        
+        :type time_dep: bool
+
+        :returns: Piecewise linear approximation of the time derivative.
+        :rtype: numpy.ndarray
+        """
+        if dt is not None and type(dt) == numx.ndarray:
+            # check for inconsistent arguments
+            if time_dep and self.tchunk >0 and x.shape[0]-1 == len(dt):
+                raise Exception('As time_dependence is specified, and it is not the first'
+                        '\ncall argument dt should be of length x.shape[0].')
+            if (not time_dep or self.tchunk == 0) and x.shape[0] == len(dt):
+                warnings.warn(_INC_ARG_WARNING1, mdp.MDPWarning)
+            if len(dt) != x.shape[0] and len(dt) != x.shape[0]-1:
+                raise Exception('Unexpected length of dt.')
+        elif dt is not None and not dt > 0:
+            raise Exception('Unexpected type or value of dt.')
+
+        if dt is None:
+            outlen = x.shape[0] if time_dep and self.tchunk > 0 else x.shape[0]-1
+        elif type(dt) == numx.ndarray:
+            outlen = x.shape[0]-1  if self.tchunk == 0 or dt.shape[0] != x.shape[0] else x.shape[0]
+        elif dt > 0:
+            outlen = x.shape[0]  if self.tchunk > 0  and time_dep else x.shape[0]-1
+        out = numx.empty([outlen, x.shape[1]])
+
+        if dt is not None and type(dt) == numx.ndarray:
+            # Improvements can be made, by interpolating polynomials
+            out[-x.shape[0]+1:, :] =\
+                    (x[1:, :]-x[:-1, :]) / dt[-x.shape[0]+1:, None]
+        elif dt is not None and dt > 0:
+            out[-x.shape[0]+1:, :] = (x[1:, :]-x[:-1, :])/dt
+        else:
+            # trivial fallback
+            out[-x.shape[0]+1:, :] = x[1:, :]-x[:-1, :]
+
+        if self.tchunk > 0 and time_dep:
+            if dt is None:
+                out[0, :] = x[0, :]-self.xlast
+            elif type(dt) == numx.ndarray and dt.shape[0] == x.shape[0]:
+                out[0, :] = numx.divide(x[0, :]-self.xlast, dt[0])
+            elif dt > 0:
+                out[0, :] = numx.divide(x[0, :]-self.xlast, dt)
+
+        self.xlast = x[-1, :].copy()
+        self.tchunk += 1
+
+        return out
+
+    def _train(self, x, dt=None, time_dep=True):
+        """Training method.
+
+        :param x: The time series data.
+        :type x: numpy.ndarray
+
+        :param dt: Sequence of time increments between vectors. 
+
+            Usage with only single chunk of data:
+                *dt* should be of length *x.shape[0]-1* or a constant. When
+                constant, the time increments are assumed to be constant. If
+                *dt* is not supplied, a constant time increments of one is
+                assumed. If a time sequence of length *x.shape[0]* is supplied
+                the first element is disregarded and a warning is presented.
+
+            Usage with multiple chunks of data with intended time dependence:
+                *dt* should have length *x.shape[0]-1* in the first call and
+                be of length *x.shape[0]* starting with the second call.
+                Starting with the second call, the first element in each chunk
+                will be considered the time difference between the last element
+                of *x* in the previous chunk and the first element of *x* of the
+                current chunk. The *time_dep* argument should be *True*.
+
+            Usage with multiple chunks without time dependence:
+                The moments are computed as a weighted average of the moments
+                of separate chunks, if *dt* continues to have length
+                *x.shape[0]-1* after the first call. Time dependence between
+                chunks is thus omitted and all algorithmic components regard
+                only the time structure within chunks. The *time_dep* argument
+                should be *False*. As in the single chunk case it is possible
+                to set *dt* to be a constant or omit it completely for constant
+                or unit time increments within chunks.
+
+        :type dt: numpy.ndarray or numeric
+
+        :param time_dep: Indicates whether time dependence between chunks can
+            be considered. The argument is only relevant in case multiple chunks
+            of data are used. Time dependence between chunks is disregarded
+            when data collection has been done time independently and thus no
+            reasonable time increment between the end of a chunk and
+            beginning of the next can be specified.
+        
+        :type time_dep: bool
+        """
+        # update the covariance matrices
+        self._cov_mtx.update(x, dt, time_dep)
+        x_ = self.time_derivative(x, dt, time_dep)
+
+        if (x_.shape[0] > x.shape[0]-1) and (dt is not None):
+            dt_ = dt
+        elif dt is not None and type(dt) == numx.ndarray:
+            dt_ = dt[1:]
+        elif dt is not None and dt > 0:
+            dt_ = dt
+        else:
+            dt_ = None
+
+        self._dcov_mtx.update(x_, dt_, time_dep)
+
+
 class SFA2Node(SFANode):
     """Get an input signal, expand it in the space of
     inhomogeneous polynomials of degree 2 and extract its slowly varying
-    components. The ``get_quadratic_form`` method returns the input-output
+    components.
+
+     The ``get_quadratic_form`` method returns the input-output
     function of one of the learned unit as a ``QuadraticForm`` object.
     See the documentation of ``mdp.utils.QuadraticForm`` for additional
     information.
 
     .. admonition:: Reference:
-    
+
         More information about Slow Feature Analysis can be found in
         Wiskott, L. and Sejnowski, T.J., Slow Feature Analysis: Unsupervised
-        Learning of Invariances, Neural Computation, 14(4):715-770 (2002)."""
+        Learning of Invariances, Neural Computation, 14(4):715-770 (2002).
+    """
 
     def __init__(self, input_dim=None, output_dim=None, dtype=None,
                  include_last_sample=True, rank_deficit_method='none'):
-        """
-        Initialize an object of type SFA2Node.
+        """Initialize an object of type SFA2Node.
 
         :param input_dim: The input dimensionality.
         :type input_dim: int
-        
+
         :param output_dim: The output dimensionality.
         :type output_dim: int
-        
+
         :param dtype: The datatype.
         :type dtype: numpy.dtype or str
-        
+
         :param include_last_sample: If ``False`` the `train` method discards the 
             last sample in every chunk during training when calculating 
             the covariance matrix.
@@ -405,7 +654,7 @@ class SFA2Node(SFANode):
             to ``False`` if you plan to train with several small chunks.
             For an example, see the SFANode.__init__ method's docstring.
         :type include_last_sample: bool
-        
+
         :param rank_deficit_method: Possible values: 'none' (default), 'reg', 'pca', 'svd', 'auto'
             If not 'none', the ``stop_train`` method solves the SFA eigenvalue
             problem in a way that is robust against linear redundancies in
@@ -435,7 +684,7 @@ class SFA2Node(SFANode):
 
     def _set_range(self):
         if (self.output_dim is not None) and (
-            self.output_dim <= self._expnode.output_dim):
+                self.output_dim <= self._expnode.output_dim):
             # (eigenvalues sorted in ascending order)
             rng = (1, self.output_dim)
         else:
@@ -452,12 +701,12 @@ class SFA2Node(SFANode):
 
     def _execute(self, x, n=None):
         """Compute the output of the slowest functions.
-        If 'n' is an integer, then use the first 'n' slowest components.
 
         :param x: The time series data.
         :type x: numpy.ndarray
-        
-        :param n: The number of slowest components.
+
+        :param n: The number of slowest components. If 'n' is an integer,
+            then use the first 'n' slowest components.
         :type n: int
 
         :returns: The output of the slowest functions.
@@ -468,7 +717,7 @@ class SFA2Node(SFANode):
         """Return the matrix H, the vector f and the constant c of the
         quadratic form 1/2 x'Hx + f'x + c that defines the output
         of the component 'nr' of the SFA node.
-        
+
         :param nr: The component 'nr' of the SFA node.
 
         :returns: The matrix H, the vector f and the constant c of the
@@ -496,7 +745,6 @@ class SFA2Node(SFANode):
                     h[i, j] = h[j, i]
 
         return QuadraticForm(h, f, c, dtype=self.dtype)
-
 
 
 ### old weave inline code to perform the time derivative
