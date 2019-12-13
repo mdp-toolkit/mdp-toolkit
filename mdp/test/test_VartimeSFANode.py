@@ -71,6 +71,7 @@ def test_VartimeSFANode2():
 
     assert_array_almost_equal(unsfa.sf, unsfa2.sf, decimal=10)
 
+
 def test_VartimeSFANode3():
     """Test whether different inputs for the same behavior result in the same
     output - without time dependence.
