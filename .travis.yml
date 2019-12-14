@@ -52,7 +52,15 @@ matrix:
     - python: "3.8-dev"
       env: VNUMPY=1.12.1  VSCI=0.18
     - python: "3.8-dev"
+      env: VNUMPY=1.16.1  VSCI=0.22
+    - python: "3.8-dev"
+      env: VNUMPY=1.16.1  VSCI=0.21.3
+    - python: "3.8-dev"
+      env: VNUMPY=1.16.1  VSCI=0.20.0
+    - python: "3.8-dev"
       env: VNUMPY=1.16.1  VSCI=0.18
+    - python: "3.8-dev"
+      env: VNUMPY=1.17.4  VSCI=0.20.0
     - python: "3.8-dev"
       env: VNUMPY=1.17.4  VSCI=0.18
     - python: "3.8"
@@ -64,7 +72,15 @@ matrix:
     - python: "3.8"
       env: VNUMPY=1.12.1  VSCI=0.18
     - python: "3.8"
+      env: VNUMPY=1.16.1  VSCI=0.22
+    - python: "3.8"
+      env: VNUMPY=1.16.1  VSCI=0.21.3
+    - python: "3.8"
+      env: VNUMPY=1.16.1  VSCI=0.20.0
+    - python: "3.8"
       env: VNUMPY=1.16.1  VSCI=0.18
+    - python: "3.8"
+      env: VNUMPY=1.17.4  VSCI=0.20.0
     - python: "3.8"
       env: VNUMPY=1.17.4  VSCI=0.18
     - python: "3.7-dev"
