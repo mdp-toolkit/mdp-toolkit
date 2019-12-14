@@ -1,5 +1,7 @@
 -------------------------------------------------------------------------------
 MDP-3.6:
+2019-14-12: OTH: Updated travis.yml to include Python 3.8, NumPy 17.4 and
+            SciKits 22.0.
 2019-13-12: NEW: VartimeSFANode supports SFA on data with non-constant time
             increments. This yields an SFA implementation that is robust
             against missing data.
@@ -7,7 +9,7 @@ MDP-3.6:
 2019-08-10: FIX: inspect module getargspec deprecation
 2019-07-03: FIX: Scikits compatibility regarding negative input
 2019-06-20: FIX: Add python 2.7 testing with old scikit versions
-2019-03-16: ERF: Configured Travis CI to test on Python 3.
+2019-03-16: OTH: Configured Travis CI to test on Python 3.
             As a side effect the whole travis.yml was modernized and tests now
             with modern Python 3.5-3.7, NumPy 1.8, 1.12, 1.16,
             using a pip-based setup.
