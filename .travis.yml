@@ -130,7 +130,7 @@ before_install:
 install:
     - pip install scipy
     - pip install -v numpy==$VNUMPY scikit-learn==$VSCI
-    - pip install -v pytest==4.0.0 pytest-cov>=2.5.0 coveralls future
+    - pip install -v pytest==5.3.2 pytest-cov>=2.5.0 coveralls future
 script:
     - pytest --cov-report= --cov-config=.coveragerc --cov=mdp --seed=725021957 mdp
     - pytest --cov-report= --cov-config=.coveragerc --cov=bimdp --cov-append --seed=725021957 bimdp
