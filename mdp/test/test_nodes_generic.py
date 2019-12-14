@@ -196,11 +196,9 @@ def test_dtype_consistency(klass, init_args, inp_arg_gen,
     supported_types = klass(*args).get_supported_dtypes()
     for dtype in supported_types:
         inp = inp_arg_gen()
-        # The code was written before the following was included in
-        # scikit-learn. If more new nodes show up, that require the
-        # following fix, switch to a more generic solution.
-        # See: https://github.com/mdp-toolkit/mdp-toolkit/pull/47
-        if klass.__name__ == "ComplementNBScikitsLearnNode":
+        # See https://github.com/mdp-toolkit/mdp-toolkit/pull/47
+        # and https://github.com/mdp-toolkit/mdp-toolkit/issues/62.
+        if klass.__name__ in ABSINPUT_NODES:
             inp = numx.absolute(inp)
         args = call_init_args(init_args)
         node = klass(dtype=dtype, *args)
@@ -220,11 +218,9 @@ def test_outputdim_consistency(klass, init_args, inp_arg_gen,
                                sup_arg_gen, execute_arg_gen):
     args = call_init_args(init_args)
     inp = inp_arg_gen()
-    # The code was written before the following was included in
-    # scikit-learn. If more new nodes show up, that require the
-    # following fix, switch to a more generic solution.
-    # See: https://github.com/mdp-toolkit/mdp-toolkit/pull/47
-    if klass.__name__ == "ComplementNBScikitsLearnNode":
+    # See https://github.com/mdp-toolkit/mdp-toolkit/pull/47
+    # and https://github.com/mdp-toolkit/mdp-toolkit/issues/62.
+    if klass.__name__ in ABSINPUT_NODES:
         inp = numx.absolute(inp)
     # support generators
     if isinstance(inp, Iter):
@@ -294,11 +290,9 @@ def test_dimdtypeset(klass, init_args, inp_arg_gen,
                      sup_arg_gen, execute_arg_gen):
     init_args = call_init_args(init_args)
     inp = inp_arg_gen()
-    # The code was written before the following was included in
-    # scikit-learn. If more new nodes show up, that require the
-    # following fix, switch to a more generic solution.
-    # See: https://github.com/mdp-toolkit/mdp-toolkit/pull/47
-    if klass.__name__ == "ComplementNBScikitsLearnNode":
+    # See https://github.com/mdp-toolkit/mdp-toolkit/pull/47
+    # and https://github.com/mdp-toolkit/mdp-toolkit/issues/62.
+    if klass.__name__ in ABSINPUT_NODES:
         inp = numx.absolute(inp)
     node = klass(*init_args)
     _train_if_necessary(inp, node, sup_arg_gen)
@@ -452,9 +446,19 @@ NODES = [
 
 # LabelSpreadingScikitsLearnNode is broken in sklearn version 0.11
 # It works fine in version 0.12
-EXCLUDE_NODES = ['ICANode', 'LabelSpreadingScikitsLearnNode',
-                 'OutputCodeClassifierScikitsLearnNode', 'OneVsOneClassifierScikitsLearnNode',
-                 'OneVsRestClassifierScikitsLearnNode', 'VotingClassifierScikitsLearnNode']
+EXCLUDE_NODES = ('ICANode', 'LabelSpreadingScikitsLearnNode',
+                 'OutputCodeClassifierScikitsLearnNode',
+                 'OneVsOneClassifierScikitsLearnNode',
+                 'OneVsRestClassifierScikitsLearnNode',
+                 'VotingClassifierScikitsLearnNode',
+                 'StackingClassifierScikitsLearnNode')
+
+# The following Nodes require their input to be made positive.
+# We do this using inp = numx.absolute(inp) for these nodes.
+# See https://github.com/mdp-toolkit/mdp-toolkit/pull/47
+# and https://github.com/mdp-toolkit/mdp-toolkit/issues/62.
+ABSINPUT_NODES = ('ComplementNBScikitsLearnNode',
+                  'CategoricalNBScikitsLearnNode')
 
 
 def generate_nodes_list(nodes_dicts):
