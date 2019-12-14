@@ -12,7 +12,7 @@ python:
   - "3.6-dev"  # 3.6 development branch
   - "3.7"
   - "3.7-dev"  # 3.7 development branch
-  - "3.8"
+  - "3.8.0"
   - "3.8-dev"  # 3.8 development branch
 env:
   - VNUMPY=1.12.1  VSCI=0.22
@@ -63,25 +63,27 @@ matrix:
       env: VNUMPY=1.17.4  VSCI=0.20.0
     - python: "3.8-dev"
       env: VNUMPY=1.17.4  VSCI=0.18
-    - python: "3.8"
+    - python: "3.8.0"
       env: VNUMPY=1.12.1  VSCI=0.22
-    - python: "3.8"
+    - python: "3.8.0"
       env: VNUMPY=1.12.1  VSCI=0.21.3
-    - python: "3.8"
+    - python: "3.8.0"
       env: VNUMPY=1.12.1  VSCI=0.20.0
-    - python: "3.8"
+    - python: "3.8.0"
       env: VNUMPY=1.12.1  VSCI=0.18
-    - python: "3.8"
+    - python: "3.8.0"
       env: VNUMPY=1.16.1  VSCI=0.22
-    - python: "3.8"
+    - python: "3.8.0"
       env: VNUMPY=1.16.1  VSCI=0.21.3
-    - python: "3.8"
+    - python: "3.8.0"
       env: VNUMPY=1.16.1  VSCI=0.20.0
-    - python: "3.8"
+    - python: "3.8.0"
       env: VNUMPY=1.16.1  VSCI=0.18
-    - python: "3.8"
+    - python: "3.8.0"
+      env: VNUMPY=1.17.4  VSCI=0.21.3
+    - python: "3.8.0"
       env: VNUMPY=1.17.4  VSCI=0.20.0
-    - python: "3.8"
+    - python: "3.8.0"
       env: VNUMPY=1.17.4  VSCI=0.18
     - python: "3.7-dev"
       env: VNUMPY=1.12.1  VSCI=0.22
