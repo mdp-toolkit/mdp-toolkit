@@ -174,9 +174,11 @@ class NodeMetaclass(type):
             argnames.append(varargs)
         if varkwargs:
             argnames.append(varkwargs)
+
+        # python 2/3 compatibility
         try:
             signature = _legacysignature(inspect.signature(func))
-        except:
+        except AttributeError:
             signature = inspect.formatargspec(regargs,	      
                                           varargs,	
                                           varkwargs,	
