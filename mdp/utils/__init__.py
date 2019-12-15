@@ -10,7 +10,7 @@ from .routines import (timediff, refcast, scast, rotate, random_rot,
                        lrep, rrep, irep, orthogonal_permutations,
                        izip_stretched,
                        weighted_choice, bool_to_sign, sign_to_bool, gabor,
-                       invert_exp_funcs2)
+                       invert_exp_funcs2, _legacysignature)
 try:
     from collections import OrderedDict
 except ImportError:
