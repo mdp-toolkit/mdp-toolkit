@@ -187,7 +187,7 @@ class NodeMetaclass(type):
             argnames.append(varargs)
         if varkwargs:
             argnames.append(varkwargs)
-        signature2 = _legacysignature(inspect.signature(func))
+        signature = _legacysignature(inspect.signature(func))
         return dict(name=func.__name__,
                     signature=signature,
                     argnames=argnames,
