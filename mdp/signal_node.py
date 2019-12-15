@@ -19,7 +19,8 @@ import inspect
 
 import mdp
 from mdp import numx
-from mdp.utils import _legacysignature
+from mdp.utils import inspect_formatargspec
+
 
 class NodeException(mdp.MDPException):
     """Base class for exceptions in `Node` subclasses."""
@@ -175,15 +176,10 @@ class NodeMetaclass(type):
         if varkwargs:
             argnames.append(varkwargs)
 
-        # python 2/3 compatibility
-        try:
-            signature = _legacysignature(inspect.signature(func))
-        except AttributeError:
-            signature = inspect.formatargspec(regargs,	      
-                                          varargs,	
-                                          varkwargs,	
-                                          defaults,	
-                                          formatvalue=lambda value: "")[1:-1]
+        signature = inspect_formatargspec(
+                regargs,	varargs, varkwargs,	defaults,	
+                formatvalue=lambda value: "")[1:-1]          
+
         return dict(name=func.__name__,
                     signature=signature,
                     argnames=argnames,
