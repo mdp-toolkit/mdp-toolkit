@@ -177,7 +177,7 @@ class NodeMetaclass(type):
             argnames.append(varkwargs)
 
         signature = inspect_formatargspec(
-                regargs, varargs, varkwargs, defaults,	
+                regargs, varargs, varkwargs, defaults,
                 formatvalue=lambda value: "")[1:-1]          
 
         return dict(name=func.__name__,
