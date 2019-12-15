@@ -14,8 +14,9 @@ X = mdp.numx_rand.random(size=(500, 5))
 
 def get_signature(func):
     regargs, varargs, varkwargs, defaults = getargs(func)[:4]
-    return inspect_formatargspec(regargs, varargs, varkwargs, defaults,
-                                 formatvalue=lambda value: "")[1:-1]
+    return inspect_formatargspec(
+            regargs, varargs, varkwargs, defaults,
+            formatvalue=lambda value: "")[1:-1]
 
 
 def test_docstrings():
