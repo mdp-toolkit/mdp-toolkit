@@ -6,13 +6,14 @@ try:
 except ImportError:
     from inspect import getargspec as getargs
 import inspect
+from mdp.utils import inspect_formatargspec
 import pytest
 X = mdp.numx_rand.random(size=(500, 5))
 
 
 def get_signature(func):
     regargs, varargs, varkwargs, defaults = getargs(func)[:4]
-    return inspect.formatargspec(regargs, varargs, varkwargs, defaults,
+    return inspect_formatargspec(regargs, varargs, varkwargs, defaults,
                                  formatvalue=lambda value: "")[1:-1]
 
 
