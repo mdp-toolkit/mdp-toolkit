@@ -133,6 +133,7 @@ try:
 except ImportError:
     from inspect import getargspec as getargs
 import inspect
+from mdp.utils import inspect_formatargspec
 from future.utils import with_metaclass
 
 
@@ -266,7 +267,7 @@ def _templatefunction(func, listname, stringtype):
                                '%s.append(%s(%%s))' % (listname, stringtype))
     args = getargs(func)
     code = [
-        'def %s%s:' % (func.__name__, inspect.formatargspec(*args)),
+        'def %s%s:' % (func.__name__, inspect_formatargspec(*args)),
         ' %s = []' % listname,
         builder.build(func.__doc__, filename, ' '),
         ' return "".join(%s)' % listname]
