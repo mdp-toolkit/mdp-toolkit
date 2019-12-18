@@ -1,5 +1,6 @@
 -------------------------------------------------------------------------------
 MDP-3.6:
+2019-18-12: FIX: SciPy 1.4 support.
 2019-14-12: FIX: test_nodes_generic fails with NumPy 16 and 17 + SciKits 22.0
 2019-14-12: OTH: Updated travis.yml to include Python 3.8, NumPy 17.4 and
             SciKits 22.0.
