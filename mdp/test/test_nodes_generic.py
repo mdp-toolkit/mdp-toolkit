@@ -318,7 +318,7 @@ def test_inverse(klass, init_args, inp_arg_gen,
     rec = node.inverse(out)
     # cast inp for comparison!
     inp = inp.astype(dtype)
-    assert_array_almost_equal_diff(rec, inp, decimal-3)
+    assert_array_almost_equal_diff(rec, inp, decimal-4)
     assert rec.dtype == dtype
 
 
