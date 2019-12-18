@@ -170,6 +170,7 @@ class config(with_metaclass(MetaConfig, object)):
 
 # In scipy >= 1.4.0 several deprecated members cause issues, see
 # https://github.com/mdp-toolkit/mdp-toolkit/issues/69
+# https://scipy.github.io/devdocs/release.1.4.0.html#scipy-deprecations
 # We replace the following members by their numpy counterparts in
 # case of scipy >= 1.4.0. It lists all common callable members of
 # numpy 1.17.4 and scipy 1.4.0.
@@ -287,6 +288,7 @@ def get_numx():
             
             # In scipy >= 1.4.0 several deprecated members cause issues, see
             # https://github.com/mdp-toolkit/mdp-toolkit/issues/69
+            # https://scipy.github.io/devdocs/release.1.4.0.html#scipy-deprecations
             # We have to replace them by numpy counterparts.
             nvs = numx_version.short_version.split('.')
             if int(nvs[0]) > 1 or int(nvs[0]) == 1 and int(nvs[1]) >= 4:
