@@ -9,13 +9,9 @@ class MCANode(mdp.OnlineNode):
     Minor Component Analysis (MCA) extracts minor components (dual of principal
     components) from the input data incrementally.
 
-    .. attribute:: v
-    
-         Eigen vectors
+    :ivar v: Eigenvectors
 
-    .. attribute:: d
-    
-         Eigen values
+    :ivar d: Eigenvalues
     
     |
     

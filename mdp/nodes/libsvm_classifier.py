@@ -18,12 +18,9 @@ class LibSVMClassifier(_SVMClassifier):
     
     The class provides access to change kernel and svm type with a text string.
     
-    .. attribute:: parameter
-    
-        Allows to change all other svm parameters directly.
+    :ivar parameter: Allows to change all other svm parameters directly.
         
-    .. attribute:: kernels
-    
+    :ivar kernels: 
         Kernels which LibSVM allows:
 			
 		- 'RBF' - Radial basis function kernel
@@ -31,8 +28,7 @@ class LibSVMClassifier(_SVMClassifier):
 		- 'POLY' - Polynomial kernel
 		- 'SIGMOID' - Sigmoid kernel
     
-    .. attribute:: classifiers
-    
+    :ivar classifiers:    
         Classifiers which LibSVM allows:
 
 		- 'C_SVC'

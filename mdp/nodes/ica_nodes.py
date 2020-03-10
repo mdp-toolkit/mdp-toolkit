@@ -225,18 +225,12 @@ class CuBICANode(ICANode):
     As an alternative to this batch mode you might consider the telescope
     mode (see the docs of the ``__init__`` method).
     
-    .. attribute:: white
-     
-        The whitening node used for preprocessing.
+    :ivar white: The whitening node used for preprocessing.
 
-    .. attribute:: filters
-
-        The ICA filters matrix (this is the transposed of the
+    :ivar filters: The ICA filters matrix (this is the transposed of the
         projection matrix after whitening).
 
-    .. attribute:: convergence
-     
-        The value of the convergence threshold.
+    :ivar convergence: The value of the convergence threshold.
         
     .. admonition:: Reference
     
@@ -373,18 +367,12 @@ class FastICANode(ICANode):
         - 26.6.2006 converted to numpy
         - 14.9.2007 updated to Matlab version 2.5
 
-    .. attribute:: white
-    
-        The whitening node used for preprocessing.
+    :ivar white: The whitening node used for preprocessing.
 
-    .. attribute:: filters
-    
-        The ICA filters matrix (this is the transposed of the
+    :ivar filters: The ICA filters matrix (this is the transposed of the
         projection matrix after whitening).
 
-    .. attribute:: convergence
-    
-        The value of the convergence threshold.
+    :ivar convergence: The value of the convergence threshold.
         
     .. admonition:: Reference
     
@@ -1041,18 +1029,12 @@ class TDSEPNode(ISFANode, ProjectMatrixMixin):
         i.e. it is suited to be trained on huge data sets, provided that the
         training is done sending small chunks of data for each time.
 
-    .. attribute:: white
-    
-        The whitening node used for preprocessing.
+    :ivar white: The whitening node used for preprocessing.
 
-    .. attribute:: filters
-    
-        The ICA filters matrix (this is the transposed of the
+    :ivar filters: The ICA filters matrix (this is the transposed of the
         projection matrix after whitening).
 
-    .. attribute:: convergence
-    
-        The value of the convergence threshold.
+    :ivar convergence: The value of the convergence threshold.
            
     .. admonition:: Reference
     

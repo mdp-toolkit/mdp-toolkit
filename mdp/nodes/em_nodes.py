@@ -29,22 +29,14 @@ class FANode(mdp.Node):
     of the latent variables. The ``generate_input`` method generates
     observations from the prior distribution.
 
-    .. attribute:: mu
-    
-          Mean of the input data (available after training)
+    :ivar mu: Mean of the input data (available after training).
 
-    .. attribute:: A
-    
-          Generating weights (available after training)
+    :ivar A: Generating weights (available after training).
 
-    .. attribute:: E_y_mtx
-    
-          Weights for Maximum A Posteriori inference
+    :ivar E_y_mtx: Weights for Maximum A Posteriori inference.
 
-    .. attribute:: sigma
-    
-          Vector of estimated variance of the noise
-          for all input components
+    :ivar sigma: Vector of estimated variance of the noise
+        for all input components.
     
     |
     

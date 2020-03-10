@@ -24,13 +24,9 @@ class FDANode(mdp.Node):
           called just once as usual, since it takes care of *rewinding* the iterator
           to perform the second training step.
 
-    .. attribute:: avg
-      
-        Mean of the input data (available after training)
+    :ivar avg:  Mean of the input data (available after training).
 
-    .. attribute:: v
-      
-        Transposed of the projection matrix, so that
+    :ivar v: Transposed of the projection matrix, so that
         ``output = dot(input-self.avg, self.v)`` (available after training).
           
     .. admonition:: Reference
