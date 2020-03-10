@@ -458,15 +458,11 @@ def process(off, leadVar, leadDeg, deg, pos, result, todoList):
 class RecursiveExpansionNode(_ExpansionNode):
     """Recursively computable (orthogonal) expansions.
 
-    .. attribute:: lower
+    :ivar lower: The lower bound of the domain on which the recursion function
+        is defined or orthogonal.
 
-        The lower bound of the domain on which the recursion function is
-        defined or orthogonal.
-
-    .. attribute:: upper
-
-        The upper bound of the domain on which the recursion function is
-        defined or orthogonal.
+    :ivar upper: The upper bound of the domain on which the recursion function
+        is defined or orthogonal.
     """
 
     def __init__(self, degree=1, recf='standard_poly', check=False,
@@ -633,14 +629,10 @@ class NormalizingRecursiveExpansionNode(RecursiveExpansionNode):
     """Recursively computable (orthogonal) expansions and a
     trainable transformation to the domain of the expansions.
 
-    .. attribute:: lower
-
-        The lower bound of the domain on which the recursion
+    :ivar lower: The lower bound of the domain on which the recursion
         function is defined or orthogonal.
 
-    .. attribute:: upper
-
-        The upper bound of the domain on which the recursion function
+    :ivar upper: The upper bound of the domain on which the recursion function
         is defined or orthogonal.
     """
 

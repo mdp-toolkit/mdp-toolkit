@@ -51,17 +51,11 @@ class RBMNode(mdp.Node):
         Hinton, G. E. (2002). Training products of experts by minimizing
         contrastive divergence. Neural Computation, 14(8):1711-1800
 
-    .. attribute:: w
+    :ivar w: Generative weights between hidden and observed variables.
 
-        Generative weights between hidden and observed variables.
+    :ivar bv: Bias vector of the observed variables.
 
-    .. attribute:: bv
-
-        Bias vector of the observed variables.
-
-    .. attribute:: bh
-
-        Bias vector of the hidden variables.
+    :ivar bh: Bias vector of the hidden variables.
     """
 
     def __init__(self, hidden_dim, visible_dim = None, dtype = None):
@@ -307,18 +301,11 @@ class RBMWithLabelsNode(RBMNode):
           algorithm for deep belief nets. Neural Computation, 18:1527-1554.
 
 
-    .. attribute:: w
+    :ivar w: Generative weights between hidden and observed variables.
 
-        Generative weights between hidden and observed variables.
+    :ivar bv: Bias vector of the observed variables.
 
-    .. attribute:: bv
-
-        Bias vector of the observed variables.
-
-    .. attribute:: bh
-
-        Bias vector of the hidden variables.
-
+    :ivar bh: Bias vector of the hidden variables.
     """
 
     def __init__(self, hidden_dim, labels_dim, visible_dim=None, dtype=None):

@@ -17,9 +17,7 @@ class LinearRegressionNode(Node):
     target data ``y`` to be supplied during training (see ``train``
     docstring).
 
-    .. attribute:: beta
-
-        The coefficients of the linear regression
+    :ivar beta: The coefficients of the linear regression.
     """
 
     def __init__(self, with_bias=True, use_pinv=False,

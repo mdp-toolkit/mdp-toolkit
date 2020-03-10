@@ -9,13 +9,9 @@ class CCIPCANode(mdp.OnlineNode):
     Candid-Covariance free Incremental Principal Component Analysis (CCIPCA)
     extracts the principal components from the input data incrementally.
     
-    .. attribute:: v
-    
-        Eigen vectors
+    :ivar v: Eigenvectors
 
-    .. attribute:: d
-        
-        Eigen values
+    :ivar d: Eigenvalues
     
     |
     

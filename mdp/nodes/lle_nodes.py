@@ -21,14 +21,11 @@ sqrt = numx.sqrt
 class LLENode(Cumulator):
     """Perform a Locally Linear Embedding analysis on the data.
 
-    .. attribute:: training_projection
-    
-          The LLE projection of the training data (defined when
-          training finishes).
+    :ivar training_projection: The LLE projection of the training data
+        (defined when training finishes).
 
-    .. attribute:: desired_variance
-    
-          Variance limit used to compute intrinsic dimensionality.
+    :ivar desired_variance: Variance limit used to compute intrinsic
+        dimensionality.
 
     Based on the algorithm outlined in *An Introduction to Locally
     Linear Embedding* by L. Saul and S. Roweis, using improvements
@@ -351,14 +348,11 @@ def _mgs(a):
 class HLLENode(LLENode):
     """Perform a Hessian Locally Linear Embedding analysis on the data.
 
-    .. attribute:: training_projection
-    
-          The HLLE projection of the training data (defined when training
-          finishes)
+    :ivar training_projection: The HLLE projection of the training data
+        (defined when training finishes).
 
-    .. attribute:: desired_variance
-    
-          Variance limit used to compute intrinsic dimensionality.
+    :ivar desired_variance: Variance limit used to compute intrinsic
+        dimensionality.
     
     |
     

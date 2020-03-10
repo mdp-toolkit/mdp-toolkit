@@ -41,20 +41,14 @@ class ISFANode(Node):
     """
     Perform Independent Slow Feature Analysis on the input data.
 
-    .. attribute:: RP
-    
-        The global rotation-permutation matrix. This is the filter
+    :ivar RP: The global rotation-permutation matrix. This is the filter
         applied on input_data to get output_data
 
-    .. attribute:: RPC
-    
-        The *complete* global rotation-permutation matrix. This
+    :ivar RPC: The *complete* global rotation-permutation matrix. This
         is a matrix of dimension input_dim x input_dim (the 'outer space'
         is retained)
 
-    .. attribute:: covs
-    
-        A `mdp.utils.MultipleCovarianceMatrices` instance 
+    :ivar covs: A `mdp.utils.MultipleCovarianceMatrices` instance 
         input_data. After convergence the uppermost
         ``output_dim`` x ``output_dim`` submatrices should be almost
         diagonal.
@@ -68,14 +62,10 @@ class ISFANode(Node):
         
             >>> del self.covs
 
-    .. attribute:: initial_contrast
-    
-        A dictionary with the starting contrast and the
+    :ivar initial_contrast: A dictionary with the starting contrast and the
         SFA and ICA parts of it.
 
-    .. attribute:: final_contrast
-    
-        Like the above but after convergence.
+    :ivar final_contrast: Like the above but after convergence.
 
     .. note::
     

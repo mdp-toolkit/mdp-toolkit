@@ -53,9 +53,7 @@ class GrowingNeuralGasNode(Node):
     if the growth rate is appropriate, one can avoid overfitting  or
     underfitting the data.
 
-    .. attribute:: graph
-    
-        The corresponding `mdp.graph.Graph` object.
+    :ivar graph: The corresponding `mdp.graph.Graph` object.
     
     |
     
@@ -320,13 +318,9 @@ class NeuralGasNode(GrowingNeuralGasNode):
     """Learn the topological structure of the input data by building a
     corresponding graph approximation (original Neural Gas algorithm).
 
-    .. attribute:: graph
-     
-        The corresponding `mdp.graph.Graph` object.
+    :ivar graph: The corresponding `mdp.graph.Graph` object.
     
-    .. attribute:: max_epochs
-        
-        Maximum number of epochs until which to train.
+    :ivar max_epochs: Maximum number of epochs until which to train.
     
     |
     

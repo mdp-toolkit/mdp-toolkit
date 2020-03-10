@@ -18,23 +18,15 @@ class NIPALSNode(Cumulator, PCANode):
     principal components to be a small. In this case setting output_dim to be
     a certain fraction of the total variance, say 90%, may be of some help.
 
-    .. attribute:: avg
-    
-          Mean of the input data (available after training).
+    :ivar avg: Mean of the input data (available after training).
 
-    .. attribute:: d
-    
-          Variance corresponding to the PCA components.
+    :ivar d: Variance corresponding to the PCA components.
 
-    .. attribute:: v
-    
-          Transposed of the projection matrix (available after training).
+    :ivar v: Transposed of the projection matrix (available after training).
           
-    .. attribute:: explained_variance
-    
-          When output_dim has been specified as a fraction of the total
-          variance, this is the fraction of the total variance that is actually
-          explained.
+    :ivar explained_variance: When output_dim has been specified as a fraction
+        of the total variance, this is the fraction of the total variance that is
+        actually explained.
     
     |
     

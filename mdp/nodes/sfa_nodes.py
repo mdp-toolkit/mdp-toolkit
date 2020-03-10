@@ -46,17 +46,11 @@ There are several ways to deal with this issue:
 class SFANode(Node):
     """Extract the slowly varying components from the input data.
 
-    .. attribute:: avg
+    :ivar avg: Mean of the input data (available after training)
 
-        Mean of the input data (available after training)
+    :ivar sf: Matrix of the SFA filters (available after training)
 
-    .. attribute:: sf
-
-        Matrix of the SFA filters (available after training)
-
-    .. attribute:: d
-
-        Delta values corresponding to the SFA components (generalized
+    :ivar d: Delta values corresponding to the SFA components (generalized
         eigenvalues). [See the docs of the ``get_eta_values`` method for
         more information]
 
@@ -384,17 +378,11 @@ class VartimeSFANode(SFANode):
     In particular, this node numerically computes the integrals involved in
     the SFA problem formulation by applying the trapezoid rule.
 
-    .. attribute:: avg
+    :ivar avg: Mean of the input data (available after training)
 
-        Mean of the input data (available after training)
+    :ivar sf: Matrix of the SFA filters (available after training)
 
-    .. attribute:: sf
-
-        Matrix of the SFA filters (available after training)
-
-    .. attribute:: d
-
-        Delta values corresponding to the SFA components (generalized
+    :ivar d: Delta values corresponding to the SFA components (generalized
         eigenvalues). [See the docs of the ``get_eta_values`` method for
         more information]
 

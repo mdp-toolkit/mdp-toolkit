@@ -14,23 +14,15 @@ class PCANode(mdp.Node):
     """Filter the input data through the most significatives of its
     principal components.
     
-    .. attribute:: avg
-    
-        Mean of the input data (available after training).
+    :ivar avg: Mean of the input data (available after training).
         
-    .. attribute:: v
-    
-        Transposed of the projection matrix (available after training).
+    :ivar v: Transposed of the projection matrix (available after training).
 
-    .. attribute:: d
-    
-        Variance corresponding to the PCA components (eigenvalues of the
+    :ivar d: Variance corresponding to the PCA components (eigenvalues of the
         covariance matrix).
 
-    .. attribute:: explained_variance
-    
-        When output_dim has been specified as a fraction of the total
-        variance, this is the fraction of the total variance that is
+    :ivar explained_variance: When output_dim has been specified as a fraction
+        of the total variance, this is the fraction of the total variance that is
         actually explained.
     
     |
@@ -386,22 +378,14 @@ class WhiteningNode(PCANode):
         
         All output signals have zero mean, unit variance and are decorrelated.
 
-        .. attribute:: avg
-        
-            Mean of the input data (available after training).
+        :ivar avg: Mean of the input data (available after training).
             
-        .. attribute:: v
-        
-            Transpose of the projection matrix (available after training).
+        :ivar v: Transpose of the projection matrix (available after training).
 
-        .. attribute:: d
-        
-            Variance corresponding to the PCA components (eigenvalues of
+        :ivar d: Variance corresponding to the PCA components (eigenvalues of
             the covariance matrix).
 
-        .. attribute:: explained_variance
-        
-            When output_dim has been specified as a 
+        :ivar explained_variance: When output_dim has been specified as a 
             fraction of the total variance, this is the fraction of the total
             variance that is actually explained.
         """
