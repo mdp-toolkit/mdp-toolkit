@@ -22,9 +22,7 @@ class Convolution2DNode(mdp.Node):
     
     This node depends on ``scipy``.
     
-    .. attribute:: filters
-        
-        Specifies a set of 2D filters that are
+    :ivar filters: Specifies a set of 2D filters that are
         convolved with the input data during execution. 
 
     """

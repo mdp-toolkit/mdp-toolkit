@@ -20,10 +20,7 @@ class OnlineCenteringNode(mdp.PreserveDimOnlineNode):
         avg_n intuitively denotes a "window size". For a large avg_n, 'avg_n'-samples represent about 86% of
         the total weight.
 
-    .. attribute:: avg
-    
-        The updated average of the input data
-
+    :ivar avg: The updated average of the input data.
     """
 
     def __init__(self, avg_n=None, input_dim=None, output_dim=None, dtype=None, numx_rng=None):

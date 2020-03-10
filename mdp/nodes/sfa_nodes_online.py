@@ -12,17 +12,11 @@ class IncSFANode(mdp.OnlineNode):
     components from the input data incrementally.
 
 
-    .. attribute:: sf
-    
-         Slow feature vectors
+    :ivar sf: Slow feature vectors
 
-    .. attribute:: wv
-    
-         Whitening vectors
+    :ivar wv: Whitening vectors
 
-    .. attribute:: sf_change
-    
-         Difference in slow features after update
+    :ivar sf_change: Difference in slow features after update
          
     .. admonition:: Reference
     
