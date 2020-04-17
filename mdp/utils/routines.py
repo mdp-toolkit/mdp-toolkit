@@ -27,7 +27,7 @@ if sys.version_info >= (3, 5):
             formatreturns=lambda text: ' -> ' + text,
             formatannotation=formatannotation):
         """Copy formatargspec from python 3.7 standard library.
-        
+
         Python 3 has deprecated formatargspec and requested that Signature
         be used instead, however this requires a full reimplementation
         of formatargspec() in terms of creating Parameter objects and such.
@@ -107,7 +107,7 @@ def rotate(mat, angle, columns=(0, 1), units='radians'):
 
     If M=2, columns=[0,1].
     """
-    if units is 'degrees':
+    if units == 'degrees':
         angle = angle/180.*numx.pi
     cos_ = numx.cos(angle)
     sin_ = numx.sin(angle)
@@ -522,7 +522,7 @@ def residuals(app_x, y_noisy, exp_funcs, x_orig, k=0.0):
     app_exp_x =  numx.concatenate([func(app_x) for func in exp_funcs],axis=1)
 
     div_y = numx.sqrt(len(y_noisy))
-    div_x = numx.sqrt(len(x_orig))  
+    div_x = numx.sqrt(len(x_orig))
     return numx.append( (1-k)**0.5 *(y_noisy-app_exp_x[0]) / div_y, (k)**0.5 * (x_orig - app_x[0])/div_x )
 
 
