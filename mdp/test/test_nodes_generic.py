@@ -11,8 +11,16 @@ from mdp import (config, nodes, ClassifierNode,
                  PreserveDimNode, InconsistentDimException)
 from ._tools import *
 
-uniform = numx_rand.random
+# Ignore specific warnings from sklearn
+try:
+    import sklearn
+    pytestmark = [ pytest.mark.filterwarnings("ignore::sklearn.exceptions.ConvergenceWarning"),
+                   pytest.mark.filterwarnings("ignore::FutureWarning"),
+                 ]
+except ImportError:
+    pass
 
+uniform = numx_rand.random
 
 def _rand_labels(x):
     return numx_rand.randint(0, 2, size=(x.shape[0],))
