@@ -19,8 +19,8 @@ cache:
   - apt
 
 install:
-    - [ $VERSIONS -eq 1 ] && pip install -v numpy==$VNUMPY scipy==$VSCIPY scikit-learn=$VSKL pytest=$VPYTEST pytest-cov coveralls future
-    - [ $VERSIONS -eq 0 ] && pip install -v numpy scipy scikit-learn pytest pytest-cov coveralls future
+    - test $VERSIONS -eq 1  && pip install -v numpy==$VNUMPY scipy==$VSCIPY scikit-learn=$VSKL pytest=$VPYTEST pytest-cov coveralls future
+    - test $VERSIONS -eq 0  && pip install -v numpy scipy scikit-learn pytest pytest-cov coveralls future
 script:
     - pytest --cov-report= --cov-config=.coveragerc --cov=mdp --seed=725021957 mdp
     - pytest --cov-report= --cov-config=.coveragerc --cov=bimdp --cov-append --seed=725021957 bimdp
