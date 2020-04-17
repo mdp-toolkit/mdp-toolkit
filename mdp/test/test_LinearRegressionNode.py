@@ -52,7 +52,6 @@ def test_LinearRegressionNode_with_noise():
     res = lrnode(inp[0])
     assert_array_almost_equal_diff(res, out[0], 2)
 
-@skip_on_condition('sys.version_info.major == 3','This test always fails on Python3')
 def test_LinearRegressionNode_raises_on_linearly_dependent_input():
     # 3. test error for linearly dependent input
     beta = numx_rand.uniform(-10., 10., size=(INDIM, OUTDIM))
