@@ -12,17 +12,16 @@ python:
 
 env:
   # this is Debian stable (10, codename buster)
-  - VERSIONS=1 VNUMPY=1.16.2 VSCIPY=1.1.0 VSKL=0.20.0 VPYTEST=3.10.1
-  - VERSIONS=0
+  - DEPS="numpy==1.16.2 scipy==1.1.0 scikit-learn==0.20.0 pytest==3.10.1"
+  # this is the latest of everything
+  - DEPS="numpy scipy scikit-learn pytest"
   
-cache:
-  - apt
-
 install:
-    - test $VERSIONS -eq 1  && pip install -v numpy==$VNUMPY scipy==$VSCIPY scikit-learn==$VSKL pytest==$VPYTEST pytest-cov coveralls future
-    - test $VERSIONS -eq 0  && pip install -v numpy scipy scikit-learn pytest pytest-cov coveralls future
+    - pip install -v $DEPS pytest-cov coveralls future
+
 script:
     - pytest --cov-report= --cov-config=.coveragerc --cov=mdp --seed=725021957 mdp
     - pytest --cov-report= --cov-config=.coveragerc --cov=bimdp --cov-append --seed=725021957 bimdp
+
 after_success:
     - coveralls
