@@ -262,16 +262,16 @@ def test_outputdim_consistency(klass, init_args, inp_arg_gen,
             # raises an appropriate error
             # case 1: both in the constructor
             pytest.raises(InconsistentDimException,
-                          'klass(input_dim=inp.shape[1], output_dim=output_dim, *args)')
+                          klass, *args, input_dim=inp.shape[1], output_dim=output_dim)
             # case 2: first input_dim, then output_dim
             node = klass(input_dim=inp.shape[1], *args)
-            pytest.raises(InconsistentDimException,
-                          'node.output_dim = output_dim')
+            with pytest.raises(InconsistentDimException):
+                node.output_dim = output_dim
             # case 3: first output_dim, then input_dim
             node = klass(output_dim=output_dim, *args)
             node.output_dim = output_dim
-            pytest.raises(InconsistentDimException,
-                          'node.input_dim = inp.shape[1]')
+            with pytest.raises(InconsistentDimException):
+                node.input_dim = inp.shape[1]
 
         # check that output_dim is set to whatever the output dim is
         node = klass(*args)

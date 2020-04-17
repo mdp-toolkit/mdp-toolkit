@@ -39,7 +39,8 @@ def test_signatures_same_no_arguments():
     assert get_signature(cnode._train) == 'self, x, foo'
     cnode.train(X, foo=42)
     assert cnode.foo == 42
-    pytest.raises(AttributeError, 'cnode.foo2')
+    with pytest.raises(AttributeError):
+        _ = cnode.foo2
 
 
 def test_signatures_more_arguments():
@@ -59,7 +60,8 @@ def test_signatures_more_arguments():
     cnode.train._undecorated_(cnode, X, foo=42)
     cnode.train(X, foo=42)
     assert cnode.foo == 42
-    pytest.raises(AttributeError, 'cnode.foo2')
+    with pytest.raises(AttributeError):
+        _ = cnode.foo2
 
 
 def test_signatures_less_arguments():
@@ -82,7 +84,8 @@ def test_signatures_less_arguments():
     cnode.train._undecorated_(cnode, X)
     cnode.train(X)
     assert cnode.moo == 3
-    pytest.raises(AttributeError, 'cnode.foo')
+    with pytest.raises(AttributeError):
+        _ = cnode.foo
 
 
 def test_simple_extension():
