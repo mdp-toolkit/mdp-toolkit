@@ -30,11 +30,11 @@ def test_VartimeSFANode1():
             or ((sfa.sf[0, 0] < 0) and (unsfa.sf[0, 0] > 0)):
         sfa.sf *= -1.
 
-    assert_array_almost_equal(unsfa.sf, sfa.sf, decimal-6)
+    assert_array_almost_equal(abs(unsfa.sf), abs(sfa.sf), decimal-6)
 
 
 def test_VartimeSFANode2():
-    """Check whether splitting input to unsfa in multiple chunks 
+    """Check whether splitting input to unsfa in multiple chunks
     and with time dependence works.
     """
     x = numx.random.random((12000, 2))
@@ -69,7 +69,7 @@ def test_VartimeSFANode2():
             or ((unsfa2.sf[0, 0] < 0) and (unsfa.sf[0, 0] > 0)):
         unsfa2.sf *= -1.
 
-    assert_array_almost_equal(unsfa.sf, unsfa2.sf, decimal=10)
+    assert_array_almost_equal(abs(unsfa.sf), abs(unsfa2.sf), decimal=10)
 
 
 def test_VartimeSFANode3():
@@ -113,8 +113,8 @@ def test_VartimeSFANode3():
             or ((varsfa3.sf[0, 0] < 0) and (varsfa1.sf[0, 0] > 0)):
         varsfa3.sf *= -1.
 
-    assert_array_almost_equal(varsfa1.sf, varsfa2.sf, decimal=10)
-    assert_array_almost_equal(varsfa1.sf, varsfa3.sf, decimal=10)
+    assert_array_almost_equal(abs(varsfa1.sf), abs(varsfa2.sf), decimal=10)
+    assert_array_almost_equal(abs(varsfa1.sf), abs(varsfa3.sf), decimal=10)
 
 
 def test_VartimeSFANode4():
@@ -160,5 +160,5 @@ def test_VartimeSFANode4():
             or ((varsfa3.sf[0, 0] < 0) and (varsfa1.sf[0, 0] > 0)):
         varsfa3.sf *= -1.
 
-    assert_array_almost_equal(varsfa1.sf, varsfa2.sf, decimal=10)
-    assert_array_almost_equal(varsfa1.sf, varsfa3.sf, decimal=10)
+    assert_array_almost_equal(abs(varsfa1.sf), abs(varsfa2.sf), decimal=10)
+    assert_array_almost_equal(abs(varsfa1.sf), abs(varsfa3.sf), decimal=10)
