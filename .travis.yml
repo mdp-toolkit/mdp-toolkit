@@ -17,7 +17,9 @@ env:
   - DEPS="numpy scipy scikit-learn pytest"
   
 install:
-    - pip install -v $DEPS pytest-cov coveralls future
+    # install build dependencies for installing numpy and scipy from source. This is needed for old version that are not available as wheels
+    - sudo apt-get build-dep python3-numpy python3-scipy
+    - pip install $DEPS pytest-cov coveralls future
 
 script:
     - pytest --cov-report= --cov-config=.coveragerc --cov=mdp --seed=725021957 mdp
