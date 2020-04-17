@@ -6,6 +6,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division
 
+import pytest
 from ._tools import numx, mdp, assert_array_almost_equal, decimal
 from mdp.nodes.gsfa_nodes import graph_delta_values, comp_delta
 
@@ -132,7 +133,7 @@ def test_GSFA_zero_mean_unit_variance_graph():
     assert_array_almost_equal(y_mean, numx.zeros(y_mean.shape), decimal)
     assert_array_almost_equal(y_var, numx.ones(y_var.shape), decimal)
 
-
+@pytest.mark.skip
 def test_basic_GSFA_edge_dict():
     """ Basic test of GSFA on random data and graph, edge dictionary mode.
     """
