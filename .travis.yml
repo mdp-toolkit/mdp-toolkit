@@ -19,7 +19,7 @@ env:
 before_install:
     # install build dependencies for installing numpy and scipy from source.
     # This is needed for old version that are not available as wheels
-    - sudo apt-get -y install cython3 gfortran libblas-dev liblapack-dev libsuitesparse-dev
+    - sudo apt-get -y install cython3 gfortran libblas-dev liblapack-dev
 
 install:
     - pip install $DEPS pytest-cov coveralls future
