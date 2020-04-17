@@ -1,3 +1,4 @@
+from __future__ import generator_stop
 from builtins import range
 from builtins import object
 import mdp
@@ -361,7 +362,6 @@ class TestBiNodeCoroutine(object):
         assert msg["beta"] == 4
         assert node.execute.__doc__ == """Blabla."""
 
-    @skip_on_condition('sys.version_info >= (3,7)', 'test conflicts with PEP 479')
     def test_codecorator2(self):
         """Test codecorator functionality with StopIteration."""
 
@@ -377,7 +377,7 @@ class TestBiNodeCoroutine(object):
                                         self.node_id)
                 x, alpha, beta = yield (x, {"alpha": alpha+1, "beta": beta+2},
                                         self.node_id)
-                raise StopIteration(x, {"alpha": alpha, "beta": beta})
+                return
 
         node = CoroutineBiNode(node_id="conode")
         flow = BiFlow([node])
@@ -386,7 +386,6 @@ class TestBiNodeCoroutine(object):
         assert msg["alpha"] == 4
         assert msg["beta"] == 4
 
-    @skip_on_condition('sys.version_info >= (3,7)', 'test conflicts with PEP 479')
     def test_codecorator_defaults(self):
         """Test codecorator argument default values."""
 
@@ -399,7 +398,9 @@ class TestBiNodeCoroutine(object):
             @binode_coroutine(["alpha", "beta"], defaults=(7,8))
             def _execute(self, x):
                 x, alpha, beta = yield (x, None, self.node_id)
-                raise StopIteration(x, {"alpha": alpha, "beta": beta})
+                x, alpha, beta = yield (x, {"alpha": alpha, "beta": beta},
+                                        self.node_id)
+                return
 
         node = CoroutineBiNode(node_id="conode")
         flow = BiFlow([node])
@@ -408,7 +409,6 @@ class TestBiNodeCoroutine(object):
         assert msg["alpha"] == 7
         assert msg["beta"] == 8
 
-    @skip_on_condition('sys.version_info >= (3,7)', 'test conflicts with PEP 479')
     def test_codecorator_no_iteration(self):
         """Test codecorator corner case with no iterations."""
 
@@ -423,14 +423,14 @@ class TestBiNodeCoroutine(object):
                 # at least one yield must be in a coroutine
                 if False:
                     yield None
-                raise StopIteration(None, {"a": 1}, self.node_id)
+                yield (None, {"a": 1}, self.node_id)
+                return
 
         node1 = CoroutineBiNode()
         x = n.random.random((3,2))
         result = node1.execute(x)
         assert result == (None, {"a": 1}, None)
 
-    @skip_on_condition('sys.version_info >= (3,7)', 'test conflicts with PEP 479')
     def test_codecorator_reset1(self):
         """Test that codecorator correctly resets after termination."""
 
@@ -445,7 +445,7 @@ class TestBiNodeCoroutine(object):
                 # note that the a argument is required, drop message
                 for _ in range(2):
                     x = yield x
-                raise StopIteration(x)
+                return
 
         node1 = CoroutineBiNode()
         x = n.random.random((3,2))
@@ -457,7 +457,6 @@ class TestBiNodeCoroutine(object):
         # couroutine should be reset, a argument is needed again
         pytest.raises(TypeError, node1.execute, x)
 
-    @skip_on_condition('sys.version_info >= (3,7)', 'test conflicts with PEP 479')
     def test_codecorator_reset2(self):
         """Test that codecorator correctly resets without yields."""
 
@@ -471,7 +470,7 @@ class TestBiNodeCoroutine(object):
             def _execute(self, x, a, msg=None):
                 if False:
                     yield
-                raise StopIteration(x)
+                return
 
         node1 = CoroutineBiNode()
         x = n.random.random((3,2))
