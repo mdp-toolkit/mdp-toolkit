@@ -444,10 +444,7 @@ NODES = [
          sup_arg_gen=_rand_1d),
 ]
 
-# LabelSpreadingScikitsLearnNode is broken in sklearn version 0.11
-# It works fine in version 0.12
-EXCLUDE_NODES = ('ICANode', 'LabelSpreadingScikitsLearnNode',
-                 'OutputCodeClassifierScikitsLearnNode',
+EXCLUDE_NODES = ('ICANode', 'OutputCodeClassifierScikitsLearnNode',
                  'OneVsOneClassifierScikitsLearnNode',
                  'OneVsRestClassifierScikitsLearnNode',
                  'VotingClassifierScikitsLearnNode',
