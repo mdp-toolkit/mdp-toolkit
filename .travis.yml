@@ -1,20 +1,14 @@
-
 # vim ft=yaml
-# travis-ci.org definition for MDP build (based on PyMVPA configuration
-# which in turn was based on nipype and nipy)
-#
-# I would prefer to test against what is in neurodebian
 language: python
 
-python:
-  - "3.7"
-  - "3.8"
-
-env:
+matrix:
+  include:
   # this is Debian stable (10, codename buster)
-  - DEPS="numpy==1.16.2 scipy==1.1.0 scikit-learn==0.20.0 joblib==0.13.2 pytest pytest-cov coveralls future"
+    - python: "3.7"
+      env: DEPS="numpy==1.16.2 scipy==1.1.0 scikit-learn==0.20.0 joblib==0.13.2 pytest pytest-cov coveralls future"
   # this is the latest of everything
-  - DEPS="numpy scipy scikit-learn joblib pytest pytest-cov coveralls future"
+    - python: "3.8"
+      env: DEPS="numpy scipy scikit-learn joblib pytest pytest-cov coveralls future"
   
 before_install:
     # install build dependencies for installing numpy and scipy from source.
@@ -22,7 +16,7 @@ before_install:
     - sudo apt-get -y install cython3 gfortran libblas-dev liblapack-dev
 
 install:
-    - pip install $DEPS pytest-cov coveralls future
+    - pip install $DEPS
 
 script:
     - pytest --cov-report= --cov-config=.coveragerc --cov=mdp --seed=725021957 mdp
