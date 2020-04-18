@@ -3,54 +3,24 @@ Section: python
 Priority: optional
 Maintainer: Tiziano Zito <opossumnano@gmail.com>
 Uploaders: Yaroslav Halchenko <debian@onerussian.com>
-Build-Depends: debhelper (>= 9),
+Build-Depends: debhelper-compat (= 12),
                dh-python,
-               python-all (>=2.6.6-3~),
-               python-setuptools,
                python3-all,
                python3-setuptools,
-               python-numpy,
                python3-numpy,
-               python-future,
                python3-future,
-               python-pytest,
                python3-pytest,
-               python-joblib,
                python3-joblib,
-               python-sklearn,
                python3-sklearn,
-               python-libsvm,
-               python-pp,
-X-Python-Version: >= 2.6
-X-Python3-Version: >= 3.2
-Standards-Version: 3.9.6
+Standards-Version: 4.4.1
 Vcs-Browser: https://github.com/mdp-toolkit/mdp-toolkit/tree/debian
 Vcs-git: git://github.com/mdp-toolkit/mdp-toolkit.git
 Homepage: http://mdp-toolkit.sourceforge.net/
-
-Package: python-mdp
-Architecture: all
-Depends: ${python:Depends}, ${misc:Depends}, python-numpy, python-future
-Recommends: python-pytest,
-            python-scipy,
-            python-libsvm,
-            python-joblib,
-            python-sklearn,
-            python-pp,
-Enhances: python-mvpa2
-Description: Modular toolkit for Data Processing
- Python data processing framework for building complex data processing software
- by combining widely used machine learning algorithms into pipelines and
- networks. Implemented algorithms include: Principal Component Analysis (PCA),
- Independent Component Analysis (ICA), Slow Feature Analysis (SFA), Independent
- Slow Feature Analysis (ISFA), Growing Neural Gas (GNG), Factor Analysis,
- Fisher Discriminant Analysis (FDA), and Gaussian Classifiers.
- .
- This package contains MDP for Python 2.
+Rules-Requires-Root: no
 
 Package: python3-mdp
 Architecture: all
-Depends: ${python3:Depends}, ${misc:Depends}, python-numpy, python-future
+Depends: ${python3:Depends}, ${misc:Depends}, python3-numpy, python3-future
 Recommends: python3-pytest,
             python3-scipy,
             python3-joblib,
@@ -62,6 +32,3 @@ Description: Modular toolkit for Data Processing
  Independent Component Analysis (ICA), Slow Feature Analysis (SFA), Independent
  Slow Feature Analysis (ISFA), Growing Neural Gas (GNG), Factor Analysis,
  Fisher Discriminant Analysis (FDA), and Gaussian Classifiers.
- .
- This package contains MDP for Python 3.
-
