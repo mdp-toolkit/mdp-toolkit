@@ -25,11 +25,6 @@ def test_VartimeSFANode1():
     sfa.stop_training()
     unsfa.stop_training()
 
-    # check whether it's the inverse
-    if ((sfa.sf[0, 0] > 0) and (unsfa.sf[0, 0] < 0)) \
-            or ((sfa.sf[0, 0] < 0) and (unsfa.sf[0, 0] > 0)):
-        sfa.sf *= -1.
-
     assert_array_almost_equal(abs(unsfa.sf), abs(sfa.sf), decimal-6)
 
 
@@ -63,11 +58,6 @@ def test_VartimeSFANode2():
     # quit
     unsfa.stop_training()
     unsfa2.stop_training()
-
-    # check whether it's the inverse
-    if ((unsfa2.sf[0, 0] > 0) and (unsfa.sf[0, 0] < 0)) \
-            or ((unsfa2.sf[0, 0] < 0) and (unsfa.sf[0, 0] > 0)):
-        unsfa2.sf *= -1.
 
     assert_array_almost_equal(abs(unsfa.sf), abs(unsfa2.sf), decimal=10)
 
@@ -104,14 +94,6 @@ def test_VartimeSFANode3():
     varsfa1.stop_training()
     varsfa2.stop_training()
     varsfa3.stop_training()
-
-    # check whether it's the inverse
-    if ((varsfa2.sf[0, 0] > 0) and (varsfa1.sf[0, 0] < 0)) \
-            or ((varsfa2.sf[0, 0] < 0) and (varsfa1.sf[0, 0] > 0)):
-        varsfa2.sf *= -1.
-    if ((varsfa3.sf[0, 0] > 0) and (varsfa1.sf[0, 0] < 0)) \
-            or ((varsfa3.sf[0, 0] < 0) and (varsfa1.sf[0, 0] > 0)):
-        varsfa3.sf *= -1.
 
     assert_array_almost_equal(abs(varsfa1.sf), abs(varsfa2.sf), decimal=10)
     assert_array_almost_equal(abs(varsfa1.sf), abs(varsfa3.sf), decimal=10)
@@ -151,14 +133,6 @@ def test_VartimeSFANode4():
     varsfa1.stop_training()
     varsfa2.stop_training()
     varsfa3.stop_training()
-
-    # check whether it's the inverse
-    if ((varsfa2.sf[0, 0] > 0) and (varsfa1.sf[0, 0] < 0)) \
-            or ((varsfa2.sf[0, 0] < 0) and (varsfa1.sf[0, 0] > 0)):
-        varsfa2.sf *= -1.
-    if ((varsfa3.sf[0, 0] > 0) and (varsfa1.sf[0, 0] < 0)) \
-            or ((varsfa3.sf[0, 0] < 0) and (varsfa1.sf[0, 0] > 0)):
-        varsfa3.sf *= -1.
 
     assert_array_almost_equal(abs(varsfa1.sf), abs(varsfa2.sf), decimal=10)
     assert_array_almost_equal(abs(varsfa1.sf), abs(varsfa3.sf), decimal=10)
