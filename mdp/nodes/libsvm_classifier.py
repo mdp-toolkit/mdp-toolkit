@@ -6,7 +6,7 @@ from mdp import numx
 
 from .svm_classifiers import _SVMClassifier, _LabelNormalizer
 
-import svmutil as libsvmutil
+import libsvm.svmutil as libsvmutil
 
 class LibSVMClassifier(_SVMClassifier):
     """
@@ -15,20 +15,20 @@ class LibSVMClassifier(_SVMClassifier):
 
     Information to the parameters can be found on
     http://www.csie.ntu.edu.tw/~cjlin/libsvm/
-    
+
     The class provides access to change kernel and svm type with a text string.
-    
+
     :ivar parameter: Allows to change all other svm parameters directly.
-        
-    :ivar kernels: 
+
+    :ivar kernels:
         Kernels which LibSVM allows:
-			
+
 		- 'RBF' - Radial basis function kernel
 		- 'LINEAR' - Linear kernel
 		- 'POLY' - Polynomial kernel
 		- 'SIGMOID' - Sigmoid kernel
-    
-    :ivar classifiers:    
+
+    :ivar classifiers:
         Classifiers which LibSVM allows:
 
 		- 'C_SVC'
@@ -46,40 +46,40 @@ class LibSVMClassifier(_SVMClassifier):
     def __init__(self, kernel=None, classifier=None, probability=True, params=None,
                  input_dim=None, output_dim=None, dtype=None):
         """Initializes an object of type 'LibSVMClassifier'.
-        
+
         :param kernel: The kernel to use. See self.kernel or
 			class' description for more info.
         :type kernel: str
-        
+
         :param classifier: The type of the SVM to use. See self.classifiers or
 			class' description for more info.
         :type classifier: str
-        
+
         :param probability: Must be set to True, if probabilistic algorithms
             shall be used.
         :type probability: bool
-        
+
         :param params: A dict of parameters to be passed to the svm_parameter.
         :type params: dict
-        
+
         :param input_dim: The input dimensionality.
         :type input_dim: int
-        
+
         :param output_dim: The output dimensionality.
         :type output_dim: int
-        
+
         :param dtype: The datatype.
         :type dtype: numpy.dtype or str
         """
         if not params:
             params = {}
-        
+
         # initialise the parameter and be quiet
         self.parameter = libsvmutil.svm_parameter("-q")
         if probability:
             # allow for probability estimates
             self.parameter.probability = 1
-        
+
         super(LibSVMClassifier, self).__init__(input_dim=input_dim,
                                                output_dim=output_dim,
                                                dtype=dtype)
@@ -93,13 +93,13 @@ class LibSVMClassifier(_SVMClassifier):
                 # check that the name is a valid parameter
                 msg = "'{}' is not a valid parameter for libsvm".format(k)
                 raise mdp.NodeException(msg)
-                
+
             if hasattr(self.parameter, k):
                 setattr(self.parameter, k, v)
             else:
                 msg = "'svm_parameter' has no attribute {}".format(k)
                 raise AttributeError(msg)
-            
+
 
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node."""
@@ -109,12 +109,12 @@ class LibSVMClassifier(_SVMClassifier):
     def set_classifier(self, classifier):
         """
         Sets the classifier.
-        
+
         :param classifier: A string with the name of the classifier which
             should be used. Possible values are in self.classifiers and
 			in the class' description.
         :type classifier: str
-        
+
         :raises TypeError: If the classifier type is unknown or not supported.
         """
         if classifier.upper() in self.classifiers:
@@ -126,12 +126,12 @@ class LibSVMClassifier(_SVMClassifier):
     def set_kernel(self, kernel):
         """
         Sets the classifier.
-        
+
         :param kernel: A string with the name of the kernel which
             should be used. Possible values are in kernel and
 			in the class' description.
         :type kernel: str
-        
+
         :raises TypeError: If the kernel type is unknown or not supported.
         """
         if kernel.upper() in self.kernels:
@@ -143,7 +143,7 @@ class LibSVMClassifier(_SVMClassifier):
     def _stop_training(self):
         super(LibSVMClassifier, self)._stop_training()
         self.normalizer = _LabelNormalizer(self.labels)
-                
+
         labels = self.normalizer.normalize(self.labels.tolist())
         features = self.data
 
@@ -156,7 +156,7 @@ class LibSVMClassifier(_SVMClassifier):
         if isinstance(x, (list, tuple, numx.ndarray)):
             y = [0] * len(x)
             p_labs, p_acc, p_vals = libsvmutil.svm_predict(y, x.tolist(), self.model)
-            
+
             return numx.array(p_labs)
         else:
             msg = "Data must be a sequence of vectors"
