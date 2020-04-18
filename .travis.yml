@@ -3,6 +3,9 @@ language: python
 
 matrix:
   include:
+  # this is the Python 2 environment
+    - python: "2.7"
+      env: DEPS="numpy scipy scikit-learn joblib pp pytest pytest-cov coveralls future"
   # this is Debian stable (10, codename buster)
     - python: "3.7"
       env: DEPS="numpy==1.16.2 scipy==1.1.0 scikit-learn==0.20.0 joblib==0.13.2 pytest pytest-cov coveralls future"
