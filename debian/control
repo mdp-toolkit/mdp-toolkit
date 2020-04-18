@@ -25,6 +25,7 @@ Recommends: python3-pytest,
             python3-scipy,
             python3-joblib,
             python3-sklearn,
+            python3-libsvm,
 Description: Modular toolkit for Data Processing
  Python data processing framework for building complex data processing software
  by combining widely used machine learning algorithms into pipelines and
