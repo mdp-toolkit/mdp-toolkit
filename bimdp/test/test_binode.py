@@ -1,4 +1,3 @@
-from __future__ import generator_stop
 from builtins import range
 from builtins import object
 import mdp
