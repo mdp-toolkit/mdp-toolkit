@@ -8,16 +8,16 @@ matrix:
       env: DEPS="numpy scipy scikit-learn joblib pp pytest pytest-cov coveralls future"
   # this is Ubuntu xenial (16.04 LTS)
     - python: "3.5"
-      env: DEPS="numpy scipy scikit-learn joblib pytest pytest-cov coveralls future"
+      env: DEPS="numpy scipy scikit-learn joblib libsvm pytest pytest-cov coveralls future"
   # this is Ubuntu bionic (18.04 LTS)
     - python: "3.6"
-      env: DEPS="numpy scipy scikit-learn joblib pytest pytest-cov coveralls future"
+      env: DEPS="numpy scipy scikit-learn joblib libsvm pytest pytest-cov coveralls future"
   # this is Debian stable (10, codename buster)
     - python: "3.7"
-      env: DEPS="numpy==1.16.2 scipy==1.1.0 scikit-learn==0.20.0 joblib==0.13.2 pytest pytest-cov coveralls future"
+      env: DEPS="numpy==1.16.2 scipy==1.1.0 scikit-learn==0.20.0 joblib==0.13.2 libsvm pytest pytest-cov coveralls future"
   # this is the latest of everything
     - python: "3.8"
-      env: DEPS="numpy scipy scikit-learn joblib pytest pytest-cov coveralls future"
+      env: DEPS="numpy scipy scikit-learn joblib libsvm pytest pytest-cov coveralls future"
   
 before_install:
     # install build dependencies for installing numpy and scipy from source.

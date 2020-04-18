@@ -285,7 +285,7 @@ def get_numx():
                                version as numx_version)
             numx_description = 'scipy'
             config.ExternalDepFound('numx', 'scipy ' + numx_version.version)
-            
+
             # In scipy >= 1.4.0 several deprecated members cause issues, see
             # https://github.com/mdp-toolkit/mdp-toolkit/issues/69
             # https://scipy.github.io/devdocs/release.1.4.0.html#scipy-deprecations
@@ -505,17 +505,14 @@ def set_configuration():
 
     # libsvm
     try:
-        import svm as libsvm
-        libsvm.libsvm
+        import libsvm
     except ImportError as exc:
         config.ExternalDepFailed('libsvm', exc)
-    except AttributeError as exc:
-        config.ExternalDepFailed('libsvm', 'libsvm version >= 2.91 required')
     else:
         if os.getenv('MDP_DISABLE_LIBSVM'):
             config.ExternalDepFailed('libsvm', 'disabled')
         else:
-            config.ExternalDepFound('libsvm', libsvm.libsvm._name)
+            config.ExternalDepFound('libsvm', libsvm.__version__)
 
     # joblib
     try:
