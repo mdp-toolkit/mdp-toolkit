@@ -2,7 +2,7 @@ import mdp
 from ._tools import *
 
 def testEtaComputerNode():
-    tlen = 1e5
+    tlen = int(1e5)
     t = numx.linspace(0,2*numx.pi,tlen)
     inp = numx.array([numx.sin(t), numx.sin(5*t)]).T
     # create node to be tested

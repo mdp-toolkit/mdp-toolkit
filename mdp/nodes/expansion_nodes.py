@@ -10,17 +10,48 @@ from mdp.nodes import GrowingNeuralGasNode
 
 def nmonomials(degree, nvariables):
     """Return the number of monomials of a given degree in a given number
-    of variables."""
+    of variables.
+    
+    :param degree: The degree of the monomials.
+    :type degree: int
+    
+    :param nvariables: The number of variables.
+    :type nvariables:
+    
+    :return: The number of monomials of a given degree in a given number
+        of variables.
+    :rtype: int
+    """
     return int(mdp.utils.comb(nvariables+degree-1, degree))
 
 def expanded_dim(degree, nvariables):
     """Return the size of a vector of dimension ``nvariables`` after
-    a polynomial expansion of degree ``degree``."""
+    a polynomial expansion of degree ``degree``.
+    
+    :param degree: The degree of polynomial expansion.
+    :type degree: int 
+    
+    :param nvariables: The number of variables,
+        i.e. the dimension of the vector space.
+    :type nvariables: int
+    
+    :return: The size of a vector of dimension ``nvariables`` after
+        a polynomial expansion of degree ``degree``.
+    :rtype: int
+    """
     return int(mdp.utils.comb(nvariables+degree, degree))-1
 
 class _ExpansionNode(mdp.Node):
 
     def __init__(self, input_dim = None, dtype = None):
+        """Initializes an object of type '_ExpansionNode'.
+        
+        :param input_dim: The input dimensionality.
+        :type input_dim: int
+        
+        :param dtype: The datatype.
+        :type dtype: numpy.dtype or str
+        """
         super(_ExpansionNode, self).__init__(input_dim, None, dtype)
 
     def expanded_dim(self, dim):
@@ -46,21 +77,40 @@ class PolynomialExpansionNode(_ExpansionNode):
     """Perform expansion in a polynomial space."""
 
     def __init__(self, degree, input_dim = None, dtype = None):
-        """
-        Input arguments:
-        degree -- degree of the polynomial space where the input is expanded
+        """Initializes an object of type 'PolynomialExpansionNode'.
+        
+        :param degree: Degree of the polynomial space where the
+            input is expanded.
+        :type degree: int
+        
+        :param input_dim: The input dimensionality.
+        :type input_dim: int
+        
+        :param dtype: The datatype.
+        :type dtype: numpy.dtype or str
         """
         self._degree = int(degree)
         super(PolynomialExpansionNode, self).__init__(input_dim, dtype)
 
     def _get_supported_dtypes(self):
-        """Return the list of dtypes supported by this node."""
+        """Return the list of dtypes supported by this node.
+        
+        :return: The list of dtypes supported by this node.
+        :rtype: list
+        """
         return (mdp.utils.get_dtypes('AllFloat') +
                 mdp.utils.get_dtypes('AllInteger'))
 
     def expanded_dim(self, dim):
         """Return the size of a vector of dimension 'dim' after
-        a polynomial expansion of degree 'self._degree'."""
+        a polynomial expansion of degree 'self._degree'.
+        
+        :param dim: The dimension of the vector.
+        :type dim: int
+        
+        :return: The size of the polynomial expension.
+        :rtype: int
+        """
         return expanded_dim(self._degree, dim)
 
     def _execute(self, x):
@@ -100,6 +150,14 @@ class QuadraticExpansionNode(PolynomialExpansionNode):
     ``PolynomialExpansionNode(2)``"""
 
     def __init__(self, input_dim = None, dtype = None):
+        """Initializes an object of type 'QuadraticExpansionNode'.
+        
+        :param input_dim: The input dimensionality.
+        :type input_dim: int
+        
+        :param dtype: The datatype.
+        :type dtype: numpy.dtype or str
+        """
         super(QuadraticExpansionNode, self).__init__(2, input_dim = input_dim,
                                                      dtype = dtype)
 
@@ -109,31 +167,34 @@ class RBFExpansionNode(mdp.Node):
     The input data is filtered through a set of unnormalized Gaussian
     filters, i.e.::
 
-       y_j = exp(-0.5/s_j * ||x - c_j||^2)
+        y_j = exp(-0.5/s_j * ||x - c_j||^2)
 
     for isotropic RBFs, or more in general::
 
-       y_j = exp(-0.5 * (x-c_j)^T S^-1 (x-c_j))
+        y_j = exp(-0.5 * (x-c_j)^T S^-1 (x-c_j))
 
     for anisotropic RBFs.
     """
 
     def __init__(self, centers, sizes, dtype = None):
-        """
-        :Arguments:
-          centers
-            Centers of the RBFs. The dimensionality
+        """Initializes an object of type 'RBFExpansionNode'.
+        
+        :param centers: Centers of the RBFs. The dimensionality
             of the centers determines the input dimensionality;
             the number of centers determines the output
-            dimensionalities
-          sizes
-            Radius of the RBFs.
-
-            ``sizes`` is a list with one element for each RBF, either
-            a scalar (the variance of the RBFs for isotropic RBFs)
-            or a covariance matrix (for anisotropic RBFs).
+            dimensionalities.
+        :type centers: numpy.ndarray
+        
+        :param sizes: Radius of the RBFs. ``sizes`` is a list with
+            one element for each RBF, either a scalar 
+            (the variance of the RBFs for isotropic RBFs) or a
+            covariance matrix (for anisotropic RBFs).
             If ``sizes`` is not a list, the same variance/covariance
             is used for all RBFs.
+        :type: list or numeric
+
+        :param dtype: The datatype.
+        :type dtype: numpy.dtype or str
         """
         super(RBFExpansionNode, self).__init__(None, None, dtype)
         self._init_RBF(centers, sizes)
@@ -204,32 +265,67 @@ class GrowingNeuralGasExpansionNode(GrowingNeuralGasNode):
     sizes of the basis functions are learned through a growing neural
     gas.
 
-      positions of RBFs
-        position of the nodes of the neural gas
-
-      sizes of the RBFs
-        mean distance to the neighbouring nodes.
-
-    Important: Adjust the maximum number of nodes to control the
-    dimension of the expansion.
-
-    More information on this expansion type can be found in:
-    B. Fritzke.
-    Growing cell structures-a self-organizing network for unsupervised
-    and supervised learning. Neural Networks 7, p. 1441--1460 (1994).
+    The positions of RBFs correspond to position of the nodes of the neural gas
+    The sizes of the RBFs correspond to mean distance to the neighbouring nodes.
+    
+    |
+    
+    .. note:: Adjust the maximum number of nodes to control the
+        dimension of the expansion.
+    
+    |
+    
+    .. admonition:: Reference
+    
+        More information on this expansion type can be found in:
+        B. Fritzke.
+        Growing cell structures-a self-organizing network for unsupervised
+        and supervised learning. Neural Networks 7, p. 1441--1460 (1994).
     """
 
     def __init__(self, start_poss=None, eps_b=0.2, eps_n=0.006, max_age=50,
                  lambda_=100, alpha=0.5, d=0.995, max_nodes=100,
                  input_dim=None, dtype=None):
-        """
-        For a full list of input arguments please check the documentation
-        of GrowingNeuralGasNode.
-
-        max_nodes (default 100) : maximum number of nodes in the
-                                  neural gas, therefore an upper bound
-                                  to the output dimension of the
-                                  expansion.
+        """Initializes an object of type 'GrowingNeuralGasExpansionNode'.
+        
+        :param start_poss: Sequence of two arrays containing the position of the
+            first two nodes in the GNG graph. If unspecified, the initial nodes
+            are chosen with a random position generated from a gaussian 
+            distribution with zero mean and unit variance.
+        :type start_poss: tuple or array
+        
+        :param eps_b: Coefficient of movement of the nearest node to a new data
+            point. Typical values are 0 < eps_b << 1 .
+        :type eps_b: float
+        
+        :param eps_n: coefficient of movement of the neighbours of the nearest
+            node to a new data point. Typical values are 0 < eps_n << eps_b .
+        :type eps_n: float
+        
+        :param max_age: Remove an edge after `max_age` updates. Typical values are
+            10 < max_age < lambda.
+        :type max_age: int
+        
+        :param lambda_: Insert a new node after `lambda_` steps. Typical values are O(100).
+        :type lambda_: int
+        
+        :param alpha: When a new node is inserted, multiply the error of the
+            nodes from which it generated by 0<alpha<1. A typical value is 0.5.
+        :type alpha: float
+        
+        :param d: Each step the error of the nodes are multiplied by 0<d<1.
+            Typical values are close to 1.
+        :type d: float
+        
+        :param max_nodes: Maximum number of nodes in the neural gas, therefore an
+            upper bound to the output dimension of the expansion.
+        :type max_nodes: int
+        
+        :param input_dim: The input dimensionality.
+        :type input_dim: int
+        
+        :param dtype: The datatype.
+        :type dtype: numpy.dtype or str
         """
         # __init__ is overwritten only to reset the default for
         # max_nodes. The default of the GrowingNeuralGasNode is
@@ -299,8 +395,12 @@ class GeneralExpansionNode(_ExpansionNode):
 
     This node has been designed to facilitate nonlinear, fixed but arbitrary  
     transformations of the data samples within MDP flows.
-        
-    **Example**::
+    
+    Original code contributed by Alberto Escalante.
+    
+    |
+    
+    .. admonition:: Example
    
         >>> import mdp
         >>> from mdp import numx
@@ -319,14 +419,18 @@ class GeneralExpansionNode(_ExpansionNode):
         >>>  [ 0.2         0.3         0.008       0.027       0.36055513]
         >>>  [ 0.6         1.2         0.216       1.728       1.34164079]]
 
-    Original code contributed by Alberto Escalante.
     """
     def __init__(self, funcs, input_dim = None, dtype = None):
-        """
-        Short argument description:
-
-          ``funcs``
-               list of functions f_i that realize the expansion.
+        """Initializes an object of type 'GeneralExpansionNode'.
+        
+        :param funcs: Functions f_i that realize the expansion.
+        :type funcs: list
+        
+        :param input_dim: The input dimensionality.
+        :type input_dim: int
+        
+        :param dtype: The datatype.
+        :type dtype: numpy.dtype or str
         """
         self.funcs = funcs
         super(GeneralExpansionNode, self).__init__(input_dim, dtype)
@@ -334,12 +438,25 @@ class GeneralExpansionNode(_ExpansionNode):
     def expanded_dim(self, n):
         """The expanded dim is computed by directly applying the expansion
         functions f_i to a zero input of dimension n.
+        
+        :param n: Input dimension.
+        :type n: int
+        
+        :return: Sum of the output sizes of each output function.
+        :rtype: int
         """
         return int(self.output_sizes(n).sum())
     
     def output_sizes(self, n):
         """Return the individual output sizes of each expansion function
-        when the input has lenght n."""
+        when the input has lenght n.
+        
+        :param n: Input dimension,
+        :type: int
+        
+        :return: The individual output sizes of each expansion function.
+        :rtype: list
+        """
         sizes = numx.zeros(len(self.funcs), dtype=numx.int64)
         x = numx.zeros((1,n))
         for i, func in enumerate(self.funcs):
@@ -358,14 +475,21 @@ class GeneralExpansionNode(_ExpansionNode):
     def pseudo_inverse(self, x, use_hint=None):
         """Calculate a pseudo inverse of the expansion using
         scipy.optimize.
-
-        ``use_hint``
-               when calculating a pseudo inverse of the expansion,
-               the hint determines the starting point for the approximation.
-               For details on this parameter see the function 
-               ``invert_exp_funcs2`` in ``mdp.utils.routines.py``.
-
-        This method requires scipy."""
+        
+        This method requires scipy.
+        
+        :param x: The data.
+        :type x: numpy.ndarray
+        
+        :param use_hint: When calculating a pseudo inverse of the expansion,
+            the hint determines the starting point for the approximation.
+            For details on this parameter see the function 
+            ``invert_exp_funcs2`` in ``mdp.utils.routines.py``.
+        :type use_hint: numpy.ndarray or bool
+        
+        :return: The pseudo inverse.
+        :rtype: numpy.ndarray
+        """
 
         try:
             app_x_2, app_ex_x_2 = invert_exp_funcs2(x,

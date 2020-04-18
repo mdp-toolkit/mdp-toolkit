@@ -11,7 +11,11 @@ from builtins import str
 # http://projects.scipy.org/scipy/numpy/ticket/551
 # To circumvent this, you can use a copy() of all unpickled arrays.
 
-import inspect
+# python 2/3 compatibility
+try:
+    from inspect import getfullargspec as getargs
+except ImportError:
+    from inspect import getargspec as getargs
 
 import mdp
 from mdp import numx
@@ -47,7 +51,7 @@ class ParallelExtensionNode(mdp.ExtensionNode, mdp.Node):
     # TODO: allow that forked nodes are not forkable themselves,
     #    and are not joinable either
     #    this implies that caching does not work for these
-    
+
     def fork(self):
         """Return a new instance of this node class for remote training.
 
@@ -95,19 +99,19 @@ class ParallelExtensionNode(mdp.ExtensionNode, mdp.Node):
         raise JoinParallelException("join is not implemented " +
                                     "by this node (%s)" %
                                     str(self.__class__))
-    
+
     @staticmethod
     def use_execute_fork():
         """Return True if node requires a fork / join even during execution.
-        
+
         The default output is False, overwrite this method if required.
-        
+
         Note that the same fork and join methods are used as during training,
         so the distinction must be implemented in the custom _fork and _join
         methods.
         """
         return False
-    
+
     ## helper methods ##
 
     def _default_fork(self):
@@ -119,7 +123,7 @@ class ParallelExtensionNode(mdp.ExtensionNode, mdp.Node):
 
         So you can use this method if all the required keys are also public
         attributes or have a single underscore in front.
-        
+
         There are two reasons why this method does not simply replace _fork
         of ParallelExtensionNode (plus removing Node from the
         inheritance list):
@@ -132,7 +136,7 @@ class ParallelExtensionNode(mdp.ExtensionNode, mdp.Node):
             relying on the inherited (but possibly incompatible)
             default implementation.
         """
-        args, varargs, varkw, defaults = inspect.getargspec(self.__init__)
+        args, varargs, varkw, defaults = getargs(self.__init__)[:4]
         args.remove("self")
         if defaults:
             non_default_keys = args[:-len(defaults)]
@@ -157,18 +161,18 @@ class ParallelExtensionNode(mdp.ExtensionNode, mdp.Node):
                 raise NotForkableParallelException(err)
         # create new instance
         return self.__class__(**kwargs)
-    
+
     @staticmethod
     def _join_covariance(cov, forked_cov):
         """Helper method to join two CovarianceMatrix instances.
-        
+
         cov -- Instance of CovarianceMatrix, to which the forked_cov instance
             is aded in-place.
         """
         cov._cov_mtx += forked_cov._cov_mtx
         cov._avg += forked_cov._avg
         cov._tlen += forked_cov._tlen
-        
+
 
 ## MDP parallel node implementations ##
 
@@ -248,6 +252,6 @@ class ParallelHistogramNode(ParallelExtensionNode, mdp.nodes.HistogramNode):
     def _join(self, forked_node):
         if (self.data_hist is not None) and (forked_node.data_hist is not None):
             self.data_hist = numx.concatenate([self.data_hist,
-                                            forked_node.data_hist])
-        elif forked_node.data_hist != None:
+                                               forked_node.data_hist])
+        elif forked_node.data_hist is not None:
             self.data_hist = forked_node.data_hist

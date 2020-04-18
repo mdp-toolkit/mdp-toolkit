@@ -11,7 +11,7 @@ def test(filename=None, seed=None, options='', mod_loc=None):
 
        seed     -- set random seed
 
-       options  -- options to be passed to py.test (as a string)
+       options  -- options to be passed to pytest (as a string)
 
        mod_loc  -- don't use it, it's for internal usage
     """
@@ -23,25 +23,22 @@ def test(filename=None, seed=None, options='', mod_loc=None):
         loc = os.path.join(mod_loc, os.path.basename(filename))
     args = []
     if seed is not None:
-        args.append('--seed=' + str(seed))
-    # add --assert=reiterp option to work around permissions problem
-    # with __pycache__ directory when MDP is installed on a normal
-    # user non-writable directory
-    options = "--assert=reinterp "+options
-    args.extend(options.split())
+        args.extend(('--seed', str(seed)))
+    if options is not None:
+        args.extend(options.split())
     args.append(loc)
     _worker = get_worker()
     return _worker(args)
 
 def get_worker():
     try:
-        import py.test
+        import pytest
     except ImportError:
-        raise ImportError('You need py.test to run the test suite!')
+        raise ImportError('You need pytest to run the test suite!')
 
     # check that we have at least version 2.1.2
-    if _version_too_old(py.test.__version__, (2,1,2)):
-        raise ImportError('You need at least py.test version 2.1.2,'
-                ' found %s!'%py.test.__version__)
+    if _version_too_old(pytest.__version__, (2,1,2)):
+        raise ImportError('You need at least pytest version 2.1.2,'
+                ' found %s!'%pytest.__version__)
     else:
-        return py.test.cmdline.main
+        return pytest.cmdline.main

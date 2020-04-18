@@ -10,11 +10,75 @@ numx, numx_rand, numx_linalg  = mdp.numx, mdp.numx_rand, mdp.numx_linalg
 numx_description = mdp.numx_description
 import random
 import itertools
+import sys
+
+
+# python <3.5/>=3.5 compatibility
+if sys.version_info >= (3, 5):
+    from inspect import formatannotation
+
+    def inspect_formatargspec(
+            args, varargs=None, varkw=None, defaults=None,
+            kwonlyargs=(), kwonlydefaults={}, annotations={},
+            formatarg=str,
+            formatvarargs=lambda name: '*' + name,
+            formatvarkw=lambda name: '**' + name,
+            formatvalue=lambda value: '=' + repr(value),
+            formatreturns=lambda text: ' -> ' + text,
+            formatannotation=formatannotation):
+        """Copy formatargspec from python 3.7 standard library.
+
+        Python 3 has deprecated formatargspec and requested that Signature
+        be used instead, however this requires a full reimplementation
+        of formatargspec() in terms of creating Parameter objects and such.
+        Instead of introducing all the object-creation overhead and having
+        to reinvent from scratch, just copy their compatibility routine.
+        Utimately we would need to rewrite our "decorator" routine completely
+        which is not really worth it right now, until all Python 2.x support
+        is dropped.
+        """
+
+        def formatargandannotation(arg):
+            result = formatarg(arg)
+            if arg in annotations:
+                result += ': ' + formatannotation(annotations[arg])
+            return result
+        specs = []
+        if defaults:
+            firstdefault = len(args) - len(defaults)
+        for i, arg in enumerate(args):
+            spec = formatargandannotation(arg)
+            if defaults and i >= firstdefault:
+                spec = spec + formatvalue(defaults[i - firstdefault])
+            specs.append(spec)
+        if varargs is not None:
+            specs.append(formatvarargs(formatargandannotation(varargs)))
+        else:
+            if kwonlyargs:
+                specs.append('*')
+        if kwonlyargs:
+            for kwonlyarg in kwonlyargs:
+                spec = formatargandannotation(kwonlyarg)
+                if kwonlydefaults and kwonlyarg in kwonlydefaults:
+                    spec += formatvalue(kwonlydefaults[kwonlyarg])
+                specs.append(spec)
+        if varkw is not None:
+            specs.append(formatvarkw(formatargandannotation(varkw)))
+        result = '(' + ', '.join(specs) + ')'
+        if 'return' in annotations:
+            result += formatreturns(formatannotation(annotations['return']))
+        return result
+
+else:
+    from inspect import formatargspec as inspect_formatargspec
+
+
 
 def timediff(data):
     """Returns the array of the time differences of data."""
     # this is the fastest way we found so far
     return data[1:]-data[:-1]
+
 
 def refcast(array, dtype):
     """
@@ -25,9 +89,11 @@ def refcast(array, dtype):
         return array
     return array.astype(dtype)
 
+
 def scast(scalar, dtype):
     """Convert a scalar in a 0D array of the given dtype."""
     return numx.array(scalar, dtype=dtype)
+
 
 def rotate(mat, angle, columns=(0, 1), units='radians'):
     """
@@ -41,7 +107,7 @@ def rotate(mat, angle, columns=(0, 1), units='radians'):
 
     If M=2, columns=[0,1].
     """
-    if units is 'degrees':
+    if units == 'degrees':
         angle = angle/180.*numx.pi
     cos_ = numx.cos(angle)
     sin_ = numx.sin(angle)
@@ -50,6 +116,7 @@ def rotate(mat, angle, columns=(0, 1), units='radians'):
     col_j = mat[:, j]
     mat[:, i] = cos_*col_i - sin_*col_j
     mat[:, j] = sin_*col_i + cos_*col_j
+
 
 def permute(x, indices=(0, 0), rows=0, cols=1):
     """Swap two columns and (or) two rows of 'x', whose indices are specified
@@ -72,9 +139,11 @@ def permute(x, indices=(0, 0), rows=0, cols=1):
     if cols:
         x[:, i], x[:, j] = x[:, j], x[:, i] + 0
 
+
 def hermitian(x):
     """Compute the Hermitian, i.e. conjugate transpose, of x."""
     return x.T.conj()
+
 
 def symrand(dim_or_eigv, dtype="d"):
     """Return a random symmetric (Hermitian) matrix.
@@ -105,6 +174,7 @@ def symrand(dim_or_eigv, dtype="d"):
         h = h + 1j*(numx.triu(h2)-numx.tril(h2))
     return refcast(h, dtype)
 
+
 def random_rot(dim, dtype='d'):
     """Return a random rotation matrix, drawn from the Haar distribution
     (the only uniform distribution on SO(n)).
@@ -132,11 +202,13 @@ def random_rot(dim, dtype='d'):
     H = (D*H.T).T
     return H
 
+
 def norm2(v):
     """Compute the 2-norm for 1D arrays.
     norm2(v) = sqrt(sum(v_i^2))"""
 
     return numx.sqrt((v*v).sum())
+
 
 def cov2(x, y):
     """Compute the covariance between 2D matrices x and y.
@@ -147,6 +219,7 @@ def cov2(x, y):
     mny = y.mean(axis=0)
     tlen = x.shape[0]
     return old_div(mdp.utils.mult(x.T, y),(tlen-1)) - numx.outer(mnx, mny)
+
 
 def cov_maxima(cov):
     """Extract the maxima of a covariance matrix."""
@@ -182,6 +255,7 @@ def mult_diag(d, mtx, left=True):
     else:
         return d*mtx
 
+
 def comb(N, k):
     """Return number of combinations of k objects from a set of N objects
     without repetitions, a.k.a. the binomial coefficient of N and k."""
@@ -191,6 +265,7 @@ def comb(N, k):
     for dv in range(1, k+1):
         ret //= dv
     return ret
+
 
 # WARNING numpy.linalg.eigh does not support float sizes larger than 64 bits,
 # and complex numbers of size larger than 128 bits.
@@ -216,9 +291,11 @@ def get_dtypes(typecodes_key, _safe=True):
             pass
     return types
 
+
 _UNSAFE_DTYPES = [numx.typeDict[d] for d in
                   ['float16', 'float96', 'float128', 'complex192', 'complex256']
                   if d in numx.typeDict]
+
 
 def nongeneral_svd(A, range=None, **kwargs):
     """SVD routine for simple eigenvalue problem, API is compatible with
@@ -234,10 +311,12 @@ def nongeneral_svd(A, range=None, **kwargs):
         w = w[lo-1:hi]
     return w, Z
 
+
 def sqrtm(A):
     """This is a symmetric definite positive matrix sqrt function"""
     d, V = mdp.utils.symeig(A)
     return mdp.utils.mult(V, mult_diag(numx.sqrt(d), V.T))
+
 
 # replication functions
 def lrep(x, n):
@@ -246,10 +325,12 @@ def lrep(x, n):
     shp.extend(x.shape)
     return x.reshape(shp).repeat(n, axis=0)
 
+
 def rrep(x, n):
     """Replicate x n-times on a new last dimension"""
     shp = x.shape + (1,)
     return x.reshape(shp).repeat(n, axis=-1)
+
 
 def irep(x, n, dim):
     """Replicate x n-times on a new dimension dim-th dimension"""
@@ -274,6 +355,7 @@ except ImportError:
             result = [x+[y] for x in result for y in pool]
         for prod in result:
             yield tuple(prod)
+
 
 def orthogonal_permutations(a_dict):
     """
@@ -305,6 +387,13 @@ def orthogonal_permutations(a_dict):
         yield dict(i)
 
 
+def _iter_or_repeat(val):
+    try:
+        return iter(val)
+    except TypeError:
+        return itertools.repeat(val)
+
+
 def izip_stretched(*iterables):
     """Same as izip, except that for convenience non-iterables are repeated ad infinitum.
 
@@ -317,28 +406,25 @@ def izip_stretched(*iterables):
 
     Thus,
     >>> for zipped in izip_stretched([1, 2, 3], -1):
-            print zipped
+    print zipped
     (1, -1)
     (2, -1)
     (3, -1)
 
     is equivalent to
     >>> for zipped in izip([1, 2, 3], [-1] * 3):
-            print zipped
+    print zipped
     (1, -1)
     (2, -1)
     (3, -1)
     """
-    def iter_or_repeat(val):
-        try:
-            return iter(val)
-        except TypeError:
-            return itertools.repeat(val)
-
-    iterables= list(map(iter_or_repeat, iterables))
+    iterables = list(map(_iter_or_repeat, iterables))
     while iterables:
         # need to care about python < 2.6
-        yield tuple([next(it) for it in iterables])
+        try:
+            yield tuple([next(it) for it in iterables])
+        except StopIteration:
+            break
 
 
 def weighted_choice(a_dict, normalize=True):
@@ -369,9 +455,11 @@ def weighted_choice(a_dict, normalize=True):
             return key
     return None
 
+
 def bool_to_sign(an_array):
     """Return -1 for each False; +1 for each True"""
     return numx.sign(an_array - 0.5)
+
 
 def sign_to_bool(an_array, zero=True):
     """Return False for each negative value, else True.
@@ -383,6 +471,7 @@ def sign_to_bool(an_array, zero=True):
     else:
         return numx.array(an_array) > 0
 
+
 def gabor(size, alpha, phi, freq, sgm, x0=None, res=1, ampl=1.):
     """Return a 2D array containing a Gabor wavelet.
 
@@ -392,13 +481,13 @@ def gabor(size, alpha, phi, freq, sgm, x0=None, res=1, ampl=1.):
     phi -- phase (rad)
     freq -- frequency (cycles/deg)
     sgm -- (sigma_x, sigma_y) standard deviation along the axis
-           of the gaussian ellipse (pixel)
+    of the gaussian ellipse (pixel)
     x0 -- (x,y) coordinates of the center of the wavelet (pixel)
-          Default: None, meaning the center of the array
+    Default: None, meaning the center of the array
     res -- spatial resolution (deg/pixel)
-           Default: 1, so that 'freq' is measured in cycles/pixel
+    Default: 1, so that 'freq' is measured in cycles/pixel
     ampl -- constant multiplying the result
-            Default: 1.
+    Default: 1.
     """
 
     # init
@@ -425,6 +514,7 @@ def gabor(size, alpha, phi, freq, sgm, x0=None, res=1, ampl=1.):
 
     return im
 
+
 def residuals(app_x, y_noisy, exp_funcs, x_orig, k=0.0):
     """Function used internally by invert_exp_funcs2 to approximate
     inverses in GeneralExpansionNode. """
@@ -432,8 +522,9 @@ def residuals(app_x, y_noisy, exp_funcs, x_orig, k=0.0):
     app_exp_x =  numx.concatenate([func(app_x) for func in exp_funcs],axis=1)
 
     div_y = numx.sqrt(len(y_noisy))
-    div_x = numx.sqrt(len(x_orig))  
+    div_x = numx.sqrt(len(x_orig))
     return numx.append( (1-k)**0.5 *(y_noisy-app_exp_x[0]) / div_y, (k)**0.5 * (x_orig - app_x[0])/div_x )
+
 
 def invert_exp_funcs2(exp_x_noisy, dim_x, exp_funcs, use_hint=False, k=0.0):
     """Approximates a preimage app_x of exp_x_noisy.
@@ -448,10 +539,10 @@ def invert_exp_funcs2(exp_x_noisy, dim_x, exp_funcs, use_hint=False, k=0.0):
     otherwise: use the parameter use_hint itself as the first approximation
 
     k: weighting factor in [0, 1] to balance between approximation error and
-       closeness to the starting point. For instance:
-       objective function is to minimize:
-           (1-k) * ||exp_funcs(app_x) - exp_x_noisy||**2/output_dim +
-               k * ||app_x - starting point||**2/input_dim
+    closeness to the starting point. For instance:
+    objective function is to minimize:
+    (1-k) * ||exp_funcs(app_x) - exp_x_noisy||**2/output_dim +
+    k * ||app_x - starting point||**2/input_dim
 
     Note: this function requires scipy.
     """

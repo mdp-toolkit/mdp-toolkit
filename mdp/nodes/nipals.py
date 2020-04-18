@@ -10,55 +10,63 @@ sqrt = numx.sqrt
 
 class NIPALSNode(Cumulator, PCANode):
     """Perform Principal Component Analysis using the NIPALS algorithm.
-    This algorithm is particularyl useful if you have more variable than
+
+    This algorithm is particularly useful if you have more variables than
     observations, or in general when the number of variables is huge and
-    calculating a full covariance matrix may be unfeasable. It's also more
+    calculating a full covariance matrix may be infeasible. It's also more
     efficient of the standard PCANode if you expect the number of significant
     principal components to be a small. In this case setting output_dim to be
     a certain fraction of the total variance, say 90%, may be of some help.
 
-    **Internal variables of interest**
+    :ivar avg: Mean of the input data (available after training).
 
-      ``self.avg``
-          Mean of the input data (available after training).
+    :ivar d: Variance corresponding to the PCA components.
 
-      ``self.d``
-          Variance corresponding to the PCA components.
-
-      ``self.v``
-          Transposed of the projection matrix (available after training).
+    :ivar v: Transposed of the projection matrix (available after training).
           
-      ``self.explained_variance``
-          When output_dim has been specified as a fraction of the total
-          variance, this is the fraction of the total variance that is actually
-          explained.
+    :ivar explained_variance: When output_dim has been specified as a fraction
+        of the total variance, this is the fraction of the total variance that is
+        actually explained.
+    
+    |
+    
+    .. admonition:: Reference
+    
+        Reference for *NIPALS (Nonlinear Iterative Partial Least Squares)*:
+        Wold, H.
+        Nonlinear estimation by iterative least squares procedures.
+        in David, F. (Editor), Research Papers in Statistics, Wiley,
+        New York, pp 411-444 (1966).
 
-    Reference for NIPALS (Nonlinear Iterative Partial Least Squares):
-    Wold, H.
-    Nonlinear estimation by iterative least squares procedures.
-    in David, F. (Editor), Research Papers in Statistics, Wiley,
-    New York, pp 411-444 (1966).
+        More information about Principal Component Analysis*, a.k.a. discrete
+        Karhunen-Loeve transform can be found among others in
+        I.T. Jolliffe, Principal Component Analysis, Springer-Verlag (1986).
 
-    More information about Principal Component Analysis, a.k.a. discrete
-    Karhunen-Loeve transform can be found among others in
-    I.T. Jolliffe, Principal Component Analysis, Springer-Verlag (1986).
-
-    Original code contributed by:
-    Michael Schmuker, Susanne Lezius, and Farzad Farkhooi (2008).
+        Original code contributed by:
+        Michael Schmuker, Susanne Lezius, and Farzad Farkhooi (2008).
     """
     def __init__(self, input_dim=None, output_dim=None, dtype=None,
                  conv = 1e-8, max_it = 100000):
-        """
-        The number of principal components to be kept can be specified as
-        'output_dim' directly (e.g. 'output_dim=10' means 10 components
-        are kept) or by the fraction of variance to be explained
-        (e.g. 'output_dim=0.95' means that as many components as necessary
-        will be kept in order to explain 95% of the input variance).
-
-        Other Arguments:
-           conv   - convergence threshold for the residual error.
-           max_it - maximum number of iterations
-
+        """Initializes an object of type 'NIPALSNode'.
+        
+        :param input_dim: The input dimensionality.
+        :type input_dim: int
+        
+        :param output_dim: The number of principal components to be kept can be specified as
+            'output_dim' directly (e.g. 'output_dim=10' means 10 components
+            are kept) or by the fraction of variance to be explained
+            (e.g. 'output_dim=0.95' means that as many components as necessary
+            will be kept in order to explain 95% of the input variance).
+        :type output_dim: int or float
+        
+        :param dtype: The datatype.
+        :type dtype: numpy.dtype or str
+        
+        :param conv: Convergence threshold for the residual error.
+        :type conv: float
+        
+        :param max_it: Maximum number of iterations.
+        :type max_it: int
         """
         super(NIPALSNode, self).__init__(input_dim, output_dim, dtype)
         self.conv = conv

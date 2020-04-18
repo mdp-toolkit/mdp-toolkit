@@ -3,14 +3,14 @@ from builtins import object
 import mdp
 n = mdp.numx
 
-import py.test
+import pytest
 
 from bimdp import BiNode, MSG_ID_SEP, BiFlow, BiClassifier, binode_coroutine
 from bimdp.nodes import (
     IdentityBiNode, SFABiNode, FDABiNode, SignumBiClassifier
 )
 from ._tools import JumpBiNode
-
+from mdp.test._tools import skip_on_condition
 
 class TestBiNode(object):
 
@@ -153,7 +153,7 @@ class TestBiNode(object):
         assert bi_sfa_node.is_trainable()
         x = n.random.random((100,10))
         train_result = bi_sfa_node.train(x)
-        assert train_result == None
+        assert train_result is None
         assert bi_sfa_node.is_training()
         result = bi_sfa_node.stop_training()
         assert result == (None,) + stop_result
@@ -376,7 +376,7 @@ class TestBiNodeCoroutine(object):
                                         self.node_id)
                 x, alpha, beta = yield (x, {"alpha": alpha+1, "beta": beta+2},
                                         self.node_id)
-                raise StopIteration(x, {"alpha": alpha, "beta": beta})
+                return
 
         node = CoroutineBiNode(node_id="conode")
         flow = BiFlow([node])
@@ -397,7 +397,9 @@ class TestBiNodeCoroutine(object):
             @binode_coroutine(["alpha", "beta"], defaults=(7,8))
             def _execute(self, x):
                 x, alpha, beta = yield (x, None, self.node_id)
-                raise StopIteration(x, {"alpha": alpha, "beta": beta})
+                x, alpha, beta = yield (x, {"alpha": alpha, "beta": beta},
+                                        self.node_id)
+                return
 
         node = CoroutineBiNode(node_id="conode")
         flow = BiFlow([node])
@@ -420,7 +422,8 @@ class TestBiNodeCoroutine(object):
                 # at least one yield must be in a coroutine
                 if False:
                     yield None
-                raise StopIteration(None, {"a": 1}, self.node_id)
+                yield (None, {"a": 1}, self.node_id)
+                return
 
         node1 = CoroutineBiNode()
         x = n.random.random((3,2))
@@ -441,7 +444,7 @@ class TestBiNodeCoroutine(object):
                 # note that the a argument is required, drop message
                 for _ in range(2):
                     x = yield x
-                raise StopIteration(x)
+                return
 
         node1 = CoroutineBiNode()
         x = n.random.random((3,2))
@@ -451,7 +454,7 @@ class TestBiNodeCoroutine(object):
         node1.execute(x)
         assert node1._coroutine_instances == {}
         # couroutine should be reset, a argument is needed again
-        py.test.raises(TypeError, node1.execute, x)
+        pytest.raises(TypeError, node1.execute, x)
 
     def test_codecorator_reset2(self):
         """Test that codecorator correctly resets without yields."""
@@ -466,7 +469,7 @@ class TestBiNodeCoroutine(object):
             def _execute(self, x, a, msg=None):
                 if False:
                     yield
-                raise StopIteration(x)
+                return
 
         node1 = CoroutineBiNode()
         x = n.random.random((3,2))

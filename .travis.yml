@@ -1,24 +1,35 @@
 # vim ft=yaml
-# travis-ci.org definition for MDP build (based on PyMVPA configuration
-# which in turn was based on nipype and nipy)
-#
-# We pretend to be erlang because we need can't use the python support in
-# travis-ci; it uses virtualenvs, they do not have numpy, scipy, matplotlib,
-# and it is impractical to build them
-#
-# Alternative setups could have been done using anaconda etc, but I would
-# prefer to test against what is in neurodebian
-language: erlang
-cache:
-  - apt
+language: python
+
+matrix:
+  include:
+  # this is the Python 2 environment
+    - python: "2.7"
+      env: DEPS="numpy scipy scikit-learn joblib pp pytest pytest-cov coveralls future"
+  # this is Ubuntu xenial (16.04 LTS)
+    - python: "3.5"
+      env: DEPS="numpy scipy scikit-learn joblib pytest pytest-cov coveralls future"
+  # this is Ubuntu bionic (18.04 LTS)
+    - python: "3.6"
+      env: DEPS="numpy scipy scikit-learn joblib pytest pytest-cov coveralls future"
+  # this is Debian stable (10, codename buster)
+    - python: "3.7"
+      env: DEPS="numpy==1.16.2 scipy==1.1.0 scikit-learn==0.20.0 joblib==0.13.2 pytest pytest-cov coveralls future"
+  # this is the latest of everything
+    - python: "3.8"
+      env: DEPS="numpy scipy scikit-learn joblib pytest pytest-cov coveralls future"
+  
 before_install:
-    # The ultimate one-liner setup for NeuroDebian repository
-    - bash <(wget -q -O- http://neuro.debian.net/_files/neurodebian-travis.sh)
-    - travis_retry sudo apt-get install python-numpy python-joblib python-sklearn
+    # install build dependencies for installing numpy and scipy from source.
+    # This is needed for old version that are not available as wheels
+    - sudo apt-get -y install cython3 gfortran libblas-dev liblapack-dev
+
 install:
-    - pip install --user -v pytest pytest-cov coveralls future
+    - pip install $DEPS
+
 script:
-    - py.test --cov-report= --cov-config=.coveragerc --cov=mdp --seed=725021957 mdp
-    - py.test --cov-report= --cov-config=.coveragerc --cov=bimdp --cov-append --seed=725021957 bimdp
+    - pytest --cov-report= --cov-config=.coveragerc --cov=mdp --seed=725021957 mdp
+    - pytest --cov-report= --cov-config=.coveragerc --cov=bimdp --cov-append --seed=725021957 bimdp
+
 after_success:
     - coveralls

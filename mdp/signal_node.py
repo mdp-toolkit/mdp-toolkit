@@ -10,10 +10,17 @@ __docformat__ = "restructuredtext en"
 import pickle as _cPickle
 import warnings as _warnings
 import copy as _copy
+# python 2/3 compatibility
+try:
+    from inspect import getfullargspec as getargs
+except ImportError:
+    from inspect import getargspec as getargs
 import inspect
 
 import mdp
 from mdp import numx
+from mdp.utils import inspect_formatargspec
+
 
 class NodeException(mdp.MDPException):
     """Base class for exceptions in `Node` subclasses."""
@@ -162,17 +169,17 @@ class NodeMetaclass(type):
         >>> info["kwargs_name"]
         kw
         """
-        regargs, varargs, varkwargs, defaults = inspect.getargspec(func)
+        regargs, varargs, varkwargs, defaults = getargs(func)[:4]
         argnames = list(regargs)
         if varargs:
             argnames.append(varargs)
         if varkwargs:
             argnames.append(varkwargs)
-        signature = inspect.formatargspec(regargs,
-                                          varargs,
-                                          varkwargs,
-                                          defaults,
-                                          formatvalue=lambda value: "")[1:-1]
+
+        signature = inspect_formatargspec(
+                regargs, varargs, varkwargs, defaults,
+                formatvalue=lambda value: "")[1:-1]          
+
         return dict(name=func.__name__,
                     signature=signature,
                     argnames=argnames,
@@ -389,13 +396,13 @@ class Node(with_metaclass(NodeMetaclass, object)):
     def _get_supported_dtypes(self):
         """Return the list of dtypes supported by this node.
 
-        The types can be specified in any format allowed by :numpy:`dtype`.
+        The types can be specified in any format allowed by ``numpy.dtype``.
         """
         # TODO: http://epydoc.sourceforge.net/manual-othermarkup.html#external-api-links for numpy
         return mdp.utils.get_dtypes('Float')
 
     def get_supported_dtypes(self):
-        """Return dtypes supported by the node as a list of :numpy:`dtype`
+        """Return dtypes supported by the node as a list of  ``numpy.dtype``
         objects.
 
         Note that subclasses should overwrite `self._get_supported_dtypes`

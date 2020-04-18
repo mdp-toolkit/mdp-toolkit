@@ -4,7 +4,7 @@ from __future__ import division
 from builtins import range
 from past.utils import old_div
 from builtins import object
-import py.test
+import pytest
 from ._tools import *
 from mdp import Node, nodes
 
@@ -142,7 +142,7 @@ def test_QuadraticForm_non_symmetric_raises():
     """Test the detection of non symmetric H!
     """
     H = numx_rand.random((10,10))
-    py.test.raises(mdp.utils.QuadraticFormException,
+    pytest.raises(mdp.utils.QuadraticFormException,
                    utils.QuadraticForm, H)
 
 def test_nongeneral_svd_bug():

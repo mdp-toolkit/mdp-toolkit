@@ -1,6 +1,6 @@
 from builtins import range
 from builtins import object
-import py.test
+import pytest
 
 import mdp
 from mdp import numx as np
@@ -55,7 +55,7 @@ class TestMessageResultContainer(object):
         msgs = [{"a":  np.zeros((10,3))}, {"a":  np.zeros((10,4))}]
         for msg in msgs:
             rescont.add_message(msg)
-        py.test.raises(ValueError, rescont.get_message)
+        pytest.raises(ValueError, rescont.get_message)
 
 
 class TestBiFlow(object):
@@ -113,13 +113,13 @@ class TestBiFlow(object):
         # labels argument of FDANode is not supported in biflow
         flow = BiFlow([mdp.nodes.PCANode(), mdp.nodes.FDANode()])
         # the iterables are passed as if this were a normal Flow
-        py.test.raises(BiFlowException,
-                       flow.train, [[samples], [samples, labels]])
+        pytest.raises(BiFlowException,
+                      flow.train, [[samples], [samples, labels]])
         # messing up the data iterables further doesn't matter, this is
         # actually interpreted as three data chunks for the FDANode training,
         # since argument iterables are not supported by BiFlow
-        py.test.raises(BiFlowException,
-                       flow.train, [[samples], [samples, labels, labels]])
+        pytest.raises(BiFlowException,
+                      flow.train, [[samples], [samples, labels, labels]])
 
     def test_training_targets(self):
         """Test targeting during training and stop_training."""
