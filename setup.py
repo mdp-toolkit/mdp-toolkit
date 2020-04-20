@@ -102,7 +102,9 @@ def setup_package():
           extras_require = {'pp' : 'pp',
                             'joblib' : 'joblib',
                             'scikit-learn' : 'scikit-learn',
-                            'scipy' : 'scipy'},
+                            'scipy' : 'scipy',
+                            'libsvm' : 'libsvm',
+                            'pytest': 'pytest'},
           cmdclass = {'test': MDPTest}
           )
 
