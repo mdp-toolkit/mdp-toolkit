@@ -41,7 +41,7 @@ from .sfa_nodes_online import IncSFANode
 from .stats_nodes_online import OnlineCenteringNode, OnlineTimeDiffNode
 
 __all__ = ['PCANode', 'WhiteningNode', 'NIPALSNode', 'FastICANode',
-           'CuBICANode', 'TDSEPNode', 'JADENode', 'SFANode', 'SFA2Node',
+           'CuBICANode', 'TDSEPNode', 'JADENode', 'SFANode', 'SFA2Node', 'VartimeSFANode',
            'ISFANode', 'XSFANode', 'GSFANode', 'iGSFANode', 'FDANode', 'FANode', 'RBMNode',
            'RBMWithLabelsNode', 'GrowingNeuralGasNode', 'LLENode', 'HLLENode',
            'LinearRegressionNode', 'QuadraticExpansionNode',

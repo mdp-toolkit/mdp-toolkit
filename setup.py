@@ -75,17 +75,16 @@ def setup_package():
     short_description = get_short_description()
     long_description = get_long_description()
     # create download url:
-    dl = ('http://sourceforge.net/projects/mdp-toolkit/files/mdp-toolkit/' +
-          get_version()+'/MDP-'+get_version()+'.tar.gz')
+    dl = ('https://github.com/mdp-toolkit/mdp-toolkit/archive/MDP-' + get_version()+'.zip')
 
     setup(name = 'MDP', version=version,
           author = 'MDP Developers',
           author_email = email,
           maintainer = 'MDP Developers',
           maintainer_email = email,
-          license = "http://mdp-toolkit.sourceforge.net/license.html",
+          license = "https://raw.githubusercontent.com/mdp-toolkit/mdp-toolkit/master/COPYRIGHT",
           platforms = ["Any"],
-          url = 'http://mdp-toolkit.sourceforge.net',
+          url = 'https://mdpdocs.readthedocs.io',
           download_url = dl,
           description = short_description,
           long_description = long_description,
@@ -103,7 +102,9 @@ def setup_package():
           extras_require = {'pp' : 'pp',
                             'joblib' : 'joblib',
                             'scikit-learn' : 'scikit-learn',
-                            'scipy' : 'scipy'},
+                            'scipy' : 'scipy',
+                            'libsvm' : 'libsvm',
+                            'pytest': 'pytest'},
           cmdclass = {'test': MDPTest}
           )
 

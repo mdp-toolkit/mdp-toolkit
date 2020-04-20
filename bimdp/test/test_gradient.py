@@ -103,10 +103,10 @@ class TestGradientExtension(object):
             if not hasattr(self, "__gradient_Hs"):
                 quad_forms = [self.get_quadratic_form(i)
                               for i in range(self.output_dim)]
-                self.__gradient_Hs = numx.vstack((quad_form.H[numx.newaxis]
-                                                for quad_form in quad_forms))
-                self.__gradient_fs = numx.vstack((quad_form.f[numx.newaxis]
-                                                for quad_form in quad_forms))
+                self.__gradient_Hs = numx.vstack([quad_form.H[numx.newaxis]
+                                                for quad_form in quad_forms])
+                self.__gradient_fs = numx.vstack([quad_form.f[numx.newaxis]
+                                                for quad_form in quad_forms])
             grad = (numx.dot(x, self.__gradient_Hs) +
                         numx.repeat(self.__gradient_fs[numx.newaxis,:,:],
                                   len(x), axis=0))

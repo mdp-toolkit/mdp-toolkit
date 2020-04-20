@@ -17,9 +17,9 @@ class IncSFANode(mdp.OnlineNode):
     :ivar wv: Whitening vectors
 
     :ivar sf_change: Difference in slow features after update
-         
+
     .. admonition:: Reference
-    
+
         More information about IncSFA
         can be found in Kompella V.R, Luciw M. and Schmidhuber J., Incremental Slow
         Feature Analysis: Adaptive Low-Complexity Slow Feature Updating from
@@ -30,41 +30,41 @@ class IncSFANode(mdp.OnlineNode):
                  init_pca_vectors=None, init_mca_vectors=None, input_dim=None, output_dim=None, dtype=None,
                  numx_rng=None):
         """Initialize an object of type 'SFANode'.
-        
+
         :param eps: Learning rate (default: 0.1)
         :type eps: float
-        
+
         :param whitening_output_dim: Whitening output dimension. (default: input_dim)
         :type whitening_output_dim: int
-        
+
         :param remove_mean: Remove input mean incrementally (default: True)
         :type remove_mean: bool
-        
+
         :param avg_n: When set, the node updates an exponential weighted moving average.
             avg_n intuitively denotes a window size. For a large avg_n, avg_n samples
             represents about 86% of the total weight. (Default:None)
-        
+
         :param amn_params: PCA amnesic parameters. Default set to (n1=20,n2=200,m=2000,c=3).
             For n < n1, ~ moving average.
             For n1 < n < n2 - Transitions from moving average to amnesia. m denotes the scaling
             param and c typically should be between (2-4). Higher values will weigh recent data.
         :type amn_params: tuple
-        
+
         :param init_pca_vectors: Initial whitening vectors. Default - randomly set
         :type init_pca_vectors: numpy.ndarray
-        
+
         :param init_mca_vectors: Initial mca vectors. Default - randomly set
         :type init_mca_vectors: numpy.ndarray
-        
+
         :param input_dim: The input dimensionality.
         :type input_dim: int
-        
+
         :param output_dim: The output dimensionality.
         :type output_dim: int
-        
+
         :param dtype: The datatype.
         :type dtype: numpy.dtype or str
-        
+
         :param numx_rng: Random number generator. (Optional)
         """
 
@@ -119,14 +119,14 @@ class IncSFANode(mdp.OnlineNode):
     @property
     def init_slow_features(self):
         """Return the initialized slow features.
-        
+
         :return: Initialized slow features."""
         return self._init_sf
 
     @property
     def init_pca_vectors(self):
         """Return the initialized whitening vectors.
-        
+
         :return: Initialized whitening vectors.
         :rtype: numpy.ndarray
         """
@@ -135,7 +135,7 @@ class IncSFANode(mdp.OnlineNode):
     @property
     def init_mca_vectors(self):
         """Return initialized minor components.
-        
+
         :return: Initialized minor components.
         :rtype: numpy.ndarray
         """
@@ -172,7 +172,7 @@ class IncSFANode(mdp.OnlineNode):
         node._train_iteration += x.shape[0]
 
     def _check_train_args(self, x, *args, **kwargs):
-        if self.training_type is 'batch':
+        if self.training_type == 'batch':
             # check that we have at least 2 time samples for batch training
             if x.shape[0] < 2:
                 raise mdp.TrainingException(
@@ -202,7 +202,7 @@ class IncSFANode(mdp.OnlineNode):
 
     def _train(self, x, new_episode=None):
         """Update slow features.
-        
+
         :param new_episode: Set new_episode to True to ignore taking erroneous
             derivatives between the episodes of training data.
         :type new_episode: bool
@@ -223,7 +223,7 @@ class IncSFANode(mdp.OnlineNode):
 
     def _execute(self, x):
         """Return slow feature response.
-        
+
         :return: Slow feature response.
         """
         if self.remove_mean:
@@ -232,7 +232,7 @@ class IncSFANode(mdp.OnlineNode):
 
     def _inverse(self, y):
         """Return inverse of the slow feature response.
-        
+
         :return: The inverse of the slow feature response.
         """
         return mult(y, pinv(self.sf)) + self.avgnode.avg
