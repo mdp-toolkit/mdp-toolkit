@@ -16,6 +16,7 @@ Build-Depends: debhelper-compat (= 12),
                python3-libsvm,
 Standards-Version: 4.5
 Vcs-Browser: https://github.com/mdp-toolkit/mdp-toolkit/tree/debian
+Homepage: https://mdpdocs.readthedocs.io
 Rules-Requires-Root: no
 
 Package: python3-mdp
