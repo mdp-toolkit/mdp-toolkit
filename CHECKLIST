@@ -1,64 +1,88 @@
 === Checklist for MDP release ===
 
-Before release:
-
-- check that new nodes have been explicitly imported in nodes/__init__.py
-  and that they are listed in __all__:
-  - create a list of defined nodes with:
+- Check that new nodes have been explicitly imported in nodes/__init__.py and that they are listed in __all__:
+  # create a list of defined nodes with:
     git grep 'class .*Node(' mdp/nodes | grep -v test | grep -v Scikits | cut -d ':' -f 2 | cut -d ' ' -f 2 | cut -d '(' -f 1 | sort > /tmp/list_defined
-  - create a list of nodes imported in mdp.nodes with:
-    python -c "import sys, mdp; [sys.stdout.write(i+'\n') for i in  sorted([obj for obj in mdp.nodes.__dict__ if obj.endswith('Node') and not obj.endswith('ScikitsLearnNode')])]" > /tmp/list_in_dict
-  - create a list of nodes in __all__ with:
-    python -c "import sys, mdp; [sys.stdout.write(i+'\n') for i in  sorted([obj for obj in mdp.nodes.__all__ if obj.endswith('Node') and not obj.endswith('ScikitsLearnNode')])]" > /tmp/list_in_all
-  - compare those lists [keep in mind that a couple of nodes are private and
-    so those lists do not need to be exactly equal]
+  # create a list of nodes imported in mdp.nodes with:
+    python3 -c "import sys, mdp; [sys.stdout.write(i+'\n') for i in  sorted([obj for obj in mdp.nodes.__dict__ if obj.endswith('Node') and not obj.endswith('ScikitsLearnNode')])]" > /tmp/list_in_dict
+  # create a list of nodes in __all__ with:
+    python3 -c "import sys, mdp; [sys.stdout.write(i+'\n') for i in  sorted([obj for obj in mdp.nodes.__all__ if obj.endswith('Node') and not obj.endswith('ScikitsLearnNode')])]" > /tmp/list_in_all
+  # compare those listsm for example with
+    meld /tmp/list_defined /tmp/list_in_dict /tmp/list_in_all
+  # These lists should be almost identical. Some nodes defined or found in the dict could be used only internally,
+  # and thus not available through __all__, as of 2020.04.18 the only nodes that do not need to be in all three
+  # lists are:
+    - ICANode -> this is an internal node to be subclassed by nodes implementing some form of ICA
+    - ProjectionNode -> this is an internal node used by XSFA
+    - _ExpansionNode -> this is used internally by many SFA nodes)
 
-- make sure that __init__ has the right version number
+- Make sure that mdp/__init__.py has the right version number
 
-- update date in variable __copyright__ in file __init__
-- test all suported python versions and dependencies with
-  python testall.py [dir]
-  where [dir] is an optional directory that will be prepended to your python
-  path, in case you have locally installed packages
-- "make doctest" in docs repository and fix all failures
+- Update date in variable __copyright__ in file mdp/__init__.py and in COPYRIGHT
 
-During release:
-- update CHANGES: you can generate a new bunch of CHANGES with:
-  git log --no-color --pretty="format:%w(79,0,12)%ad: %s%+b" --date=short --no-merges --since=$LASTRELEASE
-  where LASTRELEASE is the tag of the last release, e.g. MDP-3.4
+- Update CHANGES: you can generate a new bunch of CHANGES with:
+   git log --no-color --pretty="format:%w(79,0,12)%ad: %s%+b" --date=short --no-merges --since=$LASTRELEASE
+  
+  where LASTRELEASE is the tag of the last release, e.g. MDP-3.6
+  
   You can then prepend the output of this command to the original CHANGES file, 
-  but even better would be to edit the result to only keep the changes
+  but *even better* would be to edit the result to only keep the changes
   that are relevant for the user like incompatibilities, new features, etc..
-- update TODO and COPYRIGHT (date)
+  Not every commit is interesting in CHANGES: the exact commits are available in git.
+
+- Test that MDP can be installed with pip locally:
+  # create a wheel
+    python3 setup.py sdist bdist_wheel
+  # create a new Python3 virtualenv
+    python3 -m venv /tmp/mdp_test
+  # activate the virtualenv
+    source /tmp/mdp_test/bin/activate
+  # install the wheel in the virtualenv
+    pip install dist/XXX.whl
+  # this should also install MDP hard-dependencies (numpy, future)
+  # manually install MDP soft dependencies
+    pip install scipy scikit-learn joblib libsvm pytest
+  # change directory to be sure we are importing the pip-installed MDP
+    cd ~
+  # now we should be able to import
+    python -c 'import mdp; print(mdp.__file__, mdp.__version__)'
+  # -> in the above verify that the file is in the clone of the MDP repo,
+  #    and that the version is correct
+  # now we can run the tests
+  python -c 'import mdp; mdp.test(); import bimdp; bimdp.test()'
+  # -> verify that all soft depenencies are correctly detected by MDP, for example
+    ================================================== test session starts =============
+    platform linux -- Python 3.8.2, pytest-5.4.1, py-1.8.1, pluggy-0.13.1
+              python: 3.8.2.final.0
+                 mdp: 3.6
+     parallel python: NOT AVAILABLE: No module named 'pp'
+              shogun: NOT AVAILABLE: No module named 'shogun'
+              libsvm: 3.23.0.4
+              joblib: 0.14.1
+             sklearn: 0.22.2.post1
+                numx: scipy 1.4.1
+              symeig: scipy.linalg.eigh
+    Random Seed: 1343069334
+
+    rootdir: /tmp/mdp_test/lib/python3.8/site-packages/mdp/test
+ # -> also, of course check that all tests are passing  
+
+- create a release notes file (this is an edit version of the CHANGES file,
+  it will be used as annotation for the git tag, and will be shown on GitHub in the
+  release package)
+
+- tag release in git and use the release notes file as annotation for the tag
+  git tag -a MDP-3.6 -F RELEASE_NOTES
+
+- push the tag git push --tags
+
+###### The stuff below is obsolete and needs to be updated ######
+
 - generate tutorial, website, and API documentation [make website]
 - change homepage colors
 - short/long description should go: on SF.net description, tutorial,
   home page, modules __init__, software.incf.net.
-- generate packages and test them:
-  # this generates a source distribution (tarball) and an universal wheel (binary
-  # installer OS independent)
-  python3 setup.py sdist bdist_wheel
-  # the generated files are in the directory "dist"
-  # test them in a virtualenv
-  virtualenv mdp-27 && source /home/tiziano/mdp-27/bin/activate
-  cd dist 
-  pip install MDP-3.4.tar.gz
-  pip install pytest
-  python -c 'import mdp; mdp.test(seed=10)'
-  python -c 'import bimdp; bimdp.test(seed=10)'
-  cd ..
-  virtualenv mdp-27-wheel && source /home/tiziano/mdp-27-wheel/bin/activate
-  cd dist
-  pip install MDP-3.4-py2.py3-none-any.whl
-  pip install pytest
-  python -c 'import mdp; mdp.test(seed=10)'
-  python -c 'import bimdp; bimdp.test(seed=10)'
-  # now do the same with python3, where instead of virtualenv you use
-  python3 -m venv mdp-3 && source /home/tiziano/mdp-3/bin/activate
-- create a release notes file
-- tag release in git (tag mdp-toolkit repo)
-  git tag -a MDP-3.4
-- push the tag git push --tags
+
 - update the package on PyPI:
   # first test on the test PyPI instance (you have to register there first)
   # - create a ~/.pypirc first:
@@ -139,6 +163,7 @@ pip install mdp
 - tag the docs repository:
   git tag -a MDP-3.5
   git push --tags
+
 After release:
 - update version number in __init__
 - send announcement to:
