@@ -17,7 +17,7 @@ matrix:
       env: DEPS="numpy==1.16.2 scipy==1.1.0 scikit-learn==0.20.0 joblib==0.13.2 libsvm pytest pytest-cov coveralls future"
   # this is a test of MDP minimal dependencies
     - python: "3.8"
-      env: DEPS="numpy pytest pytest-cov coveralls"
+      env: DEPS="numpy future pytest pytest-cov coveralls"
   # this is the latest of everything
     - python: "3.8"
       env: DEPS="numpy scipy scikit-learn joblib libsvm pytest pytest-cov coveralls future"
