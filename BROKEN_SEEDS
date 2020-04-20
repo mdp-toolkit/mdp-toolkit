@@ -1,0 +1,2 @@
+# This file is a collection of pytest-seeds that led to at least one of the
+# tests failing, and it provides a way to spot faulty functionality.
