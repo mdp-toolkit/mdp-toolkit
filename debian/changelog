@@ -4,7 +4,7 @@ mdp (3.6-1) unstable; urgency=medium
   * Drop Python 2 package
   * Upload sponsored by Yaroslav Halchenko
 
- -- Tiziano Zito <opossumnano@gmail.com>  Sat, 24 Apr 2020 18:32:06 +0200
+ -- Tiziano Zito <opossumnano@gmail.com>  Fri, 24 Apr 2020 18:32:06 +0200
 
 mdp (3.5-1) unstable; urgency=medium
 
