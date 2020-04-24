@@ -1,10 +1,10 @@
-mdp (3.6-1) UNRELEASED; urgency=medium
+mdp (3.6-1) unstable; urgency=medium
 
   * New upstream release (Closes: #867515)
   * Drop Python 2 package
   * Upload sponsored by Yaroslav Halchenko
 
- -- Tiziano Zito <opossumnano@gmail.com>  Sat, 18 Apr 2020 13:30:06 +0200
+ -- Tiziano Zito <opossumnano@gmail.com>  Sat, 24 Apr 2020 18:32:06 +0200
 
 mdp (3.5-1) unstable; urgency=medium
 
