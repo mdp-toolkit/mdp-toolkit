@@ -1,3 +1,9 @@
+mdp (3.6-2) UNRELEASED; urgency=medium
+
+  * Trim trailing whitespace.
+
+ -- Debian Janitor <janitor@jelmer.uk>  Tue, 28 Apr 2020 21:01:38 +0000
+
 mdp (3.6-1) unstable; urgency=medium
 
   * New upstream release (Closes: #867515)
@@ -28,7 +34,7 @@ mdp (3.3+git19-g4ec2f29-1) unstable; urgency=medium
   * "New" upstream git snapshot
     - resolves FTBFS by a workaround of faulty unicode encoding in
       sklearn docstrings (Closes: #724146)
-  * debian/rules 
+  * debian/rules
     - run tests from within a corresponding tests directory
 
  -- Yaroslav Halchenko <debian@onerussian.com>  Mon, 29 Sep 2014 08:46:33 -0400
@@ -82,7 +88,7 @@ mdp (3.2+git28-g4243e9c-1) unstable; urgency=low
   * Updated git repo information in README.Debian-source
   * Added shogun-python-modular to Build-Depends now that it is available
     on all major platforms
-  * Updated debian-branch name in gbp.conf 
+  * Updated debian-branch name in gbp.conf
   * Upload sponsored by Yaroslav Halchenko
 
  -- Tiziano Zito <opossumnano@gmail.com>  Mon, 23 Jan 2012 09:43:30 +0100
@@ -193,4 +199,3 @@ mdp (2.1+svn20080122-1) unstable; urgency=low
   * Initial release (Closes: #461634)
 
  -- Yaroslav Halchenko <debian@onerussian.com>  Sat, 19 Jan 2008 16:41:20 -0500
-
