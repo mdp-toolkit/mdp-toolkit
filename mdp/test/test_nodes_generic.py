@@ -11,8 +11,16 @@ from mdp import (config, nodes, ClassifierNode,
                  PreserveDimNode, InconsistentDimException)
 from ._tools import *
 
-uniform = numx_rand.random
+# Ignore specific warnings from sklearn
+try:
+    import sklearn
+    pytestmark = [ pytest.mark.filterwarnings("ignore::sklearn.exceptions.ConvergenceWarning"),
+                   pytest.mark.filterwarnings("ignore::FutureWarning"),
+                 ]
+except ImportError:
+    pass
 
+uniform = numx_rand.random
 
 def _rand_labels(x):
     return numx_rand.randint(0, 2, size=(x.shape[0],))
@@ -262,16 +270,16 @@ def test_outputdim_consistency(klass, init_args, inp_arg_gen,
             # raises an appropriate error
             # case 1: both in the constructor
             pytest.raises(InconsistentDimException,
-                          'klass(input_dim=inp.shape[1], output_dim=output_dim, *args)')
+                          klass, *args, input_dim=inp.shape[1], output_dim=output_dim)
             # case 2: first input_dim, then output_dim
             node = klass(input_dim=inp.shape[1], *args)
-            pytest.raises(InconsistentDimException,
-                          'node.output_dim = output_dim')
+            with pytest.raises(InconsistentDimException):
+                node.output_dim = output_dim
             # case 3: first output_dim, then input_dim
             node = klass(output_dim=output_dim, *args)
             node.output_dim = output_dim
-            pytest.raises(InconsistentDimException,
-                          'node.input_dim = inp.shape[1]')
+            with pytest.raises(InconsistentDimException):
+                node.input_dim = inp.shape[1]
 
         # check that output_dim is set to whatever the output dim is
         node = klass(*args)
@@ -444,10 +452,7 @@ NODES = [
          sup_arg_gen=_rand_1d),
 ]
 
-# LabelSpreadingScikitsLearnNode is broken in sklearn version 0.11
-# It works fine in version 0.12
-EXCLUDE_NODES = ('ICANode', 'LabelSpreadingScikitsLearnNode',
-                 'OutputCodeClassifierScikitsLearnNode',
+EXCLUDE_NODES = ('ICANode', 'OutputCodeClassifierScikitsLearnNode',
                  'OneVsOneClassifierScikitsLearnNode',
                  'OneVsRestClassifierScikitsLearnNode',
                  'VotingClassifierScikitsLearnNode',

@@ -1,140 +1,38 @@
-
 # vim ft=yaml
-# travis-ci.org definition for MDP build (based on PyMVPA configuration
-# which in turn was based on nipype and nipy)
-#
-# I would prefer to test against what is in neurodebian
 language: python
-python:
-  - "3.5"
-  - "3.5-dev"  # 3.5 development branch
-  - "3.6"
-  - "3.6-dev"  # 3.6 development branch
-  - "3.7"
-  - "3.7-dev"  # 3.7 development branch
-  - "3.8"
-  - "3.8-dev"  # 3.8 development branch
-env:
-  - VNUMPY=1.12.1  VSCI=0.22
-  - VNUMPY=1.12.1  VSCI=0.21.3
-  - VNUMPY=1.12.1  VSCI=0.20.0
-  - VNUMPY=1.12.1  VSCI=0.18
-  - VNUMPY=1.16.1  VSCI=0.22
-  - VNUMPY=1.16.1  VSCI=0.21.3
-  - VNUMPY=1.16.1  VSCI=0.20.0
-  - VNUMPY=1.16.1  VSCI=0.18
-  - VNUMPY=1.17.4  VSCI=0.22
-  - VNUMPY=1.17.4  VSCI=0.21.3
-  - VNUMPY=1.17.4  VSCI=0.20.0
-  - VNUMPY=1.17.4  VSCI=0.18
-  
-cache:
-  - apt
+
 matrix:
   include:
-  - python: "2.7"
-    env: VNUMPY=1.7.1  VSCI=0.14
-  - python: "2.7"
-    env: VNUMPY=1.8.2  VSCI=0.19.2
-  - python: "2.7"
-    env: VNUMPY=1.16.1  VSCI=0.14
-  - python: "2.7"
-    env: VNUMPY=1.16.1  VSCI=0.19.2
-
-# old packages + new python has problems setting up
-  exclude:
-    - python: "3.8-dev"
-      env: VNUMPY=1.12.1  VSCI=0.22
-    - python: "3.8-dev"
-      env: VNUMPY=1.12.1  VSCI=0.21.3
-    - python: "3.8-dev"
-      env: VNUMPY=1.12.1  VSCI=0.20.0
-    - python: "3.8-dev"
-      env: VNUMPY=1.12.1  VSCI=0.18
-    - python: "3.8-dev"
-      env: VNUMPY=1.16.1  VSCI=0.22
-    - python: "3.8-dev"
-      env: VNUMPY=1.16.1  VSCI=0.21.3
-    - python: "3.8-dev"
-      env: VNUMPY=1.16.1  VSCI=0.20.0
-    - python: "3.8-dev"
-      env: VNUMPY=1.16.1  VSCI=0.18
-    - python: "3.8-dev"
-      env: VNUMPY=1.17.4  VSCI=0.21.3
-    - python: "3.8-dev"
-      env: VNUMPY=1.17.4  VSCI=0.20.0
-    - python: "3.8-dev"
-      env: VNUMPY=1.17.4  VSCI=0.18
-    - python: "3.8"
-      env: VNUMPY=1.12.1  VSCI=0.22
-    - python: "3.8"
-      env: VNUMPY=1.12.1  VSCI=0.21.3
-    - python: "3.8"
-      env: VNUMPY=1.12.1  VSCI=0.20.0
-    - python: "3.8"
-      env: VNUMPY=1.12.1  VSCI=0.18
-    - python: "3.8"
-      env: VNUMPY=1.16.1  VSCI=0.22
-    - python: "3.8"
-      env: VNUMPY=1.16.1  VSCI=0.21.3
-    - python: "3.8"
-      env: VNUMPY=1.16.1  VSCI=0.20.0
-    - python: "3.8"
-      env: VNUMPY=1.16.1  VSCI=0.18
-    - python: "3.8"
-      env: VNUMPY=1.17.4  VSCI=0.21.3
-    - python: "3.8"
-      env: VNUMPY=1.17.4  VSCI=0.20.0
-    - python: "3.8"
-      env: VNUMPY=1.17.4  VSCI=0.18
-    - python: "3.7-dev"
-      env: VNUMPY=1.12.1  VSCI=0.22
-    - python: "3.7-dev"
-      env: VNUMPY=1.12.1  VSCI=0.21.3
-    - python: "3.7-dev"
-      env: VNUMPY=1.12.1  VSCI=0.20.0
-    - python: "3.7-dev"
-      env: VNUMPY=1.12.1  VSCI=0.18
-    - python: "3.7-dev"
-      env: VNUMPY=1.16.1  VSCI=0.18
-    - python: "3.7-dev"
-      env: VNUMPY=1.17.4  VSCI=0.18
-    - python: "3.7"
-      env: VNUMPY=1.12.1  VSCI=0.22
-    - python: "3.7"
-      env: VNUMPY=1.12.1  VSCI=0.21.3
-    - python: "3.7"
-      env: VNUMPY=1.12.1  VSCI=0.20.0
-    - python: "3.7"
-      env: VNUMPY=1.12.1  VSCI=0.18
-    - python: "3.7"
-      env: VNUMPY=1.16.1  VSCI=0.18
-    - python: "3.7"
-      env: VNUMPY=1.17.4  VSCI=0.18
-    - python: "3.6-dev"
-      env: VNUMPY=1.12.1  VSCI=0.18
-    - python: "3.6-dev"
-      env: VNUMPY=1.16.1  VSCI=0.18
-    - python: "3.6-dev"
-      env: VNUMPY=1.17.4  VSCI=0.18
+  # this is the Python 2 environment
+    - python: "2.7"
+      env: DEPS="numpy scipy scikit-learn joblib pp pytest pytest-cov coveralls future"
+  # this is Ubuntu xenial (16.04 LTS)
+    - python: "3.5"
+      env: DEPS="numpy scipy scikit-learn joblib libsvm pytest pytest-cov coveralls future"
+  # this is Ubuntu bionic (18.04 LTS)
     - python: "3.6"
-      env: VNUMPY=1.12.1  VSCI=0.18
-    - python: "3.6"
-      env: VNUMPY=1.16.1  VSCI=0.18
-    - python: "3.6"
-      env: VNUMPY=1.17.4  VSCI=0.18
-
-
+      env: DEPS="numpy scipy scikit-learn joblib libsvm pytest pytest-cov coveralls future"
+  # this is Debian stable (10, codename buster)
+    - python: "3.7"
+      env: DEPS="numpy==1.16.2 scipy==1.1.0 scikit-learn==0.20.0 joblib==0.13.2 libsvm pytest pytest-cov coveralls future"
+  # this is a test of MDP minimal dependencies
+    - python: "3.8"
+      env: DEPS="numpy future pytest pytest-cov coveralls"
+  # this is the latest of everything
+    - python: "3.8"
+      env: DEPS="numpy scipy scikit-learn joblib libsvm pytest pytest-cov coveralls future"
+  
 before_install:
-    # The ultimate one-liner setup for NeuroDebian repository
-    - bash <(wget -q -O- http://neuro.debian.net/_files/neurodebian-travis.sh)
-    - travis_retry sudo apt-get install python-joblib
+    # install build dependencies for installing numpy and scipy from source.
+    # This is needed for old version that are not available as wheels
+    - sudo apt-get -y install cython3 gfortran libblas-dev liblapack-dev
+
 install:
-    - pip install scipy
-    - pip install -v numpy==$VNUMPY scikit-learn==$VSCI
-    - pip install -v "pytest>=4.0.0,<5.0.0" pytest-cov>=2.5.0 coveralls future
+    - pip install $DEPS
+
 script:
     - pytest --cov-report= --cov-config=.coveragerc --cov=mdp --seed=725021957 mdp
     - pytest --cov-report= --cov-config=.coveragerc --cov=bimdp --cov-append --seed=725021957 bimdp
+
 after_success:
     - coveralls
