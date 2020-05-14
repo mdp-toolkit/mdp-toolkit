@@ -1,2 +1,8 @@
 # This file is a collection of pytest-seeds that led to at least one of the
 # tests failing, and it provides a way to spot faulty functionality.
+#
+# A description of how to gather the seeds is given at
+# https://mdp-toolkit.github.io/development.html#how-to-handle-failed-tests.
+#
+# Please list them as:
+# INTEGER FUNCTIONALITY NAME
