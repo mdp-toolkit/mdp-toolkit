@@ -1,14 +1,13 @@
-'''
-Contains functions to deal with generalized symmetric positive semidefinite
+'''Contains functions to deal with generalized symmetric positive semidefinite
 eigenvalue problems Av = lBv where A and B are real symmetric matrices and
-B must be positive semidefinite. Note that eigh in SciPy requires positive
+B must be positive semidefinite. Note that ``eigh`` in SciPy requires positive
 definite B, i.e. requires strictly positive eigenvalues in B.
 There are plenty of cases where real-world data leads to a covariance
 matrix with rank deficit, e.g. a constantly white corner in training images
 or a black stripe atop of a training video due to insufficient cropping or
 a logo or timestamp in a video.
-In such cases nodes like SFA usually fail with
-SymeigException ('Covariance matrices may be singular').
+In such cases, nodes like SFA usually fail with
+``SymeigException('Covariance matrices may be singular')``.
 The functions in this module allow for a more robust data processing in
 such scenarios.
 
@@ -20,7 +19,7 @@ value for rank_threshold, e.g. 1e-10, 1e-8, 1e-6, ... (default: 1e-12).
 
 A short overview (for more details see the doc of each function):
 
-pca (solves by prepending PCA/ principal component analysis)
+pca (solves by prepending PCA/principal component analysis)
 
   One of the most stable and accurate approaches.
   Roughly twice as expensive as ordinary symmetric eigenvalue solving as
@@ -28,10 +27,10 @@ pca (solves by prepending PCA/ principal component analysis)
   Only the second one can exploit range parameter for performance.
 
 
-svd (solves by SVD / singular value decomposition)
+svd (solves by SVD/singular value decomposition)
 
   One of the most stable and accurate approaches.
-  Involves solving two svd problems. Computational cost can vary greatly
+  Involves solving two SVD problems. Computational cost can vary greatly
   depending on the backends used. E.g. SVD from SciPy appears to be much
   faster than SVD from NumPy. Based on this it can be faster or slower
   than the PCA based approach.
@@ -45,7 +44,7 @@ reg (solves by applying regularization to matrix B)
   symmetric eigenvalue solver that can exploit range for performance.
 
 
-ldl (solves by applying LDL / Cholesky decomposition for indefinite matrices)
+ldl (solves by applying LDL/Cholesky decomposition for indefinite matrices)
 
   Roughly as efficient as ordinary eigenvalue solving. Can exploit range
   parameter for performance just as well as the backend for ordinary symmetric
@@ -56,38 +55,40 @@ ldl (solves by applying LDL / Cholesky decomposition for indefinite matrices)
 import mdp
 from mdp import numx
 from ._symeig import SymeigException
+__docformat__ = "restructuredtext en"
 
 
 def symeig_semidefinite_reg(
         A, B = None, eigenvectors=True, turbo="on", range=None,
         type=1, overwrite=False, rank_threshold=1e-12, dfc_out=None):
-    """
-    Regularization-based routine to solve generalized symmetric positive
+    """Regularization-based routine to solve generalized symmetric positive
     semidefinite eigenvalue problems.
-    This can be used in case the normal symeig() call in _stop_training()
-    throws SymeigException ('Covariance matrices may be singular').
+
+    This can be used if the normal ``symeig()`` call in ``_stop_training()``
+    throws ``SymeigException('Covariance matrices may be singular')``.
 
     This solver applies a moderate regularization to B before applying
-    eigh/symeig. Afterwards it properly detects the rank deficit and
+    ``eigh``/``symeig``. Afterwards it properly detects the rank deficit and
     filters out malformed features.
     For full range, this procedure is (approximately) as efficient as the
-    ordinary eigh implementation, because all additional steps are
+    ordinary ``eigh`` implementation, because all additional steps are
     computationally cheap.
     For shorter range, the LDL method should be preferred.
 
+    .. note::
+        For efficiency reasons it actually modifies the matrix B
+        (even if ``overwrite=False``), but the changes are negligible.
 
-    The signature of this function equals that of mdp.utils.symeig, but
-    has two additional parameters:
+    The signature of this function equals that of ``mdp.utils.symeig``,
+    but has two additional parameters:
     
-    rank_threshold: A threshold to determine if an eigenvalue counts as zero.
+    :param rank_threshold:
+        A threshold to determine if an eigenvalue counts as zero.
+    :type rank_threshold: float
     
-    dfc_out: If dfc_out is not None dfc_out.rank_deficit will be set to an
-             integer indicating how many zero-eigenvalues were detected.
-
-
-    Note:
-    For efficiency reasons it actually modifies the matrix B
-    (even if overwrite=False), but the changes are negligible.
+    :param dfc_out:
+        If ``dfc_out`` is not ``None``, ``dfc_out.rank_deficit`` will be set
+        to an integer indicating how many zero-eigenvalues were detected.
     """
     if type != 1:
         raise ValueError('Only type=1 is supported.')
@@ -158,21 +159,21 @@ def _find_blank_data_idx(B, rank_threshold):
 def symeig_semidefinite_ldl(
         A, B = None, eigenvectors=True, turbo="on", rng=None,
         type=1, overwrite=False, rank_threshold=1e-12, dfc_out=None):
-    """
-    LDL-based routine to solve generalized symmetric positive semidefinite
+    """LDL-based routine to solve generalized symmetric positive semidefinite
     eigenvalue problems.
-    This can be used in case the normal symeig() call in _stop_training()
-    throws SymeigException ('Covariance matrices may be singular').
+
+    This can be used if the normal ``symeig()`` call in ``_stop_training()``
+    throws ``SymeigException('Covariance matrices may be singular')``.
 
     This solver uses SciPy's raw LAPACK interface to access LDL decomposition.
-    www.netlib.org/lapack/lug/node54.html describes how to solve a
+    http://www.netlib.org/lapack/lug/node54.html describes how to solve a
     generalized eigenvalue problem with positive definite B using Cholesky/LL
     decomposition. We extend this method to solve for positive semidefinite B
     using LDL decomposition, which is a variant of Cholesky/LL decomposition
     for indefinite Matrices.
     Accessing raw LAPACK's LDL decomposition (sytrf) is challenging. This code
     is partly based on code for SciPy 1.1:
-    github.com/scipy/scipy/pull/7941/files#diff-9bf9b4b2f0f40415bc0e72143584c889
+    http://github.com/scipy/scipy/pull/7941/files#diff-9bf9b4b2f0f40415bc0e72143584c889
     We optimized and shortened that code for the real-valued positive
     semidefinite case.
 
@@ -182,18 +183,18 @@ def symeig_semidefinite_ldl(
     general LDL decomposition is only slightly more expensive than Cholesky,
     due to pivotization.
 
-
-    The signature of this function equals that of mdp.utils.symeig, but
-    has two additional parameters:
+    .. note:: This method requires SciPy >= 1.0.
     
-    rank_threshold: A threshold to determine if an eigenvalue counts as zero.
+    The signature of this function equals that of ``mdp.utils.symeig``,
+    but has two additional parameters:
     
-    dfc_out: If dfc_out is not None dfc_out.rank_deficit will be set to an
-             integer indicating how many zero-eigenvalues were detected.
-
-
-    Note:
-    This method requires SciPy >= 1.0.
+    :param rank_threshold:
+        A threshold to determine if an eigenvalue counts as zero.
+    :type rank_threshold: float
+    
+    :param dfc_out:
+        If ``dfc_out`` is not ``None``, ``dfc_out.rank_deficit`` will be set
+        to an integer indicating how many zero-eigenvalues were detected.
     """
     if type != 1:
         raise ValueError('Only type=1 is supported.')
@@ -313,27 +314,29 @@ def symeig_semidefinite_pca(
     """
     PCA-based routine to solve generalized symmetric positive semidefinite
     eigenvalue problems.
-    This can be used in case the normal symeig() call in _stop_training()
-    throws SymeigException ('Covariance matrices may be singular').
+
+    This can be used if the normal ``symeig()`` call in ``_stop_training()``
+    throws ``SymeigException('Covariance matrices may be singular')``.
 
     It applies PCA to B and filters out rank deficit before it applies
-    symeig() to A.
-    It is roughly twice as expensive as the ordinary eigh implementation.
+    ``symeig()`` to A.
+    It is roughly twice as expensive as the ordinary ``eigh`` implementation.
 
+    .. note::
+        The advantage compared to prepending a PCA node is that in execution
+        phase all data needs to be processed by one step less. That is because
+        this approach includes the PCA into e.g. the SFA execution matrix.
 
-    The signature of this function equals that of mdp.utils.symeig, but
-    has two additional parameters:
+    The signature of this function equals that of ``mdp.utils.symeig``,
+    but has two additional parameters:
     
-    rank_threshold: A threshold to determine if an eigenvalue counts as zero.
+    :param rank_threshold:
+        A threshold to determine if an eigenvalue counts as zero.
+    :type rank_threshold: float
     
-    dfc_out: If dfc_out is not None dfc_out.rank_deficit will be set to an
-             integer indicating how many zero-eigenvalues were detected.
-
-
-    Note:
-    The advantage compared to prepending a PCA node is that in execution
-    phase all data needs to be processed by one step less. That is because
-    this approach includes the PCA into e.g. the SFA execution matrix.
+    :param dfc_out:
+        If ``dfc_out`` is not ``None``, ``dfc_out.rank_deficit`` will be set
+        to an integer indicating how many zero-eigenvalues were detected.
     """
     if type != 1:
         raise ValueError('Only type=1 is supported.')
@@ -350,7 +353,7 @@ def symeig_semidefinite_pca(
     dcov_mtx = A
     cov_mtx = B
     eg, ev = mdp.utils.symeig(cov_mtx, None, True, turbo, None, type,
-			overwrite)
+            overwrite)
     off = 0
     while eg[off] < rank_threshold:
         off += 1
@@ -363,7 +366,7 @@ def symeig_semidefinite_pca(
 
     white = mult(S.T, mult(dcov_mtx, S))
     eg, ev = mdp.utils.symeig(white, None, True, turbo, range, type,
-			overwrite)
+            overwrite)
     ev = mult(S, ev)
 
     if not nonzero_idx is None:
@@ -383,31 +386,29 @@ def symeig_semidefinite_svd(
     """
     SVD-based routine to solve generalized symmetric positive semidefinite
     eigenvalue problems.
-    This can be used in case the normal symeig() call in _stop_training()
-    throws SymeigException ('Covariance matrices may be singular').
+
+    This can be used if the normal ``symeig()`` call in ``_stop_training()``
+    throws ``SymeigException('Covariance matrices may be singular')``.
 
     This solver's computational cost depends on the underlying SVD
     implementation. Its dominant cost factor consists of two SVD runs.
-    
-    rank_threshold=1e-12
-    dfc_out=None
-
     For details on the used algorithm see:
-        http://www.geo.tuwien.ac.at/downloads/tm/svd.pdf (section 0.3.2)
+    http://www.geo.tuwien.ac.at/downloads/tm/svd.pdf (section 0.3.2)
 
+    .. note::
+        The parameters eigenvectors, turbo, type, overwrite are not used.
+        They only exist to provide a symeig-compatible signature.
 
-    The signature of this function equals that of mdp.utils.symeig, but
-    has two additional parameters:
+    The signature of this function equals that of ``mdp.utils.symeig``,
+    but has two additional parameters:
     
-    rank_threshold: A threshold to determine if an eigenvalue counts as zero.
+    :param rank_threshold:
+        A threshold to determine if an eigenvalue counts as zero.
+    :type rank_threshold: float
     
-    dfc_out: If dfc_out is not None dfc_out.rank_deficit will be set to an
-             integer indicating how many zero-eigenvalues were detected.
-
-
-    Note:
-    The parameters eigenvectors, turbo, type, overwrite are not used.
-    They only exist to provide a symeig compatible signature.
+    :param dfc_out:
+        If ``dfc_out`` is not ``None``, ``dfc_out.rank_deficit`` will be set
+        to an integer indicating how many zero-eigenvalues were detected.
     """
     if type != 1:
         raise ValueError('Only type=1 is supported.')
