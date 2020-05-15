@@ -47,12 +47,15 @@ class SFANode(Node):
     """Extract the slowly varying components from the input data.
 
     :ivar avg: Mean of the input data (available after training)
+    :vartype avg: numpy.ndarray
 
     :ivar sf: Matrix of the SFA filters (available after training)
+    :vartype sf: numpy.ndarray
 
     :ivar d: Delta values corresponding to the SFA components (generalized
         eigenvalues). [See the docs of the ``get_eta_values`` method for
         more information]
+    :vartype d: numpy.ndarray
 
     .. admonition:: Reference
 
