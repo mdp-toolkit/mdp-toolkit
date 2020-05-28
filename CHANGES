@@ -1,4 +1,8 @@
 -------------------------------------------------------------------------------
+MDP-3.6.1:
+2018-05-29: DOC: Point to the new website at https://mdp-toolkit.github.io.
+
+-------------------------------------------------------------------------------
 MDP-3.6:
 2020-04-18: NEW: support libsvm for Python 3 libsvm has been updated to be
             compatible with Python >= 3.4. Python 2 support has been dropped,

@@ -84,7 +84,7 @@ def setup_package():
           maintainer_email = email,
           license = "https://raw.githubusercontent.com/mdp-toolkit/mdp-toolkit/master/COPYRIGHT",
           platforms = ["Any"],
-          url = 'https://mdpdocs.readthedocs.io',
+          url = 'https://mdp-toolkit.github.io',
           download_url = dl,
           description = short_description,
           long_description = long_description,
