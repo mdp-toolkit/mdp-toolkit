@@ -6,7 +6,12 @@ from mdp import numx
 
 from .svm_classifiers import _SVMClassifier, _LabelNormalizer
 
-import libsvm.svmutil as libsvmutil
+try:
+    # this is the namespace used by upstream libsvm and the Debian package
+    import svmutil as libsvmutil
+except ImportError:
+    # this is the namespace if libsvm is installed via PyPI
+    import libsvm.svmutil as libsvmutil
 
 class LibSVMClassifier(_SVMClassifier):
     """
