@@ -63,7 +63,7 @@ processing algorithms are used. Its simplicity on the user's side, the
 variety of readily available algorithms, and the reusability of the
 implemented nodes also make it a useful educational tool.
 
-http://mdp-toolkit.sourceforge.net
+https://mdp-toolkit.github.io
 """
 __docformat__ = "restructuredtext en"
 
@@ -119,7 +119,7 @@ __authors__ = 'MDP Developers'
 __copyright__ = '(c) 2003-2020 mdp-toolkit@python.org'
 __license__ = 'BSD License, see COPYRIGHT'
 __contact__ = 'mdp-toolkit@python.org'
-__homepage__ = 'http://mdp-toolkit.sourceforge.net'
+__homepage__ = 'https://mdp-toolkit.github.io'
 
 configuration.set_configuration()
 
