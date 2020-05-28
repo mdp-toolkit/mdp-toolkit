@@ -504,15 +504,28 @@ def set_configuration():
                     config.ExternalDepFound('shogun', version)
 
     # libsvm
-    try:
-        import libsvm
-    except ImportError as exc:
-        config.ExternalDepFailed('libsvm', exc)
+    libsvm_error = ''
+    if os.getenv('MDP_DISABLE_LIBSVM'):
+        config.ExternalDepFailed('libsvm', 'disabled')
     else:
-        if os.getenv('MDP_DISABLE_LIBSVM'):
-            config.ExternalDepFailed('libsvm', 'disabled')
-        else:
-            config.ExternalDepFound('libsvm', libsvm.__version__)
+        try:
+            # this is the namespace used by upstream libsvm and the Debian package
+            # References:
+            #   - Debian bug: https://bugs.debian.org/958114
+            #   - PyPI libsvm bug: https://github.com/ocampor/libsvm/issues/6
+            #   - libsvm Upstream bug: https://github.com/cjlin1/libsvm/issues/XXX
+            import svmutil
+            config.ExternalDepFound('libsvm', svmutil.libsvm._name)
+        except ImportError as exc:
+            libsvm_error += str(exc)+' '
+            # if the above failed, try to detect a libsvm installed by PyPI,
+            # which lives in a different namespace
+            try:
+                import libsvm
+                config.ExternalDepFound('libsvm', libsvm.__version__)
+            except ImportError as exc:
+                libsvm_error += str(exc)
+                config.ExternalDepFailed('libsvm', libsvm_error)
 
     # joblib
     try:
