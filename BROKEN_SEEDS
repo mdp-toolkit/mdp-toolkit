@@ -1,0 +1,12 @@
+# This file is a collection of pytest-seeds that led to at least one of the
+# tests failing, and it provides a way to spot faulty functionality.
+#
+# A description of how to gather the seeds is given at
+# https://mdp-toolkit.github.io/development.html#how-to-handle-failed-tests.
+#
+# Please list them in the format:
+# SEED, FUNCTIONALITY, TEST-NAME, PYTHON-VERSION, NUMPY-VERSION, SCIPY-VERSION, SKLEARN-VERSION
+
+1766368184, SFANode, , 3.8.0.final.0, , 1.4.1, 0.23.0
+400700733, VartimeCovariance, VartimeCovarianceMatrix1, 3.5.6.final.0, , 1.4.1, 0.22.2.post1
+317438632, RBM, RBM_bv_learning, 3.6.7.final.0, , 1.4.1, 0.23.0

@@ -31,8 +31,8 @@ install:
     - pip install $DEPS
 
 script:
-    - pytest --cov-report= --cov-config=.coveragerc --cov=mdp --seed=725021957 mdp
-    - pytest --cov-report= --cov-config=.coveragerc --cov=bimdp --cov-append --seed=725021957 bimdp
+    - pytest --cov-report= --cov-config=.coveragerc --cov=mdp mdp
+    - pytest --cov-report= --cov-config=.coveragerc --cov=bimdp --cov-append bimdp
 
 after_success:
     - coveralls
