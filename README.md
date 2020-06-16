@@ -2,7 +2,7 @@
   <img align="right" width="200" height="100" src="https://mdp-toolkit.github.io/_images/logo_animation.gif"><br>
 </div>
 
-# Modular Toolkit for Data Processing
+# Modular toolkit for Data Processing
 
 **Modular toolkit for Data Processing (MDP)** is a Python data processing framework.
 
@@ -11,7 +11,7 @@ From the user’s perspective, MDP is a collection of supervised and unsupervise
 From the scientific developer’s perspective, MDP is a modular framework, which can easily be expanded. The implementation of new algorithms is easy and intuitive. The new implemented units are then automatically integrated with the rest of the library.
 
 
-#### Main Features
+#### Main features
 
 The base of available algorithms is steadily increasing and includes
 
@@ -59,7 +59,31 @@ pip install git+https://github.com/mdp-toolkit/mdp-toolkit.git
 
 Most development discussions take place in this repository on Github. You are also encouraged to get in touch with the developers and other users on the users’ [mailing list](https://mail.python.org/mm3/mailman3/lists/mdp-toolkit.python.org/).
 
+## Development
 
-Please refer to the online documentation at https://mdpdocs.readthedocs.io
-The legacy documentation is still available at http://mdp-toolkit.sourceforge.net
-The source code is available at https://github.com/mdp-toolkit/mdp-toolkit
+MDP has been originally written by [Pietro Berkes](http://people.brandeis.edu/~berkes/) and [Tiziano Zito](https://github.com/otizonaizit) at the [Institute for Theoretical Biology](http://itb.biologie.hu-berlin.de/) of the [Humboldt University](http://www.hu-berlin.de/), Berlin in 2003.
+
+Since 2017, MDP is primarily maintained by the reasearch group [Theory of Neural Systems](https://www.ini.rub.de/research/groups/theory_of_neural_systems/) at the [Institute for Neural Computation](https://www.ini.rub.de/) of the [Ruhr University Bochum](https://www.ruhr-uni-bochum.de/en).
+
+#### Contributing
+
+MDP is open to user contributions. Users have already contributed some of the nodes, and more contributions are currently being reviewed for inclusion in future releases of the package
+
+If you want to commit code, it may be easiest to fork the MDP repository on github and give us a note on the mailing list. We may then discuss how to integrate your modifications. For simple fixes that don’t need much discussion, you can also send a mail patch to the list using git format-patch or similar.
+
+Your code contribution should not have any additional dependencies, i.e. they should require only the numpy module to be installed. If your code requires some other module, e.g. scipy or C/C++ compilation, ask mdp-toolkit@python.org for assistance.
+
+To learn more about how to contribute to MDP, check out the [information for new developers section](https://mdp-toolkit.github.io/development.html#information-for-new-developers) on the MDP webpage.
+
+
+## How to cite MDP
+
+If you use MDP for scientific purposes, you may want to cite it. This is the
+official way to do it:
+
+Zito, T., Wilbert, N., Wiskott, L., Berkes, P. (2009). 
+**Modular toolkit for Data Processing (MDP): a Python data processing frame
+work**, Front. Neuroinform. (2008) **2**:8. [doi:10.3389/neuro.11.008.2008](http://www.frontiersin.org/neuroinformatics/10.3389/neuro.11.008.2008/full).
+
+If your paper gets published, please send us a reference (and even a copy if
+you don't mind).
