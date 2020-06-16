@@ -1,4 +1,4 @@
-<div align="center" width="600" height="300">
+<div align="center" width="400" height="200">
   <img src="https://mdp-toolkit.github.io/_images/logo_animation.gif"><br>
 </div>
 
