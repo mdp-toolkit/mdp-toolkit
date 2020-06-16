@@ -1,5 +1,5 @@
 <div align="center">
-  <img align="right" width="300" height="150" src="https://mdp-toolkit.github.io/_images/logo_animation.gif"><br>
+  <img align="right" width="280" height="140" src="https://mdp-toolkit.github.io/_images/logo_animation.gif"><br>
 </div>
 
 
