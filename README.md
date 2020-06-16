@@ -33,6 +33,23 @@ and many others.
 
 You can find out more about MDP's functionality in the [node list](https://mdp-toolkit.github.io/node_list.html) and [the utilities description](https://mdp-toolkit.github.io/additional_utilities.html).
 
+### Installation
+
+#### Install the newest release
+
+MDP is listed in the [Python Package Index](http://pypi.python.org/pypi/MDP) and can be
+installed with ``pip``:
+```sh
+pip install mdp
+```
+
+#### Install the development version
+
+If you want to live on the bleeding edge, install the development version from the repository with:
+```sh
+pip install git+https://github.com/mdp-toolkit/mdp-toolkit.git
+```
+
 Please refer to the online documentation at https://mdpdocs.readthedocs.io
 The legacy documentation is still available at http://mdp-toolkit.sourceforge.net
 The source code is available at https://github.com/mdp-toolkit/mdp-toolkit
