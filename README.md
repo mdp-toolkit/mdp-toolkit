@@ -11,7 +11,7 @@ From the user’s perspective, MDP is a collection of supervised and unsupervise
 From the scientific developer’s perspective, MDP is a modular framework, which can easily be expanded. The implementation of new algorithms is easy and intuitive. The new implemented units are then automatically integrated with the rest of the library.
 
 
-## Main Features
+#### Main Features
 
 The base of available algorithms is steadily increasing and includes
 
