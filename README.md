@@ -1,8 +1,8 @@
 <div align="center">
-  <img align="right" width="150" height="75" src="https://mdp-toolkit.github.io/_images/logo_animation.gif"><br>
+  <img align="right" width="200" height="150" src="https://mdp-toolkit.github.io/_images/logo_animation.gif"><br>
 </div>
 
-# Modular toolkit for Data Processing (MDP)
+# Modular toolkit for Data Processing
 
 **Modular toolkit for Data Processing (MDP)** is a Python data processing framework.
 
