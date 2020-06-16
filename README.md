@@ -1,6 +1,7 @@
 <div align="center">
   <img align="right" width="200" height="100" src="https://mdp-toolkit.github.io/_images/logo_animation.gif"><br>
 </div>
+[![PyPI Latest Release](https://img.shields.io/pypi/v/mdp.svg)](https://pypi.org/project/MDP/)
 
 # Modular toolkit for Data Processing
 
