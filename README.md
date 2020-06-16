@@ -4,7 +4,7 @@
 
 # Modular toolkit for Data Processing (MDP)
 
-Modular toolkit for Data Processing (MDP) is a Python data processing framework.
+**Modular toolkit for Data Processing (MDP)** is a Python data processing framework.
 
 From the user’s perspective, MDP is a collection of supervised and unsupervised learning algorithms and other data processing units that can be combined into data processing sequences and more complex feed-forward network architectures.
 
