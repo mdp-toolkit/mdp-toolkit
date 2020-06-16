@@ -1,6 +1,6 @@
-<div align="center">
+<a href="https://mdp-toolkit.github.io/">
   <img align="right" width="280" height="140" src="https://mdp-toolkit.github.io/_images/logo_animation.gif"><br>
-</div>
+</a>
 
 
 [![PyPI Latest Release](https://img.shields.io/pypi/v/mdp.svg)](https://pypi.org/project/MDP/)
