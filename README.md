@@ -46,10 +46,10 @@ Using MDP is as easy as:
 import mdp
 
 # perform PCA on some data x
-y = mdp.pca(x) # doctest: +SKIP
+y = mdp.pca(x)
 
 # perform ICA on some data x using single precision
-y = mdp.fastica(x, dtype='float32') # doctest: +SKIP 
+y = mdp.fastica(x, dtype='float32')
 ```
 
 ## Installation
