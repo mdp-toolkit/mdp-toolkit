@@ -55,6 +55,11 @@ pip install git+https://github.com/mdp-toolkit/mdp-toolkit.git
 ## [Documentation](https://mdp-toolkit.github.io/documentation.html)
 
 
+## Contact
+
+Most development discussions take place in this repository on Github. You are also encouraged to get in touch with the developers and other users on the users’ [mailing list](https://mail.python.org/mm3/mailman3/lists/mdp-toolkit.python.org/).
+
+
 Please refer to the online documentation at https://mdpdocs.readthedocs.io
 The legacy documentation is still available at http://mdp-toolkit.sourceforge.net
 The source code is available at https://github.com/mdp-toolkit/mdp-toolkit
