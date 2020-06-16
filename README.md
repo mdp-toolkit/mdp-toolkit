@@ -74,7 +74,7 @@ y = mdp.fastica(x, dtype='float32')
 
 MDP has been originally written by [Pietro Berkes](http://people.brandeis.edu/~berkes/) and [Tiziano Zito](https://github.com/otizonaizit) at the [Institute for Theoretical Biology](http://itb.biologie.hu-berlin.de/) of the [Humboldt University](http://www.hu-berlin.de/), Berlin in 2003.
 
-Since 2017, MDP is primarily maintained by the reasearch group [Theory of Neural Systems](https://www.ini.rub.de/research/groups/theory_of_neural_systems/) at the [Institute for Neural Computation](https://www.ini.rub.de/) of the [Ruhr University Bochum](https://www.ruhr-uni-bochum.de/en).
+Since 2017, MDP is primarily maintained by the research group [Theory of Neural Systems](https://www.ini.rub.de/research/groups/theory_of_neural_systems/) at the [Institute for Neural Computation](https://www.ini.rub.de/) of the [Ruhr University Bochum](https://www.ruhr-uni-bochum.de/en).
 
 #### Contact
 
