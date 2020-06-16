@@ -10,6 +10,7 @@ From the user’s perspective, MDP is a collection of supervised and unsupervise
 
 From the scientific developer’s perspective, MDP is a modular framework, which can easily be expanded. The implementation of new algorithms is easy and intuitive. The new implemented units are then automatically integrated with the rest of the library.
 
+
 ## Main Features
 
 The base of available algorithms is steadily increasing and includes
@@ -33,6 +34,7 @@ and many others.
 
 You can find out more about MDP's functionality in the [node list](https://mdp-toolkit.github.io/node_list.html) and [the utilities description](https://mdp-toolkit.github.io/additional_utilities.html).
 
+
 ## Installation
 
 #### Install the newest release
@@ -49,6 +51,9 @@ If you want to live on the bleeding edge, install the development version from t
 ```sh
 pip install git+https://github.com/mdp-toolkit/mdp-toolkit.git
 ```
+
+## [Documentation](https://mdp-toolkit.github.io/documentation.html)
+
 
 Please refer to the online documentation at https://mdpdocs.readthedocs.io
 The legacy documentation is still available at http://mdp-toolkit.sourceforge.net
