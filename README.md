@@ -39,6 +39,18 @@ and many others.
 
 You can find out more about MDP's functionality in the [node list](https://mdp-toolkit.github.io/node_list.html) and the [utilities description](https://mdp-toolkit.github.io/additional_utilities.html).
 
+#### Usage
+
+Using MDP is as easy as:
+```python
+import mdp
+
+# perform PCA on some data x
+y = mdp.pca(x) # doctest: +SKIP
+
+# perform ICA on some data x using single precision
+y = mdp.fastica(x, dtype='float32') # doctest: +SKIP 
+```
 
 ## Installation
 
