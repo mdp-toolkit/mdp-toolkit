@@ -33,7 +33,7 @@ and many others.
 
 You can find out more about MDP's functionality in the [node list](https://mdp-toolkit.github.io/node_list.html) and [the utilities description](https://mdp-toolkit.github.io/additional_utilities.html).
 
-### Installation
+## Installation
 
 #### Install the newest release
 
