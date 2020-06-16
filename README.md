@@ -39,21 +39,6 @@ and many others.
 
 You can find out more about MDP's functionality in the [node list](https://mdp-toolkit.github.io/node_list.html) and the [utilities description](https://mdp-toolkit.github.io/additional_utilities.html).
 
-#### Usage
-
-Using MDP is as easy as:
-```python
-import mdp
-
-# perform PCA on some data x
-y = mdp.pca(x)
-
-# perform ICA on some data x using single precision
-y = mdp.fastica(x, dtype='float32')
-```
-
-## Installation
-
 #### Install the newest release
 
 MDP is listed in the [Python Package Index](http://pypi.python.org/pypi/MDP) and can be
@@ -69,18 +54,31 @@ If you want to live on the bleeding edge, install the development version from t
 pip install git+https://github.com/mdp-toolkit/mdp-toolkit.git
 ```
 
+#### Usage
+
+Using MDP is as easy as:
+```python
+import mdp
+
+# perform PCA on some data x
+y = mdp.pca(x)
+
+# perform ICA on some data x using single precision
+y = mdp.fastica(x, dtype='float32')
+```
+
 ## [Documentation](https://mdp-toolkit.github.io/documentation.html)
 
 
-## Contact
-
-Most development discussions take place in this repository on Github. You are also encouraged to get in touch with the developers and other users on the users’ [mailing list](https://mail.python.org/mm3/mailman3/lists/mdp-toolkit.python.org/).
-
-## Development
+## Contact and development
 
 MDP has been originally written by [Pietro Berkes](http://people.brandeis.edu/~berkes/) and [Tiziano Zito](https://github.com/otizonaizit) at the [Institute for Theoretical Biology](http://itb.biologie.hu-berlin.de/) of the [Humboldt University](http://www.hu-berlin.de/), Berlin in 2003.
 
 Since 2017, MDP is primarily maintained by the reasearch group [Theory of Neural Systems](https://www.ini.rub.de/research/groups/theory_of_neural_systems/) at the [Institute for Neural Computation](https://www.ini.rub.de/) of the [Ruhr University Bochum](https://www.ruhr-uni-bochum.de/en).
+
+#### Contact
+
+Most development discussions take place in this repository on Github. You are also encouraged to get in touch with the developers and other users on the users’ [mailing list](https://mail.python.org/mm3/mailman3/lists/mdp-toolkit.python.org/).
 
 #### Contributing
 
