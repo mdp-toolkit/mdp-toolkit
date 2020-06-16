@@ -18,8 +18,8 @@ The base of available algorithms is steadily increasing and includes
   * Independent Component Analysis,
   * Principal Component Analysis, and
   * Slow Feature Analysis;
-* manifold learning methods such as the [Hessian] Locally Linear Embedding,
-* several classifiers,
+* manifold learning methods such as the [Hessian] Locally Linear Embedding;
+* several classifiers;
 * probabilistic methods such as
   * Factor Analysis,
   * Fisher Discriminant Analysis,
