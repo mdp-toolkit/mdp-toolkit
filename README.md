@@ -5,7 +5,7 @@
 
 [![PyPI Latest Release](https://img.shields.io/pypi/v/mdp.svg)](https://pypi.org/project/MDP/)
 [![Package Status](https://img.shields.io/pypi/status/mdp.svg)](https://pypi.org/project/MDP/)
-[![License](https://img.shields.io/pypi/l/mdp.svg)](https://github.com/mdp-toolkit/mdp-toolkit/blob/master/COPYRIGHT)
+[![Downloads](https://img.shields.io/pypi/dm/mdp)](https://mdp-toolkit.github.io/)
 
 # Modular toolkit for Data Processing
 
