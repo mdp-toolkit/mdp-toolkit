@@ -1,5 +1,5 @@
 <div align="center">
-  <img align="right" width="100" height="50" src="https://mdp-toolkit.github.io/_images/logo_animation.gif"><br>
+  <img align="right" width="150" height="75" src="https://mdp-toolkit.github.io/_images/logo_animation.gif"><br>
 </div>
 
 # Modular toolkit for Data Processing (MDP)
