@@ -6,6 +6,7 @@
 [![PyPI Latest Release](https://img.shields.io/pypi/v/mdp.svg)](https://pypi.org/project/MDP/)
 [![Package Status](https://img.shields.io/pypi/status/mdp.svg)](https://pypi.org/project/MDP/)
 [![Downloads](https://img.shields.io/pypi/dm/mdp)](https://mdp-toolkit.github.io/)
+[![Downloads](https://img.shields.io/badge/Go%20to-MDP's%20website-red)](https://mdp-toolkit.github.io/)
 
 # Modular toolkit for Data Processing
 
