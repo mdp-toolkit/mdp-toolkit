@@ -16,6 +16,10 @@ From the user’s perspective, MDP is a collection of supervised and unsupervise
 
 From the scientific developer’s perspective, MDP is a modular framework, which can easily be expanded. The implementation of new algorithms is easy and intuitive. The new implemented units are then automatically integrated with the rest of the library.
 
+- **Website (including documentation):** https://mdp-toolkit.github.io/
+- **Mailing list:** https://mail.python.org/mm3/mailman3/lists/mdp-toolkit.python.org/
+- **Source:** https://github.com/mdp-toolkit/mdp-toolkit/
+- **Bug reports:** https://github.com/mdp-toolkit/mdp-toolkit/issues
 
 #### Main features
 
