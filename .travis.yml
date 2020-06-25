@@ -28,7 +28,7 @@ before_install:
     - sudo apt-get -y install cython3 gfortran libblas-dev liblapack-dev
 
 install:
-    - pip install $DEPS
+    - pip install --force-reinstall $DEPS
 
 script:
     - pytest --cov-report= --cov-config=.coveragerc --cov=mdp --seed=725021957 mdp
