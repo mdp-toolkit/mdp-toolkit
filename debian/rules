@@ -12,4 +12,3 @@ override_dh_auto_test:
 
 override_dh_installchangelogs:
 	dh_installchangelogs -k CHANGES
-
