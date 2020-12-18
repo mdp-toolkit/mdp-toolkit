@@ -73,7 +73,7 @@ def init_standard_poly(result, x, pos, cur_var):
 
     :param pos: The index of the element to be computed, along the second
         dimension of result.
-    :type int: int
+    :type pos: int
 
     :param cur_var: The index of the current variable to be considered in the
         recursion. This value will have to be lower than x.shape[1].
@@ -117,7 +117,7 @@ def recf_standard_poly(result, x, special, n, cur_var, pos):
         Alternatively, in this case we could have used the x variable directly,
         by setting the return value to::
 
-            >> result[:, pos-1]*x[:, cur_var]
+            >>> result[:, pos-1]*x[:, cur_var]
 
         The recursion is natively applied to all variables contained in the data
         one after another and the results are stored in the
@@ -145,7 +145,7 @@ def recf_standard_poly(result, x, special, n, cur_var, pos):
 
     :param pos: The index of the element to be computed, along the second
         dimension of result.
-    :type int: int
+    :type pos: int
 
     :returns: The vectorized result (along the observations) of the
         n-th recursion step of the cur_var-th variable.
@@ -178,7 +178,7 @@ def init_legendre_poly(result, x, pos, cur_var):
 
     :param pos: The index of the element to be computed, along the second
         dimension of result.
-    :type int: int
+    :type pos: int
 
     :param cur_var: The index of the current variable to be considered in the
         recursion. This value will have to be lower than x.shape[1].
@@ -201,9 +201,9 @@ def recf_legendre_poly(result, x, special, n, cur_var, pos):
     The recursion formula is Bonnet's recursion formula
     P_n = (2n-1)/n * x * P_ {n-1}  - (n-1)* P_{n-2}.
 
-        .. note::
+    .. note::
 
-        The procedure on how an recursion function is built can be found in the
+        The procedure on how a recursion function is built can be found in the
         docstring of the recursion function for
         standard polynomials *recf_standard_poly*.
 
@@ -229,7 +229,7 @@ def recf_legendre_poly(result, x, special, n, cur_var, pos):
 
     :param pos: The index of the element to be computed, along the second
         dimension of result.
-    :type int: int
+    :type pos: int
 
     :returns: The vectorized result (along the observations) of the
         n-th recursion step of the cur_var-th variable.
@@ -267,7 +267,7 @@ def init_legendre_rational(result, x, pos, cur_var):
 
     :param pos: The index of the element to be computed, along the second
         dimension of result.
-    :type int: int
+    :type pos: int
 
     :param cur_var: The index of the current variable to be considered in the
         recursion. This value will have to be lower than x.shape[1].
@@ -293,7 +293,7 @@ def recf_legendre_rational(result, x, special, n, cur_var, pos):
 
     .. note::
 
-        The procedure on how an recursion function is built can be found in the
+        The procedure on how a recursion function is built can be found in the
         docstring of the recursion function for
         standard polynomials *recf_standard_poly*.
 
@@ -319,7 +319,7 @@ def recf_legendre_rational(result, x, special, n, cur_var, pos):
 
     :param pos: The index of the element to be computed, along the second
         dimension of result.
-    :type int: int
+    :type pos: int
 
     :returns: The vectorized result (along the observations) of the
         n-th recursion step of the cur_var-th variable.
@@ -357,7 +357,7 @@ def init_chebyshev_poly(result, x, pos, cur_var):
 
     :param pos: The index of the element to be computed, along the second
         dimension of result.
-    :type int: int
+    :type pos: int
 
     :param cur_var: The index of the current variable to be considered in the
         recursion. This value will have to be lower than x.shape[1].
@@ -383,7 +383,7 @@ def recf_chebyshev_poly(result, x, special, n, cur_var, pos):
 
     .. note::
 
-        The procedure on how an recursion function is built can be found in the
+        The procedure on how a recursion function is built can be found in the
         docstring of the recursion function for
         standard polynomials *recf_standard_poly*.
 
