@@ -44,9 +44,13 @@ import mdp as _mdp
 # matrix multiplication function
 # we use an alias to be able to use the wrapper for the 'gemm' Lapack
 # function in the future
-mult = _mdp.numx.dot
-matmult = mult
-
+try:
+    mult = _mdp.numx.dot
+    matmult = mult
+except:
+    mult = numpy.dot
+    matmul = mult 
+    
 if _mdp.numx_description == 'scipy':
     def matmult(a, b, alpha=1.0, beta=0.0, c=None, trans_a=0, trans_b=0):
         """Return alpha*(a*b) + beta*c.

@@ -315,7 +315,12 @@ class SFANode(Node):
             del self.dcov_mtx
 
         # store bias
-        self._bias = mult(self.avg, self.sf)
+        try:
+            self._bias = mult(self.avg, self.sf)
+        except:
+            self.avg = numx.asarray(self.avg)
+            self.sf = numx.asarray(self.sf)
+            self._bias = mult(self.avg, self.sf)
 
     def _execute(self, x, n=None):
         """Compute the output of the slowest functions.

@@ -11,7 +11,7 @@ numx_description = mdp.numx_description
 import random
 import itertools
 import sys
-
+import numpy
 
 # python <3.5/>=3.5 compatibility
 if sys.version_info >= (3, 5):
@@ -280,22 +280,38 @@ def get_dtypes(typecodes_key, _safe=True):
     if the numerical backend does not support them.
     """
     types = []
-    for c in numx.typecodes[typecodes_key]:
-        try:
-            type_ = numx.dtype(c)
-            if (_safe and not mdp.config.has_symeig == 'scipy.linalg.eigh'
-                and type_ in _UNSAFE_DTYPES):
-                continue
-            types.append(type_)
-        except TypeError:
-            pass
+    try:        
+        for c in numx.typecodes[typecodes_key]:
+            try:
+                type_ = numx.dtype(c)
+                if (_safe and not mdp.config.has_symeig == 'scipy.linalg.eigh'
+                    and type_ in _UNSAFE_DTYPES):
+                    continue
+                types.append(type_)
+            except TypeError:
+                pass
+    except:
+        for c in numpy.typecodes[typecodes_key]:
+            try:
+                type_ = numpy.dtype(c)
+                if (_safe and not mdp.config.has_symeig == 'scipy.linalg.eigh'
+                    and type_ in _UNSAFE_DTYPES):
+                    continue
+                types.append(type_)
+            except TypeError:
+                pass
+
     return types
 
 
-_UNSAFE_DTYPES = [numx.typeDict[d] for d in
-                  ['float16', 'float96', 'float128', 'complex192', 'complex256']
-                  if d in numx.typeDict]
-
+try:
+    _UNSAFE_DTYPES = [numx.typeDict[d] for d in
+                      ['float16', 'float96', 'float128', 'complex192', 'complex256']
+                      if d in numx.typeDict]
+except:
+    _UNSAFE_DTYPES = [numpy.typeDict[d] for d in
+                      ['float16', 'float96', 'float128', 'complex192', 'complex256']
+                      if d in numpy.typeDict]
 
 def nongeneral_svd(A, range=None, **kwargs):
     """SVD routine for simple eigenvalue problem, API is compatible with

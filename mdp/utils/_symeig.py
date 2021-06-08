@@ -3,6 +3,7 @@ from builtins import str
 from past.utils import old_div
 import mdp
 from mdp import numx, numx_linalg
+import numpy
 
 class SymeigException(mdp.MDPException):
     pass
@@ -139,8 +140,29 @@ numarray.linear_algebra.eigenvectors with an interface compatible with symeig.
             # diagonalize A
             w, ZA = numx_linalg.eigh(A)
             Z = mdp.utils.mult(ZB, ZA)
-    except numx_linalg.LinAlgError as exception:
-        raise SymeigException(str(exception))
+    except:
+        A = numx.asnumpy(A)
+        B = numx.asnumpy(B)
+        if B is None:
+            w, Z = numpy.linalg.eigh(A)
+        else:
+            # make B the identity matrix
+            wB, ZB = numpy.linalg.eigh(B)
+            _assert_eigenvalues_real(wB, dtype)
+            if wB.real.min() < 0:
+                # If we proceeded with negative values here, this would let some
+                # NumPy or SciPy versions cause nan values in the results.
+                # Such nan values would go through silently (or only with a warning,
+                # i.e. RuntimeWarning: invalid value encountered in sqrt)
+                # and cause hard to find issues later in user code outside mdp.
+                err = "Got negative eigenvalues: %s" % str(wB)
+                raise SymeigException(err)
+            ZB = old_div(ZB.real, numpy.sqrt(wB.real))
+            # transform A in the new basis: A = ZB^T * A * ZB
+            A = mdp.utils.mult(mdp.utils.mult(ZB.T, A), ZB)
+            # diagonalize A
+            w, ZA = numpy.linalg.eigh(A)
+            Z = mdp.utils.mult(ZB, ZA)
 
     _assert_eigenvalues_real(w, dtype)
     # Negative eigenvalues at this stage will be checked and handled by the caller.
