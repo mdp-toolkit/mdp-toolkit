@@ -257,7 +257,7 @@ class Flow(object):
         # verifies that the number of iterables matches that of
         # the signal nodes and multiplies them if needed.
         flow = self.flow
-
+        
         # if a single array is given wrap it in a list of lists,
         # note that a list of 2d arrays is not valid
         if isinstance(data_iterables, numx.ndarray):

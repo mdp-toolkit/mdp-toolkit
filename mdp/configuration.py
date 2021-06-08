@@ -14,6 +14,7 @@ from builtins import object
 from builtins import str
 from builtins import zip
 from future import standard_library
+import subprocess
 standard_library.install_aliases()
 
 
@@ -264,10 +265,18 @@ def get_numx():
     # To force MDP to use one specific extension module
     # set the environment variable MDPNUMX
     # Mainly useful for testing
+    
+    # check if NVIDIA GPU is avaialable
+    try:
+        if subprocess.check_output('nvidia-smi'):
+            gpu_available = True
+    except:
+        gpu_available = False
+
     USR_LABEL = os.getenv('MDPNUMX')
 
     # check if the variable is properly set
-    if USR_LABEL and USR_LABEL not in ('numpy', 'scipy'):
+    if USR_LABEL and USR_LABEL not in ('numpy', 'scipy', 'cupy'):
         err = ("Numerical backend '%s'" % USR_LABEL +
                "not supported. Supported backends: numpy, scipy.")
         raise ImportError(err)
@@ -275,9 +284,30 @@ def get_numx():
     numx_description = None
     numx_exception = {}
 
-    # if variable is not set or the user wants scipy
-    if USR_LABEL is None or USR_LABEL == 'scipy':
+    # if variable is not set or the user wants cupy if gpu is available
+    if (USR_LABEL is None or USR_LABEL == 'cupy') and  gpu_available:
         try:
+            cuda_version = subprocess.check_output('nvcc --version'.split(' ')).decode().split('release')[1].split(',')[0].strip()
+            numx_version = ''.join(cuda_version.split('.'))
+            subprocess.check_call([sys.executable, '-m', 'pip', 'install',
+                                   'cupy-cuda' + numx_version])
+            import cupy as numx
+            from cupy import (linalg as numx_linalg,
+                               random as numx_rand)
+            import cupyx.scipy.fftpack as numx_fft
+            numx_description = 'cupy'
+            config.ExternalDepFound('numx', 'cupy ' + numx_version)
+        except ImportError as exc:
+            if USR_LABEL:
+                raise ImportError(exc)
+            else:
+                numx_exception['cupy'] = exc
+    
+
+    # if variable is not set or the user wants scipy
+    if (USR_LABEL is None or USR_LABEL == 'scipy') and numx_description is None:
+        try:
+            print('scipyyyy')
             import scipy as numx
             from scipy import (linalg as numx_linalg,
                                fftpack as numx_fft,
