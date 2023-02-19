@@ -2,12 +2,11 @@
 Tests for the NormalizingRecursiveExpansionNode.
 """
 
-from mdp.nodes import (RecursiveExpansionNode,
+from mdp.nodes import (RecursiveExpansionNode,pytest
                        NormalizingRecursiveExpansionNode)
 from mdp.nodes.recursive_expansion_nodes import recfs
 from mdp.test._tools import *
 from mdp import numx as np
-import py.test
 
 
 def test_NormalizingRecursiveExpansionNode():
