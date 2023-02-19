@@ -2,7 +2,7 @@
 Tests for the NormalizingRecursiveExpansionNode.
 """
 
-from mdp.nodes import (RecursiveExpansionNode,pytest
+from mdp.nodes import (RecursiveExpansionNode,
                        NormalizingRecursiveExpansionNode)
 from mdp.nodes.recursive_expansion_nodes import recfs
 from mdp.test._tools import *
