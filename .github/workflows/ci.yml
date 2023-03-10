@@ -27,32 +27,9 @@ jobs:
       run: |
         sudo apt install cython3 gfortran libblas-dev liblapack-dev
         python -m pip install --upgrade pip
-        python -m pip install pytest-cov
+        python -m pip install pytest
         python -m pip install -e .${{ matrix.extras }}
     - name: Test with pytest
       run: |
-        python -m pytest --cov-config=.coveragerc --cov=mdp --seed=725021957 mdp
-        python -m pytest --cov-config=.coveragerc --cov=bimdp --cov-append --seed=725021957 bimdp
-    - name: "Upload coverage to Codecov"
-      uses: codecov/codecov-action@v3
-      with:
-        fail_ci_if_error: true
-
-    - name: Upload coverage data to coveralls.io
-      uses: AndreMiras/coveralls-python-action@develop
-      if: runner.os == 'Linux' # Only works on Linux
-      with:
-        github-token: ${{ secrets.github_token }}
-        flag-name: run-${{ matrix.os }}-py-${{ matrix.python-version }}-${{ matrix.extras }}
-        parallel: true
-
-  coveralls:
-    name: Indicate completion to coveralls.io
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-    - name: Coveralls Finished
-      uses: AndreMiras/coveralls-python-action@develop
-      with:
-        parallel-finished: true
-
+        python -m pytest --seed=725021957 mdp
+        python -m pytest --seed=725021957 bimdp
