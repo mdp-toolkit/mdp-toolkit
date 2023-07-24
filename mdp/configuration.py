@@ -4,7 +4,10 @@ from .repo_revision import get_git_revision
 import mdp
 # python 2/3 compatibility
 try:
-    from inspect import getfullargspec as getargs
+    # Migrate to signature as recommended in
+    # https://docs.python.org/3/library/inspect.html#inspect.getfullargspec
+    from inspect import signature
+    getargs = lambda func: (signature(func)._parameters, None)
 except ImportError:
     from inspect import getargspec as getargs
 import tempfile
