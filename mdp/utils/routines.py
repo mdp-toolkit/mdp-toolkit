@@ -293,7 +293,7 @@ def get_dtypes(typecodes_key, _safe=True):
 
 
 _UNSAFE_DTYPES = [numx.dtype(d).type for d in
-                  ['float16', 'float128', 'complex256']]
+                  [numx.half, numx.longfloat, numx.longcomplex]]
 
 
 def nongeneral_svd(A, range=None, **kwargs):
