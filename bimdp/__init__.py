@@ -85,7 +85,6 @@ from .biflow import (
 # the inspection stuff is considered a core functionality
 from .inspection import *
 
-from .test import test
 
 from . import nodes
 from . import hinet

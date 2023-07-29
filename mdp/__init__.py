@@ -171,7 +171,6 @@ from .classifier_node import (ClassifierNode, ClassifierCumulator)
 from . import nodes
 from . import hinet
 from . import parallel
-from .test import test
 
 
 # explicitly set __all__, mainly needed for epydoc
