@@ -57,15 +57,15 @@ def get_long_description():
 
 class MDPTest(_test):
     def run_tests(self):
-        import mdp
-        import bimdp
+        from mdp.test import test as mtest
+        from bimdp.test import test as btest
         # Fix random seed here, as we want reproducible failures in
         # automatic builds using "python setup.py test"
         # If the tests are run manually with pytest or
         # using the mdp.test and bimdp.test functions, the seed
         # is not set
-        errno = mdp.test(seed=725021957)
-        errno += bimdp.test(seed=725021957)
+        errno = mtest(seed=725021957)
+        errno += btest(seed=725021957)
         sys.exit(errno)
 
 def setup_package():
