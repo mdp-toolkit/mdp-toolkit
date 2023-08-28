@@ -26,10 +26,6 @@ def pytest_configure(config):
 
 
 def pytest_unconfigure(config):
-    # remove garbage created during tests
-    # note that usage of TemporaryDirectory is not enough to assure
-    # that all garbage is removed, expacially because we use subprocesses
-    shutil.rmtree(pytest.mdp_tempdirname, ignore_errors=True)
     # if pp was monkey-patched, remove any stale pp4mdp directories
     if hasattr(mdp.config, 'pp_monkeypatch_dirname'):
         monkey_dirs = os.path.join(mdp.config.pp_monkeypatch_dirname,

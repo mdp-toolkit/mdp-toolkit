@@ -35,7 +35,7 @@ def test_Node_copy_with_lambdas():
     generic_node.lambda_function = lambda: 1
     generic_node.copy()
     
-def test_Node_save():
+def test_Node_save(tmpdir):
     test_list = [1,2,3]
     generic_node = mdp.Node()
     generic_node.dummy_attr = test_list
@@ -48,8 +48,7 @@ def test_Node_save():
     assert generic_node.dummy_attr != copy_node.dummy_attr,\
            'Node save (string) method did not work'
     # test file save
-    dummy_file = tempfile.mktemp(prefix='MDP_', suffix=".pic",
-                                 dir=pytest.mdp_tempdirname)
+    dummy_file = tempfile.mktemp(prefix='MDP_', suffix=".pic", dir=tmpdir)
     generic_node.save(dummy_file, protocol=1)
     dummy_file = open(dummy_file, 'rb')
     copy_node = pickle.load(dummy_file)
