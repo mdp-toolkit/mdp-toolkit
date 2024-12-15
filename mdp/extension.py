@@ -43,7 +43,13 @@ ORIGINAL_ATTR_PREFIX = "_non_extension_"
 # the value stored in this attribute is the extension name
 _EXTENSION_ATTR_PREFIX = "_extension_for_"
 # list of attribute names that are not affected by extensions,
-_NON_EXTENSION_ATTRIBUTES = ["__module__", "__doc__", "extension_name"]
+_NON_EXTENSION_ATTRIBUTES = [
+    "__doc__",
+    "__firstlineno__",
+    "__module__",
+    "__static_attributes__",
+    "extension_name",
+]
 
 # keys under which the global activation and deactivation functions
 # for extensions can be stored in the extension registry
